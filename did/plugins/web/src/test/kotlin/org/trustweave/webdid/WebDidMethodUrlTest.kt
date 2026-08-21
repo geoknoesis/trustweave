@@ -17,6 +17,31 @@ class WebDidMethodUrlTest {
     private val method = WebDidMethod(InMemoryKeyManagementService(), OkHttpClient())
 
     @Test
+    fun `dot-dot path segments are rejected`() {
+        // "https://example.com/" + "../../admin/did.json" resolves to a path the DID never named.
+        // The host is unchanged, so an SSRF host guard does not see this - the escape is within
+        // the same origin, reaching an endpoint the DID subject does not control.
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:example.com:..:..:admin")
+        }
+    }
+
+    @Test
+    fun `single-dot path segments are rejected`() {
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:example.com:.:user")
+        }
+    }
+
+    @Test
+    fun `percent-encoded dot-dot path segments are rejected`() {
+        // Rejection must happen after percent-decoding, or %2E%2E walks straight past it.
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:example.com:%2E%2E:admin")
+        }
+    }
+
+    @Test
     fun `bare domain resolves to well-known location`() {
         assertEquals(
             "https://example.com/.well-known/did.json",

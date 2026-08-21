@@ -84,7 +84,8 @@ abstract class AbstractEvmAnchorClient(
 ) : AbstractBlockchainAnchorClient(chainId, options),
     java.io.Closeable {
     /** The resolved JSON-RPC endpoint (the `rpcUrl` option or the chain default). */
-    protected val rpcUrl: String = options["rpcUrl"] as? String ?: chain.defaultRpcUrl
+    protected val rpcUrl: String =
+        requireTransportSecurity(options["rpcUrl"] as? String ?: chain.defaultRpcUrl)
 
     /** The web3j client for [rpcUrl]. Shut down via [close]. */
     protected val web3j: Web3j = Web3j.build(HttpService(rpcUrl))
@@ -125,6 +126,45 @@ abstract class AbstractEvmAnchorClient(
      * (EIP-155 replay protection). Always [EvmChainConfig.numericChainId].
      */
     val eip155ChainId: Long get() = chain.numericChainId
+
+    /**
+     * Rejects a plaintext JSON-RPC endpoint on a public host.
+     *
+     * Everything this client does crosses that connection: the signed raw transaction on the way
+     * out, and on the way back the receipt and calldata a verifier treats as the anchored payload.
+     * Over plaintext both are readable and rewritable in transit. The chain defaults are https, but
+     * the `rpcUrl` option overrides them with no check at all.
+     *
+     * `http` stays available for loopback and private-range hosts, where a local or in-cluster
+     * development node is the normal case and TLS buys nothing.
+     */
+    private fun requireTransportSecurity(url: String): String {
+        if (!url.startsWith("http://", ignoreCase = true)) return url
+
+        val host =
+            runCatching { java.net.URI(url).host }.getOrNull()
+                ?: throw BlockchainException.ConfigurationFailed(
+                    chainId = "eip155:${chain.numericChainId}",
+                    configKey = "rpcUrl",
+                    reason = "Could not parse the host from the configured JSON-RPC endpoint",
+                )
+
+        // A non-null reason means the host IS loopback/private, which is exactly where plaintext
+        // is acceptable. A public host reaching here is a plaintext endpoint on the open internet.
+        if (org.trustweave.core.net.PrivateNetworkGuard
+                .rejectionReason(host) == null
+        ) {
+            throw BlockchainException.ConfigurationFailed(
+                chainId = "eip155:${chain.numericChainId}",
+                configKey = "rpcUrl",
+                reason =
+                    "Refusing a plaintext http:// JSON-RPC endpoint for public host '$host'. " +
+                        "Signed transactions and the anchored payload both cross this connection. " +
+                        "Use https, or point rpcUrl at a loopback or private-range development node.",
+            )
+        }
+        return url
+    }
 
     override fun canSubmitTransaction(): Boolean = credentials != null
 

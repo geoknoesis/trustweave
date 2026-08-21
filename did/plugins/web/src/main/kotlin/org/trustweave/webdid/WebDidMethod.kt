@@ -1,19 +1,16 @@
 package org.trustweave.webdid
 
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.*
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.base.AbstractWebDidMethod
-import org.trustweave.did.base.DidMethodUtils
-import org.trustweave.kms.KeyManagementService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
-import java.net.URL
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.*
+import org.trustweave.did.base.AbstractWebDidMethod
+import org.trustweave.did.base.DidMethodUtils
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.kms.KeyManagementService
 
 /**
  * Implementation of did:web method per W3C specification.
@@ -47,9 +44,8 @@ import java.nio.charset.StandardCharsets
 class WebDidMethod(
     kms: KeyManagementService,
     httpClient: OkHttpClient,
-    private val config: WebDidConfig = WebDidConfig.default()
+    private val config: WebDidConfig = WebDidConfig.default(),
 ) : AbstractWebDidMethod("web", kms, httpClient) {
-
     companion object {
         /**
          * Default document path per W3C spec.
@@ -73,10 +69,8 @@ class WebDidMethod(
          */
         fun create(
             kms: KeyManagementService,
-            httpClient: OkHttpClient = OkHttpClient()
-        ): WebDidMethod {
-            return WebDidMethod(kms, httpClient, WebDidConfig.default())
-        }
+            httpClient: OkHttpClient = OkHttpClient(),
+        ): WebDidMethod = WebDidMethod(kms, httpClient, WebDidConfig.default())
     }
 
     /**
@@ -93,11 +87,12 @@ class WebDidMethod(
         val (domain, pathSegments) = parseWebDid(did)
         val normalizedDomain = DidMethodUtils.normalizeDomain(domain)
 
-        val urlPath = if (pathSegments.isNotEmpty()) {
-            "/${pathSegments.joinToString("/")}/did.json"
-        } else {
-            config.documentPath
-        }
+        val urlPath =
+            if (pathSegments.isNotEmpty()) {
+                "/${pathSegments.joinToString("/")}/did.json"
+            } else {
+                config.documentPath
+            }
 
         val url = "https://$normalizedDomain$urlPath"
 
@@ -109,182 +104,200 @@ class WebDidMethod(
         return url
     }
 
-    override suspend fun publishDocument(url: String, document: DidDocument): Boolean = withContext(Dispatchers.IO) {
-        try {
-            if (config.requireHttps) {
-                validateHttps(url)
-            }
+    override suspend fun publishDocument(
+        url: String,
+        document: DidDocument,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                if (config.requireHttps) {
+                    validateHttps(url)
+                }
 
-            val request = createPublishRequest(url, document)
-            // Close the response on every path to avoid leaking the OkHttp connection.
-            executeRequest(request).use { response ->
-                if (!response.isSuccessful) {
-                    throw TrustWeaveException.Unknown(
-                        code = "HTTP_ERROR",
-                        message = "Failed to publish DID document: HTTP ${response.code} ${response.message}"
+                val request = createPublishRequest(url, document)
+                // Close the response on every path to avoid leaking the OkHttp connection.
+                executeRequest(request).use { response ->
+                    if (!response.isSuccessful) {
+                        throw TrustWeaveException.Unknown(
+                            code = "HTTP_ERROR",
+                            message = "Failed to publish DID document: HTTP ${response.code} ${response.message}",
+                        )
+                    }
+                }
+
+                true
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "PUBLISH_FAILED",
+                    message = "Failed to publish DID document to $url: ${e.message}",
+                    cause = e,
+                )
+            }
+        }
+
+    override suspend fun createDid(options: DidCreationOptions): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                // Extract domain from options
+                val domain =
+                    options.additionalProperties["domain"] as? String
+                        ?: throw IllegalArgumentException("did:web requires 'domain' option")
+
+                val normalizedDomain = DidMethodUtils.normalizeDomain(domain)
+                val path = options.additionalProperties["path"] as? String
+
+                // Build DID identifier
+                val did = DidMethodUtils.buildWebDid(normalizedDomain, path)
+
+                val algorithm = options.algorithm.algorithmName
+                val keyHandle = generateKey(algorithm, options.additionalProperties)
+
+                // Create verification method
+                val verificationMethod =
+                    DidMethodUtils.createVerificationMethod(
+                        did = did,
+                        keyHandle = keyHandle,
+                        algorithm = options.algorithm,
                     )
+
+                // Build DID document
+                val document =
+                    DidMethodUtils.buildDidDocument(
+                        did = did,
+                        verificationMethod = listOf(verificationMethod),
+                        authentication = listOf(verificationMethod.id.value),
+                        assertionMethod =
+                            if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                                listOf(verificationMethod.id.value)
+                            } else {
+                                null
+                            },
+                    )
+
+                // Publish document if hosting is available
+                val hostingUrl = options.additionalProperties["hostingUrl"] as? String
+                if (hostingUrl != null) {
+                    val publishUrl =
+                        if (hostingUrl.endsWith("/")) {
+                            hostingUrl.dropLast(1) + config.documentPath
+                        } else {
+                            hostingUrl + config.documentPath
+                        }
+                    publishDocument(publishUrl, document)
                 }
+
+                // Store locally
+                storeDocument(document.id, document)
+
+                document
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (e: IllegalArgumentException) {
+                throw e
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "CREATE_FAILED",
+                    message = "Failed to create did:web: ${e.message}",
+                    cause = e,
+                )
             }
-
-            true
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "PUBLISH_FAILED",
-                message = "Failed to publish DID document to $url: ${e.message}",
-                cause = e
-            )
         }
-    }
 
-    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            // Extract domain from options
-            val domain = options.additionalProperties["domain"] as? String
-                ?: throw IllegalArgumentException("did:web requires 'domain' option")
-
-            val normalizedDomain = DidMethodUtils.normalizeDomain(domain)
-            val path = options.additionalProperties["path"] as? String
-
-            // Build DID identifier
-            val did = DidMethodUtils.buildWebDid(normalizedDomain, path)
-
-            val algorithm = options.algorithm.algorithmName
-            val keyHandle = generateKey(algorithm, options.additionalProperties)
-
-            // Create verification method
-            val verificationMethod = DidMethodUtils.createVerificationMethod(
-                did = did,
-                keyHandle = keyHandle,
-                algorithm = options.algorithm
-            )
-
-            // Build DID document
-            val document = DidMethodUtils.buildDidDocument(
-                did = did,
-                verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else null
-            )
-
-            // Publish document if hosting is available
-            val hostingUrl = options.additionalProperties["hostingUrl"] as? String
-            if (hostingUrl != null) {
-                val publishUrl = if (hostingUrl.endsWith("/")) {
-                    hostingUrl.dropLast(1) + config.documentPath
-                } else {
-                    hostingUrl + config.documentPath
-                }
-                publishDocument(publishUrl, document)
+    override suspend fun resolveDid(did: Did): DidResolutionResult =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
+                resolveFromHttp(did.value)
+            } catch (e: TrustWeaveException.NotFound) {
+                DidMethodUtils.createErrorResolutionResult("notFound", e.message, method, did.value)
+            } catch (e: TrustWeaveException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (e: Exception) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             }
-
-            // Store locally
-            storeDocument(document.id, document)
-
-            document
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "CREATE_FAILED",
-                message = "Failed to create did:web: ${e.message}",
-                cause = e
-            )
         }
-    }
-
-    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
-            resolveFromHttp(did.value)
-        } catch (e: TrustWeaveException.NotFound) {
-            DidMethodUtils.createErrorResolutionResult("notFound", e.message, method, did.value)
-        } catch (e: TrustWeaveException) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
-        } catch (e: Exception) {
-            DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
-        }
-    }
 
     override suspend fun updateDid(
         did: Did,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+        updater: (DidDocument) -> DidDocument,
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val didString = did.value
-            // Resolve current document
-            val currentResult = resolveFromHttp(didString)
-            val currentDocument = when (currentResult) {
-                is DidResolutionResult.Success -> currentResult.document
-                else -> throw TrustWeaveException.NotFound(
-                    message = "DID document not found: $didString"
+                val didString = did.value
+                // Resolve current document
+                val currentResult = resolveFromHttp(didString)
+                val currentDocument =
+                    when (currentResult) {
+                        is DidResolutionResult.Success -> currentResult.document
+                        else -> throw TrustWeaveException.NotFound(
+                            message = "DID document not found: $didString",
+                        )
+                    }
+
+                // Apply updater
+                val updatedDocument = updater(currentDocument)
+
+                // Publish updated document
+                val url = getDocumentUrl(didString)
+                updateDocumentOnHttp(didString, updatedDocument)
+
+                updatedDocument
+            } catch (e: TrustWeaveException.NotFound) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "UPDATE_FAILED",
+                    message = "Failed to update did:web: ${e.message}",
+                    cause = e,
                 )
             }
-
-            // Apply updater
-            val updatedDocument = updater(currentDocument)
-
-            // Publish updated document
-            val url = getDocumentUrl(didString)
-            updateDocumentOnHttp(didString, updatedDocument)
-
-            updatedDocument
-        } catch (e: TrustWeaveException.NotFound) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "UPDATE_FAILED",
-                message = "Failed to update did:web: ${e.message}",
-                cause = e
-            )
         }
-    }
 
-    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    override suspend fun deactivateDid(did: Did): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val didString = did.value
-            // Resolve current document
-            val currentResult = resolveFromHttp(didString)
-            val currentDocument = when (currentResult) {
-                is DidResolutionResult.Success -> currentResult.document
-                else -> return@withContext false
+                val didString = did.value
+                // Resolve current document
+                val currentResult = resolveFromHttp(didString)
+                val currentDocument =
+                    when (currentResult) {
+                        is DidResolutionResult.Success -> currentResult.document
+                        else -> return@withContext false
+                    }
+
+                // Create deactivated document (with deactivated flag in metadata or empty document)
+                val deactivatedDocument =
+                    currentDocument.copy(
+                        verificationMethod = emptyList(),
+                        authentication = emptyList(),
+                        assertionMethod = emptyList(),
+                        keyAgreement = emptyList(),
+                        capabilityInvocation = emptyList(),
+                        capabilityDelegation = emptyList(),
+                    )
+
+                // Publish deactivated document
+                deactivateDocumentOnHttp(didString, deactivatedDocument)
+
+                true
+            } catch (e: TrustWeaveException.NotFound) {
+                false
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "DEACTIVATE_FAILED",
+                    message = "Failed to deactivate did:web: ${e.message}",
+                    cause = e,
+                )
             }
-
-            // Create deactivated document (with deactivated flag in metadata or empty document)
-            val deactivatedDocument = currentDocument.copy(
-                verificationMethod = emptyList(),
-                authentication = emptyList(),
-                assertionMethod = emptyList(),
-                keyAgreement = emptyList(),
-                capabilityInvocation = emptyList(),
-                capabilityDelegation = emptyList()
-            )
-
-            // Publish deactivated document
-            deactivateDocumentOnHttp(didString, deactivatedDocument)
-
-            true
-        } catch (e: TrustWeaveException.NotFound) {
-            false
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "DEACTIVATE_FAILED",
-                message = "Failed to deactivate did:web: ${e.message}",
-                cause = e
-            )
         }
-    }
 
     /**
      * Parses a did:web identifier into domain and percent-decoded path segments.
@@ -307,8 +320,9 @@ class WebDidMethod(
      *         contains forbidden URL metacharacters
      */
     private fun parseWebDid(did: String): Pair<String, List<String>> {
-        val parsed = DidMethodUtils.parseDid(did)
-            ?: throw IllegalArgumentException("Invalid DID format: $did")
+        val parsed =
+            DidMethodUtils.parseDid(did)
+                ?: throw IllegalArgumentException("Invalid DID format: $did")
 
         if (parsed.first != "web") {
             throw IllegalArgumentException("Not a did:web DID: $did")
@@ -317,7 +331,7 @@ class WebDidMethod(
         val rawSegments = parsed.second.split(":")
         if (rawSegments.any { it.isEmpty() }) {
             throw IllegalArgumentException(
-                "Invalid did:web DID: empty method-specific-id segment in $did"
+                "Invalid did:web DID: empty method-specific-id segment in $did",
             )
         }
 
@@ -326,7 +340,7 @@ class WebDidMethod(
         val host = segments.first()
         if (host.any { it in HOST_FORBIDDEN_CHARS || it.isWhitespace() || it.isISOControl() }) {
             throw IllegalArgumentException(
-                "Invalid did:web DID: decoded host segment contains forbidden URL characters: $did"
+                "Invalid did:web DID: decoded host segment contains forbidden URL characters: $did",
             )
         }
 
@@ -334,7 +348,16 @@ class WebDidMethod(
         pathSegments.forEach { segment ->
             if (segment.any { it in PATH_FORBIDDEN_CHARS || it.isISOControl() }) {
                 throw IllegalArgumentException(
-                    "Invalid did:web DID: decoded path segment contains forbidden URL characters: $did"
+                    "Invalid did:web DID: decoded path segment contains forbidden URL characters: $did",
+                )
+            }
+            // Dot segments walk the resolved URL somewhere the DID never named. The host is
+            // unchanged, so a private-address guard does not see it: the escape stays on the same
+            // origin and reaches a path the DID subject does not control. Checked after
+            // percent-decoding, otherwise %2E%2E slips through.
+            if (segment == "." || segment == "..") {
+                throw IllegalArgumentException(
+                    "Invalid did:web DID: path segment '$segment' would escape the DID's own path: $did",
                 )
             }
         }
@@ -342,4 +365,3 @@ class WebDidMethod(
         return host to pathSegments
     }
 }
-

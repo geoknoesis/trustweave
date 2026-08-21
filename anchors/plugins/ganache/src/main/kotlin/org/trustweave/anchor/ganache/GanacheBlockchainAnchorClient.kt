@@ -36,16 +36,15 @@ import org.trustweave.anchor.options.GanacheOptions
  */
 class GanacheBlockchainAnchorClient(
     chainId: String,
-    options: Map<String, Any?> = emptyMap()
+    options: Map<String, Any?> = emptyMap(),
 ) : AbstractEvmAnchorClient(chainId, options, resolveChain(chainId)) {
-
     /**
      * Convenience constructor using type-safe [GanacheOptions].
      */
     constructor(chainId: String, options: GanacheOptions) : this(chainId, options.toMap())
 
     companion object {
-        const val LOCAL = "eip155:1337"  // Ganache default chain ID
+        const val LOCAL = "eip155:1337" // Ganache default chain ID
 
         // Default Ganache RPC endpoint
         private const val DEFAULT_RPC_URL = "http://localhost:8545"
@@ -60,12 +59,13 @@ class GanacheBlockchainAnchorClient(
                 defaultRpcUrl = DEFAULT_RPC_URL,
                 blockchainName = "Ganache",
                 networkName = "ganache-local",
-                credentialsRequired = true
+                credentialsRequired = true,
+                // Single-node development chain: it mines a block per transaction and never
+                // re-orgs, so an anchor is settled the moment it is mined.
+                defaultMinConfirmations = 0,
             )
         }
     }
 
-    override fun generateTestTxHash(): String {
-        return "ganache_test_${uniqueTestHashSuffix()}"
-    }
+    override fun generateTestTxHash(): String = "ganache_test_${uniqueTestHashSuffix()}"
 }

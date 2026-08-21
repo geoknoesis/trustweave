@@ -32,17 +32,17 @@ object TestConfig {
      * Environment variable names.
      */
     object EnvVars {
-        const val USE_REAL_SERVICES = "VERICORE_TEST_USE_REAL_SERVICES"
-        const val TEST_TIMEOUT = "VERICORE_TEST_TIMEOUT_SECONDS"
-        const val MAX_RETRIES = "VERICORE_TEST_MAX_RETRIES"
-        const val SKIP_INTEGRATION_TESTS = "VERICORE_SKIP_INTEGRATION_TESTS"
-        const val TEST_LOG_LEVEL = "VERICORE_TEST_LOG_LEVEL"
-        const val SKIP_IF_NO_CREDENTIALS = "VERICORE_TEST_SKIP_IF_NO_CREDENTIALS"
+        const val USE_REAL_SERVICES = "TRUSTWEAVE_TEST_USE_REAL_SERVICES"
+        const val TEST_TIMEOUT = "TRUSTWEAVE_TEST_TIMEOUT_SECONDS"
+        const val MAX_RETRIES = "TRUSTWEAVE_TEST_MAX_RETRIES"
+        const val SKIP_INTEGRATION_TESTS = "TRUSTWEAVE_SKIP_INTEGRATION_TESTS"
+        const val TEST_LOG_LEVEL = "TRUSTWEAVE_TEST_LOG_LEVEL"
+        const val SKIP_IF_NO_CREDENTIALS = "TRUSTWEAVE_TEST_SKIP_IF_NO_CREDENTIALS"
     }
 
     /**
      * Whether to use real services instead of mocks.
-     * Defaults to false. Set VERICORE_TEST_USE_REAL_SERVICES=true to enable.
+     * Defaults to false. Set TRUSTWEAVE_TEST_USE_REAL_SERVICES=true to enable.
      */
     fun useRealServices(): Boolean {
         return System.getenv(EnvVars.USE_REAL_SERVICES)?.toBoolean() ?: false
@@ -50,7 +50,7 @@ object TestConfig {
 
     /**
      * Operation timeout in seconds.
-     * Defaults to 30. Set VERICORE_TEST_TIMEOUT_SECONDS to override.
+     * Defaults to 30. Set TRUSTWEAVE_TEST_TIMEOUT_SECONDS to override.
      */
     fun operationTimeout(): Long {
         return System.getenv(EnvVars.TEST_TIMEOUT)?.toLongOrNull()
@@ -59,7 +59,7 @@ object TestConfig {
 
     /**
      * Maximum number of retries for flaky tests.
-     * Defaults to 3. Set VERICORE_TEST_MAX_RETRIES to override.
+     * Defaults to 3. Set TRUSTWEAVE_TEST_MAX_RETRIES to override.
      */
     fun maxRetries(): Int {
         return System.getenv(EnvVars.MAX_RETRIES)?.toIntOrNull()
@@ -68,7 +68,7 @@ object TestConfig {
 
     /**
      * Whether to skip integration tests.
-     * Set VERICORE_SKIP_INTEGRATION_TESTS=true to skip.
+     * Set TRUSTWEAVE_SKIP_INTEGRATION_TESTS=true to skip.
      */
     fun skipIntegrationTests(): Boolean {
         return System.getenv(EnvVars.SKIP_INTEGRATION_TESTS)?.toBoolean() ?: false
@@ -76,7 +76,7 @@ object TestConfig {
 
     /**
      * Test log level.
-     * Defaults to INFO. Set VERICORE_TEST_LOG_LEVEL to override.
+     * Defaults to INFO. Set TRUSTWEAVE_TEST_LOG_LEVEL to override.
      */
     fun logLevel(): String {
         return System.getenv(EnvVars.TEST_LOG_LEVEL) ?: "INFO"
@@ -99,7 +99,7 @@ object TestConfig {
 
     /**
      * Whether to skip tests that require credentials when credentials are not available.
-     * Defaults to true. Set VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false to fail instead of skip.
+     * Defaults to true. Set TRUSTWEAVE_TEST_SKIP_IF_NO_CREDENTIALS=false to fail instead of skip.
      */
     fun skipIfNoCredentials(): Boolean {
         return System.getenv(EnvVars.SKIP_IF_NO_CREDENTIALS)?.toBoolean() ?: true

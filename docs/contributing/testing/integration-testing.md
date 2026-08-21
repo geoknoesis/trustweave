@@ -164,7 +164,7 @@ fun testMultiplePlugins() = runBlocking {
 ./gradlew test -PskipIntegrationTests=true
 
 # Or set environment variable
-export VERICORE_SKIP_INTEGRATION_TESTS=true
+export TRUSTWEAVE_SKIP_INTEGRATION_TESTS=true
 ./gradlew test
 ```
 

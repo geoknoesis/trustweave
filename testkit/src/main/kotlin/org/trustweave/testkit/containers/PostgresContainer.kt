@@ -31,7 +31,7 @@ class PostgresContainer private constructor(
     dockerImageName: DockerImageName
 ) : GenericContainer<PostgresContainer>(dockerImageName) {
 
-    private var dbName: String = "vericore_test"
+    private var dbName: String = "trustweave_test"
     private var dbUser: String = "test"
     private var dbPassword: String = "test"
 
@@ -48,11 +48,11 @@ class PostgresContainer private constructor(
         fun create(): PostgresContainer {
             return PostgresContainer(DEFAULT_IMAGE)
                 .apply {
-                    dbName = "vericore_test"
+                    dbName = "trustweave_test"
                     dbUser = "test"
                     dbPassword = "test"
                 }
-                .withEnv("POSTGRES_DB", "vericore_test")
+                .withEnv("POSTGRES_DB", "trustweave_test")
                 .withEnv("POSTGRES_USER", "test")
                 .withEnv("POSTGRES_PASSWORD", "test")
                 .withExposedPorts(5432)
@@ -65,7 +65,7 @@ class PostgresContainer private constructor(
          */
         @JvmStatic
         fun create(
-            databaseName: String = "vericore_test",
+            databaseName: String = "trustweave_test",
             username: String = "test",
             password: String = "test"
         ): PostgresContainer {

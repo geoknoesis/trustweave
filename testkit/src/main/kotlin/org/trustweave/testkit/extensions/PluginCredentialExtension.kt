@@ -121,7 +121,7 @@ class PluginCredentialExtension : ExecutionCondition {
                 "Set required environment variables or remove @RequiresPlugin annotation."
             } else {
                 "DISABLED: ${missingPlugins.joinToString("; ")}. " +
-                "Set VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false to fail instead of skip."
+                "Set TRUSTWEAVE_TEST_SKIP_IF_NO_CREDENTIALS=false to fail instead of skip."
             }
             ConditionEvaluationResult.disabled(skipReason)
         }

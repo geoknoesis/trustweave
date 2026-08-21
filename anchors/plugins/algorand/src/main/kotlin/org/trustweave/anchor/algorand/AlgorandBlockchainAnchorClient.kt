@@ -61,7 +61,6 @@ class AlgorandBlockchainAnchorClient(
     options: Map<String, Any?> = emptyMap(),
     private val sponsorRegistry: SponsorRegistry = ConfigSponsorRegistry(options),
 ) : AbstractBlockchainAnchorClient(chainId, options) {
-
     /**
      * Convenience constructor using type-safe [AlgorandOptions].
      */
@@ -93,76 +92,87 @@ class AlgorandBlockchainAnchorClient(
         }
 
         // Initialize Algod client based on chain
-        val algodUrl = when (chainId) {
-            MAINNET -> options["algodUrl"] as? String ?: MAINNET_ALGOD_URL
-            TESTNET -> options["algodUrl"] as? String ?: TESTNET_ALGOD_URL
-            BETANET -> options["algodUrl"] as? String ?: BETANET_ALGOD_URL
-            else -> throw IllegalArgumentException("Unsupported chain: $chainId")
-        }
+        val algodUrl =
+            when (chainId) {
+                MAINNET -> options["algodUrl"] as? String ?: MAINNET_ALGOD_URL
+                TESTNET -> options["algodUrl"] as? String ?: TESTNET_ALGOD_URL
+                BETANET -> options["algodUrl"] as? String ?: BETANET_ALGOD_URL
+                else -> throw IllegalArgumentException("Unsupported chain: $chainId")
+            }
 
         val algodToken = options["algodToken"] as? String ?: ""
         // AlgodClient constructor: (host: String, port: Int, token: String)
-        val url = java.net.URI.create(algodUrl).toURL()
+        val url =
+            java.net.URI
+                .create(algodUrl)
+                .toURL()
         val port = url.port.takeIf { it != -1 } ?: url.defaultPort
         algodClient = AlgodClient(url.host, port, algodToken)
 
         // Optional Indexer client for historical reads.
-        indexerClient = (options["indexerUrl"] as? String)?.let { indexerUrl ->
-            val indexer = java.net.URI.create(indexerUrl).toURL()
-            val indexerPort = indexer.port.takeIf { it != -1 } ?: indexer.defaultPort
-            IndexerClient(indexer.host, indexerPort, options["indexerToken"] as? String ?: "")
-        }
+        indexerClient =
+            (options["indexerUrl"] as? String)?.let { indexerUrl ->
+                val indexer =
+                    java.net.URI
+                        .create(indexerUrl)
+                        .toURL()
+                val indexerPort = indexer.port.takeIf { it != -1 } ?: indexer.defaultPort
+                IndexerClient(indexer.host, indexerPort, options["indexerToken"] as? String ?: "")
+            }
 
         // Initialize account if private key is provided.
         // A present-but-invalid private key is a configuration error and must fail
         // closed instead of silently degrading to the in-memory test fallback.
-        account = (options["privateKey"] as? String)?.let { encodedKey ->
-            try {
-                // Decode strictly: the SDK's lenient decoder + seed-based Account
-                // constructor accept almost any input, so garbage keys would
-                // otherwise produce a "valid" account for the wrong address.
-                // Accepted formats: 32-byte Ed25519 seed, or the 64-byte exported
-                // secret key (seed || public key) produced by common Algorand
-                // tooling (JS SDK `account.sk`, `algokey`) — the seed is its
-                // first 32 bytes.
-                val decoded = java.util.Base64.getDecoder().decode(encodedKey)
-                require(decoded.size == 32 || decoded.size == 64) {
-                    "decoded key must be a 32-byte Ed25519 seed or 64-byte exported secret key, " +
-                        "got ${decoded.size} bytes"
+        account =
+            (options["privateKey"] as? String)?.let { encodedKey ->
+                try {
+                    // Decode strictly: the SDK's lenient decoder + seed-based Account
+                    // constructor accept almost any input, so garbage keys would
+                    // otherwise produce a "valid" account for the wrong address.
+                    // Accepted formats: 32-byte Ed25519 seed, or the 64-byte exported
+                    // secret key (seed || public key) produced by common Algorand
+                    // tooling (JS SDK `account.sk`, `algokey`) — the seed is its
+                    // first 32 bytes.
+                    val decoded =
+                        java.util.Base64
+                            .getDecoder()
+                            .decode(encodedKey)
+                    require(decoded.size == 32 || decoded.size == 64) {
+                        "decoded key must be a 32-byte Ed25519 seed or 64-byte exported secret key, " +
+                            "got ${decoded.size} bytes"
+                    }
+                    Account(decoded.copyOf(32))
+                } catch (e: Exception) {
+                    throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        configKey = "privateKey",
+                        reason =
+                            "Invalid Algorand private key (expected base64 of a 32-byte seed " +
+                                "or 64-byte exported secret key): ${e.message ?: "Unknown error"}",
+                        cause = e,
+                    )
                 }
-                Account(decoded.copyOf(32))
-            } catch (e: Exception) {
-                throw BlockchainException.ConfigurationFailed(
-                    chainId = chainId,
-                    configKey = "privateKey",
-                    reason = "Invalid Algorand private key (expected base64 of a 32-byte seed " +
-                        "or 64-byte exported secret key): ${e.message ?: "Unknown error"}",
-                    cause = e
-                )
             }
+    }
+
+    protected override fun canSubmitTransaction(): Boolean = account != null
+
+    protected override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String = submitTransaction(payloadBytes).first
+
+    override suspend fun estimate(op: OperationDescriptor): TokenAmount =
+        withContext(Dispatchers.IO) {
+            val params =
+                algodClient.TransactionParams().execute().body()
+                    ?: throw BlockchainException.TransactionFailed(
+                        reason = "Failed to retrieve Algorand suggested params for estimate",
+                        chainId = chainId,
+                        operation = "estimate",
+                    )
+            val suggested = params.fee ?: 0L
+            val minFee = params.minFee ?: 1_000L
+            val microAlgos = BigInteger.valueOf(maxOf(suggested, minFee))
+            TokenAmount(op.chainId, AssetRef.Native, microAlgos)
         }
-    }
-
-    override protected fun canSubmitTransaction(): Boolean {
-        return account != null
-    }
-
-    override protected suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String {
-        return submitTransaction(payloadBytes).first
-    }
-
-    override suspend fun estimate(op: OperationDescriptor): TokenAmount = withContext(Dispatchers.IO) {
-        val params = algodClient.TransactionParams().execute().body()
-            ?: throw BlockchainException.TransactionFailed(
-                reason = "Failed to retrieve Algorand suggested params for estimate",
-                chainId = chainId,
-                operation = "estimate",
-            )
-        val suggested = params.fee ?: 0L
-        val minFee = params.minFee ?: 1_000L
-        val microAlgos = BigInteger.valueOf(maxOf(suggested, minFee))
-        TokenAmount(op.chainId, AssetRef.Native, microAlgos)
-    }
 
     override suspend fun writePayload(
         payload: JsonElement,
@@ -187,24 +197,26 @@ class AlgorandBlockchainAnchorClient(
 
         // For Sponsored, resolve the sponsor first so an unknown sponsor fails
         // closed before we touch the network.
-        val sponsor: SponsorEntry? = (ctx.feeStrategy as? FeeStrategy.Sponsored)?.let { s ->
-            sponsorRegistry.resolve(s.sponsorDid)
-                ?: throw TreasuryException.SponsorNotAllowed(
-                    domainId = ctx.domainId,
-                    sponsorDid = s.sponsorDid,
-                )
-        }
+        val sponsor: SponsorEntry? =
+            (ctx.feeStrategy as? FeeStrategy.Sponsored)?.let { s ->
+                sponsorRegistry.resolve(s.sponsorDid)
+                    ?: throw TreasuryException.SponsorNotAllowed(
+                        domainId = ctx.domainId,
+                        sponsorDid = s.sponsorDid,
+                    )
+            }
 
-        val estimate = estimate(
-            OperationDescriptor(
-                kind = "anchor.writePayload",
-                chainId = chainId,
-                // In digest mode the payload never leaves the caller's custody —
-                // estimation sees only the anchored byte size.
-                payload = if (digestPayloadMode) null else payload,
-                payloadSizeBytes = submittedBytes.size.toLong(),
-            ),
-        )
+        val estimate =
+            estimate(
+                OperationDescriptor(
+                    kind = "anchor.writePayload",
+                    chainId = chainId,
+                    // In digest mode the payload never leaves the caller's custody —
+                    // estimation sees only the anchored byte size.
+                    payload = if (digestPayloadMode) null else payload,
+                    payloadSizeBytes = submittedBytes.size.toLong(),
+                ),
+            )
         ctx.maxFee?.let { cap ->
             if (estimate > cap) {
                 throw TreasuryException.CallerCapExceeded(
@@ -218,24 +230,27 @@ class AlgorandBlockchainAnchorClient(
 
         return withContext(Dispatchers.IO) {
             try {
-                val acct = account
-                    ?: throw IllegalStateException("Account not configured. Provide 'privateKey' in options.")
+                val acct =
+                    account
+                        ?: throw IllegalStateException("Account not configured. Provide 'privateKey' in options.")
                 when (ctx.feeStrategy) {
-                    is FeeStrategy.Sponsored -> submitSponsored(
-                        payload = payload,
-                        anchoredBytes = submittedBytes,
-                        mediaType = mediaType,
-                        senderAccount = acct,
-                        sponsor = sponsor!!,
-                    )
+                    is FeeStrategy.Sponsored ->
+                        submitSponsored(
+                            payload = payload,
+                            anchoredBytes = submittedBytes,
+                            mediaType = mediaType,
+                            senderAccount = acct,
+                            sponsor = sponsor!!,
+                        )
                     else -> {
                         val (txHash, feeMicroAlgos) = submitTransaction(submittedBytes)
                         AnchorResult(
-                            ref = buildAnchorRef(
-                                txHash = txHash,
-                                contract = getContractAddress(),
-                                extra = anchorExtraMetadata(mediaType),
-                            ),
+                            ref =
+                                buildAnchorRef(
+                                    txHash = txHash,
+                                    contract = getContractAddress(),
+                                    extra = anchorExtraMetadata(mediaType),
+                                ),
                             payload = payload,
                             mediaType = mediaType,
                             timestamp = System.currentTimeMillis() / 1000,
@@ -281,61 +296,71 @@ class AlgorandBlockchainAnchorClient(
         senderAccount: Account,
         sponsor: SponsorEntry,
     ): AnchorResult {
-        val params = algodClient.TransactionParams().execute().body()
-            ?: throw BlockchainException.TransactionFailed(
-                reason = "Failed to retrieve Algorand suggested params for sponsored group",
-                chainId = chainId,
-                operation = "writePayload",
-            )
+        val params =
+            algodClient.TransactionParams().execute().body()
+                ?: throw BlockchainException.TransactionFailed(
+                    reason = "Failed to retrieve Algorand suggested params for sponsored group",
+                    chainId = chainId,
+                    operation = "writePayload",
+                )
         val minFee = params.minFee ?: 1_000L
         val sponsorFlatFee = minFee * 2
 
-        val sponsorAddress = com.algorand.algosdk.crypto.Address(sponsor.address)
+        val sponsorAddress =
+            com.algorand.algosdk.crypto
+                .Address(sponsor.address)
 
-        val dataTxn: Transaction = Transaction.PaymentTransactionBuilder()
-            .sender(senderAccount.address)
-            .receiver(senderAccount.address)
-            .amount(0)
-            .note(anchoredBytes)
-            .suggestedParams(params)
-            .flatFee(0L)
-            .build()
+        val dataTxn: Transaction =
+            Transaction
+                .PaymentTransactionBuilder()
+                .sender(senderAccount.address)
+                .receiver(senderAccount.address)
+                .amount(0)
+                .note(anchoredBytes)
+                .suggestedParams(params)
+                .flatFee(0L)
+                .build()
 
-        val sponsorTxn: Transaction = Transaction.PaymentTransactionBuilder()
-            .sender(sponsorAddress)
-            .receiver(sponsorAddress)
-            .amount(1)
-            .suggestedParams(params)
-            .flatFee(sponsorFlatFee)
-            .build()
+        val sponsorTxn: Transaction =
+            Transaction
+                .PaymentTransactionBuilder()
+                .sender(sponsorAddress)
+                .receiver(sponsorAddress)
+                .amount(1)
+                .suggestedParams(params)
+                .flatFee(sponsorFlatFee)
+                .build()
 
         TxGroup.assignGroupID(dataTxn, sponsorTxn)
 
         val signedData: SignedTransaction = senderAccount.signTransaction(dataTxn)
         val signedSponsor: SignedTransaction = sponsor.sign(sponsorTxn)
 
-        val concatenated = ByteArrayOutputStream().use { out ->
-            out.write(Encoder.encodeToMsgPack(signedData))
-            out.write(Encoder.encodeToMsgPack(signedSponsor))
-            out.toByteArray()
-        }
+        val concatenated =
+            ByteArrayOutputStream().use { out ->
+                out.write(Encoder.encodeToMsgPack(signedData))
+                out.write(Encoder.encodeToMsgPack(signedSponsor))
+                out.toByteArray()
+            }
 
-        val response = try {
-            algodClient.RawTransaction().rawtxn(concatenated).execute()
-        } catch (e: Exception) {
-            throw BlockchainException.TransactionFailed(
-                reason = "Failed to submit sponsored atomic group to Algorand: ${e.message ?: "Unknown error"}",
-                chainId = chainId,
-                operation = "writePayload",
-            )
-        }
+        val response =
+            try {
+                algodClient.RawTransaction().rawtxn(concatenated).execute()
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
+                    reason = "Failed to submit sponsored atomic group to Algorand: ${e.message ?: "Unknown error"}",
+                    chainId = chainId,
+                    operation = "writePayload",
+                )
+            }
 
-        val txid = response.body()?.txId
-            ?: throw BlockchainException.TransactionFailed(
-                reason = "Failed to get transaction ID from Algorand response (sponsored group)",
-                chainId = chainId,
-                operation = "writePayload",
-            )
+        val txid =
+            response.body()?.txId
+                ?: throw BlockchainException.TransactionFailed(
+                    reason = "Failed to get transaction ID from Algorand response (sponsored group)",
+                    chainId = chainId,
+                    operation = "writePayload",
+                )
 
         // Submission only means the node accepted the group into its pool — wait
         // for on-chain confirmation so dropped/rejected groups never report success.
@@ -344,13 +369,14 @@ class AlgorandBlockchainAnchorClient(
         val totalFee = (dataTxn.fee ?: BigInteger.ZERO) + (sponsorTxn.fee ?: BigInteger.ZERO)
 
         return AnchorResult(
-            ref = buildAnchorRef(
-                txHash = txid,
-                contract = getContractAddress(),
-                // Digest-mode aware: anchorExtraMetadata adds the payloadMode=digest
-                // marker on top of the Algorand metadata (network, mediaType).
-                extra = anchorExtraMetadata(mediaType) + ("sponsor" to sponsor.address),
-            ),
+            ref =
+                buildAnchorRef(
+                    txHash = txid,
+                    contract = getContractAddress(),
+                    // Digest-mode aware: anchorExtraMetadata adds the payloadMode=digest
+                    // marker on top of the Algorand metadata (network, mediaType).
+                    extra = anchorExtraMetadata(mediaType) + ("sponsor" to sponsor.address),
+                ),
             payload = payload,
             mediaType = mediaType,
             timestamp = System.currentTimeMillis() / 1000,
@@ -359,28 +385,19 @@ class AlgorandBlockchainAnchorClient(
         )
     }
 
-    override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
-        return readTransactionFromBlockchainImpl(txHash)
-    }
+    protected override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult = readTransactionFromBlockchainImpl(txHash)
 
-    override protected fun getContractAddress(): String? {
-        return options["appId"] as? String
-    }
+    protected override fun getContractAddress(): String? = options["appId"] as? String
 
-    override protected fun buildExtraMetadata(mediaType: String): Map<String, String> {
-        return mapOf(
+    protected override fun buildExtraMetadata(mediaType: String): Map<String, String> =
+        mapOf(
             "network" to chainId.substringAfter(":"),
-            "mediaType" to mediaType
+            "mediaType" to mediaType,
         )
-    }
 
-    override protected fun generateTestTxHash(): String {
-        return "algo_test_${uniqueTestHashSuffix()}"
-    }
+    protected override fun generateTestTxHash(): String = "algo_test_${uniqueTestHashSuffix()}"
 
-    override protected fun getBlockchainName(): String {
-        return "Algorand"
-    }
+    protected override fun getBlockchainName(): String = "Algorand"
 
     private suspend fun submitTransaction(noteData: ByteArray): Pair<String, BigInteger> {
         if (account == null) {
@@ -388,35 +405,39 @@ class AlgorandBlockchainAnchorClient(
         }
 
         val params = algodClient.TransactionParams().execute().body()
-        val tx = Transaction.PaymentTransactionBuilder()
-            .sender(account.address)
-            .receiver(account.address) // Send to self
-            .amount(0)
-            .note(noteData)
-            .suggestedParams(params)
-            .build()
+        val tx =
+            Transaction
+                .PaymentTransactionBuilder()
+                .sender(account.address)
+                .receiver(account.address) // Send to self
+                .amount(0)
+                .note(noteData)
+                .suggestedParams(params)
+                .build()
 
         val signedTx = account.signTransaction(tx)
         val txBytes = Encoder.encodeToMsgPack(signedTx)
         val feeMicroAlgos: BigInteger = tx.fee ?: BigInteger.ZERO
 
         // Submit transaction to network and get response
-        val response = try {
-            algodClient.RawTransaction().rawtxn(txBytes).execute()
-        } catch (e: Exception) {
-            throw BlockchainException.TransactionFailed(
-                reason = "Failed to submit transaction to Algorand: ${e.message ?: "Unknown error"}",
-                chainId = chainId,
-                operation = "submitTransaction"
-            )
-        }
+        val response =
+            try {
+                algodClient.RawTransaction().rawtxn(txBytes).execute()
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
+                    reason = "Failed to submit transaction to Algorand: ${e.message ?: "Unknown error"}",
+                    chainId = chainId,
+                    operation = "submitTransaction",
+                )
+            }
 
-        val txid = response.body()?.txId
-            ?: throw BlockchainException.TransactionFailed(
-                reason = "Failed to get transaction ID from Algorand response",
-                chainId = chainId,
-                operation = "submitTransaction",
-            )
+        val txid =
+            response.body()?.txId
+                ?: throw BlockchainException.TransactionFailed(
+                    reason = "Failed to get transaction ID from Algorand response",
+                    chainId = chainId,
+                    operation = "submitTransaction",
+                )
 
         // Submission only means the node accepted the tx into its pool — wait for
         // on-chain confirmation so dropped/rejected txs never report success.
@@ -435,11 +456,12 @@ class AlgorandBlockchainAnchorClient(
     private suspend fun waitForConfirmation(txid: String): PendingTransactionResponse {
         val deadline = System.currentTimeMillis() + confirmationTimeoutMs
         while (true) {
-            val pending = try {
-                algodClient.PendingTransactionInformation(txid).execute().body()
-            } catch (e: Exception) {
-                null
-            }
+            val pending =
+                try {
+                    algodClient.PendingTransactionInformation(txid).execute().body()
+                } catch (e: Exception) {
+                    null
+                }
             if (pending != null) {
                 val poolError = pending.poolError
                 if (!poolError.isNullOrBlank()) {
@@ -447,7 +469,7 @@ class AlgorandBlockchainAnchorClient(
                         chainId = chainId,
                         txHash = txid,
                         operation = "submitTransaction",
-                        reason = "Transaction rejected by Algorand node: $poolError"
+                        reason = "Transaction rejected by Algorand node: $poolError",
                     )
                 }
                 if ((pending.confirmedRound ?: 0L) > 0L) {
@@ -459,57 +481,79 @@ class AlgorandBlockchainAnchorClient(
                     chainId = chainId,
                     txHash = txid,
                     operation = "submitTransaction",
-                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
-                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                    reason =
+                        "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                            "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)",
                 )
             }
             delay(confirmationPollIntervalMs)
         }
     }
 
-    private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult {
-        return if (indexerClient != null) {
+    private suspend fun readTransactionFromBlockchainImpl(txHash: String): AnchorResult =
+        if (indexerClient != null) {
             readFromIndexer(indexerClient, txHash)
         } else {
             readFromAlgodPendingPool(txHash)
         }
-    }
 
     /**
      * Resolves a transaction through the configured Algorand Indexer.
      * The anchor timestamp is the actual on-chain round time.
      */
-    private fun readFromIndexer(indexer: IndexerClient, txHash: String): AnchorResult {
-        val response = try {
-            indexer.lookupTransaction(txHash).execute()
-        } catch (e: Exception) {
+    private fun readFromIndexer(
+        indexer: IndexerClient,
+        txHash: String,
+    ): AnchorResult {
+        val response =
+            try {
+                indexer.lookupTransaction(txHash).execute()
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "readPayload",
+                    reason = "Failed to query Algorand indexer: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            }
+        val transaction =
+            response.takeIf { it.isSuccessful }?.body()?.transaction
+                ?: throw TrustWeaveException.NotFound(resource = "Transaction not found on Algorand indexer: $txHash")
+
+        // The indexer is a separately operated service and its answer becomes the anchored payload,
+        // so the id it reports is checked rather than assumed. A wrong answer would otherwise have
+        // its note compared against the caller's payload, describing an anchor never read.
+        val returnedId = transaction.id
+        if (returnedId != null && returnedId != txHash) {
             throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = txHash,
                 operation = "readPayload",
-                reason = "Failed to query Algorand indexer: ${e.message ?: "Unknown error"}",
-                cause = e
+                reason =
+                    "Indexer returned transaction $returnedId for requested $txHash; " +
+                        "refusing to read an anchor from it",
             )
         }
-        val transaction = response.takeIf { it.isSuccessful }?.body()?.transaction
-            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found on Algorand indexer: $txHash")
 
-        val note = transaction.note
-            ?: throw TrustWeaveException.NotFound(
-                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
-            )
+        val note =
+            transaction.note
+                ?: throw TrustWeaveException.NotFound(
+                    resource = "Transaction note not found: $txHash. Transaction may not contain note data.",
+                )
 
         val payload = Json.parseToJsonElement(String(note, StandardCharsets.UTF_8))
 
         return AnchorResult(
-            ref = buildAnchorRef(
-                txHash = txHash,
-                contract = getContractAddress()
-            ),
+            ref =
+                buildAnchorRef(
+                    txHash = txHash,
+                    contract = getContractAddress(),
+                ),
             payload = payload,
             mediaType = "application/json",
             // Actual on-chain round time (epoch seconds) from the indexer.
-            timestamp = transaction.roundTime
+            timestamp = transaction.roundTime,
         )
     }
 
@@ -519,36 +563,39 @@ class AlgorandBlockchainAnchorClient(
      * for historical lookups.
      */
     private fun readFromAlgodPendingPool(txHash: String): AnchorResult {
-        val txInfo = try {
-            algodClient.PendingTransactionInformation(txHash).execute().body()
-        } catch (e: Exception) {
-            null
-        } ?: throw TrustWeaveException.NotFound(
-            resource = "Transaction not found via algod pending-transaction endpoint: $txHash. " +
-                "Without an 'indexerUrl' option, reads can only resolve recently submitted " +
-                "transactions still tracked by the node; configure an Algorand Indexer for " +
-                "historical lookups."
-        )
-
-        val note = txInfo.txn?.tx?.note
-            ?: throw TrustWeaveException.NotFound(
-                resource = "Transaction note not found: $txHash. Transaction may not contain note data."
+        val txInfo =
+            try {
+                algodClient.PendingTransactionInformation(txHash).execute().body()
+            } catch (e: Exception) {
+                null
+            } ?: throw TrustWeaveException.NotFound(
+                resource =
+                    "Transaction not found via algod pending-transaction endpoint: $txHash. " +
+                        "Without an 'indexerUrl' option, reads can only resolve recently submitted " +
+                        "transactions still tracked by the node; configure an Algorand Indexer for " +
+                        "historical lookups.",
             )
+
+        val note =
+            txInfo.txn?.tx?.note
+                ?: throw TrustWeaveException.NotFound(
+                    resource = "Transaction note not found: $txHash. Transaction may not contain note data.",
+                )
 
         val payload = Json.parseToJsonElement(String(note, StandardCharsets.UTF_8))
 
         return AnchorResult(
-            ref = buildAnchorRef(
-                txHash = txHash,
-                contract = getContractAddress()
-            ),
+            ref =
+                buildAnchorRef(
+                    txHash = txHash,
+                    contract = getContractAddress(),
+                ),
             payload = payload,
             mediaType = "application/json",
             // The pending-transaction response carries no block time; leave the
             // timestamp unset rather than fabricating one. Configure 'indexerUrl'
             // to get the actual round time.
-            timestamp = null
+            timestamp = null,
         )
     }
 }
-

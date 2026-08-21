@@ -1,6 +1,8 @@
 package org.trustweave.credential.vi.crypto
 
+import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.crypto.ECDSAVerifier
+import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.JsonObject
@@ -12,15 +14,25 @@ import org.trustweave.kms.util.EcdsaSignatureCodec
 
 /** ES256 (ECDSA P-256 + SHA-256) — the single algorithm VI permits. */
 internal object Es256 {
-
     /**
      * Verifies a compact ES256 JWT against an EC public key supplied as a JWK [JsonObject]
      * (e.g. an L1 `cnf.jwk` or an L2 mandate `cnf.jwk`). Returns false on any parse/verify failure.
      */
-    fun verify(jwt: String, jwk: JsonObject): Boolean = runCatching {
-        val ecKey = ECKey.parse(jwk.toString())
-        SignedJWT.parse(jwt).verify(ECDSAVerifier(ecKey.toECPublicKey()))
-    }.getOrDefault(false)
+    fun verify(
+        jwt: String,
+        jwk: JsonObject,
+    ): Boolean =
+        runCatching {
+            val ecKey = ECKey.parse(jwk.toString())
+            // ES256 is the only algorithm VI permits, and the whole chain leans on that. Nimbus would
+            // reject a header algorithm its verifier does not support for the key, but that pairing is
+            // the library's internal business: a P-521 cnf.jwk with an ES512 token verifies happily
+            // under it. Pin both ends here so the guarantee is this module's, not a dependency's.
+            if (ecKey.curve != Curve.P_256) return@runCatching false
+            val signedJwt = SignedJWT.parse(jwt)
+            if (signedJwt.header.algorithm != JWSAlgorithm.ES256) return@runCatching false
+            signedJwt.verify(ECDSAVerifier(ecKey.toECPublicKey()))
+        }.getOrDefault(false)
 }
 
 /** Signs the JWS signing input, returning a P1363 (`r||s`) ES256 signature. */

@@ -82,7 +82,7 @@ class Oidc4VciService(
     private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken
     private val cNonces = ConcurrentHashMap<String, String>()
 
-        // requestId -> c_nonce from token/credential endpoint
+    // requestId -> c_nonce from token/credential endpoint
     @Volatile private var metadata: CredentialIssuerMetadata? = null
 
     /** Token endpoint resolved from the authorization server's RFC 8414 metadata (cached). */
@@ -537,7 +537,7 @@ class Oidc4VciService(
 
             if (!response.isSuccessful) {
                 throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "HTTP ${response.code}: $responseBody",
+                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
                     credentialIssuer = deferredEndpoint,
                 )
             }
@@ -633,7 +633,7 @@ class Oidc4VciService(
             if (!response.isSuccessful) {
                 val responseBody = response.body?.string() ?: ""
                 throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "Notification endpoint returned HTTP ${response.code}: $responseBody",
+                    reason = "Notification endpoint returned HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
                     credentialIssuer = notificationEndpoint,
                 )
             }
@@ -712,7 +712,7 @@ class Oidc4VciService(
 
             if (!response.isSuccessful) {
                 throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "HTTP ${response.code}: $responseBody",
+                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
                     credentialIssuer = batchEndpoint,
                 )
             }
@@ -833,7 +833,7 @@ class Oidc4VciService(
         if (!response.isSuccessful) {
             throw Oidc4VciException.TokenEndpointResolutionFailed(
                 credentialIssuer = authorizationServer,
-                reason = "Authorization server metadata fetch failed: HTTP ${response.code}: $body",
+                reason = "Authorization server metadata fetch failed: HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
             )
         }
 
@@ -945,7 +945,7 @@ class Oidc4VciService(
 
         if (!response.isSuccessful) {
             throw Oidc4VciException.TokenExchangeFailed(
-                reason = "HTTP ${response.code}: $body",
+                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
                 credentialIssuer = tokenEndpoint,
                 cause = null,
             )
@@ -1127,10 +1127,10 @@ class Oidc4VciService(
             val errorCode = errorJson?.get("error")?.jsonPrimitive?.contentOrNull
             val freshNonce = errorJson?.get("c_nonce")?.jsonPrimitive?.contentOrNull
             if (errorCode == "invalid_proof" && freshNonce != null) {
-                throw FreshNonceRequired(freshNonce, "HTTP ${response.code}: $body")
+                throw FreshNonceRequired(freshNonce, "HTTP ${response.code}: ${summarizeUpstreamBody(body)}")
             }
             throw Oidc4VciException.CredentialRequestFailed(
-                reason = "HTTP ${response.code}: $body",
+                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
                 credentialIssuer = credentialEndpoint,
             )
         }
@@ -1314,7 +1314,7 @@ class Oidc4VciService(
         if (!response.isSuccessful) {
             throw Oidc4VciException.OfferParseFailed(
                 offerUri = credentialOfferUri,
-                reason = "HTTP ${response.code}: $body",
+                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
             )
         }
 
@@ -1442,7 +1442,7 @@ class Oidc4VciService(
             if (!response.isSuccessful) {
                 throw Oidc4VciException.MetadataFetchFailed(
                     credentialIssuer = credentialIssuerUrl,
-                    reason = "HTTP ${response.code}: $body",
+                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
                 )
             }
 
@@ -1461,6 +1461,27 @@ class Oidc4VciService(
         val raw: JsonObject,
         val native: Map<String, Any?>,
     )
+
+    /**
+     * Summarizes an upstream error body for an exception message.
+     *
+     * These messages are logged. An OID4VCI/OAuth error response legitimately carries a fresh
+     * `c_nonce`, and a misbehaving issuer can echo back the access token it was sent, so the raw
+     * body must not travel into the log. The `error` code is what a caller acts on and comes from
+     * a fixed vocabulary, so it is kept; everything else is reduced to a length.
+     */
+    private fun summarizeUpstreamBody(body: String?): String {
+        if (body.isNullOrBlank()) return "<empty body>"
+        val errorCode =
+            runCatching {
+                Json { ignoreUnknownKeys = true }
+                    .parseToJsonElement(body)
+                    .jsonObject["error"]
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+            }.getOrNull()
+        return errorCode?.let { "error=$it" } ?: "<${body.length}-char body redacted>"
+    }
 
     /**
      * Converts JsonObject to Map for credential response.

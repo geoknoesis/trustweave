@@ -1,10 +1,13 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
-import org.trustweave.credential.didcomm.crypto.secret.encryption.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import org.didcommx.didcomm.common.VerificationMaterial
+import org.didcommx.didcomm.common.VerificationMaterialFormat
+import org.didcommx.didcomm.common.VerificationMethodType
 import org.didcommx.didcomm.secret.Secret
+import org.trustweave.credential.didcomm.crypto.secret.encryption.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -41,14 +44,14 @@ import java.nio.file.attribute.PosixFilePermission
 class EncryptedFileLocalKeyStore(
     private val keyFile: File,
     private val masterKey: ByteArray, // Should be derived from password
-    private val keyEncryption: KeyEncryption = KeyEncryption(masterKey)
+    private val keyEncryption: KeyEncryption = KeyEncryption(masterKey),
 ) : LocalKeyStore {
-
-    private val json = Json {
-        prettyPrint = false
-        encodeDefaults = false
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+        }
 
     init {
         // Ensure file exists and has correct permissions
@@ -63,38 +66,44 @@ class EncryptedFileLocalKeyStore(
         }
     }
 
-    override suspend fun get(keyId: String): Secret? = withContext(Dispatchers.IO) {
-        try {
-            val keys = loadKeys()
-            keys[keyId]
-        } catch (e: Exception) {
-            null
+    override suspend fun get(keyId: String): Secret? =
+        withContext(Dispatchers.IO) {
+            try {
+                val keys = loadKeys()
+                keys[keyId]
+            } catch (e: Exception) {
+                null
+            }
         }
-    }
 
-    override suspend fun store(keyId: String, secret: Secret) = withContext(Dispatchers.IO) {
+    override suspend fun store(
+        keyId: String,
+        secret: Secret,
+    ) = withContext(Dispatchers.IO) {
         val keys = loadKeys().toMutableMap()
         keys[keyId] = secret
         saveKeys(keys)
     }
 
-    override suspend fun delete(keyId: String): Boolean = withContext(Dispatchers.IO) {
-        val keys = loadKeys().toMutableMap()
-        val removed = keys.remove(keyId) != null
-        if (removed) {
-            saveKeys(keys)
+    override suspend fun delete(keyId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            val keys = loadKeys().toMutableMap()
+            val removed = keys.remove(keyId) != null
+            if (removed) {
+                saveKeys(keys)
+            }
+            removed
         }
-        removed
-    }
 
-    override suspend fun list(): List<String> = withContext(Dispatchers.IO) {
-        try {
-            val keys = loadKeys()
-            keys.keys.toList()
-        } catch (e: Exception) {
-            emptyList()
+    override suspend fun list(): List<String> =
+        withContext(Dispatchers.IO) {
+            try {
+                val keys = loadKeys()
+                keys.keys.toList()
+            } catch (e: Exception) {
+                emptyList()
+            }
         }
-    }
 
     private fun loadKeys(): Map<String, Secret> {
         if (!keyFile.exists() || keyFile.length() == 0L) {
@@ -117,65 +126,65 @@ class EncryptedFileLocalKeyStore(
 
             val keysJson = json.parseToJsonElement(jsonString).jsonObject
 
-            return keysJson.entries.mapNotNull { (keyId, secretJson) ->
-                try {
-                    // Parse Secret from JSON
-                    // Note: didcomm-java Secret may need custom serialization
-                    keyId to parseSecretFromJson(secretJson)
-                } catch (e: Exception) {
-                    // Skip invalid secrets
-                    null
-                }
-            }.toMap()
+            return keysJson.entries
+                .mapNotNull { (keyId, secretJson) ->
+                    try {
+                        // Parse Secret from JSON
+                        // Note: didcomm-java Secret may need custom serialization
+                        keyId to parseSecretFromJson(secretJson)
+                    } catch (e: Exception) {
+                        // Skip invalid secrets
+                        null
+                    }
+                }.toMap()
         } catch (e: Exception) {
             throw IllegalStateException("Failed to load keys from encrypted file: ${e.message}", e)
         }
     }
 
+    /**
+     * Rebuilds a [Secret] from the shape [secretToJson] writes.
+     *
+     * didcomm-java models a secret as a kid, a verification-method type, and verification material
+     * that is a (format, value) pair — the value being the serialized key, a JWK string for
+     * [VerificationMaterialFormat.JWK]. Storing those four fields verbatim keeps the round trip
+     * exact and avoids reinterpreting key material on the way through.
+     */
     private fun parseSecretFromJson(jsonElement: JsonElement): Secret {
         val obj = jsonElement.jsonObject
-        val id = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing 'id'")
 
-        // Parse privateKeyJwk
-        val privateKeyJwk = obj["privateKeyJwk"]?.jsonObject?.let { jwkObj ->
-            jwkObj.entries.associate { (key, value) ->
-                key to when (value) {
-                    is JsonPrimitive -> {
-                        when {
-                            value.isString -> value.content
-                            value.booleanOrNull != null -> value.boolean
-                            value.longOrNull != null -> value.long
-                            value.doubleOrNull != null -> value.double
-                            else -> value.content
-                        }
-                    }
-                    is JsonArray -> value.map { it.jsonPrimitive.content }
-                    else -> value.toString()
+        fun required(field: String): String =
+            obj[field]?.jsonPrimitive?.contentOrNull
+                ?: throw IllegalArgumentException("Stored secret is missing '$field'")
+
+        val kid = required("kid")
+        val type =
+            runCatching { VerificationMethodType.valueOf(required("type")) }
+                .getOrElse {
+                    throw IllegalArgumentException(
+                        "Stored secret '$kid' has an unknown verification method type '${required("type")}'",
+                    )
                 }
-            }
-        } ?: throw IllegalArgumentException("Missing 'privateKeyJwk'")
+        val format =
+            runCatching { VerificationMaterialFormat.valueOf(required("format")) }
+                .getOrElse {
+                    throw IllegalArgumentException(
+                        "Stored secret '$kid' has an unknown verification material format " +
+                            "'${required("format")}'",
+                    )
+                }
 
-        // Note: The didcomm-java library Secret constructor API (0.3.2) is unclear from the codebase.
-        // The Secret class may require different parameters (e.g., kid, verificationMaterial instead of id, privateKeyJwk).
-        // This is a placeholder implementation that throws a clear error indicating the API needs to be updated.
-        //
-        // To fix: Check the didcomm-java library documentation for Secret constructor signature
-        // and update this code accordingly.
-        throw IllegalStateException(
-            "Secret construction from JSON is not implemented. " +
-            "The didcomm-java library Secret constructor API needs to be verified. " +
-            "Please check library documentation for version 0.3.2 and update parseSecretFromJson() accordingly. " +
-            "Secret ID: $id"
-        )
+        return Secret(kid, type, VerificationMaterial(format, required("value")))
     }
 
     private fun saveKeys(keys: Map<String, Secret>) {
         try {
-            val keysJson = buildJsonObject {
-                keys.forEach { (keyId, secret) ->
-                    put(keyId, secretToJson(secret))
+            val keysJson =
+                buildJsonObject {
+                    keys.forEach { (keyId, secret) ->
+                        put(keyId, secretToJson(secret))
+                    }
                 }
-            }
             val jsonString = json.encodeToString(JsonObject.serializer(), keysJson)
             val plaintext = jsonString.toByteArray(Charsets.UTF_8)
             val encryptedData = keyEncryption.encrypt(plaintext)
@@ -198,19 +207,19 @@ class EncryptedFileLocalKeyStore(
         }
     }
 
-    private fun secretToJson(secret: Secret): JsonObject {
-        // Note: The didcomm-java library Secret class API (0.3.2) is unclear from the codebase.
-        // The Secret class may have different property names (e.g., kid instead of id, verificationMaterial instead of privateKeyJwk).
-        // This is a placeholder implementation that throws a clear error indicating the API needs to be updated.
-        //
-        // To fix: Check the didcomm-java library documentation for Secret property access
-        // and update this code accordingly.
-        throw IllegalStateException(
-            "Secret serialization to JSON is not implemented. " +
-            "The didcomm-java library Secret class API needs to be verified. " +
-            "Please check library documentation for version 0.3.2 and update secretToJson() accordingly."
-        )
-    }
+    /**
+     * Writes a [Secret] as the four fields didcomm-java actually models it with.
+     *
+     * The value is the serialized private key; it is only ever written inside the encrypted
+     * payload, never to the file directly.
+     */
+    private fun secretToJson(secret: Secret): JsonObject =
+        buildJsonObject {
+            put("kid", secret.kid)
+            put("type", secret.type.name)
+            put("format", secret.verificationMaterial.format.name)
+            put("value", secret.verificationMaterial.value)
+        }
 
     private fun parseEncryptedFile(content: ByteArray): EncryptedData {
         // Parse file format:
@@ -224,8 +233,10 @@ class EncryptedFileLocalKeyStore(
         val version = content.sliceArray(offset until offset + 4)
         offset += 4
 
-        val ivLength = content.sliceArray(offset until offset + 4)
-            .fold(0) { acc, byte -> (acc shl 8) or (byte.toInt() and 0xFF) }
+        val ivLength =
+            content
+                .sliceArray(offset until offset + 4)
+                .fold(0) { acc, byte -> (acc shl 8) or (byte.toInt() and 0xFF) }
         offset += 4
 
         if (content.size < offset + ivLength) {
@@ -240,18 +251,19 @@ class EncryptedFileLocalKeyStore(
         return EncryptedData(
             iv = iv,
             ciphertext = ciphertext,
-            algorithm = "AES/GCM/NoPadding"
+            algorithm = "AES/GCM/NoPadding",
         )
     }
 
     private fun serializeEncryptedFile(encrypted: EncryptedData): ByteArray {
         val version = byteArrayOf(0x01, 0x00, 0x00, 0x00) // Version 1
-        val ivLength = byteArrayOf(
-            ((encrypted.iv.size shr 24) and 0xFF).toByte(),
-            ((encrypted.iv.size shr 16) and 0xFF).toByte(),
-            ((encrypted.iv.size shr 8) and 0xFF).toByte(),
-            (encrypted.iv.size and 0xFF).toByte()
-        )
+        val ivLength =
+            byteArrayOf(
+                ((encrypted.iv.size shr 24) and 0xFF).toByte(),
+                ((encrypted.iv.size shr 16) and 0xFF).toByte(),
+                ((encrypted.iv.size shr 8) and 0xFF).toByte(),
+                (encrypted.iv.size and 0xFF).toByte(),
+            )
 
         return version + ivLength + encrypted.iv + encrypted.ciphertext
     }
@@ -267,10 +279,11 @@ class EncryptedFileLocalKeyStore(
                 file.setWritable(true, true)
             } else {
                 // Unix: Use POSIX permissions
-                val perms = setOf(
-                    PosixFilePermission.OWNER_READ,
-                    PosixFilePermission.OWNER_WRITE
-                )
+                val perms =
+                    setOf(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE,
+                    )
                 Files.setPosixFilePermissions(file.toPath(), perms)
             }
         } catch (e: Exception) {
@@ -292,7 +305,6 @@ class EncryptedFileLocalKeyStore(
  * with a clear "regenerate the key store" error instead of silently reusing the weak salt.
  */
 object EncryptedFileLocalKeyStoreFactory {
-
     /** Default PBKDF2-HMAC-SHA256 iteration count (OWASP recommendation: >= 210,000). */
     const val DEFAULT_PBKDF2_ITERATIONS = 210_000
 
@@ -317,15 +329,16 @@ object EncryptedFileLocalKeyStoreFactory {
         keyFile: File,
         password: CharArray,
         salt: ByteArray? = null,
-        iterations: Int = DEFAULT_PBKDF2_ITERATIONS
+        iterations: Int = DEFAULT_PBKDF2_ITERATIONS,
     ): EncryptedFileLocalKeyStore {
         val actualSalt = salt ?: loadOrCreateSalt(keyFile)
 
-        val masterKey = MasterKeyDerivation.deriveKey(
-            password = password,
-            salt = actualSalt,
-            iterations = iterations
-        )
+        val masterKey =
+            MasterKeyDerivation.deriveKey(
+                password = password,
+                salt = actualSalt,
+                iterations = iterations,
+            )
 
         return EncryptedFileLocalKeyStore(keyFile, masterKey)
     }
@@ -343,13 +356,14 @@ object EncryptedFileLocalKeyStoreFactory {
         val saltFile = saltFileFor(keyFile)
         if (saltFile.exists()) {
             val content = saltFile.readBytes()
-            val valid = content.size == SALT_FILE_MAGIC.size + SALT_LENGTH_BYTES &&
-                content.sliceArray(SALT_FILE_MAGIC.indices).contentEquals(SALT_FILE_MAGIC)
+            val valid =
+                content.size == SALT_FILE_MAGIC.size + SALT_LENGTH_BYTES &&
+                    content.sliceArray(SALT_FILE_MAGIC.indices).contentEquals(SALT_FILE_MAGIC)
             if (!valid) {
                 throw IllegalStateException(
                     "Salt file '${saltFile.absolutePath}' is corrupt or has an unknown format. " +
                         "Restore it from backup, or delete both the salt file and the key store file " +
-                        "'${keyFile.absolutePath}' to regenerate the key store (stored keys will be lost)."
+                        "'${keyFile.absolutePath}' to regenerate the key store (stored keys will be lost).",
                 )
             }
             return content.copyOfRange(SALT_FILE_MAGIC.size, content.size)
@@ -361,7 +375,7 @@ object EncryptedFileLocalKeyStoreFactory {
                     "('${saltFile.name}'). It was likely created by an older version that derived " +
                     "the PBKDF2 salt from the file path, which is insecure and no longer supported. " +
                     "Regenerate the key store: re-store the secrets into a new file " +
-                    "(or delete the legacy file to start fresh)."
+                    "(or delete the legacy file to start fresh).",
             )
         }
 
@@ -377,4 +391,3 @@ object EncryptedFileLocalKeyStoreFactory {
         return newSalt
     }
 }
-

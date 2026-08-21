@@ -21,17 +21,24 @@ import org.trustweave.credential.spi.proof.ProofEngineProvider
  * |              |                    | verification (verify fails closed without)|
  */
 class Bbs2023ProofEngineProvider : ProofEngineProvider {
-
     override val name: String = "bbs-2023"
 
     override val supportedFormatIds: List<ProofSuiteId> = listOf(ProofSuiteId.BBS_2023)
 
     override fun create(options: Map<String, Any?>): ProofEngine? {
         if (ProofSuiteId.BBS_2023 !in supportedFormatIds) return null
+
+        // This provider is registered in META-INF/services, so it is discovered from the classpath
+        // without anyone asking for it, and distribution/bom exports the module to every BOM
+        // consumer. The engine behind it is an HMAC emulation that signs with the public key, so
+        // offering it by default meant BBS_2023 proofs verified while providing no authenticity.
+        // Returning null leaves the format unsupported, which fails closed at verification.
+        if (!BbsCryptoSuite.allowInsecureEmulation) return null
         return try {
-            val nonNullOptions = buildMap<String, Any> {
-                options.forEach { (k, v) -> if (v != null) put(k, v) }
-            }
+            val nonNullOptions =
+                buildMap<String, Any> {
+                    options.forEach { (k, v) -> if (v != null) put(k, v) }
+                }
             val config = ProofEngineConfig(properties = nonNullOptions)
             Bbs2023ProofEngine(config)
         } catch (_: Exception) {

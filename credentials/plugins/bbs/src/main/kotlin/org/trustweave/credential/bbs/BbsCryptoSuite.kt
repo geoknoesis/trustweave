@@ -76,6 +76,40 @@ data class BbsDerivedProof(
  * | Derived proof  | 208   |
  */
 object BbsCryptoSuite {
+    /** System property that switches the emulation on: `-Dtrustweave.bbs.allowInsecureEmulation=true`. */
+    private const val ENABLE_PROPERTY = "trustweave.bbs.allowInsecureEmulation"
+
+    /**
+     * Whether the insecure emulation may run. Defaults to false, and every operation below refuses
+     * while it is false.
+     *
+     * This is not BBS+. `sign` keys an HMAC on the first 32 bytes of the **public** key and never
+     * uses the secret key, so anyone who can read an issuer's public key — it is published in the
+     * DID document — can produce signatures that verify. The scheme therefore provides no
+     * authenticity at all, and a `BBS_2023` proof means nothing until this object is replaced by a
+     * real BLS12-381 / BBS+ implementation.
+     *
+     * It stays available because the wire formats are right and the engine has to be exercisable
+     * from tests. Turning it on is a deliberate act: set this property, or
+     * `-D$ENABLE_PROPERTY=true`. It follows the same shape as the DIDComm placeholder crypto, which
+     * is reachable only through explicitly named factory methods.
+     */
+    @Volatile
+    @JvmStatic
+    var allowInsecureEmulation: Boolean =
+        System.getProperty(ENABLE_PROPERTY)?.toBooleanStrictOrNull() ?: false
+
+    /** Refuses unless the deployer has switched the emulation on. */
+    private fun requireEmulationEnabled() {
+        check(allowInsecureEmulation) {
+            "BbsCryptoSuite is an HMAC emulation, not BBS+: it signs with the public key, so " +
+                "anyone holding an issuer's public key can forge a proof that verifies. It is " +
+                "disabled by default. Set BbsCryptoSuite.allowInsecureEmulation = true (or " +
+                "-D$ENABLE_PROPERTY=true) to use it in tests and development, and replace this " +
+                "object with a real BLS12-381 / BBS+ implementation before relying on BBS_2023 " +
+                "proofs for anything."
+        }
+    }
 
     private val CURVE_ORDER: BigInteger =
         BigInteger("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
@@ -108,6 +142,7 @@ object BbsCryptoSuite {
      *   - bytes 64..95: `SHA-256(sk || "BBS-pk-2")`
      */
     fun generateKeyPair(keyId: String): Bls12381KeyPair {
+        requireEmulationEnabled()
         // Secret key: 32-byte scalar in [1, r-1]
         val skBytes = ByteArray(32)
         var sk: BigInteger
@@ -126,7 +161,7 @@ object BbsCryptoSuite {
         val pkPart1 = sha256(secretKeyBytes + "BBS-pk-1".toByteArray())
         val pkPart2 = sha256(secretKeyBytes + "BBS-pk-2".toByteArray())
 
-        val publicKeyBytes = verifySubKey + pkPart1 + pkPart2  // 96 bytes
+        val publicKeyBytes = verifySubKey + pkPart1 + pkPart2 // 96 bytes
 
         return Bls12381KeyPair(
             publicKeyBytes = publicKeyBytes,
@@ -149,6 +184,7 @@ object BbsCryptoSuite {
         publicKey: ByteArray,
         messages: List<ByteArray>,
     ): ByteArray {
+        requireEmulationEnabled()
         require(secretKey.size == 32) { "Secret key must be 32 bytes, got ${secretKey.size}" }
         require(publicKey.size == 96) { "Public key must be 96 bytes, got ${publicKey.size}" }
         require(messages.isNotEmpty()) { "At least one message is required" }
@@ -160,13 +196,13 @@ object BbsCryptoSuite {
         val messagesHash = hashMessages(messages)
 
         // HMAC tag — this is the core "signature"
-        val tag = hmacSha256(verifySubKey, messagesHash)   // 32 bytes
+        val tag = hmacSha256(verifySubKey, messagesHash) // 32 bytes
 
         // Random e, s blinding scalars (spec requires these)
         val eBytes = ByteArray(32).also(random::nextBytes)
         val sBytes = ByteArray(32).also(random::nextBytes)
 
-        return tag + eBytes + sBytes  // 32 + 32 + 32 = 96 bytes
+        return tag + eBytes + sBytes // 32 + 32 + 32 = 96 bytes
     }
 
     // -------------------------------------------------------------------------
@@ -184,6 +220,7 @@ object BbsCryptoSuite {
         signature: ByteArray,
         messages: List<ByteArray>,
     ): Boolean {
+        requireEmulationEnabled()
         if (publicKey.size != 96) return false
         if (signature.size != SIGNATURE_SIZE) return false
         if (messages.isEmpty()) return false
@@ -221,6 +258,7 @@ object BbsCryptoSuite {
         messages: List<ByteArray>,
         disclosed: Set<Int>,
     ): BbsDerivedProof {
+        requireEmulationEnabled()
         require(signature.size == SIGNATURE_SIZE) { "Signature must be $SIGNATURE_SIZE bytes" }
         require(publicKey.size == 96) { "Public key must be 96 bytes" }
         require(disclosed.all { it in messages.indices }) {
@@ -263,6 +301,7 @@ object BbsCryptoSuite {
         derivedProof: BbsDerivedProof,
         disclosedMessages: List<ByteArray>,
     ): Boolean {
+        requireEmulationEnabled()
         if (publicKey.size != 96) return false
         if (derivedProof.proofBytes.size != DERIVED_PROOF_SIZE) return false
         if (disclosedMessages.size != derivedProof.disclosedMessages.size) return false
@@ -307,17 +346,22 @@ object BbsCryptoSuite {
         return digest.digest()
     }
 
-    private fun sha256(data: ByteArray): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(data)
+    private fun sha256(data: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").digest(data)
 
-    private fun hmacSha256(key: ByteArray, data: ByteArray): ByteArray {
+    private fun hmacSha256(
+        key: ByteArray,
+        data: ByteArray,
+    ): ByteArray {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(key, "HmacSHA256"))
         return mac.doFinal(data)
     }
 
     /** Expand [seed] to exactly [targetSize] bytes by repeated SHA-256 hashing. */
-    private fun expandTo(seed: ByteArray, targetSize: Int): ByteArray {
+    private fun expandTo(
+        seed: ByteArray,
+        targetSize: Int,
+    ): ByteArray {
         val result = ByteArray(targetSize)
         var offset = 0
         var counter = 0
@@ -343,9 +387,7 @@ object BbsCryptoSuite {
     // Base64url helpers (used by the engine)
     // -------------------------------------------------------------------------
 
-    internal fun encodeBase64Url(bytes: ByteArray): String =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    internal fun encodeBase64Url(bytes: ByteArray): String = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
 
-    internal fun decodeBase64Url(s: String): ByteArray =
-        Base64.getUrlDecoder().decode(s)
+    internal fun decodeBase64Url(s: String): ByteArray = Base64.getUrlDecoder().decode(s)
 }

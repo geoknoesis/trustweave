@@ -13,16 +13,16 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test Ed25519 algorithm mapping`() {
-        val vericoreAlg = Algorithm.Ed25519
+        val trustWeaveAlg = Algorithm.Ed25519
         // Ed25519 may not be available in all Google Cloud KMS SDK versions
         try {
-            val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+            val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
             // If we get here, Ed25519 is supported
             val expectedAlg = CryptoKeyVersionAlgorithm.valueOf("EC_SIGN_ED25519")
             assertEquals(expectedAlg, googleKmsAlg)
 
-            val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-            assertEquals(vericoreAlg, backToVericore)
+            val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+            assertEquals(trustWeaveAlg, backToTrustWeave)
         } catch (e: IllegalArgumentException) {
             // Ed25519 not supported in this SDK version - this is expected
             assertTrue(e.message?.contains("not supported") == true)
@@ -31,46 +31,46 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test Secp256k1 algorithm mapping`() {
-        val vericoreAlg = Algorithm.Secp256k1
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.Secp256k1
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.EC_SIGN_SECP256K1_SHA256, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test
     fun `test P256 algorithm mapping`() {
-        val vericoreAlg = Algorithm.P256
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.P256
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.EC_SIGN_P256_SHA256, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test
     fun `test P384 algorithm mapping`() {
-        val vericoreAlg = Algorithm.P384
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.P384
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.EC_SIGN_P384_SHA384, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test
     fun `test P521 algorithm mapping`() {
-        val vericoreAlg = Algorithm.P521
+        val trustWeaveAlg = Algorithm.P521
         // P-521 may not be available in all Google Cloud KMS SDK versions
         try {
-            val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+            val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
             // If we get here, P-521 is supported
             val expectedAlg = CryptoKeyVersionAlgorithm.valueOf("EC_SIGN_P521_SHA512")
             assertEquals(expectedAlg, googleKmsAlg)
 
-            val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-            assertEquals(vericoreAlg, backToVericore)
+            val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+            assertEquals(trustWeaveAlg, backToTrustWeave)
         } catch (e: IllegalArgumentException) {
             // P-521 not supported in this SDK version - this is expected
             assertTrue(e.message?.contains("not supported") == true)
@@ -79,32 +79,32 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test RSA 2048 algorithm mapping`() {
-        val vericoreAlg = Algorithm.RSA.RSA_2048
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.RSA.RSA_2048
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_2048_SHA256, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test
     fun `test RSA 3072 algorithm mapping`() {
-        val vericoreAlg = Algorithm.RSA.RSA_3072
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.RSA.RSA_3072
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_3072_SHA256, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test
     fun `test RSA 4096 algorithm mapping`() {
-        val vericoreAlg = Algorithm.RSA.RSA_4096
-        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(vericoreAlg)
+        val trustWeaveAlg = Algorithm.RSA.RSA_4096
+        val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
         assertEquals(CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA256, googleKmsAlg)
 
-        val backToVericore = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
-        assertEquals(vericoreAlg, backToVericore)
+        val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
+        assertEquals(trustWeaveAlg, backToTrustWeave)
     }
 
     @Test

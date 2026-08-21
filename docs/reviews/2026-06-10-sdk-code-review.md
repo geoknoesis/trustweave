@@ -149,7 +149,7 @@ Six parallel domain reviews (core, DID, credentials, wallet, KMS, anchors/trust-
 - **Trust registry**: no accreditation chains/validity windows/governance refs; no ToIP TRQP / OpenID Federation
   alignment; no first-class `isAuthorized(issuer, type, at)` query; DB plugin filters in memory.
 - **Observability**: slf4j 1.7.36 only; no metrics/tracing/event hooks. **Serialization split-brain**:
-  kotlinx + Jackson. Repo hygiene: stale `vericore-examples`/`trustweave-examples`/empty bom dirs; root littered
+  kotlinx + Jackson. Repo hygiene: two stale example directories and an empty bom dir (all removed 2026-08-20); root littered
   with old review/summary files.
 
 ## Recommended sequence

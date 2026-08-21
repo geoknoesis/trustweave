@@ -47,16 +47,16 @@ Configure test behavior using environment variables:
 
 ```bash
 # Use real services instead of mocks (requires credentials)
-export VERICORE_TEST_USE_REAL_SERVICES=true
+export TRUSTWEAVE_TEST_USE_REAL_SERVICES=true
 
 # Set test timeout (seconds)
-export VERICORE_TEST_TIMEOUT_SECONDS=60
+export TRUSTWEAVE_TEST_TIMEOUT_SECONDS=60
 
 # Skip integration tests
-export VERICORE_SKIP_INTEGRATION_TESTS=true
+export TRUSTWEAVE_SKIP_INTEGRATION_TESTS=true
 
 # Set log level
-export VERICORE_TEST_LOG_LEVEL=DEBUG
+export TRUSTWEAVE_TEST_LOG_LEVEL=DEBUG
 ```
 
 ## TestContainers Setup

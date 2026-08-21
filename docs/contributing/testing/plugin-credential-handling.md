@@ -132,10 +132,10 @@ Control test behavior with environment variables:
 
 ```bash
 # Skip tests when credentials are missing (default: true)
-export VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=true
+export TRUSTWEAVE_TEST_SKIP_IF_NO_CREDENTIALS=true
 
 # Fail tests when credentials are missing
-export VERICORE_TEST_SKIP_IF_NO_CREDENTIALS=false
+export TRUSTWEAVE_TEST_SKIP_IF_NO_CREDENTIALS=false
 ```
 
 ### Programmatic Check

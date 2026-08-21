@@ -15,7 +15,7 @@ redirect_from:
 
 # Key Features
 
-VeriCore provides a comprehensive set of features for building decentralized identity and trust systems.
+TrustWeave provides a comprehensive set of features for building decentralized identity and trust systems.
 
 ## Core Capabilities
 
@@ -79,7 +79,7 @@ VeriCore provides a comprehensive set of features for building decentralized ide
 
 ### 9. Error Handling
 
-- **Structured Error Types**: Sealed hierarchy of `VeriCoreError` types with context
+- **Structured Error Types**: Sealed hierarchy of `TrustWeaveException` types with context
 - **Result-Based API**: All operations return `Result<T>` for consistent error handling
 - **Input Validation**: Automatic validation of DIDs, credentials, and chain IDs
 - **Error Context**: Rich context information for debugging and error recovery
@@ -87,7 +87,7 @@ VeriCore provides a comprehensive set of features for building decentralized ide
 ### 10. Plugin Lifecycle Management
 
 - **Lifecycle Methods**: Initialize, start, stop, and cleanup plugins
-- **Automatic Discovery**: VeriCore automatically discovers plugins that implement `PluginLifecycle`
+- **Automatic Discovery**: TrustWeave automatically discovers plugins that implement `PluginLifecycle`
 - **Error Handling**: Lifecycle methods return `Result<Unit>` for error handling
 - **Plugin Configuration**: Support for plugin-specific configuration during initialization
 

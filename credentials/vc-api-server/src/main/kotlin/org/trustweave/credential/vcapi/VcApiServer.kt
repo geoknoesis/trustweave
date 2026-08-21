@@ -27,9 +27,27 @@ import org.trustweave.credential.CredentialService
  * server.start()
  * ```
  *
+ * ## Security
+ *
+ * **These endpoints are not authenticated, and this class does not authenticate them.** There is no
+ * API key, bearer token, or mTLS anywhere in this module.
+ *
+ * That matters most for `POST /credentials/issue`. It takes the issuer DID and the signing
+ * `verificationMethod` from the request body, so anyone who can reach the port can have the
+ * [CredentialService] sign a credential of their choosing with any key its KMS holds, attributed to
+ * any issuer it can sign for. Reaching the port is the whole of the authorization check.
+ *
+ * The default [host] of "0.0.0.0" binds every interface, so the default configuration publishes
+ * that capability to the network.
+ *
+ * Embed this behind something that authenticates and authorizes the caller — a reverse proxy, an
+ * API gateway, or a Ktor `Authentication` plugin installed on the enclosing application — and bind
+ * to a loopback or internal address unless the fronting layer is what listens publicly. Passing
+ * `host = "127.0.0.1"` is the conservative starting point.
+ *
  * @param credentialService The [CredentialService] used for all issuance and verification.
  * @param port TCP port to listen on (default 8080).
- * @param host Bind address (default "0.0.0.0" — all interfaces).
+ * @param host Bind address (default "0.0.0.0" — all interfaces; see the security note above).
  */
 class VcApiServer(
     private val credentialService: CredentialService,
@@ -39,9 +57,10 @@ class VcApiServer(
     private var server: NettyApplicationEngine? = null
 
     fun start(wait: Boolean = false) {
-        server = embeddedServer(Netty, port = port, host = host) {
-            configureApplication()
-        }.start(wait = wait)
+        server =
+            embeddedServer(Netty, port = port, host = host) {
+                configureApplication()
+            }.start(wait = wait)
     }
 
     fun stop() {
@@ -51,11 +70,13 @@ class VcApiServer(
 
     private fun Application.configureApplication() {
         install(ContentNegotiation) {
-            json(Json {
-                serializersModule = SerializationModule.default
-                ignoreUnknownKeys = true
-                prettyPrint = true
-            })
+            json(
+                Json {
+                    serializersModule = SerializationModule.default
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                },
+            )
         }
         routing {
             configureVcApiRoutes(credentialService)

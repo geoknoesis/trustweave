@@ -61,14 +61,28 @@ private const val ED25519_SIGNATURE_LENGTH_BYTES = 64
  * `SEQUENCE(SEQUENCE(OID 1.3.101.112), BIT STRING(0x00 || raw 32-byte key))`.
  * Appending the raw key bytes yields an X.509-encoded public key consumable by JCA.
  */
-private val ED25519_SPKI_PREFIX = byteArrayOf(
-    0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
-)
+private val ED25519_SPKI_PREFIX =
+    byteArrayOf(
+        0x30,
+        0x2A,
+        0x30,
+        0x05,
+        0x06,
+        0x03,
+        0x2B,
+        0x65,
+        0x70,
+        0x03,
+        0x21,
+        0x00,
+    )
 
 class SiopV2Service(
     private val kms: KeyManagementService,
     private val config: SiopV2Config = SiopV2Config(),
-    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient(),
+    private val httpClient: OkHttpClient =
+        org.trustweave.core.net
+            .ssrfGuardedOkHttpClient(),
     /**
      * Resolver used to pin request-object signing keys to the verifier's DID document
      * when the request's `client_id` is a DID (or `client_id_scheme=did`).
@@ -94,15 +108,16 @@ class SiopV2Service(
         presentationDefinition: PresentationDefinition? = null,
         responseType: String = "vp_token",
     ): SiopV2Session {
-        val request = SiopV2AuthorizationRequest(
-            responseType = responseType,
-            clientId = clientId,
-            clientIdScheme = config.defaultClientIdScheme,
-            responseUri = responseUri,
-            nonce = nonce,
-            state = state,
-            presentationDefinition = presentationDefinition,
-        )
+        val request =
+            SiopV2AuthorizationRequest(
+                responseType = responseType,
+                clientId = clientId,
+                clientIdScheme = config.defaultClientIdScheme,
+                responseUri = responseUri,
+                nonce = nonce,
+                state = state,
+                presentationDefinition = presentationDefinition,
+            )
         val session = SiopV2Session(sessionId = UUID.randomUUID().toString(), request = request)
         sessions[session.sessionId] = session
         return session
@@ -125,46 +140,58 @@ class SiopV2Service(
      *   verification (there is nothing to verify) — trust in its content rests entirely
      *   on the TLS channel to the `request_uri` host.
      */
-    suspend fun parseAuthorizationRequest(authorizationUrl: String): SiopV2Session = withContext(Dispatchers.IO) {
-        val queryString = authorizationUrl.substringAfter("?", "")
-        val params = queryString.split("&").associate { param ->
-            val parts = param.split("=", limit = 2)
-            URLDecoder.decode(parts[0], "UTF-8") to
-                (if (parts.size > 1) URLDecoder.decode(parts[1], "UTF-8") else "")
+    suspend fun parseAuthorizationRequest(authorizationUrl: String): SiopV2Session =
+        withContext(Dispatchers.IO) {
+            val queryString = authorizationUrl.substringAfter("?", "")
+            val params =
+                queryString.split("&").associate { param ->
+                    val parts = param.split("=", limit = 2)
+                    URLDecoder.decode(parts[0], "UTF-8") to
+                        (if (parts.size > 1) URLDecoder.decode(parts[1], "UTF-8") else "")
+                }
+            val requestUri = params["request_uri"]
+            val json = Json { ignoreUnknownKeys = true }
+            val requestJson: JsonObject =
+                if (requestUri != null) {
+                    requireHttpsOrLoopback(requestUri)
+                    val response =
+                        httpClient
+                            .newCall(
+                                Request
+                                    .Builder()
+                                    .url(requestUri)
+                                    .get()
+                                    .build(),
+                            ).execute()
+                    val body =
+                        response.body?.string()
+                            ?: throw SiopV2Exception("FETCH_FAILED", "Empty response from request_uri")
+                    if (!response.isSuccessful) {
+                        throw SiopV2Exception("FETCH_FAILED", "HTTP ${response.code} from request_uri")
+                    }
+                    val trimmed = body.trim()
+                    if (trimmed.startsWith("{")) {
+                        // Plain (unsigned) JSON request document: accepted as-is. There is no
+                        // signature to verify — trust rests on the TLS channel to request_uri.
+                        json.parseToJsonElement(trimmed).jsonObject
+                    } else {
+                        parseAndVerifyRequestObjectJwt(
+                            jwtString = trimmed,
+                            requestUri = requestUri,
+                            urlClientId = params["client_id"],
+                            urlClientIdScheme = params["client_id_scheme"],
+                        )
+                    }
+                } else {
+                    buildJsonObject {
+                        params.forEach { (k, v) -> put(k, v) }
+                    }
+                }
+            val request = json.decodeFromJsonElement<SiopV2AuthorizationRequest>(requestJson)
+            val session = SiopV2Session(sessionId = UUID.randomUUID().toString(), request = request)
+            sessions[session.sessionId] = session
+            session
         }
-        val requestUri = params["request_uri"]
-        val json = Json { ignoreUnknownKeys = true }
-        val requestJson: JsonObject = if (requestUri != null) {
-            requireHttpsOrLoopback(requestUri)
-            val response = httpClient.newCall(Request.Builder().url(requestUri).get().build()).execute()
-            val body = response.body?.string()
-                ?: throw SiopV2Exception("FETCH_FAILED", "Empty response from request_uri")
-            if (!response.isSuccessful) {
-                throw SiopV2Exception("FETCH_FAILED", "HTTP ${response.code} from request_uri")
-            }
-            val trimmed = body.trim()
-            if (trimmed.startsWith("{")) {
-                // Plain (unsigned) JSON request document: accepted as-is. There is no
-                // signature to verify — trust rests on the TLS channel to request_uri.
-                json.parseToJsonElement(trimmed).jsonObject
-            } else {
-                parseAndVerifyRequestObjectJwt(
-                    jwtString = trimmed,
-                    requestUri = requestUri,
-                    urlClientId = params["client_id"],
-                    urlClientIdScheme = params["client_id_scheme"],
-                )
-            }
-        } else {
-            buildJsonObject {
-                params.forEach { (k, v) -> put(k, v) }
-            }
-        }
-        val request = json.decodeFromJsonElement<SiopV2AuthorizationRequest>(requestJson)
-        val session = SiopV2Session(sessionId = UUID.randomUUID().toString(), request = request)
-        sessions[session.sessionId] = session
-        session
-    }
 
     /** Gets a stored session by ID. */
     fun getSession(sessionId: String): SiopV2Session? = sessions[sessionId]
@@ -179,78 +206,94 @@ class SiopV2Service(
         keyId: String,
         presentation: VerifiablePresentation? = null,
         presentationSubmission: PresentationSubmission? = null,
-    ): SiopV2AuthorizationResponse = withContext(Dispatchers.IO) {
-        val request = session.request
-        val now = System.currentTimeMillis() / 1000
+    ): SiopV2AuthorizationResponse =
+        withContext(Dispatchers.IO) {
+            val request = session.request
+            val now = System.currentTimeMillis() / 1000
 
-        val idToken: String? = if (request.responseType.contains("id_token")) {
-            val header = buildJsonObject {
-                put("alg", "EdDSA")
-                put("typ", "JWT")
-                put("kid", keyId)
-            }
-            val payload = buildJsonObject {
-                put("iss", holderDid)
-                put("sub", holderDid)
-                put("aud", request.clientId)
-                put("iat", now)
-                put("exp", now + 600)
-                put("nonce", request.nonce)
-            }
-            signJwt(header, payload, keyId)
-        } else {
-            null
+            val idToken: String? =
+                if (request.responseType.contains("id_token")) {
+                    val header =
+                        buildJsonObject {
+                            put("alg", "EdDSA")
+                            put("typ", "JWT")
+                            put("kid", keyId)
+                        }
+                    val payload =
+                        buildJsonObject {
+                            put("iss", holderDid)
+                            put("sub", holderDid)
+                            put("aud", request.clientId)
+                            put("iat", now)
+                            put("exp", now + 600)
+                            put("nonce", request.nonce)
+                        }
+                    signJwt(header, payload, keyId)
+                } else {
+                    null
+                }
+
+            val vpToken: String? =
+                if (request.responseType.contains("vp_token") && presentation != null) {
+                    val header =
+                        buildJsonObject {
+                            put("alg", "EdDSA")
+                            put("typ", "JWT")
+                            put("kid", keyId)
+                        }
+                    val payload =
+                        buildJsonObject {
+                            put("iss", holderDid)
+                            put("aud", request.clientId)
+                            put("iat", now)
+                            put("exp", now + 600)
+                            put("nonce", request.nonce)
+                            put(
+                                "vp",
+                                buildJsonObject {
+                                    put("@context", JsonArray(presentation.context.map { JsonPrimitive(it) }))
+                                    put("type", JsonArray(presentation.type.map { JsonPrimitive(it.value) }))
+                                    put("holder", presentation.holder.value)
+                                },
+                            )
+                        }
+                    signJwt(header, payload, keyId)
+                } else {
+                    null
+                }
+
+            SiopV2AuthorizationResponse(
+                idToken = idToken,
+                vpToken = vpToken,
+                presentationSubmission = presentationSubmission,
+                state = request.state,
+            )
         }
-
-        val vpToken: String? = if (request.responseType.contains("vp_token") && presentation != null) {
-            val header = buildJsonObject {
-                put("alg", "EdDSA")
-                put("typ", "JWT")
-                put("kid", keyId)
-            }
-            val payload = buildJsonObject {
-                put("iss", holderDid)
-                put("aud", request.clientId)
-                put("iat", now)
-                put("exp", now + 600)
-                put("nonce", request.nonce)
-                put(
-                    "vp",
-                    buildJsonObject {
-                        put("@context", JsonArray(presentation.context.map { JsonPrimitive(it) }))
-                        put("type", JsonArray(presentation.type.map { JsonPrimitive(it.value) }))
-                        put("holder", presentation.holder.value)
-                    },
-                )
-            }
-            signJwt(header, payload, keyId)
-        } else {
-            null
-        }
-
-        SiopV2AuthorizationResponse(
-            idToken = idToken,
-            vpToken = vpToken,
-            presentationSubmission = presentationSubmission,
-            state = request.state,
-        )
-    }
 
     /** Submits the authorization response to the verifier's response_uri via direct_post. */
     suspend fun submitResponse(
         session: SiopV2Session,
         response: SiopV2AuthorizationResponse,
     ) = withContext(Dispatchers.IO) {
-        val responseUri = session.request.responseUri
-            ?: throw SiopV2Exception("NO_RESPONSE_URI", "No response_uri in authorization request")
-        val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
-        val body = json.encodeToString(SiopV2AuthorizationResponse.serializer(), response)
-            .toRequestBody("application/json".toMediaType())
-        val httpRequest = Request.Builder()
-            .url(responseUri)
-            .post(body)
-            .addHeader("Content-Type", "application/json")
-            .build()
+        val responseUri =
+            session.request.responseUri
+                ?: throw SiopV2Exception("NO_RESPONSE_URI", "No response_uri in authorization request")
+        val json =
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = false
+            }
+        val body =
+            json
+                .encodeToString(SiopV2AuthorizationResponse.serializer(), response)
+                .toRequestBody("application/json".toMediaType())
+        val httpRequest =
+            Request
+                .Builder()
+                .url(responseUri)
+                .post(body)
+                .addHeader("Content-Type", "application/json")
+                .build()
         val httpResponse = httpClient.newCall(httpRequest).execute()
         if (!httpResponse.isSuccessful) {
             throw SiopV2Exception(
@@ -285,9 +328,10 @@ class SiopV2Service(
      * without DNS resolution).
      */
     private fun httpsOrLoopbackViolation(url: String): String? {
-        val uri = runCatching { java.net.URI(url) }.getOrElse {
-            return "is not a valid URI: ${it.message}"
-        }
+        val uri =
+            runCatching { java.net.URI(url) }.getOrElse {
+                return "is not a valid URI: ${it.message}"
+            }
         val scheme = uri.scheme?.lowercase()
         if (scheme == "https") return null
         if (scheme == "http" && isLoopbackHost(uri.host?.lowercase())) return null
@@ -302,7 +346,11 @@ class SiopV2Service(
     private fun isLoopbackHost(host: String?): Boolean {
         if (host == null) return false
         if (host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]") return true
-        return runCatching { java.net.InetAddress.getByName(host).isLoopbackAddress }.getOrDefault(false)
+        return runCatching {
+            java.net.InetAddress
+                .getByName(host)
+                .isLoopbackAddress
+        }.getOrDefault(false)
     }
 
     /**
@@ -329,27 +377,29 @@ class SiopV2Service(
         urlClientId: String?,
         urlClientIdScheme: String?,
     ): JsonObject {
-        val jwt = try {
-            JWTParser.parse(jwtString)
-        } catch (e: Exception) {
-            throw SiopV2Exception(
-                "INVALID_REQUEST_OBJECT",
-                "Request object is neither a JSON document nor a valid JWT: ${e.message}",
-            )
-        }
+        val jwt =
+            try {
+                JWTParser.parse(jwtString)
+            } catch (e: Exception) {
+                throw SiopV2Exception(
+                    "INVALID_REQUEST_OBJECT",
+                    "Request object is neither a JSON document nor a valid JWT: ${e.message}",
+                )
+            }
 
-        val signedJwt = when (jwt) {
-            is PlainJWT -> throw SiopV2Exception(
-                "INVALID_REQUEST_OBJECT",
-                "Unsigned request object (alg=none) is not accepted",
-            )
-            is SignedJWT -> jwt
-            else -> throw SiopV2Exception(
-                "INVALID_REQUEST_OBJECT",
-                "Unsupported request object type (encrypted request objects are not supported): " +
-                    jwt.javaClass.simpleName,
-            )
-        }
+        val signedJwt =
+            when (jwt) {
+                is PlainJWT -> throw SiopV2Exception(
+                    "INVALID_REQUEST_OBJECT",
+                    "Unsigned request object (alg=none) is not accepted",
+                )
+                is SignedJWT -> jwt
+                else -> throw SiopV2Exception(
+                    "INVALID_REQUEST_OBJECT",
+                    "Unsupported request object type (encrypted request objects are not supported): " +
+                        jwt.javaClass.simpleName,
+                )
+            }
 
         val lenientJson = Json { ignoreUnknownKeys = true }
         val claimsJson = lenientJson.parseToJsonElement(signedJwt.payload.toString()).jsonObject
@@ -360,22 +410,38 @@ class SiopV2Service(
         // DID-scheme signals: an explicit client_id_scheme=did (claims or URL) or a
         // client_id that is itself a DID (claims, or URL when the claims carry none).
         val effectiveClientId = claimClientId ?: urlClientId
-        val didPinned = claimClientIdScheme == "did" ||
-            urlClientIdScheme == "did" ||
-            effectiveClientId?.startsWith("did:") == true
+        val didPinned =
+            claimClientIdScheme == "did" ||
+                urlClientIdScheme == "did" ||
+                effectiveClientId?.startsWith("did:") == true
 
         if (didPinned) {
             // Keys MUST come from the client's independently resolved DID document.
             // The self-attested client_metadata.jwks is intentionally NOT consulted.
             verifyRequestObjectAgainstClientDid(signedJwt, effectiveClientId)
         } else {
-            val jwks = (claimsJson["client_metadata"] as? JsonObject)
-                ?.get("jwks")
-                ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
+            val jwks =
+                (claimsJson["client_metadata"] as? JsonObject)
+                    ?.get("jwks")
+                    ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
 
-            if (jwks != null && jwks.keys.isNotEmpty()) {
-                verifyRequestObjectSignature(signedJwt, jwks)
+            // A signed request object that cannot be checked against any key is worth no more
+            // than an unsigned one: client_id, response_uri and nonce would all be taken on the
+            // sender's word. The embedded client_metadata.jwks is self-attested and proves no
+            // identity, but it is at least the key the verifier committed to for this exchange, so
+            // it is required. Establishing verifier identity for non-DID schemes needs
+            // x509_san_dns chain validation or pre-registered client keys, neither of which exists
+            // here — client_id_scheme=did is the only scheme that authenticates today.
+            if (jwks == null || jwks.keys.isEmpty()) {
+                throw SiopV2Exception(
+                    "UNVERIFIABLE_REQUEST_OBJECT",
+                    "Signed request object for client_id_scheme " +
+                        "'${claimClientIdScheme ?: urlClientIdScheme ?: "pre_registered"}' carries " +
+                        "no client_metadata.jwks, so its signature cannot be checked against " +
+                        "anything. Use client_id_scheme=did to pin the verifier's keys.",
+                )
             }
+            verifyRequestObjectSignature(signedJwt, jwks)
         }
 
         return claimsJson
@@ -400,69 +466,77 @@ class SiopV2Service(
         jwt: SignedJWT,
         clientId: String?,
     ) {
-        fun reject(reason: String): Nothing =
-            throw SiopV2Exception("REQUEST_OBJECT_VERIFICATION_FAILED", reason)
+        fun reject(reason: String): Nothing = throw SiopV2Exception("REQUEST_OBJECT_VERIFICATION_FAILED", reason)
 
         if (clientId == null || !clientId.startsWith("did:")) {
             reject("client_id_scheme is 'did' but client_id '${clientId ?: "<absent>"}' is not a DID")
         }
 
-        val resolver = didResolver
-            ?: reject(
-                "Signed request object with DID client_id '$clientId' cannot be verified: " +
-                    "no DidResolver is configured on SiopV2Service. Configure a DidResolver " +
-                    "to pin request-object signing keys to the verifier's DID document " +
-                    "(rejecting per fail-closed policy).",
-            )
+        val resolver =
+            didResolver
+                ?: reject(
+                    "Signed request object with DID client_id '$clientId' cannot be verified: " +
+                        "no DidResolver is configured on SiopV2Service. Configure a DidResolver " +
+                        "to pin request-object signing keys to the verifier's DID document " +
+                        "(rejecting per fail-closed policy).",
+                )
 
-        val did = try {
-            Did(clientId)
-        } catch (e: IllegalArgumentException) {
-            reject("client_id '$clientId' is not a valid DID: ${e.message}")
-        }
+        val did =
+            try {
+                Did(clientId)
+            } catch (e: IllegalArgumentException) {
+                reject("client_id '$clientId' is not a valid DID: ${e.message}")
+            }
 
-        val document = when (val result = resolver.resolve(did)) {
-            is DidResolutionResult.Success -> result.document
-            // §4.4: a deactivated DID resolves to no document. The request object's signing
-            // key can no longer be pinned to a revoked verifier identity, so reject rather
-            // than treating this as an ordinary "not found".
-            is DidResolutionResult.Deactivated -> reject(
-                "client_id '$clientId' is deactivated — request object signing key cannot be " +
-                    "pinned to a revoked verifier identity",
-            )
-            else -> reject(
-                "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
-                    "request object signing key cannot be pinned",
-            )
-        }
+        val document =
+            when (val result = resolver.resolve(did)) {
+                is DidResolutionResult.Success -> result.document
+                // §4.4: a deactivated DID resolves to no document. The request object's signing
+                // key can no longer be pinned to a revoked verifier identity, so reject rather
+                // than treating this as an ordinary "not found".
+                is DidResolutionResult.Deactivated ->
+                    reject(
+                        "client_id '$clientId' is deactivated — request object signing key cannot be " +
+                            "pinned to a revoked verifier identity",
+                    )
+                else ->
+                    reject(
+                        "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
+                            "request object signing key cannot be pinned",
+                    )
+            }
 
         // Request-object signing is an authentication act: regardless of how the key is
         // selected (kid or not), it must be authorized under the DID document's
         // `authentication` relationship — a key listed only under e.g. assertionMethod
         // or keyAgreement must not authenticate the verifier.
-        val authenticationAuthorized = document.verificationMethod
-            .filter { vm -> document.authentication.any { it.value == vm.id.value } }
+        val authenticationAuthorized =
+            document.verificationMethod
+                .filter { vm -> document.authentication.any { it.value == vm.id.value } }
         val kid = jwt.header.keyID
-        val candidates = if (kid != null) {
-            authenticationAuthorized.filter { vm -> verificationMethodMatchesKid(vm, kid) }
-                .ifEmpty {
+        val candidates =
+            if (kid != null) {
+                authenticationAuthorized
+                    .filter { vm -> verificationMethodMatchesKid(vm, kid) }
+                    .ifEmpty {
+                        reject(
+                            "No authentication-authorized verification method matching kid '$kid' " +
+                                "found in DID document of client_id '$clientId'",
+                        )
+                    }
+            } else {
+                authenticationAuthorized.ifEmpty {
                     reject(
-                        "No authentication-authorized verification method matching kid '$kid' " +
-                            "found in DID document of client_id '$clientId'",
+                        "Request object has no kid and DID document of client_id '$clientId' " +
+                            "has no authentication-authorized verification method",
                     )
                 }
-        } else {
-            authenticationAuthorized.ifEmpty {
-                reject(
-                    "Request object has no kid and DID document of client_id '$clientId' " +
-                        "has no authentication-authorized verification method",
-                )
             }
-        }
 
-        val verified = candidates.any { vm ->
-            runCatching { verifyJwsWithVerificationMethod(jwt, vm) }.getOrDefault(false)
-        }
+        val verified =
+            candidates.any { vm ->
+                runCatching { verifyJwsWithVerificationMethod(jwt, vm) }.getOrDefault(false)
+            }
         if (!verified) {
             reject(
                 "Request object signature verification failed against the DID document keys " +
@@ -476,7 +550,10 @@ class SiopV2Service(
      * DID URL (`did:ex:123#key-1`), a relative fragment (`#key-1`), or a bare key id
      * (`key-1`).
      */
-    private fun verificationMethodMatchesKid(vm: VerificationMethod, kid: String): Boolean {
+    private fun verificationMethodMatchesKid(
+        vm: VerificationMethod,
+        kid: String,
+    ): Boolean {
         val vmId = vm.id.value
         return when {
             kid.startsWith("did:") -> vmId == kid
@@ -496,7 +573,10 @@ class SiopV2Service(
      * Any other algorithm, missing/unsupported key material, or verification error yields
      * `false` (fail-closed).
      */
-    private fun verifyJwsWithVerificationMethod(jwt: SignedJWT, vm: VerificationMethod): Boolean =
+    private fun verifyJwsWithVerificationMethod(
+        jwt: SignedJWT,
+        vm: VerificationMethod,
+    ): Boolean =
         when (jwt.header.algorithm) {
             JWSAlgorithm.EdDSA -> {
                 val publicKey = extractEd25519PublicKey(vm)
@@ -520,9 +600,10 @@ class SiopV2Service(
             }
             JWSAlgorithm.ES256 -> {
                 try {
-                    val jwkMap = vm.publicKeyJwk
-                        ?.filterValues { it != null }
-                        ?.mapValues { (_, value) -> value as Any }
+                    val jwkMap =
+                        vm.publicKeyJwk
+                            ?.filterValues { it != null }
+                            ?.mapValues { (_, value) -> value as Any }
                     if (jwkMap == null) {
                         false
                     } else {
@@ -553,32 +634,36 @@ class SiopV2Service(
             val kty = jwkMap["kty"] as? String ?: return null
             if (kty != "OKP" || jwkMap["crv"] as? String != "Ed25519") return null
             val x = jwkMap["x"] as? String ?: return null
-            val raw = try {
-                Base64.getUrlDecoder().decode(x)
-            } catch (_: IllegalArgumentException) {
-                return null
-            }
+            val raw =
+                try {
+                    Base64.getUrlDecoder().decode(x)
+                } catch (_: IllegalArgumentException) {
+                    return null
+                }
             return createEd25519PublicKey(raw)
         }
 
         vm.publicKeyMultibase?.let { multibase ->
             if (multibase.length < 2) return null
-            val decoded = try {
-                when (multibase[0]) {
-                    'z' -> multibase.substring(1).decodeBase58()
-                    'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+            val decoded =
+                try {
+                    when (multibase[0]) {
+                        'z' -> multibase.substring(1).decodeBase58()
+                        'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+                        else -> return null
+                    }
+                } catch (_: Exception) {
+                    return null
+                }
+            val raw =
+                when {
+                    decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 &&
+                        decoded[0] == 0xED.toByte() &&
+                        decoded[1] == 0x01.toByte() ->
+                        decoded.copyOfRange(2, decoded.size)
+                    decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
                     else -> return null
                 }
-            } catch (_: Exception) {
-                return null
-            }
-            val raw = when {
-                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 &&
-                    decoded[0] == 0xED.toByte() && decoded[1] == 0x01.toByte() ->
-                    decoded.copyOfRange(2, decoded.size)
-                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
-                else -> return null
-            }
             return createEd25519PublicKey(raw)
         }
 
@@ -606,14 +691,18 @@ class SiopV2Service(
      *
      * @throws SiopV2Exception (`REQUEST_OBJECT_VERIFICATION_FAILED`) when no key verifies
      */
-    private fun verifyRequestObjectSignature(jwt: SignedJWT, jwks: JWKSet) {
+    private fun verifyRequestObjectSignature(
+        jwt: SignedJWT,
+        jwks: JWKSet,
+    ) {
         val kid = jwt.header.keyID
         val candidates = jwks.keys.filter { kid == null || it.keyID == null || it.keyID == kid }
 
-        val verified = candidates.any { jwk ->
-            val verifier = verifierFor(jwk) ?: return@any false
-            runCatching { jwt.verify(verifier) }.getOrDefault(false)
-        }
+        val verified =
+            candidates.any { jwk ->
+                val verifier = verifierFor(jwk) ?: return@any false
+                runCatching { jwt.verify(verifier) }.getOrDefault(false)
+            }
 
         if (!verified) {
             throw SiopV2Exception(
@@ -624,37 +713,49 @@ class SiopV2Service(
     }
 
     /** Builds a [JWSVerifier] for the given JWK, or `null` if the key type is unsupported. */
-    private fun verifierFor(jwk: JWK): JWSVerifier? = try {
-        when (jwk) {
-            is ECKey -> ECDSAVerifier(jwk.toPublicJWK())
-            is RSAKey -> RSASSAVerifier(jwk)
-            is OctetKeyPair -> Ed25519Verifier(jwk.toPublicJWK())
-            else -> null
+    private fun verifierFor(jwk: JWK): JWSVerifier? =
+        try {
+            when (jwk) {
+                is ECKey -> ECDSAVerifier(jwk.toPublicJWK())
+                is RSAKey -> RSASSAVerifier(jwk)
+                is OctetKeyPair -> Ed25519Verifier(jwk.toPublicJWK())
+                else -> null
+            }
+        } catch (_: Throwable) {
+            null
         }
-    } catch (_: Throwable) {
-        null
-    }
 
-    private suspend fun signJwt(header: JsonObject, payload: JsonObject, keyId: String): String {
-        val json = Json { prettyPrint = false; encodeDefaults = false }
+    private suspend fun signJwt(
+        header: JsonObject,
+        payload: JsonObject,
+        keyId: String,
+    ): String {
+        val json =
+            Json {
+                prettyPrint = false
+                encodeDefaults = false
+            }
         val enc = Base64.getUrlEncoder().withoutPadding()
-        val headerB64 = enc.encodeToString(
-            json.encodeToString(JsonObject.serializer(), header).toByteArray(),
-        )
-        val payloadB64 = enc.encodeToString(
-            json.encodeToString(JsonObject.serializer(), payload).toByteArray(),
-        )
+        val headerB64 =
+            enc.encodeToString(
+                json.encodeToString(JsonObject.serializer(), header).toByteArray(),
+            )
+        val payloadB64 =
+            enc.encodeToString(
+                json.encodeToString(JsonObject.serializer(), payload).toByteArray(),
+            )
         val signingInput = "$headerB64.$payloadB64".toByteArray()
         val signResult = kms.sign(KeyId(keyId), signingInput)
-        val sig = when (signResult) {
-            is SignResult.Success -> signResult.signature
-            is SignResult.Failure.KeyNotFound ->
-                throw SiopV2Exception("SIGN_FAILED", "Key not found: ${signResult.keyId}")
-            is SignResult.Failure.UnsupportedAlgorithm ->
-                throw SiopV2Exception("SIGN_FAILED", "Unsupported algorithm")
-            is SignResult.Failure.Error ->
-                throw SiopV2Exception("SIGN_FAILED", signResult.reason)
-        }
+        val sig =
+            when (signResult) {
+                is SignResult.Success -> signResult.signature
+                is SignResult.Failure.KeyNotFound ->
+                    throw SiopV2Exception("SIGN_FAILED", "Key not found: ${signResult.keyId}")
+                is SignResult.Failure.UnsupportedAlgorithm ->
+                    throw SiopV2Exception("SIGN_FAILED", "Unsupported algorithm")
+                is SignResult.Failure.Error ->
+                    throw SiopV2Exception("SIGN_FAILED", signResult.reason)
+            }
         return "$headerB64.$payloadB64.${enc.encodeToString(sig)}"
     }
 }

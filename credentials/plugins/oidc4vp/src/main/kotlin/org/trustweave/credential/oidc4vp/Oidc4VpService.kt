@@ -1,30 +1,5 @@
 package org.trustweave.credential.oidc4vp
 
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.util.decodeBase58
-import org.trustweave.credential.exchange.exception.ExchangeException
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolver
-import org.trustweave.credential.model.vc.CredentialProof
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
-import org.trustweave.credential.oidc4vp.haip.HaipProfileValidator
-import org.trustweave.credential.oidc4vp.models.*
-import org.trustweave.credential.oidc4vp.models.ClientIdScheme
-import org.trustweave.credential.oidc4vp.session.InMemorySessionStore
-import org.trustweave.credential.oidc4vp.session.SessionStore
-import org.trustweave.credential.pex.DescriptorMap
-import org.trustweave.credential.pex.PresentationDefinition
-import org.trustweave.credential.pex.PresentationDefinitionMatcher
-import org.trustweave.credential.pex.PresentationSubmission
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.SignResult
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.ECDSAVerifier
@@ -42,6 +17,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.decodeBase58
+import org.trustweave.credential.exchange.exception.ExchangeException
+import org.trustweave.credential.model.vc.CredentialProof
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
+import org.trustweave.credential.oidc4vp.haip.HaipProfileValidator
+import org.trustweave.credential.oidc4vp.models.*
+import org.trustweave.credential.oidc4vp.models.ClientIdScheme
+import org.trustweave.credential.oidc4vp.session.InMemorySessionStore
+import org.trustweave.credential.oidc4vp.session.SessionStore
+import org.trustweave.credential.pex.DescriptorMap
+import org.trustweave.credential.pex.PresentationDefinition
+import org.trustweave.credential.pex.PresentationDefinitionMatcher
+import org.trustweave.credential.pex.PresentationSubmission
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.SignResult
 import java.net.URLDecoder
 import java.security.KeyFactory
 import java.security.PublicKey
@@ -102,9 +100,21 @@ private const val ED25519_SIGNATURE_LENGTH_BYTES = 64
  * `SEQUENCE(SEQUENCE(OID 1.3.101.112), BIT STRING(0x00 || raw 32-byte key))`.
  * Appending the raw key bytes yields an X.509-encoded public key consumable by JCA.
  */
-private val ED25519_SPKI_PREFIX = byteArrayOf(
-    0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
-)
+private val ED25519_SPKI_PREFIX =
+    byteArrayOf(
+        0x30,
+        0x2A,
+        0x30,
+        0x05,
+        0x06,
+        0x03,
+        0x2B,
+        0x65,
+        0x70,
+        0x03,
+        0x21,
+        0x00,
+    )
 
 /**
  * Json configuration for serializing credential/presentation models into vp_token JSON.
@@ -112,17 +122,20 @@ private val ED25519_SPKI_PREFIX = byteArrayOf(
  * `encodeDefaults = true` keeps required W3C fields with default values (e.g. `@context`);
  * `explicitNulls = false` omits absent optional fields.
  */
-private val vpJson = Json {
-    prettyPrint = false
-    encodeDefaults = true
-    explicitNulls = false
-    ignoreUnknownKeys = true
-    classDiscriminator = "@type" // avoid conflict with LinkedDataProof.type
-}
+private val vpJson =
+    Json {
+        prettyPrint = false
+        encodeDefaults = true
+        explicitNulls = false
+        ignoreUnknownKeys = true
+        classDiscriminator = "@type" // avoid conflict with LinkedDataProof.type
+    }
 
 class Oidc4VpService(
     private val kms: KeyManagementService,
-    private val httpClient: OkHttpClient = org.trustweave.core.net.ssrfGuardedOkHttpClient(),
+    private val httpClient: OkHttpClient =
+        org.trustweave.core.net
+            .ssrfGuardedOkHttpClient(),
     /**
      * When `true`, [parseAuthorizationUrl] enforces HAIP constraints:
      * - `client_id_scheme` must be `did`, `x509_san_dns`, or `verifier_attestation`
@@ -166,147 +179,162 @@ class Oidc4VpService(
      * @param authorizationUrl The authorization URL to parse
      * @return PermissionRequest for user interaction
      */
-    suspend fun parseAuthorizationUrl(authorizationUrl: String): PermissionRequest = withContext(Dispatchers.IO) {
-        try {
-            // Parse URL manually since openid4vp:// is not a standard scheme
-            val queryString = if (authorizationUrl.contains("?")) {
-                authorizationUrl.substringAfter("?")
-            } else {
-                ""
-            }
+    suspend fun parseAuthorizationUrl(authorizationUrl: String): PermissionRequest =
+        withContext(Dispatchers.IO) {
+            try {
+                // Parse URL manually since openid4vp:// is not a standard scheme
+                val queryString =
+                    if (authorizationUrl.contains("?")) {
+                        authorizationUrl.substringAfter("?")
+                    } else {
+                        ""
+                    }
 
-            // Parse query parameters
-            val queryParams = parseQueryParameters(queryString)
+                // Parse query parameters
+                val queryParams = parseQueryParameters(queryString)
 
-            val clientId = queryParams["client_id"]
-            val clientIdScheme = queryParams["client_id_scheme"]
-                ?.let { ClientIdScheme.fromString(it) }
-                ?: ClientIdScheme.PRE_REGISTERED
-            val requestUri = queryParams["request_uri"]
-            val responseUri = queryParams["response_uri"]
-            val redirectUri = queryParams["redirect_uri"]
-            val responseMode = queryParams["response_mode"]
-            val nonce = queryParams["nonce"]
-            val state = queryParams["state"]
+                val clientId = queryParams["client_id"]
+                val clientIdScheme =
+                    queryParams["client_id_scheme"]
+                        ?.let { ClientIdScheme.fromString(it) }
+                        ?: ClientIdScheme.PRE_REGISTERED
+                val requestUri = queryParams["request_uri"]
+                val responseUri = queryParams["response_uri"]
+                val redirectUri = queryParams["redirect_uri"]
+                val responseMode = queryParams["response_mode"]
+                val nonce = queryParams["nonce"]
+                val state = queryParams["state"]
 
-            // Parse dcql_query into typed DcqlQuery if present
-            val dcqlQuery = queryParams["dcql_query"]?.let { raw ->
-                try {
-                    lenientJson.decodeFromString<DcqlQuery>(raw)
-                } catch (_: Exception) {
-                    null
-                }
-            }
+                // Parse dcql_query into typed DcqlQuery if present
+                val dcqlQuery =
+                    queryParams["dcql_query"]?.let { raw ->
+                        try {
+                            lenientJson.decodeFromString<DcqlQuery>(raw)
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
 
-            // presentation_definition may be a JSON string embedded directly in the URL param
-            val urlPresentationDefinition = queryParams["presentation_definition"]?.let { raw ->
-                try {
-                    Json.parseToJsonElement(raw).jsonObject
-                } catch (_: Exception) {
-                    null
-                }
-            }
+                // presentation_definition may be a JSON string embedded directly in the URL param
+                val urlPresentationDefinition =
+                    queryParams["presentation_definition"]?.let { raw ->
+                        try {
+                            Json.parseToJsonElement(raw).jsonObject
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
 
-            // client_metadata may be a JSON string embedded directly in the URL param
-            val urlClientMetadata = queryParams["client_metadata"]?.let { raw ->
-                try {
-                    Json.parseToJsonElement(raw).jsonObject
-                } catch (_: Exception) {
-                    null
-                }
-            }
+                // client_metadata may be a JSON string embedded directly in the URL param
+                val urlClientMetadata =
+                    queryParams["client_metadata"]?.let { raw ->
+                        try {
+                            Json.parseToJsonElement(raw).jsonObject
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
 
-            // Build base AuthorizationRequest from URL params
-            val urlRequest = AuthorizationRequest(
-                responseUri = responseUri,
-                redirectUri = redirectUri,
-                clientId = clientId,
-                clientIdScheme = clientIdScheme,
-                requestUri = requestUri,
-                presentationDefinition = urlPresentationDefinition,
-                nonce = nonce,
-                state = state,
-                responseMode = responseMode,
-                dcqlQuery = dcqlQuery,
-                clientMetadata = urlClientMetadata,
-            )
-
-            // If request_uri is present, fetch the request object.
-            // - Signed JWT request object (JAR / OID4VP §5.10): its claims are authoritative —
-            //   URL query parameters MUST NOT override or fill in request parameters.
-            // - Plain JSON request: fetched values take precedence, URL params fill gaps.
-            val authorizationRequest = if (requestUri != null) {
-                val (fetched, fromSignedRequestObject) = fetchAuthorizationRequest(
-                    requestUri = requestUri,
-                    urlClientId = urlRequest.clientId,
-                    urlClientIdScheme = queryParams["client_id_scheme"]?.let { ClientIdScheme.fromString(it) },
-                )
-                if (fromSignedRequestObject) {
-                    fetched.copy(requestUri = requestUri)
-                } else {
+                // Build base AuthorizationRequest from URL params
+                val urlRequest =
                     AuthorizationRequest(
-                        responseUri = fetched.responseUri ?: urlRequest.responseUri,
-                        redirectUri = fetched.redirectUri ?: urlRequest.redirectUri,
-                        clientId = fetched.clientId ?: urlRequest.clientId,
-                        clientIdScheme = if (fetched.clientIdScheme != ClientIdScheme.PRE_REGISTERED)
-                            fetched.clientIdScheme else urlRequest.clientIdScheme,
+                        responseUri = responseUri,
+                        redirectUri = redirectUri,
+                        clientId = clientId,
+                        clientIdScheme = clientIdScheme,
                         requestUri = requestUri,
-                        presentationDefinition = fetched.presentationDefinition ?: urlRequest.presentationDefinition,
-                        nonce = fetched.nonce ?: urlRequest.nonce,
-                        state = fetched.state ?: urlRequest.state,
-                        responseMode = fetched.responseMode ?: urlRequest.responseMode,
-                        dcqlQuery = fetched.dcqlQuery ?: urlRequest.dcqlQuery,
-                        clientMetadata = fetched.clientMetadata ?: urlRequest.clientMetadata,
+                        presentationDefinition = urlPresentationDefinition,
+                        nonce = nonce,
+                        state = state,
+                        responseMode = responseMode,
+                        dcqlQuery = dcqlQuery,
+                        clientMetadata = urlClientMetadata,
                     )
+
+                // If request_uri is present, fetch the request object.
+                // - Signed JWT request object (JAR / OID4VP §5.10): its claims are authoritative —
+                //   URL query parameters MUST NOT override or fill in request parameters.
+                // - Plain JSON request: fetched values take precedence, URL params fill gaps.
+                val authorizationRequest =
+                    if (requestUri != null) {
+                        val (fetched, fromSignedRequestObject) =
+                            fetchAuthorizationRequest(
+                                requestUri = requestUri,
+                                urlClientId = urlRequest.clientId,
+                                urlClientIdScheme = queryParams["client_id_scheme"]?.let { ClientIdScheme.fromString(it) },
+                            )
+                        if (fromSignedRequestObject) {
+                            fetched.copy(requestUri = requestUri)
+                        } else {
+                            AuthorizationRequest(
+                                responseUri = fetched.responseUri ?: urlRequest.responseUri,
+                                redirectUri = fetched.redirectUri ?: urlRequest.redirectUri,
+                                clientId = fetched.clientId ?: urlRequest.clientId,
+                                clientIdScheme =
+                                    if (fetched.clientIdScheme != ClientIdScheme.PRE_REGISTERED) {
+                                        fetched.clientIdScheme
+                                    } else {
+                                        urlRequest.clientIdScheme
+                                    },
+                                requestUri = requestUri,
+                                presentationDefinition = fetched.presentationDefinition ?: urlRequest.presentationDefinition,
+                                nonce = fetched.nonce ?: urlRequest.nonce,
+                                state = fetched.state ?: urlRequest.state,
+                                responseMode = fetched.responseMode ?: urlRequest.responseMode,
+                                dcqlQuery = fetched.dcqlQuery ?: urlRequest.dcqlQuery,
+                                clientMetadata = fetched.clientMetadata ?: urlRequest.clientMetadata,
+                            )
+                        }
+                    } else {
+                        // No request_uri: all data must come from URL params directly
+                        if (urlRequest.responseUri == null && urlRequest.redirectUri == null) {
+                            throw Oidc4VpException.UrlParseFailed(
+                                url = authorizationUrl,
+                                reason = "Missing both 'request_uri' and response endpoint ('response_uri' / 'redirect_uri')",
+                            )
+                        }
+                        urlRequest
+                    }
+
+                // HAIP compliance check — runs before any further processing
+                if (haipMode) {
+                    val violations = HaipProfileValidator.validateAuthorizationRequest(authorizationRequest)
+                    if (violations.isNotEmpty()) {
+                        throw Oidc4VpException.HaipViolationException(violations)
+                    }
                 }
-            } else {
-                // No request_uri: all data must come from URL params directly
-                if (urlRequest.responseUri == null && urlRequest.redirectUri == null) {
-                    throw Oidc4VpException.UrlParseFailed(
-                        url = authorizationUrl,
-                        reason = "Missing both 'request_uri' and response endpoint ('response_uri' / 'redirect_uri')"
+
+                val requestId = UUID.randomUUID().toString()
+
+                // Extract requested credential types and claims from presentation_definition
+                val requestedCredentialTypes = extractCredentialTypes(authorizationRequest.presentationDefinition)
+                val requestedClaims = extractRequestedClaims(authorizationRequest.presentationDefinition)
+
+                val verifierUrl =
+                    requestUri?.let { extractVerifierUrl(it) }
+                        ?: authorizationRequest.responseUri?.let { extractVerifierUrl(it) }
+                        ?: authorizationRequest.redirectUri?.let { extractVerifierUrl(it) }
+
+                val permissionRequest =
+                    PermissionRequest(
+                        requestId = requestId,
+                        authorizationRequest = authorizationRequest,
+                        verifierUrl = verifierUrl,
+                        requestedCredentialTypes = requestedCredentialTypes,
+                        requestedClaims = requestedClaims,
                     )
-                }
-                urlRequest
+
+                sessionStore.put(requestId, permissionRequest)
+                permissionRequest
+            } catch (e: Oidc4VpException) {
+                throw e
+            } catch (e: Exception) {
+                throw Oidc4VpException.UrlParseFailed(
+                    url = authorizationUrl,
+                    reason = "Failed to parse URL: ${e.message ?: "Unknown error"}",
+                )
             }
-
-            // HAIP compliance check — runs before any further processing
-            if (haipMode) {
-                val violations = HaipProfileValidator.validateAuthorizationRequest(authorizationRequest)
-                if (violations.isNotEmpty()) {
-                    throw Oidc4VpException.HaipViolationException(violations)
-                }
-            }
-
-            val requestId = UUID.randomUUID().toString()
-
-            // Extract requested credential types and claims from presentation_definition
-            val requestedCredentialTypes = extractCredentialTypes(authorizationRequest.presentationDefinition)
-            val requestedClaims = extractRequestedClaims(authorizationRequest.presentationDefinition)
-
-            val verifierUrl = requestUri?.let { extractVerifierUrl(it) }
-                ?: authorizationRequest.responseUri?.let { extractVerifierUrl(it) }
-                ?: authorizationRequest.redirectUri?.let { extractVerifierUrl(it) }
-
-            val permissionRequest = PermissionRequest(
-                requestId = requestId,
-                authorizationRequest = authorizationRequest,
-                verifierUrl = verifierUrl,
-                requestedCredentialTypes = requestedCredentialTypes,
-                requestedClaims = requestedClaims
-            )
-
-            sessionStore.put(requestId, permissionRequest)
-            permissionRequest
-        } catch (e: Oidc4VpException) {
-            throw e
-        } catch (e: Exception) {
-            throw Oidc4VpException.UrlParseFailed(
-                url = authorizationUrl,
-                reason = "Failed to parse URL: ${e.message ?: "Unknown error"}"
-            )
         }
-    }
 
     /**
      * Creates a PermissionResponse from a PermissionRequest with selected credentials.
@@ -325,94 +353,111 @@ class Oidc4VpService(
         selectedFields: List<List<String>> = emptyList(),
         holderDid: String,
         keyId: String,
-        presentation: VerifiablePresentation? = null
-    ): PermissionResponse = withContext(Dispatchers.IO) {
-        // Field-level selective disclosure (selectedFields) is NOT implemented: the credential is
-        // embedded whole in the vp_token (see credentialToW3cJson). Honoring a field subset would
-        // require SD-JWT/BBS derivation, and simply dropping claims from an embedded VC-LD credential
-        // would invalidate its data-integrity proof. So when a caller requests minimization, refuse
-        // rather than silently disclose the entire credential.
-        if (selectedFields.any { it.isNotEmpty() }) {
-            throw UnsupportedOperationException(
-                "Field-level selective disclosure (selectedFields) is not supported: the full " +
-                    "credential would be disclosed. Omit selectedFields to disclose the full " +
-                    "credential explicitly, or present an SD-JWT credential. Refusing to silently " +
-                    "over-disclose.",
+        presentation: VerifiablePresentation? = null,
+    ): PermissionResponse =
+        withContext(Dispatchers.IO) {
+            // Field-level selective disclosure (selectedFields) is NOT implemented: the credential is
+            // embedded whole in the vp_token (see credentialToW3cJson). Honoring a field subset would
+            // require SD-JWT/BBS derivation, and simply dropping claims from an embedded VC-LD credential
+            // would invalidate its data-integrity proof. So when a caller requests minimization, refuse
+            // rather than silently disclose the entire credential.
+            // OpenID4VP requires `nonce` on the authorization request for every flow, not only under
+            // HAIP. It is the only thing tying this vp_token to this verifier's session — without it a
+            // signed presentation is replayable to any other verifier that accepts the same credential.
+            if (permissionRequest.authorizationRequest.nonce.isNullOrBlank()) {
+                throw Oidc4VpException.MissingReplayBinding(requestId = permissionRequest.requestId)
+            }
+
+            if (selectedFields.any { it.isNotEmpty() }) {
+                throw UnsupportedOperationException(
+                    "Field-level selective disclosure (selectedFields) is not supported: the full " +
+                        "credential would be disclosed. Omit selectedFields to disclose the full " +
+                        "credential explicitly, or present an SD-JWT credential. Refusing to silently " +
+                        "over-disclose.",
+                )
+            }
+            val authorizationRequest = permissionRequest.authorizationRequest
+
+            // Credentials embedded in the vp_token, in array order — presentation_submission
+            // descriptor paths are aligned with this order.
+            val vpCredentials =
+                presentation?.verifiableCredential
+                    ?: selectedCredentials.map { it.credential }
+
+            val vpToken =
+                if (presentation != null) {
+                    createVpTokenJwt(presentation, holderDid, keyId, authorizationRequest)
+                } else {
+                    createVpTokenJwtFromCredentials(
+                        credentials = vpCredentials,
+                        holderDid = holderDid,
+                        keyId = keyId,
+                        authorizationRequest = authorizationRequest,
+                    )
+                }
+
+            PermissionResponse(
+                responseId = UUID.randomUUID().toString(),
+                requestId = permissionRequest.requestId,
+                vpToken = vpToken,
+                presentationSubmission =
+                    buildPresentationSubmission(
+                        presentationDefinition = authorizationRequest.presentationDefinition,
+                        credentials = vpCredentials,
+                    ),
+                state = authorizationRequest.state,
             )
         }
-        val authorizationRequest = permissionRequest.authorizationRequest
-
-        // Credentials embedded in the vp_token, in array order — presentation_submission
-        // descriptor paths are aligned with this order.
-        val vpCredentials = presentation?.verifiableCredential
-            ?: selectedCredentials.map { it.credential }
-
-        val vpToken = if (presentation != null) {
-            createVpTokenJwt(presentation, holderDid, keyId, authorizationRequest)
-        } else {
-            createVpTokenJwtFromCredentials(
-                credentials = vpCredentials,
-                holderDid = holderDid,
-                keyId = keyId,
-                authorizationRequest = authorizationRequest
-            )
-        }
-
-        PermissionResponse(
-            responseId = UUID.randomUUID().toString(),
-            requestId = permissionRequest.requestId,
-            vpToken = vpToken,
-            presentationSubmission = buildPresentationSubmission(
-                presentationDefinition = authorizationRequest.presentationDefinition,
-                credentials = vpCredentials,
-            ),
-            state = authorizationRequest.state
-        )
-    }
 
     /**
      * Submits a PermissionResponse to the verifier.
      *
      * @param permissionResponse The permission response to submit
      */
-    suspend fun submitPermissionResponse(permissionResponse: PermissionResponse) = withContext(Dispatchers.IO) {
-        val request = sessionStore.get(permissionResponse.requestId)
-            ?: throw ExchangeException.RequestNotFound(requestId = permissionResponse.requestId)
-        
-        val responseUri = request.authorizationRequest.effectiveResponseEndpoint
-            ?: throw Oidc4VpException.PresentationSubmissionFailed(
-                reason = "No response endpoint available (neither response_uri nor redirect_uri)",
-                verifierUrl = request.verifierUrl ?: "unknown"
-            )
-        
-        // OID4VP direct_post response mode (v1.0 §7.2): the Authorization Response is
-        // posted as application/x-www-form-urlencoded form parameters. vp_token and state
-        // are plain form values; presentation_submission is its JSON serialization.
-        val formBody = FormBody.Builder()
-            .add("vp_token", permissionResponse.vpToken)
-            .apply {
-                permissionResponse.presentationSubmission?.let {
-                    add("presentation_submission", it.toString())
-                }
-                permissionResponse.state?.let { add("state", it) }
-            }
-            .build()
+    suspend fun submitPermissionResponse(permissionResponse: PermissionResponse) =
+        withContext(Dispatchers.IO) {
+            val request =
+                sessionStore.get(permissionResponse.requestId)
+                    ?: throw ExchangeException.RequestNotFound(requestId = permissionResponse.requestId)
 
-        val httpRequest = Request.Builder()
-            .url(responseUri)
-            .post(formBody)
-            .build()
-        
-        val response = httpClient.newCall(httpRequest).execute()
-        val body = response.body?.string()
-        
-        if (!response.isSuccessful) {
-            throw Oidc4VpException.PresentationSubmissionFailed(
-                reason = "HTTP ${response.code}: $body",
-                verifierUrl = responseUri
-            )
+            val responseUri =
+                request.authorizationRequest.effectiveResponseEndpoint
+                    ?: throw Oidc4VpException.PresentationSubmissionFailed(
+                        reason = "No response endpoint available (neither response_uri nor redirect_uri)",
+                        verifierUrl = request.verifierUrl ?: "unknown",
+                    )
+
+            // OID4VP direct_post response mode (v1.0 §7.2): the Authorization Response is
+            // posted as application/x-www-form-urlencoded form parameters. vp_token and state
+            // are plain form values; presentation_submission is its JSON serialization.
+            val formBody =
+                FormBody
+                    .Builder()
+                    .add("vp_token", permissionResponse.vpToken)
+                    .apply {
+                        permissionResponse.presentationSubmission?.let {
+                            add("presentation_submission", it.toString())
+                        }
+                        permissionResponse.state?.let { add("state", it) }
+                    }.build()
+
+            val httpRequest =
+                Request
+                    .Builder()
+                    .url(responseUri)
+                    .post(formBody)
+                    .build()
+
+            val response = httpClient.newCall(httpRequest).execute()
+            val body = response.body?.string()
+
+            if (!response.isSuccessful) {
+                throw Oidc4VpException.PresentationSubmissionFailed(
+                    reason = "HTTP ${response.code}: $body",
+                    verifierUrl = responseUri,
+                )
+            }
         }
-    }
 
     /** Result of fetching a request_uri: the parsed request and whether it was a signed JWT request object. */
     private data class FetchedAuthorizationRequest(
@@ -439,22 +484,25 @@ class Oidc4VpService(
         urlClientId: String? = null,
         urlClientIdScheme: ClientIdScheme? = null,
     ): FetchedAuthorizationRequest {
-        val request = Request.Builder()
-            .url(requestUri)
-            .get()
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(requestUri)
+                .get()
+                .build()
 
         val response = httpClient.newCall(request).execute()
-        val body = response.body?.string()
-            ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "Empty response body"
-            )
+        val body =
+            response.body?.string()
+                ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Empty response body",
+                )
 
         if (!response.isSuccessful) {
             throw Oidc4VpException.AuthorizationRequestFetchFailed(
                 requestUri = requestUri,
-                reason = "HTTP ${response.code}: $body"
+                reason = "HTTP ${response.code}: $body",
             )
         }
 
@@ -509,52 +557,73 @@ class Oidc4VpService(
         urlClientId: String? = null,
         urlClientIdScheme: ClientIdScheme? = null,
     ): AuthorizationRequest {
-        val jwt = try {
-            JWTParser.parse(jwtString)
-        } catch (e: Exception) {
-            throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "Request object is neither a JSON document nor a valid JWT: ${e.message}"
-            )
-        }
+        val jwt =
+            try {
+                JWTParser.parse(jwtString)
+            } catch (e: Exception) {
+                throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Request object is neither a JSON document nor a valid JWT: ${e.message}",
+                )
+            }
 
-        val signedJwt = when (jwt) {
-            is PlainJWT -> throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "Unsigned request object (alg=none) is not accepted"
-            )
-            is SignedJWT -> jwt
-            else -> throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "Unsupported request object type: ${jwt.javaClass.simpleName}"
-            )
-        }
+        val signedJwt =
+            when (jwt) {
+                is PlainJWT -> throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Unsigned request object (alg=none) is not accepted",
+                )
+                is SignedJWT -> jwt
+                else -> throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Unsupported request object type: ${jwt.javaClass.simpleName}",
+                )
+            }
 
         val claimsJson = lenientJson.parseToJsonElement(signedJwt.payload.toString()).jsonObject
 
         val claimClientId = (claimsJson["client_id"] as? JsonPrimitive)?.contentOrNull
-        val claimClientIdScheme = (claimsJson["client_id_scheme"] as? JsonPrimitive)?.contentOrNull
-            ?.let { ClientIdScheme.fromString(it) }
+        val claimClientIdScheme =
+            (claimsJson["client_id_scheme"] as? JsonPrimitive)
+                ?.contentOrNull
+                ?.let { ClientIdScheme.fromString(it) }
 
         // DID-scheme signals: an explicit client_id_scheme=did (claims or URL) or a
         // client_id that is itself a DID (claims, or URL when the claims carry none).
         val effectiveClientId = claimClientId ?: urlClientId
-        val didPinned = claimClientIdScheme == ClientIdScheme.DID ||
-            urlClientIdScheme == ClientIdScheme.DID ||
-            effectiveClientId?.startsWith("did:") == true
+        val didPinned =
+            claimClientIdScheme == ClientIdScheme.DID ||
+                urlClientIdScheme == ClientIdScheme.DID ||
+                effectiveClientId?.startsWith("did:") == true
 
         if (didPinned) {
             // Keys MUST come from the client's independently resolved DID document.
             // The self-attested client_metadata.jwks is intentionally NOT consulted.
             verifyRequestObjectAgainstClientDid(signedJwt, effectiveClientId, requestUri)
         } else {
-            val jwks = (claimsJson["client_metadata"] as? JsonObject)
-                ?.get("jwks")
-                ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
+            val jwks =
+                (claimsJson["client_metadata"] as? JsonObject)
+                    ?.get("jwks")
+                    ?.let { runCatching { JWKSet.parse(it.toString()) }.getOrNull() }
 
-            if (jwks != null && jwks.keys.isNotEmpty()) {
-                verifyRequestObjectSignature(signedJwt, jwks, requestUri)
+            // A signed request object that cannot be checked against any key is worth no more
+            // than an unsigned one: client_id, response_uri and nonce would all be taken on the
+            // sender's word. The embedded client_metadata.jwks is self-attested and proves no
+            // identity, but it is at least the key the verifier committed to for this exchange, so
+            // it is required. Establishing verifier identity for non-DID schemes needs
+            // x509_san_dns chain validation or pre-registered client keys, neither of which exists
+            // here — client_id_scheme=did is the only scheme that authenticates today.
+            if (jwks == null || jwks.keys.isEmpty()) {
+                throw Oidc4VpException.UrlParseFailed(
+                    url = requestUri ?: effectiveClientId.orEmpty(),
+                    reason =
+                        "Signed request object for client_id_scheme " +
+                            "'${claimClientIdScheme ?: urlClientIdScheme ?: "pre_registered"}' carries " +
+                            "no client_metadata.jwks, so its signature cannot be checked against " +
+                            "anything. Use client_id_scheme=did to pin the verifier's keys.",
+                )
             }
+            verifyRequestObjectSignature(signedJwt, jwks, requestUri)
         }
 
         return buildAuthorizationRequestFromJson(claimsJson)
@@ -579,75 +648,85 @@ class Oidc4VpService(
         clientId: String?,
         requestUri: String,
     ) {
-        fun reject(reason: String): Nothing = throw Oidc4VpException.AuthorizationRequestFetchFailed(
-            requestUri = requestUri,
-            reason = reason,
-        )
+        fun reject(reason: String): Nothing =
+            throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                requestUri = requestUri,
+                reason = reason,
+            )
 
         if (clientId == null || !clientId.startsWith("did:")) {
             reject("client_id_scheme is 'did' but client_id '${clientId ?: "<absent>"}' is not a DID")
         }
 
-        val resolver = didResolver
-            ?: reject(
-                "Signed request object with DID client_id '$clientId' cannot be verified: " +
-                    "no DidResolver is configured on Oidc4VpService. Configure a DidResolver " +
-                    "to pin request-object signing keys to the verifier's DID document " +
-                    "(rejecting per fail-closed policy)."
-            )
+        val resolver =
+            didResolver
+                ?: reject(
+                    "Signed request object with DID client_id '$clientId' cannot be verified: " +
+                        "no DidResolver is configured on Oidc4VpService. Configure a DidResolver " +
+                        "to pin request-object signing keys to the verifier's DID document " +
+                        "(rejecting per fail-closed policy).",
+                )
 
-        val did = try {
-            Did(clientId)
-        } catch (e: IllegalArgumentException) {
-            reject("client_id '$clientId' is not a valid DID: ${e.message}")
-        }
+        val did =
+            try {
+                Did(clientId)
+            } catch (e: IllegalArgumentException) {
+                reject("client_id '$clientId' is not a valid DID: ${e.message}")
+            }
 
-        val document = when (val result = resolver.resolve(did)) {
-            is DidResolutionResult.Success -> result.document
-            // §4.4: a deactivated DID resolves to no document. The request object's signing
-            // key can no longer be pinned to a revoked verifier identity, so reject rather
-            // than treating this as an ordinary "not found".
-            is DidResolutionResult.Deactivated -> reject(
-                "client_id '$clientId' is deactivated — request object signing key cannot be " +
-                    "pinned to a revoked verifier identity"
-            )
-            else -> reject(
-                "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
-                    "request object signing key cannot be pinned"
-            )
-        }
+        val document =
+            when (val result = resolver.resolve(did)) {
+                is DidResolutionResult.Success -> result.document
+                // §4.4: a deactivated DID resolves to no document. The request object's signing
+                // key can no longer be pinned to a revoked verifier identity, so reject rather
+                // than treating this as an ordinary "not found".
+                is DidResolutionResult.Deactivated ->
+                    reject(
+                        "client_id '$clientId' is deactivated — request object signing key cannot be " +
+                            "pinned to a revoked verifier identity",
+                    )
+                else ->
+                    reject(
+                        "DID resolution of client_id '$clientId' failed (${result.javaClass.simpleName}) — " +
+                            "request object signing key cannot be pinned",
+                    )
+            }
 
         // Request-object signing is an authentication act: regardless of how the key is
         // selected (kid or not), it must be authorized under the DID document's
         // `authentication` relationship — a key listed only under e.g. assertionMethod
         // or keyAgreement must not authenticate the verifier.
-        val authenticationAuthorized = document.verificationMethod
-            .filter { vm -> document.authentication.any { it.value == vm.id.value } }
+        val authenticationAuthorized =
+            document.verificationMethod
+                .filter { vm -> document.authentication.any { it.value == vm.id.value } }
         val kid = jwt.header.keyID
-        val candidates = if (kid != null) {
-            authenticationAuthorized.filter { vm -> verificationMethodMatchesKid(vm, kid) }
-                .ifEmpty {
+        val candidates =
+            if (kid != null) {
+                authenticationAuthorized
+                    .filter { vm -> verificationMethodMatchesKid(vm, kid) }
+                    .ifEmpty {
+                        reject(
+                            "No authentication-authorized verification method matching kid '$kid' " +
+                                "found in DID document of client_id '$clientId'",
+                        )
+                    }
+            } else {
+                authenticationAuthorized.ifEmpty {
                     reject(
-                        "No authentication-authorized verification method matching kid '$kid' " +
-                            "found in DID document of client_id '$clientId'"
+                        "Request object has no kid and DID document of client_id '$clientId' " +
+                            "has no authentication-authorized verification method",
                     )
                 }
-        } else {
-            authenticationAuthorized.ifEmpty {
-                reject(
-                    "Request object has no kid and DID document of client_id '$clientId' " +
-                        "has no authentication-authorized verification method"
-                )
             }
-        }
 
-        val verified = candidates.any { vm ->
-            runCatching { verifyJwsWithVerificationMethod(jwt, vm) }.getOrDefault(false)
-        }
+        val verified =
+            candidates.any { vm ->
+                runCatching { verifyJwsWithVerificationMethod(jwt, vm) }.getOrDefault(false)
+            }
         if (!verified) {
             reject(
                 "Request object signature verification failed against the DID document keys " +
-                    "of client_id '$clientId'"
+                    "of client_id '$clientId'",
             )
         }
     }
@@ -657,7 +736,10 @@ class Oidc4VpService(
      * DID URL (`did:ex:123#key-1`), a relative fragment (`#key-1`), or a bare key id
      * (`key-1`).
      */
-    private fun verificationMethodMatchesKid(vm: VerificationMethod, kid: String): Boolean {
+    private fun verificationMethodMatchesKid(
+        vm: VerificationMethod,
+        kid: String,
+    ): Boolean {
         val vmId = vm.id.value
         return when {
             kid.startsWith("did:") -> vmId == kid
@@ -677,7 +759,10 @@ class Oidc4VpService(
      * Any other algorithm, missing/unsupported key material, or verification error yields
      * `false` (fail-closed).
      */
-    private fun verifyJwsWithVerificationMethod(jwt: SignedJWT, vm: VerificationMethod): Boolean =
+    private fun verifyJwsWithVerificationMethod(
+        jwt: SignedJWT,
+        vm: VerificationMethod,
+    ): Boolean =
         when (jwt.header.algorithm) {
             JWSAlgorithm.EdDSA -> {
                 val publicKey = extractEd25519PublicKey(vm)
@@ -701,9 +786,10 @@ class Oidc4VpService(
             }
             JWSAlgorithm.ES256 -> {
                 try {
-                    val jwkMap = vm.publicKeyJwk
-                        ?.filterValues { it != null }
-                        ?.mapValues { (_, value) -> value as Any }
+                    val jwkMap =
+                        vm.publicKeyJwk
+                            ?.filterValues { it != null }
+                            ?.mapValues { (_, value) -> value as Any }
                     if (jwkMap == null) {
                         false
                     } else {
@@ -736,32 +822,36 @@ class Oidc4VpService(
             val kty = jwkMap["kty"] as? String ?: return null
             if (kty != "OKP" || jwkMap["crv"] as? String != "Ed25519") return null
             val x = jwkMap["x"] as? String ?: return null
-            val raw = try {
-                Base64.getUrlDecoder().decode(x)
-            } catch (_: IllegalArgumentException) {
-                return null
-            }
+            val raw =
+                try {
+                    Base64.getUrlDecoder().decode(x)
+                } catch (_: IllegalArgumentException) {
+                    return null
+                }
             return createEd25519PublicKey(raw)
         }
 
         vm.publicKeyMultibase?.let { multibase ->
             if (multibase.length < 2) return null
-            val decoded = try {
-                when (multibase[0]) {
-                    'z' -> multibase.substring(1).decodeBase58()
-                    'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+            val decoded =
+                try {
+                    when (multibase[0]) {
+                        'z' -> multibase.substring(1).decodeBase58()
+                        'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+                        else -> return null
+                    }
+                } catch (_: Exception) {
+                    return null
+                }
+            val raw =
+                when {
+                    decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 &&
+                        decoded[0] == 0xED.toByte() &&
+                        decoded[1] == 0x01.toByte() ->
+                        decoded.copyOfRange(2, decoded.size)
+                    decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
                     else -> return null
                 }
-            } catch (_: Exception) {
-                return null
-            }
-            val raw = when {
-                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 &&
-                    decoded[0] == 0xED.toByte() && decoded[1] == 0x01.toByte() ->
-                    decoded.copyOfRange(2, decoded.size)
-                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
-                else -> return null
-            }
             return createEd25519PublicKey(raw)
         }
 
@@ -788,34 +878,40 @@ class Oidc4VpService(
      *
      * @throws Oidc4VpException.AuthorizationRequestFetchFailed when no key verifies the signature
      */
-    private fun verifyRequestObjectSignature(jwt: SignedJWT, jwks: JWKSet, requestUri: String) {
+    private fun verifyRequestObjectSignature(
+        jwt: SignedJWT,
+        jwks: JWKSet,
+        requestUri: String,
+    ) {
         val kid = jwt.header.keyID
         val candidates = jwks.keys.filter { kid == null || it.keyID == null || it.keyID == kid }
 
-        val verified = candidates.any { jwk ->
-            val verifier = verifierFor(jwk) ?: return@any false
-            runCatching { jwt.verify(verifier) }.getOrDefault(false)
-        }
+        val verified =
+            candidates.any { jwk ->
+                val verifier = verifierFor(jwk) ?: return@any false
+                runCatching { jwt.verify(verifier) }.getOrDefault(false)
+            }
 
         if (!verified) {
             throw Oidc4VpException.AuthorizationRequestFetchFailed(
                 requestUri = requestUri,
-                reason = "Request object signature verification failed against client_metadata jwks"
+                reason = "Request object signature verification failed against client_metadata jwks",
             )
         }
     }
 
     /** Builds a [JWSVerifier] for the given JWK, or `null` if the key type is unsupported. */
-    private fun verifierFor(jwk: JWK): JWSVerifier? = try {
-        when (jwk) {
-            is ECKey -> ECDSAVerifier(jwk.toPublicJWK())
-            is RSAKey -> RSASSAVerifier(jwk)
-            is OctetKeyPair -> Ed25519Verifier(jwk.toPublicJWK())
-            else -> null
+    private fun verifierFor(jwk: JWK): JWSVerifier? =
+        try {
+            when (jwk) {
+                is ECKey -> ECDSAVerifier(jwk.toPublicJWK())
+                is RSAKey -> RSASSAVerifier(jwk)
+                is OctetKeyPair -> Ed25519Verifier(jwk.toPublicJWK())
+                else -> null
+            }
+        } catch (_: Throwable) {
+            null
         }
-    } catch (_: Throwable) {
-        null
-    }
 
     /**
      * Builds an [AuthorizationRequest] from a JSON document (plain JSON request or
@@ -823,37 +919,43 @@ class Oidc4VpService(
      */
     private fun buildAuthorizationRequestFromJson(jsonElement: JsonObject): AuthorizationRequest {
         // presentation_definition may be a nested JsonObject or an embedded JSON string
-        val presentationDefinition = jsonElement["presentation_definition"]?.let { elem ->
-            when {
-                elem is JsonObject -> elem
-                elem is JsonPrimitive && elem.isString -> try {
-                    Json.parseToJsonElement(elem.content).jsonObject
+        val presentationDefinition =
+            jsonElement["presentation_definition"]?.let { elem ->
+                when {
+                    elem is JsonObject -> elem
+                    elem is JsonPrimitive && elem.isString ->
+                        try {
+                            Json.parseToJsonElement(elem.content).jsonObject
+                        } catch (_: Exception) {
+                            null
+                        }
+                    else -> null
+                }
+            }
+
+        val dcqlQuery =
+            jsonElement["dcql_query"]?.let { elem ->
+                try {
+                    when {
+                        elem is JsonObject -> lenientJson.decodeFromJsonElement<DcqlQuery>(elem)
+                        elem is JsonPrimitive && elem.isString -> lenientJson.decodeFromString<DcqlQuery>(elem.content)
+                        else -> null
+                    }
                 } catch (_: Exception) {
                     null
                 }
-                else -> null
             }
-        }
-
-        val dcqlQuery = jsonElement["dcql_query"]?.let { elem ->
-            try {
-                when {
-                    elem is JsonObject -> lenientJson.decodeFromJsonElement<DcqlQuery>(elem)
-                    elem is JsonPrimitive && elem.isString -> lenientJson.decodeFromString<DcqlQuery>(elem.content)
-                    else -> null
-                }
-            } catch (_: Exception) {
-                null
-            }
-        }
 
         return AuthorizationRequest(
             responseUri = jsonElement["response_uri"]?.jsonPrimitive?.content,
             redirectUri = jsonElement["redirect_uri"]?.jsonPrimitive?.content,
             clientId = jsonElement["client_id"]?.jsonPrimitive?.content,
-            clientIdScheme = jsonElement["client_id_scheme"]?.jsonPrimitive?.content
-                ?.let { ClientIdScheme.fromString(it) }
-                ?: ClientIdScheme.PRE_REGISTERED,
+            clientIdScheme =
+                jsonElement["client_id_scheme"]
+                    ?.jsonPrimitive
+                    ?.content
+                    ?.let { ClientIdScheme.fromString(it) }
+                    ?: ClientIdScheme.PRE_REGISTERED,
             requestUri = jsonElement["request_uri"]?.jsonPrimitive?.content,
             presentationDefinition = presentationDefinition,
             nonce = jsonElement["nonce"]?.jsonPrimitive?.content,
@@ -870,28 +972,32 @@ class Oidc4VpService(
      * @param verifierUrl Verifier URL
      * @return Verifier metadata
      */
-    suspend fun fetchVerifierMetadata(verifierUrl: String): VerifierMetadata = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$verifierUrl/.well-known/openid-credential-verifier")
-            .get()
-            .build()
-        
-        val response = httpClient.newCall(request).execute()
-        val body = response.body?.string()
-            ?: throw Oidc4VpException.MetadataFetchFailed(
-                verifierUrl = verifierUrl,
-                reason = "Empty response body"
-            )
-        
-        if (!response.isSuccessful) {
-            throw Oidc4VpException.MetadataFetchFailed(
-                verifierUrl = verifierUrl,
-                reason = "HTTP ${response.code}: $body"
-            )
+    suspend fun fetchVerifierMetadata(verifierUrl: String): VerifierMetadata =
+        withContext(Dispatchers.IO) {
+            val request =
+                Request
+                    .Builder()
+                    .url("$verifierUrl/.well-known/openid-credential-verifier")
+                    .get()
+                    .build()
+
+            val response = httpClient.newCall(request).execute()
+            val body =
+                response.body?.string()
+                    ?: throw Oidc4VpException.MetadataFetchFailed(
+                        verifierUrl = verifierUrl,
+                        reason = "Empty response body",
+                    )
+
+            if (!response.isSuccessful) {
+                throw Oidc4VpException.MetadataFetchFailed(
+                    verifierUrl = verifierUrl,
+                    reason = "HTTP ${response.code}: $body",
+                )
+            }
+
+            lenientJson.decodeFromString<VerifierMetadata>(body)
         }
-        
-        lenientJson.decodeFromString<VerifierMetadata>(body)
-    }
 
     /**
      * Creates a VP token JWT from a VerifiablePresentation.
@@ -904,13 +1010,16 @@ class Oidc4VpService(
         presentation: VerifiablePresentation,
         holderDid: String,
         keyId: String,
-        authorizationRequest: AuthorizationRequest
+        authorizationRequest: AuthorizationRequest,
     ): String {
         val encoded = vpJson.encodeToJsonElement(VerifiablePresentation.serializer(), presentation).jsonObject
-        val vp = JsonObject(
-            encoded + ("verifiableCredential" to
-                JsonArray(presentation.verifiableCredential.map { credentialToW3cJson(it) }))
-        )
+        val vp =
+            JsonObject(
+                encoded + (
+                    "verifiableCredential" to
+                        JsonArray(presentation.verifiableCredential.map { credentialToW3cJson(it) })
+                ),
+            )
         return signVpTokenJwt(vp, holderDid, keyId, authorizationRequest)
     }
 
@@ -921,14 +1030,15 @@ class Oidc4VpService(
         credentials: List<VerifiableCredential>,
         holderDid: String,
         keyId: String,
-        authorizationRequest: AuthorizationRequest
+        authorizationRequest: AuthorizationRequest,
     ): String {
-        val vp = buildJsonObject {
-            put("@context", JsonArray(listOf(JsonPrimitive(W3C_CREDENTIALS_V1_CONTEXT))))
-            put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentation"))))
-            put("holder", holderDid)
-            put("verifiableCredential", JsonArray(credentials.map { credentialToW3cJson(it) }))
-        }
+        val vp =
+            buildJsonObject {
+                put("@context", JsonArray(listOf(JsonPrimitive(W3C_CREDENTIALS_V1_CONTEXT))))
+                put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentation"))))
+                put("holder", holderDid)
+                put("verifiableCredential", JsonArray(credentials.map { credentialToW3cJson(it) }))
+            }
         return signVpTokenJwt(vp, holderDid, keyId, authorizationRequest)
     }
 
@@ -945,54 +1055,56 @@ class Oidc4VpService(
      * - `proof` is a plain W3C proof object (see [w3cProofOf]) or omitted for envelope
      *   proof formats.
      */
-    private fun credentialToW3cJson(credential: VerifiableCredential): JsonObject = buildJsonObject {
-        put("@context", JsonArray(credential.context.map { JsonPrimitive(it) }))
-        credential.id?.let { put("id", it.value) }
-        put("type", JsonArray(credential.type.map { JsonPrimitive(it.value) }))
-        when (val issuer = credential.issuer) {
-            is Issuer.IriIssuer -> put("issuer", issuer.id.value)
-            is Issuer.ObjectIssuer -> put(
-                "issuer",
-                buildJsonObject {
-                    put("id", issuer.id.value)
-                    issuer.name?.let { put("name", it) }
-                    issuer.additionalProperties.forEach { (key, value) -> put(key, value) }
-                }
-            )
-        }
-        credential.issuanceDate?.let { put("issuanceDate", it.toString()) }
-        credential.validFrom?.let { put("validFrom", it.toString()) }
-        credential.expirationDate?.let { put("expirationDate", it.toString()) }
-        credential.validUntil?.let { put("validUntil", it.toString()) }
-        credential.name?.let { put("name", it) }
-        credential.description?.let { put("description", it) }
-        credential.credentialStatus?.let { status ->
-            put(
-                "credentialStatus",
-                buildJsonObject {
-                    put("id", status.id.value)
-                    put("type", status.type)
-                }
-            )
-        }
-        credential.credentialSchema?.let { schema ->
-            put(
-                "credentialSchema",
-                buildJsonObject {
-                    put("id", schema.id.value)
-                    put("type", schema.type)
-                }
-            )
-        }
-        put(
-            "credentialSubject",
-            buildJsonObject {
-                credential.credentialSubject.id?.let { put("id", it.value) }
-                credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+    private fun credentialToW3cJson(credential: VerifiableCredential): JsonObject =
+        buildJsonObject {
+            put("@context", JsonArray(credential.context.map { JsonPrimitive(it) }))
+            credential.id?.let { put("id", it.value) }
+            put("type", JsonArray(credential.type.map { JsonPrimitive(it.value) }))
+            when (val issuer = credential.issuer) {
+                is Issuer.IriIssuer -> put("issuer", issuer.id.value)
+                is Issuer.ObjectIssuer ->
+                    put(
+                        "issuer",
+                        buildJsonObject {
+                            put("id", issuer.id.value)
+                            issuer.name?.let { put("name", it) }
+                            issuer.additionalProperties.forEach { (key, value) -> put(key, value) }
+                        },
+                    )
             }
-        )
-        w3cProofOf(credential.proof)?.let { put("proof", it) }
-    }
+            credential.issuanceDate?.let { put("issuanceDate", it.toString()) }
+            credential.validFrom?.let { put("validFrom", it.toString()) }
+            credential.expirationDate?.let { put("expirationDate", it.toString()) }
+            credential.validUntil?.let { put("validUntil", it.toString()) }
+            credential.name?.let { put("name", it) }
+            credential.description?.let { put("description", it) }
+            credential.credentialStatus?.let { status ->
+                put(
+                    "credentialStatus",
+                    buildJsonObject {
+                        put("id", status.id.value)
+                        put("type", status.type)
+                    },
+                )
+            }
+            credential.credentialSchema?.let { schema ->
+                put(
+                    "credentialSchema",
+                    buildJsonObject {
+                        put("id", schema.id.value)
+                        put("type", schema.type)
+                    },
+                )
+            }
+            put(
+                "credentialSubject",
+                buildJsonObject {
+                    credential.credentialSubject.id?.let { put("id", it.value) }
+                    credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+                },
+            )
+            w3cProofOf(credential.proof)?.let { put("proof", it) }
+        }
 
     /**
      * Maps an embedded data-integrity proof to a plain W3C proof object
@@ -1002,17 +1114,19 @@ class Oidc4VpService(
      * Envelope proof formats (VC-JWT, SD-JWT VC, mdoc, JAdES) return `null`: there the
      * proof *is* the credential envelope and has no in-document proof object representation.
      */
-    private fun w3cProofOf(proof: CredentialProof?): JsonObject? = when (proof) {
-        is CredentialProof.LinkedDataProof -> buildJsonObject {
-            put("type", proof.type)
-            put("created", proof.created.toString())
-            put("verificationMethod", proof.verificationMethod)
-            put("proofPurpose", proof.proofPurpose)
-            if (proof.proofValue.isNotBlank()) put("proofValue", proof.proofValue)
-            proof.additionalProperties.forEach { (key, value) -> put(key, value) }
+    private fun w3cProofOf(proof: CredentialProof?): JsonObject? =
+        when (proof) {
+            is CredentialProof.LinkedDataProof ->
+                buildJsonObject {
+                    put("type", proof.type)
+                    put("created", proof.created.toString())
+                    put("verificationMethod", proof.verificationMethod)
+                    put("proofPurpose", proof.proofPurpose)
+                    if (proof.proofValue.isNotBlank()) put("proofValue", proof.proofValue)
+                    proof.additionalProperties.forEach { (key, value) -> put(key, value) }
+                }
+            else -> null
         }
-        else -> null
-    }
 
     /**
      * Signs a VP token JWT embedding [vp] under the `vp` claim.
@@ -1024,23 +1138,25 @@ class Oidc4VpService(
         vp: JsonObject,
         holderDid: String,
         keyId: String,
-        authorizationRequest: AuthorizationRequest
+        authorizationRequest: AuthorizationRequest,
     ): String {
-        val header = buildJsonObject {
-            put("alg", "EdDSA")
-            put("typ", "JWT")
-            put("kid", keyId)
-        }
+        val header =
+            buildJsonObject {
+                put("alg", "EdDSA")
+                put("typ", "JWT")
+                put("kid", keyId)
+            }
 
         val now = System.currentTimeMillis() / 1000
-        val payload = buildJsonObject {
-            put("iss", holderDid)
-            authorizationRequest.audience?.let { put("aud", it) }
-            put("iat", now)
-            put("exp", now + 3600) // 1 hour expiration
-            authorizationRequest.nonce?.let { put("nonce", it) }
-            put("vp", vp)
-        }
+        val payload =
+            buildJsonObject {
+                put("iss", holderDid)
+                authorizationRequest.audience?.let { put("aud", it) }
+                put("iat", now)
+                put("exp", now + 3600) // 1 hour expiration
+                authorizationRequest.nonce?.let { put("nonce", it) }
+                put("vp", vp)
+            }
 
         return signJwt(header, payload, keyId)
     }
@@ -1065,19 +1181,21 @@ class Oidc4VpService(
     ): JsonObject? {
         if (presentationDefinition == null) return null
 
-        val definition = try {
-            lenientJson.decodeFromJsonElement<PresentationDefinition>(presentationDefinition)
-        } catch (_: Exception) {
-            return null
-        }
+        val definition =
+            try {
+                lenientJson.decodeFromJsonElement<PresentationDefinition>(presentationDefinition)
+            } catch (_: Exception) {
+                return null
+            }
 
         val matches = PresentationDefinitionMatcher.match(definition, credentials)
 
         // submission_requirements absent → all input descriptors are required (PEX v2.0 §4.2)
         if (definition.submissionRequirements.isNullOrEmpty()) {
-            val unmatched = definition.inputDescriptors
-                .filter { matches[it.id].isNullOrEmpty() }
-                .map { it.id }
+            val unmatched =
+                definition.inputDescriptors
+                    .filter { matches[it.id].isNullOrEmpty() }
+                    .map { it.id }
             if (unmatched.isNotEmpty()) {
                 throw Oidc4VpException.RequiredCredentialMissing(
                     definitionId = definition.id,
@@ -1086,23 +1204,25 @@ class Oidc4VpService(
             }
         }
 
-        val descriptorMap = definition.inputDescriptors.mapNotNull { descriptor ->
-            val matched = matches[descriptor.id]?.firstOrNull() ?: return@mapNotNull null
-            val index = credentials.indexOf(matched)
-            if (index < 0) return@mapNotNull null
-            DescriptorMap(
-                id = descriptor.id,
-                format = credentialFormatOf(matched),
-                path = "$.verifiableCredential[$index]",
-            )
-        }
+        val descriptorMap =
+            definition.inputDescriptors.mapNotNull { descriptor ->
+                val matched = matches[descriptor.id]?.firstOrNull() ?: return@mapNotNull null
+                val index = credentials.indexOf(matched)
+                if (index < 0) return@mapNotNull null
+                DescriptorMap(
+                    id = descriptor.id,
+                    format = credentialFormatOf(matched),
+                    path = "$.verifiableCredential[$index]",
+                )
+            }
         if (descriptorMap.isEmpty()) return null
 
-        val submission = PresentationSubmission(
-            id = UUID.randomUUID().toString(),
-            definitionId = definition.id,
-            descriptorMap = descriptorMap,
-        )
+        val submission =
+            PresentationSubmission(
+                id = UUID.randomUUID().toString(),
+                definitionId = definition.id,
+                descriptorMap = descriptorMap,
+            )
         return lenientJson.encodeToJsonElement(PresentationSubmission.serializer(), submission).jsonObject
     }
 
@@ -1110,34 +1230,55 @@ class Oidc4VpService(
      * Maps a credential's proof type to its registered OID4VP format identifier
      * (OID4VP v1.0 Appendix B): `jwt_vc_json`, `ldp_vc`, `vc+sd-jwt`, `mso_mdoc`.
      */
-    private fun credentialFormatOf(credential: VerifiableCredential): String = when (credential.proof) {
-        is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
-        is CredentialProof.MdocProof -> "mso_mdoc"
-        is CredentialProof.JwtProof -> "jwt_vc_json"
-        else -> "ldp_vc"
-    }
+    private fun credentialFormatOf(credential: VerifiableCredential): String =
+        when (credential.proof) {
+            is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
+            is CredentialProof.MdocProof -> "mso_mdoc"
+            is CredentialProof.JwtProof -> "jwt_vc_json"
+            else -> "ldp_vc"
+        }
 
     /**
      * Signs a JWT.
      */
-    private suspend fun signJwt(header: JsonObject, payload: JsonObject, keyId: String): String {
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val headerBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(json.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
-        val payloadBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(json.encodeToString(JsonObject.serializer(), payload).toByteArray(Charsets.UTF_8))
-        
+    private suspend fun signJwt(
+        header: JsonObject,
+        payload: JsonObject,
+        keyId: String,
+    ): String {
+        val json =
+            Json {
+                prettyPrint = false
+                encodeDefaults = false
+            }
+        val headerBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(json.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
+        val payloadBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(json.encodeToString(JsonObject.serializer(), payload).toByteArray(Charsets.UTF_8))
+
         val signingInput = "$headerBase64.$payloadBase64".toByteArray(Charsets.UTF_8)
         val signResult = kms.sign(KeyId(keyId), signingInput)
-        val signature = when (signResult) {
-            is SignResult.Success -> signResult.signature
-            is SignResult.Failure.KeyNotFound -> throw IllegalStateException("KMS signing failed: Key not found: ${signResult.keyId}")
-            is SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException("KMS signing failed: Unsupported algorithm: ${signResult.reason ?: "Algorithm ${signResult.requestedAlgorithm} not compatible with ${signResult.keyAlgorithm}"}")
-            is SignResult.Failure.Error -> throw IllegalStateException("KMS signing failed: ${signResult.reason}")
-        }
-        val signatureBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(signature)
-        
+        val signature =
+            when (signResult) {
+                is SignResult.Success -> signResult.signature
+                is SignResult.Failure.KeyNotFound -> throw IllegalStateException("KMS signing failed: Key not found: ${signResult.keyId}")
+                is SignResult.Failure.UnsupportedAlgorithm -> throw IllegalStateException(
+                    "KMS signing failed: Unsupported algorithm: ${signResult.reason ?: "Algorithm ${signResult.requestedAlgorithm} not compatible with ${signResult.keyAlgorithm}"}",
+                )
+                is SignResult.Failure.Error -> throw IllegalStateException("KMS signing failed: ${signResult.reason}")
+            }
+        val signatureBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(signature)
+
         return "$headerBase64.$payloadBase64.$signatureBase64"
     }
 
@@ -1146,7 +1287,7 @@ class Oidc4VpService(
      */
     private fun parseQueryParameters(query: String?): Map<String, String> {
         if (query.isNullOrBlank()) return emptyMap()
-        
+
         return query.split("&").associate { param ->
             val parts = param.split("=", limit = 2)
             val key = URLDecoder.decode(parts[0], "UTF-8")
@@ -1158,8 +1299,8 @@ class Oidc4VpService(
     /**
      * Extracts verifier URL from request URI.
      */
-    private fun extractVerifierUrl(requestUri: String): String? {
-        return try {
+    private fun extractVerifierUrl(requestUri: String): String? =
+        try {
             val uri = java.net.URI(requestUri)
             val scheme = uri.scheme
             val authority = uri.authority
@@ -1171,22 +1312,24 @@ class Oidc4VpService(
         } catch (e: Exception) {
             null
         }
-    }
 
     /**
      * Extracts requested credential types from presentation definition.
      */
     private fun extractCredentialTypes(presentationDefinition: JsonObject?): List<String> {
         if (presentationDefinition == null) return emptyList()
-        
+
         // Extract from input_descriptors
         val inputDescriptors = presentationDefinition["input_descriptors"]?.jsonArray ?: return emptyList()
         return inputDescriptors.mapNotNull { descriptor ->
-            descriptor.jsonObject["constraints"]?.jsonObject
-                ?.get("fields")?.jsonArray
+            descriptor.jsonObject["constraints"]
+                ?.jsonObject
+                ?.get("fields")
+                ?.jsonArray
                 ?.firstOrNull()
                 ?.jsonObject
-                ?.get("path")?.jsonArray
+                ?.get("path")
+                ?.jsonArray
                 ?.firstOrNull()
                 ?.jsonPrimitive
                 ?.content
@@ -1198,9 +1341,8 @@ class Oidc4VpService(
      */
     private fun extractRequestedClaims(presentationDefinition: JsonObject?): Map<String, List<String>> {
         if (presentationDefinition == null) return emptyMap()
-        
+
         // Simplified extraction - full implementation would parse full presentation definition
         return emptyMap()
     }
 }
-

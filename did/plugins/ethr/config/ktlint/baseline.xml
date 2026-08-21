@@ -1,39 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <baseline version="1.0">
-    <file name="../../../../../../did/plugins/ethr/build.gradle.kts">
+    <file name="build.gradle.kts">
         <error line="18" column="1" source="standard:no-consecutive-blank-lines" />
         <error line="26" column="1" source="standard:no-consecutive-blank-lines" />
-    </file>
-    <file name="../../../../../../did/plugins/ethr/src/test/kotlin/org/trustweave/ethrdid/EthrDidMethodAddressDerivationTest.kt">
-        <error line="35" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="46" column="55" source="standard:function-signature" />
-        <error line="52" column="43" source="standard:function-signature" />
-        <error line="52" column="65" source="standard:function-signature" />
-        <error line="52" column="82" source="standard:function-signature" />
-        <error line="52" column="99" source="standard:function-signature" />
-        <error line="61" column="47" source="standard:multiline-expression-wrapping" />
-        <error line="65" column="45" source="standard:trailing-comma-on-call-site" />
-        <error line="67" column="56" source="standard:trailing-comma-on-declaration-site" />
-        <error line="71" column="72" source="standard:function-signature" />
-        <error line="76" column="39" source="standard:trailing-comma-on-declaration-site" />
-        <error line="80" column="37" source="standard:if-else-wrapping" />
-        <error line="80" column="37" source="standard:multiline-if-else" />
-        <error line="81" column="18" source="standard:if-else-wrapping" />
-        <error line="81" column="18" source="standard:multiline-if-else" />
-        <error line="83" column="35" source="standard:function-signature" />
-        <error line="83" column="49" source="standard:function-signature" />
-        <error line="83" column="66" source="standard:function-signature" />
-        <error line="83" column="87" source="standard:function-signature" />
-        <error line="83" column="102" source="standard:function-signature" />
-        <error line="93" column="68" source="standard:trailing-comma-on-call-site" />
-        <error line="97" column="90" source="standard:multiline-expression-wrapping" />
-        <error line="97" column="90" source="standard:function-signature" />
-        <error line="106" column="81" source="standard:multiline-expression-wrapping" />
-        <error line="106" column="81" source="standard:function-signature" />
-        <error line="109" column="21" source="standard:multiline-expression-wrapping" />
-        <error line="114" column="84" source="standard:trailing-comma-on-call-site" />
-        <error line="130" column="75" source="standard:multiline-expression-wrapping" />
-        <error line="130" column="75" source="standard:function-signature" />
     </file>
     <file name="src/main/kotlin/org/trustweave/ethrdid/EthrDidConfig.kt">
         <error line="23" column="1" source="standard:no-blank-line-in-list" />
@@ -67,67 +36,8 @@
         <error line="195" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/ethrdid/EthrDidMethod.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="5" column="1" source="standard:no-wildcard-imports" />
-        <error line="17" column="1" source="standard:no-unused-imports" />
-        <error line="21" column="1" source="standard:no-unused-imports" />
-        <error line="67" column="38" source="standard:trailing-comma-on-declaration-site" />
-        <error line="69" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="79" column="30" source="standard:multiline-expression-wrapping" />
-        <error line="81" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="82" column="53" source="standard:trailing-comma-on-call-site" />
-        <error line="92" column="70" source="standard:function-expression-body" />
-        <error line="96" column="39" source="standard:function-expression-body" />
-        <error line="100" column="58" source="standard:function-expression-body" />
-        <error line="126" column="80" source="standard:multiline-expression-wrapping" />
-        <error line="126" column="80" source="standard:function-signature" />
-        <error line="134" column="76" source="standard:trailing-comma-on-call-site" />
-        <error line="144" column="23" source="standard:multiline-expression-wrapping" />
-        <error line="151" column="38" source="standard:multiline-expression-wrapping" />
-        <error line="154" column="46" source="standard:trailing-comma-on-call-site" />
-        <error line="158" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="162" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="164" column="19" source="standard:if-else-wrapping" />
-        <error line="164" column="24" source="standard:if-else-bracing" />
-        <error line="164" column="24" source="standard:if-else-wrapping" />
-        <error line="164" column="24" source="standard:multiline-if-else" />
-        <error line="164" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="185" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="190" column="70" source="standard:multiline-expression-wrapping" />
-        <error line="190" column="70" source="standard:function-signature" />
-        <error line="216" column="30" source="standard:trailing-comma-on-call-site" />
-        <error line="226" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="233" column="46" source="standard:trailing-comma-on-declaration-site" />
-        <error line="234" column="22" source="standard:multiline-expression-wrapping" />
-        <error line="234" column="22" source="standard:function-signature" />
-        <error line="241" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="244" column="67" source="standard:trailing-comma-on-call-site" />
-        <error line="264" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="269" column="61" source="standard:multiline-expression-wrapping" />
-        <error line="269" column="61" source="standard:function-signature" />
-        <error line="277" column="35" source="standard:multiline-expression-wrapping" />
-        <error line="283" column="39" source="standard:multiline-expression-wrapping" />
-        <error line="289" column="51" source="standard:trailing-comma-on-call-site" />
-        <error line="305" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="327" column="94" source="standard:trailing-comma-on-call-site" />
-        <error line="331" column="19" source="standard:multiline-expression-wrapping" />
-        <error line="338" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="339" column="58" source="standard:trailing-comma-on-call-site" />
-        <error line="347" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="348" column="74" source="standard:trailing-comma-on-call-site" />
-        <error line="364" column="37" source="standard:function-signature" />
-        <error line="364" column="50" source="standard:function-signature" />
-        <error line="364" column="64" source="standard:function-signature" />
-        <error line="364" column="77" source="standard:function-signature" />
-        <error line="365" column="23" source="standard:multiline-expression-wrapping" />
-        <error line="368" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="369" column="45" source="standard:trailing-comma-on-call-site" />
-        <error line="371" column="21" source="standard:multiline-expression-wrapping" />
-        <error line="376" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="378" column="26" source="standard:trailing-comma-on-call-site" />
-        <error line="384" column="27" source="standard:multiline-expression-wrapping" />
-        <error line="385" column="89" source="standard:trailing-comma-on-call-site" />
-        <error line="404" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="7" column="1" source="standard:no-wildcard-imports" />
+        <error line="423" column="5" source="standard:no-consecutive-comments" />
     </file>
     <file name="src/main/kotlin/org/trustweave/ethrdid/spi/EthrDidMethodProvider.kt">
         <error line="20" column="1" source="standard:no-empty-first-line-in-class-body" />
@@ -140,5 +50,36 @@
         <error line="76" column="1" source="standard:indent" />
         <error line="76" column="38" source="standard:trailing-comma-on-call-site" />
         <error line="82" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/test/kotlin/org/trustweave/ethrdid/EthrDidMethodAddressDerivationTest.kt">
+        <error line="35" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="46" column="55" source="standard:function-signature" />
+        <error line="52" column="43" source="standard:function-signature" />
+        <error line="52" column="65" source="standard:function-signature" />
+        <error line="52" column="82" source="standard:function-signature" />
+        <error line="52" column="99" source="standard:function-signature" />
+        <error line="61" column="47" source="standard:multiline-expression-wrapping" />
+        <error line="65" column="45" source="standard:trailing-comma-on-call-site" />
+        <error line="67" column="56" source="standard:trailing-comma-on-declaration-site" />
+        <error line="71" column="72" source="standard:function-signature" />
+        <error line="76" column="39" source="standard:trailing-comma-on-declaration-site" />
+        <error line="80" column="37" source="standard:if-else-wrapping" />
+        <error line="80" column="37" source="standard:multiline-if-else" />
+        <error line="81" column="18" source="standard:if-else-wrapping" />
+        <error line="81" column="18" source="standard:multiline-if-else" />
+        <error line="83" column="35" source="standard:function-signature" />
+        <error line="83" column="49" source="standard:function-signature" />
+        <error line="83" column="66" source="standard:function-signature" />
+        <error line="83" column="87" source="standard:function-signature" />
+        <error line="83" column="102" source="standard:function-signature" />
+        <error line="93" column="68" source="standard:trailing-comma-on-call-site" />
+        <error line="97" column="90" source="standard:multiline-expression-wrapping" />
+        <error line="97" column="90" source="standard:function-signature" />
+        <error line="106" column="81" source="standard:multiline-expression-wrapping" />
+        <error line="106" column="81" source="standard:function-signature" />
+        <error line="109" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="114" column="84" source="standard:trailing-comma-on-call-site" />
+        <error line="130" column="75" source="standard:multiline-expression-wrapping" />
+        <error line="130" column="75" source="standard:function-signature" />
     </file>
 </baseline>

@@ -1,14 +1,14 @@
 package org.trustweave.did.registry
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.DidMethod
 import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.DidMethod
+import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.RegistryBasedResolver
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
-import java.util.concurrent.ConcurrentHashMap
 import java.util.ServiceLoader
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * In-memory registry for managing DID method implementations.
@@ -30,11 +30,11 @@ import java.util.ServiceLoader
  * // Manual registration
  * val registry = DidMethodRegistry()
  * registry.register(KeyDidMethod(kms))
- * 
+ *
  * // Auto-register from SPI providers
  * val auto = DidMethodRegistry.autoRegister(kms)
  * val registry = auto.registry
- * 
+ *
  * // Use operators
  * val method = registry["key"]
  * if ("key" in registry) {
@@ -73,7 +73,10 @@ class DidMethodRegistry {
      * registry["key"] = KeyDidMethod(kms)
      * ```
      */
-    operator fun set(methodName: String, method: DidMethod) {
+    operator fun set(
+        methodName: String,
+        method: DidMethod,
+    ) {
         require(method.method == methodName) {
             "Method name mismatch: expected '$methodName', got '${method.method}'"
         }
@@ -107,14 +110,15 @@ class DidMethodRegistry {
      *   [DidResolutionResult.Failure.MethodNotRegistered] if the method is not registered
      */
     suspend fun resolve(did: String): DidResolutionResult {
-        val parsed = try {
-            Did(did)
-        } catch (e: IllegalArgumentException) {
-            return DidResolutionResult.Failure.InvalidFormat(
-                did = did,
-                reason = e.message ?: "Invalid DID format"
-            )
-        }
+        val parsed =
+            try {
+                Did(did)
+            } catch (e: IllegalArgumentException) {
+                return DidResolutionResult.Failure.InvalidFormat(
+                    did = did,
+                    reason = e.message ?: "Invalid DID format",
+                )
+            }
         return RegistryBasedResolver(this).resolve(parsed)
     }
 
@@ -142,12 +146,13 @@ class DidMethodRegistry {
 
     /**
      * Checks if a method is registered.
-     * 
+     *
      * Consider using the `in` operator instead: `"key" in registry`
      */
     fun has(methodName: String): Boolean = methods.containsKey(methodName)
 
     // Internal/test utility
+
     /**
      * Clears all registered methods (for testing).
      */
@@ -156,7 +161,9 @@ class DidMethodRegistry {
     }
 
     companion object {
-        private val logger = org.trustweave.did.util.DidLogging.getLogger(DidMethodRegistry::class.java)
+        private val logger =
+            org.trustweave.did.util.DidLogging
+                .getLogger(DidMethodRegistry::class.java)
 
         /**
          * Creates a registry and auto-registers all methods discovered via SPI.
@@ -184,20 +191,21 @@ class DidMethodRegistry {
          */
         suspend fun autoRegister(
             kms: KeyManagementService? = null,
-            options: DidCreationOptions = DidCreationOptions()
+            options: DidCreationOptions = DidCreationOptions(),
         ): DidMethodRegistryAutoRegisterResult {
             val registry = DidMethodRegistry()
             val failures = mutableListOf<DidMethodAutoRegisterFailure>()
 
             try {
                 val providers = ServiceLoader.load(DidMethodProvider::class.java).toList()
-                val creationOptions = if (kms != null) {
-                    options.copy(
-                        additionalProperties = options.additionalProperties + ("kms" to kms)
-                    )
-                } else {
-                    options
-                }
+                val creationOptions =
+                    if (kms != null) {
+                        options.copy(
+                            additionalProperties = options.additionalProperties + ("kms" to kms),
+                        )
+                    } else {
+                        options
+                    }
 
                 val methodsToRegister = mutableSetOf<String>()
                 providers.forEach { provider ->
@@ -206,20 +214,20 @@ class DidMethodRegistry {
 
                 for (methodName in methodsToRegister) {
                     val providersForMethod = providers.filter { methodName in it.supportedMethods }
+                    val provider = selectProviderFor(providersForMethod)
                     if (providersForMethod.size > 1) {
                         logger.warn(
                             "Multiple SPI providers support DID method '$methodName': " +
                                 "${providersForMethod.map { it::class.java.simpleName }}. " +
-                                "Using first: ${providersForMethod.first()::class.java.simpleName}"
+                                "Using highest priority: ${provider?.let { it::class.java.simpleName }}",
                         )
                     }
-                    val provider = providersForMethod.firstOrNull()
                     if (provider == null) {
                         failures.add(
                             DidMethodAutoRegisterFailure(
                                 phase = "resolve_provider",
                                 message = "No DidMethodProvider found for method '$methodName'",
-                            )
+                            ),
                         )
                         continue
                     }
@@ -228,7 +236,7 @@ class DidMethodRegistry {
                             DidMethodAutoRegisterFailure(
                                 phase = "environment",
                                 message = "Skipped method '$methodName': provider ${provider::class.java.name} missing required environment variables",
-                            )
+                            ),
                         )
                         continue
                     }
@@ -241,7 +249,7 @@ class DidMethodRegistry {
                                 DidMethodAutoRegisterFailure(
                                     phase = "create",
                                     message = "Provider ${provider::class.java.name} returned null for method '$methodName'",
-                                )
+                                ),
                             )
                         }
                     } catch (e: kotlinx.coroutines.CancellationException) {
@@ -252,7 +260,7 @@ class DidMethodRegistry {
                                 phase = "create",
                                 message = "Provider ${provider::class.java.name} failed for method '$methodName': ${e.message ?: e::class.java.simpleName}",
                                 cause = e,
-                            )
+                            ),
                         )
                     }
                 }
@@ -264,7 +272,7 @@ class DidMethodRegistry {
                         phase = "discovery",
                         message = "DID method SPI discovery failed: ${e.message ?: e::class.java.simpleName}",
                         cause = e,
-                    )
+                    ),
                 )
             }
 
@@ -289,3 +297,17 @@ class DidMethodRegistry {
         }
     }
 }
+
+/**
+ * Chooses between providers that claim the same DID method.
+ *
+ * Highest [DidMethodProvider.priority] wins. Ties fall back to the provider class name so the
+ * result cannot move with `ServiceLoader`'s classpath ordering — a build that reorders its jars
+ * must not silently change which DID implementation is in use.
+ */
+internal fun selectProviderFor(providers: List<DidMethodProvider>): DidMethodProvider? =
+    providers.minWithOrNull(
+        compareByDescending<DidMethodProvider> { it.priority }
+            .thenBy { it.name }
+            .thenBy { it::class.java.name },
+    )

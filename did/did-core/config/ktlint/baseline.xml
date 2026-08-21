@@ -612,29 +612,8 @@
         <error line="156" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/did/registry/DidMethodRegistry.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="33" column="3" source="standard:no-trailing-spaces" />
-        <error line="37" column="3" source="standard:no-trailing-spaces" />
-        <error line="76" column="22" source="standard:function-signature" />
-        <error line="76" column="42" source="standard:function-signature" />
-        <error line="76" column="59" source="standard:function-signature" />
-        <error line="110" column="22" source="standard:multiline-expression-wrapping" />
-        <error line="115" column="59" source="standard:trailing-comma-on-call-site" />
-        <error line="145" column="7" source="standard:no-trailing-spaces" />
-        <error line="151" column="5" source="standard:blank-line-before-declaration" />
-        <error line="151" column="5" source="standard:no-consecutive-comments" />
-        <error line="159" column="64" source="standard:chain-method-continuation" />
-        <error line="187" column="63" source="standard:trailing-comma-on-declaration-site" />
-        <error line="194" column="39" source="standard:multiline-expression-wrapping" />
-        <error line="196" column="93" source="standard:trailing-comma-on-call-site" />
-        <error line="213" column="100" source="standard:trailing-comma-on-call-site" />
-        <error line="222" column="30" source="standard:trailing-comma-on-call-site" />
-        <error line="230" column="141" source="standard:max-line-length" />
-        <error line="231" column="30" source="standard:trailing-comma-on-call-site" />
-        <error line="244" column="34" source="standard:trailing-comma-on-call-site" />
-        <error line="253" column="141" source="standard:max-line-length" />
-        <error line="255" column="30" source="standard:trailing-comma-on-call-site" />
-        <error line="267" column="22" source="standard:trailing-comma-on-call-site" />
+        <error line="238" column="141" source="standard:max-line-length" />
+        <error line="261" column="141" source="standard:max-line-length" />
     </file>
     <file name="src/main/kotlin/org/trustweave/did/representation/DidDocumentJsonProducer.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -1175,13 +1154,6 @@
         <error line="300" column="50" source="standard:trailing-comma-on-call-site" />
         <error line="305" column="68" source="standard:trailing-comma-on-call-site" />
         <error line="311" column="1" source="standard:no-consecutive-blank-lines" />
-    </file>
-    <file name="src/main/kotlin/org/trustweave/did/spi/DidMethodProvider.kt">
-        <error line="18" column="16" source="standard:function-signature" />
-        <error line="18" column="36" source="standard:function-signature" />
-        <error line="18" column="86" source="standard:function-signature" />
-        <error line="53" column="52" source="standard:function-expression-body" />
-        <error line="62" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/did/storage/DidDocumentStorage.kt">
         <error line="42" column="1" source="standard:no-trailing-spaces" />

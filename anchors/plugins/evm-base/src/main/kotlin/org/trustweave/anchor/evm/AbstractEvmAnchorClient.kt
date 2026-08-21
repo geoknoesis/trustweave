@@ -34,6 +34,15 @@ data class EvmChainConfig(
     val blockchainName: String,
     val networkName: String,
     val credentialsRequired: Boolean = false,
+    /**
+     * Blocks required on top of an anchor's block before it can be read back, unless the
+     * `minConfirmations` option overrides it.
+     *
+     * Chain-level policy rather than a global constant: a single-node development chain mines a
+     * block per transaction and never re-orgs, so requiring a confirmation there would reject an
+     * anchor that was just written. Public chains keep the default.
+     */
+    val defaultMinConfirmations: Long = AbstractEvmAnchorClient.DEFAULT_MIN_CONFIRMATIONS,
 )
 
 /**
@@ -72,8 +81,8 @@ abstract class AbstractEvmAnchorClient(
     chainId: String,
     options: Map<String, Any?>,
     protected val chain: EvmChainConfig,
-) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-
+) : AbstractBlockchainAnchorClient(chainId, options),
+    java.io.Closeable {
     /** The resolved JSON-RPC endpoint (the `rpcUrl` option or the chain default). */
     protected val rpcUrl: String = options["rpcUrl"] as? String ?: chain.defaultRpcUrl
 
@@ -86,27 +95,30 @@ abstract class AbstractEvmAnchorClient(
      * error and fails closed instead of silently degrading to the in-memory
      * test fallback.
      */
-    protected val credentials: org.web3j.crypto.Credentials? = run {
-        val privateKeyHex = options["privateKey"] as? String
-        when {
-            privateKeyHex != null -> try {
-                org.web3j.crypto.Credentials.create(privateKeyHex.removePrefix("0x"))
-            } catch (e: Exception) {
-                throw BlockchainException.ConfigurationFailed(
+    protected val credentials: org.web3j.crypto.Credentials? =
+        run {
+            val privateKeyHex = options["privateKey"] as? String
+            when {
+                privateKeyHex != null ->
+                    try {
+                        org.web3j.crypto.Credentials
+                            .create(privateKeyHex.removePrefix("0x"))
+                    } catch (e: Exception) {
+                        throw BlockchainException.ConfigurationFailed(
+                            chainId = chainId,
+                            configKey = "privateKey",
+                            reason = "Invalid ${chain.blockchainName} private key: ${e.message ?: "Unknown error"}",
+                            cause = e,
+                        )
+                    }
+                chain.credentialsRequired -> throw BlockchainException.ConfigurationFailed(
                     chainId = chainId,
                     configKey = "privateKey",
-                    reason = "Invalid ${chain.blockchainName} private key: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    reason = "privateKey is required for ${this::class.java.simpleName}",
                 )
+                else -> null
             }
-            chain.credentialsRequired -> throw BlockchainException.ConfigurationFailed(
-                chainId = chainId,
-                configKey = "privateKey",
-                reason = "privateKey is required for ${this::class.java.simpleName}"
-            )
-            else -> null
         }
-    }
 
     /**
      * The numeric chain id every transaction from this client is signed with
@@ -116,8 +128,7 @@ abstract class AbstractEvmAnchorClient(
 
     override fun canSubmitTransaction(): Boolean = credentials != null
 
-    override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String =
-        submitTransaction(payloadBytes).transactionHash
+    override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String = submitTransaction(payloadBytes).transactionHash
 
     override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
         val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
@@ -126,43 +137,51 @@ abstract class AbstractEvmAnchorClient(
         }
 
         val receipt = ethGetTransactionReceipt.transactionReceipt.get()
-        val tx = web3j.ethGetTransactionByHash(txHash).send().transaction.orElse(null)
-            ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
+        requireSameTransaction(requested = txHash, returned = receipt.transactionHash, source = "receipt")
+
+        val tx =
+            web3j
+                .ethGetTransactionByHash(txHash)
+                .send()
+                .transaction
+                .orElse(null)
+                ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
+        requireSameTransaction(requested = txHash, returned = tx.hash, source = "transaction")
+
+        requireBuried(txHash, receipt)
 
         val input = tx.input
         if (input == null || input.isEmpty() || input == "0x") {
             throw TrustWeaveException.NotFound(resource = "Transaction data not found: $txHash")
         }
 
-        val dataBytes = org.web3j.utils.Numeric.hexStringToByteArray(input)
+        val dataBytes =
+            org.web3j.utils.Numeric
+                .hexStringToByteArray(input)
         val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
         val payload = Json.parseToJsonElement(payloadJson)
 
         return AnchorResult(
-            ref = buildAnchorRef(
-                txHash = txHash,
-                contract = getContractAddress()
-            ),
+            ref =
+                buildAnchorRef(
+                    txHash = txHash,
+                    contract = getContractAddress(),
+                ),
             payload = payload,
             mediaType = "application/json",
-            timestamp = readBlockTimestamp(receipt)
+            timestamp = readBlockTimestamp(receipt),
         )
     }
 
-    override fun getContractAddress(): String? {
-        return options["contractAddress"] as? String
-    }
+    override fun getContractAddress(): String? = options["contractAddress"] as? String
 
-    override fun buildExtraMetadata(mediaType: String): Map<String, String> {
-        return mapOf(
+    override fun buildExtraMetadata(mediaType: String): Map<String, String> =
+        mapOf(
             "network" to chain.networkName,
-            "mediaType" to mediaType
+            "mediaType" to mediaType,
         )
-    }
 
-    override fun generateTestTxHash(): String {
-        return "0x${uniqueTestHashHex()}"
-    }
+    override fun generateTestTxHash(): String = "0x${uniqueTestHashHex()}"
 
     override fun getBlockchainName(): String = chain.blockchainName
 
@@ -175,8 +194,10 @@ abstract class AbstractEvmAnchorClient(
      * cost (Arbitrum Nitro, zkSync Era, …) override this with an
      * `eth_estimateGas`-primary strategy built on [tryEstimateGas].
      */
-    protected open fun deriveGasLimit(data: ByteArray, from: String): BigInteger =
-        EvmGas.txGasLimit(data)
+    protected open fun deriveGasLimit(
+        data: ByteArray,
+        from: String,
+    ): BigInteger = EvmGas.txGasLimit(data)
 
     /**
      * Asks the node how much gas the anchor transaction (a data-carrying self-send
@@ -184,21 +205,27 @@ abstract class AbstractEvmAnchorClient(
      * node reports an error or the call fails, letting callers fall back to
      * intrinsic-gas math.
      */
-    protected fun tryEstimateGas(data: ByteArray, from: String): BigInteger? = try {
-        val tx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
-            from,
-            null,
-            null,
-            null,
-            from, // Anchors are data-carrying self-sends
-            BigInteger.ZERO,
-            org.web3j.utils.Numeric.toHexString(data)
-        )
-        val response = web3j.ethEstimateGas(tx).send()
-        if (response.hasError() || response.result == null) null else response.amountUsed
-    } catch (_: Exception) {
-        null
-    }
+    protected fun tryEstimateGas(
+        data: ByteArray,
+        from: String,
+    ): BigInteger? =
+        try {
+            val tx =
+                org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
+                    from,
+                    null,
+                    null,
+                    null,
+                    from, // Anchors are data-carrying self-sends
+                    BigInteger.ZERO,
+                    org.web3j.utils.Numeric
+                        .toHexString(data),
+                )
+            val response = web3j.ethEstimateGas(tx).send()
+            if (response.hasError() || response.result == null) null else response.amountUsed
+        } catch (_: Exception) {
+            null
+        }
 
     /**
      * Builds, signs ([signWithChainId]) and submits a raw transaction carrying [data]
@@ -211,26 +238,34 @@ abstract class AbstractEvmAnchorClient(
      * @return the confirmed transaction receipt
      */
     protected suspend fun submitTransaction(data: ByteArray): TransactionReceipt {
-        val creds = credentials
-            ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
+        val creds =
+            credentials
+                ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
 
         val gasPrice = web3j.ethGasPrice().send().gasPrice
         // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
-        val nonce = web3j.ethGetTransactionCount(creds.address, DefaultBlockParameterName.PENDING)
-            .send().transactionCount
+        val nonce =
+            web3j
+                .ethGetTransactionCount(creds.address, DefaultBlockParameterName.PENDING)
+                .send()
+                .transactionCount
 
         val gasLimit = deriveGasLimit(data, creds.address)
-        val rawTransaction = org.web3j.crypto.RawTransaction.createTransaction(
-            nonce,
-            gasPrice,
-            gasLimit,
-            creds.address, // Send to self
-            BigInteger.ZERO,
-            org.web3j.utils.Numeric.toHexString(data)
-        )
+        val rawTransaction =
+            org.web3j.crypto.RawTransaction.createTransaction(
+                nonce,
+                gasPrice,
+                gasLimit,
+                creds.address, // Send to self
+                BigInteger.ZERO,
+                org.web3j.utils.Numeric
+                    .toHexString(data),
+            )
 
         val signedTransaction = signWithChainId(rawTransaction, creds)
-        val hexValue = org.web3j.utils.Numeric.toHexString(signedTransaction)
+        val hexValue =
+            org.web3j.utils.Numeric
+                .toHexString(signedTransaction)
 
         val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
         if (ethSendTransaction.hasError()) {
@@ -241,7 +276,7 @@ abstract class AbstractEvmAnchorClient(
                 operation = "submitTransaction",
                 payloadSize = data.size.toLong(),
                 gasUsed = gasLimit.toLong(),
-                reason = "Transaction failed: ${error?.message ?: "Unknown error"}"
+                reason = "Transaction failed: ${error?.message ?: "Unknown error"}",
             )
         }
 
@@ -262,17 +297,26 @@ abstract class AbstractEvmAnchorClient(
         rawTransaction: org.web3j.crypto.RawTransaction,
         creds: org.web3j.crypto.Credentials,
     ): ByteArray =
-        org.web3j.crypto.TransactionEncoder.signMessage(rawTransaction, chain.numericChainId, creds)
+        org.web3j.crypto.TransactionEncoder
+            .signMessage(rawTransaction, chain.numericChainId, creds)
 
     /**
      * Polls `eth_getTransactionReceipt` until the transaction is mined, bounded by
      * [confirmationTimeoutMs] (option [OPTION_CONFIRMATION_TIMEOUT_MS]). Throws
      * [BlockchainException.TransactionFailed] on revert or timeout.
      */
-    protected suspend fun waitForReceipt(txHash: String, payloadSize: Long): TransactionReceipt {
+    protected suspend fun waitForReceipt(
+        txHash: String,
+        payloadSize: Long,
+    ): TransactionReceipt {
         val deadline = System.currentTimeMillis() + confirmationTimeoutMs
         while (true) {
-            val receipt = web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt.orElse(null)
+            val receipt =
+                web3j
+                    .ethGetTransactionReceipt(txHash)
+                    .send()
+                    .transactionReceipt
+                    .orElse(null)
             if (receipt != null) {
                 if (!receipt.isStatusOK) {
                     throw BlockchainException.TransactionFailed(
@@ -280,12 +324,13 @@ abstract class AbstractEvmAnchorClient(
                         txHash = txHash,
                         operation = "submitTransaction",
                         payloadSize = payloadSize,
-                        gasUsed = try {
-                            receipt.gasUsed?.toLong()
-                        } catch (_: Exception) {
-                            null
-                        },
-                        reason = "Transaction reverted on chain (status=${receipt.status})"
+                        gasUsed =
+                            try {
+                                receipt.gasUsed?.toLong()
+                            } catch (_: Exception) {
+                                null
+                            },
+                        reason = "Transaction reverted on chain (status=${receipt.status})",
                     )
                 }
                 return receipt
@@ -296,8 +341,9 @@ abstract class AbstractEvmAnchorClient(
                     txHash = txHash,
                     operation = "submitTransaction",
                     payloadSize = payloadSize,
-                    reason = "Transaction not confirmed within $confirmationTimeoutMs ms " +
-                        "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)"
+                    reason =
+                        "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                            "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)",
                 )
             }
             delay(confirmationPollIntervalMs)
@@ -310,30 +356,109 @@ abstract class AbstractEvmAnchorClient(
      * transaction's gas price otherwise. Returns null when the fee cannot be
      * resolved.
      */
-    protected fun computeActualFee(receipt: TransactionReceipt): TokenAmount? = try {
-        val gasUsed = receipt.gasUsed ?: BigInteger.ZERO
-        val effectivePrice = receipt.effectiveGasPrice
-            ?.let { org.web3j.utils.Numeric.decodeQuantity(it) }
-            ?: web3j.ethGetTransactionByHash(receipt.transactionHash).send()
-                .transaction.orElse(null)?.gasPrice
-            ?: BigInteger.ZERO
-        TokenAmount(chainId, AssetRef.Native, gasUsed.multiply(effectivePrice))
-    } catch (_: Exception) {
-        null
+    protected fun computeActualFee(receipt: TransactionReceipt): TokenAmount? =
+        try {
+            val gasUsed = receipt.gasUsed ?: BigInteger.ZERO
+            val effectivePrice =
+                receipt.effectiveGasPrice
+                    ?.let {
+                        org.web3j.utils.Numeric
+                            .decodeQuantity(it)
+                    }
+                    ?: web3j
+                        .ethGetTransactionByHash(receipt.transactionHash)
+                        .send()
+                        .transaction
+                        .orElse(null)
+                        ?.gasPrice
+                    ?: BigInteger.ZERO
+            TokenAmount(chainId, AssetRef.Native, gasUsed.multiply(effectivePrice))
+        } catch (_: Exception) {
+            null
+        }
+
+    /**
+     * Asserts the node handed back the transaction that was asked for.
+     *
+     * `verifyAnchor` treats whatever this read returns as what was anchored, and the answer comes
+     * from one RPC endpoint. A node that is compromised, buggy, or simply pointed at a forked chain
+     * can answer with a different transaction, and its payload would then be compared against the
+     * caller's — so the identity is checked rather than assumed. Hex casing is not significant.
+     */
+    private fun requireSameTransaction(
+        requested: String,
+        returned: String?,
+        source: String,
+    ) {
+        if (returned == null || !returned.equals(requested, ignoreCase = true)) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = requested,
+                operation = "readTransaction",
+                reason =
+                    "RPC returned a $source for a different transaction ($returned); " +
+                        "refusing to read an anchor from it",
+            )
+        }
+    }
+
+    /**
+     * Asserts the containing block has at least [minConfirmations] blocks on top of it.
+     *
+     * A transaction in the current head block is not settled — a re-org of depth one removes it,
+     * and an anchor verified against it would later refer to nothing. The depth is configurable
+     * via [OPTION_MIN_CONFIRMATIONS]; the default of
+     * [DEFAULT_MIN_CONFIRMATIONS] only excludes the tip, which is the cheapest useful guard.
+     * Deployments anchoring high-value data should raise it to their chain's usual settlement
+     * depth, and may set 0 to restore the previous unchecked behaviour.
+     */
+    private fun requireBuried(
+        txHash: String,
+        receipt: TransactionReceipt,
+    ) {
+        val required = minConfirmations
+        if (required <= 0) return
+
+        val blockNumber =
+            receipt.blockNumber
+                ?: throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "readTransaction",
+                    reason = "Transaction is not in a block yet; cannot confirm it is settled",
+                )
+        val head = web3j.ethBlockNumber().send().blockNumber
+        val confirmations = head.subtract(blockNumber).toLong()
+        if (confirmations < required) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readTransaction",
+                reason =
+                    "Transaction has $confirmations confirmation(s) at block $blockNumber " +
+                        "(head $head); $required required. Configure via " +
+                        "'$OPTION_MIN_CONFIRMATIONS'",
+            )
+        }
     }
 
     /**
      * Resolves the timestamp of the block containing [receipt] (one extra RPC call);
      * returns null if it cannot be resolved, rather than fabricating one.
      */
-    protected fun readBlockTimestamp(receipt: TransactionReceipt): Long? = try {
-        receipt.blockNumber?.let { blockNumber ->
-            web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(blockNumber), false)
-                .send().block?.timestamp?.toLong()
+    protected fun readBlockTimestamp(receipt: TransactionReceipt): Long? =
+        try {
+            receipt.blockNumber?.let { blockNumber ->
+                web3j
+                    .ethGetBlockByNumber(DefaultBlockParameter.valueOf(blockNumber), false)
+                    .send()
+                    .block
+                    ?.timestamp
+                    ?.toLong()
+            }
+        } catch (_: Exception) {
+            null
         }
-    } catch (_: Exception) {
-        null
-    }
 
     override fun close() {
         try {
@@ -341,5 +466,25 @@ abstract class AbstractEvmAnchorClient(
         } catch (_: Exception) {
             // Ignore errors during shutdown
         }
+    }
+
+    /** Blocks required on top of an anchor's block before it is read (see [OPTION_MIN_CONFIRMATIONS]). */
+    private val minConfirmations: Long
+        get() =
+            when (val value = options[OPTION_MIN_CONFIRMATIONS]) {
+                is Number -> value.toLong()
+                is String -> value.toLongOrNull() ?: chain.defaultMinConfirmations
+                else -> chain.defaultMinConfirmations
+            }
+
+    public companion object {
+        /**
+         * Blocks that must sit on top of an anchor's block before [readTransactionFromBlockchain]
+         * will read it. 0 disables the check.
+         */
+        public const val OPTION_MIN_CONFIRMATIONS: String = "minConfirmations"
+
+        /** Excludes only the head block, where a depth-one re-org still removes the transaction. */
+        public const val DEFAULT_MIN_CONFIRMATIONS: Long = 1L
     }
 }

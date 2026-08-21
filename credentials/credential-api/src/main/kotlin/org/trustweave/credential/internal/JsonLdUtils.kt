@@ -45,7 +45,6 @@ import java.io.StringWriter
  * It is used by proof engines for VC-LD operations.
  */
 internal object JsonLdUtils {
-
     /** Expanded IRI of `credentialSubject` (identical in the VC 1.1 and VC 2.0 vocabularies). */
     private const val CREDENTIAL_SUBJECT_IRI = "https://www.w3.org/2018/credentials#credentialSubject"
 
@@ -91,29 +90,34 @@ internal object JsonLdUtils {
      * @return Canonicalized document as N-Quads string
      */
     fun canonicalizeDocument(document: JsonObject): String {
+        enforcePreCanonicalizationBounds(document)
+
         val jakartaDocument = toJakartaObject(document)
 
-        val canonical = try {
-            val canon = RdfCanon.create(RDF_CANON_HASH_ALGORITHM)
-            JsonLd.toRdf(JsonDocument.of(jakartaDocument))
-                .loader(JsonLdContextLoader.createDocumentLoader())
-                .provide(canon)
-            val writer = StringWriter()
-            canon.provide(NQuadsWriter(writer))
-            writer.toString()
-        } catch (e: Exception) {
-            throw SerializationException.EncodeFailed(
-                element = "json-ld-document",
-                reason = "JSON-LD canonicalization (RDFC-1.0/URDNA2015) failed: ${e.message}"
-            )
-        }
+        val canonical =
+            try {
+                val canon = RdfCanon.create(RDF_CANON_HASH_ALGORITHM)
+                JsonLd
+                    .toRdf(JsonDocument.of(jakartaDocument))
+                    .loader(JsonLdContextLoader.createDocumentLoader())
+                    .provide(canon)
+                val writer = StringWriter()
+                canon.provide(NQuadsWriter(writer))
+                writer.toString()
+            } catch (e: Exception) {
+                throw SerializationException.EncodeFailed(
+                    element = "json-ld-document",
+                    reason = "JSON-LD canonicalization (RDFC-1.0/URDNA2015) failed: ${e.message}",
+                )
+            }
 
         if (canonical.isBlank()) {
             throw SerializationException.EncodeFailed(
                 element = "json-ld-document",
-                reason = "JSON-LD canonicalization produced no RDF statements; the document's " +
-                    "@context is missing or does not define any of its terms. Refusing to sign or " +
-                    "verify an empty canonical form."
+                reason =
+                    "JSON-LD canonicalization produced no RDF statements; the document's " +
+                        "@context is missing or does not define any of its terms. Refusing to sign or " +
+                        "verify an empty canonical form.",
             )
         }
 
@@ -123,7 +127,7 @@ internal object JsonLdUtils {
             throw IllegalArgumentException(
                 "Canonicalized document exceeds maximum size of " +
                     "${SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES} bytes: " +
-                    "${canonicalBytes.size} bytes"
+                    "${canonicalBytes.size} bytes",
             )
         }
 
@@ -171,9 +175,10 @@ internal object JsonLdUtils {
         when (val subject = document["credentialSubject"]) {
             null -> return
             is JsonObject -> requireAbsoluteSubjectId(subject)
-            is JsonArray -> subject.forEach { element ->
-                if (element is JsonObject) requireAbsoluteSubjectId(element)
-            }
+            is JsonArray ->
+                subject.forEach { element ->
+                    if (element is JsonObject) requireAbsoluteSubjectId(element)
+                }
             else -> {} // non-object/array subjects are handled by the claims-preserved check
         }
     }
@@ -194,16 +199,17 @@ internal object JsonLdUtils {
         if (!UriUtils.isAbsoluteUri(idValue)) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject.id",
-                reason = "credentialSubject.id must be a valid absolute IRI; '$idValue' is not — " +
-                    "toRdf would drop its triples, leaving the subject's claims unsigned. " +
-                    "JSON-LD RDFC-1.0 canonicalization (JsonLd.toRdf) drops every triple whose " +
-                    "subject is not a usable absolute IRI — this covers relative IRIs (no scheme, " +
-                    "e.g. a bare UUID or '#fragment') AND syntactically-invalid IRIs that carry a " +
-                    "colon but are not legal (e.g. 'urn:has space', 'urn:a^b'). The subject's " +
-                    "claims would then NOT be covered by the proof signature (the credential would " +
-                    "still verify, making the claims forgeable). Use a valid absolute IRI for " +
-                    "credentialSubject.id (e.g. http:, https:, did:, or urn:uuid:), or omit it to " +
-                    "mint an anonymous (blank-node) subject whose triples are signed."
+                reason =
+                    "credentialSubject.id must be a valid absolute IRI; '$idValue' is not — " +
+                        "toRdf would drop its triples, leaving the subject's claims unsigned. " +
+                        "JSON-LD RDFC-1.0 canonicalization (JsonLd.toRdf) drops every triple whose " +
+                        "subject is not a usable absolute IRI — this covers relative IRIs (no scheme, " +
+                        "e.g. a bare UUID or '#fragment') AND syntactically-invalid IRIs that carry a " +
+                        "colon but are not legal (e.g. 'urn:has space', 'urn:a^b'). The subject's " +
+                        "claims would then NOT be covered by the proof signature (the credential would " +
+                        "still verify, making the claims forgeable). Use a valid absolute IRI for " +
+                        "credentialSubject.id (e.g. http:, https:, did:, or urn:uuid:), or omit it to " +
+                        "mint an anonymous (blank-node) subject whose triples are signed.",
             )
         }
     }
@@ -234,17 +240,82 @@ internal object JsonLdUtils {
      * - a context that compacts a declared term back to a *different* alias also throws
      *   (the claim cannot be proven preserved by name).
      */
+
+    /**
+     * Bounds the work canonicalization can be asked to do, before any of it is done.
+     *
+     * [SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES] measures the *output*, so it only
+     * reports a document that was already expensive to process — by then the CPU is spent. RDFC-1.0
+     * (URDNA2015) is super-linear in blank nodes, so a small document holding many
+     * mutually-referencing blank nodes buys an attacker a large amount of verifier work. Both the
+     * input size and the blank-node count are therefore checked up front.
+     */
+    private fun enforcePreCanonicalizationBounds(document: JsonObject) {
+        val sizeBytes = document.toString().toByteArray(Charsets.UTF_8).size
+        if (sizeBytes > SecurityConstants.MAX_PRE_CANONICALIZATION_SIZE_BYTES) {
+            throw IllegalArgumentException(
+                "Document exceeds maximum size of " +
+                    "${SecurityConstants.MAX_PRE_CANONICALIZATION_SIZE_BYTES} bytes before " +
+                    "canonicalization: $sizeBytes bytes",
+            )
+        }
+
+        val limit = SecurityConstants.MAX_BLANK_NODES_PER_DOCUMENT
+        val blankNodes = countBlankNodes(document, limit)
+        if (blankNodes > limit) {
+            throw IllegalArgumentException(
+                "Document contains more than $limit blank nodes; refusing to canonicalize it. " +
+                    "RDFC-1.0 canonicalization is super-linear in blank nodes, so this bound keeps " +
+                    "an untrusted document from dictating how much work a verifier does.",
+            )
+        }
+    }
+
+    /**
+     * Counts node objects that will become blank nodes, stopping once [limit] is passed.
+     *
+     * A node object with no `@id` becomes a blank node on expansion. `@value` objects are literals
+     * and `@context` holds term definitions, so neither contributes. Iterative on purpose: a
+     * recursive walk over a deeply nested untrusted document would itself be a way to exhaust the
+     * stack.
+     */
+    private fun countBlankNodes(
+        root: JsonObject,
+        limit: Int,
+    ): Int {
+        var count = 0
+        val pending = ArrayDeque<Pair<JsonElement, Boolean>>()
+        pending.addLast(root to false)
+
+        while (pending.isNotEmpty() && count <= limit) {
+            val (node, insideContext) = pending.removeLast()
+            when (node) {
+                is JsonObject -> {
+                    if (insideContext) continue
+                    if (node.containsKey("@value")) continue
+                    if (!node.containsKey("@id")) count++
+                    node.forEach { (key, value) -> pending.addLast(value to (key == "@context")) }
+                }
+
+                is JsonArray -> node.forEach { pending.addLast(it to insideContext) }
+                else -> Unit
+            }
+        }
+        return count
+    }
+
     private fun verifyCredentialSubjectClaimsPreserved(
         document: JsonObject,
-        jakartaDocument: jakarta.json.JsonObject
+        jakartaDocument: jakarta.json.JsonObject,
     ) {
         val subject = document["credentialSubject"] ?: return
         if (subject !is JsonObject && subject !is JsonArray) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject",
-                reason = "credentialSubject must be a JSON object (or an array of objects), got " +
-                    "${subject::class.simpleName}. Refusing to sign or verify a document whose " +
-                    "subject claims cannot be checked against the @context for dropped terms."
+                reason =
+                    "credentialSubject must be a JSON object (or an array of objects), got " +
+                        "${subject::class.simpleName}. Refusing to sign or verify a document whose " +
+                        "subject claims cannot be checked against the @context for dropped terms.",
             )
         }
 
@@ -256,20 +327,23 @@ internal object JsonLdUtils {
         // Terms not defined by the @context are dropped at expansion and cannot reappear
         // at compaction; defined terms compact back to their original names.
         val contextValue: JsonValue = jakartaDocument["@context"] ?: JsonValue.EMPTY_JSON_OBJECT
-        val compacted: jakarta.json.JsonObject = try {
-            val contextDocument = JsonDocument.of(
-                Json.createObjectBuilder().add("@context", contextValue).build()
-            )
-            JsonLd.compact(JsonDocument.of(jakartaDocument), contextDocument)
-                .loader(JsonLdContextLoader.createDocumentLoader())
-                .compactToRelative(false)
-                .get()
-        } catch (e: Exception) {
-            throw SerializationException.EncodeFailed(
-                element = "credentialSubject",
-                reason = "JSON-LD compaction failed while checking for dropped claims: ${e.message}"
-            )
-        }
+        val compacted: jakarta.json.JsonObject =
+            try {
+                val contextDocument =
+                    JsonDocument.of(
+                        Json.createObjectBuilder().add("@context", contextValue).build(),
+                    )
+                JsonLd
+                    .compact(JsonDocument.of(jakartaDocument), contextDocument)
+                    .loader(JsonLdContextLoader.createDocumentLoader())
+                    .compactToRelative(false)
+                    .get()
+            } catch (e: Exception) {
+                throw SerializationException.EncodeFailed(
+                    element = "credentialSubject",
+                    reason = "JSON-LD compaction failed while checking for dropped claims: ${e.message}",
+                )
+            }
 
         // Note: when every claim was dropped (or the credentialSubject term itself is not
         // defined), the subject node may compact away entirely (e.g. to a bare IRI string)
@@ -285,19 +359,23 @@ internal object JsonLdUtils {
         // matched by a surviving occurrence. Extra surviving properties cannot mask a
         // missing name.
         val survivingCounts = survivingNames.groupingBy { it }.eachCount()
-        val missing = declaredNames.groupingBy { it }.eachCount()
-            .filter { (name, declaredCount) -> (survivingCounts[name] ?: 0) < declaredCount }
-            .keys
+        val missing =
+            declaredNames
+                .groupingBy { it }
+                .eachCount()
+                .filter { (name, declaredCount) -> (survivingCounts[name] ?: 0) < declaredCount }
+                .keys
         if (missing.isNotEmpty()) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject",
-                reason = "JSON-LD canonicalization dropped credentialSubject claims: " +
-                    "${missing.sorted()} (declared, nested claims included, but absent after a " +
-                    "JSON-LD expansion/compaction round-trip). Claims whose terms are not defined " +
-                    "in the credential's @context are silently removed and would NOT be covered " +
-                    "by the proof signature. Declare an @context that defines every " +
-                    "credentialSubject term (e.g. register a context via JsonLdContextLoader and " +
-                    "reference it from the credential's @context)."
+                reason =
+                    "JSON-LD canonicalization dropped credentialSubject claims: " +
+                        "${missing.sorted()} (declared, nested claims included, but absent after a " +
+                        "JSON-LD expansion/compaction round-trip). Claims whose terms are not defined " +
+                        "in the credential's @context are silently removed and would NOT be covered " +
+                        "by the proof signature. Declare an @context that defines every " +
+                        "credentialSubject term (e.g. register a context via JsonLdContextLoader and " +
+                        "reference it from the credential's @context).",
             )
         }
     }
@@ -307,14 +385,18 @@ internal object JsonLdUtils {
      * JSON-LD keywords) declared on the `credentialSubject`, including properties of
      * nested objects and of objects inside arrays.
      */
-    private fun collectDeclaredClaimNames(element: JsonElement, into: MutableList<String>) {
+    private fun collectDeclaredClaimNames(
+        element: JsonElement,
+        into: MutableList<String>,
+    ) {
         when (element) {
-            is JsonObject -> element.forEach { (key, value) ->
-                if (key != "id" && key != "type" && !key.startsWith("@")) {
-                    into.add(key)
+            is JsonObject ->
+                element.forEach { (key, value) ->
+                    if (key != "id" && key != "type" && !key.startsWith("@")) {
+                        into.add(key)
+                    }
+                    collectDeclaredClaimNames(value, into)
                 }
-                collectDeclaredClaimNames(value, into)
-            }
             is JsonArray -> element.forEach { collectDeclaredClaimNames(it, into) }
             else -> {}
         }
@@ -325,17 +407,22 @@ internal object JsonLdUtils {
      * by JSON-LD compaction: recursively collect non-`id`/`type`, non-keyword property
      * names of the compacted subject node(s).
      */
-    private fun collectCompactedClaimNames(value: JsonValue?, into: MutableList<String>) {
+    private fun collectCompactedClaimNames(
+        value: JsonValue?,
+        into: MutableList<String>,
+    ) {
         when (value?.valueType) {
-            JsonValue.ValueType.OBJECT -> value.asJsonObject().forEach { (key, nested) ->
-                if (key != "id" && key != "type" && !key.startsWith("@")) {
-                    into.add(key)
+            JsonValue.ValueType.OBJECT ->
+                value.asJsonObject().forEach { (key, nested) ->
+                    if (key != "id" && key != "type" && !key.startsWith("@")) {
+                        into.add(key)
+                    }
+                    collectCompactedClaimNames(nested, into)
                 }
-                collectCompactedClaimNames(nested, into)
-            }
-            JsonValue.ValueType.ARRAY -> value.asJsonArray().forEach {
-                collectCompactedClaimNames(it, into)
-            }
+            JsonValue.ValueType.ARRAY ->
+                value.asJsonArray().forEach {
+                    collectCompactedClaimNames(it, into)
+                }
             else -> {}
         }
     }
@@ -347,7 +434,7 @@ internal object JsonLdUtils {
      */
     private fun collectCompactedSubjectNodes(
         value: JsonValue?,
-        into: MutableList<jakarta.json.JsonObject>
+        into: MutableList<jakarta.json.JsonObject>,
     ) {
         when (value?.valueType) {
             JsonValue.ValueType.ARRAY ->
@@ -356,9 +443,10 @@ internal object JsonLdUtils {
                 val obj = value.asJsonObject()
                 val subjectValue = obj["credentialSubject"] ?: obj[CREDENTIAL_SUBJECT_IRI]
                 when (subjectValue?.valueType) {
-                    JsonValue.ValueType.ARRAY -> subjectValue.asJsonArray().forEach { node ->
-                        if (node.valueType == JsonValue.ValueType.OBJECT) into.add(node.asJsonObject())
-                    }
+                    JsonValue.ValueType.ARRAY ->
+                        subjectValue.asJsonArray().forEach { node ->
+                            if (node.valueType == JsonValue.ValueType.OBJECT) into.add(node.asJsonObject())
+                        }
                     JsonValue.ValueType.OBJECT -> into.add(subjectValue.asJsonObject())
                     else -> {}
                 }

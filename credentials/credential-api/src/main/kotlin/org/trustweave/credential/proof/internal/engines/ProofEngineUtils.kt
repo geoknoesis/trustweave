@@ -1,52 +1,51 @@
 package org.trustweave.credential.proof.internal.engines
 
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.core.util.decodeBase58
-import org.trustweave.core.util.encodeBase58
-import org.trustweave.credential.internal.CredentialConstants
-import org.trustweave.credential.internal.SecurityConstants
-import org.trustweave.kms.util.EcdsaSignatureCodec
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolver
-import org.trustweave.did.resolver.DidResolutionResult
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jwt.SignedJWT
-import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier
-import org.bouncycastle.asn1.DERBitString
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.bouncycastle.asn1.DERBitString
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.slf4j.LoggerFactory
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.decodeBase58
+import org.trustweave.core.util.encodeBase58
+import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.internal.SecurityConstants
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.kms.util.EcdsaSignatureCodec
+import java.security.KeyFactory
 import java.security.MessageDigest
 import java.security.PublicKey
-import java.security.KeyFactory
 import java.security.Security
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
-import org.slf4j.LoggerFactory
 
 /**
  * Shared utilities for proof engines.
- * 
+ *
  * This utility object provides shared functionality for proof engine implementations,
  * including DID resolution, verification method extraction, and public key operations.
- * 
+ *
  * **Key Operations:**
  * - DID resolution and verification method lookup
  * - Public key extraction from verification methods (JWK, multibase)
  * - Ed25519 public key creation from various formats
  * - Key format conversion and validation
- * 
+ *
  * **Usage:**
  * ```kotlin
  * // Resolve verification method from DID
@@ -54,17 +53,16 @@ import org.slf4j.LoggerFactory
  *     issuerIri = issuerIri,
  *     verificationMethodId = proof.verificationMethod
  * )
- * 
+ *
  * // Extract public key
  * val publicKey = ProofEngineUtils.extractPublicKey(verificationMethod)
  * ```
- * 
+ *
  * **Note:** This is an internal utility used by proof engines (VC-LD, SD-JWT-VC, etc.)
  * for cryptographic operations. It handles multiple key formats and provides fallback
  * mechanisms for key extraction.
  */
 internal object ProofEngineUtils {
-
     private val logger = LoggerFactory.getLogger(ProofEngineUtils::class.java)
 
     /** Raw Ed25519 public key length in bytes (RFC 8032). */
@@ -77,19 +75,19 @@ internal object ProofEngineUtils {
      * EC field element size in bytes per ECDSA JWS algorithm
      * (P1363 `r || s` signature length is twice this).
      */
-    private val ECDSA_JWS_FIELD_SIZE_BYTES: Map<JWSAlgorithm, Int> = mapOf(
-        JWSAlgorithm.ES256 to 32,
-        JWSAlgorithm.ES256K to 32,
-        JWSAlgorithm.ES384 to 48,
-        JWSAlgorithm.ES512 to 66
-    )
+    private val ECDSA_JWS_FIELD_SIZE_BYTES: Map<JWSAlgorithm, Int> =
+        mapOf(
+            JWSAlgorithm.ES256 to 32,
+            JWSAlgorithm.ES256K to 32,
+            JWSAlgorithm.ES384 to 48,
+            JWSAlgorithm.ES512 to 66,
+        )
 
     /**
      * Whether [algorithm] is an ECDSA JWS algorithm (ES256, ES256K, ES384, ES512) whose
      * JWS signature segment must be IEEE P1363 (`r || s`) encoded per RFC 7518 §3.4.
      */
-    fun isEcdsaJwsAlgorithm(algorithm: JWSAlgorithm): Boolean =
-        algorithm in ECDSA_JWS_FIELD_SIZE_BYTES
+    fun isEcdsaJwsAlgorithm(algorithm: JWSAlgorithm): Boolean = algorithm in ECDSA_JWS_FIELD_SIZE_BYTES
 
     /**
      * Normalize an ECDSA signature to the IEEE P1363 (`r || s`) form required by JWS
@@ -110,16 +108,20 @@ internal object ProofEngineUtils {
      * @throws IllegalArgumentException if [algorithm] is not an ECDSA JWS algorithm
      * @throws IllegalStateException if the signature is neither P1363-sized nor valid DER
      */
-    fun ensureP1363EcdsaJwsSignature(signature: ByteArray, algorithm: JWSAlgorithm): ByteArray {
-        val fieldSize = ECDSA_JWS_FIELD_SIZE_BYTES[algorithm]
-            ?: throw IllegalArgumentException("Not an ECDSA JWS algorithm: ${algorithm.name}")
+    fun ensureP1363EcdsaJwsSignature(
+        signature: ByteArray,
+        algorithm: JWSAlgorithm,
+    ): ByteArray {
+        val fieldSize =
+            ECDSA_JWS_FIELD_SIZE_BYTES[algorithm]
+                ?: throw IllegalArgumentException("Not an ECDSA JWS algorithm: ${algorithm.name}")
         val expectedLength = fieldSize * 2
         return when {
             signature.size == expectedLength -> signature
             EcdsaSignatureCodec.isDer(signature) -> EcdsaSignatureCodec.derToP1363(signature, fieldSize)
             else -> throw IllegalStateException(
                 "ECDSA signature for ${algorithm.name} is neither P1363 ($expectedLength bytes) " +
-                    "nor a DER-encoded SEQUENCE: got ${signature.size} bytes"
+                    "nor a DER-encoded SEQUENCE: got ${signature.size} bytes",
             )
         }
     }
@@ -155,13 +157,15 @@ internal object ProofEngineUtils {
      */
     fun decodeEd25519ProofValue(proofValue: String): ByteArray? {
         val candidates = mutableListOf<ByteArray>()
+
         fun attempt(decoder: () -> ByteArray) {
-            val decoded = try {
-                decoder()
-            } catch (_: Exception) {
-                // Not decodable in this encoding — try the next candidate.
-                return
-            }
+            val decoded =
+                try {
+                    decoder()
+                } catch (_: Exception) {
+                    // Not decodable in this encoding — try the next candidate.
+                    return
+                }
             // Canonicality: only an exactly-64-byte decoding is a plausible Ed25519
             // signature; anything else is rejected, not passed along.
             if (decoded.size == SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES) {
@@ -194,7 +198,7 @@ internal object ProofEngineUtils {
             verificationMethodId
         }
     }
-    
+
     /**
      * Resolve verification method from DID document.
      *
@@ -216,67 +220,89 @@ internal object ProofEngineUtils {
         issuerIri: Iri,
         verificationMethodId: String?,
         didResolver: DidResolver?,
-        expectedProofPurpose: String? = null
+        expectedProofPurpose: String? = null,
     ): VerificationMethod? {
-        logger.debug("Resolving verification method: issuerIri={}, verificationMethodId={}, didResolverPresent={}", 
-            issuerIri.value, verificationMethodId, didResolver != null)
+        logger.debug(
+            "Resolving verification method: issuerIri={}, verificationMethodId={}, didResolverPresent={}",
+            issuerIri.value,
+            verificationMethodId,
+            didResolver != null,
+        )
         if (!issuerIri.isDid || didResolver == null) {
             logger.debug("Cannot resolve verification method: isDid={}, didResolverPresent={}", issuerIri.isDid, didResolver != null)
             return null
         }
-        
+
         try {
             val issuerDid = Did(issuerIri.value)
             logger.debug("Resolving DID: {}", issuerDid.value)
             val resolutionResult = didResolver.resolve(issuerDid)
-            
-            val document = when (resolutionResult) {
-                is DidResolutionResult.Success -> {
-                    logger.debug("Successfully resolved DID: verificationMethodsCount={}", resolutionResult.document.verificationMethod.size)
-                    resolutionResult.document
-                }
-                is DidResolutionResult.Deactivated -> {
-                    // §4.4: a deactivated DID resolves to no document. Treat as a resolution
-                    // failure rather than "document missing" — a revoked identity must never be
-                    // usable to satisfy a proof-purpose check.
-                    logger.warn("Issuer DID is deactivated; refusing to resolve verification method: issuerIri={}", issuerIri.value)
-                    return null
-                }
-                is DidResolutionResult.Failure -> {
-                    logger.warn("Failed to resolve DID: issuerIri={}, resolutionResult={}", issuerIri.value, resolutionResult.javaClass.simpleName)
-                    return null
-                }
-            }
-            
-            // Parse verification method ID
-            val vmId = if (verificationMethodId != null) {
-                try {
-                    VerificationMethodId.parse(verificationMethodId, issuerDid)
-                } catch (e: Exception) {
-                    logger.debug("Failed to parse verificationMethodId '{}': error={}", verificationMethodId, e.message)
-                    // Try with just the fragment
-                    if (verificationMethodId.contains("#")) {
-                        VerificationMethodId.parse(verificationMethodId, issuerDid)
-                    } else {
-                        VerificationMethodId(issuerDid, KeyId(verificationMethodId))
+
+            val document =
+                when (resolutionResult) {
+                    is DidResolutionResult.Success -> {
+                        logger.debug(
+                            "Successfully resolved DID: verificationMethodsCount={}",
+                            resolutionResult.document.verificationMethod.size,
+                        )
+                        resolutionResult.document
+                    }
+                    is DidResolutionResult.Deactivated -> {
+                        // §4.4: a deactivated DID resolves to no document. Treat as a resolution
+                        // failure rather than "document missing" — a revoked identity must never be
+                        // usable to satisfy a proof-purpose check.
+                        logger.warn("Issuer DID is deactivated; refusing to resolve verification method: issuerIri={}", issuerIri.value)
+                        return null
+                    }
+                    is DidResolutionResult.Failure -> {
+                        logger.warn(
+                            "Failed to resolve DID: issuerIri={}, resolutionResult={}",
+                            issuerIri.value,
+                            resolutionResult.javaClass.simpleName,
+                        )
+                        return null
                     }
                 }
-            } else {
-                // Default to first assertion method or first verification method
-                document.assertionMethod.firstOrNull() 
-                    ?: document.verificationMethod.firstOrNull()?.id
-                    ?: return null
-            }
-            
-            logger.debug("Looking for verification method: vmId={}, availableCount={}", vmId.value, document.verificationMethod.size)
-            
-            // Find verification method in document
-            val found = document.verificationMethod.find { it.id == vmId }
-                ?: document.verificationMethod.find { 
-                    it.id.value == vmId.value || 
-                    it.id.value.endsWith("#${vmId.keyId.value}")
+
+            // Parse verification method ID
+            val vmId =
+                if (verificationMethodId != null) {
+                    try {
+                        VerificationMethodId.parse(verificationMethodId, issuerDid)
+                    } catch (e: Exception) {
+                        logger.debug("Failed to parse verificationMethodId '{}': error={}", verificationMethodId, e.message)
+                        // Try with just the fragment
+                        if (verificationMethodId.contains("#")) {
+                            VerificationMethodId.parse(verificationMethodId, issuerDid)
+                        } else {
+                            VerificationMethodId(issuerDid, KeyId(verificationMethodId))
+                        }
+                    }
+                } else {
+                    // Default to first assertion method or first verification method
+                    document.assertionMethod.firstOrNull()
+                        ?: document.verificationMethod.firstOrNull()?.id
+                        ?: return null
                 }
-            
+
+            logger.debug("Looking for verification method: vmId={}, availableCount={}", vmId.value, document.verificationMethod.size)
+
+            // Find verification method in document.
+            //
+            // Both comparisons are exact and stay inside the issuer's own document, so a proof
+            // naming a key under a different DID cannot be satisfied by an issuer key. The string
+            // comparison is a fallback because two VerificationMethodIds can denote the same URL
+            // while differing structurally (a fragment carried with or without its leading '#').
+            //
+            // A third clause used to match on the fragment alone. It compared against
+            // "#${vmId.keyId.value}" while keyId already carries its '#', so it could only ever
+            // test for '##fragment' and never matched — it made the binding read as if it crossed
+            // DID boundaries when it did not. Removed rather than repaired: matching a bare
+            // fragment across documents is exactly what must not happen.
+            val found =
+                document.verificationMethod.find { it.id == vmId }
+                    ?: document.verificationMethod.find { it.id.value == vmId.value }
+
             if (found == null) {
                 logger.warn("Could not find matching verification method: vmId={}", vmId.value)
                 return null
@@ -290,7 +316,9 @@ internal object ProofEngineUtils {
             ) {
                 logger.warn(
                     "Verification method {} is not authorized for proof purpose '{}' in DID document {}",
-                    found.id.value, expectedProofPurpose, document.id.value
+                    found.id.value,
+                    expectedProofPurpose,
+                    document.id.value,
                 )
                 return null
             }
@@ -311,19 +339,20 @@ internal object ProofEngineUtils {
     fun isAuthorizedForPurpose(
         document: DidDocument,
         verificationMethod: VerificationMethod,
-        proofPurpose: String
+        proofPurpose: String,
     ): Boolean {
-        val relationship = when (proofPurpose) {
-            CredentialConstants.ProofPurposes.ASSERTION_METHOD -> document.assertionMethod
-            CredentialConstants.ProofPurposes.AUTHENTICATION -> document.authentication
-            "keyAgreement" -> document.keyAgreement
-            "capabilityInvocation" -> document.capabilityInvocation
-            "capabilityDelegation" -> document.capabilityDelegation
-            else -> {
-                logger.warn("Unknown proof purpose '{}' — rejecting", proofPurpose)
-                return false
+        val relationship =
+            when (proofPurpose) {
+                CredentialConstants.ProofPurposes.ASSERTION_METHOD -> document.assertionMethod
+                CredentialConstants.ProofPurposes.AUTHENTICATION -> document.authentication
+                "keyAgreement" -> document.keyAgreement
+                "capabilityInvocation" -> document.capabilityInvocation
+                "capabilityDelegation" -> document.capabilityDelegation
+                else -> {
+                    logger.warn("Unknown proof purpose '{}' — rejecting", proofPurpose)
+                    return false
+                }
             }
-        }
         return relationship.any { it == verificationMethod.id || it.value == verificationMethod.id.value }
     }
 
@@ -340,7 +369,10 @@ internal object ProofEngineUtils {
      * @param canonicalDocument Canonical N-Quads of the secured document (without proof)
      * @return The 64-byte payload to sign or verify
      */
-    fun composeDataIntegrityPayload(canonicalProofOptions: String, canonicalDocument: String): ByteArray {
+    fun composeDataIntegrityPayload(
+        canonicalProofOptions: String,
+        canonicalDocument: String,
+    ): ByteArray {
         val digest = MessageDigest.getInstance("SHA-256")
         val proofOptionsHash = digest.digest(canonicalProofOptions.toByteArray(Charsets.UTF_8))
         val documentHash = digest.digest(canonicalDocument.toByteArray(Charsets.UTF_8))
@@ -370,29 +402,33 @@ internal object ProofEngineUtils {
         created: String,
         verificationMethod: String,
         proofPurpose: String,
-        additionalProperties: Map<String, JsonElement> = emptyMap()
-    ): JsonObject = buildJsonObject {
-        put("@context", buildJsonArray {
-            context.forEach { add(it) }
-        })
-        put("type", proofType)
-        put("created", created)
-        put("verificationMethod", verificationMethod)
-        put("proofPurpose", proofPurpose)
-        additionalProperties.forEach { (key, value) ->
-            if (key != "proofValue" && key != "jws") {
-                put(key, value)
+        additionalProperties: Map<String, JsonElement> = emptyMap(),
+    ): JsonObject =
+        buildJsonObject {
+            put(
+                "@context",
+                buildJsonArray {
+                    context.forEach { add(it) }
+                },
+            )
+            put("type", proofType)
+            put("created", created)
+            put("verificationMethod", verificationMethod)
+            put("proofPurpose", proofPurpose)
+            additionalProperties.forEach { (key, value) ->
+                if (key != "proofValue" && key != "jws") {
+                    put(key, value)
+                }
             }
         }
-    }
 
     /**
      * Extract public key from verification method.
-     * 
+     *
      * Attempts to extract a Java PublicKey from a verification method by trying multiple
      * key formats in order of preference. This function handles various key encoding formats
      * commonly used in DID documents and verifiable credentials.
-     * 
+     *
      * **Extraction Algorithm:**
      * 1. **JWK (JSON Web Key)**: Primary method - checks for `publicKeyJwk` field
      *    - Extracts key from JWK map using `extractPublicKeyFromJwk()`
@@ -401,24 +437,28 @@ internal object ProofEngineUtils {
      *    - Extracts key from multibase-encoded string
      *    - Decodes multibase prefix and extracts raw key bytes
      * 3. **Fallback**: Returns null if neither format is available
-     * 
+     *
      * **Key Format Support:**
      * - Ed25519 keys in JWK format (OKP with crv=Ed25519)
      * - Ed25519 keys in multibase format (base58-btc encoding)
      * - Additional key types may be supported via extensions
-     * 
+     *
      * **Error Handling:**
      * - Returns null if extraction fails (graceful degradation)
      * - Logs warnings for debugging purposes
      * - Multiple extraction strategies ensure compatibility with different DID methods
-     * 
+     *
      * @param verificationMethod The verification method containing the public key
      * @return The public key, or null if extraction fails or key format is unsupported
      */
     fun extractPublicKey(verificationMethod: VerificationMethod): PublicKey? {
-        logger.debug("Extracting public key: verificationMethodId={}, type={}, hasJwk={}, hasMultibase={}", 
-            verificationMethod.id.value, verificationMethod.type, 
-            verificationMethod.publicKeyJwk != null, verificationMethod.publicKeyMultibase != null)
+        logger.debug(
+            "Extracting public key: verificationMethodId={}, type={}, hasJwk={}, hasMultibase={}",
+            verificationMethod.id.value,
+            verificationMethod.type,
+            verificationMethod.publicKeyJwk != null,
+            verificationMethod.publicKeyMultibase != null,
+        )
         // Try JWK first
         verificationMethod.publicKeyJwk?.let { jwkMap ->
             logger.debug("Attempting to extract public key from JWK: keys={}", jwkMap.keys)
@@ -430,24 +470,24 @@ internal object ProofEngineUtils {
             }
             return result
         }
-        
+
         // Try multibase
         verificationMethod.publicKeyMultibase?.let { multibase ->
             logger.debug("Attempting to extract public key from multibase: verificationMethodId={}", verificationMethod.id.value)
             return extractPublicKeyFromMultibase(multibase, verificationMethod.type)
         }
-        
+
         logger.warn("No public key found in verification method: verificationMethodId={}", verificationMethod.id.value)
         return null
     }
-    
+
     /**
      * Extract public key from JWK map.
      */
     private fun extractPublicKeyFromJwk(jwkMap: Map<String, Any?>): PublicKey? {
         try {
             val kty = jwkMap["kty"] as? String ?: return null
-            
+
             return when (kty) {
                 "OKP" -> {
                     // Ed25519
@@ -467,7 +507,7 @@ internal object ProofEngineUtils {
             return null
         }
     }
-    
+
     /**
      * Extract public key from multibase-encoded string.
      *
@@ -499,47 +539,54 @@ internal object ProofEngineUtils {
      *   prefix in the decoded bytes is authoritative)
      * @return The extracted PublicKey, or null if extraction fails
      */
-    private fun extractPublicKeyFromMultibase(multibase: String, keyType: String): PublicKey? {
+    private fun extractPublicKeyFromMultibase(
+        multibase: String,
+        keyType: String,
+    ): PublicKey? {
         if (multibase.length < 2) {
             logger.warn("Multibase value too short to contain a key: length={}", multibase.length)
             return null
         }
 
-        val decoded = try {
-            when (multibase[0]) {
-                'z' -> multibase.substring(1).decodeBase58()
-                'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+        val decoded =
+            try {
+                when (multibase[0]) {
+                    'z' -> multibase.substring(1).decodeBase58()
+                    'u' -> Base64.getUrlDecoder().decode(multibase.substring(1))
+                    else -> {
+                        logger.warn(
+                            "Unsupported multibase prefix '{}' for key type {}; only 'z' (base58btc) " +
+                                "and 'u' (base64url) are supported",
+                            multibase[0],
+                            keyType,
+                        )
+                        return null
+                    }
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to decode multibase key payload: error={}", e.message)
+                return null
+            }
+
+        val rawKey =
+            when {
+                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + MULTICODEC_ED25519_PUB_PREFIX.size &&
+                    decoded[0] == MULTICODEC_ED25519_PUB_PREFIX[0] &&
+                    decoded[1] == MULTICODEC_ED25519_PUB_PREFIX[1] ->
+                    decoded.copyOfRange(MULTICODEC_ED25519_PUB_PREFIX.size, decoded.size)
+
+                decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
+
                 else -> {
                     logger.warn(
-                        "Unsupported multibase prefix '{}' for key type {}; only 'z' (base58btc) " +
-                            "and 'u' (base64url) are supported",
-                        multibase[0], keyType
+                        "Multibase key is not an Ed25519 public key (decoded {} bytes, key type {}); " +
+                            "expected multicodec ed25519-pub (0xED 0x01) + 32 bytes, or raw 32 bytes",
+                        decoded.size,
+                        keyType,
                     )
                     return null
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("Failed to decode multibase key payload: error={}", e.message)
-            return null
-        }
-
-        val rawKey = when {
-            decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + MULTICODEC_ED25519_PUB_PREFIX.size &&
-                decoded[0] == MULTICODEC_ED25519_PUB_PREFIX[0] &&
-                decoded[1] == MULTICODEC_ED25519_PUB_PREFIX[1] ->
-                decoded.copyOfRange(MULTICODEC_ED25519_PUB_PREFIX.size, decoded.size)
-
-            decoded.size == ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES -> decoded
-
-            else -> {
-                logger.warn(
-                    "Multibase key is not an Ed25519 public key (decoded {} bytes, key type {}); " +
-                        "expected multicodec ed25519-pub (0xED 0x01) + 32 bytes, or raw 32 bytes",
-                    decoded.size, keyType
-                )
-                return null
-            }
-        }
 
         return createEd25519PublicKey(rawKey)
     }
@@ -592,7 +639,6 @@ internal object ProofEngineUtils {
         }
     }
 
-
     /**
      * Verify an EdDSA (Ed25519) JWS signature using the Java Security API.
      *
@@ -612,7 +658,7 @@ internal object ProofEngineUtils {
      */
     fun verifyEd25519Jws(
         signedJwt: SignedJWT,
-        verificationMethod: VerificationMethod
+        verificationMethod: VerificationMethod,
     ): Boolean {
         // Reject algorithm confusion: only EdDSA is acceptable for Ed25519 keys.
         if (signedJwt.header.algorithm != JWSAlgorithm.EdDSA) {
@@ -633,4 +679,3 @@ internal object ProofEngineUtils {
         }
     }
 }
-

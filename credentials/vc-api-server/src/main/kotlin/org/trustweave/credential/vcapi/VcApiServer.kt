@@ -47,12 +47,14 @@ import org.trustweave.credential.CredentialService
  *
  * @param credentialService The [CredentialService] used for all issuance and verification.
  * @param port TCP port to listen on (default 8080).
- * @param host Bind address (default "0.0.0.0" — all interfaces; see the security note above).
+ * @param host Bind address. Defaults to loopback: exposing an embedded server to the network
+ *   is an explicit decision, not something that happens because a default was left alone. Pass
+ *   "0.0.0.0" once something in front of it authenticates callers.
  */
 class VcApiServer(
     private val credentialService: CredentialService,
     private val port: Int = 8080,
-    private val host: String = "0.0.0.0",
+    private val host: String = "127.0.0.1",
 ) {
     private var server: NettyApplicationEngine? = null
 

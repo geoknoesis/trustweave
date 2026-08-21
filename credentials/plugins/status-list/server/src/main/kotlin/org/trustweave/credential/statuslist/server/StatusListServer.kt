@@ -31,22 +31,25 @@ import org.trustweave.revocation.token.TokenStatusListManager
  * ```
  *
  * @param port TCP port to listen on (default 8080).
- * @param host Bind address (default "0.0.0.0" — all interfaces).
+ * @param host Bind address. Defaults to loopback: exposing an embedded server to the network
+ *   is an explicit decision, not something that happens because a default was left alone. Pass
+ *   "0.0.0.0" once something in front of it authenticates callers.
  * @param bitstringManager Optional [BitstringStatusListManager] for W3C Bitstring Status Lists.
  * @param tokenManager Optional [TokenStatusListManager] for IETF Token Status Lists.
  */
 class StatusListServer(
     private val port: Int = 8080,
-    private val host: String = "0.0.0.0",
+    private val host: String = "127.0.0.1",
     private val bitstringManager: BitstringStatusListManager? = null,
     private val tokenManager: TokenStatusListManager? = null,
 ) {
     private var server: NettyApplicationEngine? = null
 
     fun start(wait: Boolean = false) {
-        server = embeddedServer(Netty, port = port, host = host) {
-            configureApplication()
-        }.start(wait = wait)
+        server =
+            embeddedServer(Netty, port = port, host = host) {
+                configureApplication()
+            }.start(wait = wait)
     }
 
     fun stop() {
@@ -56,11 +59,13 @@ class StatusListServer(
 
     private fun Application.configureApplication() {
         install(ContentNegotiation) {
-            json(Json {
-                serializersModule = SerializationModule.default
-                ignoreUnknownKeys = true
-                prettyPrint = true
-            })
+            json(
+                Json {
+                    serializersModule = SerializationModule.default
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                },
+            )
         }
         routing {
             configureStatusListRoutes(bitstringManager, tokenManager)

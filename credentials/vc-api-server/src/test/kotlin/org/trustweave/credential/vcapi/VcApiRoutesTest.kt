@@ -31,7 +31,6 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -201,16 +200,6 @@ class VcApiRoutesTest {
         }
 
     @Test
-    @Ignore(
-        "Known defect, not yet fixed: Issuer is a @Serializable sealed class with no custom " +
-            "serializer, so VerifiableCredential.serializer() can only read the object form " +
-            "{\"id\": ...}. /credentials/issue accepts the string form because " +
-            "buildIssuanceRequest parses it by hand, but /credentials/verify and " +
-            "/presentations/verify go straight through the serializer and reject it. Fixing this " +
-            "means adding an Issuer serializer in credential-models-mp that reads both forms, " +
-            "which changes how every credential in the library serializes - a deliberate design " +
-            "decision rather than a local repair.",
-    )
     fun `verify accepts the standard string form of issuer`() =
         testApplication {
             application { vcApiTestApp() }

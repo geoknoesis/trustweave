@@ -1,29 +1,30 @@
 package org.trustweave.credential.internal
 
+import kotlinx.datetime.Clock
+import org.slf4j.LoggerFactory
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.requests.RevocationFailurePolicy
 import org.trustweave.credential.results.VerificationResult
-import kotlinx.datetime.Clock
+import org.trustweave.credential.revocation.CredentialRevocationManager
 
 /**
  * Revocation checking utilities.
- * 
+ *
  * This utility object handles credential revocation status checks with proper error handling
  * and policy enforcement. It provides a centralized way to check if a credential has been
  * revoked or suspended, with configurable failure policies.
- * 
+ *
  * **Key Features:**
  * - Revocation status checking via CredentialRevocationManager
  * - Suspension status checking
  * - Policy-based error handling (fail-fast vs. fail-soft)
  * - Comprehensive error handling for network and I/O errors
  * - Proper cancellation support for coroutines
- * 
+ *
  * **Failure Policies:**
  * - `FAIL_FAST`: Return invalid result immediately on revocation check failure
  * - `FAIL_SOFT`: Return warnings but allow verification to proceed
- * 
+ *
  * **Usage:**
  * ```kotlin
  * val (invalidResult, warnings) = RevocationChecker.checkRevocationStatus(
@@ -31,19 +32,21 @@ import kotlinx.datetime.Clock
  *     revocationManager = revocationManager,
  *     policy = RevocationFailurePolicy.FAIL_FAST
  * )
- * 
+ *
  * if (invalidResult != null) {
  *     return invalidResult
  * }
  * // Add warnings to verification result
  * ```
- * 
+ *
  * **Note:** This is an internal utility used by DefaultCredentialService during verification.
  */
 internal object RevocationChecker {
+    private val logger = LoggerFactory.getLogger(RevocationChecker::class.java)
+
     /**
      * Check revocation status with proper error handling.
-     * 
+     *
      * @param credential The credential to check
      * @param revocationManager Revocation manager (if available)
      * @param policy Failure policy to apply
@@ -53,7 +56,7 @@ internal object RevocationChecker {
     suspend fun checkRevocationStatus(
         credential: VerifiableCredential,
         revocationManager: CredentialRevocationManager?,
-        policy: RevocationFailurePolicy
+        policy: RevocationFailurePolicy,
     ): Pair<VerificationResult.Invalid?, List<String>> {
         if (revocationManager == null) {
             return if (credential.credentialStatus == null) {
@@ -63,14 +66,14 @@ internal object RevocationChecker {
                     credential = credential,
                     error = IllegalStateException("No revocation manager configured"),
                     reason = "Credential has a credentialStatus but no revocation manager is configured",
-                    policy = policy
+                    policy = policy,
                 )
             }
         }
         if (credential.credentialStatus == null) {
             return Pair(null, emptyList())
         }
-        
+
         return try {
             val revocationStatus = revocationManager.checkRevocationStatus(credential)
 
@@ -82,9 +85,9 @@ internal object RevocationChecker {
                         revokedAt = revocationStatus.revokedAt ?: Clock.System.now(),
                         errors = listOf(errorMessage),
                         warnings = emptyList(),
-                        revocationReason = revocationStatus.reason
+                        revocationReason = revocationStatus.reason,
                     ),
-                    emptyList()
+                    emptyList(),
                 )
             } else if (revocationStatus.suspended) {
                 val errorMessage = "Credential is suspended${revocationStatus.reason?.let { ": $it" } ?: ""}"
@@ -94,9 +97,9 @@ internal object RevocationChecker {
                         suspendedAt = revocationStatus.revokedAt,
                         reason = revocationStatus.reason,
                         errors = listOf(errorMessage),
-                        warnings = emptyList()
+                        warnings = emptyList(),
                     ),
-                    emptyList()
+                    emptyList(),
                 )
             } else {
                 // Credential is not revoked
@@ -111,61 +114,61 @@ internal object RevocationChecker {
                 credential = credential,
                 error = e,
                 reason = "Revocation check timed out",
-                policy = policy
+                policy = policy,
             )
         } catch (e: java.net.UnknownHostException) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Revocation service unreachable: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         } catch (e: java.net.ConnectException) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Revocation service connection refused: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         } catch (e: java.io.IOException) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Revocation check I/O error: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         } catch (e: IllegalStateException) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Revocation manager error: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         } catch (e: IllegalArgumentException) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Invalid revocation check request: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         } catch (e: Exception) {
             handleRevocationFailure(
                 credential = credential,
                 error = e,
                 reason = "Unexpected revocation check error: ${e.message}",
-                policy = policy
+                policy = policy,
             )
         }
     }
-    
+
     /**
      * Handle revocation check failure according to policy.
-     * 
+     *
      * Implements the revocation failure policy pattern:
      * - **FAIL_CLOSED**: Reject credential if revocation cannot be verified (most secure)
      * - **FAIL_WITH_WARNING**: Accept credential but add warning (balanced)
      * - **FAIL_OPEN**: Accept credential silently (most permissive, use with caution)
-     * 
+     *
      * @param credential The credential being verified
      * @param error The exception that occurred during revocation check
      * @param reason Human-readable reason for the failure
@@ -177,9 +180,9 @@ internal object RevocationChecker {
         credential: VerifiableCredential,
         error: Throwable,
         reason: String,
-        policy: RevocationFailurePolicy
-    ): Pair<VerificationResult.Invalid?, List<String>> {
-        return when (policy) {
+        policy: RevocationFailurePolicy,
+    ): Pair<VerificationResult.Invalid?, List<String>> =
+        when (policy) {
             RevocationFailurePolicy.FAIL_CLOSED -> {
                 // Fail-closed: Reject credential if revocation cannot be checked
                 Pair(
@@ -187,23 +190,30 @@ internal object RevocationChecker {
                         credential = credential,
                         reason = reason,
                         errors = listOf(reason),
-                        cause = error
+                        cause = error,
                     ),
-                    emptyList()
+                    emptyList(),
                 )
             }
             RevocationFailurePolicy.FAIL_WITH_WARNING -> {
                 // Fail-with-warning: Continue verification but add warning
                 Pair(
                     null,
-                    listOf("Revocation check failed: $reason. Verification continues with warning.")
+                    listOf("Revocation check failed: $reason. Verification continues with warning."),
                 )
             }
             RevocationFailurePolicy.FAIL_OPEN -> {
-                // Fail-open: Continue verification silently
+                // Fail-open: accept the credential, but never silently. A verifier running this
+                // policy has decided availability outweighs certainty about revocation; that
+                // decision still has to be visible in the record afterwards, because the
+                // credential is accepted with its status genuinely unknown.
+                logger.warn(
+                    "Revocation check failed and policy is FAIL_OPEN; accepting credential {} " +
+                        "with unknown revocation status: {}",
+                    credential.id?.value ?: "<no id>",
+                    reason,
+                )
                 Pair(null, emptyList())
             }
         }
-    }
 }
-

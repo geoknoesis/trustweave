@@ -2,7 +2,6 @@ package org.trustweave.credential
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -92,17 +91,20 @@ class IssuerSerializationTest {
     }
 
     @Test
-    fun `the legacy polymorphic form is still readable`() {
-        // Credentials persisted before this fix carry the class-name wrapper. Reading them must
-        // keep working, or stored data becomes unloadable.
-        val legacy =
+    fun `a type member on an issuer object is an ordinary member`() {
+        // There is no released version that wrote the polymorphic wrapper, so nothing special is
+        // done with `type`. A VC issuer object may legitimately carry one, and it round-trips like
+        // any other member rather than being interpreted as a Kotlin class name.
+        val source =
             buildJsonObject {
-                put("type", JsonPrimitive("org.trustweave.credential.model.vc.Issuer.IriIssuer"))
-                put("id", JsonPrimitive("did:key:zAbc"))
+                put("id", "did:key:zAbc")
+                put("type", "Organization")
             }
 
-        val decoded = json.decodeFromString(Issuer.serializer(), legacy.toString())
+        val decoded = json.decodeFromString(Issuer.serializer(), source.toString())
+        val reencoded = json.parseToJsonElement(json.encodeToString(Issuer.serializer(), decoded)) as JsonObject
 
         assertEquals("did:key:zAbc", decoded.id.value)
+        assertEquals("Organization", reencoded["type"]?.jsonPrimitive?.content)
     }
 }

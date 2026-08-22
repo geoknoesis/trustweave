@@ -53,7 +53,7 @@ azure-identity = "1.18.2"
 
 # Build tools
 kover = "0.9.8"
-slf4j = "1.7.36"
+slf4j = "2.0.17"
 
 [libraries]
 # Kotlin

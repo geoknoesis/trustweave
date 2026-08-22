@@ -26,13 +26,8 @@ import org.trustweave.core.identifiers.Iri
  *
  * The JSON-LD path has always written `credential.issuer.id.value` directly rather than going
  * through this serializer, so signatures were computed over the correct shape and are unaffected.
- *
- * Deserialization still accepts the old polymorphic wrapper so credentials already persisted in
- * that form stay readable.
  */
 object IssuerSerializer : KSerializer<Issuer> {
-    /** Legacy discriminator written by the previous polymorphic encoding. */
-    private const val LEGACY_TYPE_KEY = "type"
     private const val ID_KEY = "id"
     private const val NAME_KEY = "name"
 
@@ -88,20 +83,6 @@ object IssuerSerializer : KSerializer<Issuer> {
         val id =
             obj[ID_KEY]?.jsonPrimitive?.contentOrNull
                 ?: throw IllegalArgumentException("issuer object is missing 'id'")
-
-        // Credentials written before the string form was emitted carry the Kotlin class name here.
-        // Honour it so stored data stays loadable, but never write it back out.
-        val legacyType = obj[LEGACY_TYPE_KEY]?.jsonPrimitive?.contentOrNull
-        if (legacyType != null && legacyType.startsWith("org.trustweave.")) {
-            return if (legacyType.endsWith("IriIssuer")) {
-                Issuer.IriIssuer(Iri(id))
-            } else {
-                Issuer.ObjectIssuer(
-                    id = Iri(id),
-                    name = obj[NAME_KEY]?.jsonPrimitive?.contentOrNull,
-                )
-            }
-        }
 
         return Issuer.ObjectIssuer(
             id = Iri(id),

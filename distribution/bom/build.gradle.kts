@@ -109,7 +109,6 @@ dependencies {
         api(project(":credentials:plugins:siop"))
         api(project(":credentials:plugins:openid-federation"))
         api(project(":credentials:plugins:mdl"))
-        api(project(":credentials:plugins:bbs"))
         api(project(":credentials:plugins:eudiw"))
         api(project(":credentials:plugins:jades"))
         // NOTE: credentials:plugins:verifiable-intent is in-progress (not yet in
@@ -161,4 +160,3 @@ publishing {
         }
     }
 }
-

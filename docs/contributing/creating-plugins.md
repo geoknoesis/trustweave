@@ -263,7 +263,7 @@ Quick pointers for orientation:
 
 - **SPI interface:** `credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt`
 - **Built-in reference engines:** `credentials/credential-api/.../proof/internal/engines/` (`VcLdProofEngine`, `SdJwtProofEngine`)
-- **External plugin examples:** `credentials/plugins/bbs/` (`Bbs2023ProofEngine`), `credentials/plugins/mdl/` (`MdocProofEngine`)
+- **External plugin examples:** `credentials/plugins/mdl/` (`MdocProofEngine`), `credentials/plugins/jades/` (`JAdESProofEngine`)
 - **Registration:** ship a `ProofEngineProvider` and a `META-INF/services/org.trustweave.credential.spi.proof.ProofEngineProvider` file. The default `CredentialService` picks it up automatically via `ServiceLoader`.
 
 ### Registration

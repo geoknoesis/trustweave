@@ -48,7 +48,7 @@ Individual plugins under `did/plugins/*`, `kms/plugins/*`, `anchors/plugins/*`, 
 Newer plugin families that ship in `settings.gradle.kts` but are evolving:
 
 - DID methods: `did:plugins:ebsi`
-- Credentials formats / proofs: `credentials:plugins:bbs`, `credentials:plugins:mdl`, `credentials:plugins:eudiw`
+- Credentials formats / proofs: `credentials:plugins:mdl`, `credentials:plugins:eudiw`
 - Exchange / discovery: `credentials:plugins:siop`, `credentials:plugins:presentation-exchange`, `credentials:plugins:openid-federation`
 - Status lists: `credentials:plugins:status-list:bitstring`, `credentials:plugins:status-list:token`, `credentials:plugins:status-list:publishing`, `credentials:plugins:status-list:server`
 - Agent authorization: `credentials:plugins:verifiable-intent`

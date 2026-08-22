@@ -20,9 +20,14 @@ A **proof suite** identifies the cryptographic proof format used in a Verifiable
 - **VC-JWT** (`ProofSuiteId.VC_JWT`) - W3C Verifiable Credentials as JWT
 - **SD-JWT-VC** (`ProofSuiteId.SD_JWT_VC`) - IETF Selective Disclosure JWT Verifiable Credentials
 - **mDoc/mDL** (`ProofSuiteId.MDOC`) - ISO 18013-5 mobile documents (CBOR/COSE)
-- **BBS 2023** (`ProofSuiteId.BBS_2023`) - W3C Data Integrity BBS Cryptosuite (selective disclosure + ZK)
+- **BBS 2023** (`ProofSuiteId.BBS_2023`) - recognised but **not implemented**. There is no
+  maintained BBS+ library for the JVM, and a placeholder is worse than nothing for a
+  signature scheme, so no engine is registered and a `bbs-2023` proof never verifies. Note it
+  is not reported as an unsupported *format*: every `DataIntegrityProof` maps to `VC_LD`, so
+  such a proof reaches the VC-LD engine — which does not read `cryptosuite` — and fails there
+  on the signature.
 
-The VC-LD and SD-JWT-VC engines are **built-in** to the credential API; mDoc and BBS are
+The VC-LD and SD-JWT-VC engines are **built-in** to the credential API; mDoc is
 shipped as separate plugin modules. No additional registration is required when the
 plugin JARs are on the classpath.
 
@@ -207,10 +212,10 @@ TrustWeave includes the following proof engines:
 - **VcLdProofEngine** (built-in) - Handles VC-LD proofs with JSON-LD canonicalization
 - **SdJwtProofEngine** (built-in) - Handles SD-JWT-VC proofs with selective disclosure
 - **MdocProofEngine** (`credentials/plugins/mdl`) - ISO 18013-5 mDoc / mDL (CBOR/COSE)
-- **Bbs2023ProofEngine** (`credentials/plugins/bbs`) - BBS Cryptosuite with selective disclosure and ZK
+
 
 VC-LD and SD-JWT-VC are automatically available when you create a `CredentialService`; the
-mDoc and BBS engines are picked up via SPI when their plugin modules are on the classpath:
+The mDoc engine is picked up via SPI when its plugin module is on the classpath:
 
 ```kotlin
 import org.trustweave.credential.*

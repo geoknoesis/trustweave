@@ -422,13 +422,15 @@ sealed class CredentialProof {
 
 | Variant | Format | Produced by | Typical `proof.type` / payload |
 |---|---|---|---|
-| `LinkedDataProof` | W3C VC-LD (JSON-LD Data Integrity) | `VcLdProofEngine`, `Bbs2023ProofEngine` | `Ed25519Signature2020`, `JsonWebSignature2020`, `DataIntegrityProof` (`bbs-2023`) |
+| `LinkedDataProof` | W3C VC-LD (JSON-LD Data Integrity) | `VcLdProofEngine` | `Ed25519Signature2020`, `JsonWebSignature2020`, `DataIntegrityProof` |
 | `JwtProof` | W3C VC-JWT (compact JWS) | `VcLdProofEngine` in JWT mode | Compact JWT string |
 | `SdJwtVcProof` | IETF SD-JWT-VC | `SdJwtProofEngine` | SD-JWT-VC string + tilde-separated disclosures |
 | `MdocProof` | ISO 18013-5 mDoc/mDL (CBOR/COSE) | `MdocProofEngine` (`credentials/plugins/mdl`) | CBOR `DeviceResponse` bytes + `docType` |
 
 The proof variant is picked by the `ProofEngine` matching the credential's `ProofSuiteId`
-(`VC_LD`, `VC_JWT`, `SD_JWT_VC`, `MDOC`, `BBS_2023`). Engines are auto-discovered via
+(`VC_LD`, `VC_JWT`, `SD_JWT_VC`, `MDOC`, `BBS_2023`). `BBS_2023` is a recognised
+identifier with no engine behind it, so a `bbs-2023` proof never verifies. Engines are
+auto-discovered via
 the `ProofEngineProvider` SPI — see [Proof Engine Implementation Guide](advanced/proof-engine-implementation-guide.md).
 
 ## Service Types

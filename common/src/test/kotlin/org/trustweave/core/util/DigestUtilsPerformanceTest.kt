@@ -1,113 +1,148 @@
 package org.trustweave.core.util
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
- * Performance tests for DigestUtils with large inputs.
+ * Guards against [DigestUtils] becoming pathological on large or deeply nested input, and pins the
+ * behaviour of its digest cache.
+ *
+ * These are not benchmarks. The timing assertions exist to catch algorithmic blow-up — an accidental
+ * quadratic in canonicalization would take minutes, not milliseconds — so the ceiling is deliberately
+ * far above any plausible healthy runtime. Tight wall-clock bounds measure the machine and the load
+ * on it rather than the code, and fail in CI for reasons that have nothing to do with a change.
+ *
+ * The cache is asserted through [DigestUtils.cacheSize] rather than by timing two calls against each
+ * other. That comparison used to read `duration2 < duration1` at millisecond resolution, which is
+ * false whenever both round to 0 — so the faster the machine, the more likely it failed.
  */
 class DigestUtilsPerformanceTest {
+    /** Far above any healthy runtime; only catches genuine blow-up. */
+    private val pathologicalMs = 10_000L
 
-    @Test
-    fun `test canonicalization performance with large JSON`() {
-        val largeJsonElement: JsonElement = buildJsonObject {
-            repeat(1000) { i ->
-                put("key$i", "value$i".repeat(10))
-            }
-        }
+    private var cacheEnabledBefore: Boolean = true
+    private var maxCacheSizeBefore: Int = 1000
 
-        val startTime = System.currentTimeMillis()
-        val canonical = DigestUtils.canonicalizeJson(largeJsonElement)
-        val duration = System.currentTimeMillis() - startTime
+    @BeforeEach
+    fun captureCacheSettings() {
+        // These are process-wide mutable statics. The previous version of this file changed them
+        // and never put them back, so whichever test ran next inherited a 100-entry cache.
+        cacheEnabledBefore = DigestUtils.isDigestCacheEnabled
+        maxCacheSizeBefore = DigestUtils.maxCacheSize
+    }
 
-        assertNotNull(canonical)
-        // Should complete in reasonable time (< 1 second for 1000 keys)
-        assertTrue(duration < 1000, "Canonicalization took too long: ${duration}ms")
+    @AfterEach
+    fun restoreCacheSettings() {
+        DigestUtils.isDigestCacheEnabled = cacheEnabledBefore
+        DigestUtils.maxCacheSize = maxCacheSizeBefore
+        DigestUtils.clearCache()
     }
 
     @Test
-    fun `test digest performance with large JSON`() {
-        val largeJsonElement: JsonElement = buildJsonObject {
-            repeat(500) { i ->
-                put("key$i", "value$i".repeat(20))
+    fun `canonicalizing a large object does not blow up`() {
+        val large: JsonElement =
+            buildJsonObject {
+                repeat(1000) { i -> put("key$i", "value$i".repeat(10)) }
             }
-        }
 
+        val start = System.currentTimeMillis()
+        val canonical = DigestUtils.canonicalizeJson(large)
+        val elapsed = System.currentTimeMillis() - start
+
+        assertNotNull(canonical)
+        assertTrue(elapsed < pathologicalMs, "Canonicalizing 1000 keys took ${elapsed}ms")
+    }
+
+    @Test
+    fun `digesting the same element twice reuses one cache entry`() {
+        DigestUtils.isDigestCacheEnabled = true
+        DigestUtils.clearCache()
+        val element: JsonElement =
+            buildJsonObject {
+                repeat(500) { i -> put("key$i", "value$i".repeat(20)) }
+            }
+
+        assertEquals(0, DigestUtils.cacheSize, "clearCache should leave nothing behind")
+
+        val first = DigestUtils.sha256DigestMultibase(element)
+        assertEquals(1, DigestUtils.cacheSize, "The first digest should be cached")
+
+        val second = DigestUtils.sha256DigestMultibase(element)
+
+        assertEquals(first, second)
+        assertEquals(
+            1,
+            DigestUtils.cacheSize,
+            "The same element must map to the same key rather than adding a second entry",
+        )
+    }
+
+    @Test
+    fun `distinct elements are cached separately`() {
         DigestUtils.isDigestCacheEnabled = true
         DigestUtils.clearCache()
 
-        // First computation (cache miss)
-        val startTime1 = System.currentTimeMillis()
-        val digest1 = DigestUtils.sha256DigestMultibase(largeJsonElement)
-        val duration1 = System.currentTimeMillis() - startTime1
+        DigestUtils.sha256DigestMultibase(buildJsonObject { put("a", 1) })
+        DigestUtils.sha256DigestMultibase(buildJsonObject { put("b", 2) })
 
-        // Second computation (cache hit)
-        val startTime2 = System.currentTimeMillis()
-        val digest2 = DigestUtils.sha256DigestMultibase(largeJsonElement)
-        val duration2 = System.currentTimeMillis() - startTime2
-
-        assertEquals(digest1, digest2)
-        // Cached computation should be significantly faster
-        assertTrue(duration2 < duration1, 
-            "Cached computation should be faster. First: ${duration1}ms, Second: ${duration2}ms")
+        assertEquals(2, DigestUtils.cacheSize, "Different inputs must not collide onto one entry")
     }
 
     @Test
-    fun `test digest performance with very large string`() {
-        val veryLargeString = "a".repeat(100000) // 100KB
+    fun `digesting a large string does not blow up`() {
+        val veryLarge = "a".repeat(100_000)
 
-        val startTime = System.currentTimeMillis()
-        val digest = DigestUtils.sha256DigestMultibase(veryLargeString)
-        val duration = System.currentTimeMillis() - startTime
+        val start = System.currentTimeMillis()
+        val digest = DigestUtils.sha256DigestMultibase(veryLarge)
+        val elapsed = System.currentTimeMillis() - start
 
         assertTrue(digest.startsWith("z"))
-        // Should complete in reasonable time (< 500ms for 100KB)
-        assertTrue(duration < 500, "Digest computation took too long: ${duration}ms")
+        assertTrue(elapsed < pathologicalMs, "Digesting 100KB took ${elapsed}ms")
     }
 
     @Test
-    fun `test cache eviction performance`() {
+    fun `the cache never grows past its configured maximum`() {
         DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 100
         DigestUtils.clearCache()
 
-        // Fill cache beyond max size
-        val startTime = System.currentTimeMillis()
-        repeat(200) { i ->
-            val json = """{"index": $i}"""
-            DigestUtils.sha256DigestMultibase(json)
-        }
-        val duration = System.currentTimeMillis() - startTime
+        repeat(200) { i -> DigestUtils.sha256DigestMultibase("""{"index": $i}""") }
 
-        // Should complete in reasonable time
-        assertTrue(duration < 2000, "Cache eviction took too long: ${duration}ms")
-        // Cache should be at max size
-        assertTrue(DigestUtils.cacheSize <= DigestUtils.maxCacheSize)
+        assertTrue(
+            DigestUtils.cacheSize <= DigestUtils.maxCacheSize,
+            "Cache holds ${DigestUtils.cacheSize} entries, max is ${DigestUtils.maxCacheSize}",
+        )
     }
 
     @Test
-    fun `test nested JSON canonicalization performance`() {
-        val deeplyNested = buildString {
-            append("{")
-            repeat(10) { i ->
-                if (i > 0) append(",")
-                append("\"level$i\": {")
-                repeat(10) { j ->
-                    if (j > 0) append(",")
-                    append("\"key$j\": \"value$j\"")
+    fun `canonicalizing nested objects does not blow up`() {
+        val nested =
+            buildString {
+                append("{")
+                repeat(10) { i ->
+                    if (i > 0) append(",")
+                    append("\"level$i\": {")
+                    repeat(10) { j ->
+                        if (j > 0) append(",")
+                        append("\"key$j\": \"value$j\"")
+                    }
+                    append("}")
                 }
                 append("}")
             }
-            append("}")
-        }
 
-        val startTime = System.currentTimeMillis()
-        val canonical = DigestUtils.canonicalizeJson(deeplyNested)
-        val duration = System.currentTimeMillis() - startTime
+        val start = System.currentTimeMillis()
+        val canonical = DigestUtils.canonicalizeJson(nested)
+        val elapsed = System.currentTimeMillis() - start
 
         assertNotNull(canonical)
-        // Should complete quickly even with deep nesting
-        assertTrue(duration < 500, "Nested canonicalization took too long: ${duration}ms")
+        assertTrue(elapsed < pathologicalMs, "Nested canonicalization took ${elapsed}ms")
     }
 }

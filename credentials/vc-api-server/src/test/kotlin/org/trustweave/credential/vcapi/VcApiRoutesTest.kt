@@ -93,6 +93,58 @@ class VcApiRoutesTest {
         }.toString()
 
     @Test
+    fun `verify refuses a credential larger than the configured maximum`() =
+        testApplication {
+            application { vcApiTestApp() }
+
+            // SecurityConstants.MAX_CREDENTIAL_SIZE_BYTES is 1MB. These routes decode straight
+            // through the serializer, so the cap applied at JsonObject.toCredential() never ran
+            // here - the HTTP boundary is where untrusted documents actually arrive.
+            val oversized =
+                buildJsonObject {
+                    putJsonArray("@context") { add("https://www.w3.org/ns/credentials/v2") }
+                    putJsonArray("type") { add("VerifiableCredential") }
+                    put("issuer", issuerDocument.id.value)
+                    putJsonObject("credentialSubject") {
+                        put("id", holderDocument.id.value)
+                        put("padding", "x".repeat(1_100_000))
+                    }
+                }
+
+            val response =
+                client.post("/credentials/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody(buildJsonObject { put("verifiableCredential", oversized) }.toString())
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status, response.bodyAsText())
+        }
+
+    @Test
+    fun `prove refuses a presentation larger than the configured maximum`() =
+        testApplication {
+            application { vcApiTestApp() }
+
+            val oversized =
+                buildJsonObject {
+                    putJsonArray("type") { add("VerifiablePresentation") }
+                    put("padding", "x".repeat(5_300_000))
+                }
+
+            val response =
+                client.post("/presentations/prove") {
+                    contentType(ContentType.Application.Json)
+                    setBody(buildJsonObject { put("presentation", oversized) }.toString())
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status, response.bodyAsText())
+            assertTrue(
+                "exceeds the maximum" in response.bodyAsText(),
+                "Must be refused for its size, not incidentally: ${response.bodyAsText()}",
+            )
+        }
+
+    @Test
     fun `issue returns a signed credential`() =
         testApplication {
             application { vcApiTestApp() }

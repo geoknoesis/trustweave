@@ -15,6 +15,7 @@ import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.internal.SecurityConstants
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
@@ -238,6 +239,11 @@ private fun buildIssuanceRequest(body: IssueCredentialRequest): IssuanceRequest 
 }
 
 private fun parsePresentationCredentials(presentationJson: JsonObject): List<VerifiableCredential> {
+    requireWithinSizeLimit(
+        presentationJson,
+        SecurityConstants.MAX_PRESENTATION_SIZE_BYTES,
+        "Presentation",
+    )
     val vcs = presentationJson["verifiableCredential"] ?: return emptyList()
     return when (vcs) {
         is JsonArray -> vcs.mapNotNull { runCatching { deserializeVc(it.jsonObject) }.getOrNull() }
@@ -248,13 +254,36 @@ private fun parsePresentationCredentials(presentationJson: JsonObject): List<Ver
 
 private fun serializeVc(vc: VerifiableCredential): JsonObject = vcJson.encodeToJsonElement(VerifiableCredential.serializer(), vc).jsonObject
 
-private fun deserializeVc(json: JsonObject): VerifiableCredential = vcJson.decodeFromJsonElement(VerifiableCredential.serializer(), json)
+/**
+ * Rejects a document larger than [limit] bytes before it is decoded.
+ *
+ * These routes decode straight through the kotlinx serializer, so the cap applied at
+ * `JsonObject.toCredential()` never runs on this path — and this is the path where untrusted
+ * documents actually arrive, over the network, from callers this server does not authenticate.
+ */
+private fun requireWithinSizeLimit(
+    json: JsonObject,
+    limit: Int,
+    what: String,
+) {
+    val sizeBytes = json.toString().toByteArray(Charsets.UTF_8).size
+    require(sizeBytes <= limit) {
+        "$what exceeds the maximum of $limit bytes: $sizeBytes bytes"
+    }
+}
+
+private fun deserializeVc(json: JsonObject): VerifiableCredential {
+    requireWithinSizeLimit(json, SecurityConstants.MAX_CREDENTIAL_SIZE_BYTES, "Credential")
+    return vcJson.decodeFromJsonElement(VerifiableCredential.serializer(), json)
+}
 
 private fun serializeVp(vp: VerifiablePresentation): JsonObject =
     vcJson.encodeToJsonElement(VerifiablePresentation.serializer(), vp).jsonObject
 
-private fun deserializeVp(json: JsonObject): VerifiablePresentation =
-    vcJson.decodeFromJsonElement(VerifiablePresentation.serializer(), json)
+private fun deserializeVp(json: JsonObject): VerifiablePresentation {
+    requireWithinSizeLimit(json, SecurityConstants.MAX_PRESENTATION_SIZE_BYTES, "Presentation")
+    return vcJson.decodeFromJsonElement(VerifiablePresentation.serializer(), json)
+}
 
 private fun VerificationResult.toVerifyResponse(): VerifyCredentialResponse =
     when (this) {

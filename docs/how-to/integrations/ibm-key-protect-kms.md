@@ -195,7 +195,7 @@ Configure via IBM Cloud IAM.
 
 ## Related Documentation
 
-- [Key Management Concepts](../core-concepts/key-management.md)
+- [Key Management Concepts](../../core-concepts/key-management.md)
 - [IBM Key Protect Documentation](https://cloud.ibm.com/docs/key-protect)
 
 ## See Also

@@ -231,7 +231,7 @@ val kms = InMemoryKeyManagementService()
 
 ## Related Documentation
 
-- [Key Management Concepts](../core-concepts/key-management.md)
+- [Key Management Concepts](../../core-concepts/key-management.md)
 - [KMS Quick Start Guide](../../api-reference/kms/KMS_QUICK_START.md)
 - [KMS Plugins Configuration](../../api-reference/kms/KMS_PLUGINS_CONFIGURATION.md)
 

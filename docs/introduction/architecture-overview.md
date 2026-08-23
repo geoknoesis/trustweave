@@ -307,15 +307,15 @@ TrustWeave/
 
 #### Cloud KMS Providers
 
-- **AWS KMS** (`org.trustweave:kms-plugins-aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../../how-to/integrations/aws-kms.md).
+- **AWS KMS** (`org.trustweave:kms-plugins-aws`) – AWS Key Management Service. See [AWS KMS Integration Guide](../how-to/integrations/aws-kms.md).
 - **AWS CloudHSM** (`org.trustweave:kms-plugins-cloudhsm`) – AWS CloudHSM for dedicated hardware security modules. Documentation coming soon.
-- **Azure Key Vault** (`org.trustweave:kms-plugins-azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../../how-to/integrations/azure-kms.md).
-- **Google Cloud KMS** (`org.trustweave:kms-plugins-google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../../how-to/integrations/google-kms.md).
+- **Azure Key Vault** (`org.trustweave:kms-plugins-azure`) – Azure Key Vault integration. See [Azure KMS Integration Guide](../how-to/integrations/azure-kms.md).
+- **Google Cloud KMS** (`org.trustweave:kms-plugins-google`) – Google Cloud KMS integration. See [Google KMS Integration Guide](../how-to/integrations/google-kms.md).
 - **IBM Key Protect** (`org.trustweave:kms-plugins-ibm`) – IBM Cloud Key Protect integration. Documentation coming soon.
 
 #### Self-Hosted KMS Providers
 
-- **HashiCorp Vault** (`org.trustweave:kms-plugins-hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../../how-to/integrations/hashicorp-vault-kms.md).
+- **HashiCorp Vault** (`org.trustweave:kms-plugins-hashicorp`) – HashiCorp Vault Transit engine. See [HashiCorp Vault KMS Integration Guide](../how-to/integrations/hashicorp-vault-kms.md).
 - **Thales CipherTrust** (`org.trustweave:kms-plugins-thales`) – Thales CipherTrust Manager integration. Documentation coming soon.
 - **Thales Luna** (`org.trustweave:kms-plugins-thales-luna`) – Thales Luna HSM integration. Documentation coming soon.
 - **CyberArk Conjur** (`org.trustweave:kms-plugins-cyberark`) – CyberArk Conjur secrets management integration. Documentation coming soon.
@@ -325,23 +325,23 @@ TrustWeave/
 
 #### Other KMS Integrations
 
-- **walt.id** (`org.trustweave:kms-plugins-waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../../how-to/integrations/waltid.md).
+- **walt.id** (`org.trustweave:kms-plugins-waltid`) – walt.id-based KMS and DID methods. See [walt.id Integration Guide](../how-to/integrations/waltid.md).
 
 ### DID Method Plugins
 
-- **GoDiddy** (`org.trustweave:did-plugins-godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../../how-to/integrations/godiddy.md).
-- **did:key** (`org.trustweave:did-plugins-key`) – Native did:key implementation. See [Key DID Integration Guide](../../how-to/integrations/key-did.md).
-- **did:web** (`org.trustweave:did-plugins-web`) – Web DID method. See [Web DID Integration Guide](../../how-to/integrations/web-did.md).
-- **did:ion** (`org.trustweave:did-plugins-ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../../how-to/integrations/ion-did.md).
+- **GoDiddy** (`org.trustweave:did-plugins-godiddy`) – HTTP integration with GoDiddy services. Universal Resolver, Registrar, Issuer, Verifier. Supports 20+ DID methods. See [GoDiddy Integration Guide](../how-to/integrations/godiddy.md).
+- **did:key** (`org.trustweave:did-plugins-key`) – Native did:key implementation. See [Key DID Integration Guide](../how-to/integrations/key-did.md).
+- **did:web** (`org.trustweave:did-plugins-web`) – Web DID method. See [Web DID Integration Guide](../how-to/integrations/web-did.md).
+- **did:ion** (`org.trustweave:did-plugins-ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../how-to/integrations/ion-did.md).
 - See [Integration Modules](../../how-to/integrations/README.md) for all DID method implementations.
 
 ### Blockchain Anchor Plugins
 
-- **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../../how-to/integrations/algorand.md).
+- **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../how-to/integrations/algorand.md).
 - **Polygon** (`org.trustweave:anchors-plugins-polygon`) – Polygon blockchain adapter. See [Integration Modules](../../how-to/integrations/README.md#blockchain-anchor-integrations).
-- **Ethereum** (`org.trustweave:anchors-plugins-ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../../how-to/integrations/ethereum-anchor.md).
-- **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../../how-to/integrations/base-anchor.md).
-- **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../../how-to/integrations/arbitrum-anchor.md).
+- **Ethereum** (`org.trustweave:anchors-plugins-ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../how-to/integrations/ethereum-anchor.md).
+- **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../how-to/integrations/base-anchor.md).
+- **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../how-to/integrations/arbitrum-anchor.md).
 - See [Integration Modules](../../how-to/integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
@@ -498,7 +498,7 @@ Chain Plugins (org.trustweave:anchors-plugins-*)
 
 ## Next Steps
 
-- Learn about [Core Modules](../../api-reference/modules/core-modules.md)
+- Learn about [Core Modules](../api-reference/modules/core-modules.md)
 - Explore [Integration Modules](../../how-to/integrations/README.md)
 - Review the [TrustWeave setup checklist](../core-concepts/trust-registry.md#trustweave-setup-checklist) before wiring issuance or verification flows
 

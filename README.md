@@ -48,13 +48,13 @@ dependencies {
 
 ## Documentation
 
-- **[Getting Started](docs/tutorials/getting-started/installation.md)** - Installation, examples, and tutorials
-- **[Quick Start](docs/tutorials/getting-started/quick-start.md)** - Get up and running in 5 minutes
+- **[Getting Started](docs/getting-started/installation.md)** - Installation, examples, and tutorials
+- **[Quick Start](docs/getting-started/quick-start.md)** - Get up and running in 5 minutes
 - **[Create presentations](docs/how-to/create-presentations.md)** - `presentationFromWalletResult` / `PresentationResult`
-- **[Production integration checklist](docs/tutorials/getting-started/production-integration-checklist.md)** - Logging, timeouts, result types
+- **[Production integration checklist](docs/getting-started/production-integration-checklist.md)** - Logging, timeouts, result types
 - **[Module maturity matrix](docs/api-reference/module-maturity.md)** - Which modules are GA vs experimental
 - **[API Reference](docs/api-reference/)** - Detailed API documentation
-- **[Architecture & Modules](docs/core-concepts/introduction/architecture-overview.md)** - Module details and design principles
+- **[Architecture & Modules](docs/introduction/architecture-overview.md)** - Module details and design principles
 - **[Available Plugins](docs/api-reference/plugins.md)** - DID methods, blockchain anchors, and KMS plugins
 - **[Integrations](docs/how-to/integrations/)** - walt.id, godiddy, and third-party integrations
 - **[Contributing](CONTRIBUTING.md)** - Building, testing, and development guide

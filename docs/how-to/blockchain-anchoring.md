@@ -497,8 +497,8 @@ For complete API documentation, see:
 ## Next Steps
 
 **Ready to integrate?**
-- [Algorand Integration](../integrations/algorand.md) - Set up Algorand anchoring
-- [Ethereum Integration](../integrations/ethereum-anchor.md) - Set up Ethereum anchoring
+- [Algorand Integration](integrations/algorand.md) - Set up Algorand anchoring
+- [Ethereum Integration](integrations/ethereum-anchor.md) - Set up Ethereum anchoring
 
 **Want to learn more?**
 - [Blockchain Anchoring Concept](../core-concepts/blockchain-anchoring.md) - Deep dive into anchoring

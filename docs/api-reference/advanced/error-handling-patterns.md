@@ -378,6 +378,6 @@ This hybrid approach provides:
 ## Related Documentation
 
 - [Error Handling Guide](./error-handling.md) - Complete error handling reference
-- [API Reference](../api-reference/core-api.md) - Method signatures and return types
-- [Best Practices](../getting-started/common-patterns.md) - Common patterns
+- [API Reference](../core-api.md) - Method signatures and return types
+- [Best Practices](../../getting-started/common-patterns.md) - Common patterns
 

@@ -267,5 +267,5 @@ did:key is the fastest DID method:
 - [DID Key Method Specification](https://w3c-ccg.github.io/did-method-key/)
 - [Multibase Encoding](https://github.com/multiformats/multibase)
 - [Multicodec](https://github.com/multiformats/multicodec)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../../api-reference/core-api.md)
 

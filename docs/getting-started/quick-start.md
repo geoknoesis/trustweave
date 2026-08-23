@@ -392,7 +392,7 @@ fun main() = runBlocking {
 - Builds a credential payload using Kotlinx Serialization builders so the structure is type-safe.
 - Canonicalises and hashes the payload, returning a multibase-encoded digest you can anchor or sign.
 
-> **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../../how-to/configuration/defaults.md) and [Production Integration Checklist](production-integration-checklist.md) for details.
+> **Important:** The defaults use in-memory components (KMS, wallets, DID methods) suitable for testing only. For production, configure your own KMS, DID methods, and storage backends. See [Default Configuration](../how-to/configuration/defaults.md) and [Production Integration Checklist](production-integration-checklist.md) for details.
 
 **Result**
 `DigestUtils.sha256DigestMultibase` prints a deterministic digest (for example `u5v...`) that becomes the integrity reference for later steps.
@@ -671,7 +671,7 @@ when (verification) {
 
 **Best Practice:** Use an exhaustive `when` on `VerificationResult` so every invalid case is handled; reserve try-catch for `getOrThrow()` or other throwing APIs in the same scope.
 
-See [Error Handling](../../api-reference/advanced/error-handling.md) for more details on error handling patterns.
+See [Error Handling](../api-reference/advanced/error-handling.md) for more details on error handling patterns.
 
 ## Scenario Playbook
 
@@ -695,8 +695,8 @@ Ready to explore real-world workflows? Each guide below walks through an end-to-
 
 If you encounter issues:
 - See [Troubleshooting Guide](troubleshooting.md) for common problems and solutions
-- Check [Error Handling](../../api-reference/advanced/error-handling.md) for error handling patterns
-- Review [FAQ](../../faq.md) for frequently asked questions
+- Check [Error Handling](../api-reference/advanced/error-handling.md) for error handling patterns
+- Review [FAQ](../faq.md) for frequently asked questions
 
 ## Learning Path
 
@@ -722,11 +722,11 @@ Follow this structured path to master TrustWeave:
 
 ### 4. Deepen Your Knowledge
 - **[Core Concepts](../../core-concepts/README.md)** - Deep dives into fundamentals
-- **[API Reference](../../api-reference/core-api.md)** - Complete API documentation
+- **[API Reference](../api-reference/core-api.md)** - Complete API documentation
 - **[Advanced Topics](../../api-reference/advanced/README.md)** - Key rotation, verification policies, etc.
 
 ### 5. Production Deployment
-- **[Error Handling Guide](../../api-reference/advanced/error-handling.md)** - Production error handling
+- **[Error Handling Guide](../api-reference/advanced/error-handling.md)** - Production error handling
 - **[Troubleshooting](troubleshooting.md)** - Debugging and solutions
 - **[Security Best Practices](../../core-concepts/security/README.md)** - Security guidelines
 
@@ -740,12 +740,12 @@ Follow this structured path to master TrustWeave:
 **Already familiar with DIDs/VCs?**
 1. Review [Common Patterns](common-patterns.md) for TrustWeave-specific patterns
 2. Explore [Scenarios](../../scenarios/README.md) for your use case
-3. Reference [API Reference](../../api-reference/core-api.md) as needed
+3. Reference [API Reference](../api-reference/core-api.md) as needed
 
 **Building a specific application?**
 1. Check [Scenarios](../../scenarios/README.md) for similar use cases
 2. Review [Common Patterns](common-patterns.md) for reusable patterns
-3. Consult [API Reference](../../api-reference/core-api.md) for details
+3. Consult [API Reference](../api-reference/core-api.md) for details
 
 ## Additional Resources
 

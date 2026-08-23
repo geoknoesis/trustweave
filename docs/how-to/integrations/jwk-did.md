@@ -285,5 +285,5 @@ did:jwk is very fast:
 
 - [DID JWK Method Specification](https://github.com/quartzjer/did-jwk/blob/main/spec.md)
 - [JSON Web Key (JWK) RFC 7517](https://tools.ietf.org/html/rfc7517)
-- [TrustWeave Core API](../api-reference/core-api.md)
+- [TrustWeave Core API](../../api-reference/core-api.md)
 

@@ -188,7 +188,7 @@ org.trustweave.credential.yourprotocol.exchange.spi.YourProtocolExchangeProtocol
 
 ```kotlin
 dependencies {
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
     implementation(project(":did:did-core"))
     implementation(project(":common"))
 
@@ -395,7 +395,7 @@ Potential protocols to implement:
 
 ## References
 
-- [Protocol Abstraction Documentation](../../core-concepts/credential-exchange-protocols.md)
+- [Protocol Abstraction Documentation](../../../core-concepts/credential-exchange-protocols.md)
 - [DIDComm Implementation](./didcomm.md)
 - [OIDC4VCI Implementation](./oidc4vci.md)
 - [CHAPI Implementation](./chapi.md)

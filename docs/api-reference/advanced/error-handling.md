@@ -991,5 +991,5 @@ For a detailed explanation of when to use exceptions vs sealed results, see [Err
 - [API Reference](../api-reference/)
 - [Verification Policies](verification-policies.md)
 - [Plugin Lifecycle](plugin-lifecycle.md)
-- [Troubleshooting](../getting-started/troubleshooting.md)
+- [Troubleshooting](../../getting-started/troubleshooting.md)
 

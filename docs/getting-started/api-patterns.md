@@ -24,7 +24,7 @@ Use **sealed results** for credential flows so production code can handle failur
 
 **Unwrapping:** Most `getOrThrow()` extensions throw `IllegalStateException` with context; **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`**. Prefer `when` on sealed results in user-facing code.
 
-See [Result types guide](../../api-reference/result-types-guide.md) and [Production integration checklist](production-integration-checklist.md).
+See [Result types guide](../api-reference/result-types-guide.md) and [Production integration checklist](production-integration-checklist.md).
 
 ### `getOrThrow()` imports
 

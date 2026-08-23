@@ -608,7 +608,7 @@ val badOptions = mapOf(
 ## Next Steps
 
 - [Complete Configuration Guide](KMS_PLUGINS_CONFIGURATION.md)
-- [Creating Plugins Guide](../contributing/creating-plugins.md)
+- [Creating Plugins Guide](../../contributing/creating-plugins.md)
 - [Error Handling Guide](../advanced/error-handling.md)
 
 ---

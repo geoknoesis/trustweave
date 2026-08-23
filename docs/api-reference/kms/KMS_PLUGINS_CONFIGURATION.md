@@ -963,8 +963,8 @@ val config = AwsKmsConfig.builder()
 
 ## Additional Resources
 
-- [KMS Core Concepts](../core-concepts/key-management.md)
-- [Creating Plugins Guide](../contributing/creating-plugins.md)
+- [KMS Core Concepts](../../core-concepts/key-management.md)
+- [Creating Plugins Guide](../../contributing/creating-plugins.md)
 - [Error Handling Guide](../advanced/error-handling.md)
 
 ---

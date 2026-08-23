@@ -202,7 +202,7 @@ When upgrading TrustWeave versions:
 
 - [Installation Guide](../getting-started/installation.md) - Setup instructions
 - [Migration Guides](../../how-to/migration/README.md) - Upgrade instructions
-- [Module Overview](../modules/core-modules.md) - Module dependencies
+- [Module Overview](modules/core-modules.md) - Module dependencies
 
 ---
 

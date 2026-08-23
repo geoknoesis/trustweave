@@ -163,9 +163,9 @@ For production use, implement `SmartContractService` with persistent storage (da
 
 ## See Also
 
-- [Smart Contracts Core Concepts](../core-concepts/smart-contracts.md) for detailed concepts
-- [Smart Contract API Reference](../api-reference/smart-contract-api.md) for complete API documentation
-- [Parametric Insurance Scenario](../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
-- [Verifiable Credentials](../core-concepts/verifiable-credentials.md) for credential concepts
+- [Smart Contracts Core Concepts](../../core-concepts/smart-contracts.md) for detailed concepts
+- [Smart Contract API Reference](../smart-contract-api.md) for complete API documentation
+- [Parametric Insurance Scenario](../../scenarios/smart-contract-parametric-insurance-scenario.md) for complete example
+- [Verifiable Credentials](../../core-concepts/verifiable-credentials.md) for credential concepts
 - [Blockchain Anchoring](../core-concepts/blockchain-anchoring.md) for anchoring concepts
 

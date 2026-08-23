@@ -43,7 +43,7 @@ The exception handling implementation for credential exchange protocols demonstr
 
 #### Strengths
 
-- **Perfect Separation of Concerns**: Plugin-specific exceptions (`DidCommException`, `Oidc4VciException`, `ChapiException`) are correctly placed in their respective plugin modules, not in the shared `credential-core` module.
+- **Perfect Separation of Concerns**: Plugin-specific exceptions (`DidCommException`, `Oidc4VciException`, `ChapiException`) are correctly placed in their respective plugin modules, not in the shared `credential-api` module.
 - **Clean Hierarchy**: All exceptions extend `ExchangeException`, which extends `TrustWeaveException`, providing a consistent error handling structure across TrustWeave.
 - **Sealed Classes**: Proper use of sealed classes ensures exhaustive error handling in `when` expressions.
 - **Extension Functions**: `toExchangeException()` provides automatic conversion of standard exceptions to structured types.
@@ -57,7 +57,7 @@ credentials/plugins/oidc4vci/.../Oidc4VciException.kt
 credentials/plugins/chapi/.../ChapiException.kt
 
 // ✅ Excellent: Shared exceptions in core module
-credentials/credential-core/.../ExchangeException.kt
+credentials/credential-api/.../ExchangeException.kt
 ```
 
 **Verdict:** Architecture is exemplary. No improvements needed.

@@ -897,7 +897,7 @@ credentials/credential-api/src/main/kotlin/org/trustweave/credential/
 
 ### Phase 2: Module-Specific Identifiers
 1. Create `DidIdentifiers.kt` in `did-core`
-2. Create `CredentialIdentifiers.kt` in `credential-core`
+2. Create `CredentialIdentifiers.kt` in `credential-api`
 3. Create identifier files for other modules
 
 ### Phase 3: Update Models
@@ -1060,7 +1060,7 @@ inline fun String.toDidOrNull(): Did? =
 inline fun String.toVerificationMethodIdOrNull(baseDid: Did? = null): VerificationMethodId? = 
     try { VerificationMethodId.parse(this, baseDid) } catch (e: IllegalArgumentException) { null }
 
-// credentials/credential-core/.../CredentialIdentifiersExtensions.kt
+// credentials/credential-api/.../CredentialIdentifiersExtensions.kt
 inline fun String.toCredentialIdOrNull(): CredentialId? = 
     try { CredentialId(this) } catch (e: IllegalArgumentException) { null }
 

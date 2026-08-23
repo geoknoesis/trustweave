@@ -745,7 +745,7 @@ For phone wallets, set `demoBackendBaseUrl` in `reference-wallet/expo/app.json` 
 - [Academic Credentials Scenario](../scenarios/academic-credentials-scenario.md) - Kotlin education credential flow
 - [Spatial Web Authorization Scenario](../scenarios/spatial-web-authorization-scenario.md) - Drone airspace authorization flow
 - [Reference Wallet README](../../reference-wallet/README.md) - Runnable SD-JWT demo (web + Expo)
-- [Wallet API Reference](../../api-reference/wallet-api.md) - Complete wallet API
-- [Error Handling](../../api-reference/advanced/error-handling.md) - Error handling patterns
+- [Wallet API Reference](../api-reference/wallet-api.md) - Complete wallet API
+- [Error Handling](../api-reference/advanced/error-handling.md) - Error handling patterns
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 

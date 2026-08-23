@@ -238,7 +238,7 @@ Add the credential exchange dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core credential exchange
-    implementation(project(":credentials:credential-core"))
+    implementation(project(":credentials:credential-api"))
 
     // DIDComm protocol (optional - choose protocols you need)
     implementation(project(":credentials:plugins:didcomm"))

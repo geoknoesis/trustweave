@@ -118,7 +118,7 @@ credentials/plugins/didcomm/
 
 ## Dependencies
 
-- `credentials:credential-core` - For credential models
+- `credentials:credential-api` - For credential models
 - `did:did-core` - For DID document models
 - `kms:kms-core` - For key management
 - `common` - For common utilities

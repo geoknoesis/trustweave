@@ -3,15 +3,15 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "org.trustweave.core"
+group = "org.trustweave.wallet"
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
-    implementation(project(":wallet:wallet-core"))  // Wallet interfaces
+    implementation(project(":wallet:wallet-core")) // Wallet interfaces
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-
 
     // AWS S3
     implementation(platform("software.amazon.awssdk:bom:2.20.0"))
@@ -28,4 +28,3 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
 }
-

@@ -333,16 +333,16 @@ TrustWeave/
 - **did:key** (`org.trustweave:did-plugins-key`) – Native did:key implementation. See [Key DID Integration Guide](../how-to/integrations/key-did.md).
 - **did:web** (`org.trustweave:did-plugins-web`) – Web DID method. See [Web DID Integration Guide](../how-to/integrations/web-did.md).
 - **did:ion** (`org.trustweave:did-plugins-ion`) – Microsoft ION DID method. See [ION DID Integration Guide](../how-to/integrations/ion-did.md).
-- See [Integration Modules](../../how-to/integrations/README.md) for all DID method implementations.
+- See [Integration Modules](../how-to/integrations/README.md) for all DID method implementations.
 
 ### Blockchain Anchor Plugins
 
 - **Algorand** (`org.trustweave:anchors-plugins-algorand`) – Algorand blockchain adapter. Mainnet and testnet support. See [Algorand Integration Guide](../how-to/integrations/algorand.md).
-- **Polygon** (`org.trustweave:anchors-plugins-polygon`) – Polygon blockchain adapter. See [Integration Modules](../../how-to/integrations/README.md#blockchain-anchor-integrations).
+- **Polygon** (`org.trustweave:anchors-plugins-polygon`) – Polygon blockchain adapter. See [Integration Modules](../how-to/integrations/README.md#blockchain-anchor-integrations).
 - **Ethereum** (`org.trustweave:anchors-plugins-ethereum`) – Ethereum blockchain adapter. See [Ethereum Anchor Integration Guide](../how-to/integrations/ethereum-anchor.md).
 - **Base** (`org.trustweave:anchors-plugins-base`) – Base (Coinbase L2) adapter. See [Base Anchor Integration Guide](../how-to/integrations/base-anchor.md).
 - **Arbitrum** (`org.trustweave:anchors-plugins-arbitrum`) – Arbitrum adapter. See [Arbitrum Anchor Integration Guide](../how-to/integrations/arbitrum-anchor.md).
-- See [Integration Modules](../../how-to/integrations/README.md) for all blockchain adapters.
+- See [Integration Modules](../how-to/integrations/README.md) for all blockchain adapters.
 
 ## Design Patterns
 
@@ -462,18 +462,18 @@ trustweave-testkit
 KMS Plugins (org.trustweave:kms-plugins-*)
     → trustweave-common
     → trustweave-kms
-    See: [KMS Integration Guides](../../how-to/integrations/README.md#other-did--kms-integrations)
+    See: [KMS Integration Guides](../how-to/integrations/README.md#other-did--kms-integrations)
 
 DID Plugins (org.trustweave:did-plugins-*)
     → trustweave-common
     → trustweave-did
     → trustweave-kms
-    See: [DID Integration Guides](../../how-to/integrations/README.md#did-method-integrations)
+    See: [DID Integration Guides](../how-to/integrations/README.md#did-method-integrations)
 
 Chain Plugins (org.trustweave:anchors-plugins-*)
     → trustweave-common
     → trustweave-anchor
-    See: [Blockchain Integration Guides](../../how-to/integrations/README.md#blockchain-anchor-integrations)
+    See: [Blockchain Integration Guides](../how-to/integrations/README.md#blockchain-anchor-integrations)
 ```
 
 ## Extensibility
@@ -499,6 +499,6 @@ Chain Plugins (org.trustweave:anchors-plugins-*)
 ## Next Steps
 
 - Learn about [Core Modules](../api-reference/modules/core-modules.md)
-- Explore [Integration Modules](../../how-to/integrations/README.md)
+- Explore [Integration Modules](../how-to/integrations/README.md)
 - Review the [TrustWeave setup checklist](../core-concepts/trust-registry.md#trustweave-setup-checklist) before wiring issuance or verification flows
 

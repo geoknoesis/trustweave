@@ -272,5 +272,5 @@ Algorand has very low transaction fees (typically 0.001 ALGO). The adapter autom
 - [Algorand Documentation](https://developer.algorand.org/docs/)
 - [Algorand SDK](https://github.com/algorand/java-algorand-sdk)
 - [TrustWeave Anchor Module](../../api-reference/modules/trustweave-anchor.md)
-- [Blockchain Anchoring Guide](../core-concepts/blockchain-anchoring.md)
+- [Blockchain Anchoring Guide](../../core-concepts/blockchain-anchoring.md)
 

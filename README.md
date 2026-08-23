@@ -76,7 +76,7 @@ Full documentation is available in the [`docs/`](docs/) directory:
 - **[Core Concepts](docs/core-concepts/README.md)** - Introduction to DIDs, VCs, Wallets, and more
 - **[Use Case Scenarios](docs/scenarios/README.md)** - 25+ real-world scenarios with runnable code
 - **[API Reference](docs/api-reference/)** - Detailed API documentation
-- **[Getting Started](docs/tutorials/getting-started/)** - Installation and quick start guides
+- **[Getting Started](docs/getting-started/)** - Installation and quick start guides
 
 ## License
 
@@ -97,7 +97,6 @@ TrustWeave is built and maintained by [Geoknoesis LLC](https://www.geoknoesis.co
 - **Commercial Licensing** - For enterprise use
 - **Open Collective** - Transparent financial management
 
-For detailed information, see [Funding Plan](docs/FUNDING_PLAN.md).
 
 ## Security
 

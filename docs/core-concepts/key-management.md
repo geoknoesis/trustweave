@@ -424,5 +424,5 @@ Add `META-INF/services/org.trustweave.kms.spi.KeyManagementServiceProvider` cont
 
 **Explore related concepts:**
 - [Testkit KMS](../api-reference/modules/trustweave-common.md) - Testing helpers
-- [Security Best Practices](../security/README.md) - Security guidelines
+- [Security Best Practices](security/README.md) - Security guidelines
 

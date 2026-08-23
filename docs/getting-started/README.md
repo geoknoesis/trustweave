@@ -38,7 +38,7 @@ Each guide below introduces a checkpoint in the onboarding journey. Follow them 
 - [Troubleshooting](troubleshooting.md) – Common issues and solutions ⭐
 
 ### Use Case Scenarios
-- **[View All Scenarios](../../scenarios/README.md)** – Complete end-to-end workflows for real-world use cases
+- **[View All Scenarios](../scenarios/README.md)** – Complete end-to-end workflows for real-world use cases
 
 ## What You'll Build
 

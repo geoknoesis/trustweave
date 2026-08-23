@@ -119,7 +119,7 @@ org.trustweave:testkit:0.6.0
 | Future 1.0.0 | Planned | None expected |
 | Future 1.1.0 | Planned | TBD |
 
-**Note:** Breaking changes will be documented in [Migration Guides](../../how-to/migration/README.md).
+**Note:** Breaking changes will be documented in [Migration Guides](../how-to/migration/README.md).
 
 ## Compatibility Recommendations
 
@@ -201,7 +201,7 @@ When upgrading TrustWeave versions:
 ## Related Documentation
 
 - [Installation Guide](../getting-started/installation.md) - Setup instructions
-- [Migration Guides](../../how-to/migration/README.md) - Upgrade instructions
+- [Migration Guides](../how-to/migration/README.md) - Upgrade instructions
 - [Module Overview](modules/core-modules.md) - Module dependencies
 
 ---

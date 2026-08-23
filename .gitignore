@@ -72,5 +72,12 @@ docs/_site/
 # Local docs HTML preview output
 docs_html/
 
+# Rendered documentation PDFs. Markdown under docs/ is the source of truth; a
+# committed PDF is a second copy of the same document and drifts from it (the
+# MGA guide's PDF ended up showing the pre-rename brand name throughout, plus
+# absolute file:/// links to a local working directory). Render on demand
+# instead of committing the output.
+docs/**/*.pdf
+
 # Superpowers SDD scratch workspace (ledgers, briefs, review packages)
 .superpowers/

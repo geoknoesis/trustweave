@@ -31,7 +31,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod createDid with empty options`() = runBlocking {
+    fun `test DidMethod createDid with empty options`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         val doc = method.createDid()
@@ -41,7 +41,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod createDid with options`() = runBlocking {
+    fun `test DidMethod createDid with options`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         val doc = method.createDid(
@@ -55,7 +55,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod resolveDid with valid DID`() = runBlocking {
+    fun `test DidMethod resolveDid with valid DID`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         val result = method.resolveDid(Did("did:test:123"))
@@ -67,7 +67,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod resolveDid with invalid DID format`() = runBlocking {
+    fun `test DidMethod resolveDid with invalid DID format`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         // Should handle gracefully or throw
@@ -80,7 +80,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod updateDid`() = runBlocking {
+    fun `test DidMethod updateDid`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         val originalDoc = DidDocument(id = Did("did:test:123"))
 
@@ -93,7 +93,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod updateDid with complex updater`() = runBlocking {
+    fun `test DidMethod updateDid with complex updater`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         val did = Did("did:test:123")
         val vm = VerificationMethod(
@@ -114,7 +114,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod deactivateDid`() = runBlocking {
+    fun `test DidMethod deactivateDid`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         val result = method.deactivateDid(Did("did:test:123"))
@@ -123,7 +123,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod deactivateDid with nonexistent DID`() = runBlocking {
+    fun `test DidMethod deactivateDid with nonexistent DID`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
 
         // May return false or throw
@@ -159,7 +159,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with metadata`() = runBlocking {
+    fun `test DidRegistry resolve with metadata`() = runBlocking<Unit> {
         val method = object : DidMethod {
             override val method = "test"
 
@@ -194,7 +194,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with null document`() = runBlocking {
+    fun `test DidRegistry resolve with null document`() = runBlocking<Unit> {
         val method = object : DidMethod {
             override val method = "test"
 
@@ -228,7 +228,7 @@ class DidMethodEdgeCasesTest {
     // previously only reachable via the Did-typed resolve(did) entry point — apply here too.
 
     @Test
-    fun `test DidRegistry resolve string overload converts deactivated Success to Deactivated`() = runBlocking {
+    fun `test DidRegistry resolve string overload converts deactivated Success to Deactivated`() = runBlocking<Unit> {
         val method = object : DidMethod {
             override val method = "test"
             override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
@@ -247,7 +247,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve string overload rejects a mismatched document id`() = runBlocking {
+    fun `test DidRegistry resolve string overload rejects a mismatched document id`() = runBlocking<Unit> {
         val method = object : DidMethod {
             override val method = "test"
             override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
@@ -299,7 +299,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with DID containing special characters`() = runBlocking {
+    fun `test DidRegistry resolve with DID containing special characters`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         registry.register(method)
 
@@ -311,7 +311,7 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with very long DID`() = runBlocking {
+    fun `test DidRegistry resolve with very long DID`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         registry.register(method)
 

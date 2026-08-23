@@ -133,7 +133,7 @@ class DidCommPackerEncryptedAuthTest {
     // --- AuthCrypt: authenticated sender satisfies requireSigned ------------------------------
 
     @Test
-    fun authCryptWithExpectedSenderAndRequireSignedIsAccepted() = runBlocking {
+    fun authCryptWithExpectedSenderAndRequireSignedIsAccepted() = runBlocking<Unit> {
         val packed = packAuthCrypt("authenticated hello")
 
         val result = bobPacker().unpackToResult(
@@ -151,7 +151,7 @@ class DidCommPackerEncryptedAuthTest {
     }
 
     @Test
-    fun authCryptWithoutExplicitSenderExpectationAuthenticatesViaSkid() = runBlocking {
+    fun authCryptWithoutExplicitSenderExpectationAuthenticatesViaSkid() = runBlocking<Unit> {
         val packed = packAuthCrypt("skid-derived sender")
 
         val result = bobPacker().unpackToResult(
@@ -168,7 +168,7 @@ class DidCommPackerEncryptedAuthTest {
     // --- AnonCrypt forgery: plaintext `from` must never authenticate --------------------------
 
     @Test
-    fun anonCryptForgedFromWithRequireSignedIsRejected() = runBlocking {
+    fun anonCryptForgedFromWithRequireSignedIsRejected() = runBlocking<Unit> {
         // Attacker forges an anoncrypt envelope whose inner `from` claims to be alice.
         val forged = forgeAnonCryptFromAlice("forged as alice")
 
@@ -188,7 +188,7 @@ class DidCommPackerEncryptedAuthTest {
     }
 
     @Test
-    fun anonCryptForgedFromWithSenderExpectationIsRejectedEvenWithoutRequireSigned() = runBlocking {
+    fun anonCryptForgedFromWithSenderExpectationIsRejectedEvenWithoutRequireSigned() = runBlocking<Unit> {
         // Root cause fix: the expected-sender binding itself must be cryptographic, so the
         // forgery is rejected even when the caller did not ask for requireSigned.
         val forged = forgeAnonCryptFromAlice("forged as alice")
@@ -209,7 +209,7 @@ class DidCommPackerEncryptedAuthTest {
     }
 
     @Test
-    fun anonCryptWithRequireSignedAndNoSenderExpectationIsRejected() = runBlocking {
+    fun anonCryptWithRequireSignedAndNoSenderExpectationIsRejected() = runBlocking<Unit> {
         // Even without an expected sender, requireSigned can never be satisfied anonymously.
         val forged = forgeAnonCryptFromAlice("anonymous but signature required")
 
@@ -229,7 +229,7 @@ class DidCommPackerEncryptedAuthTest {
     }
 
     @Test
-    fun anonCryptWithoutExpectationsUnpacksAnonymously() = runBlocking {
+    fun anonCryptWithoutExpectationsUnpacksAnonymously() = runBlocking<Unit> {
         // Documented semantics: with no sender expectation and no requireSigned, an anoncrypt
         // envelope still unpacks — but it carries NO authenticated sender. The plaintext `from`
         // is a claim only; callers must treat it as unverified.
@@ -251,7 +251,7 @@ class DidCommPackerEncryptedAuthTest {
     // --- AuthCrypt with the wrong expected sender ----------------------------------------------
 
     @Test
-    fun authCryptSenderMismatchAgainstEncryptedFromIsRejected() = runBlocking {
+    fun authCryptSenderMismatchAgainstEncryptedFromIsRejected() = runBlocking<Unit> {
         // Genuine authcrypt from alice, but bob expects charlie: the binding is checked against
         // the cryptographic sender (encryptedFrom), and must fail.
         val packed = packAuthCrypt("from alice, not charlie")

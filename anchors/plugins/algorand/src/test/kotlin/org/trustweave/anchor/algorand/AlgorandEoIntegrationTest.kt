@@ -27,7 +27,7 @@ import kotlin.test.*
 class AlgorandEoIntegrationTest {
 
     @Test
-    fun `end-to-end EO integrity chain verification with Algorand`() = runBlocking {
+    fun `end-to-end EO integrity chain verification with Algorand`() = runBlocking<Unit> {
         // Setup: Create DID for issuer and register Algorand blockchain anchor client (testnet)
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -264,7 +264,7 @@ class AlgorandEoIntegrationTest {
 
 
     @Test
-    fun `test Algorand blockchain anchoring for EO dataset`() = runBlocking {
+    fun `test Algorand blockchain anchoring for EO dataset`() = runBlocking<Unit> {
         val chainId = AlgorandBlockchainAnchorClient.TESTNET
         val anchorClient = AlgorandBlockchainAnchorClient(
             chainId = chainId,

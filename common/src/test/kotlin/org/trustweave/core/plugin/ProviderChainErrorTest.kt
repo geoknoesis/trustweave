@@ -44,7 +44,7 @@ class ProviderChainErrorTest {
     }
 
     @Test
-    fun `test execute throws AllProvidersFailed when all providers fail`() = runBlocking {
+    fun `test execute throws AllProvidersFailed when all providers fail`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = true)
@@ -64,7 +64,7 @@ class ProviderChainErrorTest {
     }
 
     @Test
-    fun `test execute throws AllProvidersFailed with provider error details`() = runBlocking {
+    fun `test execute throws AllProvidersFailed with provider error details`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true, errorMessage = "Error 1"),
             TestProvider("provider-2", shouldFail = true, errorMessage = "Error 2")
@@ -84,7 +84,7 @@ class ProviderChainErrorTest {
     }
 
     @Test
-    fun `test execute does not catch Error types`() = runBlocking {
+    fun `test execute does not catch Error types`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldThrowError = true)
         )
@@ -182,28 +182,27 @@ class ProviderChainErrorTest {
     }
 
     @Test
-    fun `test execute throws InvalidState when selector filters all providers during execution`() = runBlocking {
-        val providers = listOf(
-            TestProvider("provider-1"),
-            TestProvider("provider-2")
-        )
+    fun `test constructor rejects a selector that filters out all providers`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1"),
+                    TestProvider("provider-2"),
+                )
 
-        // Selector that filters out all providers (but constructor allows it if selector changes)
-        // Actually, this shouldn't happen because constructor validates, but let's test the runtime check
-        val chain = ProviderChain(providers) { false }
-
-        // This should fail at construction, but if it somehow gets through, execute should handle it
-        // Actually, the constructor should prevent this, so this test verifies the constructor works
-        assertFailsWith<IllegalArgumentException> {
-            ProviderChain(providers) { false }
+            // The constructor validates the selector, so a selector that keeps nothing is rejected
+            // there — never reaching execute(). (The previous version of this test constructed the
+            // chain unguarded first, which threw before the assertion below could run.)
+            assertFailsWith<IllegalArgumentException> {
+                ProviderChain(providers) { false }
+            }
         }
-    }
 
     private class TestProvider(
         val name: String,
         val shouldFail: Boolean = false,
         val errorMessage: String = "Provider failed",
-        val shouldThrowError: Boolean = false
+        val shouldThrowError: Boolean = false,
     ) {
         suspend fun operation(): String {
             if (shouldThrowError) {
@@ -216,4 +215,3 @@ class ProviderChainErrorTest {
         }
     }
 }
-

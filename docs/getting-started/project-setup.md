@@ -120,7 +120,7 @@ TrustWeave/
 │       ├── polygon/          # Polygon adapter
 │       └── ...               # Other blockchain adapters
 ├── credentials/              # Credentials domain
-│   ├── credential-core/      # Core credential abstraction (renamed from core)
+│   ├── credential-api/      # Core credential abstraction (renamed from core)
 │   └── plugins/              # Credential plugins
 ├── wallet/                   # Wallet domain
 │   ├── wallet-core/          # Core wallet abstraction (renamed from core)
@@ -133,7 +133,7 @@ TrustWeave/
 
 **Note:** Module folders ending with `:core` have been renamed to avoid circular dependency issues:
 - `did/core` → `did/did-core`
-- `credentials/core` → `credentials/credential-core`
+- `credentials/core` → `credentials/credential-api`
 - `kms/core` → `kms/kms-core`
 - `anchors/core` → `anchors/anchor-core`
 - `wallet/core` → `wallet/wallet-core`

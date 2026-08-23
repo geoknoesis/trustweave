@@ -33,7 +33,7 @@ class AnchorVerificationTest {
     // ---------------------------------------------------------------------
 
     @Test
-    fun `full mode roundtrip verifies true`() = runBlocking {
+    fun `full mode roundtrip verifies true`() = runBlocking<Unit> {
         val client = TestAnchorClient()
 
         val result = client.writePayload(payload)
@@ -42,7 +42,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `full mode tampered payload verifies false`() = runBlocking {
+    fun `full mode tampered payload verifies false`() = runBlocking<Unit> {
         val client = TestAnchorClient()
 
         val result = client.writePayload(payload)
@@ -51,7 +51,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `full mode comparison is structural not string equality`() = runBlocking {
+    fun `full mode comparison is structural not string equality`() = runBlocking<Unit> {
         val client = TestAnchorClient()
         val result = client.writePayload(payload)
 
@@ -65,7 +65,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `full mode write does not mark payloadMode in extra`() = runBlocking {
+    fun `full mode write does not mark payloadMode in extra`() = runBlocking<Unit> {
         val client = TestAnchorClient()
 
         val result = client.writePayload(payload)
@@ -79,7 +79,7 @@ class AnchorVerificationTest {
     // ---------------------------------------------------------------------
 
     @Test
-    fun `digest mode write returns original payload and marks the ref`() = runBlocking {
+    fun `digest mode write returns original payload and marks the ref`() = runBlocking<Unit> {
         val client = TestAnchorClient(digestMode = true)
 
         val result = client.writePayload(payload)
@@ -92,7 +92,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `digest mode read returns the envelope with the expected shape`() = runBlocking {
+    fun `digest mode read returns the envelope with the expected shape`() = runBlocking<Unit> {
         val client = TestAnchorClient(digestMode = true)
         val result = client.writePayload(payload)
 
@@ -119,7 +119,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `digest mode write then verify is true`() = runBlocking {
+    fun `digest mode write then verify is true`() = runBlocking<Unit> {
         val client = TestAnchorClient(digestMode = true)
 
         val result = client.writePayload(payload)
@@ -128,7 +128,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `digest mode tampered payload verifies false`() = runBlocking {
+    fun `digest mode tampered payload verifies false`() = runBlocking<Unit> {
         val client = TestAnchorClient(digestMode = true)
 
         val result = client.writePayload(payload)
@@ -137,7 +137,7 @@ class AnchorVerificationTest {
     }
 
     @Test
-    fun `digest mode submits the envelope bytes - never the payload - on chain`() = runBlocking {
+    fun `digest mode submits the envelope bytes - never the payload - on chain`() = runBlocking<Unit> {
         val client = TestAnchorClient(digestMode = true, canSubmit = true)
 
         val result = client.writePayload(payload)
@@ -164,7 +164,7 @@ class AnchorVerificationTest {
     // ---------------------------------------------------------------------
 
     @Test
-    fun `verifyAnchor returns false when the anchor does not exist`() = runBlocking {
+    fun `verifyAnchor returns false when the anchor does not exist`() = runBlocking<Unit> {
         val client = TestAnchorClient()
 
         val missing = AnchorRef(chainId = "test:unit", txHash = "no-such-tx")

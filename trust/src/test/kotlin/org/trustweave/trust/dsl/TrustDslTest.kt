@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 class TrustDslTest {
 
     @Test
-    fun `test TrustWeave configuration with trust registry`() = runBlocking {
+    fun `test TrustWeave configuration with trust registry`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -48,7 +48,7 @@ class TrustDslTest {
     }
 
     @Test
-    fun `test add anchor via DSL`() = runBlocking {
+    fun `test add anchor via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -70,7 +70,7 @@ class TrustDslTest {
     }
 
     @Test
-    fun `test check trust via DSL`() = runBlocking {
+    fun `test check trust via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -95,7 +95,7 @@ class TrustDslTest {
     }
 
     @Test
-    fun `test get trust path via DSL`() = runBlocking {
+    fun `test get trust path via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -126,7 +126,7 @@ class TrustDslTest {
     }
 
     @Test
-    fun `test get trusted issuers via DSL`() = runBlocking {
+    fun `test get trusted issuers via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -152,7 +152,7 @@ class TrustDslTest {
     }
 
     @Test
-    fun `test remove anchor via DSL`() = runBlocking {
+    fun `test remove anchor via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()

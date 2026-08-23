@@ -94,7 +94,7 @@ class EthrDidMethodAddressDerivationTest {
         )
 
     @Test
-    fun `derives the real Keccak-256 Ethereum address from the secp256k1 public key`() = runBlocking {
+    fun `derives the real Keccak-256 Ethereum address from the secp256k1 public key`() = runBlocking<Unit> {
         val method = newMethod(FixedSecp256k1Kms())
 
         val document = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.SECP256K1))
@@ -103,7 +103,7 @@ class EthrDidMethodAddressDerivationTest {
     }
 
     @Test
-    fun `rejects Ed25519 keys - Ethereum addresses require secp256k1`(): Unit = runBlocking {
+    fun `rejects Ed25519 keys - Ethereum addresses require secp256k1`(): Unit = runBlocking<Unit> {
         val method = newMethod(FixedSecp256k1Kms())
 
         val error = assertFailsWith<IllegalArgumentException> {
@@ -127,7 +127,7 @@ class EthrDidMethodAddressDerivationTest {
         }
 
     @Test
-    fun `rejects a key handle whose algorithm is not secp256k1`(): Unit = runBlocking {
+    fun `rejects a key handle whose algorithm is not secp256k1`(): Unit = runBlocking<Unit> {
         // KMS misbehaves and hands back an Ed25519 key even though secp256k1 was requested.
         val method = newMethod(FixedSecp256k1Kms(algorithmName = "Ed25519"))
 

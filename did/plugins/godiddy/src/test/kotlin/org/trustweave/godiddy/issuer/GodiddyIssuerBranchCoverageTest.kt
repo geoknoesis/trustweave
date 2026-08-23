@@ -14,7 +14,7 @@ import kotlin.test.*
 class GodiddyIssuerBranchCoverageTest {
 
     @Test
-    fun `test GodiddyIssuer issueCredential with valid credential`() = runBlocking {
+    fun `test GodiddyIssuer issueCredential with valid credential`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
@@ -41,7 +41,7 @@ class GodiddyIssuerBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyIssuer issueCredential with options`() = runBlocking {
+    fun `test GodiddyIssuer issueCredential with options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
@@ -73,7 +73,7 @@ class GodiddyIssuerBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyIssuer issueCredential with null credential in response`() = runBlocking {
+    fun `test GodiddyIssuer issueCredential with null credential in response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
@@ -100,7 +100,7 @@ class GodiddyIssuerBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyIssuer issueCredential with empty options`() = runBlocking {
+    fun `test GodiddyIssuer issueCredential with empty options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)
@@ -127,7 +127,7 @@ class GodiddyIssuerBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyIssuer convertToJsonElement with various types`() = runBlocking {
+    fun `test GodiddyIssuer convertToJsonElement with various types`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val issuer = GodiddyIssuer(client)

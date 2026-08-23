@@ -33,7 +33,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test key generation performance`() = runBlocking {
+    fun `test key generation performance`() = runBlocking<Unit> {
         val iterations = 10
         val times = mutableListOf<Long>()
         
@@ -59,7 +59,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test signing performance`() = runBlocking {
+    fun `test signing performance`() = runBlocking<Unit> {
         // Generate a key first
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -91,7 +91,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test concurrent key generation`() = runBlocking {
+    fun `test concurrent key generation`() = runBlocking<Unit> {
         val concurrentOperations = 20
         val time = kotlin.system.measureTimeMillis {
             val results = (1..concurrentOperations).map { i ->
@@ -116,7 +116,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test concurrent signing`() = runBlocking {
+    fun `test concurrent signing`() = runBlocking<Unit> {
         // Generate a key first
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -147,7 +147,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test public key retrieval performance`() = runBlocking {
+    fun `test public key retrieval performance`() = runBlocking<Unit> {
         // Generate a key first
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -178,7 +178,7 @@ abstract class KeyManagementServicePerformanceTest {
     }
     
     @Test
-    fun `test cache effectiveness`() = runBlocking {
+    fun `test cache effectiveness`() = runBlocking<Unit> {
         // Generate a key first
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)

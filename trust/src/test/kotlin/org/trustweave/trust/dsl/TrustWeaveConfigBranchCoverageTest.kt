@@ -31,7 +31,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== KMS Resolution Branches ==========
 
     @Test
-    fun `test branch custom KMS takes precedence over provider`() = runBlocking {
+    fun `test branch custom KMS takes precedence over provider`() = runBlocking<Unit> {
         val customKms = InMemoryKeyManagementService()
 
         val trustWeaveConfig = TrustWeave.build {
@@ -55,7 +55,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch KMS provider resolution with inMemory`() = runBlocking {
+    fun `test branch KMS provider resolution with inMemory`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -71,7 +71,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch KMS provider resolution with SPI provider`() = runBlocking {
+    fun `test branch KMS provider resolution with SPI provider`() = runBlocking<Unit> {
         // This tests the SPI resolution path (may fail if provider not available)
         try {
             val trustWeaveConfig = TrustWeave.build {
@@ -92,7 +92,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch KMS default algorithm when not specified`() = runBlocking {
+    fun `test branch KMS default algorithm when not specified`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -108,7 +108,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch KMS error when provider not found`() = runBlocking {
+    fun `test branch KMS error when provider not found`() = runBlocking<Unit> {
         val exception = assertFailsWith<ConfigException.UnsupportedValue> {
             trustWeave {
                 keys {
@@ -126,21 +126,23 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch KMS error when no KMS configured`() = runBlocking {
-        assertFailsWith<IllegalArgumentException> {
-            trustWeave {
-                // No keys configured
-                did {
-                    method("key") {}
-                }
+    fun `test branch no KMS configured falls back to the in-memory provider`() = runBlocking<Unit> {
+        // TrustWeaveFactory resolves `state.kmsProvider ?: "inMemory"`, so omitting keys { }
+        // is valid and yields the in-memory KMS rather than an error.
+        val config = trustWeave {
+            // No keys configured
+            did {
+                method("key") {}
             }
         }
+
+        assertNotNull(config.kms, "A config built without keys { } must still expose a KMS")
     }
 
     // ========== DID Method Resolution Branches ==========
 
     @Test
-    fun `test branch DID method resolution with testkit key method`() = runBlocking {
+    fun `test branch DID method resolution with testkit key method`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeaveConfig = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -164,7 +166,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch DID method resolution with SPI provider waltid`() = runBlocking {
+    fun `test branch DID method resolution with SPI provider waltid`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         try {
             val trustWeaveConfig = TrustWeave.build {
@@ -196,7 +198,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch DID method resolution with SPI provider godiddy`() = runBlocking {
+    fun `test branch DID method resolution with SPI provider godiddy`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         try {
             val trustWeaveConfig = TrustWeave.build {
@@ -228,7 +230,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch DID method error when method not found`() = runBlocking {
+    fun `test branch DID method error when method not found`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         assertFailsWith<IllegalStateException> {
             trustWeave {
@@ -250,7 +252,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch multiple DID methods registration`() = runBlocking {
+    fun `test branch multiple DID methods registration`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeaveConfig = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -278,7 +280,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Anchor Client Resolution Branches ==========
 
     @Test
-    fun `test branch anchor client resolution with inMemory`() = runBlocking {
+    fun `test branch anchor client resolution with inMemory`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -298,7 +300,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor client resolution with inMemory and contract`() = runBlocking {
+    fun `test branch anchor client resolution with inMemory and contract`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -318,7 +320,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor client resolution with SPI provider`() = runBlocking {
+    fun `test branch anchor client resolution with SPI provider`() = runBlocking<Unit> {
         try {
             val trustWeaveConfig = TrustWeave.build {
                 // KMS, DID methods, and Anchor clients auto-discovered via SPI
@@ -345,7 +347,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor client error when provider not found`() = runBlocking {
+    fun `test branch anchor client error when provider not found`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave {
                 // KMS and DID methods auto-discovered via SPI
@@ -365,7 +367,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor client error when provider not specified`() = runBlocking {
+    fun `test branch anchor client error when provider not specified`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave {
                 // KMS and DID methods auto-discovered via SPI
@@ -385,7 +387,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch multiple anchor chains`() = runBlocking {
+    fun `test branch multiple anchor chains`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -412,7 +414,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Credential Config Branches ==========
 
     @Test
-    fun `test branch credential config with defaults`() = runBlocking {
+    fun `test branch credential config with defaults`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -429,7 +431,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch credential config with custom values`() = runBlocking {
+    fun `test branch credential config with custom values`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -456,7 +458,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch credential config partial override`() = runBlocking {
+    fun `test branch credential config partial override`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -479,7 +481,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Named TrustWeave instance branches ==========
 
     @Test
-    fun `test branch named TrustWeave instance`() = runBlocking {
+    fun `test branch named TrustWeave instance`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build("production") {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -494,7 +496,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch default named TrustWeave instance`() = runBlocking {
+    fun `test branch default named TrustWeave instance`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -511,7 +513,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Proof Generator Resolution Branches ==========
 
     @Test
-    fun `test branch proof generator creation with KMS`() = runBlocking {
+    fun `test branch proof generator creation with KMS`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -526,7 +528,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch proof generator uses signer function when provided`() = runBlocking {
+    fun `test branch proof generator uses signer function when provided`() = runBlocking<Unit> {
         var signerCalled = false
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
@@ -549,7 +551,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Error Handling Branches ==========
 
     @Test
-    fun `test branch error when KMS class not found`() = runBlocking {
+    fun `test branch error when KMS class not found`() = runBlocking<Unit> {
         // This tests the ClassNotFoundException path in resolveKms
         // We can't easily simulate this without mocking, but the branch exists
         assertNotNull(trustWeave {
@@ -564,7 +566,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch handles DID registry registration`() = runBlocking {
+    fun `test branch handles DID registry registration`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -582,7 +584,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Revocation Provider Branches ==========
 
     @Test
-    fun `test branch revocation provider inMemory is honored`() = runBlocking {
+    fun `test branch revocation provider inMemory is honored`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             keys {
                 provider("inMemory")
@@ -597,7 +599,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch revocation provider default alias is honored`() = runBlocking {
+    fun `test branch revocation provider default alias is honored`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             keys {
                 provider("inMemory")
@@ -612,7 +614,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch unknown revocation provider fails instead of being silently ignored`() = runBlocking {
+    fun `test branch unknown revocation provider fails instead of being silently ignored`() = runBlocking<Unit> {
         val exception = assertFailsWith<ConfigException.UnsupportedValue> {
             TrustWeave.build {
                 keys {
@@ -633,7 +635,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Schema Config Branches ==========
 
     @Test
-    fun `test branch schemas with default JSON_SCHEMA format is accepted`() = runBlocking {
+    fun `test branch schemas with default JSON_SCHEMA format is accepted`() = runBlocking<Unit> {
         val trustWeaveConfig = TrustWeave.build {
             keys {
                 provider("inMemory")
@@ -648,7 +650,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch schemas with non-default format fails instead of being silently ignored`() = runBlocking {
+    fun `test branch schemas with non-default format fails instead of being silently ignored`() = runBlocking<Unit> {
         val exception = assertFailsWith<ConfigException.UnsupportedValue> {
             TrustWeave.build {
                 keys {
@@ -667,7 +669,7 @@ class TrustWeaveConfigBranchCoverageTest {
     }
 
     @Test
-    fun `test branch error when blockchain registry not available`() = runBlocking {
+    fun `test branch error when blockchain registry not available`() = runBlocking<Unit> {
         // This tests the exception handling when BlockchainRegistry is not available
         val trustWeaveConfig = TrustWeave.build {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI

@@ -52,7 +52,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `resolve request asks for application did-resolution`() = runBlocking {
+    fun `resolve request asks for application did-resolution`() = runBlocking<Unit> {
         val capturedAccept = AtomicReference<String?>(null)
         val body = """{"didDocument":{"id":"did:example:123"},"didDocumentMetadata":{}}"""
         val server = startServer(200, body, capturedAccept)
@@ -68,7 +68,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 410 maps to Deactivated`() = runBlocking {
+    fun `HTTP 410 maps to Deactivated`() = runBlocking<Unit> {
         val body = """{"didDocument":null,"didDocumentMetadata":{"deactivated":true}}"""
         val server = startServer(410, body)
         try {
@@ -84,7 +84,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 410 with absent body still produces Deactivated`() = runBlocking {
+    fun `HTTP 410 with absent body still produces Deactivated`() = runBlocking<Unit> {
         val server = startServer(410, "")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -99,7 +99,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 410 with malformed body still produces Deactivated`() = runBlocking {
+    fun `HTTP 410 with malformed body still produces Deactivated`() = runBlocking<Unit> {
         val server = startServer(410, "not-json{{{")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -121,7 +121,7 @@ class DefaultUniversalResolverCrTest {
     // credential and be cached. ───
 
     @Test
-    fun `HTTP 200 with a non-null document and deactivated true still produces Deactivated`() = runBlocking {
+    fun `HTTP 200 with a non-null document and deactivated true still produces Deactivated`() = runBlocking<Unit> {
         val body = """{"didDocument":{"id":"did:example:still-live"},"didDocumentMetadata":{"deactivated":true}}"""
         val server = startServer(200, body)
         try {
@@ -137,7 +137,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 501 maps to METHOD_NOT_SUPPORTED`() = runBlocking {
+    fun `HTTP 501 maps to METHOD_NOT_SUPPORTED`() = runBlocking<Unit> {
         val server = startServer(501, "")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -151,7 +151,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 400 maps to INVALID_DID`() = runBlocking {
+    fun `HTTP 400 maps to INVALID_DID`() = runBlocking<Unit> {
         val server = startServer(400, "")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -165,7 +165,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `legacy string error in 200 body is upgraded to NOT_FOUND`() = runBlocking {
+    fun `legacy string error in 200 body is upgraded to NOT_FOUND`() = runBlocking<Unit> {
         val body = """{"didResolutionMetadata":{"error":"notFound"},"didDocumentMetadata":{}}"""
         val server = startServer(200, body)
         try {
@@ -180,7 +180,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `upstream nextVersionId lands in document metadata`() = runBlocking {
+    fun `upstream nextVersionId lands in document metadata`() = runBlocking<Unit> {
         val body = """{"didDocument":{"id":"did:example:versioned"},"didDocumentMetadata":{"versionId":"3","nextVersionId":"4"}}"""
         val server = startServer(200, body)
         try {
@@ -203,7 +203,7 @@ class DefaultUniversalResolverCrTest {
     // GodiddyProtocolAdapter now use `as? JsonObject` so this degrades to null instead. ───
 
     @Test
-    fun `HTTP 410 with explicit null metadata field still produces Deactivated`() = runBlocking {
+    fun `HTTP 410 with explicit null metadata field still produces Deactivated`() = runBlocking<Unit> {
         val server = startServer(410, """{"didDocumentMetadata":null}""")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -218,7 +218,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 200 with explicit null metadata field does not crash resolution`() = runBlocking {
+    fun `HTTP 200 with explicit null metadata field does not crash resolution`() = runBlocking<Unit> {
         val server = startServer(200, """{"didDocumentMetadata":null}""")
         try {
             val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
@@ -246,7 +246,7 @@ class DefaultUniversalResolverCrTest {
     // and gives genuine RED coverage. ───
 
     @Test
-    fun `HTTP 410 with null-valued metadata sub-fields still produces Deactivated`() = runBlocking {
+    fun `HTTP 410 with null-valued metadata sub-fields still produces Deactivated`() = runBlocking<Unit> {
         val body = """{"didDocumentMetadata":{"deactivated":null,"canonicalId":null,"equivalentId":null}}"""
         val server = startServer(410, body)
         try {
@@ -262,7 +262,7 @@ class DefaultUniversalResolverCrTest {
     }
 
     @Test
-    fun `HTTP 200 with null-valued metadata sub-fields does not crash resolution`() = runBlocking {
+    fun `HTTP 200 with null-valued metadata sub-fields does not crash resolution`() = runBlocking<Unit> {
         val body =
             """{"didDocument":{"id":"did:example:200-null-subfields"},""" +
                 """"didDocumentMetadata":{"deactivated":null,"canonicalId":null,"equivalentId":null,"versionId":null}}"""
@@ -285,7 +285,7 @@ class DefaultUniversalResolverCrTest {
     // proofs on a resolved document. ───
 
     @Test
-    fun `upstream documentMetadata proof is parsed back`() = runBlocking {
+    fun `upstream documentMetadata proof is parsed back`() = runBlocking<Unit> {
         val body = """{"didDocument":{"id":"did:example:proofed"},""" +
             """"didDocumentMetadata":{"proof":[{"type":"DataIntegrityProof","proofValue":"z123"}]}}"""
         val server = startServer(200, body)

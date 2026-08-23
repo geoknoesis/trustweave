@@ -38,7 +38,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test toJwt creates valid JWT format`() = runBlocking {
+    fun `test toJwt creates valid JWT format`() = runBlocking<Unit> {
         val credential = createTestCredential()
 
         val jwt = credential.toJwt()
@@ -51,7 +51,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test fromJwt recovers credential structure`() = runBlocking {
+    fun `test fromJwt recovers credential structure`() = runBlocking<Unit> {
         val originalCredential = createTestCredential(
             claims = mapOf(
                 "name" to JsonPrimitive("John Doe"),
@@ -69,7 +69,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test JWT round trip preserves all claims`() = runBlocking {
+    fun `test JWT round trip preserves all claims`() = runBlocking<Unit> {
         val originalCredential = createTestCredential(
             claims = mapOf(
                 "name" to JsonPrimitive("Jane Smith"),
@@ -95,7 +95,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test toJwt handles empty claims`() = runBlocking {
+    fun `test toJwt handles empty claims`() = runBlocking<Unit> {
         val credential = createTestCredential(claims = emptyMap())
 
         val jwt = credential.toJwt()
@@ -106,7 +106,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test toJwt handles multiple credential types`() = runBlocking {
+    fun `test toJwt handles multiple credential types`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(
                 CredentialType.fromString("VerifiableCredential"),
@@ -131,7 +131,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test fromJwt handles invalid JWT format`() = runBlocking {
+    fun `test fromJwt handles invalid JWT format`() = runBlocking<Unit> {
         val invalidJwt = "not.a.valid.jwt"
 
         assertFailsWith<IllegalArgumentException> {
@@ -140,14 +140,14 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test fromJwt handles empty JWT`() = runBlocking {
+    fun `test fromJwt handles empty JWT`() = runBlocking<Unit> {
         assertFailsWith<IllegalArgumentException> {
             "".fromJwt()
         }
     }
 
     @Test
-    fun `test fromJwt handles malformed JWT payload`() = runBlocking {
+    fun `test fromJwt handles malformed JWT payload`() = runBlocking<Unit> {
         // Create a JWT with invalid base64 payload
         val invalidJwt = "eyJ0eXAiOiJKV1QifQ.invalid.payload"
 
@@ -157,7 +157,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test JWT with DID issuer`() = runBlocking {
+    fun `test JWT with DID issuer`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(CredentialType.fromString("VerifiableCredential")),
             context = listOf("https://www.w3.org/2018/credentials/v1"),
@@ -177,7 +177,7 @@ class CredentialTransformerJwtTest {
     }
 
     @Test
-    fun `test JWT with complex nested claims`() = runBlocking {
+    fun `test JWT with complex nested claims`() = runBlocking<Unit> {
         val nestedClaims = buildJsonObject {
             put("name", "John Doe")
             put("address", buildJsonObject {

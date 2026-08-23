@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -91,17 +92,21 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Credential Required Branches ==========
 
     @Test
-    fun `test branch credential required error`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
+    fun `test branch credential required returns InvalidRequest`() = runBlocking<Unit> {
+        val result =
             trustWeave.issue {
                 // Missing credential
                 signedBy(issuerDid = Did("did:key:issuer"), keyId = "key-1")
             }
-        }
+
+        assertTrue(
+            result is IssuanceResult.Failure.InvalidRequest,
+            "Issuing with no credential must yield InvalidRequest, got: $result",
+        )
     }
 
     @Test
-    fun `test branch credential from inline builder`() = runBlocking {
+    fun `test branch credential from inline builder`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -125,7 +130,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch credential from pre-built`() = runBlocking {
+    fun `test branch credential from pre-built`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -153,8 +158,8 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Issuer DID Required Branches ==========
 
     @Test
-    fun `test branch issuer DID required error`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
+    fun `test branch issuer DID required returns InvalidRequest`() = runBlocking<Unit> {
+        val result =
             trustWeave.issue {
                 credential {
                     type("PersonCredential")
@@ -166,11 +171,15 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 // Missing signedBy() call
             }
-        }
+
+        assertTrue(
+            result is IssuanceResult.Failure.InvalidRequest,
+            "Issuing with no issuer DID must yield InvalidRequest, got: $result",
+        )
     }
 
     @Test
-    fun `test branch issuer DID provided`() = runBlocking {
+    fun `test branch issuer DID provided`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -196,11 +205,11 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Key ID Required Branches ==========
 
     @Test
-    fun `test branch key ID required error`() = runBlocking {
+    fun `test branch blank key ID is rejected`() = runBlocking<Unit> {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<IllegalArgumentException> {
             trustWeave.issue {
                 credential {
                     type("PersonCredential")
@@ -218,7 +227,7 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Proof Type Branches ==========
 
     @Test
-    fun `test branch proof type from default config`() = runBlocking {
+    fun `test branch proof type from default config`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -246,7 +255,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch proof type from custom value`() = runBlocking {
+    fun `test branch proof type from custom value`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -276,7 +285,7 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Challenge and Domain Branches ==========
 
     @Test
-    fun `test branch challenge provided`() = runBlocking {
+    fun `test branch challenge provided`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -304,7 +313,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch domain provided`() = runBlocking {
+    fun `test branch domain provided`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -332,7 +341,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch challenge and domain both provided`() = runBlocking {
+    fun `test branch challenge and domain both provided`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -364,7 +373,7 @@ class IssuanceBuilderBranchCoverageTest {
     // ========== Auto-Anchor Branches ==========
 
     @Test
-    fun `test branch auto-anchor disabled in config`() = runBlocking {
+    fun `test branch auto-anchor disabled in config`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -390,7 +399,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch auto-anchor enabled in config`() = runBlocking {
+    fun `test branch auto-anchor enabled in config`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -436,7 +445,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch explicit anchor call`() = runBlocking {
+    fun `test branch explicit anchor call`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
             keys {
@@ -480,7 +489,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor error when chain ID missing`() = runBlocking {
+    fun `test branch anchor without chain ID still issues`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -505,7 +514,7 @@ class IssuanceBuilderBranchCoverageTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
         // Should fail when trying to anchor without chain ID
-        assertFailsWith<IllegalStateException> {
+        val result =
             trustWeaveWithAutoAnchor.issue {
                 credential {
                     type("PersonCredential")
@@ -518,11 +527,15 @@ class IssuanceBuilderBranchCoverageTest {
                 signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
                 // No anchor() call and no defaultChain
             }
-        }
+
+        assertTrue(
+            result is IssuanceResult.Success,
+            "Auto-anchor without a chain ID must still issue the credential, got: $result",
+        )
     }
 
     @Test
-    fun `test branch anchor error when anchor client not found`() = runBlocking {
+    fun `test branch missing anchor client still issues`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -546,7 +559,7 @@ class IssuanceBuilderBranchCoverageTest {
         val didMethod = DidKeyMockMethod(kms)
         val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertFailsWith<IllegalStateException> {
+        val result =
             trustWeaveWithAutoAnchor.issue {
                 credential {
                     type("PersonCredential")
@@ -558,11 +571,15 @@ class IssuanceBuilderBranchCoverageTest {
                 }
                 signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
             }
-        }
+
+        assertTrue(
+            result is IssuanceResult.Success,
+            "A missing anchor client must still issue the credential, got: $result",
+        )
     }
 
     @Test
-    fun `test branch anchor failure handling`() = runBlocking {
+    fun `test branch anchor failure handling`() = runBlocking<Unit> {
         // This tests the exception handling when anchoring fails
         // The credential should still be issued even if anchoring fails
         val kmsRef = kms

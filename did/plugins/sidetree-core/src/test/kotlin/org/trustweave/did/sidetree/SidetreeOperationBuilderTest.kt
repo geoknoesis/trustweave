@@ -40,7 +40,7 @@ class SidetreeOperationBuilderTest {
     private val builder = SidetreeOperationBuilder(SidetreeMethodSpec.ORB)
 
     @Test
-    fun `update reveals the PREVIOUS update key (not a fresh one)`() = runBlocking {
+    fun `update reveals the PREVIOUS update key (not a fresh one)`() = runBlocking<Unit> {
         val previous = SidetreeP256KeyPair.generate()
         val next = SidetreeP256KeyPair.generate()
 
@@ -70,7 +70,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `update signedData is a JWS Compact Serialization, not a JSON object`() = runBlocking {
+    fun `update signedData is a JWS Compact Serialization, not a JSON object`() = runBlocking<Unit> {
         val previous = SidetreeP256KeyPair.generate()
         val next = SidetreeP256KeyPair.generate()
 
@@ -87,7 +87,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `update signedData JWS verifies against the previous update public key`() = runBlocking {
+    fun `update signedData JWS verifies against the previous update public key`() = runBlocking<Unit> {
         val previous = SidetreeP256KeyPair.generate()
         val next = SidetreeP256KeyPair.generate()
 
@@ -105,7 +105,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `update signedData payload contains updateKey=previous and deltaHash`() = runBlocking {
+    fun `update signedData payload contains updateKey=previous and deltaHash`() = runBlocking<Unit> {
         val previous = SidetreeP256KeyPair.generate()
         val next = SidetreeP256KeyPair.generate()
 
@@ -134,7 +134,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `recover reveals the PREVIOUS recovery key, rotates both commitments, and signs with its private half`() = runBlocking {
+    fun `recover reveals the PREVIOUS recovery key, rotates both commitments, and signs with its private half`() = runBlocking<Unit> {
         val previousRecovery = SidetreeP256KeyPair.generate()
         val nextUpdate = SidetreeP256KeyPair.generate()
         val nextRecovery = SidetreeP256KeyPair.generate()
@@ -190,7 +190,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `deactivate reveals the PREVIOUS recovery key and signs with its private half`() = runBlocking {
+    fun `deactivate reveals the PREVIOUS recovery key and signs with its private half`() = runBlocking<Unit> {
         val previousRecovery = SidetreeP256KeyPair.generate()
 
         val deactivateOp = builder.buildDeactivateOperation(
@@ -215,7 +215,7 @@ class SidetreeOperationBuilderTest {
     }
 
     @Test
-    fun `create produces a long-form DID that starts with the configured namespace`() = runBlocking {
+    fun `create produces a long-form DID that starts with the configured namespace`() = runBlocking<Unit> {
         val publicKeyJwk = mapOf(
             "kty" to "EC",
             "crv" to "P-256",

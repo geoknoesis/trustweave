@@ -37,7 +37,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test toJsonLd creates valid JSON-LD structure`() = runBlocking {
+    fun `test toJsonLd creates valid JSON-LD structure`() = runBlocking<Unit> {
         val credential = createTestCredential()
 
         val jsonLd = credential.toJsonLd()
@@ -48,7 +48,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test fromJsonLd recovers credential structure`() = runBlocking {
+    fun `test fromJsonLd recovers credential structure`() = runBlocking<Unit> {
         val originalCredential = createTestCredential(
             claims = mapOf(
                 "name" to JsonPrimitive("John Doe"),
@@ -66,7 +66,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test JSON-LD round trip preserves all claims`() = runBlocking {
+    fun `test JSON-LD round trip preserves all claims`() = runBlocking<Unit> {
         val originalCredential = createTestCredential(
             claims = mapOf(
                 "name" to JsonPrimitive("Jane Smith"),
@@ -92,7 +92,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test toJsonLd includes context`() = runBlocking {
+    fun `test toJsonLd includes context`() = runBlocking<Unit> {
         val credential = createTestCredential()
 
         val jsonLd = credential.toJsonLd()
@@ -102,7 +102,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test toJsonLd includes type as array`() = runBlocking {
+    fun `test toJsonLd includes type as array`() = runBlocking<Unit> {
         val credential = createTestCredential()
 
         val jsonLd = credential.toJsonLd()
@@ -113,7 +113,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test toJsonLd handles empty claims`() = runBlocking {
+    fun `test toJsonLd handles empty claims`() = runBlocking<Unit> {
         val credential = createTestCredential(claims = emptyMap())
 
         val jsonLd = credential.toJsonLd()
@@ -123,7 +123,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test toJsonLd handles multiple credential types`() = runBlocking {
+    fun `test toJsonLd handles multiple credential types`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(
                 CredentialType.fromString("VerifiableCredential"),
@@ -148,7 +148,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test fromJsonLd handles missing required fields`() = runBlocking {
+    fun `test fromJsonLd handles missing required fields`() = runBlocking<Unit> {
         // Create invalid JSON-LD missing required fields
         val invalidJsonLd = buildJsonObject {
             // Missing @context, type, issuer, etc.
@@ -168,7 +168,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test JSON-LD with DID issuer`() = runBlocking {
+    fun `test JSON-LD with DID issuer`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(CredentialType.fromString("VerifiableCredential")),
             context = listOf("https://www.w3.org/2018/credentials/v1"),
@@ -188,7 +188,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test JSON-LD with complex nested claims`() = runBlocking {
+    fun `test JSON-LD with complex nested claims`() = runBlocking<Unit> {
         val nestedClaims = buildJsonObject {
             put("name", "John Doe")
             put("address", buildJsonObject {
@@ -217,7 +217,7 @@ class CredentialTransformerJsonLdTest {
     }
 
     @Test
-    fun `test JSON-LD preserves issuance date`() = runBlocking {
+    fun `test JSON-LD preserves issuance date`() = runBlocking<Unit> {
         val issuanceDate = Clock.System.now()
         val credential = VerifiableCredential(
             type = listOf(CredentialType.fromString("VerifiableCredential")),

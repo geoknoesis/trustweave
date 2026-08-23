@@ -20,7 +20,7 @@ import kotlinx.datetime.Clock
 class TrustRegistryEdgeCasesTest {
 
     @Test
-    fun `test trust registry with empty credential types list`() = runBlocking {
+    fun `test trust registry with empty credential types list`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor(
@@ -37,7 +37,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust registry with null credential types`() = runBlocking {
+    fun `test trust registry with null credential types`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor(
@@ -53,7 +53,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust path with circular references`() = runBlocking {
+    fun `test trust path with circular references`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -71,7 +71,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust path with disconnected nodes`() = runBlocking {
+    fun `test trust path with disconnected nodes`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -87,7 +87,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust score calculation for various path lengths`() = runBlocking {
+    fun `test trust score calculation for various path lengths`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:a1", TrustAnchorMetadata())
@@ -126,7 +126,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test remove non-existent trust anchor`() = runBlocking {
+    fun `test remove non-existent trust anchor`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         val removed = registry.removeTrustAnchor("did:key:nonexistent")
@@ -134,7 +134,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test get trusted issuers with empty registry`() = runBlocking {
+    fun `test get trusted issuers with empty registry`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         val issuers: List<String> = registry.getTrustedIssuers(null as String?)
@@ -142,7 +142,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust anchor metadata with all fields`() = runBlocking {
+    fun `test trust anchor metadata with all fields`() = runBlocking<Unit> {
         val now = Clock.System.now()
         val metadata = TrustAnchorMetadata(
             credentialTypes = listOf("Type1", "Type2"),
@@ -156,7 +156,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust path result validation`() = runBlocking {
+    fun `test trust path result validation`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
         
         registry.addTrustAnchor("did:key:a1", TrustAnchorMetadata())
@@ -181,7 +181,7 @@ class TrustRegistryEdgeCasesTest {
     }
 
     @Test
-    fun `test trust path result with invalid trust score`() = runBlocking {
+    fun `test trust path result with invalid trust score`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
         
         registry.addTrustAnchor("did:key:a1", TrustAnchorMetadata())

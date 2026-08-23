@@ -41,7 +41,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test toCbor converts credential to CBOR bytes`() = runBlocking {
+    fun `test toCbor converts credential to CBOR bytes`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val cborBytes = credential.toCbor()
@@ -57,7 +57,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test fromCbor converts CBOR bytes back to credential`() = runBlocking {
+    fun `test fromCbor converts CBOR bytes back to credential`() = runBlocking<Unit> {
         val originalCredential = createTestCredential()
         
         // Convert to CBOR
@@ -75,7 +75,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test round trip CBOR conversion preserves all data`() = runBlocking {
+    fun `test round trip CBOR conversion preserves all data`() = runBlocking<Unit> {
         val originalCredential = createTestCredential()
         
         // Convert to CBOR and back
@@ -114,7 +114,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test CBOR is more compact than JSON`() = runBlocking {
+    fun `test CBOR is more compact than JSON`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val jsonBytes = credential.toJsonLd().toString().toByteArray(Charsets.UTF_8)
@@ -129,7 +129,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test fromCbor throws exception for invalid CBOR data`() = runBlocking {
+    fun `test fromCbor throws exception for invalid CBOR data`() = runBlocking<Unit> {
         val invalidBytes = "not valid CBOR".toByteArray(Charsets.UTF_8)
         
         val exception = kotlin.test.assertFailsWith<IllegalArgumentException> {
@@ -142,7 +142,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test fromCbor handles empty bytes`() = runBlocking {
+    fun `test fromCbor handles empty bytes`() = runBlocking<Unit> {
         val emptyBytes = ByteArray(0)
         
         val exception = kotlin.test.assertFailsWith<IllegalArgumentException> {
@@ -153,7 +153,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test CBOR conversion with credential containing expiration`() = runBlocking {
+    fun `test CBOR conversion with credential containing expiration`() = runBlocking<Unit> {
         // Note: expirationDate is @Transient in VerifiableCredential, so it's not serialized
         // by kotlinx.serialization. This test verifies that CBOR conversion works for credentials
         // without expirationDate (which is the typical case for serialization).
@@ -181,7 +181,7 @@ class CredentialTransformerCborTest {
     }
     
     @Test
-    fun `test CBOR conversion with credential containing nested claims`() = runBlocking {
+    fun `test CBOR conversion with credential containing nested claims`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(CredentialType.fromString("VerifiableCredential")),
             context = listOf("https://www.w3.org/2018/credentials/v1"),

@@ -22,7 +22,7 @@ import kotlin.test.*
 class ProfessionalIdentityExampleTest {
 
     @Test
-    fun `test main function executes successfully`() = runBlocking {
+    fun `test main function executes successfully`() = runBlocking<Unit> {
         // Capture output to verify execution
         val output = java.io.ByteArrayOutputStream()
         val originalOut = System.out
@@ -45,7 +45,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test storing multiple credential types`() = runBlocking {
+    fun `test storing multiple credential types`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -111,7 +111,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test credential organization with collections`() = runBlocking {
+    fun `test credential organization with collections`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -169,7 +169,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test credential tagging`() = runBlocking {
+    fun `test credential tagging`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -208,7 +208,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test credential querying by type`() = runBlocking {
+    fun `test credential querying by type`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -251,7 +251,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test selective disclosure presentation`() = runBlocking {
+    fun `test selective disclosure presentation`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -307,7 +307,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test full presentation creation`() = runBlocking {
+    fun `test full presentation creation`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -354,7 +354,7 @@ class ProfessionalIdentityExampleTest {
     }
 
     @Test
-    fun `test querying active certifications`() = runBlocking {
+    fun `test querying active certifications`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)

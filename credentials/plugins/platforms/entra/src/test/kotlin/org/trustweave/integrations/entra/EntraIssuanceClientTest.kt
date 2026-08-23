@@ -63,7 +63,7 @@ class EntraIssuanceClientTest {
     }
 
     @Test
-    fun `createRequest sends correctly-shaped wire payload and parses response`() = runBlocking {
+    fun `createRequest sends correctly-shaped wire payload and parses response`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/v1.0/verifiableCredentials/createIssuanceRequest"))
                 .withHeader("Authorization", equalTo("Bearer test-token"))
@@ -126,7 +126,7 @@ class EntraIssuanceClientTest {
     }
 
     @Test
-    fun `propagates wire format exactly via equalToJson when claims provided`() = runBlocking {
+    fun `propagates wire format exactly via equalToJson when claims provided`() = runBlocking<Unit> {
         val expectedJson = """
             {
               "authority": "did:web:authority.example.com",
@@ -162,7 +162,7 @@ class EntraIssuanceClientTest {
     }
 
     @Test
-    fun `5xx response is mapped to RequestServiceError with body preserved`() = runBlocking {
+    fun `5xx response is mapped to RequestServiceError with body preserved`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/v1.0/verifiableCredentials/createIssuanceRequest"))
                 .willReturn(

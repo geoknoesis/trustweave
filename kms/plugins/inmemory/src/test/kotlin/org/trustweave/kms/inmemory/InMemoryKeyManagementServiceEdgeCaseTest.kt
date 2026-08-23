@@ -31,7 +31,7 @@ class InMemoryKeyManagementServiceEdgeCaseTest : PluginEdgeCaseTestTemplate() {
      * KeyId constructor validates and throws exception, so this tests that validation.
      */
     @Test
-    fun `test empty key ID validation`() = runBlocking {
+    fun `test empty key ID validation`() = runBlocking<Unit> {
         // KeyId constructor throws IllegalArgumentException for blank strings,
         // so we can't create an empty KeyId. This test verifies that the validation
         // happens at the KeyId level, not at the KMS level.
@@ -56,7 +56,7 @@ class InMemoryKeyManagementServiceEdgeCaseTest : PluginEdgeCaseTestTemplate() {
      * The implementation returns UnsupportedAlgorithm, which is acceptable.
      */
     @Test
-    fun `test signing with incompatible algorithm returns UnsupportedAlgorithm`() = runBlocking {
+    fun `test signing with incompatible algorithm returns UnsupportedAlgorithm`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithms = getSupportedAlgorithms()
         if (algorithms.size < 2) return@runBlocking

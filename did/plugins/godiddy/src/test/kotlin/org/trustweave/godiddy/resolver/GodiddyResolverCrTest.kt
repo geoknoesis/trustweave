@@ -37,7 +37,7 @@ class GodiddyResolverCrTest {
     }
 
     @Test
-    fun `deactivated upstream body maps to Deactivated`() = runBlocking {
+    fun `deactivated upstream body maps to Deactivated`() = runBlocking<Unit> {
         val body = """{"didDocument":null,"didDocumentMetadata":{"deactivated":true}}"""
         val server = startServer(body)
         val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
@@ -61,7 +61,7 @@ class GodiddyResolverCrTest {
     // "deactivated -> Deactivated" survived undetected — a revoked DID's document would otherwise
     // flow into a caller as a plain Success and could go on to verify a credential and be cached.
     @Test
-    fun `deactivated upstream body with a non-null document still maps to Deactivated`() = runBlocking {
+    fun `deactivated upstream body with a non-null document still maps to Deactivated`() = runBlocking<Unit> {
         val body = """{"didDocument":{"id":"did:example:still-live"},"didDocumentMetadata":{"deactivated":true}}"""
         val server = startServer(body)
         val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
@@ -79,7 +79,7 @@ class GodiddyResolverCrTest {
     }
 
     @Test
-    fun `upstream nextVersionId lands in document metadata`() = runBlocking {
+    fun `upstream nextVersionId lands in document metadata`() = runBlocking<Unit> {
         val body =
             """{"didDocument":{"id":"did:example:versioned"},"didDocumentMetadata":{"versionId":"3","nextVersionId":"4"}}"""
         val server = startServer(body)
@@ -102,7 +102,7 @@ class GodiddyResolverCrTest {
     // not exist". Asserting NOT_FOUND (404) here would be dishonest; INVALID_DID_DOCUMENT (500)
     // reflects what actually happened.
     @Test
-    fun `document conversion failure maps to INVALID_DID_DOCUMENT, not NOT_FOUND`() = runBlocking {
+    fun `document conversion failure maps to INVALID_DID_DOCUMENT, not NOT_FOUND`() = runBlocking<Unit> {
         val body = """{"didDocument":{"noIdField":true},"didDocumentMetadata":{}}"""
         val server = startServer(body)
         val client = GodiddyClient(GodiddyConfig(baseUrl = "http://localhost:${server.address.port}"))
@@ -128,7 +128,7 @@ class GodiddyResolverCrTest {
     // F4: DidDocumentMetadata.proof (§4.3) round-trip — GodiddyResolver's own metadata parser
     // must read `proof` back, not just serialize it out.
     @Test
-    fun `upstream documentMetadata proof is parsed back`() = runBlocking {
+    fun `upstream documentMetadata proof is parsed back`() = runBlocking<Unit> {
         val body = """{"didDocument":{"id":"did:example:proofed"},""" +
             """"didDocumentMetadata":{"proof":[{"type":"DataIntegrityProof","proofValue":"z123"}]}}"""
         val server = startServer(body)

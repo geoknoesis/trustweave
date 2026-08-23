@@ -63,7 +63,7 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `writePayload uses in-memory fallback when no submitter configured and test mode is on`() = runBlocking {
+    fun `writePayload uses in-memory fallback when no submitter configured and test mode is on`() = runBlocking<Unit> {
         client(inMemoryTestMode = true).use { c ->
             val payload = buildJsonObject {
                 put("kind", JsonPrimitive("test"))
@@ -81,7 +81,7 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `writePayload fails closed when no submitter configured and test mode is off`() = runBlocking {
+    fun `writePayload fails closed when no submitter configured and test mode is off`() = runBlocking<Unit> {
         client().use { c ->
             val payload = buildJsonObject { put("kind", JsonPrimitive("test")) }
             assertThrows<BlockchainException.ConfigurationFailed> {
@@ -92,7 +92,7 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `readPayload returns NotFound on 404`() = runBlocking {
+    fun `readPayload returns NotFound on 404`() = runBlocking<Unit> {
         server.enqueue(MockResponse().setResponseCode(404).setBody("""{"status_code":404,"error":"Not Found","message":"x"}"""))
         client().use { c ->
             val ref = AnchorRef(
@@ -108,7 +108,7 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `readPayload returns BlockchainException on 500`() = runBlocking {
+    fun `readPayload returns BlockchainException on 500`() = runBlocking<Unit> {
         server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":"boom"}"""))
         client().use { c ->
             val ref = AnchorRef(
@@ -122,7 +122,7 @@ class CardanoBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `readPayload deserialises Blockfrost CIP-20 response`() = runBlocking {
+    fun `readPayload deserialises Blockfrost CIP-20 response`() = runBlocking<Unit> {
         val body = """
             [
               {

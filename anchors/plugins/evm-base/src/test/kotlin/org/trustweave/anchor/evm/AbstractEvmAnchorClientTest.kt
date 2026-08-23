@@ -76,7 +76,7 @@ class AbstractEvmAnchorClientTest {
     }
 
     @Test
-    fun `write and read roundtrip in opt-in in-memory test mode`() = runBlocking {
+    fun `write and read roundtrip in opt-in in-memory test mode`() = runBlocking<Unit> {
         val client = TestEvmClient(
             chain,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)

@@ -77,7 +77,7 @@ class CredentialLifecycleIntegrationTest {
     }
 
     @Test
-    fun `test full credential lifecycle - issue and verify`() = runBlocking {
+    fun `test full credential lifecycle - issue and verify`() = runBlocking<Unit> {
         // Setup: Create KMS and DID method
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -163,7 +163,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test credential lifecycle with expiration check`() = runBlocking {
+    fun `test credential lifecycle with expiration check`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -227,7 +227,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test batch verification`() = runBlocking {
+    fun `test batch verification`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -313,7 +313,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test issuance fails with unsupported format`() = runBlocking {
+    fun `test issuance fails with unsupported format`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -364,7 +364,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test verification fails with invalid issuer DID`() = runBlocking {
+    fun `test verification fails with invalid issuer DID`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -420,7 +420,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test verification fails with credential missing proof`() = runBlocking {
+    fun `test verification fails with credential missing proof`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -472,7 +472,7 @@ class CredentialLifecycleIntegrationTest {
     }
     
     @Test
-    fun `test issuance fails with too many claims`() = runBlocking {
+    fun `test issuance fails with too many claims`() = runBlocking<Unit> {
         // Setup
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)

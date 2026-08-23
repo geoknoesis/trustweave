@@ -3,15 +3,15 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "org.trustweave.core"
+group = "org.trustweave.wallet"
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
-    implementation(project(":wallet:wallet-core"))  // Wallet interfaces
+    implementation(project(":wallet:wallet-core")) // Wallet interfaces
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-
 
     // JDBC drivers (PostgreSQL and H2 — MySQL is not supported, see DatabaseWallet KDoc)
     implementation("org.postgresql:postgresql:42.7.1")
@@ -23,4 +23,3 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
 }
-

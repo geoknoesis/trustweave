@@ -18,7 +18,7 @@ class RequiresPluginExampleTest {
      */
     @Test
     @RequiresPlugin("aws")
-    fun `example test requiring AWS KMS`() = runBlocking {
+    fun `example test requiring AWS KMS`() = runBlocking<Unit> {
         // This test will only run if AWS_REGION is set
         // The test framework automatically checks AWS provider's requiredEnvironmentVariables
         assertNotNull(System.getenv("AWS_REGION") ?: System.getenv("AWS_DEFAULT_REGION"))
@@ -30,7 +30,7 @@ class RequiresPluginExampleTest {
      */
     @Test
     @RequiresPlugin("google-cloud-kms")
-    fun `example test requiring Google Cloud KMS`() = runBlocking {
+    fun `example test requiring Google Cloud KMS`() = runBlocking<Unit> {
         // This test will only run if GOOGLE_CLOUD_PROJECT or GCLOUD_PROJECT is set
         assertNotNull(
             System.getenv("GOOGLE_CLOUD_PROJECT") ?:
@@ -45,7 +45,7 @@ class RequiresPluginExampleTest {
      */
     @Test
     @RequiresPlugin("aws", "azure")
-    fun `example test requiring multiple plugins`() = runBlocking {
+    fun `example test requiring multiple plugins`() = runBlocking<Unit> {
         // This test will only run if both AWS and Azure have their required env vars
         // If either is missing, the test is skipped
     }

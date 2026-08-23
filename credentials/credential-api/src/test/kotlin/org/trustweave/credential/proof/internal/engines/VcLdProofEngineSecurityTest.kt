@@ -128,7 +128,7 @@ class VcLdProofEngineSecurityTest {
     // --- Happy path -------------------------------------------------------------------
 
     @Test
-    fun `sign and verify round-trip succeeds with proof options covered`() = runBlocking {
+    fun `sign and verify round-trip succeeds with proof options covered`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest())
 
@@ -142,7 +142,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `JsonWebSignature2020 sign and verify round-trip succeeds`() = runBlocking {
+    fun `JsonWebSignature2020 sign and verify round-trip succeeds`() = runBlocking<Unit> {
         // EdDSA detached-JWS verification is implemented with the Java Security API
         // (java.security.Signature "Ed25519"), NOT Nimbus' Ed25519Verifier, which would
         // throw NoClassDefFoundError because the optional com.google.crypto.tink
@@ -171,7 +171,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `JsonWebSignature2020 tampered credentialSubject claim fails verification`() = runBlocking {
+    fun `JsonWebSignature2020 tampered credentialSubject claim fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest(proofType = "JsonWebSignature2020"))
 
@@ -191,7 +191,7 @@ class VcLdProofEngineSecurityTest {
     // --- Finding 1: proof options must be covered by the signature ---------------------
 
     @Test
-    fun `tampering with proof challenge after signing fails verification`() = runBlocking {
+    fun `tampering with proof challenge after signing fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest(challenge = "original-challenge"))
 
@@ -210,7 +210,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `tampering with proof domain after signing fails verification`() = runBlocking {
+    fun `tampering with proof domain after signing fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest(domain = "original.example.com"))
 
@@ -229,7 +229,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `tampering with proof created timestamp after signing fails verification`() = runBlocking {
+    fun `tampering with proof created timestamp after signing fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest())
 
@@ -244,7 +244,7 @@ class VcLdProofEngineSecurityTest {
     // --- Finding 2: credentialSubject claims must be signed -----------------------------
 
     @Test
-    fun `tampering with a credentialSubject claim after signing fails verification`() = runBlocking {
+    fun `tampering with a credentialSubject claim after signing fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest())
 
@@ -263,7 +263,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `issuing a credential with claims undefined in its context fails closed`(): Unit = runBlocking {
+    fun `issuing a credential with claims undefined in its context fails closed`(): Unit = runBlocking<Unit> {
         val rig = TestRig()
         // No claim context declared: "favoriteColor" is an undefined JSON-LD term and
         // would be silently dropped from the canonical form (left unsigned).
@@ -284,7 +284,7 @@ class VcLdProofEngineSecurityTest {
     // --- Finding 9: proof purpose enforcement -------------------------------------------
 
     @Test
-    fun `proof with keyAgreement proofPurpose is rejected`() = runBlocking {
+    fun `proof with keyAgreement proofPurpose is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest())
 
@@ -302,7 +302,7 @@ class VcLdProofEngineSecurityTest {
     }
 
     @Test
-    fun `verification method not listed under assertionMethod is rejected`() = runBlocking {
+    fun `verification method not listed under assertionMethod is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.engine.issue(rig.issuanceRequest())
 
@@ -322,7 +322,7 @@ class VcLdProofEngineSecurityTest {
     // --- Presentation proof path ---------------------------------------------------------
 
     @Test
-    fun `presentation signature covers proof options - tampered challenge fails`() = runBlocking {
+    fun `presentation signature covers proof options - tampered challenge fails`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val holderDocument = didMethod.createDid()

@@ -13,7 +13,7 @@ import kotlin.test.*
 class BlockchainAnchorClientInterfaceContractTest {
 
     @Test
-    fun `test BlockchainAnchorClient writePayload returns anchor result`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload returns anchor result`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -29,7 +29,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with custom media type`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with custom media type`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -42,7 +42,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient readPayload returns anchor result`() = runBlocking {
+    fun `test BlockchainAnchorClient readPayload returns anchor result`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -57,7 +57,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient readPayload throws NotFound`() = runBlocking {
+    fun `test BlockchainAnchorClient readPayload throws NotFound`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val ref = AnchorRef(
             chainId = "algorand:testnet",
@@ -70,7 +70,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with complex payload`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with complex payload`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("id", "credential-1")
@@ -93,7 +93,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with array payload`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with array payload`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonArray {
             add("item1")
@@ -108,7 +108,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with primitive payload`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with primitive payload`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = JsonPrimitive("simple string")
 
@@ -119,7 +119,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload includes timestamp`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload includes timestamp`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -132,7 +132,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with contract address`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with contract address`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet", "contract-123")
         val payload = buildJsonObject {
             put("data", "test")
@@ -145,7 +145,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient writePayload with extra metadata`() = runBlocking {
+    fun `test BlockchainAnchorClient writePayload with extra metadata`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -158,7 +158,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient readPayload preserves media type`() = runBlocking {
+    fun `test BlockchainAnchorClient readPayload preserves media type`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload = buildJsonObject {
             put("data", "test")
@@ -171,7 +171,7 @@ class BlockchainAnchorClientInterfaceContractTest {
     }
 
     @Test
-    fun `test BlockchainAnchorClient multiple writes create different hashes`() = runBlocking {
+    fun `test BlockchainAnchorClient multiple writes create different hashes`() = runBlocking<Unit> {
         val client = createMockClient("algorand:testnet")
         val payload1 = buildJsonObject { put("data", "test1") }
         val payload2 = buildJsonObject { put("data", "test2") }

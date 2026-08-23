@@ -36,5 +36,5 @@ Use this checklist when wiring TrustWeave into a production or pre-production se
 
 ## API stability
 
-- Follow the [Deprecation policy](../../api-reference/deprecation-policy.md). Replace deprecated APIs when warnings appear in your build.
-- Consult the [Module maturity matrix](../../api-reference/module-maturity.md) before depending on optional plugins in production.
+- Follow the [Deprecation policy](../api-reference/deprecation-policy.md). Replace deprecated APIs when warnings appear in your build.
+- Consult the [Module maturity matrix](../api-reference/module-maturity.md) before depending on optional plugins in production.

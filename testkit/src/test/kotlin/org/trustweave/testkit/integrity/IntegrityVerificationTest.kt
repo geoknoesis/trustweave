@@ -35,7 +35,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `end-to-end integrity chain verification`() = runBlocking {
+    fun `end-to-end integrity chain verification`() = runBlocking<Unit> {
         // Setup: Create DID for issuer, register blockchain clients (testnet)
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -169,7 +169,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test anchor discovery method 1 - embedded evidence`() = runBlocking {
+    fun `test anchor discovery method 1 - embedded evidence`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -233,7 +233,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test anchor discovery method 2 - issuer DID document`() = runBlocking {
+    fun `test anchor discovery method 2 - issuer DID document`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -278,7 +278,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test anchor discovery method 3 - status service`() = runBlocking {
+    fun `test anchor discovery method 3 - status service`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -343,7 +343,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test anchor discovery method 4 - external anchor registry`() = runBlocking {
+    fun `test anchor discovery method 4 - external anchor registry`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -397,7 +397,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test anchor discovery method 5 - linked manifest`() = runBlocking {
+    fun `test anchor discovery method 5 - linked manifest`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -435,7 +435,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test tamper detection - modified artifact should fail verification`() = runBlocking {
+    fun `test tamper detection - modified artifact should fail verification`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val chainId = "algorand:testnet"
@@ -488,7 +488,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test digest consistency - same content produces same digest`() = runBlocking {
+    fun `test digest consistency - same content produces same digest`() = runBlocking<Unit> {
         val content1 = buildJsonObject {
             put("a", 1)
             put("b", 2)
@@ -506,7 +506,7 @@ class IntegrityVerificationTest {
     }
 
     @Test
-    fun `test digest changes with content modification`() = runBlocking {
+    fun `test digest changes with content modification`() = runBlocking<Unit> {
         val original = buildJsonObject {
             put("value", 100)
         }

@@ -76,7 +76,7 @@ class EntraExchangeProtocolTest {
     }
 
     @Test
-    fun `offer wires through to createIssuanceRequest and returns envelope with request URL`() = runBlocking {
+    fun `offer wires through to createIssuanceRequest and returns envelope with request URL`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/v1.0/verifiableCredentials/createIssuanceRequest"))
                 .withHeader("Authorization", equalTo("Bearer tk"))
@@ -131,7 +131,7 @@ class EntraExchangeProtocolTest {
     }
 
     @Test
-    fun `requestProof builds a presentation request envelope`() = runBlocking {
+    fun `requestProof builds a presentation request envelope`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/v1.0/verifiableCredentials/createPresentationRequest"))
                 .withHeader("Authorization", equalTo("Bearer tk"))

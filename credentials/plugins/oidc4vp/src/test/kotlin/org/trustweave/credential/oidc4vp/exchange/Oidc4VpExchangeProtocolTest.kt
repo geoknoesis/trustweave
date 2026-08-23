@@ -55,7 +55,7 @@ class Oidc4VpExchangeProtocolTest {
     }
 
     @Test
-    fun `test offer throws InvalidOperation exception`() = runBlocking {
+    fun `test offer throws InvalidOperation exception`() = runBlocking<Unit> {
         val request = ExchangeRequest.Offer(
             protocolName = ExchangeProtocolName.Oidc4Vp,
             issuerDid = Did("did:key:issuer"),
@@ -73,7 +73,7 @@ class Oidc4VpExchangeProtocolTest {
     }
 
     @Test
-    fun `test request throws InvalidOperation exception`() = runBlocking {
+    fun `test request throws InvalidOperation exception`() = runBlocking<Unit> {
         val request = ExchangeRequest.Request(
             protocolName = ExchangeProtocolName.Oidc4Vp,
             holderDid = Did("did:key:holder"),
@@ -87,7 +87,7 @@ class Oidc4VpExchangeProtocolTest {
     }
 
     @Test
-    fun `test issue throws InvalidOperation exception`() = runBlocking {
+    fun `test issue throws InvalidOperation exception`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:issuer")
         val holderDid = Did("did:key:holder")
         val credential = VerifiableCredential(
@@ -111,7 +111,7 @@ class Oidc4VpExchangeProtocolTest {
     }
 
     @Test
-    fun `test requestProof requires authorizationUrl in metadata`() = runBlocking {
+    fun `test requestProof requires authorizationUrl in metadata`() = runBlocking<Unit> {
         val request = ProofExchangeRequest.Request(
             protocolName = ExchangeProtocolName.Oidc4Vp,
             verifierDid = Did("did:key:verifier"),
@@ -129,7 +129,7 @@ class Oidc4VpExchangeProtocolTest {
     }
     
     @Test
-    fun `test requestProof with valid authorizationUrl`() = runBlocking {
+    fun `test requestProof with valid authorizationUrl`() = runBlocking<Unit> {
         // This test would require a mock Oidc4VpService with mocked HTTP responses
         // For now, we just verify that the exception is thrown correctly when URL is missing
         assertTrue(true, "Exception handling verified in test above")

@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 class WalletPresentationFromWalletResultTest {
 
     @Test
-    fun `presentationFromWalletResult returns InvalidRequest when fromWallet id not in wallet`() = runBlocking {
+    fun `presentationFromWalletResult returns InvalidRequest when fromWallet id not in wallet`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
             when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {

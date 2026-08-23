@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class ErrorHandlingTest {
     
     @Test
-    fun `test handleIssuanceErrors with successful operation`() = runBlocking {
+    fun `test handleIssuanceErrors with successful operation`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
@@ -34,7 +34,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with IllegalArgumentException`() = runBlocking {
+    fun `test handleIssuanceErrors with IllegalArgumentException`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw IllegalArgumentException("Invalid request")
         }
@@ -46,7 +46,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with IllegalStateException`() = runBlocking {
+    fun `test handleIssuanceErrors with IllegalStateException`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw IllegalStateException("Engine not ready")
         }
@@ -58,7 +58,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with TimeoutException`() = runBlocking {
+    fun `test handleIssuanceErrors with TimeoutException`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw java.util.concurrent.TimeoutException("Operation timed out")
         }
@@ -70,7 +70,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with IOException`() = runBlocking {
+    fun `test handleIssuanceErrors with IOException`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw java.io.IOException("I/O error occurred")
         }
@@ -82,7 +82,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with RuntimeException`() = runBlocking {
+    fun `test handleIssuanceErrors with RuntimeException`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw RuntimeException("Runtime error")
         }
@@ -94,7 +94,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with generic Exception`() = runBlocking {
+    fun `test handleIssuanceErrors with generic Exception`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw Exception("Unexpected error")
         }
@@ -106,7 +106,7 @@ class ErrorHandlingTest {
     }
     
     @Test
-    fun `test handleIssuanceErrors with Exception without message`() = runBlocking {
+    fun `test handleIssuanceErrors with Exception without message`() = runBlocking<Unit> {
         val result = ErrorHandling.handleIssuanceErrors(ProofSuiteId.VC_LD) {
             throw Exception()
         }

@@ -87,13 +87,26 @@ KMS integrations enable TrustWeave to use various key management services for se
 
 ## Proof Generator Integrations
 
-TrustWeave provides multiple proof generation methods for creating cryptographic proofs on verifiable credentials. All proof generators implement the `ProofGenerator` interface.
+TrustWeave generates and verifies credential proofs through the `ProofEngine` SPI. Engines are
+discovered via `ProofEngineProvider` entries in `META-INF/services`.
+
+Two engines are **built into `credential-api`** and need no extra dependency:
+
+| Engine | Proof suite | Description |
+|--------|-------------|-------------|
+| `VcLdProofEngine` | `VC_LD` | W3C VC Data Integrity over JSON-LD. Covers `Ed25519Signature2020`, `JsonWebSignature2020`, and `DataIntegrityProof` |
+| `SdJwtProofEngine` | `SD_JWT_VC` | IETF SD-JWT VC with selective disclosure |
+
+The remaining engines ship as separate plugin modules:
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **JWT Proof Generator** | `org.trustweave.core:jwt-proof` | Documentation coming soon | JWT-based proofs using nimbus-jose-jwt. Supports Ed25519, ECDSA, and RSA algorithms |
-| **BBS+ Proof Generator** | `org.trustweave.core:bbs-proof` | Documentation coming soon | BBS+ signature proofs for selective disclosure. Uses JSON-LD canonicalization |
-| **LD-Proof Generator** | `org.trustweave.core:ld-proof` | Documentation coming soon | Linked Data Proofs using JSON-LD signatures. Supports multiple signature suites |
+| **mDoc / mDL** | `org.trustweave.credentials:credentials-plugins-mdl` | Documentation coming soon | ISO/IEC 18013-5 mobile driving licence (`MdocProofEngine`) |
+| **JAdES** | `org.trustweave.credentials:credentials-plugins-jades` | Documentation coming soon | ETSI TS 119 182-1 JSON Advanced Electronic Signatures (`JAdESProofEngine`) |
+
+> **BBS-2023 is not implemented.** `ProofSuiteId.BBS_2023` is a recognised identifier with no engine
+> behind it. There is no maintained BBS+ library for the JVM, and a placeholder is worse than nothing
+> for a signature scheme, so no engine is registered and such a proof never verifies.
 
 ## Wallet Factory Integrations
 
@@ -101,9 +114,9 @@ Wallet factories enable creation of different wallet storage backends for creden
 
 | Plugin | Module ID | Documentation | Description |
 |--------|-----------|---------------|-------------|
-| **Database Wallet** | `org.trustweave.core:database-wallet` | Documentation coming soon | Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases |
-| **File Wallet** | `org.trustweave.core:file-wallet` | Documentation coming soon | File-based wallet with local filesystem storage. Optional AES encryption support |
-| **Cloud Wallet** | `org.trustweave.core:cloud-wallet` | Documentation coming soon | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage |
+| **Database Wallet** | `org.trustweave.wallet:wallet-plugins-database` | Documentation coming soon | Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases |
+| **File Wallet** | `org.trustweave.wallet:wallet-plugins-file` | Documentation coming soon | File-based wallet with local filesystem storage. Optional AES encryption support |
+| **Cloud Wallet** | `org.trustweave.wallet:wallet-plugins-cloud` | Documentation coming soon | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage |
 
 ## Other Integrations
 

@@ -110,7 +110,7 @@ when (val v = trustWeave.verify(credential)) {
 }
 ```
 
-See [Result types guide](../../api-reference/result-types-guide.md) and [API patterns](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
+See [Result types guide](../api-reference/result-types-guide.md) and [API patterns](../getting-started/api-patterns.md#api-contract-results-vs-exceptions).
 
 ### 2. Configuration (`TrustWeaveConfig`)
 

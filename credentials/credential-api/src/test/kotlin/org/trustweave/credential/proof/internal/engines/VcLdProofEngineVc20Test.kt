@@ -95,7 +95,7 @@ class VcLdProofEngineVc20Test {
     }
 
     @Test
-    fun `issuing with the v2 base context emits a VC 2_0 credential that verifies`() = runBlocking {
+    fun `issuing with the v2 base context emits a VC 2_0 credential that verifies`() = runBlocking<Unit> {
         val rig = TestRig()
         val issuedAt = Clock.System.now()
         val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
@@ -130,7 +130,7 @@ class VcLdProofEngineVc20Test {
     }
 
     @Test
-    fun `v2 base context is hoisted to the first context position`() = runBlocking {
+    fun `v2 base context is hoisted to the first context position`() = runBlocking<Unit> {
         val rig = TestRig()
 
         // Declared with the claims context first — the base context must still end up first.
@@ -146,7 +146,7 @@ class VcLdProofEngineVc20Test {
     }
 
     @Test
-    fun `default issuance remains VC 1_1 with issuanceDate and expirationDate`() = runBlocking {
+    fun `default issuance remains VC 1_1 with issuanceDate and expirationDate`() = runBlocking<Unit> {
         val rig = TestRig()
         val issuedAt = Clock.System.now()
         val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
@@ -222,7 +222,7 @@ class VcLdProofEngineVc20Test {
         }
 
     @Test
-    fun `tampering with validUntil on a VC 2_0 credential fails verification`() = runBlocking {
+    fun `tampering with validUntil on a VC 2_0 credential fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val issuedAt = Clock.System.now()
         val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P30D"))

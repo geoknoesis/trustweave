@@ -62,7 +62,7 @@ class SidetreeKeyStoreContractTest {
     }
 
     @Test
-    fun `file-backed store persists across instances pointing at the same directory`(@TempDir tmp: Path) = runBlocking {
+    fun `file-backed store persists across instances pointing at the same directory`(@TempDir tmp: Path) = runBlocking<Unit> {
         val dir = tmp.resolve("persisted")
         val first = FileSidetreeKeyStore(dir)
         first.put("EiAcrossInstances", sample("persistent"))
@@ -72,7 +72,7 @@ class SidetreeKeyStoreContractTest {
     }
 
     @Test
-    fun `file-backed store survives a clear() and starts clean`(@TempDir tmp: Path) = runBlocking {
+    fun `file-backed store survives a clear() and starts clean`(@TempDir tmp: Path) = runBlocking<Unit> {
         val store = FileSidetreeKeyStore(tmp.resolve("clearable"))
         store.put("EiOne", sample("one"))
         store.put("EiTwo", sample("two"))

@@ -131,7 +131,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation with single credential`() = runBlocking {
+    fun `test presentation creation with single credential`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe")
@@ -149,7 +149,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation with multiple credentials`() = runBlocking {
+    fun `test presentation creation with multiple credentials`() = runBlocking<Unit> {
         val credential1 = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe")
@@ -170,7 +170,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation with challenge`() = runBlocking {
+    fun `test presentation creation with challenge`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -184,7 +184,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation with domain`() = runBlocking {
+    fun `test presentation creation with domain`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -198,15 +198,10 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation with custom proof type`() = runBlocking {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:holder")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test presentation creation with custom proof type`() = runBlocking<Unit> {
+        // A presentation embeds the credential's proof, so the credential must be issued
+        // (signed) first — a raw `credential { }` has no proof and is rejected.
+        val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
                 credentials(credential)
@@ -218,7 +213,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `holder string must be a did colon prefix`() = runBlocking {
+    fun `holder string must be a did colon prefix`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
         assertFailsWith<IllegalArgumentException> {
             trustWeave.presentationResult {
@@ -229,7 +224,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation requires credentials`() = runBlocking {
+    fun `test presentation creation requires credentials`() = runBlocking<Unit> {
         val r = trustWeave.presentationResult {
             holder("did:key:holder")
             // Missing credentials
@@ -238,7 +233,7 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation creation requires holder`() = runBlocking {
+    fun `test presentation creation requires holder`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -256,18 +251,15 @@ class PresentationDslTest {
     }
 
     @Test
-    fun `test presentation with selective disclosure`() = runBlocking {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:holder")
-                "name" to "John Doe"
-                "email" to "john@example.com"
-                "ssn" to "123-45-6789"
-            }
-            issued(Clock.System.now())
-        }
+    fun `test presentation with selective disclosure`() = runBlocking<Unit> {
+        val credential = issueTestCredential(
+            type = "PersonCredential",
+            claims = mapOf(
+                "name" to "John Doe",
+                "email" to "john@example.com",
+                "ssn" to "123-45-6789",
+            ),
+        )
 
         val presentation = trustWeave.presentationResult {
                 credentials(credential)

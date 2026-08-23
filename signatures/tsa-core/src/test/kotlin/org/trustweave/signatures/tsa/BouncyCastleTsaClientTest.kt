@@ -36,7 +36,7 @@ class BouncyCastleTsaClientTest {
     // ------------------------------------------------------------------ happy paths
 
     @Test
-    fun `returns a parsed token on the happy path`() = runBlocking {
+    fun `returns a parsed token on the happy path`() = runBlocking<Unit> {
         val digest = sha256("hello world")
         server.dispatcher = stampingDispatcher(tsa)
 
@@ -55,7 +55,7 @@ class BouncyCastleTsaClientTest {
     }
 
     @Test
-    fun `request carries the application timestamp-query content type`() = runBlocking {
+    fun `request carries the application timestamp-query content type`() = runBlocking<Unit> {
         val digest = sha256("payload")
         server.dispatcher = stampingDispatcher(tsa)
 
@@ -72,7 +72,7 @@ class BouncyCastleTsaClientTest {
     }
 
     @Test
-    fun `passes the caller-supplied nonce through to the TSA request`() = runBlocking {
+    fun `passes the caller-supplied nonce through to the TSA request`() = runBlocking<Unit> {
         val digest = sha256("nonce-test")
         val nonce = ByteArray(16) { (it + 1).toByte() }
         val captured = mutableListOf<ByteArray>()
@@ -90,7 +90,7 @@ class BouncyCastleTsaClientTest {
     }
 
     @Test
-    fun `signer-cert pin verification passes when the matching cert is pinned`() = runBlocking {
+    fun `signer-cert pin verification passes when the matching cert is pinned`() = runBlocking<Unit> {
         val digest = sha256("pin-pass")
         server.dispatcher = stampingDispatcher(tsa)
 
@@ -108,7 +108,7 @@ class BouncyCastleTsaClientTest {
     // ------------------------------------------------------------------ failure paths
 
     @Test
-    fun `rejects when digest size disagrees with the algorithm`() = runBlocking {
+    fun `rejects when digest size disagrees with the algorithm`() = runBlocking<Unit> {
         val client = BouncyCastleTsaClient(
             TsaConfig(endpointUrl = server.url("/tsa").toString()),
         )

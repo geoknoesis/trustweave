@@ -410,6 +410,6 @@ data class CredentialRequest(
 
 - [API Patterns](api-patterns.md) — correct API usage patterns
 - [Production Deployment](production-deployment.md) — production best practices
-- [Error Handling](../../api-reference/advanced/error-handling.md) — error handling patterns
-- [API Reference](../../api-reference/core-api.md) — complete API documentation
+- [Error Handling](../api-reference/advanced/error-handling.md) — error handling patterns
+- [API Reference](../api-reference/core-api.md) — complete API documentation
 

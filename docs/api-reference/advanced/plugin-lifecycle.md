@@ -298,5 +298,5 @@ override suspend fun cleanup() {
 
 - [Error Handling](error-handling.md)
 - [Service Provider Interface](spi.md)
-- [API Reference](../api-reference/)
+- [API Reference](../)
 

@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class DelegationDslTest {
 
     @Test
-    fun `delegation verifier accepts valid delegator to delegate link`() = runBlocking {
+    fun `delegation verifier accepts valid delegator to delegate link`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -49,7 +49,7 @@ class DelegationDslTest {
     }
 
     @Test
-    fun `delegation verifier accepts capability delegation reference`() = runBlocking {
+    fun `delegation verifier accepts capability delegation reference`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -76,7 +76,7 @@ class DelegationDslTest {
     }
 
     @Test
-    fun `delegation verifier fails when resolution returns nothing`() = runBlocking {
+    fun `delegation verifier fails when resolution returns nothing`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })

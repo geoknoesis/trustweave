@@ -50,21 +50,21 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test initialize and close`() = runBlocking {
+    fun `test initialize and close`() = runBlocking<Unit> {
         engine.initialize()
         engine.close()
         // Should not throw
     }
 
     @Test
-    fun `test initialize with config`() = runBlocking {
+    fun `test initialize with config`() = runBlocking<Unit> {
         val config = ProofEngineConfig(properties = mapOf("test" to "value"))
         engine.initialize(config)
         // Should not throw
     }
 
     @Test
-    fun `test issue with valid request`() = runBlocking {
+    fun `test issue with valid request`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest()
         
         // Note: This will fail because getSigner returns null in the implementation
@@ -76,7 +76,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test issue with wrong format`() = runBlocking {
+    fun `test issue with wrong format`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest().copy(
             format = ProofSuiteId.VC_LD
         )
@@ -88,7 +88,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test issue with expiration date`() = runBlocking {
+    fun `test issue with expiration date`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest().copy(
             validUntil = Clock.System.now().plus(kotlin.time.Duration.parse("PT${86400 * 365}S")) // 1 year
         )
@@ -100,7 +100,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test issue without expiration date`() = runBlocking {
+    fun `test issue without expiration date`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest().copy(
             validUntil = null
         )
@@ -112,7 +112,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test verify with valid credential`() = runBlocking {
+    fun `test verify with valid credential`() = runBlocking<Unit> {
         val credential = createValidCredential()
         val options = VerificationOptions()
         
@@ -125,7 +125,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test verify with expired credential`() = runBlocking {
+    fun `test verify with expired credential`() = runBlocking<Unit> {
         val credential = createValidCredential().copy(
             expirationDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT1H")) // Expired 1 hour ago
         )
@@ -139,7 +139,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test verify with credential missing proof`() = runBlocking {
+    fun `test verify with credential missing proof`() = runBlocking<Unit> {
         val credential = createValidCredential().copy(proof = null)
         val options = VerificationOptions()
         
@@ -149,7 +149,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test verify with invalid SD-JWT format`() = runBlocking {
+    fun `test verify with invalid SD-JWT format`() = runBlocking<Unit> {
         val credential = createValidCredential().copy(
             proof = org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof(
                 type = "Ed25519Signature2020",
@@ -168,7 +168,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation`() = runBlocking {
+    fun `test createPresentation`() = runBlocking<Unit> {
         val credentials = listOf(createValidCredential())
         val request = PresentationRequest()
         
@@ -180,7 +180,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation with selective disclosure`() = runBlocking {
+    fun `test createPresentation with selective disclosure`() = runBlocking<Unit> {
         val credentials = listOf(createValidCredential())
         val request = PresentationRequest(
             disclosedClaims = setOf("name", "email")
@@ -195,7 +195,7 @@ class SdJwtProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation with empty credentials`() = runBlocking {
+    fun `test createPresentation with empty credentials`() = runBlocking<Unit> {
         val request = PresentationRequest()
         
         val exception = assertThrows<IllegalArgumentException> {

@@ -72,7 +72,7 @@ class OrbDidMethodIntegrationTest {
      *    specific error as "wire format accepted" here.
      */
     @Test
-    fun `create resolve update deactivate against a real Orb node`() = runBlocking {
+    fun `create resolve update deactivate against a real Orb node`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val cfg = OrbDidConfig(
             baseUrl = baseUrl,

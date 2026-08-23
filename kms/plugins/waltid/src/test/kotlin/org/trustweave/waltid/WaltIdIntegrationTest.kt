@@ -38,7 +38,7 @@ class WaltIdIntegrationTest {
     }
 
     @Test
-    fun integrationTest_createAndResolveDIDUsingWaltIdAdapters() = runBlocking {
+    fun integrationTest_createAndResolveDIDUsingWaltIdAdapters() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.setup(kms, registry, listOf("key"))

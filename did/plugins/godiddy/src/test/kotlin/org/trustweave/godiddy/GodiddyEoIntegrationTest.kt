@@ -31,7 +31,7 @@ import kotlin.test.*
 class GodiddyEoIntegrationTest {
 
     @Test
-    fun `end-to-end EO integrity chain verification with GoDiddy`() = runBlocking {
+    fun `end-to-end EO integrity chain verification with GoDiddy`() = runBlocking<Unit> {
         // Setup: Register GoDiddy integration and blockchain client (testnet)
         val didRegistry = DidMethodRegistry()
         val result = try {
@@ -363,7 +363,7 @@ class GodiddyEoIntegrationTest {
     }
 
     @Test
-    fun `test GoDiddy DID resolution for EO issuer`() = runBlocking {
+    fun `test GoDiddy DID resolution for EO issuer`() = runBlocking<Unit> {
         val result = try {
             GodiddyIntegration.discoverAndRegister(DidMethodRegistry())
         } catch (e: Exception) {
@@ -415,7 +415,7 @@ class GodiddyEoIntegrationTest {
     }
 
     @Test
-    fun `test GoDiddy VC issuance and verification workflow`() = runBlocking {
+    fun `test GoDiddy VC issuance and verification workflow`() = runBlocking<Unit> {
         val result = try {
             GodiddyIntegration.discoverAndRegister(DidMethodRegistry())
         } catch (e: Exception) {

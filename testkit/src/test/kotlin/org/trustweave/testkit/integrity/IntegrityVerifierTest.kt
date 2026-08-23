@@ -16,7 +16,7 @@ import kotlin.test.*
 class IntegrityVerifierTest {
 
     @Test
-    fun `test verifyVcIntegrity`() = runBlocking {
+    fun `test verifyVcIntegrity`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
 
         val vc = buildJsonObject {
@@ -92,7 +92,7 @@ class IntegrityVerifierTest {
     }
 
     @Test
-    fun `test verifyIntegrityChain`() = runBlocking {
+    fun `test verifyIntegrityChain`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
         val registry = BlockchainAnchorRegistry().also { it.register("algorand:testnet", client) }
 

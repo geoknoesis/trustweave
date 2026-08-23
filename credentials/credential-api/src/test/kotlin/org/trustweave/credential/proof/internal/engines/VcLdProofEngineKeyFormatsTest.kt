@@ -88,7 +88,7 @@ class VcLdProofEngineKeyFormatsTest {
     // --- Finding 17: publicKeyMultibase verification methods ----------------------------
 
     @Test
-    fun `credential verifies when issuer DID document only carries publicKeyMultibase`() = runBlocking {
+    fun `credential verifies when issuer DID document only carries publicKeyMultibase`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val issuerDocument = didMethod.createDid()
@@ -135,7 +135,7 @@ class VcLdProofEngineKeyFormatsTest {
     }
 
     @Test
-    fun `credential verification fails closed when multibase carries a non-ed25519 multicodec`() = runBlocking {
+    fun `credential verification fails closed when multibase carries a non-ed25519 multicodec`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val issuerDocument = didMethod.createDid()
@@ -180,7 +180,7 @@ class VcLdProofEngineKeyFormatsTest {
     // --- Finding 13: ECDSA JWS signatures must be P1363 ---------------------------------
 
     @Test
-    fun `ES256 JsonWebSignature2020 round-trip with a DER-emitting KMS`() = runBlocking {
+    fun `ES256 JsonWebSignature2020 round-trip with a DER-emitting KMS`() = runBlocking<Unit> {
         val keyPairGenerator = KeyPairGenerator.getInstance("EC")
         keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"))
         val keyPair = keyPairGenerator.generateKeyPair()
@@ -196,7 +196,7 @@ class VcLdProofEngineKeyFormatsTest {
     }
 
     @Test
-    fun `ES256K JsonWebSignature2020 round-trip with a DER-emitting KMS`() = runBlocking {
+    fun `ES256K JsonWebSignature2020 round-trip with a DER-emitting KMS`() = runBlocking<Unit> {
         val bc = bouncyCastle()
         val keyPairGenerator = KeyPairGenerator.getInstance("EC", bc)
         keyPairGenerator.initialize(ECGenParameterSpec("secp256k1"))

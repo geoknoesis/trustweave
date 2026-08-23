@@ -52,7 +52,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test register JSON schema`() = runBlocking {
+    fun `test register JSON schema`() = runBlocking<Unit> {
         val schemaId = "https://example.com/schemas/person"
 
         val result = trustWeave.registerSchema {
@@ -74,7 +74,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test register SHACL schema`() = runBlocking {
+    fun `test register SHACL schema`() = runBlocking<Unit> {
         val schemaId = "https://example.com/schemas/person-shacl"
 
         val result = trustWeave.registerSchema {
@@ -91,7 +91,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test register schema without id throws exception`() = runBlocking {
+    fun `test register schema without id throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.registerSchema {
                 jsonSchema {
@@ -102,7 +102,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test register schema without definition throws exception`() = runBlocking {
+    fun `test register schema without definition throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.registerSchema {
                 id("https://example.com/schemas/test")
@@ -111,7 +111,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test validate credential against schema`() = runBlocking {
+    fun `test validate credential against schema`() = runBlocking<Unit> {
         val schemaId = "https://example.com/schemas/person"
 
         // Register schema
@@ -161,7 +161,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test schema builder with format override`() = runBlocking {
+    fun `test schema builder with format override`() = runBlocking<Unit> {
         val schemaId = "https://example.com/schemas/test"
 
         val result = trustWeave.registerSchema {
@@ -177,7 +177,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test schema builder definition method`() = runBlocking {
+    fun `test schema builder definition method`() = runBlocking<Unit> {
         val schemaId = "https://example.com/schemas/test"
         val definition = buildJsonObject {
             put("type", "object")
@@ -195,7 +195,7 @@ class SchemaDslTest {
     }
 
     @Test
-    fun `test validate credential against unregistered schema throws exception`() = runBlocking {
+    fun `test validate credential against unregistered schema throws exception`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(org.trustweave.credential.model.CredentialType.VerifiableCredential),
             issuer = org.trustweave.credential.model.vc.Issuer.fromDid(org.trustweave.did.identifiers.Did("did:key:issuer")),

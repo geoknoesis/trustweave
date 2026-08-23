@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class DelegationDslComprehensiveTest {
 
     @Test
-    fun `multi-hop delegation chain verifies`() = runBlocking {
+    fun `multi-hop delegation chain verifies`() = runBlocking<Unit> {
         val chain = listOf("did:key:ceo", "did:key:director", "did:key:manager", "did:key:assistant")
 
         val ceoDid = Did("did:key:ceo")
@@ -67,7 +67,7 @@ class DelegationDslComprehensiveTest {
     }
 
     @Test
-    fun `resolution failure yields invalid chain`() = runBlocking {
+    fun `resolution failure yields invalid chain`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))
@@ -76,7 +76,7 @@ class DelegationDslComprehensiveTest {
     }
 
     @Test
-    fun `single delegator delegate pair matches simple verifier`() = runBlocking {
+    fun `single delegator delegate pair matches simple verifier`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
         val delegator = Did(delegatorDid)

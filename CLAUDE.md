@@ -71,7 +71,7 @@ Type-safe builders are the primary configuration API: `DidBuilder`, `DidDocument
 
 ## Module Map
 
-86+ modules across five domains. Key modules:
+106 modules across five domains. Key modules:
 
 - **`common`** — shared utilities, exceptions, plugin infrastructure
 - **`trust`** — main facade (`TrustWeave.kt`), integration tests
@@ -90,7 +90,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 | File | Purpose |
 |---|---|
-| `settings.gradle.kts` | Module definitions (all 86+ includes) |
+| `settings.gradle.kts` | Module definitions (all 106 includes) |
 | `build.gradle.kts` | Central config, publishing, Windows JAR handling |
 | `gradle/libs.versions.toml` | Centralized dependency versions and bundles |
 | `gradle.properties` | JVM args, parallel builds, Kotlin daemon settings |

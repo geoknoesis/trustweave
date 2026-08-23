@@ -313,13 +313,13 @@ val didCommService = DidCommFactory.createDatabaseService(
    ```kotlin
    // Check your current dependencies
    // In build.gradle.kts:
-   implementation("org.trustweave:credential-core:0.6.0")
+   implementation("org.trustweave:credentials-credential-api:0.6.0")
    ```
 
 2. **Update dependencies:**
    ```kotlin
    // Update to latest version
-   implementation("org.trustweave:credential-core:0.6.0")
+   implementation("org.trustweave:credentials-credential-api:0.6.0")
    ```
 
 3. **Review changelog:**

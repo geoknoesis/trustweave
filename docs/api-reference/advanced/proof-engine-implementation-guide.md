@@ -19,7 +19,7 @@ A **Proof Engine** is an implementation of the `ProofEngine` SPI interface that 
 - **Proof Verification** - Verifying proofs during credential verification  
 - **Presentation Creation** - Creating verifiable presentations (if supported)
 
-The built-in proof engines shipped in `credential-api` are **VC-LD** (`VcLdProofEngine`) and **SD-JWT-VC** (`SdJwtProofEngine`). Additional engines are provided by separate plugin modules (e.g. `credentials/plugins/bbs/` for BBS-2023, `credentials/plugins/mdl/` for ISO 18013-5 mDoc).
+The built-in proof engines shipped in `credential-api` are **VC-LD** (`VcLdProofEngine`) and **SD-JWT-VC** (`SdJwtProofEngine`). Additional engines are provided by separate plugin modules (`credentials/plugins/mdl/` for ISO 18013-5 mDoc, `credentials/plugins/jades/` for ETSI JAdES).
 
 ## When to Implement a Proof Engine
 

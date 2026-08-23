@@ -150,7 +150,7 @@ class Ed25519Signature2020InteropTest {
     // --- Positive: the externally signed credential must verify -------------------------
 
     @Test
-    fun `credential signed by the Digital Bazaar stack verifies through the real engine path`() = runBlocking {
+    fun `credential signed by the Digital Bazaar stack verifies through the real engine path`() = runBlocking<Unit> {
         val credential = parseFixture(fixture)
         val (_, resolver) = issuerEnvironment(credential)
 
@@ -167,7 +167,7 @@ class Ed25519Signature2020InteropTest {
     // --- Negatives: any tampering must invalidate the external signature ----------------
 
     @Test
-    fun `flipping a claim on the externally signed credential fails verification`() = runBlocking {
+    fun `flipping a claim on the externally signed credential fails verification`() = runBlocking<Unit> {
         val credential = parseFixture(fixture)
         val (_, resolver) = issuerEnvironment(credential)
         val tampered = credential.copy(
@@ -185,7 +185,7 @@ class Ed25519Signature2020InteropTest {
     }
 
     @Test
-    fun `rewriting the proof created timestamp fails verification`() = runBlocking {
+    fun `rewriting the proof created timestamp fails verification`() = runBlocking<Unit> {
         val credential = parseFixture(fixture)
         val (_, resolver) = issuerEnvironment(credential)
         val proof = credential.proof as CredentialProof.LinkedDataProof

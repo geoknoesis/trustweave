@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.testkit.did.DidKeyMockMethod
@@ -50,7 +51,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid add key`() = runBlocking {
+    fun `test updateDid add key`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -73,7 +74,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid add service`() = runBlocking {
+    fun `test updateDid add service`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -92,7 +93,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid remove key`() = runBlocking {
+    fun `test updateDid remove key`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -107,7 +108,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid remove service`() = runBlocking {
+    fun `test updateDid remove service`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -133,35 +134,41 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid without DID throws exception`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.updateDid {
-                addKey {
-                    type("Ed25519VerificationKey2020")
-                }
+    fun `test updateDid without DID returns UpdateFailed`() = runBlocking<Unit> {
+        val result = trustWeave.updateDid {
+            addKey {
+                type("Ed25519VerificationKey2020")
             }
         }
+
+        assertTrue(
+            result is DidResult.Failure.UpdateFailed,
+            "Updating without naming a DID must yield UpdateFailed, got: $result",
+        )
     }
 
     @Test
-    fun `test updateDid add service without required fields throws exception`() = runBlocking {
+    fun `test updateDid add service without required fields throws exception`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
         }.getOrThrowDid()
 
-        assertFailsWith<IllegalStateException> {
-            trustWeave.updateDid {
-                did(did.value)
-                addService {
-                    // Missing required fields
-                }
+        val result = trustWeave.updateDid {
+            did(did.value)
+            addService {
+                // Missing required fields
             }
         }
+
+        assertTrue(
+            result is DidResult.Failure.UpdateFailed,
+            "A service with no required fields must yield UpdateFailed, got: $result",
+        )
     }
 
     @Test
-    fun `test updateDid add key with multibase`() = runBlocking {
+    fun `test updateDid add key with multibase`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -179,7 +186,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid add multiple keys and services`() = runBlocking {
+    fun `test updateDid add multiple keys and services`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -220,7 +227,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid auto-detects method from DID`() = runBlocking {
+    fun `test updateDid auto-detects method from DID`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -240,7 +247,7 @@ class DidDocumentDslTest {
     }
 
     @Test
-    fun `test updateDid via TrustWeaveContext`() = runBlocking {
+    fun `test updateDid via TrustWeaveContext`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")

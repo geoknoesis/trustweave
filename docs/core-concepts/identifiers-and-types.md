@@ -517,7 +517,7 @@ import org.trustweave.credential.identifiers.toCredentialIdOrNull
 
 - **`common`**: Base identifiers (`Iri`, `KeyId`)
 - **`did-core`**: DID-related identifiers (`Did`, `VerificationMethodId`)
-- **`credential-core`**: Credential identifiers (`CredentialId`, `IssuerId`, etc.) and types (`ProofType`, `CredentialType`, etc.)
+- **`credential-api`**: Credential identifiers (`CredentialId`, `IssuerId`, etc.) and types (`ProofType`, `CredentialType`, etc.)
 
 ---
 

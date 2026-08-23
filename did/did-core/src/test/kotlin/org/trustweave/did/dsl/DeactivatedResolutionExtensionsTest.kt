@@ -33,7 +33,7 @@ class DeactivatedResolutionExtensionsTest {
     // --- Did.resolveOrThrow / DidResolver.resolveOrThrow ---------------------------------
 
     @Test
-    fun `Did resolveOrThrow throws for a deactivated DID`() = runBlocking {
+    fun `Did resolveOrThrow throws for a deactivated DID`() = runBlocking<Unit> {
         val exception = assertFailsWith<DidException.DidResolutionFailed> {
             did.resolveOrThrow(deactivatedResolver())
         }
@@ -41,7 +41,7 @@ class DeactivatedResolutionExtensionsTest {
     }
 
     @Test
-    fun `DidResolver resolveOrThrow throws for a deactivated DID`() = runBlocking {
+    fun `DidResolver resolveOrThrow throws for a deactivated DID`() = runBlocking<Unit> {
         val exception = assertFailsWith<DidException.DidResolutionFailed> {
             deactivatedResolver().resolveOrThrow(did)
         }
@@ -51,7 +51,7 @@ class DeactivatedResolutionExtensionsTest {
     // --- Did.resolveOrNull / DidResolver.resolveOrNull ------------------------------------
 
     @Test
-    fun `Did resolveOrNull throws for a deactivated DID rather than returning null`() = runBlocking {
+    fun `Did resolveOrNull throws for a deactivated DID rather than returning null`() = runBlocking<Unit> {
         val exception = assertFailsWith<DidException.DidResolutionFailed> {
             did.resolveOrNull(deactivatedResolver())
         }
@@ -59,12 +59,12 @@ class DeactivatedResolutionExtensionsTest {
     }
 
     @Test
-    fun `Did resolveOrNull still returns null for an ordinary not-found DID`() = runBlocking {
+    fun `Did resolveOrNull still returns null for an ordinary not-found DID`() = runBlocking<Unit> {
         assertNull(did.resolveOrNull(notFoundResolver()))
     }
 
     @Test
-    fun `DidResolver resolveOrNull throws for a deactivated DID rather than returning null`() = runBlocking {
+    fun `DidResolver resolveOrNull throws for a deactivated DID rather than returning null`() = runBlocking<Unit> {
         val exception = assertFailsWith<DidException.DidResolutionFailed> {
             deactivatedResolver().resolveOrNull(did)
         }
@@ -72,14 +72,14 @@ class DeactivatedResolutionExtensionsTest {
     }
 
     @Test
-    fun `DidResolver resolveOrNull still returns null for an ordinary not-found DID`() = runBlocking {
+    fun `DidResolver resolveOrNull still returns null for an ordinary not-found DID`() = runBlocking<Unit> {
         assertNull(notFoundResolver().resolveOrNull(did))
     }
 
     // --- Did.resolveOrDefault --------------------------------------------------------------
 
     @Test
-    fun `Did resolveOrDefault throws for a deactivated DID rather than returning the default`() = runBlocking {
+    fun `Did resolveOrDefault throws for a deactivated DID rather than returning the default`() = runBlocking<Unit> {
         val default = DidDocument(id = did)
         val exception = assertFailsWith<DidException.DidResolutionFailed> {
             did.resolveOrDefault(deactivatedResolver(), default)
@@ -88,7 +88,7 @@ class DeactivatedResolutionExtensionsTest {
     }
 
     @Test
-    fun `Did resolveOrDefault still returns the default for an ordinary not-found DID`() = runBlocking {
+    fun `Did resolveOrDefault still returns the default for an ordinary not-found DID`() = runBlocking<Unit> {
         val default = DidDocument(id = did)
         assertEquals(default, did.resolveOrDefault(notFoundResolver(), default))
     }

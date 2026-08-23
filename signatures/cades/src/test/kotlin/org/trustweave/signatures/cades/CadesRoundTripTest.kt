@@ -42,7 +42,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `roundtrips a CAdES B-B detached signature with P-256`() = runBlocking {
+    fun `roundtrips a CAdES B-B detached signature with P-256`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=P256 CAdES Signer")
         val payload = "TrustWeave eIDAS CAdES B-B test payload".toByteArray()
@@ -76,7 +76,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `roundtrips a CAdES B-B encapsulated signature with Ed25519`() = runBlocking {
+    fun `roundtrips a CAdES B-B encapsulated signature with Ed25519`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Ed25519 CAdES Signer")
         val payload = "encapsulated".toByteArray()
@@ -103,7 +103,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `roundtrips a CAdES B-T detached signature using an in-process TSA`() = runBlocking {
+    fun `roundtrips a CAdES B-T detached signature using an in-process TSA`() = runBlocking<Unit> {
         val tsa = TestTsa.generate()
         val server = MockWebServer().apply { start() }
         try {
@@ -142,7 +142,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `untrusted signer resolves to UntrustedSigner`() = runBlocking {
+    fun `untrusted signer resolves to UntrustedSigner`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val payload = "x".toByteArray()
@@ -163,7 +163,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `tampered detached payload fails BadSignature`() = runBlocking {
+    fun `tampered detached payload fails BadSignature`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val payload = "original".toByteArray()
@@ -183,7 +183,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `requiring B-T but receiving B-B yields WrongProfile`() = runBlocking {
+    fun `requiring B-T but receiving B-B yields WrongProfile`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val payload = "x".toByteArray()
@@ -203,7 +203,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `garbage input yields Malformed`() = runBlocking {
+    fun `garbage input yields Malformed`() = runBlocking<Unit> {
         val result = verifier.verify(
             "not a CMS".toByteArray(),
             CadesVerificationOptions(
@@ -215,7 +215,7 @@ class CadesRoundTripTest {
     }
 
     @Test
-    fun `detached signature without payload yields MissingDetachedPayload`() = runBlocking {
+    fun `detached signature without payload yields MissingDetachedPayload`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val payload = "x".toByteArray()

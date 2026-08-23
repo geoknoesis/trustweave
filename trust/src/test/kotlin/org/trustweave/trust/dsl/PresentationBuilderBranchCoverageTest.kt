@@ -134,7 +134,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Credentials Required Branches ==========
 
     @Test
-    fun `test branch credentials required error`() = runBlocking {
+    fun `test branch credentials required error`() = runBlocking<Unit> {
         val r = trustWeave.presentationResult {
             holder("did:key:holder")
             // Missing credentials
@@ -143,7 +143,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch single credential provided`() = runBlocking {
+    fun `test branch single credential provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe")
@@ -159,7 +159,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch multiple credentials provided`() = runBlocking {
+    fun `test branch multiple credentials provided`() = runBlocking<Unit> {
         val credential1 = issueTestCredential(type = "PersonCredential")
         val credential2 = issueTestCredential(type = "DegreeCredential")
 
@@ -173,7 +173,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch credentials from list`() = runBlocking {
+    fun `test branch credentials from list`() = runBlocking<Unit> {
         val credentials = listOf(
             issueTestCredential(type = "PersonCredential"),
             issueTestCredential(type = "DegreeCredential")
@@ -191,7 +191,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Holder DID Required Branches ==========
 
     @Test
-    fun `test branch holder DID required error`() = runBlocking {
+    fun `test branch holder DID required error`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val r = trustWeave.presentationResult {
@@ -202,7 +202,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch holder DID provided`() = runBlocking {
+    fun `test branch holder DID provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -217,7 +217,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Challenge Branches ==========
 
     @Test
-    fun `test branch challenge not provided`() = runBlocking {
+    fun `test branch challenge not provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -231,7 +231,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch challenge provided`() = runBlocking {
+    fun `test branch challenge provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -247,7 +247,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Domain Branches ==========
 
     @Test
-    fun `test branch domain not provided`() = runBlocking {
+    fun `test branch domain not provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -261,7 +261,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch domain provided`() = runBlocking {
+    fun `test branch domain provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -277,15 +277,10 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Proof Type Branches ==========
 
     @Test
-    fun `test branch proof type default`() = runBlocking {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:holder")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch proof type default`() = runBlocking<Unit> {
+        // A presentation embeds the credential's proof, so the credential must be issued
+        // (signed) first — a raw `credential { }` has no proof and is rejected.
+        val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
                 credentials(credential)
@@ -297,15 +292,10 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch proof type custom`() = runBlocking {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:holder")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch proof type custom`() = runBlocking<Unit> {
+        // A presentation embeds the credential's proof, so the credential must be issued
+        // (signed) first — a raw `credential { }` has no proof and is rejected.
+        val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
             credentials(credential)
@@ -318,15 +308,10 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Key ID Branches ==========
 
     @Test
-    fun `test branch key ID not provided`() = runBlocking {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:holder")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch key ID not provided`() = runBlocking<Unit> {
+        // A presentation embeds the credential's proof, so the credential must be issued
+        // (signed) first — a raw `credential { }` has no proof and is rejected.
+        val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
                 credentials(credential)
@@ -338,7 +323,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch key ID provided`() = runBlocking {
+    fun `test branch key ID provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(type = "PersonCredential")
 
         val presentation = trustWeave.presentationResult {
@@ -353,7 +338,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Selective Disclosure Branches ==========
 
     @Test
-    fun `test branch selective disclosure disabled by default`() = runBlocking {
+    fun `test branch selective disclosure disabled by default`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe", "email" to "john@example.com")
@@ -369,7 +354,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch selective disclosure enabled with reveal`() = runBlocking {
+    fun `test branch selective disclosure enabled with reveal`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789")
@@ -387,7 +372,7 @@ class PresentationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch selective disclosure with hide`() = runBlocking {
+    fun `test branch selective disclosure with hide`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789")
@@ -407,7 +392,7 @@ class PresentationBuilderBranchCoverageTest {
     // ========== Combined Options Branches ==========
 
     @Test
-    fun `test branch all presentation options provided`() = runBlocking {
+    fun `test branch all presentation options provided`() = runBlocking<Unit> {
         val credential = issueTestCredential(
             type = "PersonCredential",
             claims = mapOf("name" to "John Doe")

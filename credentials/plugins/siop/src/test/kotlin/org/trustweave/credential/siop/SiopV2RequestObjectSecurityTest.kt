@@ -59,7 +59,7 @@ class SiopV2RequestObjectSecurityTest {
     // ========== SSRF: request_uri scheme restriction ==========
 
     @Test
-    fun `http request_uri to a non-loopback host is rejected`() = runBlocking {
+    fun `http request_uri to a non-loopback host is rejected`() = runBlocking<Unit> {
         val service = serviceWith(didResolver = null)
 
         val exception = assertFailsWith<SiopV2Exception> {
@@ -72,7 +72,7 @@ class SiopV2RequestObjectSecurityTest {
     }
 
     @Test
-    fun `non-http scheme request_uri is rejected`() = runBlocking {
+    fun `non-http scheme request_uri is rejected`() = runBlocking<Unit> {
         val service = serviceWith(didResolver = null)
 
         val exception = assertFailsWith<SiopV2Exception> {
@@ -85,7 +85,7 @@ class SiopV2RequestObjectSecurityTest {
     }
 
     @Test
-    fun `http request_uri to loopback is allowed`() = runBlocking {
+    fun `http request_uri to loopback is allowed`() = runBlocking<Unit> {
         // MockWebServer serves plain http on 127.0.0.1 — the loopback carve-out
         // must keep local development and tests working.
         val service = serviceWith(didResolver = null)
@@ -100,7 +100,7 @@ class SiopV2RequestObjectSecurityTest {
     // ========== Unsigned / malformed request objects ==========
 
     @Test
-    fun `unsigned request object with alg none is rejected`() = runBlocking {
+    fun `unsigned request object with alg none is rejected`() = runBlocking<Unit> {
         val service = serviceWith(didResolver = null)
         val unsigned = PlainJWT(
             JWTClaimsSet.Builder()
@@ -124,7 +124,7 @@ class SiopV2RequestObjectSecurityTest {
     // ========== DID client_id pinning ==========
 
     @Test
-    fun `request object signed by the DID's actual key is accepted`() = runBlocking {
+    fun `request object signed by the DID's actual key is accepted`() = runBlocking<Unit> {
         val keyPair = generateEd25519KeyPair()
         val service = serviceWith(resolverFor(didDocument(ed25519VerificationMethod(keyPair))))
 
@@ -138,7 +138,7 @@ class SiopV2RequestObjectSecurityTest {
     }
 
     @Test
-    fun `request object signed by a different key than the DID document's is rejected`() = runBlocking {
+    fun `request object signed by a different key than the DID document's is rejected`() = runBlocking<Unit> {
         val verifierKeyPair = generateEd25519KeyPair()
         val attackerKeyPair = generateEd25519KeyPair()
         val service = serviceWith(resolverFor(didDocument(ed25519VerificationMethod(verifierKeyPair))))
@@ -156,7 +156,7 @@ class SiopV2RequestObjectSecurityTest {
     }
 
     @Test
-    fun `signed request object with DID client_id but no resolver is rejected fail-closed`() = runBlocking {
+    fun `signed request object with DID client_id but no resolver is rejected fail-closed`() = runBlocking<Unit> {
         val keyPair = generateEd25519KeyPair()
         // Even a genuinely signed request must be rejected without a resolver,
         // because the verifier identity cannot be pinned.
@@ -201,7 +201,7 @@ class SiopV2RequestObjectSecurityTest {
     }
 
     @Test
-    fun `DID client_id whose DID cannot be resolved is rejected`() = runBlocking {
+    fun `DID client_id whose DID cannot be resolved is rejected`() = runBlocking<Unit> {
         val keyPair = generateEd25519KeyPair()
         val service = serviceWith(DidResolver { did -> DidResolutionResult.Failure.NotFound(did) })
 

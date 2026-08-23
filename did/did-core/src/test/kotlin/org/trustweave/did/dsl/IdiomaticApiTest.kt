@@ -86,7 +86,7 @@ class IdiomaticApiTest {
     }
 
     @Test
-    fun `test DidResolutionResult extensions`() = runBlocking {
+    fun `test DidResolutionResult extensions`() = runBlocking<Unit> {
         val success = DidResolutionResult.Success(
             document = DidDocument(id = Did("did:test:123"))
         )
@@ -107,7 +107,7 @@ class IdiomaticApiTest {
     }
 
     @Test
-    fun `test DidResolutionResult failure extensions`() = runBlocking {
+    fun `test DidResolutionResult failure extensions`() = runBlocking<Unit> {
         val failure = DidResolutionResult.Failure.NotFound(
             did = Did("did:test:123"),
             reason = "Not found"
@@ -128,7 +128,7 @@ class IdiomaticApiTest {
     }
 
     @Test
-    fun `test Did extension functions`() = runBlocking {
+    fun `test Did extension functions`() = runBlocking<Unit> {
         val did = Did("did:test:123")
         val resolver = object : DidResolver {
             override suspend fun resolve(did: Did) = DidResolutionResult.Success(

@@ -109,7 +109,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with different algorithms`() = runBlocking {
+    fun `test KeyManagementService generateKey with different algorithms`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val ed25519Result = kms.generateKey("Ed25519")
@@ -125,7 +125,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with options`() = runBlocking {
+    fun `test KeyManagementService generateKey with options`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val result = kms.generateKey(
@@ -140,7 +140,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService sign with different algorithms`() = runBlocking {
+    fun `test KeyManagementService sign with different algorithms`() = runBlocking<Unit> {
         val kms = createMockKMS()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -156,7 +156,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService sign with null algorithm`() = runBlocking {
+    fun `test KeyManagementService sign with null algorithm`() = runBlocking<Unit> {
         val kms = createMockKMS()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -169,7 +169,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService sign with empty data`() = runBlocking {
+    fun `test KeyManagementService sign with empty data`() = runBlocking<Unit> {
         val kms = createMockKMS()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -182,7 +182,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService sign with large data`() = runBlocking {
+    fun `test KeyManagementService sign with large data`() = runBlocking<Unit> {
         val kms = createMockKMS()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -196,7 +196,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService deleteKey returns NotFound for nonexistent key`() = runBlocking {
+    fun `test KeyManagementService deleteKey returns NotFound for nonexistent key`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val result = kms.deleteKey(KeyId("nonexistent"))
@@ -204,7 +204,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService deleteKey after getPublicKey fails`() = runBlocking {
+    fun `test KeyManagementService deleteKey after getPublicKey fails`() = runBlocking<Unit> {
         val kms = createMockKMS()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -218,7 +218,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService multiple keys coexist`() = runBlocking {
+    fun `test KeyManagementService multiple keys coexist`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val key1Result = kms.generateKey("Ed25519")
@@ -246,7 +246,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking {
+    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val result = kms.getPublicKey(KeyId("nonexistent-key"))
@@ -255,7 +255,7 @@ class KeyManagementServiceEdgeCasesTest {
     }
 
     @Test
-    fun `test KeyManagementService sign returns KeyNotFound`() = runBlocking {
+    fun `test KeyManagementService sign returns KeyNotFound`() = runBlocking<Unit> {
         val kms = createMockKMS()
 
         val result = kms.sign(KeyId("nonexistent-key"), "test".toByteArray())

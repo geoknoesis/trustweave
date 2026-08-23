@@ -165,8 +165,8 @@ See [Plugin Lifecycle](advanced/plugin-lifecycle.md) for detailed plugin lifecyc
 - [Mental Model](../introduction/mental-model.md) - Understand how TrustWeave works
 
 **Ready to dive deeper?**
-- [Error Handling](../advanced/error-handling.md) - Error handling patterns
-- [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
+- [Error Handling](advanced/error-handling.md) - Error handling patterns
+- [Plugin Lifecycle](advanced/plugin-lifecycle.md) - Plugin lifecycle management
 - [Common Patterns](../getting-started/common-patterns.md) - Production-ready patterns
 - [Getting Started](../getting-started/README.md) - Step-by-step guides
 - [Use Case Scenarios](../scenarios/README.md) - Real-world examples

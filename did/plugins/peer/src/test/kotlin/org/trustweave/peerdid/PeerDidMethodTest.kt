@@ -32,7 +32,7 @@ class PeerDidMethodTest {
     // ─── did:peer:2 service segment encoding ───
 
     @Test
-    fun `numalgo2 service segment is base64url not multibase`() = runBlocking {
+    fun `numalgo2 service segment is base64url not multibase`() = runBlocking<Unit> {
         val document = newMethod().createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519
@@ -50,7 +50,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 service round-trips through a fresh resolver instance`() = runBlocking {
+    fun `numalgo2 service round-trips through a fresh resolver instance`() = runBlocking<Unit> {
         val document = newMethod().createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519
@@ -71,7 +71,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 cross-vendor fixture from did-peer spec is parsed`() = runBlocking {
+    fun `numalgo2 cross-vendor fixture from did-peer spec is parsed`() = runBlocking<Unit> {
         // Example DID from the did:peer specification (numalgo 2):
         // one X25519 key agreement key, two Ed25519 signing keys, one DIDCommMessaging
         // service with routingKeys and accept.
@@ -112,7 +112,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 all six purpose codes are decoded to the correct relationships`() = runBlocking {
+    fun `numalgo2 all six purpose codes are decoded to the correct relationships`() = runBlocking<Unit> {
         // Synthetic keys: distinct Ed25519 keys for V/A/I/D, an X25519 key for E.
         fun ed25519Mb(seed: Int) =
             "z" + (byteArrayOf(0xed.toByte(), 0x01) + ByteArray(32) { (it + seed).toByte() }).encodeBase58()
@@ -153,7 +153,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 A segment maps to assertionMethod not authentication`() = runBlocking {
+    fun `numalgo2 A segment maps to assertionMethod not authentication`() = runBlocking<Unit> {
         val keyMb = "z" + (byteArrayOf(0xed.toByte(), 0x01) + ByteArray(32) { (it + 7).toByte() }).encodeBase58()
         val did = Did("did:peer:2.A$keyMb")
 
@@ -166,7 +166,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 createDid encodes I and D purpose segments and round-trips`() = runBlocking {
+    fun `numalgo2 createDid encodes I and D purpose segments and round-trips`() = runBlocking<Unit> {
         val document = newMethod().createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519
@@ -211,7 +211,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 stored document is identical to what a third party resolves`() = runBlocking {
+    fun `numalgo2 stored document is identical to what a third party resolves`() = runBlocking<Unit> {
         // AUTH + ASSERTION: the reviewer-flagged divergence — stored doc used to carry
         // ONE VM named #<kmsKeyId> in both relationships, while external parsers derive
         // one VM PER segment (#key-1, #key-2), each in exactly one relationship.
@@ -259,7 +259,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 KEY_AGREEMENT-only creation is consistent between stored and resolved`() = runBlocking {
+    fun `numalgo2 KEY_AGREEMENT-only creation is consistent between stored and resolved`() = runBlocking<Unit> {
         // KEY_AGREEMENT is not encodable for the single signing key, so the encoder
         // falls back to `.V`. The stored document must agree with what the world
         // resolves: authentication = [#key-1], keyAgreement empty.
@@ -284,7 +284,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `numalgo2 stored service id matches the spec parser convention`() = runBlocking {
+    fun `numalgo2 stored service id matches the spec parser convention`() = runBlocking<Unit> {
         val document = newMethod().createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519
@@ -303,7 +303,7 @@ class PeerDidMethodTest {
     }
 
     @Test
-    fun `legacy multibase service segment is still accepted on parse`() = runBlocking {
+    fun `legacy multibase service segment is still accepted on parse`() = runBlocking<Unit> {
         // Segment produced by earlier versions of this plugin: 'z' + base58btc(JSON)
         val legacyJson = """{"t":"dm","s":"https://legacy.example/endpoint"}"""
         val legacySegment = "z" + legacyJson.toByteArray(Charsets.UTF_8).encodeBase58()
@@ -324,7 +324,7 @@ class PeerDidMethodTest {
     // ─── did:peer:1 multihash ───
 
     @Test
-    fun `numalgo1 numeric basis is a multihash of the genesis document`() = runBlocking {
+    fun `numalgo1 numeric basis is a multihash of the genesis document`() = runBlocking<Unit> {
         val document = newMethod(PeerDidConfig.numalgo1()).createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519
@@ -344,7 +344,7 @@ class PeerDidMethodTest {
     // ─── did:peer:0 (regression) ───
 
     @Test
-    fun `numalgo0 did round-trips through a fresh resolver instance`() = runBlocking {
+    fun `numalgo0 did round-trips through a fresh resolver instance`() = runBlocking<Unit> {
         val document = newMethod(PeerDidConfig.numalgo0()).createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.ED25519

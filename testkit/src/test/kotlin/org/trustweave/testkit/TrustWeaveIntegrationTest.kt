@@ -32,7 +32,7 @@ class TrustWeaveIntegrationTest {
     )
 
     @Test
-    fun integrationTest_DIDCreationDigestComputationAndAnchoring() = runBlocking {
+    fun integrationTest_DIDCreationDigestComputationAndAnchoring() = runBlocking<Unit> {
         // Setup: Create KMS, DID method, and blockchain client
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -79,7 +79,7 @@ class TrustWeaveIntegrationTest {
     }
 
     @Test
-    fun integrationTest_RoundTripAnchorTypedAndReadTyped() = runBlocking {
+    fun integrationTest_RoundTripAnchorTypedAndReadTyped() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("test:chain")
 
         val original = VerifiableCredentialDigest("vc-999", "uXYZ789")

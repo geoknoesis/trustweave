@@ -37,7 +37,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient writePayload stores payload`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient writePayload stores payload`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -52,7 +52,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient writePayload generates unique txHash`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient writePayload generates unique txHash`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -64,7 +64,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient writePayload increments counter`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient writePayload increments counter`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -76,7 +76,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient readPayload returns stored payload`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient readPayload returns stored payload`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -89,7 +89,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient readPayload throws when not found`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient readPayload throws when not found`() = runBlocking<Unit> {
         val ref = AnchorRef(
             chainId = "algorand:testnet",
             txHash = "nonexistent",
@@ -102,7 +102,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient readPayload throws when chainId mismatch`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient readPayload throws when chainId mismatch`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -120,7 +120,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient clear removes all anchors`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient clear removes all anchors`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("test", "data")
         }
@@ -134,7 +134,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient size returns correct count`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient size returns correct count`() = runBlocking<Unit> {
         assertEquals(0, client.size())
 
         val payload = buildJsonObject {
@@ -148,7 +148,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient writePayload with different media types`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient writePayload with different media types`() = runBlocking<Unit> {
         val payload1 = buildJsonObject {
             put("test", "data1")
         }
@@ -164,7 +164,7 @@ class InMemoryBlockchainAnchorClientBranchCoverageTest {
     }
 
     @Test
-    fun `test InMemoryBlockchainAnchorClient writePayload with null contract`() = runBlocking {
+    fun `test InMemoryBlockchainAnchorClient writePayload with null contract`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet", null)
         val payload = buildJsonObject {
             put("test", "data")

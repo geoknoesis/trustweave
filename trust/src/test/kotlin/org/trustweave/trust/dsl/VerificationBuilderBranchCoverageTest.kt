@@ -50,7 +50,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Credential Required Branches ==========
 
     @Test
-    fun `test branch credential required error`() = runBlocking {
+    fun `test branch credential required error`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.verify {
                 // Missing credential
@@ -60,7 +60,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch credential provided`() = runBlocking {
+    fun `test branch credential provided`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -80,7 +80,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Revocation Check Branches ==========
 
     @Test
-    fun `test branch revocation check enabled by default`() = runBlocking {
+    fun `test branch revocation check enabled by default`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -99,7 +99,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch revocation check explicitly enabled`() = runBlocking {
+    fun `test branch revocation check explicitly enabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -118,7 +118,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch revocation check disabled`() = runBlocking {
+    fun `test branch revocation check disabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -137,7 +137,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch revocation check toggle multiple times`() = runBlocking {
+    fun `test branch revocation check toggle multiple times`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -159,7 +159,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Expiration Check Branches ==========
 
     @Test
-    fun `test branch expiration check enabled by default`() = runBlocking {
+    fun `test branch expiration check enabled by default`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -178,7 +178,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch expiration check explicitly enabled`() = runBlocking {
+    fun `test branch expiration check explicitly enabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -197,7 +197,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch expiration check disabled`() = runBlocking {
+    fun `test branch expiration check disabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -216,7 +216,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch expiration check toggle multiple times`() = runBlocking {
+    fun `test branch expiration check toggle multiple times`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -238,7 +238,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Schema Validation Branches ==========
 
     @Test
-    fun `test branch schema validation disabled by default`() = runBlocking {
+    fun `test branch schema validation disabled by default`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -257,7 +257,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch schema validation enabled`() = runBlocking {
+    fun `test branch schema validation enabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -276,7 +276,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch schema validation disabled after enabled`() = runBlocking {
+    fun `test branch schema validation disabled after enabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -296,7 +296,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch schema validation with schema ID`() = runBlocking {
+    fun `test branch schema validation with schema ID`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -317,7 +317,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Anchor Verification Branches ==========
 
     @Test
-    fun `test branch anchor verification disabled by default`() = runBlocking {
+    fun `test branch anchor verification disabled by default`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -336,7 +336,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor verification enabled without chain ID`() = runBlocking {
+    fun `test branch anchor verification enabled without chain ID`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -375,7 +375,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking {
+    fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -413,7 +413,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor verification error when no chain ID`() = runBlocking {
+    fun `test branch anchor verification error when no chain ID`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveNoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -449,7 +449,7 @@ class VerificationBuilderBranchCoverageTest {
     // ========== Combined Options Branches ==========
 
     @Test
-    fun `test branch all verification options enabled`() = runBlocking {
+    fun `test branch all verification options enabled`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -491,7 +491,7 @@ class VerificationBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch all verification options disabled`() = runBlocking {
+    fun `test branch all verification options disabled`() = runBlocking<Unit> {
         val credential = buildCredential {
             type("PersonCredential")
             issuer("did:key:issuer")

@@ -36,7 +36,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== store() Branch Coverage ==========
 
     @Test
-    fun `test branch store with credential id`() = runBlocking {
+    fun `test branch store with credential id`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-123")
 
         val result = wallet.store(credential)
@@ -46,7 +46,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch store without credential id generates UUID`() = runBlocking {
+    fun `test branch store without credential id generates UUID`() = runBlocking<Unit> {
         val credential = createTestCredential(id = null)
 
         val result = wallet.store(credential)
@@ -57,7 +57,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch store creates metadata if not exists`() = runBlocking {
+    fun `test branch store creates metadata if not exists`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-new")
 
         wallet.store(credential)
@@ -69,7 +69,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== get() Branch Coverage ==========
 
     @Test
-    fun `test branch get from credentials`() = runBlocking {
+    fun `test branch get from credentials`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-1")
         wallet.store(credential)
 
@@ -80,7 +80,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch get from archived credentials`() = runBlocking {
+    fun `test branch get from archived credentials`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-archived")
         wallet.store(credential)
         wallet.archive("cred-archived")
@@ -92,7 +92,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch get returns null for nonexistent`() = runBlocking {
+    fun `test branch get returns null for nonexistent`() = runBlocking<Unit> {
         val result = wallet.get("nonexistent")
 
         assertNull(result)
@@ -101,7 +101,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== list() Branch Coverage ==========
 
     @Test
-    fun `test branch list with null filter`() = runBlocking {
+    fun `test branch list with null filter`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1")
         val cred2 = createTestCredential(id = "cred-2")
         wallet.store(cred1)
@@ -113,7 +113,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with issuer filter matching`() = runBlocking {
+    fun `test branch list with issuer filter matching`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", issuerDid = "did:key:issuer1")
         val cred2 = createTestCredential(id = "cred-2", issuerDid = "did:key:issuer2")
         wallet.store(cred1)
@@ -126,7 +126,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with issuer filter not matching`() = runBlocking {
+    fun `test branch list with issuer filter not matching`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", issuerDid = "did:key:issuer1")
         wallet.store(cred1)
 
@@ -136,7 +136,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with type filter matching`() = runBlocking {
+    fun `test branch list with type filter matching`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", types = listOf("VerifiableCredential", "PersonCredential"))
         val cred2 = createTestCredential(id = "cred-2", types = listOf("VerifiableCredential", "EmailCredential"))
         wallet.store(cred1)
@@ -149,7 +149,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with subjectId filter matching`() = runBlocking {
+    fun `test branch list with subjectId filter matching`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             subject = buildJsonObject { put("id", "did:key:subject1") }
@@ -167,7 +167,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with expired filter true`() = runBlocking {
+    fun `test branch list with expired filter true`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             expirationDate = Clock.System.now().minus(86400.seconds).toString()
@@ -186,7 +186,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with expired filter false`() = runBlocking {
+    fun `test branch list with expired filter false`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             expirationDate = Clock.System.now().minus(86400.seconds).toString()
@@ -205,7 +205,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with expired filter null and no expiration date`() = runBlocking {
+    fun `test branch list with expired filter null and no expiration date`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", expirationDate = null)
         wallet.store(cred1)
 
@@ -215,7 +215,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with revoked filter true`() = runBlocking {
+    fun `test branch list with revoked filter true`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -235,7 +235,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch list with revoked filter false`() = runBlocking {
+    fun `test branch list with revoked filter false`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -257,7 +257,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== delete() Branch Coverage ==========
 
     @Test
-    fun `test branch delete from credentials`() = runBlocking {
+    fun `test branch delete from credentials`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-1")
         wallet.store(credential)
 
@@ -268,7 +268,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch delete from archived credentials`() = runBlocking {
+    fun `test branch delete from archived credentials`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-archived")
         wallet.store(credential)
         wallet.archive("cred-archived")
@@ -280,7 +280,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch delete returns false for nonexistent`() = runBlocking {
+    fun `test branch delete returns false for nonexistent`() = runBlocking<Unit> {
         val result = wallet.delete("nonexistent")
 
         assertFalse(result)
@@ -289,14 +289,14 @@ class InMemoryWalletBranchCoverageTest {
     // ========== getCollection() Branch Coverage ==========
 
     @Test
-    fun `test branch getCollection returns null for nonexistent`() = runBlocking {
+    fun `test branch getCollection returns null for nonexistent`() = runBlocking<Unit> {
         val result = wallet.getCollection("nonexistent")
 
         assertNull(result)
     }
 
     @Test
-    fun `test branch getCollection calculates credentialCount dynamically`() = runBlocking {
+    fun `test branch getCollection calculates credentialCount dynamically`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
         val cred1 = createTestCredential(id = "cred-1")
         val cred2 = createTestCredential(id = "cred-2")
@@ -314,7 +314,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== deleteCollection() Branch Coverage ==========
 
     @Test
-    fun `test branch deleteCollection removes collection`() = runBlocking {
+    fun `test branch deleteCollection removes collection`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
 
         val result = wallet.deleteCollection(collectionId)
@@ -324,7 +324,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch deleteCollection returns false for nonexistent`() = runBlocking {
+    fun `test branch deleteCollection returns false for nonexistent`() = runBlocking<Unit> {
         val result = wallet.deleteCollection("nonexistent")
 
         assertFalse(result)
@@ -333,7 +333,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== addToCollection() Branch Coverage ==========
 
     @Test
-    fun `test branch addToCollection returns false when credential not found`() = runBlocking {
+    fun `test branch addToCollection returns false when credential not found`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
 
         val result = wallet.addToCollection("nonexistent", collectionId)
@@ -342,7 +342,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch addToCollection returns false when collection not found`() = runBlocking {
+    fun `test branch addToCollection returns false when collection not found`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-1")
         wallet.store(credential)
 
@@ -355,7 +355,7 @@ class InMemoryWalletBranchCoverageTest {
     // Mirrors DatabaseWalletTest: true only when an existing membership is removed.
 
     @Test
-    fun `test branch removeFromCollection removes membership then returns false on repeat`() = runBlocking {
+    fun `test branch removeFromCollection removes membership then returns false on repeat`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
         wallet.store(createTestCredential(id = "cred-coll"))
         assertTrue(wallet.addToCollection("cred-coll", collectionId))
@@ -367,21 +367,21 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch removeFromCollection returns false for unknown credential`() = runBlocking {
+    fun `test branch removeFromCollection returns false for unknown credential`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
 
         assertFalse(wallet.removeFromCollection("nonexistent", collectionId))
     }
 
     @Test
-    fun `test branch removeFromCollection returns false for unknown collection`() = runBlocking {
+    fun `test branch removeFromCollection returns false for unknown collection`() = runBlocking<Unit> {
         wallet.store(createTestCredential(id = "cred-1"))
 
         assertFalse(wallet.removeFromCollection("cred-1", "nonexistent"))
     }
 
     @Test
-    fun `test branch removeFromCollection returns false for non-member credential`() = runBlocking {
+    fun `test branch removeFromCollection returns false for non-member credential`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
         wallet.store(createTestCredential(id = "cred-not-member"))
 
@@ -391,14 +391,14 @@ class InMemoryWalletBranchCoverageTest {
     // ========== getCredentialsInCollection() Branch Coverage ==========
 
     @Test
-    fun `test branch getCredentialsInCollection returns empty for nonexistent collection`() = runBlocking {
+    fun `test branch getCredentialsInCollection returns empty for nonexistent collection`() = runBlocking<Unit> {
         val result = wallet.getCredentialsInCollection("nonexistent")
 
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun `test branch getCredentialsInCollection gets from both credentials and archived`() = runBlocking {
+    fun `test branch getCredentialsInCollection gets from both credentials and archived`() = runBlocking<Unit> {
         val collectionId = wallet.createCollection("Test Collection", "Description")
         val cred1 = createTestCredential(id = "cred-1")
         val cred2 = createTestCredential(id = "cred-2")
@@ -416,7 +416,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== tagCredential() Branch Coverage ==========
 
     @Test
-    fun `test branch tagCredential returns false when credential not found`() = runBlocking {
+    fun `test branch tagCredential returns false when credential not found`() = runBlocking<Unit> {
         val result = wallet.tagCredential("nonexistent", setOf("tag1"))
 
         assertFalse(result)
@@ -426,14 +426,14 @@ class InMemoryWalletBranchCoverageTest {
     // Mirrors DatabaseWalletTest: false for an unknown credential, true otherwise.
 
     @Test
-    fun `test branch untagCredential returns false when credential not found`() = runBlocking {
+    fun `test branch untagCredential returns false when credential not found`() = runBlocking<Unit> {
         val result = wallet.untagCredential("nonexistent", setOf("tag1"))
 
         assertFalse(result)
     }
 
     @Test
-    fun `test branch tagCredential then untagCredential round-trips`() = runBlocking {
+    fun `test branch tagCredential then untagCredential round-trips`() = runBlocking<Unit> {
         wallet.store(createTestCredential(id = "cred-tags"))
 
         assertTrue(wallet.tagCredential("cred-tags", setOf("important", "work")))
@@ -445,7 +445,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch untagCredential returns true for known credential without matching tags`() = runBlocking {
+    fun `test branch untagCredential returns true for known credential without matching tags`() = runBlocking<Unit> {
         wallet.store(createTestCredential(id = "cred-untagged"))
 
         // Credential exists but carries none of the requested tags — still true,
@@ -454,7 +454,7 @@ class InMemoryWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test branch untagCredential works on archived credential`() = runBlocking {
+    fun `test branch untagCredential works on archived credential`() = runBlocking<Unit> {
         wallet.store(createTestCredential(id = "cred-arch-tag"))
         wallet.tagCredential("cred-arch-tag", setOf("keep", "drop"))
         wallet.archive("cred-arch-tag")
@@ -466,7 +466,7 @@ class InMemoryWalletBranchCoverageTest {
     // ========== getTags() Branch Coverage ==========
 
     @Test
-    fun `test branch getTags returns empty set when credential not found`() = runBlocking {
+    fun `test branch getTags returns empty set when credential not found`() = runBlocking<Unit> {
         val result = wallet.getTags("nonexistent")
 
         assertTrue(result.isEmpty())

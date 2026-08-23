@@ -14,7 +14,7 @@ import kotlin.test.*
 class ProofEngineTestHelpersExample {
 
     @Test
-    fun `example - create issuance request`() = runBlocking {
+    fun `example - create issuance request`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         
@@ -35,7 +35,7 @@ class ProofEngineTestHelpersExample {
     }
 
     @Test
-    fun `example - create test credential`() = runBlocking {
+    fun `example - create test credential`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         
@@ -55,7 +55,7 @@ class ProofEngineTestHelpersExample {
     }
 
     @Test
-    fun `example - create expired credential`() = runBlocking {
+    fun `example - create expired credential`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         
@@ -69,7 +69,7 @@ class ProofEngineTestHelpersExample {
     }
 
     @Test
-    fun `example - create credential without proof`() = runBlocking {
+    fun `example - create credential without proof`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         
@@ -83,7 +83,7 @@ class ProofEngineTestHelpersExample {
     }
 
     @Test
-    fun `example - create verification options`() = runBlocking {
+    fun `example - create verification options`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         
@@ -100,7 +100,7 @@ class ProofEngineTestHelpersExample {
     }
 
     @Test
-    fun `example - create presentation request`() = runBlocking {
+    fun `example - create presentation request`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
         val helpers = fixture.proofEngineHelpers()
         

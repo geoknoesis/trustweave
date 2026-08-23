@@ -40,7 +40,7 @@ class KeyManagementServiceProviderTest {
     }
 
     @Test
-    fun `test KeyManagementServiceProvider creates functional KMS`() = runBlocking {
+    fun `test KeyManagementServiceProvider creates functional KMS`() = runBlocking<Unit> {
         val provider = createMockProvider()
         val kms = provider.create()
 

@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class WaltIdErrorHandlingTest {
 
     @Test
-    fun `KMS should return KeyNotFound result for non-existent key`() = runBlocking {
+    fun `KMS should return KeyNotFound result for non-existent key`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
 
         val result = kms.getPublicKey(org.trustweave.core.identifiers.KeyId("nonexistent-key-id"))
@@ -28,7 +28,7 @@ class WaltIdErrorHandlingTest {
     }
 
     @Test
-    fun `KMS should return KeyNotFound result when signing with non-existent key`() = runBlocking {
+    fun `KMS should return KeyNotFound result when signing with non-existent key`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
 
         val result = kms.sign(org.trustweave.core.identifiers.KeyId("nonexistent-key-id"), "test data".toByteArray())
@@ -36,18 +36,25 @@ class WaltIdErrorHandlingTest {
     }
 
     @Test
-    fun `DID method should throw exception for invalid options`() = runBlocking {
+    fun `DID method should throw exception for invalid options`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val webMethod = WaltIdWebMethod(kms)
 
-        // did:web requires domain option
-        assertFailsWith<IllegalArgumentException> {
+        // The missing-domain precondition is an IllegalArgumentException, but WaltIdWebMethod
+        // wraps every failure from createDid in TrustWeaveException.Unknown, so that is the
+        // type callers actually observe. The original cause is preserved.
+        val error = assertFailsWith<org.trustweave.core.exception.TrustWeaveException.Unknown> {
             webMethod.createDid()
         }
+        assertTrue(
+            error.message.orEmpty().contains("domain"),
+            "The failure must name the missing 'domain' option, got: ${error.message}",
+        )
+        assertTrue(error.cause is IllegalArgumentException, "cause: ${error.cause}")
     }
 
     @Test
-    fun `DID method should throw exception when resolving non-existent DID`() = runBlocking {
+    fun `DID method should throw exception when resolving non-existent DID`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val keyMethod = WaltIdKeyMethod(kms)
 
@@ -57,7 +64,7 @@ class WaltIdErrorHandlingTest {
     }
 
     @Test
-    fun `DID method should throw exception when updating non-existent DID`() = runBlocking {
+    fun `DID method should throw exception when updating non-existent DID`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val keyMethod = WaltIdKeyMethod(kms)
 
@@ -94,7 +101,7 @@ class WaltIdErrorHandlingTest {
     }
 
     @Test
-    fun `KMS should handle invalid algorithm gracefully`() = runBlocking {
+    fun `KMS should handle invalid algorithm gracefully`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
 
         // Try to generate key with unsupported algorithm

@@ -69,7 +69,7 @@ when (offerResult) {
 
 ### Exception Module Structure
 
-- **Core exceptions** (`ExchangeException`): Located in `credentials/credential-core`
+- **Core exceptions** (`ExchangeException`): Located in `credentials/credential-api`
   - Registry errors
   - Request validation errors
   - Resource not found errors

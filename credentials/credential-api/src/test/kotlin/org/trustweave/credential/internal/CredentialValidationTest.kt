@@ -206,14 +206,14 @@ class CredentialValidationTest {
     }
     
     @Test
-    fun `test validateTrust with no trust policy`() = runBlocking {
+    fun `test validateTrust with no trust policy`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val result = CredentialValidation.validateTrust(credential, null)
         assertNull(result, "When no trust policy, should not validate")
     }
     
     @Test
-    fun `test validateTrust with trusted issuer`() = runBlocking {
+    fun `test validateTrust with trusted issuer`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(issuerDid))
         val TrustEvaluator = TrustEvaluator.allowlist(setOf(issuerDid))
@@ -222,7 +222,7 @@ class CredentialValidationTest {
     }
     
     @Test
-    fun `test validateTrust with untrusted issuer`() = runBlocking {
+    fun `test validateTrust with untrusted issuer`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK")
         val untrustedDid = Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK2")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(untrustedDid))
@@ -233,7 +233,7 @@ class CredentialValidationTest {
     }
     
     @Test
-    fun `test validateTrust with non-DID issuer`() = runBlocking {
+    fun `test validateTrust with non-DID issuer`() = runBlocking<Unit> {
         val issuerIri = Iri("https://example.com/issuer")
         val credential = createTestCredential(issuer = Issuer.IriIssuer(issuerIri))
         val TrustEvaluator = TrustEvaluator.allowlist(setOf(Did("did:key:test")))

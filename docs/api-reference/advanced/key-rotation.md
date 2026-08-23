@@ -113,8 +113,8 @@ Keep issuing with the old key until the updated DID is published and cached by v
 
 ## See also
 
-- [Key Management](../core-concepts/key-management.md) for the underlying abstractions.
-- [DIDs](../core-concepts/dids.md) for publication guidance.
+- [Key Management](../../core-concepts/key-management.md) for the underlying abstractions.
+- [DIDs](../../core-concepts/dids.md) for publication guidance.
 - [Verification Policies](verification-policies.md) to enforce that proofs are signed with an expected key set.
 - [Quick Start sample](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/src/main/kotlin/org/trustweave/examples/quickstart/QuickStartSample.kt) for runnable issuance code.
 

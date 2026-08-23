@@ -28,7 +28,7 @@ the current `main` branch and link to the actual sources where applicable.
   (W3C VC-JWT, IETF SD-JWT VC, OID4VCI JWT VC). Implementing JAdES first lets a single signature
   envelope cover every JWT/JSON-LD-shaped credential the platform produces.
 - **PKCS#11 binding for QSCDs.** A new `kms:plugins:pkcs11` module implements the existing
-  [`KeyManagementService`](../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
+  [`KeyManagementService`](../../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
   SPI on top of `sun.security.pkcs11.SunPKCS11`. Any standards-conformant QSCD or HSM is then
   usable as a signing backend without device-specific code in the credentials or signatures
   domains.
@@ -123,7 +123,7 @@ credentials/credential-api/          [MODIFIED]
 ### 4.4 `kms:plugins:pkcs11`
 
 - **Purpose:** Implement the existing
-  [`KeyManagementService`](../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
+  [`KeyManagementService`](../../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
   SPI on top of a PKCS#11 device, using `sun.security.pkcs11.SunPKCS11`. Slot + token + PIN are
   externally configured. The implementation is generic — no device-specific code paths — so any
   standards-conformant QSCD (SafeNet Luna, Utimaco CryptoServer, Thales ProtectServer,
@@ -140,12 +140,12 @@ credentials/credential-api/          [MODIFIED]
   [`CredentialProof.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt)
   for the existing variants).
 - New `JAdESProofEngine` implementing
-  [`ProofEngine`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt),
+  [`ProofEngine`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt),
   registered via the same SPI route used by `VcLdProofEngine` and `SdJwtProofEngine`.
 - New `ProofSuiteId.JADES` enum entry alongside the existing values in
   [`ProofSuiteId.kt`](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/format/ProofSuiteId.kt).
 - DSL hooks on
-  [`IssuanceRequestBuilder`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/IssuanceRequestBuilder.kt)
+  [`IssuanceRequestBuilder`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/IssuanceRequestBuilder.kt)
   and `VerificationBuilder`.
 
 ## 5. Public API surfaces
@@ -579,7 +579,7 @@ JADES("jades")
 ```
 
 A new `JAdESProofEngine` implements
-[`ProofEngine`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt):
+[`ProofEngine`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt):
 
 ```kotlin
 package org.trustweave.credential.proof.internal.engines
@@ -658,7 +658,7 @@ val engine = JAdESProofEngine(kms, signer, verifier, resolver)
 ### 7.1 KMS — `KeyManagementService` SPI
 
 The QES code path uses
-[`KeyManagementService`](../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
+[`KeyManagementService`](../../../kms/kms-core/src/main/kotlin/org/trustweave/kms/KeyManagementService.kt)
 unchanged. `JadesSigner` calls `kms.sign(keyId, signingInput, algorithm)` and never sees a private
 key. For QES, the application wires `Pkcs11KeyManagementService` as the active KMS; for AES-only
 operation or local tests, the existing `InMemoryKeyManagementService` works without any JAdES code
@@ -676,7 +676,7 @@ gains one branch.
 ### 7.3 IssuanceBuilder DSL — `withJadesProfile`
 
 The existing
-[`IssuanceRequestBuilder`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/IssuanceRequestBuilder.kt)
+[`IssuanceRequestBuilder`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/requests/IssuanceRequestBuilder.kt)
 DSL gets one new configurator. Usage:
 
 ```kotlin
@@ -726,9 +726,9 @@ or the parsed profile is below the required level.
 
 `signatures:jades` does *not* introduce a new SPI namespace. The `JAdESProofEngine` registers
 itself via the same SPI route that the existing engines use — see
-[`VcLdProofEngineProvider.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngineProvider.kt)
+[`VcLdProofEngineProvider.kt`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngineProvider.kt)
 and
-[`SdJwtProofEngineProvider.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/SdJwtProofEngineProvider.kt)
+[`SdJwtProofEngineProvider.kt`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/SdJwtProofEngineProvider.kt)
 for the pattern. The JAdES engine provider lives in the new `signatures:jades` module so that
 applications that don't pull in `signatures:jades` never load the engine.
 
@@ -764,7 +764,7 @@ parallel with A, compressing the calendar to ~7 weeks if two engineers are avail
   is offline or the PIN is wrong.
 - `credentials/credential-api`: the new `JAdESProofEngine` is tested against the same fixture
   matrix used by `VcLdProofEngine` and `SdJwtProofEngine` (see
-  [`VcLdProofEngine.kt`](../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngine.kt)).
+  [`VcLdProofEngine.kt`](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/VcLdProofEngine.kt)).
 
 ### 9.2 Interop tests with the EUDI Reference Wallet
 
@@ -857,7 +857,7 @@ test-scope fixtures and a CI container image.
 ## 12. Open questions
 
 - **Result vs throw conventions.** The `kms:` domain returns sealed `*Result` types
-  (see [`SignResult.kt`](../../kms/kms-core/src/main/kotlin/org/trustweave/kms/results/SignResult.kt));
+  (see [`SignResult.kt`](../../../kms/kms-core/src/main/kotlin/org/trustweave/kms/results/SignResult.kt));
   the credentials API throws (`ProofEngine.issue` is documented to throw). The new
   `signatures:` modules straddle both. **Recommendation:** match the `kms:` pattern —
   `JadesValidationResult` is already a sealed type, and `JadesSigner.sign` should likewise

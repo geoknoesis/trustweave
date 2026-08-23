@@ -26,7 +26,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with successful provider`() = runBlocking {
+    fun `test execute with successful provider`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = false),
             TestProvider("provider-2", shouldFail = false)
@@ -42,7 +42,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with fallback to second provider`() = runBlocking {
+    fun `test execute with fallback to second provider`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = false)
@@ -58,7 +58,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute throws AllProvidersFailed when all fail`() = runBlocking {
+    fun `test execute throws AllProvidersFailed when all fail`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = true)
@@ -74,7 +74,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with selector`() = runBlocking {
+    fun `test execute with selector`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = false),
             TestProvider("provider-2", shouldFail = false)
@@ -90,7 +90,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test executeAndTransform`() = runBlocking {
+    fun `test executeAndTransform`() = runBlocking<Unit> {
         val providers = listOf(TestProvider("provider-1", shouldFail = false))
         val chain = ProviderChain(providers)
 
@@ -144,7 +144,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test createProviderChain from plugin IDs`() = runBlocking {
+    fun `test createProviderChain from plugin IDs`() = runBlocking<Unit> {
         val metadata = PluginMetadata(
             id = "test-plugin",
             name = "Test Plugin",
@@ -171,7 +171,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test createProviderChainFromConfig`() = runBlocking {
+    fun `test createProviderChainFromConfig`() = runBlocking<Unit> {
         val metadata = PluginMetadata(
             id = "test-plugin",
             name = "Test Plugin",
@@ -201,7 +201,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with selector that filters some providers`() = runBlocking {
+    fun `test execute with selector that filters some providers`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = false),
@@ -219,7 +219,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with selector where first selected fails`() = runBlocking {
+    fun `test execute with selector where first selected fails`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = false),
             TestProvider("provider-2", shouldFail = true),
@@ -237,7 +237,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test executeAndTransform when operation fails`() = runBlocking {
+    fun `test executeAndTransform when operation fails`() = runBlocking<Unit> {
         val providers = listOf(
             TestProvider("provider-1", shouldFail = true),
             TestProvider("provider-2", shouldFail = false)
@@ -254,7 +254,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute rethrows CancellationException instead of trying next provider`() = runBlocking {
+    fun `test execute rethrows CancellationException instead of trying next provider`() = runBlocking<Unit> {
         var secondAttempted = false
         val chain = ProviderChain(listOf("first", "second"))
 
@@ -272,7 +272,7 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute propagates cancellation of the calling coroutine`() = runBlocking {
+    fun `test execute propagates cancellation of the calling coroutine`() = runBlocking<Unit> {
         val firstStarted = CompletableDeferred<Unit>()
         var secondAttempted = false
         val chain = ProviderChain(listOf("first", "second"))

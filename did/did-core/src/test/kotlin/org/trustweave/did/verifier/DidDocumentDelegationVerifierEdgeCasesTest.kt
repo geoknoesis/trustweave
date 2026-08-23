@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class DidDocumentDelegationVerifierEdgeCasesTest {
 
     @Test
-    fun `test verify delegation with empty capabilityDelegation list`() = runBlocking {
+    fun `test verify delegation with empty capabilityDelegation list`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -47,7 +47,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify delegation with verification method reference`() = runBlocking {
+    fun `test verify delegation with verification method reference`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -89,7 +89,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify delegation with relative verification method reference`() = runBlocking {
+    fun `test verify delegation with relative verification method reference`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -98,7 +98,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
                 delegatorDid -> DidResolutionResult.Success(
                     document = DidDocument(
                         id = Did(delegatorDid),
-                        capabilityDelegation = listOf(VerificationMethodId.parse("#key-1"))
+                        capabilityDelegation = listOf(VerificationMethodId.parse("$delegatorDid#key-1"))
                     )
                 )
                 delegateDid -> DidResolutionResult.Success(
@@ -116,7 +116,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify multi-hop delegation with single DID`() = runBlocking {
+    fun `test verify multi-hop delegation with single DID`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
@@ -127,7 +127,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify multi-hop delegation with empty chain`() = runBlocking {
+    fun `test verify multi-hop delegation with empty chain`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
@@ -138,7 +138,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify delegation with same delegator and delegate`() = runBlocking {
+    fun `test verify delegation with same delegator and delegate`() = runBlocking<Unit> {
         val did = "did:key:same"
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { d ->
@@ -186,7 +186,7 @@ class DidDocumentDelegationVerifierEdgeCasesTest {
     }
 
     @Test
-    fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking {
+    fun `test verify delegation chain with boolean resolver returns invalid`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { _: String -> null }
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
         val result = verifier.verify(Did("did:key:delegator"), Did("did:key:delegate"))

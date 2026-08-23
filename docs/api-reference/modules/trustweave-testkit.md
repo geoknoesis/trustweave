@@ -245,6 +245,6 @@ See [Plugin Credential Handling](../../contributing/testing/plugin-credential-ha
 - See [TrustWeave test templates](../../contributing/testing/trustweave-test-templates.md) for comprehensive workflow templates
 - Explore [Plugin Credential Handling](../../contributing/testing/plugin-credential-handling.md) for external service testing
 - Explore [EO Test Integration README](https://github.com/geoknoesis/trustweave/blob/main/testkit/src/main/kotlin/org/trustweave/testkit/eo) for detailed EO test utilities
-- See [Test Fixtures](../../testkit/src/main/kotlin/org/trustweave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation
+- See [Test Fixtures](../../../testkit/src/main/kotlin/org/trustweave/testkit/TrustWeaveTestFixture.kt) for fixture builder documentation
 - Check [Creating Plugins](../../contributing/creating-plugins.md) to understand SPI interfaces being mocked
 

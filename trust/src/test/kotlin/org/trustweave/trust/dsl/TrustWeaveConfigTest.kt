@@ -22,7 +22,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave configuration with inMemory KMS`() = runBlocking {
+    fun `test TrustWeave configuration with inMemory KMS`() = runBlocking<Unit> {
         val trustWeave = trustWeave {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -58,7 +58,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave configuration with custom KMS`() = runBlocking {
+    fun `test TrustWeave configuration with custom KMS`() = runBlocking<Unit> {
         // For custom KMS without signer function, use provider("inMemory") instead
         // This test verifies that custom KMS can be set, but signer must be provided
         val trustWeave = trustWeave {
@@ -79,7 +79,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test trust layer configuration with multiple DID methods`() = runBlocking {
+    fun `test trust layer configuration with multiple DID methods`() = runBlocking<Unit> {
         val trustWeave = trustWeave {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -103,7 +103,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave configuration with multiple anchor chains`() = runBlocking {
+    fun `test TrustWeave configuration with multiple anchor chains`() = runBlocking<Unit> {
         val trustWeave = trustWeave {
             // KMS, DID methods, and Anchor clients auto-discovered via SPI
             keys {
@@ -131,7 +131,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave configuration with named instance`() = runBlocking {
+    fun `test TrustWeave configuration with named instance`() = runBlocking<Unit> {
         val trustWeave = trustWeave("production") {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -149,7 +149,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave credential config defaults`() = runBlocking {
+    fun `test TrustWeave credential config defaults`() = runBlocking<Unit> {
         val trustWeave = trustWeave {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -169,7 +169,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test trust layer credential config custom values`() = runBlocking {
+    fun `test trust layer credential config custom values`() = runBlocking<Unit> {
         val trustWeave = trustWeave {
             // KMS and DID methods auto-discovered via SPI
             keys {
@@ -195,7 +195,7 @@ class TrustWeaveConfigTest {
     }
 
     @Test
-    fun `test TrustWeave context provides access to components`() = runBlocking {
+    fun `test TrustWeave context provides access to components`() = runBlocking<Unit> {
         val trustWeaveConfig = trustWeave {
             // KMS and DID methods auto-discovered via SPI
             keys {

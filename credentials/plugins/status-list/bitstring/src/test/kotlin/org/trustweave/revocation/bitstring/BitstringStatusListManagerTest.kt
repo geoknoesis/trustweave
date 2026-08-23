@@ -177,7 +177,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `encodedList is multibase u-prefixed gzip-compressed base64url without padding`() = runBlocking {
+    fun `encodedList is multibase u-prefixed gzip-compressed base64url without padding`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -197,7 +197,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `bit packing is MSB-first - the left-most bit of each byte is the lowest index`() = runBlocking {
+    fun `bit packing is MSB-first - the left-most bit of each byte is the lowest index`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -228,7 +228,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `decoding rejects legacy un-prefixed encodedList values fail-closed`() = runBlocking {
+    fun `decoding rejects legacy un-prefixed encodedList values fail-closed`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -261,7 +261,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `createStatusList enforces the spec minimum of 131072 bits`() = runBlocking {
+    fun `createStatusList enforces the spec minimum of 131072 bits`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -281,7 +281,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `checkStatusByIndex fails closed with RANGE_ERROR for out-of-range indices`() = runBlocking {
+    fun `checkStatusByIndex fails closed with RANGE_ERROR for out-of-range indices`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -299,7 +299,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `checkStatusByIndex fails closed when the status list is unknown`() = runBlocking {
+    fun `checkStatusByIndex fails closed when the status list is unknown`() = runBlocking<Unit> {
         val ex = assertFailsWith<TrustWeaveException.InvalidState> {
             manager.checkStatusByIndex(StatusListId("https://example.com/status/unknown"), 0)
         }
@@ -307,7 +307,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `checkStatusByCredentialId fails closed when the status list is unknown`() = runBlocking {
+    fun `checkStatusByCredentialId fails closed when the status list is unknown`() = runBlocking<Unit> {
         val ex = assertFailsWith<TrustWeaveException.InvalidState> {
             manager.checkStatusByCredentialId("some-cred", StatusListId("unknown-list"))
         }
@@ -315,7 +315,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `checkStatusByCredentialId fails closed for an unassigned credential`() = runBlocking {
+    fun `checkStatusByCredentialId fails closed for an unassigned credential`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -327,7 +327,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `assignCredentialIndex rejects an explicit out-of-range index`() = runBlocking {
+    fun `assignCredentialIndex rejects an explicit out-of-range index`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -347,7 +347,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `assignCredentialIndex auto-assigns sequential indices`() = runBlocking {
+    fun `assignCredentialIndex auto-assigns sequential indices`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -363,7 +363,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `assignCredentialIndex is idempotent for the same credential`() = runBlocking {
+    fun `assignCredentialIndex is idempotent for the same credential`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -374,7 +374,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `auto index assignment retries past an index claimed by a concurrent writer`() = runBlocking {
+    fun `auto index assignment retries past an index claimed by a concurrent writer`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -397,7 +397,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `getCredentialIndex returns null for unassigned credential`() = runBlocking {
+    fun `getCredentialIndex returns null for unassigned credential`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -411,7 +411,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `revokeCredential sets the bit and checkStatusByCredentialId returns revoked`() = runBlocking {
+    fun `revokeCredential sets the bit and checkStatusByCredentialId returns revoked`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -430,7 +430,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `unrevokeCredential clears the revocation bit`() = runBlocking {
+    fun `unrevokeCredential clears the revocation bit`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -444,7 +444,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `revokeCredentials batch revokes all provided credentials`() = runBlocking {
+    fun `revokeCredentials batch revokes all provided credentials`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -468,7 +468,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `suspendCredential sets the bit on a suspension-purpose list`() = runBlocking {
+    fun `suspendCredential sets the bit on a suspension-purpose list`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.SUSPENSION
@@ -486,7 +486,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `status checks use the stored bits_per_entry not the reading manager's constructor value`() = runBlocking {
+    fun `status checks use the stored bits_per_entry not the reading manager's constructor value`() = runBlocking<Unit> {
         // Manager A creates and writes a 2-bits-per-entry list (entry n: bit 2n = revoked,
         // bit 2n+1 = suspended).
         val managerA = BitstringStatusListManagerFactory.create(
@@ -529,7 +529,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `buildStatusListVc without configured signer fails closed with ConfigException`() = runBlocking {
+    fun `buildStatusListVc without configured signer fails closed with ConfigException`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -544,7 +544,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListVc signs via the configured proof engine with the issuer's key`() = runBlocking {
+    fun `buildStatusListVc signs via the configured proof engine with the issuer's key`() = runBlocking<Unit> {
         val engine = RecordingProofEngine()
         val signing = signingManager(engine)
 
@@ -631,7 +631,7 @@ class BitstringStatusListManagerTest {
         }
 
     @Test
-    fun `buildStatusListVc refuses to sign when the configured key belongs to a different DID`() = runBlocking {
+    fun `buildStatusListVc refuses to sign when the configured key belongs to a different DID`() = runBlocking<Unit> {
         val engine = RecordingProofEngine()
         val signing = signingManager(
             engine,
@@ -648,7 +648,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListVc rejects a signed VC whose issuer does not match the status list issuer`() = runBlocking {
+    fun `buildStatusListVc rejects a signed VC whose issuer does not match the status list issuer`() = runBlocking<Unit> {
         // Misbehaving engine: ignores the requested issuer and signs as someone else.
         val engine = RecordingProofEngine(
             issuerOverride = Issuer.from("did:key:z6MkRogueIssuer")
@@ -686,7 +686,7 @@ class BitstringStatusListManagerTest {
      * undefined term, so the last assertion fails.
      */
     @Test
-    fun `buildStatusListVc signs a real VC under the VC 2_0 context via the production proof engine`() = runBlocking {
+    fun `buildStatusListVc signs a real VC under the VC 2_0 context via the production proof engine`() = runBlocking<Unit> {
         // 1. Provision a real Ed25519 issuer key via the testkit KMS + DidKeyMockMethod.
         //    DidKeyMockMethod stores the DID document in-memory and can resolve it later.
         val realKms = InMemoryKeyManagementService()
@@ -782,7 +782,7 @@ class BitstringStatusListManagerTest {
      * breaks the signature.
      */
     @Test
-    fun `tampering encodedList breaks the real proof - revocation data is signed`() = runBlocking {
+    fun `tampering encodedList breaks the real proof - revocation data is signed`() = runBlocking<Unit> {
         // 1-4. Provision a real Ed25519 issuer + the production VcLdProofEngine.
         val realKms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(realKms)
@@ -881,7 +881,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `factory accepts a valid https baseUrl and yields baseUrl-prefixed subject id`() = runBlocking {
+    fun `factory accepts a valid https baseUrl and yields baseUrl-prefixed subject id`() = runBlocking<Unit> {
         val engine = RecordingProofEngine()
         val signing = signingManager(engine, baseUrl = "https://issuer.example.com/status")
 
@@ -903,7 +903,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getStatusListStatistics reflects revokedCount correctly`() = runBlocking {
+    fun `getStatusListStatistics reflects revokedCount correctly`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -924,7 +924,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `listStatusLists filters by issuerDid`() = runBlocking {
+    fun `listStatusLists filters by issuerDid`() = runBlocking<Unit> {
         val did1 = "did:key:issuer-list-1"
         val did2 = "did:key:issuer-list-2"
         manager.createStatusList(issuerDid = did1, purpose = StatusPurpose.REVOCATION)
@@ -936,7 +936,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `deleteStatusList removes the status list`() = runBlocking {
+    fun `deleteStatusList removes the status list`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -950,7 +950,7 @@ class BitstringStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `expandStatusList increases the recorded size`() = runBlocking {
+    fun `expandStatusList increases the recorded size`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -968,7 +968,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `expandStatusList applied twice accumulates size`() = runBlocking {
+    fun `expandStatusList applied twice accumulates size`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -986,7 +986,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `expandStatusList preserves the multibase prefix MSB-first bit order and existing bits`() = runBlocking {
+    fun `expandStatusList preserves the multibase prefix MSB-first bit order and existing bits`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -1084,7 +1084,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `updateStatusListBatch does not lose an interleaved concurrent update`() = runBlocking {
+    fun `updateStatusListBatch does not lose an interleaved concurrent update`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -1108,7 +1108,7 @@ class BitstringStatusListManagerTest {
     }
 
     @Test
-    fun `expandStatusList does not lose an interleaved concurrent update`() = runBlocking {
+    fun `expandStatusList does not lose an interleaved concurrent update`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION

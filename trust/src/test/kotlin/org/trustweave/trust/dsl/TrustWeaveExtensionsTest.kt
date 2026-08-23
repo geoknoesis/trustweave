@@ -92,7 +92,7 @@ class TrustWeaveExtensionsTest {
     }
 
     @Test
-    fun `test createDidAndIssue`() = runBlocking {
+    fun `test createDidAndIssue`() = runBlocking<Unit> {
         val credential = trustWeave.createDidAndIssue(
             didBlock = {
                 method("key")
@@ -125,7 +125,7 @@ class TrustWeaveExtensionsTest {
     }
 
     @Test
-    fun `test createDidIssueAndStore`() = runBlocking {
+    fun `test createDidIssueAndStore`() = runBlocking<Unit> {
         val stored = trustWeave.createDidIssueAndStore(
             didBlock = {
                 method("key")
@@ -162,7 +162,7 @@ class TrustWeaveExtensionsTest {
     }
 
     @Test
-    fun `test completeWorkflow`() = runBlocking {
+    fun `test completeWorkflow`() = runBlocking<Unit> {
         val result = trustWeave.completeWorkflow(
             didBlock = {
                 method("key")
@@ -208,7 +208,7 @@ class TrustWeaveExtensionsTest {
     }
 
     @Test
-    fun `test completeWorkflow without organization`() = runBlocking {
+    fun `test completeWorkflow without organization`() = runBlocking<Unit> {
         val result = trustWeave.completeWorkflow(
             didBlock = {
                 method("key")
@@ -243,7 +243,7 @@ class TrustWeaveExtensionsTest {
     }
 
     @Test
-    fun `test createDidAndIssue via TrustWeave API`() = runBlocking {
+    fun `test createDidAndIssue via TrustWeave API`() = runBlocking<Unit> {
         val (issuerDid, keyId) = trustWeave.createDidWithKey { method("key") }.getOrThrow()
         val credential = trustWeave.issue {
             credential {
@@ -252,12 +252,15 @@ class TrustWeaveExtensionsTest {
                 subject { id("did:key:subject"); "name" to "Test" }
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            // "name" is an ad-hoc claim: without a @context term, JSON-LD canonicalization
+            // would drop it from the signed payload, and issuance fails closed.
+            withTestClaimContexts()
         }.getOrThrow()
         assertNotNull(credential)
     }
 
     @Test
-    fun `test createDidIssueAndStore via TrustWeave API`() = runBlocking {
+    fun `test createDidIssueAndStore via TrustWeave API`() = runBlocking<Unit> {
         val (issuerDid, keyId) = trustWeave.createDidWithKey { method("key") }.getOrThrow()
         val credential = trustWeave.issue {
             credential {
@@ -266,6 +269,9 @@ class TrustWeaveExtensionsTest {
                 subject { id("did:key:subject"); "name" to "Test" }
             }
             signedBy(issuerDid = issuerDid, keyId = keyId)
+            // "name" is an ad-hoc claim: without a @context term, JSON-LD canonicalization
+            // would drop it from the signed payload, and issuance fails closed.
+            withTestClaimContexts()
         }.getOrThrow()
         val storedId = wallet.store(credential)
         assertNotNull(storedId)

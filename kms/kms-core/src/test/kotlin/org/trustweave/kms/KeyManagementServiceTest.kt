@@ -38,7 +38,7 @@ class KeyManagementServiceTest {
     }
 
     @Test
-    fun `test KeyManagementService interface methods`() = runBlocking {
+    fun `test KeyManagementService interface methods`() = runBlocking<Unit> {
         val kms = object : KeyManagementService {
             private val keys = mutableMapOf<KeyId, KeyHandle>()
 
@@ -96,7 +96,7 @@ class KeyManagementServiceTest {
     }
 
     @Test
-    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking {
+    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking<Unit> {
         val kms = object : KeyManagementService {
             private val keys = mutableMapOf<KeyId, KeyHandle>()
 

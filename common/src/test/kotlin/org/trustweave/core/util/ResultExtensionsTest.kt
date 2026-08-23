@@ -132,7 +132,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test mapSequential succeeds when all operations succeed`() = runBlocking {
+    fun `test mapSequential succeeds when all operations succeed`() = runBlocking<Unit> {
         val items = listOf(1, 2, 3)
 
         val result = items.mapSequential { item ->
@@ -144,7 +144,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test mapSequential fails when any operation fails`() = runBlocking {
+    fun `test mapSequential fails when any operation fails`() = runBlocking<Unit> {
         val items = listOf(1, 2, 3)
 
         val result = items.mapSequential { item ->
@@ -159,7 +159,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test mapSequential with empty list`() = runBlocking {
+    fun `test mapSequential with empty list`() = runBlocking<Unit> {
         val items = emptyList<Int>()
 
         val result = items.mapSequential { item ->
@@ -247,7 +247,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching converts exceptions to TrustWeaveException`() = runBlocking {
+    fun `test trustweaveCatching converts exceptions to TrustWeaveException`() = runBlocking<Unit> {
         val result = trustweaveCatching {
             throw IllegalArgumentException("Test error")
         }
@@ -260,7 +260,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching returns success on no exception`() = runBlocking {
+    fun `test trustweaveCatching returns success on no exception`() = runBlocking<Unit> {
         val result = trustweaveCatching {
             "success"
         }
@@ -270,7 +270,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching preserves TrustWeaveException`() = runBlocking {
+    fun `test trustweaveCatching preserves TrustWeaveException`() = runBlocking<Unit> {
         val originalError = TrustWeaveException.ValidationFailed(
             field = "test",
             reason = "Invalid",
@@ -287,7 +287,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `test trustweaveCatching with suspend function`() = runBlocking {
+    fun `test trustweaveCatching with suspend function`() = runBlocking<Unit> {
         suspend fun suspendOperation(): String {
             kotlinx.coroutines.delay(10)
             return "result"
@@ -343,7 +343,7 @@ class ResultExtensionsTest {
     // ===== Cancellation guards: helpers must never capture CancellationException =====
 
     @Test
-    fun `trustweaveCatching rethrows CancellationException instead of capturing it`() = runBlocking {
+    fun `trustweaveCatching rethrows CancellationException instead of capturing it`() = runBlocking<Unit> {
         assertFailsWith<CancellationException> {
             trustweaveCatching<String> {
                 throw CancellationException("cancelled")
@@ -353,7 +353,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `trustweaveCatching rethrows timeout from enclosing withTimeout`() = runBlocking {
+    fun `trustweaveCatching rethrows timeout from enclosing withTimeout`() = runBlocking<Unit> {
         // An enclosing withTimeout cancels the body with TimeoutCancellationException;
         // capturing it in a Result would break the timeout. It must propagate.
         assertFailsWith<TimeoutCancellationException> {
@@ -368,7 +368,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `trustweaveCatching does not capture cancellation of the calling coroutine`() = runBlocking {
+    fun `trustweaveCatching does not capture cancellation of the calling coroutine`() = runBlocking<Unit> {
         var capturedCancellation = false
         val job = launch {
             val result = trustweaveCatching { delay(10_000) }
@@ -383,7 +383,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `mapSequential rethrows CancellationException from transform`() = runBlocking {
+    fun `mapSequential rethrows CancellationException from transform`() = runBlocking<Unit> {
         assertFailsWith<CancellationException> {
             listOf(1, 2, 3).mapSequential<Int, Int> {
                 throw CancellationException("cancelled")
@@ -393,7 +393,7 @@ class ResultExtensionsTest {
     }
 
     @Test
-    fun `mapSequential does not capture cancellation of the calling coroutine`() = runBlocking {
+    fun `mapSequential does not capture cancellation of the calling coroutine`() = runBlocking<Unit> {
         var capturedCancellation = false
         val job = launch {
             val result = listOf(1, 2, 3).mapSequential {

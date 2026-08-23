@@ -457,10 +457,10 @@ val TrustWeave = TrustWeave.build {
 
 ## Related Documentation
 
-- [Key Management Guide](../core-concepts/key-management.md) - Core KMS concepts
-- [Algorithm Compatibility Table](../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
+- [Key Management Guide](../../core-concepts/key-management.md) - Core KMS concepts
+- [Algorithm Compatibility Table](../../core-concepts/algorithm-compatibility-table.md) - Algorithm support comparison
 - [Key Rotation Guide](../../api-reference/advanced/key-rotation.md) - Key rotation strategies
-- [Creating Plugins Guide](../contributing/creating-plugins.md) - Custom KMS implementations
+- [Creating Plugins Guide](../../contributing/creating-plugins.md) - Custom KMS implementations
 
 ## See Also
 

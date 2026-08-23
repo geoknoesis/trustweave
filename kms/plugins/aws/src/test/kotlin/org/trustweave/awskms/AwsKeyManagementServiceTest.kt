@@ -31,7 +31,7 @@ class AwsKeyManagementServiceTest {
     }
 
     @Test
-    fun `test get supported algorithms`() = runBlocking {
+    fun `test get supported algorithms`() = runBlocking<Unit> {
         // AWS KMS does not support Ed25519 — supported set excludes it.
         val supported = AwsKeyManagementService.SUPPORTED_ALGORITHMS
 

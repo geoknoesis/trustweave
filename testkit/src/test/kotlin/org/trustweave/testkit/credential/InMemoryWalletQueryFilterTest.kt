@@ -44,7 +44,7 @@ class InMemoryWalletQueryFilterTest {
         )
 
     @Test
-    fun `byTag returns only credentials carrying the tag`() = runBlocking {
+    fun `byTag returns only credentials carrying the tag`() = runBlocking<Unit> {
         val taggedId = wallet.store(credential("cred-tagged"))
         wallet.store(credential("cred-untagged"))
         wallet.tagCredential(taggedId, setOf("important"))
@@ -55,7 +55,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `byTag with unknown tag returns empty list instead of all credentials`() = runBlocking {
+    fun `byTag with unknown tag returns empty list instead of all credentials`() = runBlocking<Unit> {
         wallet.store(credential("cred-1"))
         wallet.store(credential("cred-2"))
 
@@ -65,7 +65,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `multiple byTag calls require all tags (AND semantics)`() = runBlocking {
+    fun `multiple byTag calls require all tags (AND semantics)`() = runBlocking<Unit> {
         val bothId = wallet.store(credential("cred-both"))
         val oneId = wallet.store(credential("cred-one"))
         wallet.tagCredential(bothId, setOf("a", "b"))
@@ -80,7 +80,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `byCollection returns only credentials in the collection`() = runBlocking {
+    fun `byCollection returns only credentials in the collection`() = runBlocking<Unit> {
         val inId = wallet.store(credential("cred-in"))
         wallet.store(credential("cred-out"))
         val collectionId = wallet.createCollection("My Collection")
@@ -92,7 +92,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `byCollection with unknown collection returns empty list`() = runBlocking {
+    fun `byCollection with unknown collection returns empty list`() = runBlocking<Unit> {
         wallet.store(credential("cred-1"))
 
         val results = wallet.query { byCollection("no-such-collection") }
@@ -101,7 +101,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `byTag combines with standard predicate filters`() = runBlocking {
+    fun `byTag combines with standard predicate filters`() = runBlocking<Unit> {
         val matchId = wallet.store(credential("cred-match", type = "PersonCredential"))
         val wrongTypeId = wallet.store(credential("cred-wrong-type", type = "DegreeCredential"))
         wallet.tagCredential(matchId, setOf("important"))
@@ -116,7 +116,7 @@ class InMemoryWalletQueryFilterTest {
     }
 
     @Test
-    fun `query without tag or collection filters still returns all matches`() = runBlocking {
+    fun `query without tag or collection filters still returns all matches`() = runBlocking<Unit> {
         wallet.store(credential("cred-1"))
         wallet.store(credential("cred-2"))
 

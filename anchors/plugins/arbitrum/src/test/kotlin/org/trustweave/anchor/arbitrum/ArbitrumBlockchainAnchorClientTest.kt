@@ -20,7 +20,7 @@ class ArbitrumBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test create client with valid chain ID`() = runBlocking {
+    fun `test create client with valid chain ID`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(ArbitrumBlockchainAnchorClient.MAINNET)
 
         // Test that we can write and read to verify chain ID is correct
@@ -30,7 +30,7 @@ class ArbitrumBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test anchor payload`() = runBlocking {
+    fun `test anchor payload`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(ArbitrumBlockchainAnchorClient.ARBITRUM_SEPOLIA)
         val payload = buildJsonObject {
             put("digest", "uABC123...")

@@ -131,6 +131,6 @@ Until the test suite is run and the report is published, conformance is **self-a
 
 ## 9. Related TrustWeave docs
 
-- [Decentralized Identifiers (DIDs) – core concepts](../../core-concepts/dids.md)
-- [trustweave-did module](../modules/trustweave-did.md)
+- [Decentralized Identifiers (DIDs) – core concepts](../core-concepts/dids.md)
+- [trustweave-did module](modules/trustweave-did.md)
 - [Migrating to DID Resolution 1.0](../releases/did-resolution-1.0-migration.md)

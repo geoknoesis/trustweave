@@ -32,8 +32,8 @@ published: false
 
 1. **Publishable conformance claims for every standard TrustWeave implements.**
    Today the codebase ships protocol implementations for the W3C VC Data
-   Model 2.0, W3C DID Core 1.1 (and DID Resolution v0.3), W3C Data Integrity
-   `Bbs2023`, W3C Bitstring Status List, IETF SD-JWT VC, IETF Token Status
+   Model 2.0, W3C DID Core 1.1 (and DID Resolution v0.3),
+   W3C Bitstring Status List, IETF SD-JWT VC, IETF Token Status
    List, ISO/IEC 18013-5 mdoc/mDL, OpenID4VCI, OpenID4VP (incl. HAIP),
    SIOPv2, DIF Presentation Exchange v2, OpenID Federation 1.0, and the
    EUDI Wallet ARF (EU PID + profile overlays). Each of these has a
@@ -91,7 +91,7 @@ published: false
 | 9 | HAIP profile (high-assurance interop profile) | Internal validators in `credentials/plugins/oidc4vp` cross-checked against [EUDI Ref Wallet](https://github.com/eu-digital-identity-wallet) | `credentials/plugins/oidc4vp`, `credentials/plugins/eudiw` | Interop | 3 | P1 |
 | 10 | ISO/IEC 18013-5 mdoc/mDL | Vendor test vectors (ISO does not publish a public open-source suite; we use the ISO Annex D + state-DMV test vectors that have been shared) | `credentials/plugins/mdl` | Manual / vector-based | 4 | P1 |
 | 11 | SD-JWT VC + Token Status List (IETF) | [`oauth-selective-disclosure-jwt`](https://github.com/oauth-wg/oauth-selective-disclosure-jwt) test vectors + draft Token Status List vectors | `credentials/credential-api` (sd-jwt engine), `credentials/credential-api` status-list code | Vector-based | 2 | P1 |
-| 12 | Data Integrity `Bbs2023` | [`w3c/vc-di-bbs-test-suite`](https://github.com/w3c/vc-di-bbs) | `credentials/plugins/bbs` | Automated (self-host) | 2 | P1 |
+| 12 | Data Integrity `Bbs2023` | [`w3c/vc-di-bbs-test-suite`](https://github.com/w3c/vc-di-bbs) | _no implementation_ | **Deferred** — see §5.11 | — | — |
 | 13 | Bitstring Status List | [`w3c/vc-bitstring-status-list-test-suite`](https://github.com/w3c/vc-bitstring-status-list) | `credentials/credential-api` status-list code | Automated (self-host) | 1 | P1 |
 | 14 | OpenID Federation 1.0 | [OIDF federation interop fixtures](https://openid.net/wg/connect/) (no certified suite yet; community fixtures in [`openid/federation`](https://github.com/openid/federation)) | `credentials/plugins/openid-federation` | Vector-based + interop | 3 | P2 |
 | 15 | EUDI Wallet ARF — LSP track | POTENTIAL, EWC, NOBID — schedule-driven interop events | `credentials/plugins/eudiw` | Interop (event-based) | n/a (institutional) | P2 |
@@ -119,7 +119,6 @@ large vector downloads:
 :credentials:credential-api:conformanceTestVcDataModel20
 :credentials:credential-api:conformanceTestSdJwtVc
 :credentials:credential-api:conformanceTestBitstringStatusList
-:credentials:plugins:bbs:conformanceTestDataIntegrityBbs
 :credentials:plugins:oidc4vci:conformanceTestOidf
 :credentials:plugins:oidc4vp:conformanceTestOidf
 :credentials:plugins:oidc4vp:conformanceTestHaip
@@ -162,7 +161,6 @@ Two new workflows live in `.github/workflows/`:
   | `credentials/plugins/oidc4vp/**` | OIDF OID4VP, HAIP |
   | `credentials/plugins/siop/**` | OIDF SIOPv2 |
   | `credentials/plugins/presentation-exchange/**` | DIF PE v2 |
-  | `credentials/plugins/bbs/**` | DI-Bbs2023 |
   | `credentials/plugins/mdl/**` | ISO 18013-5 vectors |
   | `credentials/plugins/eudiw/**` | EBSI conformance (read-only mode), ARF profile |
   | `credentials/plugins/openid-federation/**` | OpenID Federation |
@@ -406,18 +404,19 @@ intentionally compact; the full how-to lives in the relevant
   `docs/conformance/token-status-list/`.
 - **Estimated wire-up cost.** 2 engineer-days combined.
 
-### 5.11 Data Integrity `Bbs2023` — P1
+### 5.11 Data Integrity `Bbs2023` — deferred, no implementation
 
-- **Description.** W3C VC-WG test suite for the BBS+ Data Integrity
-  cryptosuite (`Bbs2023`).
-- **Setup.** Clone `w3c/vc-di-bbs-test-suite`; provide a TrustWeave
-  implementation entry pointing at a local Ktor server backed by
-  `credentials/plugins/bbs`.
-- **Gradle/CI.**
-  `:credentials:plugins:bbs:conformanceTestDataIntegrityBbs`.
-- **Frequency.** Per PR + nightly.
-- **Report destination.** `docs/conformance/vc-di-bbs2023/`.
-- **Estimated wire-up cost.** 2 engineer-days.
+- **Status.** Not scheduled. `ProofSuiteId.BBS_2023` is a recognised
+  identifier with no engine behind it, so there is nothing to certify.
+  The plugin that once served it was an HMAC emulation that signed with the
+  *public* key — forgeable by anyone holding it — and was removed rather
+  than left behind a feature flag.
+- **Blocker.** No maintained BBS+ signature library for the JVM. A
+  placeholder is worse than nothing for a signature scheme.
+- **Prerequisite for scheduling.** A real BBS+ implementation lands under
+  `credentials/plugins/`, registered through `ProofEngineProvider`. Until
+  then this suite stays out of the CI matrix — running it would report
+  failures against a component that does not exist.
 
 ### 5.12 Bitstring Status List — P1
 
@@ -616,7 +615,7 @@ cost, which is why it's the immediate priority.
 | OIDF conformance suite changes underneath us. | High | Medium | Pin suite revisions in `libs.versions.toml`; track OIDF working-group changelog; subscribe to OIDF announcement list. |
 | OIDF certification requires a publicly reachable endpoint with TLS. | High | Low (cost) | Stand up a small CI-only endpoint with a free TLS cert; budget for hosting. |
 | EBSI conformance requires test-network credentials, free but rate-limited. | High | Medium | Run EBSI full suite only nightly; offline subset on PRs. Escalate to EBSI support if rate-limit blocks releases. |
-| W3C VC 2.0 + DI Bbs2023 suites are still moving targets (REC not yet ratified at time of writing). | High | Medium | Pin suite revisions; treat failures introduced by upstream churn as amber, not red, until the upstream suite stabilizes. |
+| W3C VC 2.0 suite is still a moving target (REC not yet ratified at time of writing). | High | Medium | Pin suite revisions; treat failures introduced by upstream churn as amber, not red, until the upstream suite stabilizes. |
 | ISO 18013-5 conformance has no public open-source suite — partner access required. | Medium | High | Engage state DMV programs and ISO-aligned vendors for vector access; document what we cannot run. |
 | LSP participation requires institutional sponsorship, not just engineering. | Certain | High | Flag as non-engineering blocker for product leadership; do not attempt to absorb into the engineering plan. |
 | HAIP profile drift — the EUDI Reference Wallet updates faster than HAIP itself. | Medium | Medium | Pin Ref Wallet commit; review monthly. |

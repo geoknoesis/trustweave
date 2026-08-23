@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
 class TrustWeaveProductionApiContractTest {
 
     @Test
-    fun `issue returns AdapterNotReady when credential service is null`() = runBlocking {
+    fun `issue returns AdapterNotReady when credential service is null`() = runBlocking<Unit> {
         val tw = trustWeaveWithoutCredentialService()
         val result = tw.issue { }
         assertIs<IssuanceResult.Failure.AdapterNotReady>(result)
@@ -39,7 +39,7 @@ class TrustWeaveProductionApiContractTest {
     }
 
     @Test
-    fun `presentationResult returns AdapterNotReady when credential service is null`() = runBlocking {
+    fun `presentationResult returns AdapterNotReady when credential service is null`() = runBlocking<Unit> {
         val tw = trustWeaveWithoutCredentialService()
         val result = tw.presentationResult { }
         assertIs<PresentationResult.Failure.AdapterNotReady>(result)
@@ -47,7 +47,7 @@ class TrustWeaveProductionApiContractTest {
     }
 
     @Test
-    fun presentationResultGetOrThrowThrowsInvalidStateWhenAdapterNotReady() = runBlocking {
+    fun presentationResultGetOrThrowThrowsInvalidStateWhenAdapterNotReady() = runBlocking<Unit> {
         val tw = trustWeaveWithoutCredentialService()
         val ex = assertFailsWith<TrustWeaveException.InvalidState> {
             tw.presentationResult { }.getOrThrow()
@@ -56,7 +56,7 @@ class TrustWeaveProductionApiContractTest {
     }
 
     @Test
-    fun `presentationResult returns InvalidRequest when holder missing`() = runBlocking {
+    fun `presentationResult returns InvalidRequest when holder missing`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
             when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
@@ -104,7 +104,7 @@ class TrustWeaveProductionApiContractTest {
     }
 
     @Test
-    fun `issueBatch emits AdapterNotReady for each request when service missing`() = runBlocking {
+    fun `issueBatch emits AdapterNotReady for each request when service missing`() = runBlocking<Unit> {
         val tw = trustWeaveWithoutCredentialService()
         val results = tw.issueBatch {
             requests = listOf({ }, { })
@@ -115,7 +115,7 @@ class TrustWeaveProductionApiContractTest {
     }
 
     @Test
-    fun `verifyBatch emits AdapterNotReady for each credential when service missing`() = runBlocking {
+    fun `verifyBatch emits AdapterNotReady for each credential when service missing`() = runBlocking<Unit> {
         val tw = trustWeaveWithoutCredentialService()
         val c = kotlinx.datetime.Clock.System.now()
         val minimal = org.trustweave.credential.model.vc.VerifiableCredential(

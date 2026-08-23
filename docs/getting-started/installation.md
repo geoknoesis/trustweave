@@ -86,7 +86,7 @@ dependencies {
 }
 ```
 
-> **Note:** `distribution-all` includes all core modules, DID support, KMS abstractions, anchoring, and DSLs. For production, you may want to use individual modules to minimize bundle size. See [Module Architecture](../../api-reference/modules/core-modules.md) for details.
+> **Note:** `distribution-all` includes all core modules, DID support, KMS abstractions, anchoring, and DSLs. For production, you may want to use individual modules to minimize bundle size. See [Module Architecture](../api-reference/modules/core-modules.md) for details.
 
 **Result:** Gradle resolves the full TrustWeave BOM plus kotlinx libraries so you can compile the sample code in this guide.
 
@@ -158,7 +158,7 @@ dependencies {
 
 > **Note:** For getting started, use `distribution-all` instead. Only use individual modules if you need to minimize bundle size in production.
 
-**Result:** You get the same APIs with a smaller bundle size. See [Module Architecture](../../api-reference/modules/core-modules.md) for details on available modules.
+**Result:** You get the same APIs with a smaller bundle size. See [Module Architecture](../api-reference/modules/core-modules.md) for details on available modules.
 
 ## Repository Configuration
 

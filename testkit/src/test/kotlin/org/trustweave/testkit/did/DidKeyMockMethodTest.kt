@@ -33,7 +33,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test create DID with default algorithm`() = runBlocking {
+    fun `test create DID with default algorithm`() = runBlocking<Unit> {
         val document = didMethod.createDid()
 
         assertNotNull(document)
@@ -46,7 +46,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test create DID with Ed25519 algorithm`() = runBlocking {
+    fun `test create DID with Ed25519 algorithm`() = runBlocking<Unit> {
         val document = didMethod.createDid()
 
         assertNotNull(document)
@@ -54,7 +54,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test create DID with Secp256k1 algorithm`() = runBlocking {
+    fun `test create DID with Secp256k1 algorithm`() = runBlocking<Unit> {
         val document = didMethod.createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.SECP256K1
@@ -66,7 +66,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test create DID with fallback algorithm`() = runBlocking {
+    fun `test create DID with fallback algorithm`() = runBlocking<Unit> {
         val document = didMethod.createDid(
             didCreationOptions {
                 algorithm = KeyAlgorithm.P256
@@ -78,7 +78,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test resolve DID after creation`() = runBlocking {
+    fun `test resolve DID after creation`() = runBlocking<Unit> {
         val document = didMethod.createDid()
         val did = document.id
 
@@ -94,7 +94,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test resolve non-existent DID`() = runBlocking {
+    fun `test resolve non-existent DID`() = runBlocking<Unit> {
         val result = didMethod.resolveDid(org.trustweave.did.identifiers.Did("did:key:zNonexistent"))
 
         assertNull((result as? DidResolutionResult.Success)?.document)
@@ -102,7 +102,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test update DID`() = runBlocking {
+    fun `test update DID`() = runBlocking<Unit> {
         val document = didMethod.createDid()
         val did = document.id
 
@@ -125,14 +125,14 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test update non-existent DID throws exception`() = runBlocking {
+    fun `test update non-existent DID throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalArgumentException> {
             didMethod.updateDid(org.trustweave.did.identifiers.Did("did:key:zNonexistent")) { it }
         }
     }
 
     @Test
-    fun `test deactivate DID`() = runBlocking {
+    fun `test deactivate DID`() = runBlocking<Unit> {
         val document = didMethod.createDid()
         val did = document.id
 
@@ -144,14 +144,14 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test deactivate non-existent DID`() = runBlocking {
+    fun `test deactivate non-existent DID`() = runBlocking<Unit> {
         val result = didMethod.deactivateDid(org.trustweave.did.identifiers.Did("did:key:zNonexistent"))
 
         assertFalse(result)
     }
 
     @Test
-    fun `test clear all DIDs`() = runBlocking {
+    fun `test clear all DIDs`() = runBlocking<Unit> {
         val doc1 = didMethod.createDid()
         val doc2 = didMethod.createDid()
 
@@ -162,7 +162,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test verification method controller matches DID`() = runBlocking {
+    fun `test verification method controller matches DID`() = runBlocking<Unit> {
         val document = didMethod.createDid()
 
         document.verificationMethod.forEach { vm ->
@@ -171,7 +171,7 @@ class DidKeyMockMethodTest {
     }
 
     @Test
-    fun `test verification method ID format`() = runBlocking {
+    fun `test verification method ID format`() = runBlocking<Unit> {
         val document = didMethod.createDid()
 
         document.verificationMethod.forEach { vm ->

@@ -1445,8 +1445,8 @@ val trustWeave = TrustWeave.build {
 
 ## Related Documentation
 
-- [Error Handling](../advanced/error-handling.md) - Detailed error handling patterns
-- [Plugin Lifecycle](../advanced/plugin-lifecycle.md) - Plugin lifecycle management
+- [Error Handling](advanced/error-handling.md) - Detailed error handling patterns
+- [Plugin Lifecycle](advanced/plugin-lifecycle.md) - Plugin lifecycle management
 - [Wallet API](wallet-api.md) - Wallet operations reference
 - [Credential Service API](credential-service-api.md) - Credential service SPI
 - [DIDs Core Concept](../core-concepts/dids.md) - DID concepts and usage

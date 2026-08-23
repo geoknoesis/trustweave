@@ -6,13 +6,14 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class WaltIdKeyMethodTest {
 
     @Test
-    fun createDid_shouldCreateDidKeyDocument() = runBlocking {
+    fun createDid_shouldCreateDidKeyDocument() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdKeyMethod(kms)
 
@@ -25,7 +26,7 @@ class WaltIdKeyMethodTest {
     }
 
     @Test
-    fun resolveDid_shouldReturnCreatedDocument() = runBlocking {
+    fun resolveDid_shouldReturnCreatedDocument() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdKeyMethod(kms)
         val document = method.createDid()
@@ -39,7 +40,7 @@ class WaltIdKeyMethodTest {
     }
 
     @Test
-    fun updateDid_shouldModifyDocument() = runBlocking {
+    fun updateDid_shouldModifyDocument() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdKeyMethod(kms)
         val document = method.createDid()
@@ -52,7 +53,7 @@ class WaltIdKeyMethodTest {
     }
 
     @Test
-    fun deactivateDid_shouldRemoveDocument() = runBlocking {
+    fun deactivateDid_shouldRemoveDocument() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdKeyMethod(kms)
         val document = method.createDid()
@@ -68,7 +69,7 @@ class WaltIdKeyMethodTest {
 class WaltIdWebMethodTest {
 
     @Test
-    fun createDid_shouldCreateDidWebDocument() = runBlocking {
+    fun createDid_shouldCreateDidWebDocument() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdWebMethod(kms)
 
@@ -84,16 +85,20 @@ class WaltIdWebMethodTest {
     }
 
     @Test
-    fun createDid_shouldRequireDomainOption() = runBlocking {
+    fun createDid_shouldRequireDomainOption() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val method = WaltIdWebMethod(kms)
 
-        try {
+        // WaltIdWebMethod wraps every createDid failure in TrustWeaveException.Unknown,
+        // so that — not the raw IllegalArgumentException — is what callers observe.
+        val error = assertFailsWith<org.trustweave.core.exception.TrustWeaveException.Unknown> {
             method.createDid()
-            assert(false) { "Should have thrown IllegalArgumentException" }
-        } catch (e: IllegalArgumentException) {
-            assertNotNull(e.message)
         }
+        assertTrue(
+            error.message.orEmpty().contains("domain"),
+            "The failure must name the missing 'domain' option, got: ${error.message}",
+        )
+        assertTrue(error.cause is IllegalArgumentException, "cause: ${error.cause}")
     }
 }
 

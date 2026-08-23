@@ -32,7 +32,7 @@ import kotlinx.datetime.Clock
 class TrustRegistryDslComprehensiveTest {
 
     @Test
-    fun `test trust registry configuration in TrustWeave`() = runBlocking {
+    fun `test trust registry configuration in TrustWeave`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -48,7 +48,7 @@ class TrustRegistryDslComprehensiveTest {
     }
 
     @Test
-    fun `test add multiple trust anchors with different credential types`() = runBlocking {
+    fun `test add multiple trust anchors with different credential types`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -88,7 +88,7 @@ class TrustRegistryDslComprehensiveTest {
     }
 
     @Test
-    fun `test trust path discovery with multiple anchors`() = runBlocking {
+    fun `test trust path discovery with multiple anchors`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -136,7 +136,7 @@ class TrustRegistryDslComprehensiveTest {
     }
 
     @Test
-    fun `test get trusted issuers with filtering`() = runBlocking {
+    fun `test get trusted issuers with filtering`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -190,7 +190,7 @@ class TrustRegistryDslComprehensiveTest {
     }
 
     @Test
-    fun `test remove trust anchor via DSL`() = runBlocking {
+    fun `test remove trust anchor via DSL`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -254,7 +254,7 @@ class TrustRegistryDslComprehensiveTest {
     }
 
     @Test
-    fun `test trust registry with credential verification integration`() = runBlocking {
+    fun `test trust registry with credential verification integration`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         
         val trustWeave = createTrustWeaveWithCredentialService(kms)

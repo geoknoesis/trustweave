@@ -14,7 +14,7 @@ Many components implemented for DIDComm are reusable across other protocols (OID
 
 > **TODO (audit 2026-05):** Locations below are aspirational. As of this audit:
 >
-> - `KeyEncryption`, `LocalKeyStore`, `MessageEncryption`, `EncryptionKeyManager`, `KeyRotationPolicy`/`KeyRotationManager`, `ReplicationManager`, `*MessageStorage`, `EncryptedFileLocalKeyStore`, `HybridKmsSecretResolver`, `KmsSecretResolver` all live under `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/...` — **not** in `credential-core`.
+> - `KeyEncryption`, `LocalKeyStore`, `MessageEncryption`, `EncryptionKeyManager`, `KeyRotationPolicy`/`KeyRotationManager`, `ReplicationManager`, `*MessageStorage`, `EncryptedFileLocalKeyStore`, `HybridKmsSecretResolver`, `KmsSecretResolver` all live under `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/...` — **not** in `credential-api`.
 > - The `ProtocolMessage` / generic `ProtocolMessageStorage<T>` / generic `PostgresMessageStorage<T>` / `S3MessageArchiver` / `PostgresFullTextSearch` / `PostgresMessageAnalytics` types referenced below **do not currently exist** in the codebase. The DIDComm-specific equivalents (`DidCommMessage`, `DidCommMessageStorage`, `PostgresDidCommMessageStorage`, `MongoDidCommMessageStorage`) do exist.
 > - Treat the rest of this document as a *design proposal* for cross-protocol abstraction, not a description of the current API.
 
@@ -22,7 +22,7 @@ Many components implemented for DIDComm are reusable across other protocols (OID
 
 ### 1. Encryption & Key Management
 
-**Location**: `credentials/credential-core/src/main/kotlin/org.trustweave/credential/`
+**Location**: `credentials/credential-api/src/main/kotlin/org.trustweave/credential/`
 
 #### KeyEncryption (`crypto/secret/encryption/KeyEncryption.kt`)
 - **Reusable**: ✅ Yes - Generic AES-256-GCM encryption
@@ -320,5 +320,5 @@ archiver.archiveMessages(policy)
 
 ❌ **3 Protocol-Specific**: DIDComm message models, packing, crypto adapters
 
-All reusable components are now in `credentials/credential-core` and can be used by any protocol!
+All reusable components are now in `credentials/credential-api` and can be used by any protocol!
 

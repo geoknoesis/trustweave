@@ -17,7 +17,7 @@ class BaseBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test create client with valid chain ID`() = runBlocking {
+    fun `test create client with valid chain ID`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(BaseBlockchainAnchorClient.MAINNET)
 
         // Test that we can write and read to verify chain ID is correct
@@ -27,7 +27,7 @@ class BaseBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test anchor payload`() = runBlocking {
+    fun `test anchor payload`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(BaseBlockchainAnchorClient.BASE_SEPOLIA)
         val payload = buildJsonObject {
             put("digest", "uABC123...")

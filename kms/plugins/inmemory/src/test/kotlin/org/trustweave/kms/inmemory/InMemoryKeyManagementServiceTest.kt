@@ -47,7 +47,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test getSupportedAlgorithms returns all supported algorithms`() = runBlocking {
+    fun `test getSupportedAlgorithms returns all supported algorithms`() = runBlocking<Unit> {
         val supported = kms.getSupportedAlgorithms()
 
         assertTrue(supported.contains(Algorithm.Ed25519))
@@ -62,7 +62,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with Ed25519`() = runBlocking {
+    fun `test generateKey with Ed25519`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.Ed25519)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -77,7 +77,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with secp256k1`() = runBlocking {
+    fun `test generateKey with secp256k1`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.Secp256k1)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -90,7 +90,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with P-256`() = runBlocking {
+    fun `test generateKey with P-256`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.P256)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -103,7 +103,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with P-384`() = runBlocking {
+    fun `test generateKey with P-384`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.P384)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -113,7 +113,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with P-521`() = runBlocking {
+    fun `test generateKey with P-521`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.P521)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -123,7 +123,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with RSA-2048`() = runBlocking {
+    fun `test generateKey with RSA-2048`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.RSA.RSA_2048)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -137,7 +137,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with RSA-3072`() = runBlocking {
+    fun `test generateKey with RSA-3072`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.RSA.RSA_3072)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -146,7 +146,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with RSA-4096`() = runBlocking {
+    fun `test generateKey with RSA-4096`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.RSA.RSA_4096)
 
         assertTrue(result is GenerateKeyResult.Success)
@@ -155,7 +155,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey with custom keyId`() = runBlocking {
+    fun `test generateKey with custom keyId`() = runBlocking<Unit> {
         val customKeyId = "my-custom-key-123"
         val result = kms.generateKey(
             Algorithm.Ed25519,
@@ -167,7 +167,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey rejects duplicate keyId`() = runBlocking {
+    fun `test generateKey rejects duplicate keyId`() = runBlocking<Unit> {
         val keyId = "duplicate-key"
         val firstResult = kms.generateKey(
             Algorithm.Ed25519,
@@ -185,7 +185,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey rejects invalid keyId - too long`() = runBlocking {
+    fun `test generateKey rejects invalid keyId - too long`() = runBlocking<Unit> {
         val longKeyId = "a".repeat(300) // Exceeds 256 character limit
         val result = kms.generateKey(
             Algorithm.Ed25519,
@@ -197,7 +197,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey rejects invalid keyId - blank`() = runBlocking {
+    fun `test generateKey rejects invalid keyId - blank`() = runBlocking<Unit> {
         val result = kms.generateKey(
             Algorithm.Ed25519,
             mapOf(KmsOptionKeys.KEY_ID to "   ")
@@ -208,7 +208,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generateKey rejects unsupported algorithm`() = runBlocking {
+    fun `test generateKey rejects unsupported algorithm`() = runBlocking<Unit> {
         val unsupported = Algorithm.Custom("UnsupportedAlg")
         val result = kms.generateKey(unsupported)
 
@@ -218,7 +218,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test getPublicKey retrieves existing key`() = runBlocking {
+    fun `test getPublicKey retrieves existing key`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -232,7 +232,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test getPublicKey returns KeyNotFound for non-existent key`() = runBlocking {
+    fun `test getPublicKey returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
         val nonExistentKeyId = KeyId("non-existent-key")
 
         val result = kms.getPublicKey(nonExistentKeyId)
@@ -242,7 +242,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign signs data successfully`() = runBlocking {
+    fun `test sign signs data successfully`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -256,7 +256,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign with different algorithms`() = runBlocking {
+    fun `test sign with different algorithms`() = runBlocking<Unit> {
         val algorithms = listOf(
             Algorithm.Ed25519,
             Algorithm.Secp256k1,
@@ -285,7 +285,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign rejects empty data`() = runBlocking {
+    fun `test sign rejects empty data`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -297,7 +297,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign rejects data exceeding size limit`() = runBlocking {
+    fun `test sign rejects data exceeding size limit`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -310,7 +310,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign returns KeyNotFound for non-existent key`() = runBlocking {
+    fun `test sign returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
         val nonExistentKeyId = KeyId("non-existent-key")
         val data = "test".toByteArray()
 
@@ -321,7 +321,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign with algorithm compatibility check`() = runBlocking {
+    fun `test sign with algorithm compatibility check`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -335,7 +335,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test deleteKey deletes existing key`() = runBlocking {
+    fun `test deleteKey deletes existing key`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -350,7 +350,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test deleteKey returns NotFound for non-existent key`() = runBlocking {
+    fun `test deleteKey returns NotFound for non-existent key`() = runBlocking<Unit> {
         val nonExistentKeyId = KeyId("non-existent-key")
 
         val result = kms.deleteKey(nonExistentKeyId)
@@ -359,7 +359,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test deleteKey is idempotent`() = runBlocking {
+    fun `test deleteKey is idempotent`() = runBlocking<Unit> {
         val generateResult = kms.generateKey(Algorithm.Ed25519)
         assertTrue(generateResult is GenerateKeyResult.Success)
         val keyId = generateResult.keyHandle.id
@@ -372,7 +372,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test multiple keys can coexist`() = runBlocking {
+    fun `test multiple keys can coexist`() = runBlocking<Unit> {
         val key1Result = kms.generateKey(Algorithm.Ed25519)
         val key2Result = kms.generateKey(Algorithm.P256)
         val key3Result = kms.generateKey(Algorithm.RSA.RSA_2048)
@@ -386,7 +386,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test thread safety with concurrent operations`() = runBlocking {
+    fun `test thread safety with concurrent operations`() = runBlocking<Unit> {
         val keys = mutableListOf<KeyId>()
         
         // Generate multiple keys concurrently
@@ -419,7 +419,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test JWK format for EC keys`() = runBlocking {
+    fun `test JWK format for EC keys`() = runBlocking<Unit> {
         val algorithms = listOf(Algorithm.Secp256k1, Algorithm.P256, Algorithm.P384, Algorithm.P521)
         
         for (algorithm in algorithms) {
@@ -436,7 +436,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test JWK format for RSA keys`() = runBlocking {
+    fun `test JWK format for RSA keys`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.RSA.RSA_2048)
         assertTrue(result is GenerateKeyResult.Success)
         val jwk = result.keyHandle.publicKeyJwk
@@ -448,7 +448,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test JWK format for Ed25519`() = runBlocking {
+    fun `test JWK format for Ed25519`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.Ed25519)
         assertTrue(result is GenerateKeyResult.Success)
         val jwk = result.keyHandle.publicKeyJwk
@@ -490,7 +490,7 @@ class InMemoryKeyManagementServiceProviderTest {
     }
 
     @Test
-    fun `test provider supported algorithms match service`() = runBlocking {
+    fun `test provider supported algorithms match service`() = runBlocking<Unit> {
         val provider = InMemoryKeyManagementServiceProvider()
         val kms = provider.create()
 

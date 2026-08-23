@@ -92,7 +92,7 @@ class TrustWeaveCloseTest {
     )
 
     @Test
-    fun `close closes the trust registry the factory created during build`() = runBlocking {
+    fun `close closes the trust registry the factory created during build`() = runBlocking<Unit> {
         var created: CloseableTrustRegistry? = null
         val trustWeave = TrustWeave.build {
             keys {
@@ -120,7 +120,7 @@ class TrustWeaveCloseTest {
     }
 
     @Test
-    fun `close does not close a caller-injected KMS`() = runBlocking {
+    fun `close does not close a caller-injected KMS`() = runBlocking<Unit> {
         val kms = CloseableKms()
         val trustWeave = TrustWeave.build {
             keys { custom(kms) }
@@ -189,7 +189,7 @@ class TrustWeaveCloseTest {
     }
 
     @Test
-    fun `close does not close DID methods the caller registered after construction`() = runBlocking {
+    fun `close does not close DID methods the caller registered after construction`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             keys {
                 provider("inMemory")

@@ -13,7 +13,7 @@ import kotlin.test.*
 class RetryConfigPerformanceTest {
 
     @Test
-    fun `test retry config performance with immediate success`() = runBlocking {
+    fun `test retry config performance with immediate success`() = runBlocking<Unit> {
         val config = RetryConfig.default()
         
         val startTime = System.nanoTime()
@@ -35,7 +35,7 @@ class RetryConfigPerformanceTest {
     }
 
     @Test
-    fun `test retry config performance with one retry`() = runBlocking {
+    fun `test retry config performance with one retry`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 1,
             initialDelayMs = 10,
@@ -66,7 +66,7 @@ class RetryConfigPerformanceTest {
     }
 
     @Test
-    fun `test exponential backoff timing`() = runBlocking {
+    fun `test exponential backoff timing`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 3,
             initialDelayMs = 10,

@@ -33,7 +33,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `a first-stage Deactivated verdict short-circuits and is returned unchanged`() = runBlocking {
+    fun `a first-stage Deactivated verdict short-circuits and is returned unchanged`() = runBlocking<Unit> {
         val deactivated = DidResolutionResult.Deactivated(did)
         val local = CountingResolver { deactivated }
         val methodSpecific = CountingResolver { DidResolutionResult.Success(DidDocument(id = did)) }
@@ -54,7 +54,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `a first-stage Failure still falls through to the next stage`() = runBlocking {
+    fun `a first-stage Failure still falls through to the next stage`() = runBlocking<Unit> {
         val failure = DidResolutionResult.Failure.ResolutionError(did, "local storage miss")
         val success = DidResolutionResult.Success(DidDocument(id = did))
         val local = CountingResolver { failure }
@@ -76,7 +76,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `a method-specific Deactivated verdict short-circuits before the universal resolver`() = runBlocking {
+    fun `a method-specific Deactivated verdict short-circuits before the universal resolver`() = runBlocking<Unit> {
         val deactivated = DidResolutionResult.Deactivated(did)
         val local = CountingResolver { DidResolutionResult.Failure.NotFound(did) }
         val methodSpecific = CountingResolver { deactivated }
@@ -95,7 +95,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `a stale local Success still falls through to the next stage`() = runBlocking {
+    fun `a stale local Success still falls through to the next stage`() = runBlocking<Unit> {
         // No created/updated timestamps -> isFresh() treats it as not fresh.
         val stale = DidResolutionResult.Success(DidDocument(id = did))
         val success = DidResolutionResult.Success(DidDocument(id = did))
@@ -129,7 +129,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `DecentralizedResolutionStrategy forwards options to whichever stage answers`() = runBlocking {
+    fun `DecentralizedResolutionStrategy forwards options to whichever stage answers`() = runBlocking<Unit> {
         val options = ResolutionOptions(accept = "application/did+ld+json")
         val local = RecordingOptionsResolver { DidResolutionResult.Failure.NotFound(did) }
         val methodSpecific = RecordingOptionsResolver { DidResolutionResult.Success(DidDocument(id = did)) }
@@ -153,7 +153,7 @@ class DecentralizedResolutionStrategyTest {
     }
 
     @Test
-    fun `ResolutionFallbackStrategy forwards options to every resolver it tries`() = runBlocking {
+    fun `ResolutionFallbackStrategy forwards options to every resolver it tries`() = runBlocking<Unit> {
         val options = ResolutionOptions(accept = "application/did+ld+json")
         val first = RecordingOptionsResolver { DidResolutionResult.Failure.NotFound(did) }
         val second = RecordingOptionsResolver { DidResolutionResult.Success(DidDocument(id = did)) }

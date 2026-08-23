@@ -20,7 +20,7 @@ class AzureKeyManagementServiceTest {
     }
 
     @Test
-    fun `test get supported algorithms`() = runBlocking {
+    fun `test get supported algorithms`() = runBlocking<Unit> {
         val supported = AzureKeyManagementService.SUPPORTED_ALGORITHMS
 
         assertFalse(supported.contains(Algorithm.Ed25519)) // Not supported by Azure
@@ -35,7 +35,7 @@ class AzureKeyManagementServiceTest {
     }
 
     @Test
-    fun `test unsupported algorithm Ed25519`() = runBlocking {
+    fun `test unsupported algorithm Ed25519`() = runBlocking<Unit> {
         // Note: This test would require a real Azure Key Vault or mock
         // For now, we just test that Ed25519 is not in supported algorithms
         val supported = AzureKeyManagementService.SUPPORTED_ALGORITHMS

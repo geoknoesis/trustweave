@@ -30,7 +30,7 @@ import kotlin.test.assertFailsWith
 class CredentialServicesTest {
 
     @Test
-    fun `test credentialService with didResolver only`() = runBlocking {
+    fun `test credentialService with didResolver only`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         
         val service = credentialService(didResolver = didResolver)
@@ -41,7 +41,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test credentialService with all optional parameters`() = runBlocking {
+    fun `test credentialService with all optional parameters`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val schemaRegistry = null // Schema registry can be null
         val revocationManager = null // Revocation manager can be null
@@ -56,7 +56,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test credentialService with signer function`() = runBlocking {
+    fun `test credentialService with signer function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val kms: KeyManagementService = InMemoryKeyManagementService()
         
@@ -82,7 +82,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test credentialService with signer and optional parameters`() = runBlocking {
+    fun `test credentialService with signer and optional parameters`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val kms: KeyManagementService = InMemoryKeyManagementService()
         
@@ -110,7 +110,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test createCredentialService with all formats`() = runBlocking {
+    fun `test createCredentialService with all formats`() = runBlocking<Unit> {
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didResolver = createMockDidResolver()
         
@@ -127,7 +127,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test createCredentialService with single format`() = runBlocking {
+    fun `test createCredentialService with single format`() = runBlocking<Unit> {
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didResolver = createMockDidResolver()
         
@@ -144,7 +144,7 @@ class CredentialServicesTest {
     }
 
     @Test
-    fun `test createCredentialService with unsupported format`() = runBlocking {
+    fun `test createCredentialService with unsupported format`() = runBlocking<Unit> {
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didResolver = createMockDidResolver()
         
@@ -160,7 +160,7 @@ class CredentialServicesTest {
 
 
     @Test
-    fun `test createCredentialService with KMS creates service successfully`() = runBlocking {
+    fun `test createCredentialService with KMS creates service successfully`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val kms: KeyManagementService = InMemoryKeyManagementService()
         

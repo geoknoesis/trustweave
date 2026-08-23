@@ -42,7 +42,7 @@ class EtsiSignatureValidatorTest {
     // ---------------------------------------------------------------- happy path
 
     @Test
-    fun `valid Ed25519 signature with matching policy yields TOTAL_PASSED`() = runBlocking {
+    fun `valid Ed25519 signature with matching policy yields TOTAL_PASSED`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val cert = ca.issueChainBytes(kms.publicKey(keyId), "CN=Ed25519 Signer")
 
@@ -91,7 +91,7 @@ class EtsiSignatureValidatorTest {
     // ---------------------------------------------------------------- policy-rejected algorithm
 
     @Test
-    fun `ES256 signature against EdDSA-only policy fails CRYPTO_CONSTRAINTS`() = runBlocking {
+    fun `ES256 signature against EdDSA-only policy fails CRYPTO_CONSTRAINTS`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val cert = ca.issueChainBytes(kms.publicKey(keyId), "CN=P256 Signer")
 
@@ -127,7 +127,7 @@ class EtsiSignatureValidatorTest {
     // ---------------------------------------------------------------- untrusted signer
 
     @Test
-    fun `untrusted signer fails X509_CERT_PATH`() = runBlocking {
+    fun `untrusted signer fails X509_CERT_PATH`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val cert = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
 
@@ -155,7 +155,7 @@ class EtsiSignatureValidatorTest {
     // ---------------------------------------------------------------- time-stamp required
 
     @Test
-    fun `B-B signature with policy requireTimeStamp fails TIME_STAMP_TOKEN`() = runBlocking {
+    fun `B-B signature with policy requireTimeStamp fails TIME_STAMP_TOKEN`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val cert = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
 
@@ -178,7 +178,7 @@ class EtsiSignatureValidatorTest {
     // ---------------------------------------------------------------- INDETERMINATE on malformed envelope
 
     @Test
-    fun `unparseable envelope produces TOTAL_FAILED on FORMAT_CHECK with later steps Inconclusive`() = runBlocking {
+    fun `unparseable envelope produces TOTAL_FAILED on FORMAT_CHECK with later steps Inconclusive`() = runBlocking<Unit> {
         val report = validator.validate(
             jadesSerialized = "not a JWS",
             policy = EtsiSignaturePolicy(),
@@ -191,7 +191,7 @@ class EtsiSignatureValidatorTest {
     }
 
     @Test
-    fun `withdrawn trust status surfaces INDETERMINATE when policy excludes WITHDRAWN`() = runBlocking {
+    fun `withdrawn trust status surfaces INDETERMINATE when policy excludes WITHDRAWN`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val cert = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
 
@@ -217,7 +217,7 @@ class EtsiSignatureValidatorTest {
     }
 
     @Test
-    fun `Inconclusive step surfaces INDETERMINATE final verdict`() = runBlocking {
+    fun `Inconclusive step surfaces INDETERMINATE final verdict`() = runBlocking<Unit> {
         // Construct a synthetic report manually to exercise the aggregation logic — the easiest
         // way to land an Inconclusive without a Failed in the pipeline is via the helper.
         val outcomes = linkedMapOf<EtsiValidationStep, StepOutcome>(

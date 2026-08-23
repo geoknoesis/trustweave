@@ -50,7 +50,7 @@ class IndyVdrProxyTransportTest {
     )
 
     @Test
-    fun `submit ATTRIB request returns parsed seqNo`() = runBlocking {
+    fun `submit ATTRIB request returns parsed seqNo`() = runBlocking<Unit> {
         wireMock.stubFor(
             post(urlPathEqualTo("/submit"))
                 .willReturn(

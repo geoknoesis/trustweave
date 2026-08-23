@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 class DidCommServiceTest {
 
     @Test
-    fun testBasicMessageCreation() = runBlocking {
+    fun testBasicMessageCreation() = runBlocking<Unit> {
         val message = BasicMessageProtocol.createBasicMessage(
             fromDid = "did:key:alice",
             toDid = "did:key:bob",
@@ -38,7 +38,7 @@ class DidCommServiceTest {
     }
 
     @Test
-    fun testCredentialOfferCreation() = runBlocking {
+    fun testCredentialOfferCreation() = runBlocking<Unit> {
         val preview = CredentialPreview(
             attributes = listOf(
                 CredentialAttribute(
@@ -65,7 +65,7 @@ class DidCommServiceTest {
     }
 
     @Test
-    fun testMessageStorage() = runBlocking {
+    fun testMessageStorage() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val resolveDid: suspend (String) -> DidDocument? = { didStr ->
             val did = Did(didStr)
@@ -108,7 +108,7 @@ class DidCommServiceTest {
     }
 
     @Test
-    fun testMessageThreading() = runBlocking {
+    fun testMessageThreading() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val resolveDid: suspend (String) -> DidDocument? = { didStr ->
             val did = Did(didStr)

@@ -70,7 +70,7 @@ class CachingDidResolverTest {
     // ─── Hit / miss ───
 
     @Test
-    fun `second resolve of the same DID is a cache hit`() = runBlocking {
+    fun `second resolve of the same DID is a cache hit`() = runBlocking<Unit> {
         val did = Did("did:example:hit")
         val delegate = CountingResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
@@ -83,7 +83,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `different DIDs are independent cache entries`() = runBlocking {
+    fun `different DIDs are independent cache entries`() = runBlocking<Unit> {
         val delegate = CountingResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
 
@@ -100,7 +100,7 @@ class CachingDidResolverTest {
     // ─── TTL expiry ───
 
     @Test
-    fun `entry expires after ttl and delegate is consulted again`() = runBlocking {
+    fun `entry expires after ttl and delegate is consulted again`() = runBlocking<Unit> {
         val did = Did("did:example:ttl")
         val clock = MutableClock(epoch)
         val delegate = CountingResolver { success(it) }
@@ -119,7 +119,7 @@ class CachingDidResolverTest {
     // ─── nextUpdate ───
 
     @Test
-    fun `nextUpdate earlier than ttl shortens the cache lifetime`() = runBlocking {
+    fun `nextUpdate earlier than ttl shortens the cache lifetime`() = runBlocking<Unit> {
         val did = Did("did:example:nextupdate")
         val clock = MutableClock(epoch)
         val delegate = CountingResolver { success(it, nextUpdate = clock.now() + 1.minutes) }
@@ -136,7 +136,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `nextUpdate in the past means the result is not cached`() = runBlocking {
+    fun `nextUpdate in the past means the result is not cached`() = runBlocking<Unit> {
         val did = Did("did:example:stale")
         val clock = MutableClock(epoch)
         val delegate = CountingResolver { success(it, nextUpdate = clock.now() - 1.minutes) }
@@ -150,7 +150,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `nextUpdate later than ttl does not extend the cache lifetime`() = runBlocking {
+    fun `nextUpdate later than ttl does not extend the cache lifetime`() = runBlocking<Unit> {
         val did = Did("did:example:longnext")
         val clock = MutableClock(epoch)
         val delegate = CountingResolver { success(it, nextUpdate = clock.now() + 60.minutes) }
@@ -166,7 +166,7 @@ class CachingDidResolverTest {
     // ─── Failures and deactivated documents ───
 
     @Test
-    fun `failures are never cached`() = runBlocking {
+    fun `failures are never cached`() = runBlocking<Unit> {
         val did = Did("did:example:missing")
         val delegate = CountingResolver { notFound(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
@@ -181,7 +181,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `success after a non-cached failure is cached`() = runBlocking {
+    fun `success after a non-cached failure is cached`() = runBlocking<Unit> {
         val did = Did("did:example:flaky")
         var fail = true
         val delegate = CountingResolver { if (fail) notFound(it) else success(it) }
@@ -196,7 +196,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `deactivated results are cached and served without re-hitting the delegate`() = runBlocking {
+    fun `deactivated results are cached and served without re-hitting the delegate`() = runBlocking<Unit> {
         // Deactivation is terminal (W3C DID Core §7.3), so a Deactivated result is cached
         // exactly like a Success — served from cache on the second lookup.
         val did = Did("did:example:deactivated")
@@ -213,7 +213,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `deactivated entry expires after ttl and delegate is consulted again`() = runBlocking {
+    fun `deactivated entry expires after ttl and delegate is consulted again`() = runBlocking<Unit> {
         val did = Did("did:example:deactivated-ttl")
         val clock = MutableClock(epoch)
         val delegate = CountingResolver { deactivated(it) }
@@ -232,7 +232,7 @@ class CachingDidResolverTest {
     // ─── LRU eviction ───
 
     @Test
-    fun `least recently used entry is evicted when maxSize is exceeded`() = runBlocking {
+    fun `least recently used entry is evicted when maxSize is exceeded`() = runBlocking<Unit> {
         val delegate = CountingResolver { success(it) }
         val resolver = CachingDidResolver(delegate, maxSize = 2, clock = MutableClock(epoch))
 
@@ -258,7 +258,7 @@ class CachingDidResolverTest {
     // ─── invalidate / clear ───
 
     @Test
-    fun `invalidate drops a single entry`() = runBlocking {
+    fun `invalidate drops a single entry`() = runBlocking<Unit> {
         val a = Did("did:example:a")
         val b = Did("did:example:b")
         val delegate = CountingResolver { success(it) }
@@ -276,7 +276,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `clear drops all entries`() = runBlocking {
+    fun `clear drops all entries`() = runBlocking<Unit> {
         val a = Did("did:example:a")
         val b = Did("did:example:b")
         val delegate = CountingResolver { success(it) }
@@ -323,7 +323,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `resolve with options forwards them unchanged to the delegate`() = runBlocking {
+    fun `resolve with options forwards them unchanged to the delegate`() = runBlocking<Unit> {
         val did = Did("did:example:a")
         val delegate = RecordingOptionsResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
@@ -335,7 +335,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `resolve with empty options still hits the cache`() = runBlocking {
+    fun `resolve with empty options still hits the cache`() = runBlocking<Unit> {
         val did = Did("did:example:a")
         val delegate = RecordingOptionsResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
@@ -347,7 +347,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `noCache bypasses a fresh cache entry and forces a delegate round trip`() = runBlocking {
+    fun `noCache bypasses a fresh cache entry and forces a delegate round trip`() = runBlocking<Unit> {
         val did = Did("did:example:a")
         val delegate = RecordingOptionsResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
@@ -360,7 +360,7 @@ class CachingDidResolverTest {
     }
 
     @Test
-    fun `invalid options short-circuit before touching cache or delegate`() = runBlocking {
+    fun `invalid options short-circuit before touching cache or delegate`() = runBlocking<Unit> {
         val did = Did("did:example:a")
         val delegate = RecordingOptionsResolver { success(it) }
         val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))

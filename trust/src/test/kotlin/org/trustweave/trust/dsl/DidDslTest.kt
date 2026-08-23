@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.revocation.CredentialRevocationManager
@@ -52,7 +53,7 @@ class DidDslTest {
     }
 
     @Test
-    fun `test createDid with method and algorithm`() = runBlocking {
+    fun `test createDid with method and algorithm`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -63,26 +64,34 @@ class DidDslTest {
     }
 
     @Test
-    fun `test createDid without method throws exception`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.createDid {
-                algorithm("Ed25519")
-            }
-        }
+    fun `test createDid without method falls back to the configured default`() = runBlocking<Unit> {
+        // DidBuilder resolves "explicit method, or config's default, or first registered method".
+        // This fixture configures did { method("key") }, so omitting method() must yield a did:key.
+        val did = trustWeave.createDid {
+            algorithm("Ed25519")
+        }.getOrThrowDid()
+
+        assertTrue(
+            did.value.startsWith("did:key:"),
+            "Omitting method() must fall back to the configured default, got: ${'$'}{did.value}",
+        )
     }
 
     @Test
-    fun `test createDid with unconfigured method throws exception`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.createDid {
-                method("web")
-                algorithm("Ed25519")
-            }
+    fun `test createDid with unconfigured method returns MethodNotRegistered`() = runBlocking<Unit> {
+        val result = trustWeave.createDid {
+            method("web")
+            algorithm("Ed25519")
         }
+
+        assertTrue(
+            result is DidCreationResult.Failure.MethodNotRegistered,
+            "An unconfigured method must yield MethodNotRegistered, got: $result",
+        )
     }
 
     @Test
-    fun `test createDid with custom options`() = runBlocking {
+    fun `test createDid with custom options`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -94,7 +103,7 @@ class DidDslTest {
     }
 
     @Test
-    fun `test createDid via TrustWeaveContext`() = runBlocking {
+    fun `test createDid via TrustWeaveContext`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -105,7 +114,7 @@ class DidDslTest {
     }
 
     @Test
-    fun `test createDid with different algorithms`() = runBlocking {
+    fun `test createDid with different algorithms`() = runBlocking<Unit> {
         val did1 = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -124,7 +133,7 @@ class DidDslTest {
     }
 
     @Test
-    fun `test createDid extracts DID from document`() = runBlocking {
+    fun `test createDid extracts DID from document`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")

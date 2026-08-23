@@ -24,14 +24,14 @@ import org.trustweave.did.didCreationOptions
 class DidMethodInterfaceContractTest {
 
     @Test
-    fun `test DidMethod method returns method name`() = runBlocking {
+    fun `test DidMethod method returns method name`() = runBlocking<Unit> {
         val method = createMockMethod("key")
 
         assertEquals("key", method.method)
     }
 
     @Test
-    fun `test DidMethod createDid returns DID document`() = runBlocking {
+    fun `test DidMethod createDid returns DID document`() = runBlocking<Unit> {
         val method = createMockMethod("key")
 
         val document = method.createDid()
@@ -41,7 +41,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod createDid with options`() = runBlocking {
+    fun `test DidMethod createDid with options`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val options = didCreationOptions {
             property("keyType", "Ed25519")
@@ -53,7 +53,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod resolveDid returns resolution result`() = runBlocking {
+    fun `test DidMethod resolveDid returns resolution result`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
@@ -67,7 +67,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod resolveDid returns null document for non-existent DID`() = runBlocking {
+    fun `test DidMethod resolveDid returns null document for non-existent DID`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val did = Did("did:key:nonexistent")
 
@@ -78,7 +78,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod updateDid returns updated document`() = runBlocking {
+    fun `test DidMethod updateDid returns updated document`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
@@ -98,7 +98,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod deactivateDid returns true`() = runBlocking {
+    fun `test DidMethod deactivateDid returns true`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
@@ -109,7 +109,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod deactivateDid returns false for non-existent DID`() = runBlocking {
+    fun `test DidMethod deactivateDid returns false for non-existent DID`() = runBlocking<Unit> {
         val method = createMockMethod("key")
 
         val deactivated = method.deactivateDid(Did("did:key:nonexistent"))
@@ -118,7 +118,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod createDid then resolveDid`() = runBlocking {
+    fun `test DidMethod createDid then resolveDid`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
@@ -131,7 +131,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod updateDid with empty updater`() = runBlocking {
+    fun `test DidMethod updateDid with empty updater`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id
@@ -142,7 +142,7 @@ class DidMethodInterfaceContractTest {
     }
 
     @Test
-    fun `test DidMethod updateDid adds verification method`() = runBlocking {
+    fun `test DidMethod updateDid adds verification method`() = runBlocking<Unit> {
         val method = createMockMethod("key")
         val document = method.createDid()
         val did = document.id

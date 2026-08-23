@@ -65,7 +65,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with valid DID and resolver`() = runBlocking {
+    fun `test resolveVerificationMethod with valid DID and resolver`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         val verificationMethodId = "did:key:test#key-1"
@@ -106,7 +106,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with non-DID IRI`() = runBlocking {
+    fun `test resolveVerificationMethod with non-DID IRI`() = runBlocking<Unit> {
         val issuerIri = Iri("https://example.com/issuer")
         val didResolver = object : DidResolver {
             override suspend fun resolve(did: Did): DidResolutionResult {
@@ -124,7 +124,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with null resolver`() = runBlocking {
+    fun `test resolveVerificationMethod with null resolver`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         
@@ -138,7 +138,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with DID resolution failure`() = runBlocking {
+    fun `test resolveVerificationMethod with DID resolution failure`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         
@@ -158,7 +158,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with null verification method ID uses first assertion method`() = runBlocking {
+    fun `test resolveVerificationMethod with null verification method ID uses first assertion method`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         
@@ -194,7 +194,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with null verification method ID uses first verification method if no assertion method`() = runBlocking {
+    fun `test resolveVerificationMethod with null verification method ID uses first verification method if no assertion method`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         
@@ -230,7 +230,7 @@ class ProofEngineUtilsTest {
     }
     
     @Test
-    fun `test resolveVerificationMethod with null verification method ID returns null if no methods`() = runBlocking {
+    fun `test resolveVerificationMethod with null verification method ID returns null if no methods`() = runBlocking<Unit> {
         val issuerDid = Did("did:key:test")
         val issuerIri = Iri(issuerDid.value)
         

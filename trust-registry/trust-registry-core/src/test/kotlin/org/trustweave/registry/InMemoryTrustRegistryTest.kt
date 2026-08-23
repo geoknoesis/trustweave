@@ -9,25 +9,25 @@ class InMemoryTrustRegistryTest {
     private val registry = InMemoryTrustRegistry()
 
     @Test
-    fun `getAccreditationStatus returns UNKNOWN for unregistered DID`() = runBlocking {
+    fun `getAccreditationStatus returns UNKNOWN for unregistered DID`() = runBlocking<Unit> {
         assertEquals(AccreditationStatus.UNKNOWN, registry.getAccreditationStatus("did:key:never-registered"))
     }
 
     @Test
-    fun `getAccreditationStatus returns ACTIVE for registered issuer`() = runBlocking {
+    fun `getAccreditationStatus returns ACTIVE for registered issuer`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration(did = "did:key:issuer", name = "Issuer"))
         assertEquals(AccreditationStatus.ACTIVE, registry.getAccreditationStatus("did:key:issuer"))
     }
 
     @Test
-    fun `getAccreditationStatus returns REVOKED after revocation`() = runBlocking {
+    fun `getAccreditationStatus returns REVOKED after revocation`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration(did = "did:key:revoked", name = "Revoked Issuer"))
         registry.revokeIssuer("did:key:revoked")
         assertEquals(AccreditationStatus.REVOKED, registry.getAccreditationStatus("did:key:revoked"))
     }
 
     @Test
-    fun `getAccreditationStatus returns ACTIVE for registered verifier`() = runBlocking {
+    fun `getAccreditationStatus returns ACTIVE for registered verifier`() = runBlocking<Unit> {
         registry.registerVerifier(VerifierRegistration(did = "did:key:verifier", name = "Verifier"))
         assertEquals(AccreditationStatus.ACTIVE, registry.getAccreditationStatus("did:key:verifier"))
     }

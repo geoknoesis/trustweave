@@ -19,7 +19,7 @@ class IndyBlockchainAnchorClientTest {
         mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
 
     @Test
-    fun `should create client with testnet chain ID`() = runBlocking {
+    fun `should create client with testnet chain ID`() = runBlocking<Unit> {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
             options = emptyMap()
@@ -28,7 +28,7 @@ class IndyBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should anchor payload using opt-in in-memory test mode`() = runBlocking {
+    fun `should anchor payload using opt-in in-memory test mode`() = runBlocking<Unit> {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
             options = testModeOptions
@@ -59,7 +59,7 @@ class IndyBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should read anchored payload`() = runBlocking {
+    fun `should read anchored payload`() = runBlocking<Unit> {
         val client = IndyBlockchainAnchorClient(
             chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
             options = testModeOptions
@@ -76,7 +76,7 @@ class IndyBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should handle custom chain ID`() = runBlocking {
+    fun `should handle custom chain ID`() = runBlocking<Unit> {
         val client = IndyBlockchainAnchorClient(
             chainId = "indy:testnet:custom-pool",
             options = mapOf("poolEndpoint" to "https://custom.pool.example.com") + testModeOptions

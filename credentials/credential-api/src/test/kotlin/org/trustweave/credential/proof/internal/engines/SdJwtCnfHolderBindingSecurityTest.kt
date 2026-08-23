@@ -217,7 +217,7 @@ class SdJwtCnfHolderBindingSecurityTest {
     // --- cnf at issuance --------------------------------------------------------------------
 
     @Test
-    fun `issuance embeds cnf kid bound to the holder DID`() = runBlocking {
+    fun `issuance embeds cnf kid bound to the holder DID`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
 
@@ -234,7 +234,7 @@ class SdJwtCnfHolderBindingSecurityTest {
     // --- cnf round-trip ----------------------------------------------------------------------
 
     @Test
-    fun `cnf round-trip presentation verifies without opting into enforceHolderBinding`() = runBlocking {
+    fun `cnf round-trip presentation verifies without opting into enforceHolderBinding`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(credential)
@@ -284,7 +284,7 @@ class SdJwtCnfHolderBindingSecurityTest {
         }
 
     @Test
-    fun `envelope holder differing from cnf DID is rejected even with a genuine holder kb-jwt`() = runBlocking {
+    fun `envelope holder differing from cnf DID is rejected even with a genuine holder kb-jwt`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(credential)
@@ -326,7 +326,7 @@ class SdJwtCnfHolderBindingSecurityTest {
     // --- format-agnostic cnf binding (non-SD-JWT presentation proofs) -------------------------
 
     @Test
-    fun `cnf binding is enforced for any presentation proof format via verifyCnfHolderBinding`() = runBlocking {
+    fun `cnf binding is enforced for any presentation proof format via verifyCnfHolderBinding`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
 
@@ -357,7 +357,7 @@ class SdJwtCnfHolderBindingSecurityTest {
     // --- legacy (cnf-less) fallback ----------------------------------------------------------
 
     @Test
-    fun `legacy credential without cnf keeps envelope-holder binding behaviour`() = runBlocking {
+    fun `legacy credential without cnf keeps envelope-holder binding behaviour`() = runBlocking<Unit> {
         val rig = TestRig()
         val legacyCredential = rig.issueLegacyWithoutCnf()
 

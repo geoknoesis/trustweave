@@ -44,7 +44,7 @@ class EntraTokenClientTest {
     }
 
     @Test
-    fun `posts client_credentials grant with scope`() = runBlocking {
+    fun `posts client_credentials grant with scope`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/tenant-abc/oauth2/v2.0/token"))
                 .withRequestBody(containing("grant_type=client_credentials"))
@@ -64,7 +64,7 @@ class EntraTokenClientTest {
     }
 
     @Test
-    fun `caches token across concurrent calls and only hits AAD once`() = runBlocking {
+    fun `caches token across concurrent calls and only hits AAD once`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/tenant-abc/oauth2/v2.0/token")).willReturn(
                 aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -79,7 +79,7 @@ class EntraTokenClientTest {
     }
 
     @Test
-    fun `refreshes token after it nears expiry`() = runBlocking {
+    fun `refreshes token after it nears expiry`() = runBlocking<Unit> {
         // Use a controllable clock so we can advance time past the expiry window
         val baseInstant = Instant.parse("2026-01-01T00:00:00Z")
         var nowSupplier: () -> Instant = { baseInstant }
@@ -137,7 +137,7 @@ class EntraTokenClientTest {
     }
 
     @Test
-    fun `invalidate forces fresh token request`() = runBlocking {
+    fun `invalidate forces fresh token request`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/tenant-abc/oauth2/v2.0/token")).willReturn(
                 aResponse().withStatus(200).withHeader("Content-Type", "application/json")

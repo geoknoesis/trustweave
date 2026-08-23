@@ -68,7 +68,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test getSupportedAlgorithms returns correct set`() = runBlocking {
+    fun `test getSupportedAlgorithms returns correct set`() = runBlocking<Unit> {
         val kms = createKms()
         val expected = getSupportedAlgorithms().toSet()
         val actual = kms.getSupportedAlgorithms()
@@ -83,7 +83,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test supportsAlgorithm returns true for supported algorithms`() = runBlocking {
+    fun `test supportsAlgorithm returns true for supported algorithms`() = runBlocking<Unit> {
         val kms = createKms()
         getSupportedAlgorithms().forEach { algorithm ->
             assertTrue(
@@ -94,7 +94,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test supportsAlgorithm returns false for unsupported algorithms`() = runBlocking {
+    fun `test supportsAlgorithm returns false for unsupported algorithms`() = runBlocking<Unit> {
         val kms = createKms()
         val unsupported = getUnsupportedAlgorithm()
 
@@ -107,7 +107,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test generateKey with all supported algorithms`() = runBlocking {
+    fun `test generateKey with all supported algorithms`() = runBlocking<Unit> {
         val kms = createKms()
         val supported = getSupportedAlgorithms()
 
@@ -142,7 +142,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test generateKey with unsupported algorithm returns UnsupportedAlgorithm`() = runBlocking {
+    fun `test generateKey with unsupported algorithm returns UnsupportedAlgorithm`() = runBlocking<Unit> {
         val kms = createKms()
         val unsupported = getUnsupportedAlgorithm()
 
@@ -158,7 +158,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test generateKey with custom key ID`() = runBlocking {
+    fun `test generateKey with custom key ID`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
         val customKeyId = "custom-key-${System.currentTimeMillis()}"
@@ -173,7 +173,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test getPublicKey retrieves existing key`() = runBlocking {
+    fun `test getPublicKey retrieves existing key`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 
@@ -189,7 +189,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test getPublicKey returns KeyNotFound for non-existent key`() = runBlocking {
+    fun `test getPublicKey returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
         val kms = createKms()
         val nonExistentKeyId = KeyId("non-existent-key-${System.currentTimeMillis()}")
 
@@ -202,7 +202,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test sign signs data successfully`() = runBlocking {
+    fun `test sign signs data successfully`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
         val data = "test message".toByteArray()
@@ -218,7 +218,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test sign with algorithm override`() = runBlocking {
+    fun `test sign with algorithm override`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
         val data = "test data".toByteArray()
@@ -234,7 +234,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test sign returns KeyNotFound for non-existent key`() = runBlocking {
+    fun `test sign returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
         val kms = createKms()
         val nonExistentKeyId = KeyId("non-existent-key-${System.currentTimeMillis()}")
         val data = "test data".toByteArray()
@@ -248,7 +248,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test deleteKey deletes existing key`() = runBlocking {
+    fun `test deleteKey deletes existing key`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 
@@ -271,7 +271,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test deleteKey returns NotFound for non-existent key`() = runBlocking {
+    fun `test deleteKey returns NotFound for non-existent key`() = runBlocking<Unit> {
         val kms = createKms()
         val nonExistentKeyId = KeyId("non-existent-key-${System.currentTimeMillis()}")
 
@@ -283,7 +283,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test deleteKey is idempotent`() = runBlocking {
+    fun `test deleteKey is idempotent`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 
@@ -302,7 +302,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test full key lifecycle`() = runBlocking {
+    fun `test full key lifecycle`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
         val data = "test data".toByteArray()
@@ -337,7 +337,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test generateKey with multiple keys`() = runBlocking {
+    fun `test generateKey with multiple keys`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 
@@ -359,7 +359,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test sign with different data sizes`() = runBlocking {
+    fun `test sign with different data sizes`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 
@@ -380,7 +380,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test generateKey with duplicate key ID returns InvalidOptions`() = runBlocking {
+    fun `test generateKey with duplicate key ID returns InvalidOptions`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
         val keyId = "duplicate-key-${System.currentTimeMillis()}"
@@ -403,7 +403,7 @@ abstract class KeyManagementServiceContractTest {
     }
 
     @Test
-    fun `test publicKeyJwk format is valid`() = runBlocking {
+    fun `test publicKeyJwk format is valid`() = runBlocking<Unit> {
         val kms = createKms()
         val algorithm = getSupportedAlgorithms().first()
 

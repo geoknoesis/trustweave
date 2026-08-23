@@ -18,7 +18,7 @@ import kotlin.test.*
 class DefaultUniversalResolverTest {
 
     @Test
-    fun `test URL validation for invalid baseUrl`() = runBlocking {
+    fun `test URL validation for invalid baseUrl`() = runBlocking<Unit> {
         // The constructor validates the URL and throws IllegalArgumentException or DidException.InvalidDidFormat
         val exception = assertThrows<Throwable> {
             DefaultUniversalResolver(
@@ -40,7 +40,7 @@ class DefaultUniversalResolverTest {
     }
 
     @Test
-    fun `test URL validation for blank DID`() = runBlocking {
+    fun `test URL validation for blank DID`() = runBlocking<Unit> {
         val resolver = DefaultUniversalResolver(
             baseUrl = "https://dev.uniresolver.io",
             timeout = 5
@@ -54,7 +54,7 @@ class DefaultUniversalResolverTest {
     }
 
     @Test
-    fun `test URL validation for DID not starting with did prefix`() = runBlocking {
+    fun `test URL validation for DID not starting with did prefix`() = runBlocking<Unit> {
         val resolver = DefaultUniversalResolver(
             baseUrl = "https://dev.uniresolver.io",
             timeout = 5
@@ -183,7 +183,7 @@ class DefaultUniversalResolverTest {
     }
 
     @Test
-    fun `test getSupportedMethods returns null for invalid URL`() = runBlocking {
+    fun `test getSupportedMethods returns null for invalid URL`() = runBlocking<Unit> {
         // Constructor will throw exception for invalid URL, so we can't test this scenario
         // Instead, test with a valid URL that might fail during the actual HTTP call
         // This test verifies that getSupportedMethods handles failures gracefully
@@ -257,7 +257,7 @@ class DefaultUniversalResolverTest {
     // behaviour is unchanged; only what the caller does with its output changed. ───
 
     @Test
-    fun `resolveDid surfaces a bare errorMessage as the NotFound reason`() = runBlocking {
+    fun `resolveDid surfaces a bare errorMessage as the NotFound reason`() = runBlocking<Unit> {
         val server = HttpServer.create(InetSocketAddress("localhost", 0), 0)
         try {
             val body = """{"didResolutionMetadata":{"errorMessage":"DID did:x:y does not exist"}}"""

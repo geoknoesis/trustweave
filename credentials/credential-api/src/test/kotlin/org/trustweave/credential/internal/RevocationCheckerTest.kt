@@ -30,7 +30,7 @@ import kotlin.test.assertFailsWith
 class RevocationCheckerTest {
     
     @Test
-    fun `test checkRevocationStatus with no revocation manager`() = runBlocking {
+    fun `test checkRevocationStatus with no revocation manager`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val (failure, warnings) = RevocationChecker.checkRevocationStatus(
             credential = credential,
@@ -47,7 +47,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with no credentialStatus`() = runBlocking {
+    fun `test checkRevocationStatus with no credentialStatus`() = runBlocking<Unit> {
         val credential = createTestCredential(credentialStatus = null)
         val mockManager = createMockRevocationManager(RevocationStatus(revoked = false))
         
@@ -62,7 +62,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with non-revoked credential`() = runBlocking {
+    fun `test checkRevocationStatus with non-revoked credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManager(RevocationStatus(revoked = false))
         
@@ -77,7 +77,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with revoked credential`() = runBlocking {
+    fun `test checkRevocationStatus with revoked credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManager(
             RevocationStatus(revoked = true, reason = "Credential was compromised")
@@ -96,7 +96,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with suspended credential`() = runBlocking {
+    fun `test checkRevocationStatus with suspended credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManager(
             RevocationStatus(revoked = false, suspended = true, reason = "Under review")
@@ -114,7 +114,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with timeout and FAIL_CLOSED policy`() = runBlocking {
+    fun `test checkRevocationStatus with timeout and FAIL_CLOSED policy`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(java.util.concurrent.TimeoutException("Timeout"))
         
@@ -130,7 +130,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with timeout and FAIL_OPEN policy`() = runBlocking {
+    fun `test checkRevocationStatus with timeout and FAIL_OPEN policy`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(java.util.concurrent.TimeoutException("Timeout"))
         
@@ -145,7 +145,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with timeout and FAIL_WITH_WARNING policy`() = runBlocking {
+    fun `test checkRevocationStatus with timeout and FAIL_WITH_WARNING policy`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(java.util.concurrent.TimeoutException("Timeout"))
         
@@ -162,7 +162,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with IOException and FAIL_CLOSED policy`() = runBlocking {
+    fun `test checkRevocationStatus with IOException and FAIL_CLOSED policy`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(java.io.IOException("Network error"))
         
@@ -178,7 +178,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with UnknownHostException`() = runBlocking {
+    fun `test checkRevocationStatus with UnknownHostException`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(
             java.net.UnknownHostException("host unreachable")
@@ -195,7 +195,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with ConnectException`() = runBlocking {
+    fun `test checkRevocationStatus with ConnectException`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(
             java.net.ConnectException("Connection refused")
@@ -212,7 +212,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with IllegalStateException`() = runBlocking {
+    fun `test checkRevocationStatus with IllegalStateException`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(
             IllegalStateException("Manager not initialized")
@@ -229,7 +229,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with IllegalArgumentException`() = runBlocking {
+    fun `test checkRevocationStatus with IllegalArgumentException`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(
             IllegalArgumentException("Invalid credential")
@@ -246,7 +246,7 @@ class RevocationCheckerTest {
     }
     
     @Test
-    fun `test checkRevocationStatus with generic Exception`() = runBlocking {
+    fun `test checkRevocationStatus with generic Exception`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val mockManager = createMockRevocationManagerThrowing(
             RuntimeException("Unexpected error")

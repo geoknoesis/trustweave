@@ -37,7 +37,7 @@ class XadesRoundTripTest {
     }
 
     @Test
-    fun `roundtrips an enveloped XAdES B-B signature with P-256`() = runBlocking {
+    fun `roundtrips an enveloped XAdES B-B signature with P-256`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=P256 XAdES Signer")
         val doc = parseSampleDocument()
@@ -67,7 +67,7 @@ class XadesRoundTripTest {
     }
 
     @Test
-    fun `untrusted signer resolves to UntrustedSigner`() = runBlocking {
+    fun `untrusted signer resolves to UntrustedSigner`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.P256)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Untrusted")
         val doc = parseSampleDocument()
@@ -88,7 +88,7 @@ class XadesRoundTripTest {
     }
 
     @Test
-    fun `document without ds-Signature element yields Malformed`() = runBlocking {
+    fun `document without ds-Signature element yields Malformed`() = runBlocking<Unit> {
         val result = verifier.verify(
             parseSampleDocument(),
             XadesVerificationOptions(

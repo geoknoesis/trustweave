@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 class SpatialWebExampleTest {
 
     @Test
-    fun `drone receives authorization and passes domain policy check`() = runBlocking {
+    fun `drone receives authorization and passes domain policy check`() = runBlocking<Unit> {
         val result = runSpatialWebDroneDemo(printSteps = false)
 
         assertTrue(result.verification is VerificationResult.Valid)
@@ -28,7 +28,7 @@ class SpatialWebExampleTest {
     }
 
     @Test
-    fun `drone outside domain boundary is denied`() = runBlocking {
+    fun `drone outside domain boundary is denied`() = runBlocking<Unit> {
         val result = runSpatialWebDroneDemo(printSteps = false)
         // Los Angeles — outside SF Bay bounding box
         val denied = checkDomainAuthorization(
@@ -42,7 +42,7 @@ class SpatialWebExampleTest {
     }
 
     @Test
-    fun `wrong activity type is denied`() = runBlocking {
+    fun `wrong activity type is denied`() = runBlocking<Unit> {
         val result = runSpatialWebDroneDemo(printSteps = false)
         val denied = checkDomainAuthorization(
             agentDid = result.droneDid,

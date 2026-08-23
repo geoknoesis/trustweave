@@ -50,7 +50,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with default options`() = runBlocking {
+    fun `test verification with default options`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -70,7 +70,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with revocation check enabled`() = runBlocking {
+    fun `test verification with revocation check enabled`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -90,7 +90,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with revocation check disabled`() = runBlocking {
+    fun `test verification with revocation check disabled`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -110,7 +110,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with expiration check enabled`() = runBlocking {
+    fun `test verification with expiration check enabled`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -130,7 +130,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with expiration check disabled`() = runBlocking {
+    fun `test verification with expiration check disabled`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -150,7 +150,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with schema validation`() = runBlocking {
+    fun `test verification with schema validation`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -170,7 +170,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification with anchor verification`() = runBlocking {
+    fun `test verification with anchor verification`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")
@@ -190,7 +190,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verification requires credential`() = runBlocking {
+    fun `test verification requires credential`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.verify {
                 // Missing credential
@@ -200,7 +200,7 @@ class VerificationDslTest {
     }
 
     @Test
-    fun `test verify credential direct overload`() = runBlocking {
+    fun `test verify credential direct overload`() = runBlocking<Unit> {
         val credential = credential {
             type("PersonCredential")
             issuer("did:key:issuer")

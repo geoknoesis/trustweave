@@ -12,7 +12,7 @@ import kotlin.test.assertNotNull
 class InMemoryBlockchainAnchorClientTest {
 
     @Test
-    fun `writePayload should store payload and return anchor result`() = runBlocking {
+    fun `writePayload should store payload and return anchor result`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("test:chain")
         val payload = buildJsonObject {
             put("test", "value")
@@ -28,7 +28,7 @@ class InMemoryBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `readPayload should retrieve stored payload`() = runBlocking {
+    fun `readPayload should retrieve stored payload`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("test:chain")
         val payload = buildJsonObject {
             put("key", "value")
@@ -42,7 +42,7 @@ class InMemoryBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `readPayload should throw NotFoundException for non-existent anchor`() = runBlocking {
+    fun `readPayload should throw NotFoundException for non-existent anchor`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("test:chain")
         val ref = AnchorRef("test:chain", "nonexistent")
 
@@ -52,7 +52,7 @@ class InMemoryBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `round-trip writePayload and readPayload should work`() = runBlocking {
+    fun `round-trip writePayload and readPayload should work`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("algorand:mainnet", "app-123")
         val payload = buildJsonObject {
             put("vcId", "vc-123")

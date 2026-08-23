@@ -71,7 +71,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `createDid posts a sidetree create operation and returns a did orb DID`() = runBlocking {
+    fun `createDid posts a sidetree create operation and returns a did orb DID`() = runBlocking<Unit> {
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"status":"queued"}"""))
 
         val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
@@ -88,7 +88,12 @@ class OrbDidMethodTest {
         val request = server.takeRequest()
         assertEquals("POST", request.method)
         assertEquals("/sidetree/v1/operations", request.path)
-        assertEquals("application/json", request.getHeader("Content-Type"))
+        // OkHttp appends the charset parameter from the RequestBody's MediaType
+        // ("application/json; charset=utf-8"); only the media type is contractual here.
+        assertTrue(
+            request.getHeader("Content-Type").orEmpty().startsWith("application/json"),
+            "Content-Type must be application/json, got: ${request.getHeader("Content-Type")}",
+        )
         val bodyJson = Json.parseToJsonElement(request.body.readUtf8()).jsonObject
         assertEquals("create", bodyJson["type"]?.jsonPrimitive?.content)
         assertNotNull(bodyJson["suffixData"])
@@ -96,7 +101,7 @@ class OrbDidMethodTest {
     }
 
     @Test
-    fun `createDid uses the DID returned by the Orb node when present`() = runBlocking {
+    fun `createDid uses the DID returned by the Orb node when present`() = runBlocking<Unit> {
         val canonicalDid = "did:orb:Eiabc123canonicalsuffix"
         server.enqueue(
             MockResponse().setResponseCode(200).setBody(
@@ -114,7 +119,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid parses a successful Orb resolution result`() = runBlocking {
+    fun `resolveDid parses a successful Orb resolution result`() = runBlocking<Unit> {
         val did = "did:orb:EiTest"
         val body = """
             {
@@ -145,7 +150,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid falls back to local cache when Orb returns 404`() = runBlocking {
+    fun `resolveDid falls back to local cache when Orb returns 404`() = runBlocking<Unit> {
         // First: create the DID (Orb acks the operation)
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"status":"queued"}"""))
         val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
@@ -164,7 +169,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid returns notFound when Orb 404s a DID we never created`() = runBlocking {
+    fun `resolveDid returns notFound when Orb 404s a DID we never created`() = runBlocking<Unit> {
         server.enqueue(MockResponse().setResponseCode(404))
 
         val result = method.resolveDid(Did("did:orb:EiUnknownSuffix"))
@@ -172,7 +177,7 @@ class OrbDidMethodTest {
     }
 
     @Test
-    fun `resolveDid rejects DIDs with the wrong method`() = runBlocking {
+    fun `resolveDid rejects DIDs with the wrong method`() = runBlocking<Unit> {
         val result = method.resolveDid(Did("did:web:example.com"))
         assertIs<DidResolutionResult.Failure>(result)
     }
@@ -182,7 +187,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `updateDid posts a sidetree update operation`() = runBlocking {
+    fun `updateDid posts a sidetree update operation`() = runBlocking<Unit> {
         // create
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"status":"queued"}"""))
         val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
@@ -215,7 +220,7 @@ class OrbDidMethodTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `deactivateDid posts a sidetree deactivate operation`() = runBlocking {
+    fun `deactivateDid posts a sidetree deactivate operation`() = runBlocking<Unit> {
         // create
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"status":"queued"}"""))
         val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
@@ -238,7 +243,7 @@ class OrbDidMethodTest {
     }
 
     @Test
-    fun `deactivateDid returns false when Orb rejects the operation`() = runBlocking {
+    fun `deactivateDid returns false when Orb rejects the operation`() = runBlocking<Unit> {
         server.enqueue(MockResponse().setResponseCode(500).setBody("internal error"))
 
         val result = method.deactivateDid(Did("did:orb:EiSomeSuffix"))

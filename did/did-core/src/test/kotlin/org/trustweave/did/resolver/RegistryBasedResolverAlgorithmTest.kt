@@ -35,14 +35,14 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `an unregistered method yields METHOD_NOT_SUPPORTED`() = runBlocking {
+    fun `an unregistered method yields METHOD_NOT_SUPPORTED`() = runBlocking<Unit> {
         val resolver = RegistryBasedResolver(DidMethodRegistry())
         val result = resolver.resolve(Did("did:nope:123"))
         assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, result.errorType)
     }
 
     @Test
-    fun `invalid options yield INVALID_OPTIONS before the method is consulted`() = runBlocking {
+    fun `invalid options yield INVALID_OPTIONS before the method is consulted`() = runBlocking<Unit> {
         val resolver = resolverFor(DidDocument(id = did))
         val options = ResolutionOptions(
             versionId = "3",
@@ -52,7 +52,7 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `contradictory options plus an unsupported accept still yield INVALID_OPTIONS`() = runBlocking {
+    fun `contradictory options plus an unsupported accept still yield INVALID_OPTIONS`() = runBlocking<Unit> {
         // Pins the step-4-before-step-3 ordering: without it, the unsupported `accept` below
         // would be reached first and report REPRESENTATION_NOT_SUPPORTED instead.
         val resolver = resolverFor(DidDocument(id = did))
@@ -65,21 +65,21 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `an unsupported accept media type yields REPRESENTATION_NOT_SUPPORTED`() = runBlocking {
+    fun `an unsupported accept media type yields REPRESENTATION_NOT_SUPPORTED`() = runBlocking<Unit> {
         val resolver = resolverFor(DidDocument(id = did))
         val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
         assertEquals(DidErrorType.REPRESENTATION_NOT_SUPPORTED, result.errorType)
     }
 
     @Test
-    fun `a supported accept media type is echoed in contentType`() = runBlocking {
+    fun `a supported accept media type is echoed in contentType`() = runBlocking<Unit> {
         val resolver = resolverFor(DidDocument(id = did))
         val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+ld+json"))
         assertEquals("application/did+ld+json", (result as DidResolutionResult.Success).resolutionMetadata.contentType)
     }
 
     @Test
-    fun `without accept the method's own contentType is preserved`() = runBlocking {
+    fun `without accept the method's own contentType is preserved`() = runBlocking<Unit> {
         // Deliberately returns a contentType other than the application/did default so the
         // assertion below only holds if the resolver leaves it alone rather than overwriting it.
         val registry = DidMethodRegistry()
@@ -100,7 +100,7 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `expandRelativeUrls rewrites relative service ids`() = runBlocking {
+    fun `expandRelativeUrls rewrites relative service ids`() = runBlocking<Unit> {
         val document = DidDocument(
             id = did,
             service = listOf(
@@ -116,7 +116,7 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `without the option relative service ids are left alone`() = runBlocking {
+    fun `without the option relative service ids are left alone`() = runBlocking<Unit> {
         val document = DidDocument(
             id = did,
             service = listOf(
@@ -128,14 +128,14 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `a document whose id does not match the requested DID is rejected`() = runBlocking {
+    fun `a document whose id does not match the requested DID is rejected`() = runBlocking<Unit> {
         val resolver = resolverFor(DidDocument(id = Did("did:example:someoneelse")))
         val result = resolver.resolve(did)
         assertEquals(DidErrorType.INVALID_DID_DOCUMENT, result.errorType)
     }
 
     @Test
-    fun `an unexpected method failure yields INTERNAL_ERROR`() = runBlocking {
+    fun `an unexpected method failure yields INTERNAL_ERROR`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         registry.register(object : DidMethod {
             override val method: String = "example"
@@ -152,7 +152,7 @@ class RegistryBasedResolverAlgorithmTest {
     }
 
     @Test
-    fun `a deactivated DID returns Deactivated with no document exposed`() = runBlocking {
+    fun `a deactivated DID returns Deactivated with no document exposed`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         registry.register(object : DidMethod {
             override val method: String = "example"

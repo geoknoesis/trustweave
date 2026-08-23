@@ -10,8 +10,6 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.exception.DidException
-import org.trustweave.did.exception.DidException.InvalidDidFormat
-import org.trustweave.did.exception.DidException.DidMethodNotRegistered
 
 class DidTest {
 
@@ -60,7 +58,7 @@ class DidRegistryTest {
     }
 
     @Test
-    fun `test resolve DID`() = runBlocking {
+    fun `test resolve DID`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         registry.register(method)
 
@@ -72,10 +70,12 @@ class DidRegistryTest {
     }
 
     @Test
-    fun `test resolve fails when method not registered`() = runBlocking {
-        assertFailsWith<DidMethodNotRegistered> {
-            registry.resolve("did:nonexistent:123")
-        }
+    fun `test resolve fails when method not registered`() = runBlocking<Unit> {
+        val result = registry.resolve("did:nonexistent:123")
+        assertTrue(
+            result is DidResolutionResult.Failure.MethodNotRegistered,
+            "An unregistered method must resolve to MethodNotRegistered, got: $result",
+        )
     }
 
     @Test
@@ -92,17 +92,19 @@ class DidRegistryTest {
     }
 
     @Test
-    fun `test resolve with invalid DID format`() = runBlocking {
+    fun `test resolve with invalid DID format`() = runBlocking<Unit> {
         val method = createMockDidMethod("test")
         registry.register(method)
 
-        assertFailsWith<InvalidDidFormat> {
-            registry.resolve("invalid-did")
-        }
+        val result = registry.resolve("invalid-did")
+        assertTrue(
+            result is DidResolutionResult.Failure.InvalidFormat,
+            "A malformed DID must resolve to InvalidFormat, got: $result",
+        )
     }
 
     @Test
-    fun `test resolve with multiple registered methods`() = runBlocking {
+    fun `test resolve with multiple registered methods`() = runBlocking<Unit> {
         registry.register(createMockDidMethod("method1"))
         registry.register(createMockDidMethod("method2"))
 
@@ -116,7 +118,7 @@ class DidRegistryTest {
     }
 
     @Test
-    fun `test resolve extracts correct method from DID`() = runBlocking {
+    fun `test resolve extracts correct method from DID`() = runBlocking<Unit> {
         val method = createMockDidMethod("web")
         registry.register(method)
 

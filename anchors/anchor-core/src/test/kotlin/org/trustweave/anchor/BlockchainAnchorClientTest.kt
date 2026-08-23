@@ -77,7 +77,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload successfully`() = runBlocking {
+    fun `test write payload successfully`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
@@ -96,7 +96,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test read payload successfully`() = runBlocking {
+    fun `test read payload successfully`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
@@ -112,7 +112,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test read payload fails when not found`() = runBlocking {
+    fun `test read payload fails when not found`() = runBlocking<Unit> {
         val ref = AnchorRef(
             chainId = chainId,
             txHash = "nonexistent-tx-hash",
@@ -125,7 +125,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test read payload fails when chain ID mismatch`() = runBlocking {
+    fun `test read payload fails when chain ID mismatch`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("vcDigest", "uABC123")
         }
@@ -139,7 +139,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write multiple payloads`() = runBlocking {
+    fun `test write multiple payloads`() = runBlocking<Unit> {
         val payload1 = buildJsonObject { put("id", "1") }
         val payload2 = buildJsonObject { put("id", "2") }
         val payload3 = buildJsonObject { put("id", "3") }
@@ -154,7 +154,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload with different media types`() = runBlocking {
+    fun `test write payload with different media types`() = runBlocking<Unit> {
         val payload = buildJsonObject { put("data", "test") }
 
         val jsonResult = client.writePayload(payload, "application/json")
@@ -165,7 +165,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload with complex JSON structure`() = runBlocking {
+    fun `test write payload with complex JSON structure`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")
@@ -185,7 +185,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload with array payload`() = runBlocking {
+    fun `test write payload with array payload`() = runBlocking<Unit> {
         val payload = buildJsonArray {
             add(buildJsonObject { put("id", "1") })
             add(buildJsonObject { put("id", "2") })
@@ -198,7 +198,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload generates unique transaction hashes`() = runBlocking {
+    fun `test write payload generates unique transaction hashes`() = runBlocking<Unit> {
         val payload = buildJsonObject { put("data", "test") }
 
         val result1 = client.writePayload(payload, "application/json")
@@ -209,7 +209,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload includes timestamp`() = runBlocking {
+    fun `test write payload includes timestamp`() = runBlocking<Unit> {
         val beforeWrite = System.currentTimeMillis() / 1000
         val payload = buildJsonObject { put("data", "test") }
 
@@ -222,7 +222,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test clear removes all anchors`() = runBlocking {
+    fun `test clear removes all anchors`() = runBlocking<Unit> {
         val payload = buildJsonObject { put("data", "test") }
 
         client.writePayload(payload, "application/json")
@@ -235,7 +235,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test anchor ref contains correct metadata`() = runBlocking {
+    fun `test anchor ref contains correct metadata`() = runBlocking<Unit> {
         val payload = buildJsonObject { put("vcDigest", "uABC123") }
 
         val result = client.writePayload(payload, "application/json")
@@ -247,7 +247,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload without contract`() = runBlocking {
+    fun `test write payload without contract`() = runBlocking<Unit> {
         val clientWithoutContract = TestBlockchainAnchorClient(chainId, null)
         val payload = buildJsonObject { put("data", "test") }
 
@@ -257,7 +257,7 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test read payload preserves all fields`() = runBlocking {
+    fun `test read payload preserves all fields`() = runBlocking<Unit> {
         val payload = buildJsonObject {
             put("vcDigest", "uABC123")
             put("issuer", "did:key:issuer")

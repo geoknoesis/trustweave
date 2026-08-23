@@ -49,21 +49,21 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test initialize and close`() = runBlocking {
+    fun `test initialize and close`() = runBlocking<Unit> {
         engine.initialize()
         engine.close()
         // Should not throw
     }
 
     @Test
-    fun `test initialize with config`() = runBlocking {
+    fun `test initialize with config`() = runBlocking<Unit> {
         val config = ProofEngineConfig(properties = mapOf("test" to "value"))
         engine.initialize(config)
         // Should not throw
     }
 
     @Test
-    fun `test issue with valid request`() = runBlocking {
+    fun `test issue with valid request`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest()
         
         // Note: This will fail because KMS is not configured
@@ -75,7 +75,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test issue with wrong format`() = runBlocking {
+    fun `test issue with wrong format`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest().copy(
             format = ProofSuiteId.VC_JWT
         )
@@ -87,7 +87,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test issue with proof options`() = runBlocking {
+    fun `test issue with proof options`() = runBlocking<Unit> {
         val request = createValidIssuanceRequest().copy(
             proofOptions = proofOptions {
                 purpose = ProofPurpose.Authentication
@@ -104,7 +104,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test verify with valid credential`() = runBlocking {
+    fun `test verify with valid credential`() = runBlocking<Unit> {
         val credential = createValidCredential()
         val options = VerificationOptions()
         
@@ -117,7 +117,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test verify with expired credential`() = runBlocking {
+    fun `test verify with expired credential`() = runBlocking<Unit> {
         val credential = createValidCredential().copy(
             expirationDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT1H")) // Expired 1 hour ago
         )
@@ -131,7 +131,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test verify with credential missing proof`() = runBlocking {
+    fun `test verify with credential missing proof`() = runBlocking<Unit> {
         val credential = createValidCredential().copy(proof = null)
         val options = VerificationOptions()
         
@@ -141,7 +141,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test verify with credential missing issuer`() = runBlocking {
+    fun `test verify with credential missing issuer`() = runBlocking<Unit> {
         // Use a valid but unresolvable issuer instead of empty string
         // Empty IRI throws IllegalArgumentException during construction
         val credential = createValidCredential().copy(
@@ -156,7 +156,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `verify fails closed for a credential whose subject id is an invalid IRI`() = runBlocking {
+    fun `verify fails closed for a credential whose subject id is an invalid IRI`() = runBlocking<Unit> {
         // Security regression: a credentialSubject.id like "urn:has space" is accepted by Iri()
         // (its regex allows the space) but JsonLd.toRdf drops every triple whose subject is not
         // a usable absolute IRI, so the subject's claims would be UNSIGNED. The canonicalization
@@ -203,7 +203,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation`() = runBlocking {
+    fun `test createPresentation`() = runBlocking<Unit> {
         val credentials = listOf(createValidCredential())
         val request = PresentationRequest()
         
@@ -215,7 +215,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation with selective disclosure`() = runBlocking {
+    fun `test createPresentation with selective disclosure`() = runBlocking<Unit> {
         val credentials = listOf(createValidCredential())
         val request = PresentationRequest(
             disclosedClaims = setOf("name", "email")
@@ -230,7 +230,7 @@ class VcLdProofEngineTest {
     }
 
     @Test
-    fun `test createPresentation with empty credentials`() = runBlocking {
+    fun `test createPresentation with empty credentials`() = runBlocking<Unit> {
         val request = PresentationRequest()
         
         val exception = assertThrows<IllegalArgumentException> {

@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class RegistryBasedResolverPerformanceTest {
 
     @Test
-    fun `test resolution performance`() = runBlocking {
+    fun `test resolution performance`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         
@@ -64,7 +64,7 @@ class RegistryBasedResolverPerformanceTest {
     }
 
     @Test
-    fun `test resolution with invalid format performance`() = runBlocking {
+    fun `test resolution with invalid format performance`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         
@@ -89,7 +89,7 @@ class RegistryBasedResolverPerformanceTest {
     }
 
     @Test
-    fun `test resolution with method not registered performance`() = runBlocking {
+    fun `test resolution with method not registered performance`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val resolver = RegistryBasedResolver(registry)
         

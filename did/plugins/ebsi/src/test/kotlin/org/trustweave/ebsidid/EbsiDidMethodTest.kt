@@ -109,7 +109,7 @@ class EbsiDidMethodTest {
     // ──────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid returns success when EBSI API returns a valid DID document`() = runBlocking {
+    fun `resolveDid returns success when EBSI API returns a valid DID document`() = runBlocking<Unit> {
         // Given: a locally created DID so we know its value
         // We stub the registry POST so createDid succeeds remotely
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
@@ -138,7 +138,7 @@ class EbsiDidMethodTest {
     }
 
     @Test
-    fun `resolveDid sends correct Accept header and path to EBSI API`() = runBlocking {
+    fun `resolveDid sends correct Accept header and path to EBSI API`() = runBlocking<Unit> {
         // Given: create a DID (stub the POST)
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
         val document = method.createDid(
@@ -170,7 +170,7 @@ class EbsiDidMethodTest {
     // ──────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid falls back to in-memory document when API returns 404`() = runBlocking {
+    fun `resolveDid falls back to in-memory document when API returns 404`() = runBlocking<Unit> {
         // Given: create a DID and cache it locally (stub the POST for registration)
         server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
         val document = method.createDid(
@@ -190,7 +190,7 @@ class EbsiDidMethodTest {
     }
 
     @Test
-    fun `resolveDid returns notFound failure when API returns 404 and no local cache`() = runBlocking {
+    fun `resolveDid returns notFound failure when API returns 404 and no local cache`() = runBlocking<Unit> {
         // Given: a DID that was never created locally
         val unknownDid = org.trustweave.did.identifiers.Did("did:ebsi:unknownidentifier123")
 

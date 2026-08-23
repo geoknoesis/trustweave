@@ -13,7 +13,7 @@ import kotlin.test.*
 class KeyManagementServiceInterfaceContractTest {
 
     @Test
-    fun `test KeyManagementService generateKey returns key handle`() = runBlocking {
+    fun `test KeyManagementService generateKey returns key handle`() = runBlocking<Unit> {
         val kms = createMockKms()
 
         val result = kms.generateKey("Ed25519")
@@ -26,7 +26,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with custom ID`() = runBlocking {
+    fun `test KeyManagementService generateKey with custom ID`() = runBlocking<Unit> {
         val kms = createMockKms()
         val options = mapOf<String, Any?>(
             "keyId" to "custom-key-123"
@@ -41,7 +41,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with different algorithms`() = runBlocking {
+    fun `test KeyManagementService generateKey with different algorithms`() = runBlocking<Unit> {
         val kms = createMockKms()
 
         val ed25519Result = kms.generateKey("Ed25519")
@@ -54,7 +54,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService getPublicKey returns key handle`() = runBlocking {
+    fun `test KeyManagementService getPublicKey returns key handle`() = runBlocking<Unit> {
         val kms = createMockKms()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -70,7 +70,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking {
+    fun `test KeyManagementService getPublicKey returns KeyNotFound`() = runBlocking<Unit> {
         val kms = createMockKms()
 
         val result = kms.getPublicKey(KeyId("non-existent"))
@@ -79,7 +79,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService sign returns signature`() = runBlocking {
+    fun `test KeyManagementService sign returns signature`() = runBlocking<Unit> {
         val kms = createMockKms()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -95,7 +95,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService sign with algorithm override`() = runBlocking {
+    fun `test KeyManagementService sign with algorithm override`() = runBlocking<Unit> {
         val kms = createMockKms()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -108,7 +108,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService sign returns KeyNotFound`() = runBlocking {
+    fun `test KeyManagementService sign returns KeyNotFound`() = runBlocking<Unit> {
         val kms = createMockKms()
         val data = "test data".toByteArray()
 
@@ -118,7 +118,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService deleteKey returns Deleted`() = runBlocking {
+    fun `test KeyManagementService deleteKey returns Deleted`() = runBlocking<Unit> {
         val kms = createMockKms()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -132,7 +132,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService deleteKey returns NotFound for non-existent key`() = runBlocking {
+    fun `test KeyManagementService deleteKey returns NotFound for non-existent key`() = runBlocking<Unit> {
         val kms = createMockKms()
 
         val result = kms.deleteKey(KeyId("non-existent"))
@@ -140,7 +140,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey then sign then deleteKey`() = runBlocking {
+    fun `test KeyManagementService generateKey then sign then deleteKey`() = runBlocking<Unit> {
         val kms = createMockKms()
         val generateResult = kms.generateKey("Ed25519")
         assertTrue(generateResult is GenerateKeyResult.Success)
@@ -163,7 +163,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with publicKeyJwk`() = runBlocking {
+    fun `test KeyManagementService generateKey with publicKeyJwk`() = runBlocking<Unit> {
         val kms = createMockKms()
         val result = kms.generateKey("Ed25519")
         assertTrue(result is GenerateKeyResult.Success)
@@ -174,7 +174,7 @@ class KeyManagementServiceInterfaceContractTest {
     }
 
     @Test
-    fun `test KeyManagementService generateKey with publicKeyMultibase`() = runBlocking {
+    fun `test KeyManagementService generateKey with publicKeyMultibase`() = runBlocking<Unit> {
         val kms = createMockKms()
         val result = kms.generateKey("Ed25519")
         assertTrue(result is GenerateKeyResult.Success)

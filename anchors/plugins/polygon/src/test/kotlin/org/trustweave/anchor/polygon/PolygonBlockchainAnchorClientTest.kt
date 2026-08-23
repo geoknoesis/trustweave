@@ -1,5 +1,6 @@
 package org.trustweave.anchor.polygon
 
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorDigest
 import org.trustweave.anchor.AnchorRef
@@ -20,13 +21,13 @@ import kotlin.test.assertTrue
 class PolygonBlockchainAnchorClientTest {
 
     @Test
-    fun `should create client for Amoy testnet`() = runBlocking {
+    fun `should create client for Amoy testnet`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.AMOY)
         assertNotNull(client)
     }
 
     @Test
-    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking {
+    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(
             PolygonBlockchainAnchorClient.AMOY,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
@@ -48,7 +49,7 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should generate collision-free test hashes in in-memory test mode`() = runBlocking {
+    fun `should generate collision-free test hashes in in-memory test mode`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(
             PolygonBlockchainAnchorClient.AMOY,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
@@ -64,7 +65,7 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should anchor digest envelope and verify in digest payload mode`() = runBlocking {
+    fun `should anchor digest envelope and verify in digest payload mode`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(
             PolygonBlockchainAnchorClient.AMOY,
             mapOf(
@@ -93,7 +94,7 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should verify full-mode anchors structurally`() = runBlocking {
+    fun `should verify full-mode anchors structurally`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(
             PolygonBlockchainAnchorClient.AMOY,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
@@ -116,7 +117,13 @@ class PolygonBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should throw NotFoundException for non-existent transaction`() = runBlocking {
+    @EnabledIfEnvironmentVariable(
+        named = "TRUSTWEAVE_TEST_USE_REAL_SERVICES",
+        matches = "(?i)true",
+        disabledReason = "Reads a receipt from the live Amoy RPC; without network the DNS " +
+            "failure surfaces as TransactionFailed long before the chain can report NotFound.",
+    )
+    fun `should throw NotFoundException for non-existent transaction`() = runBlocking<Unit> {
         val client = PolygonBlockchainAnchorClient(PolygonBlockchainAnchorClient.AMOY)
         val ref = AnchorRef(
             chainId = PolygonBlockchainAnchorClient.AMOY,

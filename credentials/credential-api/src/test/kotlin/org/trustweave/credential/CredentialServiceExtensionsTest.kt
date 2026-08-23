@@ -56,7 +56,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toJwt extension function`() = runBlocking {
+    fun `test toJwt extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val credential = createTestCredential()
@@ -71,7 +71,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test fromJwt extension function`() = runBlocking {
+    fun `test fromJwt extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -87,7 +87,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toJwt and fromJwt round trip`() = runBlocking {
+    fun `test toJwt and fromJwt round trip`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -107,7 +107,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toJsonLd extension function`() = runBlocking {
+    fun `test toJsonLd extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val credential = createTestCredential()
@@ -120,7 +120,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test fromJsonLd extension function`() = runBlocking {
+    fun `test fromJsonLd extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -135,7 +135,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toJsonLd and fromJsonLd round trip`() = runBlocking {
+    fun `test toJsonLd and fromJsonLd round trip`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -150,7 +150,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toCbor extension function`() = runBlocking {
+    fun `test toCbor extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val credential = createTestCredential()
@@ -164,7 +164,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test fromCbor extension function`() = runBlocking {
+    fun `test fromCbor extension function`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -179,7 +179,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test toCbor and fromCbor round trip`() = runBlocking {
+    fun `test toCbor and fromCbor round trip`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()
@@ -197,7 +197,7 @@ class CredentialServiceExtensionsTest {
     }
 
     @Test
-    fun `test all format conversions round trip`() = runBlocking {
+    fun `test all format conversions round trip`() = runBlocking<Unit> {
         val didResolver = createMockDidResolver()
         val service = credentialService(didResolver = didResolver)
         val originalCredential = createTestCredential()

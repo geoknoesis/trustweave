@@ -14,7 +14,7 @@ import kotlin.test.*
 class GodiddyResolverBranchCoverageTest {
 
     @Test
-    fun `test GodiddyResolver resolveDid with successful response`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with successful response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -32,7 +32,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver resolveDid with NotFound response`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with NotFound response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -61,7 +61,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver resolveDid with wrapped response`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with wrapped response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -79,7 +79,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver resolveDid with direct document response`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with direct document response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -97,7 +97,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver resolveDid with metadata`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with metadata`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -118,7 +118,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver resolveDid with invalid document`() = runBlocking {
+    fun `test GodiddyResolver resolveDid with invalid document`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -147,7 +147,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver convertToDidDocument with all fields`() = runBlocking {
+    fun `test GodiddyResolver convertToDidDocument with all fields`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -165,7 +165,7 @@ class GodiddyResolverBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyResolver convertToDidDocument with missing id`() = runBlocking {
+    fun `test GodiddyResolver convertToDidDocument with missing id`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)

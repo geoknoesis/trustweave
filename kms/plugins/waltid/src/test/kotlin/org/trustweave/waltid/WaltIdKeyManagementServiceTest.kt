@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class WaltIdKeyManagementServiceTest {
 
     @Test
-    fun `generateKey should create Ed25519 key`() = runBlocking {
+    fun `generateKey should create Ed25519 key`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
 
         val result = kms.generateKey(org.trustweave.kms.Algorithm.Ed25519)
@@ -23,7 +23,7 @@ class WaltIdKeyManagementServiceTest {
     }
 
     @Test
-    fun `getPublicKey should retrieve key handle`() = runBlocking {
+    fun `getPublicKey should retrieve key handle`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val generateResult = kms.generateKey(org.trustweave.kms.Algorithm.Ed25519)
         assertTrue(generateResult is org.trustweave.kms.results.GenerateKeyResult.Success)
@@ -38,7 +38,7 @@ class WaltIdKeyManagementServiceTest {
     }
 
     @Test
-    fun `getPublicKey should return KeyNotFound result for non-existent key`() = runBlocking {
+    fun `getPublicKey should return KeyNotFound result for non-existent key`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
 
         val result = kms.getPublicKey(org.trustweave.core.identifiers.KeyId("nonexistent"))
@@ -48,7 +48,7 @@ class WaltIdKeyManagementServiceTest {
     }
 
     @Test
-    fun `sign should produce signature`() = runBlocking {
+    fun `sign should produce signature`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val generateResult = kms.generateKey(org.trustweave.kms.Algorithm.Ed25519)
         assertTrue(generateResult is org.trustweave.kms.results.GenerateKeyResult.Success)
@@ -64,7 +64,7 @@ class WaltIdKeyManagementServiceTest {
     }
 
     @Test
-    fun `deleteKey should remove key`() = runBlocking {
+    fun `deleteKey should remove key`() = runBlocking<Unit> {
         val kms = WaltIdKeyManagementService()
         val generateResult = kms.generateKey(org.trustweave.kms.Algorithm.Ed25519)
         assertTrue(generateResult is org.trustweave.kms.results.GenerateKeyResult.Success)

@@ -20,7 +20,7 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `register and get issuer`() = runBlocking {
+    fun `register and get issuer`() = runBlocking<Unit> {
         val reg = IssuerRegistration(did = "did:key:issuer1", name = "Test Issuer",
             credentialTypes = listOf("DegreeCredential"))
         val record = registry.registerIssuer(reg)
@@ -33,12 +33,12 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `getIssuer returns null for unknown DID`() = runBlocking {
+    fun `getIssuer returns null for unknown DID`() = runBlocking<Unit> {
         assertNull(registry.getIssuer("did:key:unknown"))
     }
 
     @Test
-    fun `listIssuers filters by status`() = runBlocking {
+    fun `listIssuers filters by status`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration("did:key:a", "A"))
         registry.registerIssuer(IssuerRegistration("did:key:b", "B"))
         registry.revokeIssuer("did:key:b")
@@ -49,7 +49,7 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `listIssuers filters by credentialType`() = runBlocking {
+    fun `listIssuers filters by credentialType`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration("did:key:c", "C", credentialTypes = listOf("PassportCredential")))
         registry.registerIssuer(IssuerRegistration("did:key:d", "D", credentialTypes = listOf("DegreeCredential")))
         val passports = registry.listIssuers(RegistryFilter(credentialType = "PassportCredential"))
@@ -58,14 +58,14 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `revokeIssuer sets status to REVOKED`() = runBlocking {
+    fun `revokeIssuer sets status to REVOKED`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration("did:key:rev", "Revokable"))
         assertTrue(registry.revokeIssuer("did:key:rev"))
         assertEquals(AccreditationStatus.REVOKED, registry.getIssuer("did:key:rev")?.status)
     }
 
     @Test
-    fun `register and get verifier`() = runBlocking {
+    fun `register and get verifier`() = runBlocking<Unit> {
         val reg = VerifierRegistration(did = "did:key:verifier1", name = "Test Verifier")
         val record = registry.registerVerifier(reg)
         assertEquals("did:key:verifier1", record.did)
@@ -76,7 +76,7 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `listVerifiers returns all registered verifiers`() = runBlocking {
+    fun `listVerifiers returns all registered verifiers`() = runBlocking<Unit> {
         registry.registerVerifier(VerifierRegistration("did:key:v1", "V1"))
         registry.registerVerifier(VerifierRegistration("did:key:v2", "V2"))
         val list = registry.listVerifiers()
@@ -84,12 +84,12 @@ class DatabaseTrustRegistryTest {
     }
 
     @Test
-    fun `getAccreditationStatus returns UNKNOWN for unregistered DID`() = runBlocking {
+    fun `getAccreditationStatus returns UNKNOWN for unregistered DID`() = runBlocking<Unit> {
         assertEquals(AccreditationStatus.UNKNOWN, registry.getAccreditationStatus("did:key:nobody"))
     }
 
     @Test
-    fun `getAccreditationStatus reflects registered and revoked DIDs`() = runBlocking {
+    fun `getAccreditationStatus reflects registered and revoked DIDs`() = runBlocking<Unit> {
         registry.registerIssuer(IssuerRegistration("did:key:status-issuer", "Status Issuer"))
         assertEquals(AccreditationStatus.ACTIVE, registry.getAccreditationStatus("did:key:status-issuer"))
         registry.revokeIssuer("did:key:status-issuer")

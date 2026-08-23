@@ -24,7 +24,7 @@ import kotlin.test.*
 class GodiddyRegistrarBranchCoverageTest {
 
     @Test
-    fun `test GodiddyRegistrar createDid with valid options`() = runBlocking {
+    fun `test GodiddyRegistrar createDid with valid options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -49,7 +49,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar createDid with empty options`() = runBlocking {
+    fun `test GodiddyRegistrar createDid with empty options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -72,7 +72,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar createDid with null did in response`() = runBlocking {
+    fun `test GodiddyRegistrar createDid with null did in response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -95,7 +95,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar updateDid with valid document`() = runBlocking {
+    fun `test GodiddyRegistrar updateDid with valid document`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -115,7 +115,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar updateDid with failed response`() = runBlocking {
+    fun `test GodiddyRegistrar updateDid with failed response`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -135,7 +135,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar deactivateDid`() = runBlocking {
+    fun `test GodiddyRegistrar deactivateDid`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -153,7 +153,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar convertToJsonElement with various types`() = runBlocking {
+    fun `test GodiddyRegistrar convertToJsonElement with various types`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)
@@ -184,7 +184,7 @@ class GodiddyRegistrarBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyRegistrar convertDidDocumentToJson with all fields`() = runBlocking {
+    fun `test GodiddyRegistrar convertDidDocumentToJson with all fields`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val registrar = GodiddyRegistrar(client)

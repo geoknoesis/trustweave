@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class WaltIdEndToEndTest {
 
     @Test
-    fun discoverAndRegister_shouldDiscoverAndRegisterWaltIdAdapters() = runBlocking {
+    fun discoverAndRegister_shouldDiscoverAndRegisterWaltIdAdapters() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.discoverAndRegister(registry)
 
@@ -31,7 +31,7 @@ class WaltIdEndToEndTest {
     }
 
     @Test
-    fun endToEnd_didCreationAndResolution() = runBlocking {
+    fun endToEnd_didCreationAndResolution() = runBlocking<Unit> {
         // Setup integration
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.discoverAndRegister(registry)
@@ -54,7 +54,7 @@ class WaltIdEndToEndTest {
     }
 
     @Test
-    fun endToEnd_didWebCreation() = runBlocking {
+    fun endToEnd_didWebCreation() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.discoverAndRegister(registry)
 
@@ -74,7 +74,7 @@ class WaltIdEndToEndTest {
     }
 
     @Test
-    fun `integration with TrustWeave workflow`() = runBlocking {
+    fun `integration with TrustWeave workflow`() = runBlocking<Unit> {
         // This test demonstrates a complete TrustWeave workflow using walt.id adapters
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.discoverAndRegister(registry)
@@ -99,7 +99,7 @@ class WaltIdEndToEndTest {
     }
 
     @Test
-    fun `multiple DID methods can coexist`() = runBlocking {
+    fun `multiple DID methods can coexist`() = runBlocking<Unit> {
         val registry = DidMethodRegistry()
         val result = WaltIdIntegration.discoverAndRegister(registry)
 

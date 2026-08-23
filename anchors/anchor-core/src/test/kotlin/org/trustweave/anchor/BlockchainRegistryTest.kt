@@ -26,7 +26,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test register client`() = runBlocking {
+    fun `test register client`() = runBlocking<Unit> {
         val client = createTestClient("algorand:testnet")
 
         registry.register("algorand:testnet", client)
@@ -35,7 +35,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test get client`() = runBlocking {
+    fun `test get client`() = runBlocking<Unit> {
         val client1 = createTestClient("algorand:testnet")
         val client2 = createTestClient("eip155:137")
 
@@ -47,12 +47,12 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test get client returns null when not registered`() = runBlocking {
+    fun `test get client returns null when not registered`() = runBlocking<Unit> {
         assertNull(registry.get("nonexistent:chain"))
     }
 
     @Test
-    fun `test clear all clients`() = runBlocking {
+    fun `test clear all clients`() = runBlocking<Unit> {
         val client1 = createTestClient("algorand:testnet")
         val client2 = createTestClient("eip155:137")
 
@@ -66,7 +66,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test anchorTyped extension function`() = runBlocking {
+    fun `test anchorTyped extension function`() = runBlocking<Unit> {
         val registry = BlockchainAnchorRegistry()
         val client = createTestClient("algorand:testnet")
         registry.register("algorand:testnet", client)
@@ -83,7 +83,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test anchorTyped extension fails when client not registered`() = runBlocking {
+    fun `test anchorTyped extension fails when client not registered`() = runBlocking<Unit> {
         val registry = BlockchainAnchorRegistry()
 
         @Serializable
@@ -97,7 +97,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test readTyped extension function`() = runBlocking {
+    fun `test readTyped extension function`() = runBlocking<Unit> {
         val registry = BlockchainAnchorRegistry()
         val client = createTestClient("algorand:testnet")
         registry.register("algorand:testnet", client)
@@ -115,7 +115,7 @@ class BlockchainRegistryTest {
     }
 
     @Test
-    fun `test readTyped extension fails when client not registered`() = runBlocking {
+    fun `test readTyped extension fails when client not registered`() = runBlocking<Unit> {
         val registry = BlockchainAnchorRegistry()
 
         @Serializable

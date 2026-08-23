@@ -39,7 +39,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
     }
 
     @Test
-    fun `end-to-end EO integrity chain verification with in-memory client`() = runBlocking {
+    fun `end-to-end EO integrity chain verification with in-memory client`() = runBlocking<Unit> {
         val result = runEoTestScenario()
 
         // Verify results
@@ -63,7 +63,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
     }
 
     @Test
-    fun `test EO scenario with custom dataset`() = runBlocking {
+    fun `test EO scenario with custom dataset`() = runBlocking<Unit> {
         val result = runEoTestScenario(
             datasetId = "custom-eo-dataset-123",
             metadataTitle = "Custom EO Dataset",
@@ -80,7 +80,7 @@ class InMemoryEoTestIntegrationExample : BaseEoIntegrationTest() {
     }
 
     @Test
-    fun `test EO scenario step by step`() = runBlocking {
+    fun `test EO scenario step by step`() = runBlocking<Unit> {
         // Setup DID method
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)

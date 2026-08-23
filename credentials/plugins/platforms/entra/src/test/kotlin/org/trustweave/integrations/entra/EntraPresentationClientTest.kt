@@ -66,7 +66,7 @@ class EntraPresentationClientTest {
     }
 
     @Test
-    fun `createRequest issues bearer-authorized POST and parses response`() = runBlocking {
+    fun `createRequest issues bearer-authorized POST and parses response`() = runBlocking<Unit> {
         server.stubFor(
             post(urlEqualTo("/v1.0/verifiableCredentials/createPresentationRequest"))
                 .withHeader("Authorization", equalTo("Bearer tok"))

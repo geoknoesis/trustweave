@@ -39,7 +39,7 @@ class RegistryBasedResolverTest {
         }
 
     @Test
-    fun `DidException DidNotFound surfaces NOT_FOUND`() = runBlocking {
+    fun `DidException DidNotFound surfaces NOT_FOUND`() = runBlocking<Unit> {
         val did = Did("did:test:missing")
         val registry = DidMethodRegistry()
         registry.register(throwingMethod("test", DidException.DidNotFound(did = did)))
@@ -53,7 +53,7 @@ class RegistryBasedResolverTest {
     }
 
     @Test
-    fun `DidException InvalidDidFormat surfaces INVALID_DID`() = runBlocking {
+    fun `DidException InvalidDidFormat surfaces INVALID_DID`() = runBlocking<Unit> {
         val did = Did("did:test:example")
         val registry = DidMethodRegistry()
         registry.register(
@@ -72,7 +72,7 @@ class RegistryBasedResolverTest {
     }
 
     @Test
-    fun `unmapped DidException subtype falls back to INTERNAL_ERROR`() = runBlocking {
+    fun `unmapped DidException subtype falls back to INTERNAL_ERROR`() = runBlocking<Unit> {
         val did = Did("did:test:example")
         val registry = DidMethodRegistry()
         registry.register(
@@ -91,7 +91,7 @@ class RegistryBasedResolverTest {
     }
 
     @Test
-    fun `DidException DidMethodNotRegistered surfaces METHOD_NOT_SUPPORTED`() = runBlocking {
+    fun `DidException DidMethodNotRegistered surfaces METHOD_NOT_SUPPORTED`() = runBlocking<Unit> {
         val did = Did("did:test:example")
         val registry = DidMethodRegistry()
         registry.register(

@@ -24,13 +24,13 @@ import kotlin.test.assertTrue
 class AlgorandBlockchainAnchorClientTest {
 
     @Test
-    fun `should create client for testnet`() = runBlocking {
+    fun `should create client for testnet`() = runBlocking<Unit> {
         val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
         assertNotNull(client)
     }
 
     @Test
-    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking {
+    fun `should write and read payload in opt-in in-memory test mode`() = runBlocking<Unit> {
         val client = AlgorandBlockchainAnchorClient(
             AlgorandBlockchainAnchorClient.TESTNET,
             mapOf(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to true)
@@ -52,7 +52,7 @@ class AlgorandBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `should throw NotFoundException for non-existent transaction`() = runBlocking {
+    fun `should throw NotFoundException for non-existent transaction`() = runBlocking<Unit> {
         val client = AlgorandBlockchainAnchorClient(AlgorandBlockchainAnchorClient.TESTNET)
         val ref = AnchorRef(
             chainId = AlgorandBlockchainAnchorClient.TESTNET,

@@ -43,7 +43,7 @@ class GodiddyDidMethodTest {
     }
 
     @Test
-    fun `test GodiddyDidMethod createDid throws when registrar is null`() = runBlocking {
+    fun `test GodiddyDidMethod createDid throws when registrar is null`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -57,7 +57,7 @@ class GodiddyDidMethodTest {
     }
 
     @Test
-    fun `test GodiddyDidMethod updateDid throws when registrar is null`() = runBlocking {
+    fun `test GodiddyDidMethod updateDid throws when registrar is null`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -71,7 +71,7 @@ class GodiddyDidMethodTest {
     }
 
     @Test
-    fun `test GodiddyDidMethod updateDid throws when DID not found`() = runBlocking {
+    fun `test GodiddyDidMethod updateDid throws when DID not found`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -87,7 +87,7 @@ class GodiddyDidMethodTest {
     }
 
     @Test
-    fun `test GodiddyDidMethod deactivateDid throws when registrar is null`() = runBlocking {
+    fun `test GodiddyDidMethod deactivateDid throws when registrar is null`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)
@@ -101,7 +101,7 @@ class GodiddyDidMethodTest {
     }
 
     @Test
-    fun `test GodiddyDidMethod resolveDid calls resolver`() = runBlocking {
+    fun `test GodiddyDidMethod resolveDid calls resolver`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val resolver = GodiddyResolver(client)

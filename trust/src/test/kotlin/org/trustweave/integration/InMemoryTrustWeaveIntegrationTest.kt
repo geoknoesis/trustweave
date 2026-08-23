@@ -105,7 +105,7 @@ class InMemoryTrustWeaveIntegrationTest {
     }
 
     @Test
-    fun `test complete in-memory workflow template`() = runBlocking {
+    fun `test complete in-memory workflow template`() = runBlocking<Unit> {
         // Step 1: Setup in-memory KMS
         val kms = InMemoryKeyManagementService()
 
@@ -191,7 +191,7 @@ class InMemoryTrustWeaveIntegrationTest {
      */
     @Test
     @RequiresPlugin("aws-kms", "ethr-did") // List all required plugins
-    fun `test with external services template`() = runBlocking {
+    fun `test with external services template`() = runBlocking<Unit> {
         // This test will be automatically skipped if AWS credentials or Ethereum RPC URL are not available
         // Use this pattern for tests requiring external services
 
@@ -221,7 +221,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * **Key Pattern:** Same as basic workflow - extract key ID from DID document
      */
     @Test
-    fun `test credential revocation workflow template`() = runBlocking {
+    fun `test credential revocation workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms) {
@@ -300,7 +300,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * **Key Pattern:** Same as basic workflow - extract key ID from DID document
      */
     @Test
-    fun `test wallet storage workflow template`() = runBlocking {
+    fun `test wallet storage workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms)
@@ -375,7 +375,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * **Key Pattern:** Extract key IDs from both issuer and holder DID documents
      */
     @Test
-    fun `test verifiable presentation workflow template`() = runBlocking {
+    fun `test verifiable presentation workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms)
@@ -476,7 +476,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * **Key Pattern:** Extract key ID from updated DID document after adding new key
      */
     @Test
-    fun `test DID update workflow template`() = runBlocking {
+    fun `test DID update workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms)
@@ -551,7 +551,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * **Note:** This uses in-memory anchor client. For real blockchains, use @RequiresPlugin annotation.
      */
     @Test
-    fun `test blockchain anchoring workflow template`() = runBlocking {
+    fun `test blockchain anchoring workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms) {
@@ -626,7 +626,7 @@ class InMemoryTrustWeaveIntegrationTest {
      * This uses in-memory anchor client. For real blockchains, use @RequiresPlugin annotation.
      */
     @Test
-    fun `test smart contract workflow template`() = runBlocking {
+    fun `test smart contract workflow template`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
 
         val trustWeave = createTrustWeaveWithCredentialService(kms) {

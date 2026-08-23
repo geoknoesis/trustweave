@@ -21,7 +21,7 @@ import kotlinx.datetime.Clock
 class TrustRegistryTest {
 
     @Test
-    fun `test add trust anchor`() = runBlocking {
+    fun `test add trust anchor`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         val added = registry.addTrustAnchor(
@@ -37,7 +37,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test add duplicate trust anchor returns false`() = runBlocking {
+    fun `test add duplicate trust anchor returns false`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
@@ -47,7 +47,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test remove trust anchor`() = runBlocking {
+    fun `test remove trust anchor`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
@@ -59,7 +59,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test isTrustedIssuer with credential type filter`() = runBlocking {
+    fun `test isTrustedIssuer with credential type filter`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor(
@@ -75,7 +75,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test isTrustedIssuer with null credential type`() = runBlocking {
+    fun `test isTrustedIssuer with null credential type`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor(
@@ -90,7 +90,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test findTrustPath direct trust`() = runBlocking {
+    fun `test findTrustPath direct trust`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -107,7 +107,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test findTrustPath between anchors`() = runBlocking {
+    fun `test findTrustPath between anchors`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -123,7 +123,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test findTrustPath no path returns NotFound`() = runBlocking {
+    fun `test findTrustPath no path returns NotFound`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -135,7 +135,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test getTrustedIssuers with credential type filter`() = runBlocking {
+    fun `test getTrustedIssuers with credential type filter`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor(
@@ -157,7 +157,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test getTrustedIssuers with null credential type`() = runBlocking {
+    fun `test getTrustedIssuers with null credential type`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -168,7 +168,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test trust score calculation`() = runBlocking {
+    fun `test trust score calculation`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
@@ -184,7 +184,7 @@ class TrustRegistryTest {
     }
 
     @Test
-    fun `test clear trust registry`() = runBlocking {
+    fun `test clear trust registry`() = runBlocking<Unit> {
         val registry = InMemoryTrustRegistry()
 
         registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())

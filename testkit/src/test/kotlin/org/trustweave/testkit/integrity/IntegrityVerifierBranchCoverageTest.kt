@@ -31,7 +31,7 @@ class IntegrityVerifierBranchCoverageTest {
     // ========== verifyVcIntegrity() Branch Coverage ==========
 
     @Test
-    fun `test branch verifyVcIntegrity excludes digestMultibase from computation`() = runBlocking {
+    fun `test branch verifyVcIntegrity excludes digestMultibase from computation`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -54,7 +54,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyVcIntegrity excludes evidence from computation`() = runBlocking {
+    fun `test branch verifyVcIntegrity excludes evidence from computation`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -81,7 +81,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyVcIntegrity uses vcDigest from payload`() = runBlocking {
+    fun `test branch verifyVcIntegrity uses vcDigest from payload`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("type", buildJsonArray { add("VerifiableCredential") })
@@ -99,7 +99,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyVcIntegrity throws when no client registered`() = runBlocking {
+    fun `test branch verifyVcIntegrity throws when no client registered`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
@@ -111,7 +111,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyVcIntegrity throws when payload has no digest`() = runBlocking {
+    fun `test branch verifyVcIntegrity throws when payload has no digest`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
@@ -128,7 +128,7 @@ class IntegrityVerifierBranchCoverageTest {
     // ========== verifyLinksetIntegrity() Branch Coverage ==========
 
     @Test
-    fun `test branch verifyLinksetIntegrity excludes digestMultibase`() = runBlocking {
+    fun `test branch verifyLinksetIntegrity excludes digestMultibase`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
             put("digestMultibase", "should-be-excluded")
@@ -143,7 +143,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyLinksetIntegrity returns false when digests don't match`() = runBlocking {
+    fun `test branch verifyLinksetIntegrity returns false when digests don't match`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
         }
@@ -157,7 +157,7 @@ class IntegrityVerifierBranchCoverageTest {
     // ========== verifyArtifactIntegrity() Branch Coverage ==========
 
     @Test
-    fun `test branch verifyArtifactIntegrity uses content field`() = runBlocking {
+    fun `test branch verifyArtifactIntegrity uses content field`() = runBlocking<Unit> {
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("content", buildJsonObject {
@@ -174,7 +174,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyArtifactIntegrity uses entire artifact when no content field`() = runBlocking {
+    fun `test branch verifyArtifactIntegrity uses entire artifact when no content field`() = runBlocking<Unit> {
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("data", "test-data")
@@ -187,7 +187,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyArtifactIntegrity returns false when digests don't match`() = runBlocking {
+    fun `test branch verifyArtifactIntegrity returns false when digests don't match`() = runBlocking<Unit> {
         val artifact = buildJsonObject {
             put("id", "artifact-1")
             put("content", buildJsonObject {
@@ -204,7 +204,7 @@ class IntegrityVerifierBranchCoverageTest {
     // ========== verifyIntegrityChain() Branch Coverage ==========
 
     @Test
-    fun `test branch verifyIntegrityChain handles VC verification exception`() = runBlocking {
+    fun `test branch verifyIntegrityChain handles VC verification exception`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
@@ -222,7 +222,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with linksetRef from links digestMultibase`() = runBlocking {
+    fun `test branch verifyIntegrityChain with linksetRef from links digestMultibase`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
         }
@@ -251,7 +251,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with linksetRef from linksetDigest`() = runBlocking {
+    fun `test branch verifyIntegrityChain with linksetRef from linksetDigest`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
         }
@@ -276,7 +276,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with linksetRef from linkset object`() = runBlocking {
+    fun `test branch verifyIntegrityChain with linksetRef from linkset object`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
         }
@@ -305,7 +305,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with no linksetRef validates digest format`() = runBlocking {
+    fun `test branch verifyIntegrityChain with no linksetRef validates digest format`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
         }
@@ -325,7 +325,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with artifact found`() = runBlocking {
+    fun `test branch verifyIntegrityChain with artifact found`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
             put("links", buildJsonArray {
@@ -371,7 +371,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch verifyIntegrityChain with artifact not found`() = runBlocking {
+    fun `test branch verifyIntegrityChain with artifact not found`() = runBlocking<Unit> {
         val linkset = buildJsonObject {
             put("id", "linkset-1")
             put("links", buildJsonArray {
@@ -402,7 +402,7 @@ class IntegrityVerifierBranchCoverageTest {
     // ========== discoverAnchorFromEvidence() Branch Coverage ==========
 
     @Test
-    fun `test branch discoverAnchorFromEvidence returns null when no evidence`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence returns null when no evidence`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
         }
@@ -413,7 +413,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch discoverAnchorFromEvidence finds BlockchainAnchorEvidence`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence finds BlockchainAnchorEvidence`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("evidence", buildJsonArray {
@@ -433,7 +433,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch discoverAnchorFromEvidence finds evidence without type`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence finds evidence without type`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("evidence", buildJsonArray {
@@ -451,7 +451,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch discoverAnchorFromEvidence includes contract if present`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence includes contract if present`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("evidence", buildJsonArray {
@@ -471,7 +471,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch discoverAnchorFromEvidence returns null when missing chainId`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence returns null when missing chainId`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("evidence", buildJsonArray {
@@ -488,7 +488,7 @@ class IntegrityVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test branch discoverAnchorFromEvidence returns null when missing txHash`() = runBlocking {
+    fun `test branch discoverAnchorFromEvidence returns null when missing txHash`() = runBlocking<Unit> {
         val vc = buildJsonObject {
             put("id", "cred-1")
             put("evidence", buildJsonArray {

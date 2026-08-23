@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class DidDocumentDslExtendedTest {
 
     @Test
-    fun `test add capability invocation via DSL`() = runBlocking {
+    fun `test add capability invocation via DSL`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeave = TrustWeave.build {
             keys { 
@@ -47,7 +47,7 @@ class DidDocumentDslExtendedTest {
     }
 
     @Test
-    fun `test add capability delegation via DSL`() = runBlocking {
+    fun `test add capability delegation via DSL`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeave = TrustWeave.build {
             keys { 
@@ -77,7 +77,7 @@ class DidDocumentDslExtendedTest {
     }
 
     @Test
-    fun `test set context via DSL`() = runBlocking {
+    fun `test set context via DSL`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeave = TrustWeave.build {
             keys { 
@@ -107,7 +107,7 @@ class DidDocumentDslExtendedTest {
     }
 
     @Test
-    fun `test remove capability invocation via DSL`() = runBlocking {
+    fun `test remove capability invocation via DSL`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeave = TrustWeave.build {
             keys { 
@@ -144,7 +144,7 @@ class DidDocumentDslExtendedTest {
     }
 
     @Test
-    fun `test full DID document update with all new fields`() = runBlocking {
+    fun `test full DID document update with all new fields`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val trustWeave = TrustWeave.build {
             keys { 

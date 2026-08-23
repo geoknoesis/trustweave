@@ -32,7 +32,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test store credential`() = runBlocking {
+    fun `test store credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
 
         val id = wallet.store(credential)
@@ -42,7 +42,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test store credential without ID generates UUID`() = runBlocking {
+    fun `test store credential without ID generates UUID`() = runBlocking<Unit> {
         val credential = VerifiableCredential(
             type = listOf(CredentialType.VerifiableCredential),
             issuer = Issuer.fromDid(Did("did:example:issuer")),
@@ -57,7 +57,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test get credential`() = runBlocking {
+    fun `test get credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val id = wallet.store(credential)
 
@@ -69,14 +69,14 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test get non-existent credential returns null`() = runBlocking {
+    fun `test get non-existent credential returns null`() = runBlocking<Unit> {
         val retrieved = wallet.get("non-existent-id")
 
         assertNull(retrieved)
     }
 
     @Test
-    fun `test list all credentials`() = runBlocking {
+    fun `test list all credentials`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1")
         val cred2 = createTestCredential("cred-2")
         wallet.store(cred1)
@@ -90,7 +90,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test list with issuer filter`() = runBlocking {
+    fun `test list with issuer filter`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
         val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
         wallet.store(cred1)
@@ -103,7 +103,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test list with type filter`() = runBlocking {
+    fun `test list with type filter`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1", types = listOf("VerifiableCredential", "TypeA"))
         val cred2 = createTestCredential("cred-2", types = listOf("VerifiableCredential", "TypeB"))
         wallet.store(cred1)
@@ -116,7 +116,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test list with subject filter`() = runBlocking {
+    fun `test list with subject filter`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1", subjectId = "did:example:subject1")
         val cred2 = createTestCredential("cred-2", subjectId = "did:example:subject2")
         wallet.store(cred1)
@@ -129,7 +129,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test list with expired filter`() = runBlocking {
+    fun `test list with expired filter`() = runBlocking<Unit> {
         val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
         val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential("cred-1", expirationDate = pastDate)
@@ -147,7 +147,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test list with revoked filter`() = runBlocking {
+    fun `test list with revoked filter`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1", revoked = true)
         val cred2 = createTestCredential("cred-2", revoked = false)
         wallet.store(cred1)
@@ -163,7 +163,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test delete credential`() = runBlocking {
+    fun `test delete credential`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val id = wallet.store(credential)
 
@@ -174,14 +174,14 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test delete non-existent credential returns false`() = runBlocking {
+    fun `test delete non-existent credential returns false`() = runBlocking<Unit> {
         val deleted = wallet.delete("non-existent-id")
 
         assertFalse(deleted)
     }
 
     @Test
-    fun `test query credentials`() = runBlocking {
+    fun `test query credentials`() = runBlocking<Unit> {
         val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
         val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
         wallet.store(cred1)
@@ -196,7 +196,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test query with multiple filters`() = runBlocking {
+    fun `test query with multiple filters`() = runBlocking<Unit> {
         val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1", expirationDate = futureDate)
         val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer1", expirationDate = futureDate)
@@ -215,7 +215,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test query with byTag throws instead of silently returning all credentials`() = runBlocking {
+    fun `test query with byTag throws instead of silently returning all credentials`() = runBlocking<Unit> {
         wallet.store(createTestCredential("cred-1"))
 
         val exception = assertFailsWith<UnsupportedOperationException> {
@@ -225,7 +225,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test query with byCollection throws instead of silently returning all credentials`() = runBlocking {
+    fun `test query with byCollection throws instead of silently returning all credentials`() = runBlocking<Unit> {
         wallet.store(createTestCredential("cred-1"))
 
         val exception = assertFailsWith<UnsupportedOperationException> {
@@ -235,7 +235,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test clear all credentials`() = runBlocking {
+    fun `test clear all credentials`() = runBlocking<Unit> {
         wallet.store(createTestCredential("cred-1"))
         wallet.store(createTestCredential("cred-2"))
 
@@ -246,7 +246,7 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test size returns correct count`() = runBlocking {
+    fun `test size returns correct count`() = runBlocking<Unit> {
         assertEquals(0, wallet.size())
 
         wallet.store(createTestCredential("cred-1"))

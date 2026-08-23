@@ -105,7 +105,7 @@ class DidCommPackerSignedMessageTest {
         )
 
     @Test
-    fun signedPlainMessageRoundTripVerifies() = runBlocking {
+    fun signedPlainMessageRoundTripVerifies() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "signed hello")
         val packed = packSigned(packer, message)
@@ -125,7 +125,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun tamperedSignedMessageIsRejected() = runBlocking {
+    fun tamperedSignedMessageIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "original")
         val packed = packSigned(packer, message)
@@ -149,7 +149,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun signatureFromWrongKeyIsRejected() = runBlocking {
+    fun signatureFromWrongKeyIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "hi"))
 
@@ -164,7 +164,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun algNoneIsRejected() = runBlocking {
+    fun algNoneIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "hi"))
 
@@ -202,7 +202,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun missingProtectedHeaderIsRejected() = runBlocking {
+    fun missingProtectedHeaderIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "hi"))
 
@@ -232,7 +232,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun unresolvableSignerDidIsRejected() = runBlocking {
+    fun unresolvableSignerDidIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "hi"))
 
@@ -244,7 +244,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun unsignedPlainMessageStillUnpacks() = runBlocking {
+    fun unsignedPlainMessageStillUnpacks() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "no claim")
         val packed = packer.pack(
@@ -272,7 +272,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun strippedSignaturesWithRequireSignedAreRejected() = runBlocking {
+    fun strippedSignaturesWithRequireSignedAreRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val packed = packSigned(packer, BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "strip me"))
 
@@ -289,7 +289,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun unsignedMessageWithRequireSignedIsRejected() = runBlocking {
+    fun unsignedMessageWithRequireSignedIsRejected() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "never signed")
         val packed = packer.pack(
@@ -309,7 +309,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun strippedSignaturesWithoutRequireSignedStillUnpack() = runBlocking {
+    fun strippedSignaturesWithoutRequireSignedStillUnpack() = runBlocking<Unit> {
         // Default behavior is unchanged: without requireSigned, a stripped message is
         // indistinguishable from a legitimately unsigned one and still unpacks.
         val packer = packerWith()
@@ -321,7 +321,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun signedMessageWithRequireSignedSurfacesVerifiedSigner() = runBlocking {
+    fun signedMessageWithRequireSignedSurfacesVerifiedSigner() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "prove it")
         val packed = packSigned(packer, message)
@@ -333,7 +333,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun unsignedMessageSurfacesNoVerifiedSigner() = runBlocking {
+    fun unsignedMessageSurfacesNoVerifiedSigner() = runBlocking<Unit> {
         val packer = packerWith()
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "no claim")
         val packed = packer.pack(
@@ -395,7 +395,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun manuallySignedMessageWithCleanHeaderVerifies() = runBlocking {
+    fun manuallySignedMessageWithCleanHeaderVerifies() = runBlocking<Unit> {
         // Control for the header-hygiene tests: the forge helper produces an otherwise-valid JWS.
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "control")
         val forged = forgeSignedWithHeader(
@@ -408,7 +408,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun critHeaderIsRejected() = runBlocking {
+    fun critHeaderIsRejected() = runBlocking<Unit> {
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "crit")
         val forged = forgeSignedWithHeader(
             message,
@@ -422,7 +422,7 @@ class DidCommPackerSignedMessageTest {
     }
 
     @Test
-    fun b64FalseIsRejected() = runBlocking {
+    fun b64FalseIsRejected() = runBlocking<Unit> {
         val message = BasicMessageProtocol.createBasicMessage(aliceDid, bobDid, "b64")
         val forged = forgeSignedWithHeader(
             message,

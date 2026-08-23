@@ -50,7 +50,7 @@ class JAdESProofEngineTest {
     }
 
     @Test
-    fun `issues and verifies a JAdES B-B credential (Ed25519)`() = runBlocking {
+    fun `issues and verifies a JAdES B-B credential (Ed25519)`() = runBlocking<Unit> {
         val resolver = resolverFor(ca)
         val engine = JAdESProofEngine(kms = kms, trustAnchorResolver = resolver)
 
@@ -80,7 +80,7 @@ class JAdESProofEngineTest {
     }
 
     @Test
-    fun `verifying with a different CA returns UntrustedSigner via InvalidProof`() = runBlocking {
+    fun `verifying with a different CA returns UntrustedSigner via InvalidProof`() = runBlocking<Unit> {
         val resolver = resolverFor(ca)
         val engine = JAdESProofEngine(kms = kms, trustAnchorResolver = resolver)
 
@@ -104,7 +104,7 @@ class JAdESProofEngineTest {
     }
 
     @Test
-    fun `verifying a credential whose proof is not JAdES fails cleanly`() = runBlocking {
+    fun `verifying a credential whose proof is not JAdES fails cleanly`() = runBlocking<Unit> {
         val resolver = resolverFor(ca)
         val engine = JAdESProofEngine(kms = kms, trustAnchorResolver = resolver)
 
@@ -121,7 +121,7 @@ class JAdESProofEngineTest {
     }
 
     @Test
-    fun `issue rejects missing signerCertificateChain`() = runBlocking {
+    fun `issue rejects missing signerCertificateChain`() = runBlocking<Unit> {
         val engine = JAdESProofEngine(kms = kms, trustAnchorResolver = resolverFor(ca))
         val keyId = generateKey(Algorithm.Ed25519)
         val req = IssuanceRequest(
@@ -141,7 +141,7 @@ class JAdESProofEngineTest {
     }
 
     @Test
-    fun `verify falls back to additionalOptions trustAnchorResolver when not constructor-injected`() = runBlocking {
+    fun `verify falls back to additionalOptions trustAnchorResolver when not constructor-injected`() = runBlocking<Unit> {
         // Engine constructed WITHOUT a resolver
         val engine = JAdESProofEngine(kms = kms)
         val keyId = generateKey(Algorithm.Ed25519)

@@ -55,7 +55,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `signing request rejects B_LT without validationData`() = runBlocking {
+    fun `signing request rejects B_LT without validationData`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val failed = runCatching {
@@ -72,7 +72,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `signing request rejects B_LT with empty cert chain in validationData`() = runBlocking {
+    fun `signing request rejects B_LT with empty cert chain in validationData`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
         val failed = runCatching {
@@ -89,7 +89,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `roundtrips a JAdES B-LT signature`() = runBlocking {
+    fun `roundtrips a JAdES B-LT signature`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LT Signer")
         val signature = DefaultJadesSigner(kms).sign(
@@ -133,7 +133,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `roundtrips a JAdES B-LTA signature including archival time-stamp`() = runBlocking {
+    fun `roundtrips a JAdES B-LTA signature including archival time-stamp`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
         val signature = DefaultJadesSigner(kms).sign(
@@ -172,7 +172,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `requiring B-LT but receiving only B-T yields WrongProfile`() = runBlocking {
+    fun `requiring B-LT but receiving only B-T yields WrongProfile`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-T Signer")
         val signature = DefaultJadesSigner(kms).sign(
@@ -198,7 +198,7 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `B-LTA signature is accepted when verifier only requires B-T (strict-superset rule)`() = runBlocking {
+    fun `B-LTA signature is accepted when verifier only requires B-T (strict-superset rule)`() = runBlocking<Unit> {
         val keyId = generateKey(Algorithm.Ed25519)
         val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
         val signature = DefaultJadesSigner(kms).sign(

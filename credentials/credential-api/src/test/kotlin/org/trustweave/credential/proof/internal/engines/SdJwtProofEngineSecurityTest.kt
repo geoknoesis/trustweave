@@ -114,7 +114,7 @@ class SdJwtProofEngineSecurityTest {
     // --- Happy path ---------------------------------------------------------------------
 
     @Test
-    fun `sd-jwt sign and verify round-trip succeeds`() = runBlocking {
+    fun `sd-jwt sign and verify round-trip succeeds`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue(validUntil = Clock.System.now().plus(1.hours))
 
@@ -130,7 +130,7 @@ class SdJwtProofEngineSecurityTest {
     // --- Issuer key purpose: must be authorized under assertionMethod ---------------------
 
     @Test
-    fun `issuer key not listed under assertionMethod is rejected`() = runBlocking {
+    fun `issuer key not listed under assertionMethod is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue(validUntil = Clock.System.now().plus(1.hours))
 
@@ -152,7 +152,7 @@ class SdJwtProofEngineSecurityTest {
     // --- Finding 4a: signed temporal claims are authoritative -----------------------------
 
     @Test
-    fun `stripping envelope expirationDate does not bypass expired signed exp`() = runBlocking {
+    fun `stripping envelope expirationDate does not bypass expired signed exp`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue(validUntil = Clock.System.now().minus(2.hours))
 
@@ -173,7 +173,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `rewriting envelope expirationDate to extend validity is rejected as tampered`() = runBlocking {
+    fun `rewriting envelope expirationDate to extend validity is rejected as tampered`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue(validUntil = Clock.System.now().plus(1.hours))
 
@@ -186,7 +186,7 @@ class SdJwtProofEngineSecurityTest {
     // --- Finding 4b: signed iss must match the envelope issuer ----------------------------
 
     @Test
-    fun `signed iss differing from envelope issuer is rejected`() = runBlocking {
+    fun `signed iss differing from envelope issuer is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
 
@@ -215,7 +215,7 @@ class SdJwtProofEngineSecurityTest {
     // --- Finding 4c: envelope claims must be backed by signed/disclosed data --------------
 
     @Test
-    fun `envelope claim value differing from disclosure value is rejected`() = runBlocking {
+    fun `envelope claim value differing from disclosure value is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
 
@@ -230,7 +230,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `envelope claim not backed by any disclosure is rejected`() = runBlocking {
+    fun `envelope claim not backed by any disclosure is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
 
@@ -258,7 +258,7 @@ class SdJwtProofEngineSecurityTest {
     )
 
     @Test
-    fun `kb-jwt presentation round-trip passes full service verification`() = runBlocking {
+    fun `kb-jwt presentation round-trip passes full service verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue(validUntil = Clock.System.now().plus(1.hours))
         val presentation = rig.present(
@@ -277,7 +277,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `kb-jwt with wrong nonce fails verification`() = runBlocking {
+    fun `kb-jwt with wrong nonce fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(
@@ -293,7 +293,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `kb-jwt with wrong audience fails verification`() = runBlocking {
+    fun `kb-jwt with wrong audience fails verification`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(
@@ -309,7 +309,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `presentation without kb-jwt fails when proof verification is required`() = runBlocking {
+    fun `presentation without kb-jwt fails when proof verification is required`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         // No challenge => engine does not create a KB-JWT and the presentation has no proof.
@@ -322,7 +322,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `presentation with stripped kb-jwt fails`() = runBlocking {
+    fun `presentation with stripped kb-jwt fails`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(
@@ -346,7 +346,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `kb-jwt bound to different disclosures fails sd_hash check`() = runBlocking {
+    fun `kb-jwt bound to different disclosures fails sd_hash check`() = runBlocking<Unit> {
         val rig = TestRig()
         val credential = rig.issue()
         val presentation = rig.present(
@@ -418,7 +418,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `kb-jwt older than the default max age is rejected`() = runBlocking {
+    fun `kb-jwt older than the default max age is rejected`() = runBlocking<Unit> {
         val rig = TestRig()
         // 1 hour old: well past the 10-minute default max age + 5-minute default skew.
         val stale = rig.presentationWithKbJwtAge(1.hours)
@@ -434,7 +434,7 @@ class SdJwtProofEngineSecurityTest {
     }
 
     @Test
-    fun `kb-jwt max age is configurable via the kbJwtMaxAge additional option`() = runBlocking {
+    fun `kb-jwt max age is configurable via the kbJwtMaxAge additional option`() = runBlocking<Unit> {
         val rig = TestRig()
         // 30 minutes old: rejected by the 10-minute default, accepted at a 2-hour max age.
         val aged = rig.presentationWithKbJwtAge(30.minutes)

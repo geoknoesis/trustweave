@@ -33,7 +33,7 @@ import kotlin.test.assertNotNull
 class CardanoBlockfrostIntegrationTest {
 
     @Test
-    fun `anchor and read back round-trip on Preview`() = runBlocking {
+    fun `anchor and read back round-trip on Preview`() = runBlocking<Unit> {
         val projectId = System.getenv("CARDANO_BLOCKFROST_PROJECT_ID")!!
         val mnemonic = System.getenv("CARDANO_SUBMITTER_MNEMONIC")!!
 

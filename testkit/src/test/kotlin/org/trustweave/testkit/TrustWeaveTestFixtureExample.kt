@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class TrustWeaveTestFixtureExample {
 
     @Test
-    fun `test using TrustWeaveTestFixture minimal setup`() = runBlocking {
+    fun `test using TrustWeaveTestFixture minimal setup`() = runBlocking<Unit> {
         // Use minimal fixture with defaults
         TrustWeaveTestFixture.minimal().use { fixture ->
             // Create issuer DID
@@ -40,7 +40,7 @@ class TrustWeaveTestFixtureExample {
     }
 
     @Test
-    fun `test using TrustWeaveTestFixture builder pattern`() = runBlocking {
+    fun `test using TrustWeaveTestFixture builder pattern`() = runBlocking<Unit> {
         // Use builder for custom configuration
         TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
@@ -67,7 +67,7 @@ class TrustWeaveTestFixtureExample {
     }
 
     @Test
-    fun `test EO workflow with TrustWeaveTestFixture`() = runBlocking {
+    fun `test EO workflow with TrustWeaveTestFixture`() = runBlocking<Unit> {
         TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
             .build()

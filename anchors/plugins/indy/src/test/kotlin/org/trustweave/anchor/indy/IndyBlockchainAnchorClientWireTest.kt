@@ -48,7 +48,7 @@ class IndyBlockchainAnchorClientWireTest {
     }
 
     @Test
-    fun `write payload signs and submits ATTRIB`() = runBlocking {
+    fun `write payload signs and submits ATTRIB`() = runBlocking<Unit> {
         wireMock.stubFor(
             post(urlPathEqualTo("/submit"))
                 .willReturn(
@@ -83,7 +83,7 @@ class IndyBlockchainAnchorClientWireTest {
     }
 
     @Test
-    fun `read payload decodes inline raw payload`() = runBlocking {
+    fun `read payload decodes inline raw payload`() = runBlocking<Unit> {
         val rawJsonString = """{"digest":"abc123","mediaType":"application/json","payload":{"foo":"bar"}}"""
         val escaped = rawJsonString.replace("\"", "\\\"")
         wireMock.stubFor(

@@ -112,7 +112,7 @@ class InMemoryKmsContractConformanceTest {
     }
 
     @Test
-    fun `signing with an incompatible algorithm fails per isCompatibleWith`() = runBlocking {
+    fun `signing with an incompatible algorithm fails per isCompatibleWith`() = runBlocking<Unit> {
         val gen = kms.generateKey(Algorithm.Ed25519, emptyMap())
         assertTrue(gen is GenerateKeyResult.Success, "expected Success, got $gen")
         val handle = (gen as GenerateKeyResult.Success).keyHandle

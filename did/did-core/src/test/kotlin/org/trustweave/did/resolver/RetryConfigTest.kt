@@ -34,7 +34,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test executeWithRetry succeeds on first attempt`() = runBlocking {
+    fun `test executeWithRetry succeeds on first attempt`() = runBlocking<Unit> {
         val config = RetryConfig.default()
         var attempts = 0
         
@@ -48,7 +48,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test executeWithRetry retries on retryable exception`() = runBlocking {
+    fun `test executeWithRetry retries on retryable exception`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 2,
             initialDelayMs = 10,
@@ -69,7 +69,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test executeWithRetry fails after max retries`() = runBlocking {
+    fun `test executeWithRetry fails after max retries`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 2,
             initialDelayMs = 10,
@@ -89,7 +89,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test executeWithRetry does not retry non-retryable exceptions`() = runBlocking {
+    fun `test executeWithRetry does not retry non-retryable exceptions`() = runBlocking<Unit> {
         val config = RetryConfig.default()
         var attempts = 0
         
@@ -105,7 +105,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test custom retryable exceptions`() = runBlocking {
+    fun `test custom retryable exceptions`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 1,
             initialDelayMs = 10,
@@ -126,7 +126,7 @@ class RetryConfigTest {
     }
 
     @Test
-    fun `test exponential backoff`() = runBlocking {
+    fun `test exponential backoff`() = runBlocking<Unit> {
         val config = RetryConfig(
             maxRetries = 3,
             initialDelayMs = 10,

@@ -48,7 +48,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey succeeds with quickStart config`() = runBlocking {
+    fun `test rotateKey succeeds with quickStart config`() = runBlocking<Unit> {
         // Facade-level regression test: the factory must wire a KmsService so
         // rotateKey is usable out of the box (it used to always fail with
         // "KmsService is not configured"). TrustWeave.inMemory is the configuration
@@ -73,7 +73,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey`() = runBlocking {
+    fun `test rotateKey`() = runBlocking<Unit> {
         // Create initial DID
         val did = trustWeave.createDid {
             method("key")
@@ -90,7 +90,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey without DID returns failure`() = runBlocking {
+    fun `test rotateKey without DID returns failure`() = runBlocking<Unit> {
         val result = trustWeave.rotateKey {
             algorithm("Ed25519")
         }
@@ -103,7 +103,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey with removeOldKey`() = runBlocking {
+    fun `test rotateKey with removeOldKey`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -119,7 +119,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey auto-detects method from DID`() = runBlocking {
+    fun `test rotateKey auto-detects method from DID`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -135,7 +135,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey with unconfigured method returns failure`() = runBlocking {
+    fun `test rotateKey with unconfigured method returns failure`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -155,7 +155,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey via TrustWeaveContext`() = runBlocking {
+    fun `test rotateKey via TrustWeaveContext`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")
@@ -170,7 +170,7 @@ class KeyRotationDslTest {
     }
 
     @Test
-    fun `test rotateKey with multiple old keys`() = runBlocking {
+    fun `test rotateKey with multiple old keys`() = runBlocking<Unit> {
         val did = trustWeave.createDid {
             method("key")
             algorithm("Ed25519")

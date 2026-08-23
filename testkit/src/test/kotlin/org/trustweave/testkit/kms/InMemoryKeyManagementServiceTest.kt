@@ -21,7 +21,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate Ed25519 key`() = runBlocking {
+    fun `test generate Ed25519 key`() = runBlocking<Unit> {
         val result = kms.generateKey("Ed25519", emptyMap())
         val handle = when (result) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
@@ -39,7 +39,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate Secp256k1 key`() = runBlocking {
+    fun `test generate Secp256k1 key`() = runBlocking<Unit> {
         try {
             val result = kms.generateKey("SECP256K1", emptyMap())
             val handle = when (result) {
@@ -62,7 +62,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate key with custom key ID`() = runBlocking {
+    fun `test generate key with custom key ID`() = runBlocking<Unit> {
         val result = kms.generateKey("Ed25519", mapOf("keyId" to "custom-key-123"))
         val handle = when (result) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
@@ -73,13 +73,13 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate key with unsupported algorithm throws exception`() = runBlocking {
+    fun `test generate key with unsupported algorithm throws exception`() = runBlocking<Unit> {
         val result = kms.generateKey("RSA", emptyMap())
         assertTrue(result is org.trustweave.kms.results.GenerateKeyResult.Failure.UnsupportedAlgorithm)
     }
 
     @Test
-    fun `test get supported algorithms`() = runBlocking {
+    fun `test get supported algorithms`() = runBlocking<Unit> {
         val supported = kms.getSupportedAlgorithms()
 
         assertTrue(supported.contains(Algorithm.Ed25519))
@@ -88,7 +88,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test supports algorithm`() = runBlocking {
+    fun `test supports algorithm`() = runBlocking<Unit> {
         assertTrue(kms.supportsAlgorithm(Algorithm.Ed25519))
         assertTrue(kms.supportsAlgorithm(Algorithm.Secp256k1))
         assertFalse(kms.supportsAlgorithm(Algorithm.P256))
@@ -96,7 +96,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test supports algorithm by name`() = runBlocking {
+    fun `test supports algorithm by name`() = runBlocking<Unit> {
         assertTrue(kms.supportsAlgorithm("Ed25519"))
         assertTrue(kms.supportsAlgorithm("ed25519")) // case insensitive
         assertTrue(kms.supportsAlgorithm("secp256k1"))
@@ -105,7 +105,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate key with Algorithm type`() = runBlocking {
+    fun `test generate key with Algorithm type`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.Ed25519, emptyMap())
         val handle = when (result) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
@@ -117,13 +117,13 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test generate key with unsupported Algorithm type throws exception`() = runBlocking {
+    fun `test generate key with unsupported Algorithm type throws exception`() = runBlocking<Unit> {
         val result = kms.generateKey(Algorithm.P256, emptyMap())
         assertTrue(result is org.trustweave.kms.results.GenerateKeyResult.Failure.UnsupportedAlgorithm)
     }
 
     @Test
-    fun `test get public key`() = runBlocking {
+    fun `test get public key`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "key-1"))
         val handle = when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> generateResult.keyHandle
@@ -142,13 +142,13 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test get non-existent key throws exception`() = runBlocking {
+    fun `test get non-existent key throws exception`() = runBlocking<Unit> {
         val getResult = kms.getPublicKey(KeyId("non-existent-key"))
         assertTrue(getResult is org.trustweave.kms.results.GetPublicKeyResult.Failure.KeyNotFound)
     }
 
     @Test
-    fun `test sign data`() = runBlocking {
+    fun `test sign data`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "signing-key"))
         when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }
@@ -167,7 +167,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign with explicit algorithm`() = runBlocking {
+    fun `test sign with explicit algorithm`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "signing-key"))
         when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }
@@ -186,7 +186,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign with Secp256k1 algorithm`() = runBlocking {
+    fun `test sign with Secp256k1 algorithm`() = runBlocking<Unit> {
         try {
             val generateResult = kms.generateKey("SECP256K1", mapOf("keyId" to "ecdsa-key"))
             when (generateResult) {
@@ -211,7 +211,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign with non-existent key throws exception`() = runBlocking {
+    fun `test sign with non-existent key throws exception`() = runBlocking<Unit> {
         val data = "test data".toByteArray()
 
         val signResult = kms.sign(KeyId("non-existent-key"), data)
@@ -219,7 +219,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test delete key`() = runBlocking {
+    fun `test delete key`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "key-to-delete"))
         when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }
@@ -236,7 +236,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test delete non-existent key returns false`() = runBlocking {
+    fun `test delete non-existent key returns false`() = runBlocking<Unit> {
         val deleteResult = kms.deleteKey(KeyId("non-existent-key"))
         val deleted = when (deleteResult) {
             is org.trustweave.kms.results.DeleteKeyResult.Deleted -> true
@@ -248,7 +248,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test clear all keys`() = runBlocking {
+    fun `test clear all keys`() = runBlocking<Unit> {
         val result1 = kms.generateKey("Ed25519", mapOf("keyId" to "key-1"))
         when (result1) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }
@@ -269,7 +269,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test multiple keys can coexist`() = runBlocking {
+    fun `test multiple keys can coexist`() = runBlocking<Unit> {
         try {
             val result1 = kms.generateKey("Ed25519", mapOf("keyId" to "key-1"))
             val key1 = when (result1) {
@@ -303,7 +303,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign same data produces consistent signature`() = runBlocking {
+    fun `test sign same data produces consistent signature`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "consistent-key"))
         when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }
@@ -327,7 +327,7 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test sign different data produces different signatures`() = runBlocking {
+    fun `test sign different data produces different signatures`() = runBlocking<Unit> {
         val generateResult = kms.generateKey("Ed25519", mapOf("keyId" to "different-key"))
         when (generateResult) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> { /* OK */ }

@@ -14,7 +14,7 @@ import kotlin.test.*
 class GodiddyVerifierBranchCoverageTest {
 
     @Test
-    fun `test GodiddyVerifier verifyCredential with valid credential`() = runBlocking {
+    fun `test GodiddyVerifier verifyCredential with valid credential`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
@@ -46,7 +46,7 @@ class GodiddyVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyVerifier verifyCredential with options`() = runBlocking {
+    fun `test GodiddyVerifier verifyCredential with options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
@@ -82,7 +82,7 @@ class GodiddyVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyVerifier verifyCredential with empty options`() = runBlocking {
+    fun `test GodiddyVerifier verifyCredential with empty options`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)
@@ -113,7 +113,7 @@ class GodiddyVerifierBranchCoverageTest {
     }
 
     @Test
-    fun `test GodiddyVerifier convertToJsonElement with various types`() = runBlocking {
+    fun `test GodiddyVerifier convertToJsonElement with various types`() = runBlocking<Unit> {
         val config = GodiddyConfig.default()
         val client = GodiddyClient(config)
         val verifier = GodiddyVerifier(client)

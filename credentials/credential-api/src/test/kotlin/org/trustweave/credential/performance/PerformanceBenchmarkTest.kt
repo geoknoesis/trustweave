@@ -48,7 +48,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test JSON serialization performance`() = runBlocking {
+    fun `test JSON serialization performance`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val startTime = System.nanoTime()
@@ -65,7 +65,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test JSON deserialization performance`() = runBlocking {
+    fun `test JSON deserialization performance`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val jsonLd = credential.toJsonLd()
         
@@ -83,7 +83,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test CBOR encoding performance`() = runBlocking {
+    fun `test CBOR encoding performance`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val startTime = System.nanoTime()
@@ -100,7 +100,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test CBOR decoding performance`() = runBlocking {
+    fun `test CBOR decoding performance`() = runBlocking<Unit> {
         val credential = createTestCredential()
         val cborBytes = credential.toCbor()
         
@@ -118,7 +118,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test CBOR round trip performance`() = runBlocking {
+    fun `test CBOR round trip performance`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val startTime = System.nanoTime()
@@ -136,7 +136,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test CBOR size efficiency`() = runBlocking {
+    fun `test CBOR size efficiency`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val jsonBytes = credential.toJsonLd().toString().toByteArray(Charsets.UTF_8)
@@ -152,7 +152,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test large credential serialization performance`() = runBlocking {
+    fun `test large credential serialization performance`() = runBlocking<Unit> {
         // Create credential with many claims (reduced from 100 to 50 to make test more reasonable)
         val claims = (1..50).associate { 
             "claim_$it" to JsonPrimitive("value_$it".repeat(10))
@@ -182,7 +182,7 @@ class PerformanceBenchmarkTest {
     }
     
     @Test
-    fun `test memory efficiency of CBOR`() = runBlocking {
+    fun `test memory efficiency of CBOR`() = runBlocking<Unit> {
         val credential = createTestCredential()
         
         val jsonLd = credential.toJsonLd()

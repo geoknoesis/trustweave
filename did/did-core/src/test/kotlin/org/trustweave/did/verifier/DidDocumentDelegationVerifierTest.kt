@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class DidDocumentDelegationVerifierTest {
 
     @Test
-    fun `test verify simple delegation chain`() = runBlocking {
+    fun `test verify simple delegation chain`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -47,7 +47,7 @@ class DidDocumentDelegationVerifierTest {
     }
 
     @Test
-    fun `test verify delegation chain fails when delegate not in capabilityDelegation`() = runBlocking {
+    fun `test verify delegation chain fails when delegate not in capabilityDelegation`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 
@@ -74,7 +74,7 @@ class DidDocumentDelegationVerifierTest {
     }
 
     @Test
-    fun `test verify delegation chain fails when delegator not resolved`() = runBlocking {
+    fun `test verify delegation chain fails when delegator not resolved`() = runBlocking<Unit> {
         val resolveDid: suspend (String) -> DidResolutionResult? = { null }
 
         val verifier = DidDocumentDelegationVerifier(DidResolver { did -> resolveDid(did.value) ?: DidResolutionResult.Failure.NotFound(did = did, reason = "DID not found") })
@@ -85,7 +85,7 @@ class DidDocumentDelegationVerifierTest {
     }
 
     @Test
-    fun `test verify multi-hop delegation chain`() = runBlocking {
+    fun `test verify multi-hop delegation chain`() = runBlocking<Unit> {
         val chain = listOf(Did("did:key:ceo"), Did("did:key:director"), Did("did:key:manager"))
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
@@ -117,7 +117,7 @@ class DidDocumentDelegationVerifierTest {
     }
 
     @Test
-    fun `test verify multi-hop delegation chain fails on broken link`() = runBlocking {
+    fun `test verify multi-hop delegation chain fails on broken link`() = runBlocking<Unit> {
         val chain = listOf(Did("did:key:ceo"), Did("did:key:director"), Did("did:key:manager"))
 
         val resolveDid: suspend (String) -> DidResolutionResult? = { did ->
@@ -149,7 +149,7 @@ class DidDocumentDelegationVerifierTest {
     }
 
     @Test
-    fun `test verify delegation chain with capability parameter`() = runBlocking {
+    fun `test verify delegation chain with capability parameter`() = runBlocking<Unit> {
         val delegatorDid = "did:key:delegator"
         val delegateDid = "did:key:delegate"
 

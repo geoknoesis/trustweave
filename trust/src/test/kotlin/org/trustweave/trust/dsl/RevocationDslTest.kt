@@ -66,7 +66,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test createStatusList`() = runBlocking {
+    fun `test createStatusList`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
 
         val statusList = trustWeave.revocation {
@@ -85,7 +85,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test createStatusList without issuer throws exception`() = runBlocking {
+    fun `test createStatusList without issuer throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.revocation {
                 purpose(StatusPurpose.REVOCATION)
@@ -94,7 +94,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test revoke credential`() = runBlocking {
+    fun `test revoke credential`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
 
@@ -112,7 +112,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test revoke credential without credentialId throws exception`() = runBlocking {
+    fun `test revoke credential without credentialId throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.revoke {
                 statusList("list-id")
@@ -121,7 +121,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test check revocation status`() = runBlocking {
+    fun `test check revocation status`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
 
@@ -159,7 +159,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test suspend credential`() = runBlocking {
+    fun `test suspend credential`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
         val credentialId = "cred-123"
 
@@ -177,7 +177,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test getStatusList`() = runBlocking {
+    fun `test getStatusList`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
 
         val createdList = trustWeave.revocation {
@@ -194,7 +194,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test createStatusList with custom size`() = runBlocking {
+    fun `test createStatusList with custom size`() = runBlocking<Unit> {
         val issuerDid = "did:key:issuer"
 
         val statusList = trustWeave.revocation {
@@ -213,7 +213,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test revoke credential without statusListId throws exception`() = runBlocking {
+    fun `test revoke credential without statusListId throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.revoke {
                 credential("cred-123")
@@ -222,7 +222,7 @@ class RevocationDslTest {
     }
 
     @Test
-    fun `test getStatusList without statusListId throws exception`() = runBlocking {
+    fun `test getStatusList without statusListId throws exception`() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             trustWeave.revocation { }.getStatusList()
         }

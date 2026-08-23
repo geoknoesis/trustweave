@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 class AbstractBlockchainAnchorClientTest {
 
     @Test
-    fun `test writePayload with opt-in in-memory test mode`() = runBlocking {
+    fun `test writePayload with opt-in in-memory test mode`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
             canSubmit = false,
@@ -37,7 +37,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test writePayload fails closed without credentials when test mode is off`() = runBlocking {
+    fun `test writePayload fails closed without credentials when test mode is off`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
             canSubmit = false
@@ -57,7 +57,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test writePayload with real mode`() = runBlocking {
+    fun `test writePayload with real mode`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
             canSubmit = true
@@ -76,7 +76,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test writePayload with contract address`() = runBlocking {
+    fun `test writePayload with contract address`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
             contractAddress = "app-123",
@@ -93,7 +93,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test writePayload with custom media type`() = runBlocking {
+    fun `test writePayload with custom media type`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {
@@ -108,7 +108,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test readPayload roundtrip from in-memory storage when test mode is on`() = runBlocking {
+    fun `test readPayload roundtrip from in-memory storage when test mode is on`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {
@@ -123,7 +123,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test readPayload validates chain ID`() = runBlocking {
+    fun `test readPayload validates chain ID`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient("algorand:testnet")
 
         val ref = AnchorRef(
@@ -137,7 +137,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test readPayload throws NotFoundException when not found`() = runBlocking {
+    fun `test readPayload throws NotFoundException when not found`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient("algorand:testnet")
 
         val ref = AnchorRef(
@@ -151,7 +151,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test writePayload handles exceptions`() = runBlocking {
+    fun `test writePayload handles exceptions`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient(
             chainId = "algorand:testnet",
             canSubmit = true,
@@ -168,7 +168,7 @@ class AbstractBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test buildAnchorRef with extra metadata`() = runBlocking {
+    fun `test buildAnchorRef with extra metadata`() = runBlocking<Unit> {
         val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
         val payload = buildJsonObject {

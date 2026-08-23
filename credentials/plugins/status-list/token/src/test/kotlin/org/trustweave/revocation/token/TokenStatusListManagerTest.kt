@@ -53,7 +53,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `buildStatusListToken returns a three-part JWT string`() = runBlocking {
+    fun `buildStatusListToken returns a three-part JWT string`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -66,7 +66,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListToken JWT header contains typ statuslist+jwt`() = runBlocking {
+    fun `buildStatusListToken JWT header contains typ statuslist+jwt`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -79,7 +79,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListToken JWT payload contains required claims`() = runBlocking {
+    fun `buildStatusListToken JWT payload contains required claims`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -98,7 +98,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListToken JWT payload issuer matches issuerDid`() = runBlocking {
+    fun `buildStatusListToken JWT payload issuer matches issuerDid`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -111,7 +111,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListToken status_list lst is valid base64url without padding`() = runBlocking {
+    fun `buildStatusListToken status_list lst is valid base64url without padding`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -134,7 +134,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `buildStatusListToken with ttlSeconds includes exp claim`() = runBlocking {
+    fun `buildStatusListToken with ttlSeconds includes exp claim`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -152,7 +152,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `revokeCredential sets the correct bit in the status array`() = runBlocking {
+    fun `revokeCredential sets the correct bit in the status array`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -178,7 +178,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `unrevokeCredential clears the bit`() = runBlocking {
+    fun `unrevokeCredential clears the bit`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -196,7 +196,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `2-bit mode revoke and suspend set independent bits`() = runBlocking {
+    fun `2-bit mode revoke and suspend set independent bits`() = runBlocking<Unit> {
         val manager2 = TokenStatusListManagerFactory.create(
             dataSource = dataSource,
             kms = kms,
@@ -224,7 +224,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `checkStatusByCredentialId returns not revoked for fresh credential`() = runBlocking {
+    fun `checkStatusByCredentialId returns not revoked for fresh credential`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -236,7 +236,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `revokeCredentials batch sets all entries`() = runBlocking {
+    fun `revokeCredentials batch sets all entries`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -259,7 +259,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getStatusListStatistics reflects usedIndices and revokedCount`() = runBlocking {
+    fun `getStatusListStatistics reflects usedIndices and revokedCount`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,
@@ -280,7 +280,7 @@ class TokenStatusListManagerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `deleteStatusList returns true and removes the entry`() = runBlocking {
+    fun `deleteStatusList returns true and removes the entry`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION
@@ -290,7 +290,7 @@ class TokenStatusListManagerTest {
     }
 
     @Test
-    fun `expandStatusList increases recorded size`() = runBlocking {
+    fun `expandStatusList increases recorded size`() = runBlocking<Unit> {
         val statusListId = manager.createStatusList(
             issuerDid = issuerDid,
             purpose = StatusPurpose.REVOCATION,

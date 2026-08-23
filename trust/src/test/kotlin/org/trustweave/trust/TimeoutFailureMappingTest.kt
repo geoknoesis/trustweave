@@ -133,7 +133,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `createDid exceeding timeout returns Failure instead of throwing`() = runBlocking {
+    fun `createDid exceeding timeout returns Failure instead of throwing`() = runBlocking<Unit> {
         installSlowKeyMethod()
 
         val result = trustWeave.createDid(timeout = shortTimeout) {
@@ -146,7 +146,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `resolveDid exceeding timeout returns Failure instead of throwing`() = runBlocking {
+    fun `resolveDid exceeding timeout returns Failure instead of throwing`() = runBlocking<Unit> {
         val did = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         installSlowKeyMethod()
 
@@ -157,7 +157,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `updateDid exceeding timeout returns Failure instead of throwing`() = runBlocking {
+    fun `updateDid exceeding timeout returns Failure instead of throwing`() = runBlocking<Unit> {
         val did = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         installSlowKeyMethod()
 
@@ -171,7 +171,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `rotateKey exceeding timeout returns Failure instead of throwing`() = runBlocking {
+    fun `rotateKey exceeding timeout returns Failure instead of throwing`() = runBlocking<Unit> {
         val did = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         installSlowKeyMethod()
 
@@ -185,7 +185,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `delegate exceeding timeout returns invalid result instead of throwing`() = runBlocking {
+    fun `delegate exceeding timeout returns invalid result instead of throwing`() = runBlocking<Unit> {
         val delegator = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         val delegate = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         installSlowKeyMethod()
@@ -203,7 +203,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `issue exceeding timeout returns Failure instead of throwing`() = runBlocking {
+    fun `issue exceeding timeout returns Failure instead of throwing`() = runBlocking<Unit> {
         // Rebuild with a credential service so issuance is configured; signedBy(did)
         // without an explicit key id forces key extraction through the (slow) resolver.
         val kmsRef = kms
@@ -244,7 +244,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `verify exceeding timeout returns Invalid instead of throwing`() = runBlocking {
+    fun `verify exceeding timeout returns Invalid instead of throwing`() = runBlocking<Unit> {
         // The credential service resolves issuer DIDs through the facade's registry, so
         // installing a slow "key" method after issuance makes verification (and only
         // verification) exceed its timeout.
@@ -336,7 +336,7 @@ class TimeoutFailureMappingTest {
         }
 
     @Test
-    fun `revoke cancellation still propagates and is not mapped to OperationTimedOut`() = runBlocking {
+    fun `revoke cancellation still propagates and is not mapped to OperationTimedOut`() = runBlocking<Unit> {
         val started = CompletableDeferred<Unit>()
         val slowTrustWeave = TrustWeave.from(
             trustWeave.configuration.copy(revocationManager = SlowRevocationManager(slowFor, started))
@@ -359,7 +359,7 @@ class TimeoutFailureMappingTest {
     }
 
     @Test
-    fun `real cancellation still propagates and is not mapped to a Failure`() = runBlocking {
+    fun `real cancellation still propagates and is not mapped to a Failure`() = runBlocking<Unit> {
         val did = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
         val started = CompletableDeferred<Unit>()
         installSlowKeyMethod(started)

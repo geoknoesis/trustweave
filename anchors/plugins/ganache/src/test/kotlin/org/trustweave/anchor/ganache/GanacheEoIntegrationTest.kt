@@ -63,7 +63,7 @@ class GanacheEoIntegrationTest {
     }
 
     @Test
-    fun `end-to-end EO integrity chain verification with Ganache`() = runBlocking {
+    fun `end-to-end EO integrity chain verification with Ganache`() = runBlocking<Unit> {
         // Skip test if Docker/Ganache is not available
         assumeTrue(ganacheContainer != null, "Docker/Ganache container not available - skipping test")
         val container = ganacheContainer!!
@@ -306,7 +306,7 @@ class GanacheEoIntegrationTest {
     }
 
     @Test
-    fun `test Ganache blockchain anchoring for EO dataset`() = runBlocking {
+    fun `test Ganache blockchain anchoring for EO dataset`() = runBlocking<Unit> {
         // Skip test if Docker/Ganache is not available
         assumeTrue(ganacheContainer != null, "Docker/Ganache container not available - skipping test")
         val container = ganacheContainer!!

@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl
 
+import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -87,7 +88,7 @@ class IssuanceDslTest {
     }
 
     @Test
-    fun `test issuance with inline credential builder`() = runBlocking {
+    fun `test issuance with inline credential builder`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -120,7 +121,7 @@ class IssuanceDslTest {
     }
 
     @Test
-    fun `test issuance with pre-built credential`() = runBlocking {
+    fun `test issuance with pre-built credential`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -150,7 +151,7 @@ class IssuanceDslTest {
     }
 
     @Test
-    fun `test issuance with custom proof type`() = runBlocking {
+    fun `test issuance with custom proof type`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -179,7 +180,7 @@ class IssuanceDslTest {
     }
 
     @Test
-    fun `test issuance with challenge and domain`() = runBlocking {
+    fun `test issuance with challenge and domain`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -210,7 +211,7 @@ class IssuanceDslTest {
     }
 
     @Test
-    fun `test issuance requires credential`() = runBlocking {
+    fun `test issuance requires credential`() = runBlocking<Unit> {
         val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
             is org.trustweave.kms.results.GenerateKeyResult.Success -> result.keyHandle
             else -> throw IllegalStateException("Failed to generate key: $result")
@@ -219,17 +220,20 @@ class IssuanceDslTest {
         val issuerDidDoc: DidDocument = didMethod.createDid()
         val issuerDidId = issuerDidDoc.id
 
-        assertFailsWith<IllegalStateException> {
-            trustWeave.issue {
-                // Missing credential
-                signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
-            }
+        val result = trustWeave.issue {
+            // Missing credential
+            signedBy(issuerDid = issuerDidId, keyId = issuerKey.id.value)
         }
+
+        assertTrue(
+            result is IssuanceResult.Failure.InvalidRequest,
+            "Issuing without a credential must yield InvalidRequest, got: $result",
+        )
     }
 
     @Test
-    fun `test issuance requires issuer DID and key ID`() = runBlocking {
-        assertFailsWith<IllegalStateException> {
+    fun `test issuance requires issuer DID and key ID`() = runBlocking<Unit> {
+        val result =
             trustWeave.issue {
                 credential {
                     type("PersonCredential")
@@ -241,7 +245,11 @@ class IssuanceDslTest {
                 }
                 // Missing signedBy() call
             }
-        }
+
+        assertTrue(
+            result is IssuanceResult.Failure.InvalidRequest,
+            "Issuing without an issuer DID and key ID must yield InvalidRequest, got: $result",
+        )
     }
 }
 

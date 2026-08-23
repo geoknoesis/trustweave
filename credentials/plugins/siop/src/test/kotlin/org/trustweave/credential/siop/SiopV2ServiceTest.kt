@@ -49,7 +49,7 @@ class SiopV2ServiceTest {
     }
 
     @Test
-    fun `createAuthorizationRequest returns session with correct fields`() = runBlocking {
+    fun `createAuthorizationRequest returns session with correct fields`() = runBlocking<Unit> {
         val session = service.createAuthorizationRequest(
             clientId = verifierDid,
             responseUri = responseUri,
@@ -66,7 +66,7 @@ class SiopV2ServiceTest {
     }
 
     @Test
-    fun `createAuthorizationRequest stores session retrievable by sessionId`() = runBlocking {
+    fun `createAuthorizationRequest stores session retrievable by sessionId`() = runBlocking<Unit> {
         val session = service.createAuthorizationRequest(
             clientId = verifierDid,
             responseUri = responseUri,
@@ -85,7 +85,7 @@ class SiopV2ServiceTest {
     }
 
     @Test
-    fun `buildAuthorizationResponse produces valid id_token JWT structure`() = runBlocking {
+    fun `buildAuthorizationResponse produces valid id_token JWT structure`() = runBlocking<Unit> {
         val session = service.createAuthorizationRequest(
             clientId = verifierDid,
             responseUri = responseUri,
@@ -128,7 +128,7 @@ class SiopV2ServiceTest {
     }
 
     @Test
-    fun `buildAuthorizationResponse with vp_token response type produces no id_token`() = runBlocking {
+    fun `buildAuthorizationResponse with vp_token response type produces no id_token`() = runBlocking<Unit> {
         val session = service.createAuthorizationRequest(
             clientId = verifierDid,
             responseUri = responseUri,
@@ -148,7 +148,7 @@ class SiopV2ServiceTest {
     }
 
     @Test
-    fun `buildAuthorizationResponse preserves state from request`() = runBlocking {
+    fun `buildAuthorizationResponse preserves state from request`() = runBlocking<Unit> {
         val expectedState = "test-state-xyz"
         val session = service.createAuthorizationRequest(
             clientId = verifierDid,

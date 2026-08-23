@@ -27,7 +27,7 @@ class EthereumBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test anchor payload`() = runBlocking {
+    fun `test anchor payload`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(EthereumBlockchainAnchorClient.SEPOLIA)
         val payload = buildJsonObject {
             put("digest", "uABC123...")
@@ -41,7 +41,7 @@ class EthereumBlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test read anchored payload`() = runBlocking {
+    fun `test read anchored payload`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET)
         val payload = buildJsonObject {
             put("digest", "uABC123...")

@@ -65,7 +65,7 @@ class CryptoImplementationTest {
     )
 
     @Test
-    fun failClosedCryptoNeverEncrypts() = runBlocking {
+    fun failClosedCryptoNeverEncrypts() = runBlocking<Unit> {
         val crypto = DidCommCrypto(kms, resolveDid)
 
         val ex = assertFailsWith<UnsupportedOperationException> {
@@ -84,7 +84,7 @@ class CryptoImplementationTest {
     }
 
     @Test
-    fun failClosedCryptoNeverDecrypts() = runBlocking {
+    fun failClosedCryptoNeverDecrypts() = runBlocking<Unit> {
         val crypto = DidCommCrypto(kms, resolveDid)
 
         assertFailsWith<UnsupportedOperationException> {
@@ -99,7 +99,7 @@ class CryptoImplementationTest {
     }
 
     @Test
-    fun adapterWithoutDidcommJavaFailsClosed() = runBlocking {
+    fun adapterWithoutDidcommJavaFailsClosed() = runBlocking<Unit> {
         val adapter = DidCommCryptoAdapter(kms, resolveDid, useDidcommJava = false)
 
         assertFailsWith<UnsupportedOperationException> {
@@ -123,7 +123,7 @@ class CryptoImplementationTest {
     }
 
     @Test
-    fun adapterRequiresSecretResolverWhenDidcommJavaEnabled() = runBlocking {
+    fun adapterRequiresSecretResolverWhenDidcommJavaEnabled() = runBlocking<Unit> {
         val adapter = DidCommCryptoAdapter(kms, resolveDid, useDidcommJava = true, secretResolver = null)
         assertFailsWith<IllegalStateException> {
             adapter.encrypt(

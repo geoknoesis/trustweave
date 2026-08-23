@@ -1,5 +1,6 @@
 package org.trustweave.integration
 
+import org.trustweave.trust.dsl.withTestClaimContexts
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
@@ -28,6 +29,26 @@ import kotlinx.datetime.Clock
  * End-to-end integration tests for web of trust features.
  */
 class WebOfTrustIntegrationTest {
+    /**
+     * Resolves the verification-method key id actually present in [did]'s document.
+     *
+     * Signing keys are named by the DID method, so a hard-coded "key-1" does not exist in the
+     * KMS and signing fails with "Key not found".
+     */
+    private suspend fun resolveKeyId(
+        trustWeave: org.trustweave.trust.TrustWeave,
+        did: org.trustweave.did.identifiers.Did,
+    ): String {
+        val document =
+            when (val resolution = trustWeave.configuration.didRegistry.resolve(did.value)) {
+                is org.trustweave.did.resolver.DidResolutionResult.Success -> resolution.document
+                else -> throw IllegalStateException("Failed to resolve $did: $resolution")
+            }
+        val vm =
+            document.verificationMethod.firstOrNull()
+                ?: throw IllegalStateException("No verification method in $did")
+        return vm.id.value.substringAfter("#")
+    }
 
     // Helper function to create TrustWeave with CredentialService
     private suspend fun createTrustWeaveWithCredentialService(
@@ -63,7 +84,7 @@ class WebOfTrustIntegrationTest {
     }
 
     @Test
-    fun `test complete trust registry workflow`() = runBlocking {
+    fun `test complete trust registry workflow`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         
         val trustWeave = createTrustWeaveWithCredentialService(kms)
@@ -128,7 +149,7 @@ class WebOfTrustIntegrationTest {
     }
 
     @Test
-    fun `test delegation chain with credential issuance`() = runBlocking {
+    fun `test delegation chain with credential issuance`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
@@ -166,6 +187,7 @@ class WebOfTrustIntegrationTest {
         assertTrue(delegationResult.valid)
 
         // Issue credential using delegated authority
+        val delegateKeyId = resolveKeyId(trustWeave, delegateDid)
         val credential = trustWeave.issue {
             credential {
                 id("https://example.com/delegated-credential")
@@ -177,14 +199,17 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = delegateDid, keyId = "key-1")
+            signedBy(issuerDid = delegateDid, keyId = delegateKeyId)
+            // "test" is an ad-hoc claim: without a @context term, JSON-LD canonicalization
+            // would drop it from the signed payload, and issuance fails closed.
+            withTestClaimContexts()
         }.getOrThrow()
 
         assertNotNull(credential)
     }
 
     @Test
-    fun `test trust path discovery with multiple anchors`() = runBlocking {
+    fun `test trust path discovery with multiple anchors`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             factories(
                 trustRegistryFactory = TestkitTrustRegistryFactory()
@@ -231,7 +256,7 @@ class WebOfTrustIntegrationTest {
     }
 
     @Test
-    fun `test proof purpose validation in credential verification`() = runBlocking {
+    fun `test proof purpose validation in credential verification`() = runBlocking<Unit> {
         val trustWeave = TrustWeave.build {
             // DID methods auto-discovered via SPI
             keys { provider("inMemory") }
@@ -258,6 +283,7 @@ class WebOfTrustIntegrationTest {
         }
 
         // Issue credential
+        val issuerKeyId = resolveKeyId(trustWeave, issuerDid)
         val credential = trustWeave.issue {
             credential {
                 id("https://example.com/credential-1")
@@ -269,7 +295,10 @@ class WebOfTrustIntegrationTest {
                 }
                 issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid, keyId = "key-1")
+            signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+            // "test" is an ad-hoc claim: without a @context term, JSON-LD canonicalization
+            // would drop it from the signed payload, and issuance fails closed.
+            withTestClaimContexts()
         }.getOrThrow()
 
         // Verify with proof purpose validation

@@ -93,7 +93,7 @@ class DidCommDidcommRoundTripTest {
     }
 
     @Test
-    fun packAndUnpackEncryptedBasicMessage() = runBlocking {
+    fun packAndUnpackEncryptedBasicMessage() = runBlocking<Unit> {
         val secrets = resolverWith(aliceVm to aliceKp, bobVm to bobKp)
         val packer = DidCommFactory.createPacker(kms, resolveDid, secrets)
 
@@ -126,7 +126,7 @@ class DidCommDidcommRoundTripTest {
     }
 
     @Test
-    fun encryptedKeyDependsOnRecipientKeyPairAndIsNeverAllZeros() = runBlocking {
+    fun encryptedKeyDependsOnRecipientKeyPairAndIsNeverAllZeros() = runBlocking<Unit> {
         val secrets = resolverWith(aliceVm to aliceKp, bobVm to bobKp, charlieVm to charlieKp)
         val packer = DidCommFactory.createPacker(kms, resolveDid, secrets)
 
@@ -164,7 +164,7 @@ class DidCommDidcommRoundTripTest {
     }
 
     @Test
-    fun unpackFailsWhenRecipientSecretIsMissing() = runBlocking {
+    fun unpackFailsWhenRecipientSecretIsMissing() = runBlocking<Unit> {
         val senderSecrets = resolverWith(aliceVm to aliceKp, bobVm to bobKp)
         val sender = DidCommFactory.createPacker(kms, resolveDid, senderSecrets)
 
@@ -192,7 +192,7 @@ class DidCommDidcommRoundTripTest {
     }
 
     @Test
-    fun unpackFailsWithWrongPrivateKeyForRecipientKid() = runBlocking {
+    fun unpackFailsWithWrongPrivateKeyForRecipientKid() = runBlocking<Unit> {
         val senderSecrets = resolverWith(aliceVm to aliceKp, bobVm to bobKp)
         val sender = DidCommFactory.createPacker(kms, resolveDid, senderSecrets)
 

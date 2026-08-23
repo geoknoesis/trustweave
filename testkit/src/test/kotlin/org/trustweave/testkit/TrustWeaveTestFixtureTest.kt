@@ -12,7 +12,7 @@ import kotlin.test.*
 class TrustWeaveTestFixtureTest {
 
     @Test
-    fun `test builder creates fixture with defaults`() = runBlocking {
+    fun `test builder creates fixture with defaults`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder().build()
 
         assertNotNull(fixture.getKms())
@@ -21,7 +21,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test builder with custom KMS`() = runBlocking {
+    fun `test builder with custom KMS`() = runBlocking<Unit> {
         val kms = InMemoryKeyManagementService()
         val fixture = TrustWeaveTestFixture.builder()
             .withKms(kms)
@@ -31,7 +31,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test builder with custom DID method`() = runBlocking {
+    fun `test builder with custom DID method`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder()
             .withDidMethod("key")
             .build()
@@ -40,7 +40,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test builder with blockchain client`() = runBlocking {
+    fun `test builder with blockchain client`() = runBlocking<Unit> {
         val client = InMemoryBlockchainAnchorClient("algorand:testnet")
         val fixture = TrustWeaveTestFixture.builder()
             .withBlockchainClient("algorand:testnet", client)
@@ -50,7 +50,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test builder with in-memory blockchain client`() = runBlocking {
+    fun `test builder with in-memory blockchain client`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet", "app-123")
             .build()
@@ -59,7 +59,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test getAllBlockchainClients`() = runBlocking {
+    fun `test getAllBlockchainClients`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
             .withInMemoryBlockchainClient("eip155:137")
@@ -73,7 +73,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test createIssuerDid`() = runBlocking {
+    fun `test createIssuerDid`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder().build()
 
         val didDoc = fixture.createIssuerDid()
@@ -83,7 +83,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test createIssuerDid with custom algorithm`() = runBlocking {
+    fun `test createIssuerDid with custom algorithm`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder().build()
 
         val didDoc = fixture.createIssuerDid("secp256k1")
@@ -92,7 +92,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test close cleans up registries`() = runBlocking {
+    fun `test close cleans up registries`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder()
             .withInMemoryBlockchainClient("algorand:testnet")
             .build()
@@ -107,7 +107,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test minimal fixture`() = runBlocking {
+    fun `test minimal fixture`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.minimal()
 
         assertNotNull(fixture.getKms())
@@ -125,7 +125,7 @@ class TrustWeaveTestFixtureTest {
     }
 
     @Test
-    fun `test getBlockchainClient returns null for unregistered chain`() = runBlocking {
+    fun `test getBlockchainClient returns null for unregistered chain`() = runBlocking<Unit> {
         val fixture = TrustWeaveTestFixture.builder().build()
 
         assertNull(fixture.getBlockchainClient("nonexistent:chain"))

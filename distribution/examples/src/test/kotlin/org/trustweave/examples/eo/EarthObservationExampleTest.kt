@@ -27,7 +27,7 @@ import kotlin.test.*
 class EarthObservationExampleTest {
 
     @Test
-    fun `test DID creation for data provider`() = runBlocking {
+    fun `test DID creation for data provider`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -41,7 +41,7 @@ class EarthObservationExampleTest {
     }
 
     @Test
-    fun `test artifact creation`() = runBlocking {
+    fun `test artifact creation`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -85,7 +85,7 @@ class EarthObservationExampleTest {
     }
 
     @Test
-    fun `test linkset creation`() = runBlocking {
+    fun `test linkset creation`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -150,7 +150,7 @@ class EarthObservationExampleTest {
     }
 
     @Test
-    fun `test blockchain anchoring`() = runBlocking {
+    fun `test blockchain anchoring`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -208,7 +208,7 @@ class EarthObservationExampleTest {
     }
 
     @Test
-    fun `test integrity verification`() = runBlocking {
+    fun `test integrity verification`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
@@ -349,7 +349,7 @@ class EarthObservationExampleTest {
     }
 
     @Test
-    fun `test reading anchored payload`() = runBlocking {
+    fun `test reading anchored payload`() = runBlocking<Unit> {
         // Setup
         val kms = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)

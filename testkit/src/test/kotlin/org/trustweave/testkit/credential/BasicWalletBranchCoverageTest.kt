@@ -32,7 +32,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet store with credential ID`() = runBlocking {
+    fun `test BasicWallet store with credential ID`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "custom-id-123")
         val id = wallet.store(credential)
 
@@ -41,7 +41,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet store without credential ID generates UUID`() = runBlocking {
+    fun `test BasicWallet store without credential ID generates UUID`() = runBlocking<Unit> {
         val credential = createTestCredential(id = null)
         val id = wallet.store(credential)
 
@@ -50,7 +50,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with null filter returns all`() = runBlocking {
+    fun `test BasicWallet list with null filter returns all`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", issuerDid = "did:key:issuer1")
         val cred2 = createTestCredential(id = "cred-2", issuerDid = "did:key:issuer2")
         wallet.store(cred1)
@@ -62,7 +62,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with issuer filter matches`() = runBlocking {
+    fun `test BasicWallet list with issuer filter matches`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", issuerDid = "did:key:issuer1")
         val cred2 = createTestCredential(id = "cred-2", issuerDid = "did:key:issuer2")
         wallet.store(cred1)
@@ -75,7 +75,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with issuer filter does not match`() = runBlocking {
+    fun `test BasicWallet list with issuer filter does not match`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", issuerDid = "did:key:issuer1")
         wallet.store(cred1)
 
@@ -85,7 +85,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with type filter matches`() = runBlocking {
+    fun `test BasicWallet list with type filter matches`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", types = listOf("VerifiableCredential", "PersonCredential"))
         val cred2 = createTestCredential(id = "cred-2", types = listOf("VerifiableCredential", "DegreeCredential"))
         wallet.store(cred1)
@@ -98,7 +98,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with type filter does not match`() = runBlocking {
+    fun `test BasicWallet list with type filter does not match`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", types = listOf("VerifiableCredential", "PersonCredential"))
         wallet.store(cred1)
 
@@ -108,7 +108,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with subjectId filter matches`() = runBlocking {
+    fun `test BasicWallet list with subjectId filter matches`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             subject = buildJsonObject {
@@ -132,7 +132,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with subjectId filter does not match`() = runBlocking {
+    fun `test BasicWallet list with subjectId filter does not match`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             subject = buildJsonObject {
@@ -147,7 +147,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with expired filter true`() = runBlocking {
+    fun `test BasicWallet list with expired filter true`() = runBlocking<Unit> {
         val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(id = "cred-1", expirationDate = pastDate)
         val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
@@ -162,7 +162,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with expired filter false`() = runBlocking {
+    fun `test BasicWallet list with expired filter false`() = runBlocking<Unit> {
         val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(id = "cred-1", expirationDate = pastDate)
         val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
@@ -177,7 +177,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with expired filter null expiration`() = runBlocking {
+    fun `test BasicWallet list with expired filter null expiration`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", expirationDate = null)
         wallet.store(cred1)
 
@@ -187,7 +187,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with expired filter invalid date`() = runBlocking {
+    fun `test BasicWallet list with expired filter invalid date`() = runBlocking<Unit> {
         val cred1 = createTestCredential(id = "cred-1", expirationDate = "invalid-date")
         wallet.store(cred1)
 
@@ -198,7 +198,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with revoked filter true`() = runBlocking {
+    fun `test BasicWallet list with revoked filter true`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -218,7 +218,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with revoked filter false`() = runBlocking {
+    fun `test BasicWallet list with revoked filter false`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             credentialStatus = CredentialStatus(
@@ -238,7 +238,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet list with multiple filters`() = runBlocking {
+    fun `test BasicWallet list with multiple filters`() = runBlocking<Unit> {
         val cred1 = createTestCredential(
             id = "cred-1",
             issuerDid = "did:key:issuer1",
@@ -264,7 +264,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet delete returns true when found`() = runBlocking {
+    fun `test BasicWallet delete returns true when found`() = runBlocking<Unit> {
         val credential = createTestCredential(id = "cred-1")
         wallet.store(credential)
 
@@ -275,14 +275,14 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet delete returns false when not found`() = runBlocking {
+    fun `test BasicWallet delete returns false when not found`() = runBlocking<Unit> {
         val deleted = wallet.delete("nonexistent")
 
         assertFalse(deleted)
     }
 
     @Test
-    fun `test BasicWallet clear removes all credentials`() = runBlocking {
+    fun `test BasicWallet clear removes all credentials`() = runBlocking<Unit> {
         wallet.store(createTestCredential(id = "cred-1"))
         wallet.store(createTestCredential(id = "cred-2"))
         assertEquals(2, wallet.size())
@@ -294,7 +294,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet size returns correct count`() = runBlocking {
+    fun `test BasicWallet size returns correct count`() = runBlocking<Unit> {
         assertEquals(0, wallet.size())
 
         wallet.store(createTestCredential(id = "cred-1"))
@@ -305,7 +305,7 @@ class BasicWalletBranchCoverageTest {
     }
 
     @Test
-    fun `test BasicWallet query with multiple filters`() = runBlocking {
+    fun `test BasicWallet query with multiple filters`() = runBlocking<Unit> {
         val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
         val cred1 = createTestCredential(
             id = "cred-1",

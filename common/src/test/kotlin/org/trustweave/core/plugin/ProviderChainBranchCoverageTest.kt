@@ -26,7 +26,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute succeeds on first provider`() = runBlocking {
+    fun `test ProviderChain execute succeeds on first provider`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val provider2 = TestProvider("provider2", succeeds = true)
         val chain = ProviderChain(listOf(provider1, provider2))
@@ -39,7 +39,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute falls back to second provider`() = runBlocking {
+    fun `test ProviderChain execute falls back to second provider`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = false)
         val provider2 = TestProvider("provider2", succeeds = true)
         val chain = ProviderChain(listOf(provider1, provider2))
@@ -52,7 +52,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute throws AllProvidersFailed when all providers fail`() = runBlocking {
+    fun `test ProviderChain execute throws AllProvidersFailed when all providers fail`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = false)
         val provider2 = TestProvider("provider2", succeeds = false)
         val chain = ProviderChain(listOf(provider1, provider2))
@@ -63,7 +63,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute with selector skips providers`() = runBlocking {
+    fun `test ProviderChain execute with selector skips providers`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val provider2 = TestProvider("provider2", succeeds = true)
         val chain = ProviderChain(listOf(provider1, provider2)) { it.name == "provider2" }
@@ -76,7 +76,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain execute with selector that excludes all throws InvalidState`() = runBlocking {
+    fun `test ProviderChain execute with selector that excludes all throws InvalidState`() = runBlocking<Unit> {
         // Note: Constructor validation prevents this scenario, but if it somehow occurs,
         // it would throw InvalidState. However, the constructor should catch this first.
         // This test verifies the constructor validation works.
@@ -86,7 +86,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain executeAndTransform transforms result`() = runBlocking {
+    fun `test ProviderChain executeAndTransform transforms result`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val chain = ProviderChain(listOf(provider1))
 
@@ -99,7 +99,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test ProviderChain executeAndTransform falls back on failure`() = runBlocking {
+    fun `test ProviderChain executeAndTransform falls back on failure`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = false)
         val provider2 = TestProvider("provider2", succeeds = true)
         val chain = ProviderChain(listOf(provider1, provider2))
@@ -156,7 +156,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test createProviderChain with valid plugin IDs`() = runBlocking {
+    fun `test createProviderChain with valid plugin IDs`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val metadata = PluginMetadata(
             id = "plugin1",
@@ -183,7 +183,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test createProviderChain throws PartialProvidersFound when some providers missing`() = runBlocking {
+    fun `test createProviderChain throws PartialProvidersFound when some providers missing`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val metadata = PluginMetadata(
             id = "plugin1",
@@ -201,7 +201,7 @@ class ProviderChainBranchCoverageTest {
     }
 
     @Test
-    fun `test createProviderChainFromConfig returns chain when found`() = runBlocking {
+    fun `test createProviderChainFromConfig returns chain when found`() = runBlocking<Unit> {
         val provider1 = TestProvider("provider1", succeeds = true)
         val metadata = PluginMetadata(
             id = "plugin1",

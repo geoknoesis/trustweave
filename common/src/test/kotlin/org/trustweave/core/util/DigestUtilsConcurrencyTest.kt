@@ -10,7 +10,7 @@ import kotlin.test.*
 class DigestUtilsConcurrencyTest {
 
     @Test
-    fun `test concurrent digest computation with cache`() = runBlocking {
+    fun `test concurrent digest computation with cache`() = runBlocking<Unit> {
         DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 1000
         DigestUtils.clearCache()
@@ -36,7 +36,7 @@ class DigestUtilsConcurrencyTest {
     }
 
     @Test
-    fun `test concurrent digest computation with different inputs`() = runBlocking {
+    fun `test concurrent digest computation with different inputs`() = runBlocking<Unit> {
         DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 1000
         DigestUtils.clearCache()
@@ -63,7 +63,7 @@ class DigestUtilsConcurrencyTest {
     }
 
     @Test
-    fun `test concurrent cache access and eviction`() = runBlocking {
+    fun `test concurrent cache access and eviction`() = runBlocking<Unit> {
         DigestUtils.isDigestCacheEnabled = true
         DigestUtils.maxCacheSize = 50
         DigestUtils.clearCache()
@@ -88,7 +88,7 @@ class DigestUtilsConcurrencyTest {
     }
 
     @Test
-    fun `test concurrent canonicalization`() = runBlocking {
+    fun `test concurrent canonicalization`() = runBlocking<Unit> {
         val json1 = """{"b":2,"a":1}"""
         val json2 = """{"a":1,"b":2}"""
         val threads = 20
@@ -105,7 +105,7 @@ class DigestUtilsConcurrencyTest {
     }
 
     @Test
-    fun `test cache thread safety when disabled`() = runBlocking {
+    fun `test cache thread safety when disabled`() = runBlocking<Unit> {
         DigestUtils.isDigestCacheEnabled = false
         DigestUtils.clearCache()
 

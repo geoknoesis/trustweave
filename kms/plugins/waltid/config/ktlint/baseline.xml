@@ -271,21 +271,22 @@
         <error line="34" column="62" source="standard:chain-method-continuation" />
         <error line="39" column="69" source="standard:multiline-expression-wrapping" />
         <error line="39" column="69" source="standard:function-signature" />
-        <error line="50" column="81" source="standard:multiline-expression-wrapping" />
-        <error line="50" column="81" source="standard:function-signature" />
-        <error line="55" column="73" source="standard:chain-method-continuation" />
-        <error line="56" column="20" source="standard:binary-expression-wrapping" />
-        <error line="56" column="20" source="standard:argument-list-wrapping" />
-        <error line="56" column="88" source="standard:binary-expression-wrapping" />
-        <error line="56" column="141" source="standard:max-line-length" />
-        <error line="56" column="157" source="standard:argument-list-wrapping" />
-        <error line="56" column="207" source="standard:argument-list-wrapping" />
-        <error line="60" column="80" source="standard:multiline-expression-wrapping" />
-        <error line="60" column="80" source="standard:function-signature" />
-        <error line="65" column="63" source="standard:chain-method-continuation" />
-        <error line="97" column="62" source="standard:multiline-expression-wrapping" />
-        <error line="97" column="62" source="standard:function-signature" />
-        <error line="115" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="46" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="57" column="81" source="standard:multiline-expression-wrapping" />
+        <error line="57" column="81" source="standard:function-signature" />
+        <error line="62" column="73" source="standard:chain-method-continuation" />
+        <error line="63" column="20" source="standard:binary-expression-wrapping" />
+        <error line="63" column="20" source="standard:argument-list-wrapping" />
+        <error line="63" column="88" source="standard:binary-expression-wrapping" />
+        <error line="63" column="141" source="standard:max-line-length" />
+        <error line="63" column="157" source="standard:argument-list-wrapping" />
+        <error line="63" column="207" source="standard:argument-list-wrapping" />
+        <error line="67" column="80" source="standard:multiline-expression-wrapping" />
+        <error line="67" column="80" source="standard:function-signature" />
+        <error line="72" column="63" source="standard:chain-method-continuation" />
+        <error line="104" column="62" source="standard:multiline-expression-wrapping" />
+        <error line="104" column="62" source="standard:function-signature" />
+        <error line="122" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/test/kotlin/org/trustweave/waltid/WaltIdIntegrationTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -316,36 +317,37 @@
     <file name="src/test/kotlin/org/trustweave/waltid/did/WaltIdDidMethodTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="3" column="1" source="standard:no-wildcard-imports" />
-        <error line="13" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="15" column="50" source="standard:multiline-expression-wrapping" />
-        <error line="15" column="50" source="standard:function-signature" />
-        <error line="28" column="52" source="standard:multiline-expression-wrapping" />
-        <error line="28" column="52" source="standard:function-signature" />
-        <error line="42" column="44" source="standard:multiline-expression-wrapping" />
-        <error line="42" column="44" source="standard:function-signature" />
-        <error line="47" column="23" source="standard:multiline-expression-wrapping" />
-        <error line="48" column="16" source="standard:chain-method-continuation" />
-        <error line="48" column="22" source="standard:argument-list-wrapping" />
-        <error line="48" column="43" source="standard:argument-list-wrapping" />
-        <error line="48" column="76" source="standard:chain-method-continuation" />
-        <error line="48" column="83" source="standard:argument-list-wrapping" />
-        <error line="48" column="113" source="standard:chain-method-continuation" />
-        <error line="48" column="118" source="standard:argument-list-wrapping" />
-        <error line="48" column="139" source="standard:argument-list-wrapping" />
-        <error line="48" column="140" source="standard:argument-list-wrapping" />
-        <error line="48" column="141" source="standard:argument-list-wrapping" />
-        <error line="48" column="141" source="standard:max-line-length" />
-        <error line="48" column="142" source="standard:argument-list-wrapping" />
-        <error line="55" column="48" source="standard:multiline-expression-wrapping" />
-        <error line="55" column="48" source="standard:function-signature" />
-        <error line="69" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="71" column="50" source="standard:multiline-expression-wrapping" />
-        <error line="71" column="50" source="standard:function-signature" />
-        <error line="75" column="24" source="standard:multiline-expression-wrapping" />
-        <error line="78" column="14" source="standard:trailing-comma-on-call-site" />
-        <error line="87" column="49" source="standard:multiline-expression-wrapping" />
-        <error line="87" column="49" source="standard:function-signature" />
-        <error line="101" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="136" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="14" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="16" column="50" source="standard:multiline-expression-wrapping" />
+        <error line="16" column="50" source="standard:function-signature" />
+        <error line="29" column="52" source="standard:multiline-expression-wrapping" />
+        <error line="29" column="52" source="standard:function-signature" />
+        <error line="43" column="44" source="standard:multiline-expression-wrapping" />
+        <error line="43" column="44" source="standard:function-signature" />
+        <error line="48" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="49" column="16" source="standard:chain-method-continuation" />
+        <error line="49" column="22" source="standard:argument-list-wrapping" />
+        <error line="49" column="43" source="standard:argument-list-wrapping" />
+        <error line="49" column="76" source="standard:chain-method-continuation" />
+        <error line="49" column="83" source="standard:argument-list-wrapping" />
+        <error line="49" column="113" source="standard:chain-method-continuation" />
+        <error line="49" column="118" source="standard:argument-list-wrapping" />
+        <error line="49" column="139" source="standard:argument-list-wrapping" />
+        <error line="49" column="140" source="standard:argument-list-wrapping" />
+        <error line="49" column="141" source="standard:argument-list-wrapping" />
+        <error line="49" column="141" source="standard:max-line-length" />
+        <error line="49" column="142" source="standard:argument-list-wrapping" />
+        <error line="56" column="48" source="standard:multiline-expression-wrapping" />
+        <error line="56" column="48" source="standard:function-signature" />
+        <error line="70" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="72" column="50" source="standard:multiline-expression-wrapping" />
+        <error line="72" column="50" source="standard:function-signature" />
+        <error line="76" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="79" column="14" source="standard:trailing-comma-on-call-site" />
+        <error line="88" column="49" source="standard:multiline-expression-wrapping" />
+        <error line="88" column="49" source="standard:function-signature" />
+        <error line="94" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="106" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="141" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
 </baseline>

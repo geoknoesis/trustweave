@@ -112,6 +112,22 @@ ambiguity):
 Unknown constraint types are rejected in open mandates (an unevaluable constraint would leave agent
 authority unbounded) or under `STRICT` strictness; otherwise skipped under `PERMISSIVE`.
 
+### Allowlist resolution caveat
+
+`allowed_payees` and `allowed_merchants` entries may be inline objects or SD-references
+(`{"...": digest}`) whose value is disclosed separately. References are resolved against the
+disclosures the verifier holds. If the target matches no resolvable entry **and** some entries could
+not be resolved, the allowlist cannot be fully evaluated — an agent could otherwise disable the
+constraint just by withholding a disclosure. In that case:
+
+- **open mandate** — fails closed, because unbounded authority plus an unevaluable allowlist leaves
+  the payee/merchant unconstrained;
+- **bounded mandate** — passes, on the assumption that the mandate constrains the counterparty by
+  other means.
+
+If your issuance profile emits bounded mandates whose payee is pinned *only* by the allowlist,
+confirm that the disclosures needed to resolve it are always presented, or require an open mandate.
+
 ## Status and scope
 
 Draft, tracking VI spec v0.1 — **Experimental** (see the

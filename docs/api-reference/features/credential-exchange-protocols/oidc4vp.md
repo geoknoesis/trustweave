@@ -237,11 +237,6 @@ fun main() = runBlocking {
                     "selectedCredentials" to JsonArray(
                         listOf(JsonPrimitive("employee_credential")),
                     ),
-                    "selectedFields" to jsonData {
-                        "employee_credential" to JsonArray(
-                            listOf(JsonPrimitive("employeeId")),
-                        )
-                    },
                 ),
             ),
         ),
@@ -271,10 +266,11 @@ runBlocking {
             credentialType = "EmployeeCredential",
         ),
     )
+    // NOTE: `selectedFields` is deliberately omitted — passing a non-empty field list
+    // throws UnsupportedOperationException. See "Field-level selective disclosure" below.
     val response = oidc4vpService.createPermissionResponse(
         permissionRequest = permissionRequest,
         selectedCredentials = selected,
-        selectedFields = listOf(listOf("employeeId")),
         holderDid = "did:key:zHolder...",
         keyId = "did:key:zHolder...#key-1",
     )
@@ -405,10 +401,20 @@ when (val result = exchangeService.requestProof(req)) {
 - Wallet/holder-centric: verifier-side authorization endpoint, request signing,
   and JAR (JWT-Secured Authorization Request) packaging must be implemented by
   the verifier service.
+- **Field-level selective disclosure is not implemented, and requesting it fails
+  loudly.** Passing a non-empty `selectedFields` to `createPermissionResponse`
+  throws `UnsupportedOperationException` ("Field-level selective disclosure
+  (selectedFields) is not supported ... Refusing to silently over-disclose").
+  The credential is embedded whole in the `vp_token`, so honouring a field
+  subset would need SD-JWT/BBS derivation — dropping claims from an embedded
+  VC-LD credential would invalidate its data-integrity proof. Earlier versions
+  accepted `selectedFields` and silently disclosed the full credential anyway;
+  refusing is the fix. To minimise disclosure, present an SD-JWT credential, or
+  build the `VerifiablePresentation` yourself and pass it into
+  `createPermissionResponse`.
 - `vp_token` generation uses a simplified embedded-JWT layout signed with the
-  KMS-resolved holder key. For full W3C VC 1.1/2.0 VP serialization and SD-JWT
-  selective disclosure, build the `VerifiablePresentation` yourself (e.g., via
-  the SD-JWT plugin) and pass it into `createPermissionResponse`.
+  KMS-resolved holder key. For full W3C VC 1.1/2.0 VP serialization, build the
+  `VerifiablePresentation` yourself and pass it in.
 - `dcql_query` is parsed and forwarded verbatim; no built-in DCQL evaluator is
   bundled.
 - `Oidc4VpExchangeProtocol.capabilities.supportedOperations` is

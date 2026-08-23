@@ -41,6 +41,41 @@ TrustWeave is a multi-module repository. **Publishing a JAR to Maven Central doe
 |--------|----------|
 | `testkit` | Supported for **tests and local dev**—not a substitute for production KMS or ledger backends. |
 
+## Services, servers and signature formats
+
+These ship in the BOM but are **not** covered by the plugin rule below. Test counts are from the
+committed suite and are given so you can calibrate your own review effort — a low count is not a
+defect claim, but it is a reason to run your own integration tests before depending on a module.
+
+| Module | Tests | Maturity |
+|--------|-------|----------|
+| `did:registrar` | 8 | Experimental |
+| `did:registrar-server-ktor` | 0 | **Experimental — untested**; verify in your environment |
+| `did:registrar-server-spring` | 0 | **Experimental — untested**; verify in your environment |
+| `credentials:vc-api-server` | 7 | Experimental |
+| `credentials:oidc4vci-server` | 14 | Experimental |
+| `trust-registry:trust-registry-core` | 4 | Experimental |
+| `trust-registry:trust-registry-server` | 12 | Experimental |
+| `wallet:wallet-services` | 0 | **Experimental — untested**; verify in your environment |
+| `distribution:all` | n/a | Dependency aggregate only — carries no logic of its own |
+
+### ETSI / eIDAS signature formats
+
+`signatures:*` implements advanced electronic signature formats. Treat every module here as
+**Experimental**: the formats are large, conformance is defined by ETSI test suites TrustWeave does
+not yet run, and the suites below exercise round-trips rather than full profile conformance. Do not
+rely on these for a regulated eIDAS deployment without your own conformance assessment.
+
+| Module | Tests | Notes |
+|--------|-------|-------|
+| `signatures:jades` | 17 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
+| `signatures:trust-lists` | 23 | EU trusted-list handling |
+| `signatures:cades` | 8 | ETSI EN 319 122 (CMS) |
+| `signatures:tsa-core` | 8 | RFC 3161 timestamping |
+| `signatures:etsi-validation` | 7 | Validation helpers |
+| `signatures:xades` | 3 | ETSI EN 319 132 (XML) |
+| `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |
+
 ## Plugins and integrations
 
 Individual plugins under `did/plugins/*`, `kms/plugins/*`, `anchors/plugins/*`, `credentials/plugins/*`, etc., vary widely. Treat each as **Experimental** unless its own README states otherwise and you have run integration tests against your target environment. Many third-party or ledger-specific modules still contain stub or partial implementations (`TODO` in source).

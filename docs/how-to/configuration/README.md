@@ -126,12 +126,24 @@ TrustWeave.build {
     credentialService(myCredentialService) // optional override
     credentials {
         defaultProofType("Ed25519Signature2020")
-        autoAnchor(true)
-        defaultChain("algorand:testnet")
+        autoAnchor(true)                     // anchors a digest of every issued credential
+        defaultChain("algorand:testnet")     // required when autoAnchor is on
     }
     did { method("key") { algorithm("Ed25519") } }
 }
 ```
+
+**What `autoAnchor` writes.** A SHA-256 **digest envelope** (`{alg, digest, mediaType}`) of the
+canonicalized credential — never the credential itself. Anchoring proves a credential existed and
+has not been altered; publishing its `credentialSubject` would put the subject's claims on a public
+ledger permanently, and the default payload mode for an anchor client is full-payload. A single
+configuration flag must not be able to do that. To verify later, canonicalize the credential, hash
+it, and compare against the anchored digest. If you genuinely want the whole document on-chain, call
+`trustWeave.blockchains.anchor(credential, ...)` explicitly instead.
+
+`autoAnchor` **fails closed**, matching `withRevocation()`: if no `defaultChain` is set, no anchor
+layer is configured, or the anchor write fails, issuance returns a failure rather than handing back
+a credential the caller believes was anchored.
 
 **See also:** [Credential service API](../../api-reference/credential-service-api.md), [Verifiable credentials](../../core-concepts/verifiable-credentials.md).
 

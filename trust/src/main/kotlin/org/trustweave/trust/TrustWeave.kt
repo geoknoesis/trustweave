@@ -230,7 +230,10 @@ class TrustWeave internal constructor(
                 revocationManager = config.revocationManager,
                 didResolver = config.didResolver,
                 defaultProofType = config.credentialConfig.defaultProofType,
-                ioDispatcher = config.ioDispatcher
+                ioDispatcher = config.ioDispatcher,
+                autoAnchor = config.credentialConfig.autoAnchor,
+                defaultChain = config.credentialConfig.defaultChain,
+                blockchainService = blockchains
             )
         }
     }

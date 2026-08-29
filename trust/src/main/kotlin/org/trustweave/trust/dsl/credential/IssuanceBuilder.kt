@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.credential
 
+import org.trustweave.credential.transform.toJsonLd
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.CredentialStatus
@@ -66,7 +67,22 @@ class IssuanceBuilder(
      * Optional DID resolver for auto-extracting key IDs from DIDs.
      * If provided, enables signedBy(Did) overload that auto-extracts key ID.
      */
-    private val didResolver: org.trustweave.did.resolver.DidResolver? = null
+    private val didResolver: org.trustweave.did.resolver.DidResolver? = null,
+    /**
+     * Anchor every issued credential to [defaultChain] when true (`credentials { autoAnchor(true) }`).
+     *
+     * What is written is a SHA-256 **digest envelope**, never the credential itself. Anchoring
+     * exists to prove a credential existed and has not been altered; publishing its
+     * `credentialSubject` would put the subject's claims on a public ledger permanently, and the
+     * default payload mode for an anchor client is full-payload. A single configuration flag must
+     * not be able to do that. Callers that genuinely want the whole document on-chain can still
+     * call `trustWeave.blockchains.anchor(credential, ...)` explicitly.
+     */
+    private val autoAnchor: Boolean = false,
+    /** Chain ID used by [autoAnchor] (`credentials { defaultChain("...") }`). */
+    private val defaultChain: String? = null,
+    /** Anchor service used by [autoAnchor]; null when no anchor layer is configured. */
+    private val blockchainService: org.trustweave.anchor.services.BlockchainService? = null,
 ) {
     private var credential: VerifiableCredential? = null
     private var issuerDid: Did? = null
@@ -427,7 +443,7 @@ class IssuanceBuilder(
         // If issuance failed after a status-list index was allocated, surface the orphaned
         // coordinates in the failure message so callers can release the slot manually via
         // CredentialRevocationManager (no built-in releaseIndex() exists yet — see TODO above).
-        return@withContext when {
+        val settledResult = when {
             issueResult is IssuanceResult.Failure && allocatedStatusListId != null -> {
                 IssuanceResult.Failure.AdapterError(
                     format = proofSuiteToUse,
@@ -439,5 +455,65 @@ class IssuanceBuilder(
             }
             else -> issueResult
         }
+
+        // Auto-anchor. Follows the withRevocation() precedent above: an opt-in side-effect that
+        // cannot be performed fails the issuance rather than being skipped. Silently not anchoring
+        // is precisely the defect this path was added to fix, so "best effort" is not an option —
+        // a caller who asked for an anchor and received an un-anchored credential with a Success
+        // result has no way to find out.
+        if (!autoAnchor || settledResult !is IssuanceResult.Success) {
+            return@withContext settledResult
+        }
+
+        val chainId =
+            defaultChain
+                ?: return@withContext IssuanceResult.Failure.InvalidRequest(
+                    field = "defaultChain",
+                    reason =
+                        "autoAnchor is enabled but no chain is configured. " +
+                            "Set credentials { defaultChain(\"<caip-2-chain-id>\") }.",
+                )
+        val anchorService =
+            blockchainService
+                ?: return@withContext IssuanceResult.Failure.AdapterError(
+                    format = proofSuiteToUse,
+                    reason =
+                        "autoAnchor is enabled but no anchor layer is configured. " +
+                            "Add an anchor { chain(\"$chainId\") { ... } } block.",
+                    cause = null,
+                )
+
+        try {
+            // A digest envelope, not the credential — see the [autoAnchor] KDoc.
+            // Canonicalized first so the digest is reproducible: a verifier can take the same
+            // credential, canonicalize, hash, and compare against what is on-chain. Hashing an
+            // ad-hoc serialization would make the anchor unverifiable by anyone else.
+            val canonical =
+                org.trustweave.core.util.DigestUtils.canonicalizeJson(
+                    settledResult.credential.toJsonLd(),
+                )
+            val envelope =
+                org.trustweave.anchor.AnchorDigest.envelope(
+                    canonical.toByteArray(Charsets.UTF_8),
+                    "application/vc+json",
+                )
+            anchorService.anchor(
+                data = envelope,
+                serializer = kotlinx.serialization.json.JsonObject.serializer(),
+                chainId = chainId,
+            )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return@withContext IssuanceResult.Failure.AdapterError(
+                format = proofSuiteToUse,
+                reason =
+                    "Credential was issued but auto-anchoring to '$chainId' failed. " +
+                        "This is required when autoAnchor is enabled. Error: ${e.message}",
+                cause = e,
+            )
+        }
+
+        settledResult
     }
 }

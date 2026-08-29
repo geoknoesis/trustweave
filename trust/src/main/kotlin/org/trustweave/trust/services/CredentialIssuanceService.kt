@@ -27,7 +27,11 @@ class CredentialIssuanceService(
     private val revocationManager: CredentialRevocationManager?,
     private val didResolver: DidResolver?,
     private val defaultProofType: ProofType,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    /** See `IssuanceBuilder.autoAnchor` — anchors a digest envelope of every issued credential. */
+    private val autoAnchor: Boolean = false,
+    private val defaultChain: String? = null,
+    private val blockchainService: org.trustweave.anchor.services.BlockchainService? = null
 ) {
     /**
      * Issue a verifiable credential using the configured service.
@@ -47,7 +51,10 @@ class CredentialIssuanceService(
                     revocationManager = revocationManager,
                     defaultProofSuite = defaultProofType.toProofSuiteId(),
                     ioDispatcher = ioDispatcher,
-                    didResolver = didResolver
+                    didResolver = didResolver,
+                    autoAnchor = autoAnchor,
+                    defaultChain = defaultChain,
+                    blockchainService = blockchainService
                 )
                 builder.block()
                 builder.build()

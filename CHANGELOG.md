@@ -71,6 +71,20 @@ Verifiable-Intent amount bounds / configuration leakage.
 
 ### Fixed
 
+- **`credentials { autoAnchor(true) }` was a silent no-op.** The option was settable and plumbed
+  through `CredentialsBuilder` → `TrustWeaveConfig` → `TrustWeaveFactory`, but nothing ever read
+  it — `IssuanceBuilder` contained no anchoring code at all, so enabling it anchored nothing and
+  reported success. Three existing tests configured it and passed, because none asserted that
+  anything reached a chain. Now wired, with two deliberate properties:
+  - **It anchors a SHA-256 digest envelope of the canonicalized credential, never the credential
+    itself.** The default payload mode for an anchor client is full-payload, so a naive
+    implementation would have let one boolean publish every subject's claims to a public ledger
+    permanently. Verify by canonicalizing the credential, hashing, and comparing. Use
+    `trustWeave.blockchains.anchor(credential, ...)` explicitly if you do want the full document
+    on-chain.
+  - **It fails closed**, matching the `withRevocation()` precedent in the same builder: a missing
+    `defaultChain`, absent anchor layer, or failed write fails the issuance rather than returning
+    a credential the caller believes was anchored.
 - **247 tests had never run.** `fun x() = runBlocking { ... }` infers a non-`Unit` return type from
   its last expression, and JUnit silently ignores `@Test` methods that do not return `Unit` — the
   suite reported green while 247 tests were skipped without appearing in any report. 1,269 `@Test`

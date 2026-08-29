@@ -489,7 +489,7 @@ class IssuanceBuilderBranchCoverageTest {
     }
 
     @Test
-    fun `test branch anchor without chain ID still issues`() = runBlocking<Unit> {
+    fun `test branch auto-anchor without chain ID fails closed`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -529,13 +529,14 @@ class IssuanceBuilderBranchCoverageTest {
             }
 
         assertTrue(
-            result is IssuanceResult.Success,
-            "Auto-anchor without a chain ID must still issue the credential, got: $result",
+            result is IssuanceResult.Failure.InvalidRequest,
+            "Auto-anchor with no chain configured must fail closed, not issue an un-anchored " +
+                "credential the caller believes was anchored. Got: $result",
         )
     }
 
     @Test
-    fun `test branch missing anchor client still issues`() = runBlocking<Unit> {
+    fun `test branch auto-anchor with unregistered chain fails closed`() = runBlocking<Unit> {
         val kmsRef = kms
         val trustWeaveWithAutoAnchor = TrustWeave.build {
             // DID methods auto-discovered via SPI
@@ -573,8 +574,9 @@ class IssuanceBuilderBranchCoverageTest {
             }
 
         assertTrue(
-            result is IssuanceResult.Success,
-            "A missing anchor client must still issue the credential, got: $result",
+            result is IssuanceResult.Failure,
+            "An unregistered anchor chain must fail closed, not silently skip anchoring. " +
+                "Got: $result",
         )
     }
 

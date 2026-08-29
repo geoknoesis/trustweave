@@ -10,10 +10,10 @@ This tutorial provides a comprehensive guide to performing DID operations with T
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:testkit:0.6.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

@@ -26,7 +26,7 @@ Add the walt.id module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the walt.id plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-waltid:0.6.0")
+    implementation("org.trustweave:kms-plugins-waltid:0.7.0")
 }
 ```
 

@@ -28,7 +28,7 @@ Add the InMemory KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the InMemory KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-inmemory:0.6.0")
+    implementation("org.trustweave:kms-plugins-inmemory:0.7.0")
 }
 ```
 

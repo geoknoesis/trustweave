@@ -17,7 +17,7 @@ For most users, start with `distribution:all` which includes all core modules:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 
@@ -58,8 +58,8 @@ When you need a specific building block, add it to `dependencies` explicitly:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
 }
 ```
 

@@ -278,5 +278,5 @@ This document provides a detailed comparison of TrustWeave with other decentrali
 ---
 
 *Last Updated: 2025-01-XX*
-*TrustWeave Version: 0.6.0*
+*TrustWeave Version: 0.7.0*
 

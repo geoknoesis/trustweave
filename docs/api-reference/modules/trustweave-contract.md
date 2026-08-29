@@ -8,7 +8,7 @@ grand_parent: API Reference
 
 # contract Module
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > Domain-agnostic Smart Contract abstraction with verifiable credentials and blockchain anchoring
 
 ## Overview
@@ -40,7 +40,7 @@ Add this module when you need:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:contract:0.6.0")
+    implementation("org.trustweave:contract:0.7.0")
 }
 ```
 

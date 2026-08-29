@@ -38,7 +38,7 @@ The plugin focuses on the verifier/relying-party side. It can fetch and verify t
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-openid-federation:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-openid-federation:0.7.0")
 }
 ```
 

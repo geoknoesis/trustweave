@@ -25,18 +25,18 @@ Add the did:ens module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-plugins-ens:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:did-plugins-base:0.6.0")
-    implementation("org.trustweave:did-plugins-ethr:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:did-plugins-ens:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:did-plugins-base:0.7.0")
+    implementation("org.trustweave:did-plugins-ethr:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Optional: Polygon client for EVM-compatible chains
-    implementation("org.trustweave:anchors-plugins-polygon:0.6.0")
+    implementation("org.trustweave:anchors-plugins-polygon:0.7.0")
 }
 ```
 

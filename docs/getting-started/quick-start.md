@@ -19,7 +19,7 @@ redirect_from:
 
 Get started with TrustWeave in 5 minutes! This guide will walk you through creating your first TrustWeave application.
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [Installation](installation.md) for setup details.
 
@@ -327,8 +327,8 @@ The sections below explain each step in detail.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
-    testImplementation("org.trustweave:testkit:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
+    testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

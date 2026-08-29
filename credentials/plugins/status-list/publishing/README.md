@@ -107,7 +107,7 @@ Use it when verifiers will hit `https://storage.googleapis.com/<bucket>/...` or 
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-status-list-publishing:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-status-list-publishing:0.7.0")
 }
 ```
 

@@ -8,7 +8,7 @@ Instead of adding multiple dependencies individually, use the distribution modul
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 
@@ -40,10 +40,10 @@ Optional plugin modules must be added explicitly if needed. These include:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 
     // Add blockchain adapters as needed
-    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
 }
 ```
 

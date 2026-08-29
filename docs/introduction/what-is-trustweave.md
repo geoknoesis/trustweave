@@ -14,7 +14,7 @@ redirect_from:
 
 # What is TrustWeave?
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > TrustWeave is created and supported by [Geoknoesis LLC](https://www.geoknoesis.com). The project reflects Geoknoesis' reference architecture for decentralized trust.
 
 TrustWeave is a **neutral, reusable trust and identity core** library for Kotlin, designed to be:

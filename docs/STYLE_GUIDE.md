@@ -173,7 +173,7 @@ For **`VerificationResult.Invalid`**, **`IssuanceResult.Failure`**, and **`Prese
 ### Version References
 
 - Always include version in quick start guides
-- Format: `**Version:** 0.6.0`
+- Format: `**Version:** 0.7.0`
 - Include Kotlin/Java version requirements
 
 ### Deprecation

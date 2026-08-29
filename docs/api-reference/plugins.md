@@ -220,13 +220,13 @@ To use a plugin, simply add it as a dependency to your project:
 ```kotlin
 dependencies {
     // DID method plugin
-    implementation("org.trustweave:did-plugins-key:0.6.0")
+    implementation("org.trustweave:did-plugins-key:0.7.0")
 
     // Blockchain anchor plugin
-    implementation("org.trustweave:anchors-plugins-ethereum:0.6.0")
+    implementation("org.trustweave:anchors-plugins-ethereum:0.7.0")
 
     // KMS plugin
-    implementation("org.trustweave:kms-plugins-aws:0.6.0")
+    implementation("org.trustweave:kms-plugins-aws:0.7.0")
 }
 ```
 

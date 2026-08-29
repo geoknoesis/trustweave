@@ -44,7 +44,7 @@ Create a new Kotlin project and add dependencies:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 

@@ -14,7 +14,7 @@ redirect_from:
 
 # Common Patterns
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > Learn common usage patterns and best practices for TrustWeave.
 
 ## Table of Contents

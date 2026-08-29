@@ -25,10 +25,10 @@ Add the Base adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:anchors-plugins-base:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:anchors-plugins-base:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 
     // Web3j for Base blockchain (EVM-compatible)
     implementation("org.web3j:core:5.0.1")

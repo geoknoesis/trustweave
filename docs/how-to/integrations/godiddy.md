@@ -26,9 +26,9 @@ Add the GoDiddy module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-plugins-godiddy:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-plugins-godiddy:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 
     // HTTP client (OkHttp recommended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

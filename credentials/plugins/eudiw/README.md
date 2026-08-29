@@ -71,7 +71,7 @@ It also exposes `SUPPORTED_FORMATS`, `SUPPORTED_PROOF_TYPES`, `SUPPORTED_ALGORIT
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-eudiw:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-eudiw:0.7.0")
 }
 ```
 

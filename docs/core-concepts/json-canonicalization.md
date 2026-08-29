@@ -10,7 +10,7 @@ Canonicalization ensures that logically equivalent JSON payloads produce identic
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

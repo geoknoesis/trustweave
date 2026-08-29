@@ -20,13 +20,13 @@ Add an integration when you need a concrete provider:
 ```kotlin
 dependencies {
     // Chain plugins
-    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
 
     // DID plugins
-    implementation("org.trustweave:did-plugins-key:0.6.0")
+    implementation("org.trustweave:did-plugins-key:0.7.0")
 
     // KMS plugins (core dependencies included transitively)
-    implementation("org.trustweave:kms-plugins-aws:0.6.0")
+    implementation("org.trustweave:kms-plugins-aws:0.7.0")
 }
 ```
 

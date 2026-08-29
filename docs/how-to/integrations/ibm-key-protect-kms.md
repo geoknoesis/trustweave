@@ -27,7 +27,7 @@ Add the IBM Key Protect module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the IBM Key Protect KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-ibm:0.6.0")
+    implementation("org.trustweave:kms-plugins-ibm:0.7.0")
 }
 ```
 

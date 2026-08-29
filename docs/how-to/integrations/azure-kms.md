@@ -27,7 +27,7 @@ Add the Azure Key Vault module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Azure KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-azure:0.6.0")
+    implementation("org.trustweave:kms-plugins-azure:0.7.0")
 }
 ```
 

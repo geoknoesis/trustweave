@@ -25,10 +25,10 @@ Add the did:web module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-plugins-web:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:did-plugins-base:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-plugins-web:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:did-plugins-base:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

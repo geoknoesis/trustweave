@@ -25,10 +25,10 @@ Add the Ethereum adapter module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:anchors-plugins-ethereum:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:anchors-plugins-ethereum:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 
     // Web3j for Ethereum blockchain
     implementation("org.web3j:core:5.0.1")

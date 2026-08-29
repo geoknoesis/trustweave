@@ -17,7 +17,7 @@ keywords:
 
 Complete API reference for TrustWeave's TrustWeave API.
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > **Kotlin:** 2.2.21+ | **Java:** 21+
 > See [CHANGELOG.md](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md) for version history and migration guides.
 >
@@ -25,7 +25,7 @@ Complete API reference for TrustWeave's TrustWeave API.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 

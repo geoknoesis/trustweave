@@ -23,8 +23,8 @@ A **Decentralized Identifier (DID)** is a self-sovereign identifier controlled b
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

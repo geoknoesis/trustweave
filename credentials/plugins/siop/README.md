@@ -27,7 +27,7 @@ The module ships:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-siop:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-siop:0.7.0")
 }
 ```
 

@@ -26,9 +26,9 @@ Add the Algorand module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 
     // Algorand SDK
     implementation("com.algorand:algosdk:2.7.0")

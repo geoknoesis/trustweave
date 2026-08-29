@@ -25,10 +25,10 @@ Add the did:plc module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-plugins-plc:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:did-plugins-base:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-plugins-plc:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:did-plugins-base:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 
     // HTTP client for AT Protocol integration
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

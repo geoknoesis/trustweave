@@ -14,10 +14,10 @@ The TrustWeave DSL (Domain-Specific Language) provides a fluent, type-safe API f
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
     // Or use individual modules:
-    // implementation("org.trustweave:trust:0.6.0")
-    // implementation("org.trustweave:testkit:0.6.0")
+    // implementation("org.trustweave:trust:0.7.0")
+    // implementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

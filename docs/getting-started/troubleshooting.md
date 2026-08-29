@@ -10,7 +10,7 @@ redirect_from:
 
 Common issues and solutions when working with TrustWeave.
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > If you encounter issues not covered here, please [file an issue](https://github.com/your-org/TrustWeave/issues) or check the [FAQ](../faq.md).
 
 ## Common Issues

@@ -27,7 +27,7 @@ Add the HashiCorp Vault KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the HashiCorp Vault KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-hashicorp:0.6.0")
+    implementation("org.trustweave:kms-plugins-hashicorp:0.7.0")
 }
 ```
 

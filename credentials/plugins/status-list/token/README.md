@@ -5,8 +5,8 @@ JWT-based credential status list implementation for TrustWeave, following the IE
 Designed for SD-JWT VC and ISO mdoc credential profiles as a lightweight alternative to the
 W3C Bitstring Status List.
 
-**Version:** 0.6.0
-**Artifact:** `org.trustweave.credentials:credentials-plugins-status-list-token:0.6.0`
+**Version:** 0.7.0
+**Artifact:** `org.trustweave.credentials:credentials-plugins-status-list-token:0.7.0`
 
 ## Overview
 
@@ -54,7 +54,7 @@ the decoded `lst`, and inspects bit `42 % 8` to determine the credential's statu
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-status-list-token:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-status-list-token:0.7.0")
 }
 ```
 

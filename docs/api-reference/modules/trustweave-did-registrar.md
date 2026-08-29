@@ -12,9 +12,9 @@ The `did:registrar` module provides implementations of the `DidRegistrar` interf
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-registrar:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:did-registrar:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
 }
 ```
 

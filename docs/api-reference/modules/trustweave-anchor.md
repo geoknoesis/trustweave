@@ -12,8 +12,8 @@ The `anchors:anchor-core` module provides blockchain anchoring abstraction with 
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

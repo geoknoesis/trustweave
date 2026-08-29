@@ -4,7 +4,7 @@
 title: TrustWeave Developer Documentation
 description: Comprehensive developer documentation for TrustWeave - A neutral, reusable trust and identity core library for Kotlin
 author: GeoKnoesis
-version: 0.6.0
+version: 0.7.0
 
 # GitHub Pages Configuration
 # baseurl is empty to serve at root path for custom domain (trustweave.org).

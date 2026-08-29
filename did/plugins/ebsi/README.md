@@ -69,7 +69,7 @@ When no token is configured, `createDid` / `updateDid` / `deactivateDid` throw [
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.did:did-plugins-ebsi:0.6.0")
+    implementation("org.trustweave.did:did-plugins-ebsi:0.7.0")
 }
 ```
 

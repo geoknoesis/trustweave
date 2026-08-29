@@ -26,7 +26,7 @@ Add the Google Cloud KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the Google Cloud KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-google:0.6.0")
+    implementation("org.trustweave:kms-plugins-google:0.7.0")
 }
 ```
 

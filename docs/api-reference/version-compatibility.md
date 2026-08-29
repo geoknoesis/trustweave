@@ -20,7 +20,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 ## TrustWeave SDK Version
 
-**Current Version:** `0.6.0`
+**Current Version:** `0.7.0`
 
 > **Note:** TrustWeave follows semantic versioning (e.g., `0.6.0`, `0.7.0`, `1.0.0`, etc.).
 
@@ -30,7 +30,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | TrustWeave Version | Java Version | Status |
 |-------------------|--------------|--------|
-| 0.6.0             | 21+          | ✅ Required |
+| 0.7.0             | 21+          | ✅ Required |
 | Future            | 21+          | ✅ Required |
 
 **Why Java 21?**
@@ -42,7 +42,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | TrustWeave Version | Kotlin Version | Status |
 |-------------------|----------------|--------|
-| 0.6.0             | 2.3.21        | ✅ Built against |
+| 0.7.0             | 2.3.21        | ✅ Built against |
 | Future            | 2.3.x         | ✅ Tracking latest stable |
 
 **Why Kotlin 2.3.x?**
@@ -80,12 +80,12 @@ This document provides version compatibility information for TrustWeave SDK and 
 All TrustWeave modules share the same version number for consistency:
 
 ```
-org.trustweave:distribution-all:0.6.0
-org.trustweave:trust:0.6.0
-org.trustweave:did-did-core:0.6.0
-org.trustweave:kms-kms-core:0.6.0
-org.trustweave:anchors-anchor-core:0.6.0
-org.trustweave:testkit:0.6.0
+org.trustweave:distribution-all:0.7.0
+org.trustweave:trust:0.7.0
+org.trustweave:did-did-core:0.7.0
+org.trustweave:kms-kms-core:0.7.0
+org.trustweave:anchors-anchor-core:0.7.0
+org.trustweave:testkit:0.7.0
 ```
 
 **Recommendation:** Use the same version for all TrustWeave modules to avoid compatibility issues.
@@ -115,7 +115,7 @@ org.trustweave:testkit:0.6.0
 
 | Version | Status | Breaking Changes |
 |---------|--------|------------------|
-| 0.6.0 | Current | None (initial version) |
+| 0.7.0 | Current | None (initial version) |
 | Future 1.0.0 | Planned | None expected |
 | Future 1.1.0 | Planned | TBD |
 
@@ -143,7 +143,7 @@ org.trustweave:testkit:0.6.0
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 
 // Check version at runtime
@@ -156,7 +156,7 @@ val version = TrustWeave::class.java.getPackage()?.implementationVersion
 <dependency>
     <groupId>org.trustweave</groupId>
     <artifactId>distribution-all</artifactId>
-    <version>0.6.0</version>
+    <version>0.7.0</version>
 </dependency>
 ```
 
@@ -175,7 +175,7 @@ If you encounter version conflicts:
    ```kotlin
    configurations.all {
        resolutionStrategy {
-           force("org.trustweave:common:0.6.0")
+           force("org.trustweave:common:0.7.0")
        }
    }
    ```
@@ -183,7 +183,7 @@ If you encounter version conflicts:
 3. **Use BOM** (when available):
    ```kotlin
    dependencies {
-       implementation(platform("org.trustweave:distribution-bom:0.6.0"))
+       implementation(platform("org.trustweave:distribution-bom:0.7.0"))
        implementation("org.trustweave:trust")
        implementation("org.trustweave:did-did-core")
    }
@@ -207,4 +207,4 @@ When upgrading TrustWeave versions:
 ---
 
 **Last Updated:** May 2026  
-**TrustWeave Version:** 0.6.0
+**TrustWeave Version:** 0.7.0

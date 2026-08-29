@@ -12,10 +12,10 @@ The `did:registrar-server-ktor` module provides a Ktor-based HTTP server impleme
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-registrar-server-ktor:0.6.0")
-    implementation("org.trustweave:did-registrar:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:did-registrar-server-ktor:0.7.0")
+    implementation("org.trustweave:did-registrar:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
 }
 ```
 

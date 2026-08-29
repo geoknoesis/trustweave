@@ -12,8 +12,8 @@ The `kms:kms-core` module provides the key management service abstraction used t
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:kms-kms-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

@@ -133,13 +133,13 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This pulls in the core r
 dependencies {
     // Core TrustWeave modules
     // TrustWeave distribution (includes all modules)
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 
     // Test kit for in-memory implementations
-    testImplementation("org.trustweave:testkit:0.6.0")
+    testImplementation("org.trustweave:testkit:0.7.0")
 
     // Optional: Algorand adapter for real blockchain anchoring
-    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

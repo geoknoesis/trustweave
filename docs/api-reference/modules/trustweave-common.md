@@ -67,7 +67,7 @@ Add the module alongside any DID/KMS components you require:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

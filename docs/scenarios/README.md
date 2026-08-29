@@ -18,7 +18,7 @@ has_children: true
 
 # TrustWeave Use Case Scenarios
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > Complete end-to-end workflows demonstrating TrustWeave in real-world applications.
 
 ## Overview

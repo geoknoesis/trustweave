@@ -11,7 +11,7 @@ grand_parent: Core Concepts
 > **Comprehensive comparison of TrustWeave with all relevant competitors and main players in the SSI/DID/VC ecosystem**
 
 **Last Updated:** 2025-01-15
-**TrustWeave Version:** 0.6.0
+**TrustWeave Version:** 0.7.0
 
 ---
 

@@ -48,7 +48,7 @@ When you add a KMS plugin dependency to your project (e.g., `trustweave-kms-aws`
 **Example:** Adding AWS KMS plugin to your `build.gradle.kts`:
 ```kotlin
 dependencies {
-    implementation("org.trustweave:kms-plugins-aws:0.6.0")
+    implementation("org.trustweave:kms-plugins-aws:0.7.0")
 }
 ```
 

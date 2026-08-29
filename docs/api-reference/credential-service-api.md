@@ -10,7 +10,7 @@ This page describes the **`CredentialService`** API (`credentials/credential-api
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:credentials-credential-api:0.6.0")
+    implementation("org.trustweave:credentials-credential-api:0.7.0")
 }
 ```
 

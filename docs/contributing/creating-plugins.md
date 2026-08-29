@@ -30,19 +30,19 @@ Add the necessary dependencies to your project:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 
     // Credential SPI (proof engines, exchange protocols, status checkers)
-    implementation("org.trustweave:credentials-credential-api:0.6.0")
+    implementation("org.trustweave:credentials-credential-api:0.7.0")
 
     // Wallet SPI
-    implementation("org.trustweave:wallet-wallet-core:0.6.0")
+    implementation("org.trustweave:wallet-wallet-core:0.7.0")
 
     // Test doubles (in-memory KMS, mock DID method, etc.)
-    testImplementation("org.trustweave:testkit:0.6.0")
+    testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

@@ -26,17 +26,17 @@ Add the did:polygon module to your dependencies:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-plugins-polygon:0.6.0")
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:did-plugins-base:0.6.0")
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:did-plugins-polygon:0.7.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:did-plugins-base:0.7.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 
     // Web3j for Polygon blockchain
     implementation("org.web3j:core:4.10.0")
 
     // Polygon anchor client
-    implementation("org.trustweave:anchors-plugins-polygon:0.6.0")
+    implementation("org.trustweave:anchors-plugins-polygon:0.7.0")
 }
 ```
 

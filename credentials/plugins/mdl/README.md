@@ -69,7 +69,7 @@ The default is `P-256`.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-mdl:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-mdl:0.7.0")
 }
 ```
 

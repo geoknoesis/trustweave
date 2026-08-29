@@ -23,8 +23,8 @@ Key management covers the generation, storage, rotation, and usage of cryptograp
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
 }
 ```
 

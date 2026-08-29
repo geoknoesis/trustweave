@@ -16,7 +16,7 @@ Add the common module to your build when you need deterministic hashing:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

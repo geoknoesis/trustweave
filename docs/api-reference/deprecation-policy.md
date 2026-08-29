@@ -228,4 +228,4 @@ If you encounter issues with deprecated APIs:
 
 **Last Updated:** May 2026  
 **Policy Version:** 1.0  
-**TrustWeave Version:** 0.6.0
+**TrustWeave Version:** 0.7.0

@@ -14,7 +14,7 @@ A **Verifiable Credential** is a tamper-evident attestation following the W3C VC
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

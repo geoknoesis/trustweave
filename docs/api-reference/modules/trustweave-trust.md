@@ -14,7 +14,7 @@ integrations.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:trust:0.6.0")
+    implementation("org.trustweave:trust:0.7.0")
 }
 ```
 

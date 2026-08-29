@@ -2,10 +2,10 @@
 
 All notable API changes are described here. The project does not yet follow strict semantic versioning in this file; treat entries as migration notes.
 
-## [Unreleased]
+## [0.7.0] - 2026-08-29
 
-Covers the 483 commits landed since 0.6.0. `build.gradle.kts` still declares `version = "0.6.0"`;
-bump it when cutting the release and promote this section to that version.
+Covers the 483 commits landed since 0.6.0. Minor bump rather than patch: this release contains
+breaking changes, which semver permits within a `0.x` line.
 
 **Read this section before upgrading — it contains five breaking changes.**
 

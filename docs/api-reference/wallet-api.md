@@ -10,7 +10,7 @@ Complete API reference for TrustWeave's Wallet system.
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 

@@ -247,7 +247,7 @@ fun main() = runBlocking {
 ### Format
 
 ```markdown
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > **API:** TrustWeave Facade
 
 This example uses the TrustWeave facade API available in 1.0.0+.

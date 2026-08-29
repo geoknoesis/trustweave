@@ -19,8 +19,8 @@ Anchoring creates an immutable audit trail for important events or payloads by w
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:anchors-anchor-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
+    implementation("org.trustweave:anchors-anchor-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
 }
 ```
 

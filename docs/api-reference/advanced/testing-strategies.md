@@ -32,7 +32,7 @@ The `trustweave-testkit` module provides in-memory implementations:
 
 ```kotlin
 dependencies {
-    testImplementation("org.trustweave:testkit:0.6.0")
+    testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

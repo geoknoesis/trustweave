@@ -12,9 +12,9 @@ The `did:did-core` module provides Decentralized Identifier (DID) and DID Docume
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:did-did-core:0.6.0")
-    implementation("org.trustweave:common:0.6.0")
-    implementation("org.trustweave:kms-kms-core:0.6.0")
+    implementation("org.trustweave:did-did-core:0.7.0")
+    implementation("org.trustweave:common:0.7.0")
+    implementation("org.trustweave:kms-kms-core:0.7.0")
 }
 ```
 

@@ -12,14 +12,19 @@ Version information, deprecation notices, and migration guides for credential ex
 
 ## Current Version
 
-- **API Version**: 0.6.0
+- **API Version**: 0.7.0
 - **Protocol Support**: DIDComm V2, OIDC4VCI, CHAPI
 - **Kotlin Version**: 2.2.0+
 - **Java Version**: 21+
 
 ## Version History
 
-### 0.6.0 (Current)
+### 0.7.0 (Current)
+
+See the [changelog](../../../../CHANGELOG.md#070---2026-08-29) for the full entry, including five
+breaking changes.
+
+### 0.6.0
 
 **Initial Release**
 
@@ -299,9 +304,9 @@ val didCommService = DidCommFactory.createDatabaseService(
 
 ### API Compatibility
 
-| Version | 0.6.0 |
+| Version | 0.7.0 |
 |---------|----------------|
-| **0.6.0** | ✅ Compatible |
+| **0.7.0** | ✅ Compatible |
 
 ---
 
@@ -313,13 +318,13 @@ val didCommService = DidCommFactory.createDatabaseService(
    ```kotlin
    // Check your current dependencies
    // In build.gradle.kts:
-   implementation("org.trustweave:credentials-credential-api:0.6.0")
+   implementation("org.trustweave:credentials-credential-api:0.7.0")
    ```
 
 2. **Update dependencies:**
    ```kotlin
    // Update to latest version
-   implementation("org.trustweave:credentials-credential-api:0.6.0")
+   implementation("org.trustweave:credentials-credential-api:0.7.0")
    ```
 
 3. **Review changelog:**

@@ -7,7 +7,7 @@ nav_exclude: true
 
 Standard terminology used throughout TrustWeave documentation.
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 
 ## Core Terms
 

@@ -21,8 +21,8 @@ A **Smart Contract** in TrustWeave is an executable agreement between parties th
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:contract:0.6.0")
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:contract:0.7.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 

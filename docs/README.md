@@ -12,7 +12,7 @@ title: TrustWeave
 
 **A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
-[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
 
@@ -81,7 +81,7 @@ fun main() = runBlocking {
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
 }
 ```
 
@@ -313,7 +313,7 @@ val wallet = trustWeave.wallet {
 
 - **Created by**: [Geoknoesis LLC](https://www.geoknoesis.com)
 - **License**: Dual license (Open source for non-commercial, Commercial for production)
-- **Version**: 0.6.0
+- **Version**: 0.7.0
 - **GitHub**: [geoknoesis/TrustWeave](https://github.com/geoknoesis/TrustWeave)
 
 ---

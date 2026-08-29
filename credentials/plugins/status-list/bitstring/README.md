@@ -60,7 +60,7 @@ H2, PostgreSQL, and MySQL via HikariCP): `bitstring_status_lists`, `bitstring_cr
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-status-list-bitstring:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-status-list-bitstring:0.7.0")
 }
 ```
 

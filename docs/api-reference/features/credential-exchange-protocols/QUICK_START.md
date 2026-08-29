@@ -9,7 +9,7 @@ grand_parent: API Reference
 
 Get started with credential exchange protocols in 5 minutes! This guide will walk you through creating your first credential exchange using the protocol abstraction layer.
 
-> **Version:** 0.6.0
+> **Version:** 0.7.0
 > **Kotlin:** 2.2.0+ | **Java:** 21+
 > **Prerequisites:** See [Installation](../../../getting-started/installation.md)
 

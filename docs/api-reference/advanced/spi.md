@@ -142,7 +142,7 @@ Plugins can be added or removed without modifying application code:
 ```kotlin
 // Add chains/plugins/algorand dependency to enable Algorand adapter
 dependencies {
-    implementation("org.trustweave:anchors-plugins-algorand:0.6.0")
+    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
 }
 ```
 

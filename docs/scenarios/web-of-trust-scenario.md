@@ -12,8 +12,8 @@ This walkthrough explains how TrustWeave supports **trust registries**, **delega
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.6.0")
-    testImplementation("org.trustweave:testkit:0.6.0")
+    implementation("org.trustweave:distribution-all:0.7.0")
+    testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
 

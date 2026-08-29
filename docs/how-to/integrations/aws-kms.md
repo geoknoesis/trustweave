@@ -29,7 +29,7 @@ Add the AWS KMS module to your dependencies:
 ```kotlin
 dependencies {
     // Only need to add the AWS KMS plugin - core dependencies are included transitively
-    implementation("org.trustweave:kms-plugins-aws:0.6.0")
+    implementation("org.trustweave:kms-plugins-aws:0.7.0")
 }
 ```
 

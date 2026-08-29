@@ -87,7 +87,7 @@ Supported JSON Schema filter keywords:
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave.credentials:credentials-plugins-presentation-exchange:0.6.0")
+    implementation("org.trustweave.credentials:credentials-plugins-presentation-exchange:0.7.0")
 }
 ```
 

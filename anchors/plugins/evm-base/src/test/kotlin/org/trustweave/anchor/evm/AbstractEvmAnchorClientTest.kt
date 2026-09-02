@@ -257,4 +257,35 @@ class AbstractEvmAnchorClientTest {
                 }
             }
         }
+
+    // --- transport security must not fail open on a DNS failure ---
+    //
+    // The check permits plaintext only where the host is local. It decided that by asking
+    // PrivateNetworkGuard.rejectionReason() and treating "has a reason" as "is local" — but that
+    // returns a reason both for a genuinely private host AND for one that cannot be resolved. An
+    // unresolvable public host therefore looked local and got plaintext, which is a fail-open on
+    // exactly the DNS failure an attacker can induce.
+
+    @Test
+    fun `plaintext rpc to an unresolvable host is refused rather than assumed local`() {
+        val exception =
+            assertFailsWith<BlockchainException.ConfigurationFailed> {
+                TestEvmClient(chain, mapOf("rpcUrl" to "http://no-such-host.invalid:8545"))
+            }
+
+        assertTrue(exception.message.contains("plaintext", ignoreCase = true))
+    }
+
+    @Test
+    fun `plaintext rpc to a loopback or private host is still allowed`() {
+        // The documented local-node setup must keep working: this is why the guard is not simply
+        // "refuse all plaintext".
+        TestEvmClient(chain, mapOf("rpcUrl" to "http://127.0.0.1:8545"))
+        TestEvmClient(chain, mapOf("rpcUrl" to "http://10.0.0.5:8545"))
+    }
+
+    @Test
+    fun `https to any host is allowed`() {
+        TestEvmClient(chain, mapOf("rpcUrl" to "https://mainnet.example.com"))
+    }
 }

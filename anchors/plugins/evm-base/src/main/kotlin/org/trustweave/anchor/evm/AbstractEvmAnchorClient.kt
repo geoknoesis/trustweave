@@ -138,33 +138,25 @@ abstract class AbstractEvmAnchorClient(
      * `http` stays available for loopback and private-range hosts, where a local or in-cluster
      * development node is the normal case and TLS buys nothing.
      */
-    private fun requireTransportSecurity(url: String): String {
-        if (!url.startsWith("http://", ignoreCase = true)) return url
-
-        val host =
-            runCatching { java.net.URI(url).host }.getOrNull()
-                ?: throw BlockchainException.ConfigurationFailed(
-                    chainId = "eip155:${chain.numericChainId}",
-                    configKey = "rpcUrl",
-                    reason = "Could not parse the host from the configured JSON-RPC endpoint",
-                )
-
-        // A non-null reason means the host IS loopback/private, which is exactly where plaintext
-        // is acceptable. A public host reaching here is a plaintext endpoint on the open internet.
-        if (org.trustweave.core.net.PrivateNetworkGuard
-                .rejectionReason(host) == null
-        ) {
+    private fun requireTransportSecurity(url: String): String =
+        try {
+            // Delegated so the locality decision lives in one place. The previous inline version
+            // asked PrivateNetworkGuard.rejectionReason() and read "has a reason" as "is local" —
+            // but that reports a reason both for a private host and for one that cannot be
+            // resolved, so an unresolvable public host was treated as local and got plaintext.
+            // The shared helper establishes locality positively instead.
+            org.trustweave.core.net.TransportSecurity.requireSecureForPublicHosts(
+                url,
+                "Signed transactions and the anchored payload",
+            )
+        } catch (e: IllegalArgumentException) {
             throw BlockchainException.ConfigurationFailed(
                 chainId = "eip155:${chain.numericChainId}",
                 configKey = "rpcUrl",
-                reason =
-                    "Refusing a plaintext http:// JSON-RPC endpoint for public host '$host'. " +
-                        "Signed transactions and the anchored payload both cross this connection. " +
-                        "Use https, or point rpcUrl at a loopback or private-range development node.",
+                reason = e.message ?: "Refusing an insecure JSON-RPC endpoint",
+                cause = e,
             )
         }
-        return url
-    }
 
     override fun canSubmitTransaction(): Boolean = credentials != null
 

@@ -1,26 +1,9 @@
 package org.trustweave.googlekms
 
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.kms.Algorithm
-import org.trustweave.kms.KeyHandle
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.DeleteKeyResult
-import org.trustweave.kms.results.GenerateKeyResult
-import org.trustweave.kms.results.GetPublicKeyResult
-import org.trustweave.kms.results.SignResult
-import org.trustweave.kms.KmsOptionKeys
-import org.trustweave.googlekms.GcpKmsOptionKeys
-import org.trustweave.kms.util.EcdsaSignatureCodec
-import org.trustweave.kms.util.KmsInputValidator
-import org.trustweave.core.plugin.PluginLifecycle
 import com.google.api.gax.rpc.NotFoundException
 import com.google.api.gax.rpc.PermissionDeniedException
 import com.google.cloud.kms.v1.CryptoKey
 import com.google.cloud.kms.v1.CryptoKey.CryptoKeyPurpose
-import com.google.cloud.kms.v1.CryptoKeyVersion
-import com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState
-import com.google.cloud.kms.v1.CryptoKeyVersionName
 import com.google.cloud.kms.v1.CryptoKeyVersionTemplate
 import com.google.cloud.kms.v1.KeyManagementServiceClient
 import com.google.cloud.kms.v1.KeyRingName
@@ -28,7 +11,20 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.plugin.PluginLifecycle
+import org.trustweave.googlekms.GcpKmsOptionKeys
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.KeyHandle
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.DeleteKeyResult
+import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.GetPublicKeyResult
+import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.util.CacheEntry
+import org.trustweave.kms.util.EcdsaSignatureCodec
+import org.trustweave.kms.util.KmsInputValidator
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 
@@ -54,46 +50,50 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class GoogleCloudKeyManagementService(
     private val config: GoogleKmsConfig,
-    private val kmsClient: KeyManagementServiceClient = GoogleKmsClientFactory.createClient(config)
-) : KeyManagementService, PluginLifecycle, AutoCloseable {
-
+    private val kmsClient: KeyManagementServiceClient = GoogleKmsClientFactory.createClient(config),
+) : KeyManagementService,
+    PluginLifecycle,
+    AutoCloseable {
     private val logger = LoggerFactory.getLogger(GoogleCloudKeyManagementService::class.java)
-    
+
     // Cache for key metadata to avoid duplicate getCryptoKey calls (with TTL support)
     private val keyMetadataCache = ConcurrentHashMap<String, CacheEntry<CryptoKey>>()
-    
+
     /**
      * Gets cached key metadata or fetches it if not cached or expired.
      */
     private suspend fun getCachedKeyMetadata(resolvedKeyName: String): CryptoKey {
         val cacheEntry = keyMetadataCache[resolvedKeyName]
-        
+
         // Check if cache entry exists and is not expired
         if (cacheEntry != null && !cacheEntry.isExpired()) {
             logger.debug("Using cached key metadata: keyName={}", resolvedKeyName)
             return cacheEntry.value
         }
-        
+
         // Fetch fresh metadata
-        val cryptoKey = kmsClient.getCryptoKey(
-            com.google.cloud.kms.v1.GetCryptoKeyRequest.newBuilder()
-                .setName(resolvedKeyName)
-                .build()
-        )
-        
+        val cryptoKey =
+            kmsClient.getCryptoKey(
+                com.google.cloud.kms.v1.GetCryptoKeyRequest
+                    .newBuilder()
+                    .setName(resolvedKeyName)
+                    .build(),
+            )
+
         // Cache with TTL if configured
         val ttlSeconds = config.cacheTtlSeconds
-        val cacheEntryNew = if (ttlSeconds != null) {
-            CacheEntry.withTtlSeconds(cryptoKey, ttlSeconds)
-        } else {
-            CacheEntry.permanent(cryptoKey)
-        }
+        val cacheEntryNew =
+            if (ttlSeconds != null) {
+                CacheEntry.withTtlSeconds(cryptoKey, ttlSeconds)
+            } else {
+                CacheEntry.permanent(cryptoKey)
+            }
         keyMetadataCache[resolvedKeyName] = cacheEntryNew
-        
+
         logger.debug("Cached key metadata: keyName={}, ttlSeconds={}", resolvedKeyName, ttlSeconds)
         return cryptoKey
     }
-    
+
     /**
      * Invalidates cache entry for a key.
      */
@@ -104,19 +104,36 @@ class GoogleCloudKeyManagementService(
 
     companion object {
         /**
-         * Algorithms supported by Google Cloud KMS.
-         * Note: Ed25519 and P521 support may vary by Google Cloud KMS version.
+         * Algorithms this plugin would like to offer. Whether each one is really available depends
+         * on the Google Cloud KMS SDK on the classpath - `EC_SIGN_ED25519` and the P-521 variant
+         * are absent from some versions - so this list is a candidate set, not a promise.
          */
-        val SUPPORTED_ALGORITHMS = setOf(
-            Algorithm.Ed25519, // Note: may not be available in all Google Cloud KMS versions
-            Algorithm.Secp256k1,
-            Algorithm.P256,
-            Algorithm.P384,
-            Algorithm.P521, // Note: may not be available in all Google Cloud KMS versions
-            Algorithm.RSA.RSA_2048,
-            Algorithm.RSA.RSA_3072,
-            Algorithm.RSA.RSA_4096
-        )
+        private val CANDIDATE_ALGORITHMS =
+            setOf(
+                Algorithm.Ed25519,
+                Algorithm.Secp256k1,
+                Algorithm.P256,
+                Algorithm.P384,
+                Algorithm.P521,
+                Algorithm.RSA.RSA_2048,
+                Algorithm.RSA.RSA_3072,
+                Algorithm.RSA.RSA_4096,
+            )
+
+        /**
+         * What this build can actually do, computed by asking the mapping.
+         *
+         * Previously the candidate list was published directly, so `getSupportedAlgorithms()`
+         * advertised Ed25519 on SDK versions that have no `EC_SIGN_ED25519` constant. A caller who
+         * read the advertised set and asked for an Ed25519 key got an IllegalArgumentException
+         * instead - the API told them it was supported and then refused. Filtering here means the
+         * advertised set is true by construction on whatever SDK is present.
+         */
+        val SUPPORTED_ALGORITHMS: Set<Algorithm> =
+            CANDIDATE_ALGORITHMS.filterTo(LinkedHashSet()) { algorithm ->
+                runCatching { AlgorithmMapping.toGoogleKmsAlgorithm(algorithm) }
+                    .isSuccess
+            }
     }
 
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
@@ -143,316 +160,379 @@ class GoogleCloudKeyManagementService(
 
     override suspend fun generateKey(
         algorithm: Algorithm,
-        options: Map<String, Any?>
-    ): GenerateKeyResult = withContext(Dispatchers.IO) {
-        if (!supportsAlgorithm(algorithm)) {
-            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
-                algorithm = algorithm,
-                supportedAlgorithms = SUPPORTED_ALGORITHMS
-            )
-        }
-
-        // Validate key ID if provided
-        (options[KmsOptionKeys.KEY_ID] as? String)?.let { keyIdStr ->
-            val validationError = KmsInputValidator.validateKeyId(keyIdStr)
-            if (validationError != null) {
-                logger.warn("Invalid key ID provided: keyId={}, error={}", keyIdStr, validationError)
-                return@withContext GenerateKeyResult.Failure.InvalidOptions(
+        options: Map<String, Any?>,
+    ): GenerateKeyResult =
+        withContext(Dispatchers.IO) {
+            if (!supportsAlgorithm(algorithm)) {
+                return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
                     algorithm = algorithm,
-                    reason = "Invalid key ID: $validationError",
-                    invalidOptions = options
+                    supportedAlgorithms = SUPPORTED_ALGORITHMS,
                 )
             }
-        }
 
-        // Validate key ring name if provided
-        val keyRing = (options[GcpKmsOptionKeys.KEY_RING] as? String) ?: config.keyRing
-        if (keyRing == null) {
-            return@withContext GenerateKeyResult.Failure.InvalidOptions(
-                algorithm = algorithm,
-                reason = "Key ring must be specified in config or options",
-                invalidOptions = options
-            )
-        }
-
-        try {
-
-            val keyId = (options[KmsOptionKeys.KEY_ID] as? String) ?: generateKeyId()
-            val keyRingName = KeyRingName.of(config.projectId, config.location, keyRing)
-
-            val googleKmsAlgorithm = AlgorithmMapping.toGoogleKmsAlgorithm(algorithm)
-
-            // Create CryptoKeyVersionTemplate
-            val versionTemplate = CryptoKeyVersionTemplate.newBuilder()
-                .setAlgorithm(googleKmsAlgorithm)
-                .build()
-
-            // Create CryptoKey builder
-            val cryptoKeyBuilder = CryptoKey.newBuilder()
-                .setPurpose(CryptoKeyPurpose.ASYMMETRIC_SIGN)
-                .setVersionTemplate(versionTemplate)
-
-            // Add labels if provided
-            val labels = (options[GcpKmsOptionKeys.LABELS] as? Map<*, *>)?.let { map ->
-                map.entries.associate { (k, v) -> 
-                    k.toString() to v.toString() 
+            // Validate key ID if provided
+            (options[KmsOptionKeys.KEY_ID] as? String)?.let { keyIdStr ->
+                val validationError = KmsInputValidator.validateKeyId(keyIdStr)
+                if (validationError != null) {
+                    logger.warn("Invalid key ID provided: keyId={}, error={}", keyIdStr, validationError)
+                    return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                        algorithm = algorithm,
+                        reason = "Invalid key ID: $validationError",
+                        invalidOptions = options,
+                    )
                 }
             }
-            labels?.forEach { (key, value) ->
-                cryptoKeyBuilder.putLabels(key, value)
+
+            // Validate key ring name if provided
+            val keyRing = (options[GcpKmsOptionKeys.KEY_RING] as? String) ?: config.keyRing
+            if (keyRing == null) {
+                return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                    algorithm = algorithm,
+                    reason = "Key ring must be specified in config or options",
+                    invalidOptions = options,
+                )
             }
 
-            val createRequest = com.google.cloud.kms.v1.CreateCryptoKeyRequest.newBuilder()
-                .setParent(keyRingName.toString())
-                .setCryptoKeyId(keyId)
-                .setCryptoKey(cryptoKeyBuilder)
-                .build()
+            try {
+                val keyId = (options[KmsOptionKeys.KEY_ID] as? String) ?: generateKeyId()
+                val keyRingName = KeyRingName.of(config.projectId, config.location, keyRing)
 
-            val createdKey = kmsClient.createCryptoKey(createRequest)
-            val keyResourceName = createdKey.name
+                val googleKmsAlgorithm = AlgorithmMapping.toGoogleKmsAlgorithm(algorithm)
 
-            // Get the primary version to retrieve public key
-            val primaryVersionName = createdKey.primary.name
-            val publicKeyResponse = kmsClient.getPublicKey(
-                com.google.cloud.kms.v1.GetPublicKeyRequest.newBuilder()
-                    .setName(primaryVersionName)
-                    .build()
-            )
+                // Create CryptoKeyVersionTemplate
+                val versionTemplate =
+                    CryptoKeyVersionTemplate
+                        .newBuilder()
+                        .setAlgorithm(googleKmsAlgorithm)
+                        .build()
 
-            // Google Cloud KMS returns PEM format, need to convert to DER
-            val derBytes = convertPemToDer(publicKeyResponse.pem)
-            val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(derBytes, algorithm)
+                // Create CryptoKey builder
+                val cryptoKeyBuilder =
+                    CryptoKey
+                        .newBuilder()
+                        .setPurpose(CryptoKeyPurpose.ASYMMETRIC_SIGN)
+                        .setVersionTemplate(versionTemplate)
 
-            logger.info("Successfully generated key in Google Cloud KMS: algorithm={}, keyId={}, projectId={}, location={}", 
-                algorithm.name, keyResourceName, config.projectId, config.location)
-            
-            GenerateKeyResult.Success(
-                KeyHandle(
-                    id = KeyId(keyResourceName),
-                    algorithm = algorithm.name,
-                    publicKeyJwk = publicKeyJwk
+                // Add labels if provided
+                val labels =
+                    (options[GcpKmsOptionKeys.LABELS] as? Map<*, *>)?.let { map ->
+                        map.entries.associate { (k, v) ->
+                            k.toString() to v.toString()
+                        }
+                    }
+                labels?.forEach { (key, value) ->
+                    cryptoKeyBuilder.putLabels(key, value)
+                }
+
+                val createRequest =
+                    com.google.cloud.kms.v1.CreateCryptoKeyRequest
+                        .newBuilder()
+                        .setParent(keyRingName.toString())
+                        .setCryptoKeyId(keyId)
+                        .setCryptoKey(cryptoKeyBuilder)
+                        .build()
+
+                val createdKey = kmsClient.createCryptoKey(createRequest)
+                val keyResourceName = createdKey.name
+
+                // Get the primary version to retrieve public key
+                val primaryVersionName = createdKey.primary.name
+                val publicKeyResponse =
+                    kmsClient.getPublicKey(
+                        com.google.cloud.kms.v1.GetPublicKeyRequest
+                            .newBuilder()
+                            .setName(primaryVersionName)
+                            .build(),
+                    )
+
+                // Google Cloud KMS returns PEM format, need to convert to DER
+                val derBytes = convertPemToDer(publicKeyResponse.pem)
+                val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(derBytes, algorithm)
+
+                logger.info(
+                    "Successfully generated key in Google Cloud KMS: algorithm={}, keyId={}, projectId={}, location={}",
+                    algorithm.name,
+                    keyResourceName,
+                    config.projectId,
+                    config.location,
                 )
-            )
-        } catch (e: com.google.api.gax.rpc.AlreadyExistsException) {
-            logger.warn("Key already exists in Google Cloud KMS: algorithm={}, projectId={}, location={}", 
-                algorithm.name, config.projectId, config.location, e)
-            GenerateKeyResult.Failure.InvalidOptions(
-                algorithm = algorithm,
-                reason = "Key already exists: ${e.message ?: "Unknown error"}",
-                invalidOptions = options
-            )
-        } catch (e: PermissionDeniedException) {
-            logger.error("Permission denied when generating key in Google Cloud KMS: algorithm={}, projectId={}, location={}", 
-                algorithm.name, config.projectId, config.location, e)
-            GenerateKeyResult.Failure.Error(
-                algorithm = algorithm,
-                reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        } catch (e: Exception) {
-            logger.error("Unexpected error during key generation in Google Cloud KMS: algorithm={}, projectId={}, location={}", 
-                algorithm.name, config.projectId, config.location, e)
-            GenerateKeyResult.Failure.Error(
-                algorithm = algorithm,
-                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
+
+                GenerateKeyResult.Success(
+                    KeyHandle(
+                        id = KeyId(keyResourceName),
+                        algorithm = algorithm.name,
+                        publicKeyJwk = publicKeyJwk,
+                    ),
+                )
+            } catch (e: com.google.api.gax.rpc.AlreadyExistsException) {
+                logger.warn(
+                    "Key already exists in Google Cloud KMS: algorithm={}, projectId={}, location={}",
+                    algorithm.name,
+                    config.projectId,
+                    config.location,
+                    e,
+                )
+                GenerateKeyResult.Failure.InvalidOptions(
+                    algorithm = algorithm,
+                    reason = "Key already exists: ${e.message ?: "Unknown error"}",
+                    invalidOptions = options,
+                )
+            } catch (e: PermissionDeniedException) {
+                logger.error(
+                    "Permission denied when generating key in Google Cloud KMS: algorithm={}, projectId={}, location={}",
+                    algorithm.name,
+                    config.projectId,
+                    config.location,
+                    e,
+                )
+                GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error during key generation in Google Cloud KMS: algorithm={}, projectId={}, location={}",
+                    algorithm.name,
+                    config.projectId,
+                    config.location,
+                    e,
+                )
+                GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            }
         }
-    }
 
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
-        val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
-        
-        try {
-            // Get the key to find the primary version (use cache)
-            val cryptoKey = getCachedKeyMetadata(resolvedKeyName)
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
+        withContext(Dispatchers.IO) {
+            val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
 
-            val primaryVersionName = cryptoKey.primary.name
-            val publicKeyResponse = kmsClient.getPublicKey(
-                com.google.cloud.kms.v1.GetPublicKeyRequest.newBuilder()
-                    .setName(primaryVersionName)
-                    .build()
-            )
+            try {
+                // Get the key to find the primary version (use cache)
+                val cryptoKey = getCachedKeyMetadata(resolvedKeyName)
 
-            val algorithm = AlgorithmMapping.fromGoogleKmsAlgorithm(publicKeyResponse.algorithm)
-                ?: return@withContext GetPublicKeyResult.Failure.Error(
+                val primaryVersionName = cryptoKey.primary.name
+                val publicKeyResponse =
+                    kmsClient.getPublicKey(
+                        com.google.cloud.kms.v1.GetPublicKeyRequest
+                            .newBuilder()
+                            .setName(primaryVersionName)
+                            .build(),
+                    )
+
+                val algorithm =
+                    AlgorithmMapping.fromGoogleKmsAlgorithm(publicKeyResponse.algorithm)
+                        ?: return@withContext GetPublicKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Unknown algorithm: ${publicKeyResponse.algorithm}",
+                        )
+
+                val derBytes = convertPemToDer(publicKeyResponse.pem)
+                val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(derBytes, algorithm)
+
+                GetPublicKeyResult.Success(
+                    KeyHandle(
+                        id = KeyId(resolvedKeyName),
+                        algorithm = algorithm.name,
+                        publicKeyJwk = publicKeyJwk,
+                    ),
+                )
+            } catch (e: NotFoundException) {
+                logger.debug("Key not found in Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName)
+                GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+            } catch (e: PermissionDeniedException) {
+                logger.error(
+                    "Permission denied when getting public key from Google Cloud KMS: keyId={}, resolvedKeyName={}",
+                    keyId.value,
+                    resolvedKeyName,
+                    e,
+                )
+                GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Unknown algorithm: ${publicKeyResponse.algorithm}"
+                    reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
+                    cause = e,
                 )
-
-            val derBytes = convertPemToDer(publicKeyResponse.pem)
-            val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(derBytes, algorithm)
-
-            GetPublicKeyResult.Success(
-                KeyHandle(
-                    id = KeyId(resolvedKeyName),
-                    algorithm = algorithm.name,
-                    publicKeyJwk = publicKeyJwk
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error getting public key from Google Cloud KMS: keyId={}, resolvedKeyName={}",
+                    keyId.value,
+                    resolvedKeyName,
+                    e,
                 )
-            )
-        } catch (e: NotFoundException) {
-            logger.debug("Key not found in Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName)
-            GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
-        } catch (e: PermissionDeniedException) {
-            logger.error("Permission denied when getting public key from Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName, e)
-            GetPublicKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        } catch (e: Exception) {
-            logger.error("Unexpected error getting public key from Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName, e)
-            GetPublicKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
+                GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithm: Algorithm?
-    ): SignResult = withContext(Dispatchers.IO) {
-        // Validate input data
-        val dataValidationError = KmsInputValidator.validateSignData(data)
-        if (dataValidationError != null) {
-            logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
-            return@withContext SignResult.Failure.Error(
-                keyId = keyId,
-                reason = dataValidationError
-            )
-        }
-
-        try {
-            val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
-
-            // Get the key to find the primary version (use cache)
-            val cryptoKey = getCachedKeyMetadata(resolvedKeyName)
-
-            val primaryVersionName = cryptoKey.primary.name
-
-            // Get key algorithm
-            val publicKeyResponse = kmsClient.getPublicKey(
-                com.google.cloud.kms.v1.GetPublicKeyRequest.newBuilder()
-                    .setName(primaryVersionName)
-                    .build()
-            )
-            val keyAlgorithm = AlgorithmMapping.fromGoogleKmsAlgorithm(publicKeyResponse.algorithm)
-                ?: return@withContext SignResult.Failure.Error(
+        algorithm: Algorithm?,
+    ): SignResult =
+        withContext(Dispatchers.IO) {
+            // Validate input data
+            val dataValidationError = KmsInputValidator.validateSignData(data)
+            if (dataValidationError != null) {
+                logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
+                return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Cannot determine key algorithm for key: ${keyId.value}"
-                )
-
-            // Check if algorithm is compatible with key using the standard method
-            if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
-                logger.warn("Algorithm incompatibility detected: keyId={}, requestedAlgorithm={}, keyAlgorithm={}", 
-                    keyId.value, algorithm.name, keyAlgorithm.name)
-                return@withContext SignResult.Failure.UnsupportedAlgorithm(
-                    keyId = keyId,
-                    requestedAlgorithm = algorithm,
-                    keyAlgorithm = keyAlgorithm,
-                    reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'"
+                    reason = dataValidationError,
                 )
             }
 
-            // Google Cloud KMS determines the algorithm from the key version, so no need to specify it
-            val signRequest = com.google.cloud.kms.v1.AsymmetricSignRequest.newBuilder()
-                .setName(primaryVersionName)
-                .setData(ByteString.copyFrom(data))
-                .build()
+            try {
+                val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
 
-            val signResponse = kmsClient.asymmetricSign(signRequest)
-            // Google Cloud KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService
-            // contract requires P1363 (raw r||s) with low-s for secp256k1, so normalize before
-            // returning. RSA signatures pass through unchanged.
-            SignResult.Success(
-                EcdsaSignatureCodec.normalize(
-                    signResponse.signature.toByteArray(),
-                    algorithm ?: keyAlgorithm
+                // Get the key to find the primary version (use cache)
+                val cryptoKey = getCachedKeyMetadata(resolvedKeyName)
+
+                val primaryVersionName = cryptoKey.primary.name
+
+                // Get key algorithm
+                val publicKeyResponse =
+                    kmsClient.getPublicKey(
+                        com.google.cloud.kms.v1.GetPublicKeyRequest
+                            .newBuilder()
+                            .setName(primaryVersionName)
+                            .build(),
+                    )
+                val keyAlgorithm =
+                    AlgorithmMapping.fromGoogleKmsAlgorithm(publicKeyResponse.algorithm)
+                        ?: return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Cannot determine key algorithm for key: ${keyId.value}",
+                        )
+
+                // Check if algorithm is compatible with key using the standard method
+                if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                    logger.warn(
+                        "Algorithm incompatibility detected: keyId={}, requestedAlgorithm={}, keyAlgorithm={}",
+                        keyId.value,
+                        algorithm.name,
+                        keyAlgorithm.name,
+                    )
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = keyAlgorithm,
+                        reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
+                    )
+                }
+
+                // Google Cloud KMS determines the algorithm from the key version, so no need to specify it
+                val signRequest =
+                    com.google.cloud.kms.v1.AsymmetricSignRequest
+                        .newBuilder()
+                        .setName(primaryVersionName)
+                        .setData(ByteString.copyFrom(data))
+                        .build()
+
+                val signResponse = kmsClient.asymmetricSign(signRequest)
+                // Google Cloud KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService
+                // contract requires P1363 (raw r||s) with low-s for secp256k1, so normalize before
+                // returning. RSA signatures pass through unchanged.
+                SignResult.Success(
+                    EcdsaSignatureCodec.normalize(
+                        signResponse.signature.toByteArray(),
+                        algorithm ?: keyAlgorithm,
+                    ),
                 )
-            )
-        } catch (e: NotFoundException) {
-            logger.debug("Key not found in Google Cloud KMS during signing: keyId={}", keyId.value)
-            SignResult.Failure.KeyNotFound(keyId = keyId)
-        } catch (e: PermissionDeniedException) {
-            logger.error("Permission denied when signing with Google Cloud KMS: keyId={}", keyId.value, e)
-            SignResult.Failure.Error(
-                keyId = keyId,
-                reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        } catch (e: Exception) {
-            logger.error("Unexpected error during signing with Google Cloud KMS: keyId={}", keyId.value, e)
-            SignResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
+            } catch (e: NotFoundException) {
+                logger.debug("Key not found in Google Cloud KMS during signing: keyId={}", keyId.value)
+                SignResult.Failure.KeyNotFound(keyId = keyId)
+            } catch (e: PermissionDeniedException) {
+                logger.error("Permission denied when signing with Google Cloud KMS: keyId={}", keyId.value, e)
+                SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            } catch (e: Exception) {
+                logger.error("Unexpected error during signing with Google Cloud KMS: keyId={}", keyId.value, e)
+                SignResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            }
         }
-    }
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
-        val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
-        
-        try {
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
+        withContext(Dispatchers.IO) {
+            val resolvedKeyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
 
-            // Get the key to find the primary version
-            val cryptoKey = kmsClient.getCryptoKey(
-                com.google.cloud.kms.v1.GetCryptoKeyRequest.newBuilder()
-                    .setName(resolvedKeyName)
-                    .build()
-            )
+            try {
+                // Get the key to find the primary version
+                val cryptoKey =
+                    kmsClient.getCryptoKey(
+                        com.google.cloud.kms.v1.GetCryptoKeyRequest
+                            .newBuilder()
+                            .setName(resolvedKeyName)
+                            .build(),
+                    )
 
-            val primaryVersionName = cryptoKey.primary.name
+                val primaryVersionName = cryptoKey.primary.name
 
-            // Schedule key version destruction (30 day waiting period by default)
-            val destroyRequest = com.google.cloud.kms.v1.DestroyCryptoKeyVersionRequest.newBuilder()
-                .setName(primaryVersionName)
-                .build()
+                // Schedule key version destruction (30 day waiting period by default)
+                val destroyRequest =
+                    com.google.cloud.kms.v1.DestroyCryptoKeyVersionRequest
+                        .newBuilder()
+                        .setName(primaryVersionName)
+                        .build()
 
-            // Note: Google Cloud KMS doesn't have a direct delete for CryptoKey
-            // We destroy the primary version, which effectively makes the key unusable
-            // For full deletion, use scheduleDestroyCryptoKeyVersion with a schedule
-            kmsClient.destroyCryptoKeyVersion(destroyRequest)
-            
-            // Invalidate cache
-            invalidateCache(resolvedKeyName)
-            
-            logger.info("Successfully deleted key in Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName)
+                // Note: Google Cloud KMS doesn't have a direct delete for CryptoKey
+                // We destroy the primary version, which effectively makes the key unusable
+                // For full deletion, use scheduleDestroyCryptoKeyVersion with a schedule
+                kmsClient.destroyCryptoKeyVersion(destroyRequest)
 
-            DeleteKeyResult.Deleted
-        } catch (e: NotFoundException) {
-            // Invalidate cache even if key not found (cleanup)
-            invalidateCache(resolvedKeyName)
-            logger.debug("Key not found in Google Cloud KMS during deletion: keyId={}", keyId.value)
-            DeleteKeyResult.NotFound // Key doesn't exist (idempotent success)
-        } catch (e: PermissionDeniedException) {
-            logger.error("Permission denied when deleting key in Google Cloud KMS: keyId={}, resolvedKeyName={}", 
-                keyId.value, resolvedKeyName, e)
-            DeleteKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        } catch (e: Exception) {
-            logger.error("Unexpected error during key deletion in Google Cloud KMS: keyId={}, resolvedKeyName={}", 
-                keyId.value, resolvedKeyName, e)
-            DeleteKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
+                // Invalidate cache
+                invalidateCache(resolvedKeyName)
+
+                logger.info("Successfully deleted key in Google Cloud KMS: keyId={}, resolvedKeyName={}", keyId.value, resolvedKeyName)
+
+                DeleteKeyResult.Deleted
+            } catch (e: NotFoundException) {
+                // Invalidate cache even if key not found (cleanup)
+                invalidateCache(resolvedKeyName)
+                logger.debug("Key not found in Google Cloud KMS during deletion: keyId={}", keyId.value)
+                DeleteKeyResult.NotFound // Key doesn't exist (idempotent success)
+            } catch (e: PermissionDeniedException) {
+                logger.error(
+                    "Permission denied when deleting key in Google Cloud KMS: keyId={}, resolvedKeyName={}",
+                    keyId.value,
+                    resolvedKeyName,
+                    e,
+                )
+                DeleteKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error during key deletion in Google Cloud KMS: keyId={}, resolvedKeyName={}",
+                    keyId.value,
+                    resolvedKeyName,
+                    e,
+                )
+                DeleteKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     /**
      * Generates a unique key ID.
      */
-    private fun generateKeyId(): String {
-        return "key-${System.currentTimeMillis()}-${(0..9999).random()}"
-    }
+    private fun generateKeyId(): String = "key-${System.currentTimeMillis()}-${(0..9999).random()}"
 
     /**
      * Converts PEM format to DER format.
@@ -460,14 +540,15 @@ class GoogleCloudKeyManagementService(
      */
     private fun convertPemToDer(pem: String): ByteArray {
         // Remove PEM headers and whitespace
-        val base64 = pem
-            .replace("-----BEGIN PUBLIC KEY-----", "")
-            .replace("-----END PUBLIC KEY-----", "")
-            .replace("-----BEGIN RSA PUBLIC KEY-----", "")
-            .replace("-----END RSA PUBLIC KEY-----", "")
-            .replace("\n", "")
-            .replace("\r", "")
-            .replace(" ", "")
+        val base64 =
+            pem
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                .replace("-----END RSA PUBLIC KEY-----", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .replace(" ", "")
 
         return Base64.getDecoder().decode(base64)
     }
@@ -476,4 +557,3 @@ class GoogleCloudKeyManagementService(
         kmsClient.close()
     }
 }
-

@@ -15,66 +15,133 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class HttpTest {
-    private fun res(name: String) = requireNotNull(this::class.java.getResource("/vectors/$name")) {
-        "Test vector /vectors/$name missing from test resources"
-    }.readText()
+    private fun res(name: String) =
+        requireNotNull(this::class.java.getResource("/vectors/$name")) {
+            "Test vector /vectors/$name missing from test resources"
+        }.readText()
 
     private val authz = res("02-payment-authorization.json")
     private val quote = res("01-payment-quote.json")
     private val now = Instant.parse("2026-03-25T21:30:30Z")
     private val json = Json { ignoreUnknownKeys = true }
 
-    private fun wrapper(a: String = authz, q: String = quote) = """{"authorization":$a,"quote":$q}"""
+    private fun wrapper(
+        a: String = authz,
+        q: String = quote,
+    ) = """{"authorization":$a,"quote":$q}"""
+
     private fun body(text: String): VerifyResponse = json.decodeFromString(VerifyResponse.serializer(), text)
 
-    @Test fun `valid authorization with quote returns 200 allow`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        val r = client.post("/v1/authorizations/verify") { contentType(ContentType.Application.Json); setBody(wrapper()) }
-        assertEquals(HttpStatusCode.OK, r.status)
-        assertEquals("allow", body(r.bodyAsText()).decision)
-    }
-
-    @Test fun `replayed authorization returns 200 reject NONCE_REUSE`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        client.post("/v1/authorizations/verify") { contentType(ContentType.Application.Json); setBody(wrapper()) }
-        val r = client.post("/v1/authorizations/verify") { contentType(ContentType.Application.Json); setBody(wrapper()) }
-        assertEquals(HttpStatusCode.OK, r.status)
-        val decoded = body(r.bodyAsText())
-        assertEquals("reject", decoded.decision)
-        assertEquals("NONCE_REUSE", decoded.reason)
-    }
-
-    @Test fun `missing quote returns 400`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        val r = client.post("/v1/authorizations/verify") {
-            contentType(ContentType.Application.Json); setBody("""{"authorization":$authz}""")
+    @Test fun `valid authorization with quote returns 200 allow`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody(wrapper())
+                }
+            assertEquals(HttpStatusCode.OK, r.status)
+            assertEquals("allow", body(r.bodyAsText()).decision)
         }
-        assertEquals(HttpStatusCode.BadRequest, r.status)
-    }
 
-    @Test fun `malformed body returns 400`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        val r = client.post("/v1/authorizations/verify") {
-            contentType(ContentType.Application.Json); setBody("{ not json ")
+    @Test fun `replayed authorization returns 200 reject NONCE_REUSE`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            client.post("/v1/authorizations/verify") {
+                contentType(ContentType.Application.Json)
+                setBody(wrapper())
+            }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody(wrapper())
+                }
+            assertEquals(HttpStatusCode.OK, r.status)
+            val decoded = body(r.bodyAsText())
+            assertEquals("reject", decoded.decision)
+            assertEquals("NONCE_REUSE", decoded.reason)
         }
-        assertEquals(HttpStatusCode.BadRequest, r.status)
-    }
 
-    @Test fun `structurally incomplete authorization returns 400`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        val r = client.post("/v1/authorizations/verify") {
-            contentType(ContentType.Application.Json)
-            setBody("""{"authorization":{"type":"PaymentAuthorization"},"quote":$quote}""")
+    @Test fun `missing quote returns 400`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"authorization":$authz}""")
+                }
+            assertEquals(HttpStatusCode.BadRequest, r.status)
         }
-        assertEquals(HttpStatusCode.BadRequest, r.status)
-    }
 
-    @Test fun `non-object authorization field returns 400`() = testApplication {
-        application { configureAuthorization(AuthorizationEngine(clock = { now })) }
-        val r = client.post("/v1/authorizations/verify") {
-            contentType(ContentType.Application.Json)
-            setBody("""{"authorization":42,"quote":$quote}""")
+    @Test fun `malformed body returns 400`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody("{ not json ")
+                }
+            assertEquals(HttpStatusCode.BadRequest, r.status)
         }
-        assertEquals(HttpStatusCode.BadRequest, r.status)
-    }
+
+    @Test fun `structurally incomplete authorization returns 400`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"authorization":{"type":"PaymentAuthorization"},"quote":$quote}""")
+                }
+            assertEquals(HttpStatusCode.BadRequest, r.status)
+        }
+
+    @Test fun `non-object authorization field returns 400`() =
+        testApplication {
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"authorization":42,"quote":$quote}""")
+                }
+            assertEquals(HttpStatusCode.BadRequest, r.status)
+        }
+
+    // --- request bodies must be bounded ---
+    //
+    // The endpoint is unauthenticated by design (it sits behind a proxy), so anyone who can reach it
+    // can post to it. Reading the body whole means one request can drive allocation until the process
+    // dies. The VC API next door already bounds its input; this did not.
+
+    @Test
+    fun `an oversized body is refused rather than buffered`() =
+        testApplication {
+            application {
+                configureAuthorization(AuthorizationEngine(clock = { now }), maxRequestBytes = 4096)
+            }
+            val padding = "x".repeat(64 * 1024)
+            val oversized = """{"authorization":{"padding":"$padding"},"quote":{}}"""
+
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody(oversized)
+                }
+
+            assertEquals(HttpStatusCode.PayloadTooLarge, r.status)
+        }
+
+    @Test
+    fun `a normal body still passes under the limit`() =
+        testApplication {
+            // The cap must not break real traffic: the standard vector has to keep working.
+            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+
+            val r =
+                client.post("/v1/authorizations/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody(wrapper())
+                }
+
+            assertEquals(HttpStatusCode.OK, r.status)
+        }
 }

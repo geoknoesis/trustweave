@@ -78,7 +78,17 @@ class BitcoinBlockchainAnchorClient(
             }
         networkName = network
 
-        rpcUrl = options["rpcUrl"] as? String
+        // Refused at construction, not at first use: an operator who mistyped https as http should
+        // find out when the client is built, not when a signed transaction and the RPC credentials
+        // have already crossed the open internet in the clear. Loopback and private hosts stay on
+        // plaintext - that is the documented local-node setup.
+        rpcUrl =
+            (options["rpcUrl"] as? String)?.let {
+                org.trustweave.core.net.TransportSecurity.requireSecureForPublicHosts(
+                    it,
+                    "Bitcoin RPC credentials and signed transactions",
+                )
+            }
         rpcUser = options["rpcUser"] as? String
         rpcPassword = options["rpcPassword"] as? String
 
@@ -112,7 +122,9 @@ class BitcoinBlockchainAnchorClient(
             // Bitcoin OP_RETURN has 80-byte limit
             if (payloadBytes.size > OP_RETURN_MAX_SIZE) {
                 throw BlockchainException.TransactionFailed(
-                    reason = "Payload size (${payloadBytes.size} bytes) exceeds Bitcoin OP_RETURN limit ($OP_RETURN_MAX_SIZE bytes). Consider using hash-based anchoring.",
+                    reason =
+                        "Payload size (${payloadBytes.size} bytes) exceeds Bitcoin OP_RETURN limit " +
+                            "($OP_RETURN_MAX_SIZE bytes). Consider using hash-based anchoring.",
                     chainId = chainId,
                     txHash = null,
                     operation = "submitTransaction",

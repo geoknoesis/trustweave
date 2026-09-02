@@ -20,19 +20,59 @@ import org.trustweave.credential.avpmicro.verification.VerificationFailure
 // (ignoreUnknownKeys). The ContentNegotiation Json below is only for serializing our own DTOs.
 private val lenientJson = Json { ignoreUnknownKeys = true }
 
-fun Application.configureAuthorization(engine: AuthorizationEngine) {
+/**
+ * 256 KiB. A payment authorization plus its quote is a few kilobytes; this leaves generous room for
+ * extension fields while keeping a single request from exhausting memory.
+ */
+public const val DEFAULT_MAX_REQUEST_BYTES: Long = 256L * 1024
+
+fun Application.configureAuthorization(
+    engine: AuthorizationEngine,
+    maxRequestBytes: Long = DEFAULT_MAX_REQUEST_BYTES,
+) {
     install(ContentNegotiation) { json(Json { prettyPrint = false }) }
-    routing { authorizationRoutes(engine) }
+    routing { authorizationRoutes(engine, maxRequestBytes) }
 }
 
-fun Routing.authorizationRoutes(engine: AuthorizationEngine) {
+fun Routing.authorizationRoutes(
+    engine: AuthorizationEngine,
+    maxRequestBytes: Long = DEFAULT_MAX_REQUEST_BYTES,
+) {
     post("/v1/authorizations/verify") {
-        val parsed = try {
-            lenientJson.parseToJsonElement(call.receiveText()).jsonObject
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest, ErrorResponse("INVALID_REQUEST", e.message ?: "malformed JSON"))
+        // This route is unauthenticated by design (it expects a proxy in front), so anyone who can
+        // reach it can post to it. Reading the body whole would let one request drive allocation
+        // until the process dies, so bound it before parsing.
+        //
+        // Content-Length is checked first as a cheap reject, but it is attacker-supplied and absent
+        // under chunked encoding — so the read itself is bounded too, and that is what actually
+        // enforces the limit.
+        val declared = call.request.contentLength()
+        if (declared != null && declared > maxRequestBytes) {
+            call.respond(
+                HttpStatusCode.PayloadTooLarge,
+                ErrorResponse("REQUEST_TOO_LARGE", "Request body exceeds $maxRequestBytes bytes"),
+            )
             return@post
         }
+
+        val raw =
+            try {
+                readBounded(call, maxRequestBytes)
+            } catch (e: RequestTooLargeException) {
+                call.respond(
+                    HttpStatusCode.PayloadTooLarge,
+                    ErrorResponse("REQUEST_TOO_LARGE", e.message ?: "Request body too large"),
+                )
+                return@post
+            }
+
+        val parsed =
+            try {
+                lenientJson.parseToJsonElement(raw).jsonObject
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, ErrorResponse("INVALID_REQUEST", e.message ?: "malformed JSON"))
+                return@post
+            }
         val authorization = parsed["authorization"] as? JsonObject
         val quote = parsed["quote"] as? JsonObject
         if (authorization == null || quote == null) {
@@ -53,4 +93,32 @@ fun Routing.authorizationRoutes(engine: AuthorizationEngine) {
                 }
         }
     }
+}
+
+private class RequestTooLargeException(
+    message: String,
+) : Exception(message)
+
+/**
+ * Reads the request body, refusing anything past [maxBytes].
+ *
+ * Reads one byte more than the limit so "exactly at the limit" is accepted and one byte over is
+ * caught, without ever materialising an oversized body.
+ */
+private suspend fun readBounded(
+    call: io.ktor.server.application.ApplicationCall,
+    maxBytes: Long,
+): String {
+    val channel = call.receiveChannel()
+    val buffer = java.io.ByteArrayOutputStream()
+    val chunk = ByteArray(8 * 1024)
+    while (true) {
+        val read = channel.readAvailable(chunk, 0, chunk.size)
+        if (read <= 0) break
+        if (buffer.size() + read > maxBytes) {
+            throw RequestTooLargeException("Request body exceeds $maxBytes bytes")
+        }
+        buffer.write(chunk, 0, read)
+    }
+    return buffer.toString(Charsets.UTF_8.name())
 }

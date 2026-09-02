@@ -24,7 +24,8 @@ public data class ConstraintCheckResult(
  * Implemented in full: `amount_range` (integer minor-unit bounds + currency). `allowed_payees` /
  * `allowed_merchants` honor the reference behavior of skipping when the allowlist is entirely SD
  * references (resolved out-of-band). `budget` / `recurrence` / `agent_recurrence` / `reference` are
- * acknowledged as network/integrity-enforced. `line_items` deep-matching is a documented TODO.
+ * acknowledged as network/integrity-enforced. `line_items` deep-matching is unimplemented, so it is reported as *skipped* and fails closed
+ * for an open mandate or under STRICT rather than being counted as checked.
  *
  * Unknown types: rejected when [isOpenMandate] (an unevaluable constraint leaves authority unbounded)
  * or under [StrictnessMode.STRICT]; otherwise skipped.
@@ -67,7 +68,20 @@ public object ConstraintChecker {
                             violations += it
                         }
                 }
-                is Constraint.LineItems -> checked += c.type // TODO: port acceptable-id + quantity-cap matching
+                is Constraint.LineItems -> {
+                    // Deliberately NOT reported as checked. `line_items` bounds what an agent may
+                    // buy (acceptable items, quantity caps) and the matching is not implemented,
+                    // so counting it as evaluated would tell a verifier the bound held when
+                    // nothing enforced it. Treated exactly like an unevaluable constraint: fatal
+                    // where the bound is load-bearing, skipped and visible otherwise.
+                    // TODO: port acceptable-id + quantity-cap matching, then move back to `checked`.
+                    if (isOpenMandate || mode == StrictnessMode.STRICT) {
+                        satisfied = false
+                        violations += "Constraint ${c.type} cannot be evaluated (line-item matching is not implemented)"
+                    } else {
+                        skipped += c.type
+                    }
+                }
                 is Constraint.Reference,
                 is Constraint.Budget,
                 is Constraint.Recurrence,

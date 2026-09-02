@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.trustweave.credential.vi.crypto.Disclosures
 import org.trustweave.credential.vi.model.Constraint
 import org.trustweave.credential.vi.verification.ConstraintChecker
+import org.trustweave.credential.vi.verification.StrictnessMode
 
 /**
  * Guards the `allowed_payees` / `allowed_merchants` enforcement. The allowlist entries are normally
@@ -164,5 +165,67 @@ class ConstraintCheckerTest {
     fun `amount_range still enforces an ordinary maximum`() {
         check(amountRange { put("max", 40_000) }, paymentOf(40_001)).satisfied.shouldBeFalse()
         check(amountRange { put("max", 40_000) }, paymentOf(40_000)).satisfied.shouldBeTrue()
+    }
+
+    // --- line_items must not be reported as enforced while nothing enforces it ---
+    //
+    // ConstraintCheckResult distinguishes `checked` (evaluated) from `skipped` (not evaluated), and
+    // a verifier reads that distinction to decide how much the result is worth. `line_items` bounds
+    // WHAT a delegated agent may buy - acceptable items and quantity caps - so claiming it was
+    // evaluated when it was not overstates the guarantee in exactly the place an agent would exploit.
+    // Until matching is implemented it must behave like any other constraint the verifier cannot
+    // evaluate: reported as skipped, and fatal for an open mandate or under STRICT.
+
+    private fun lineItems() =
+        Constraint.LineItems(
+            raw = buildJsonObject {},
+            items = listOf(buildJsonObject { put("id", "sku-1") }),
+            matchMode = "minimum",
+        )
+
+    @Test
+    fun `line_items is not reported as checked while it is unimplemented`() {
+        val result = ConstraintChecker.check(listOf(lineItems()), buildJsonObject {})
+
+        result.checked.contains(Constraint.LineItems.TYPE).shouldBeFalse()
+        result.skipped.contains(Constraint.LineItems.TYPE).shouldBeTrue()
+    }
+
+    @Test
+    fun `an open mandate with an unevaluable line_items constraint fails closed`() {
+        // An open mandate is one whose bounds are the only thing standing between the agent and
+        // unbounded authority. An unevaluable bound there must reject, exactly as an unknown
+        // constraint type already does.
+        val result =
+            ConstraintChecker.check(
+                listOf(lineItems()),
+                buildJsonObject {},
+                isOpenMandate = true,
+            )
+
+        result.satisfied.shouldBeFalse()
+    }
+
+    @Test
+    fun `STRICT mode also rejects an unevaluable line_items constraint`() {
+        val result =
+            ConstraintChecker.check(
+                listOf(lineItems()),
+                buildJsonObject {},
+                mode = StrictnessMode.STRICT,
+            )
+
+        result.satisfied.shouldBeFalse()
+    }
+
+    @Test
+    fun `a closed mandate under PERMISSIVE still passes, but says line_items was skipped`() {
+        // Not every mandate is open; a closed one is bounded by its own contents. Rejecting here
+        // would break working deployments for a constraint that was never enforced anyway - the
+        // honest outcome is "passed, and here is what I could not evaluate".
+        val result = ConstraintChecker.check(listOf(lineItems()), buildJsonObject {})
+
+        result.satisfied.shouldBeTrue()
+        result.skipped.contains(Constraint.LineItems.TYPE).shouldBeTrue()
     }
 }

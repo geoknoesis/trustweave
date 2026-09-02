@@ -16,7 +16,7 @@ disproved and are recorded as such.
 | Core security engineering | **9.0** | Crypto, VC verification, XXE, SSRF guard, fail-closed defaults all genuinely hardened |
 | Plugin / edge security | **6.0** | Three real fail-open or unbounded-input defects, all in modules labelled Experimental |
 | Test quality (core) | **9.0** | 1130 tests, 0 failures, 0 skipped; silent-skip trap systematically fixed |
-| Test coverage (edges) | **5.5** | 6 KMS providers with zero tests; contract suite applied to 1 of 17; VI has 20 tests |
+| Test coverage (edges) | **5.5 → 7.0** | Originally: 6 KMS providers with zero tests, contract suite on 1 of 17, VI at 20 tests. All six now covered; VI at 24. The contract-suite gap remains. |
 | Code quality & consistency | **8.0** | Low TODO density, uniform `Result` pattern, controls exist and are reused |
 | Documentation honesty | **9.5** | Maturity matrix, known limitations, non-goals stated in the code that has them |
 | Build & release health | **6.0** | Full build blocked on Windows by JAR locking; 106-module assembly unverified here |
@@ -257,8 +257,42 @@ belong to the IDE. Anything requiring the full assembly — merged `META-INF/ser
 | F1 | **Fixed** | Default client is `ssrfGuardedOkHttpClient()`; bodies bounded at 1 MiB; `sub` built through `HttpUrl`. 4 tests. |
 | F3 | **Fixed** | Request body bounded at 256 KiB, enforced on the read itself rather than trusting `Content-Length`. 2 tests. |
 | F6 | **Corrected, then fixed for Bitcoin** | New shared `TransportSecurity.requireSecureForPublicHosts`; applied to the Bitcoin RPC client. 5 tests. |
-| F4 | **Open** | Extending the KMS contract suite across 16 providers is a larger piece of work; six providers still have no tests. |
+| F4 | **Partly fixed, and partly corrected** | All six zero-test providers now have tests (29 in total). The finding's severity was overstated — see below. |
 | F5 | **Open — needs a decision** | Whether mdoc revocation belongs in the engine or in deployment guidance is a product call, not a bug fix. |
+
+### F4, revisited after working on it
+
+The headline number in F4 — "~2,858 lines of untested key-handling code" — was wrong, and the
+correction matters more than the tests:
+
+- **Three of the six are honest stubs.** `entrust`, `thales-luna` and `utimaco` implement nothing:
+  every operation returns a documented `Failure` and the KDoc says outright "**None of them work**
+  — this plugin is a stub." That is the right shape, not a gap. ~502 of those lines are stubs, not
+  untested implementations.
+- **`venafi` is not a KMS at all.** Despite living under `kms/plugins/`, it registers no SPI
+  provider and its single class is a documented placeholder whose only method throws. It has no
+  `KeyManagementService` to test.
+- **The real untested surface was ~2,309 lines** across `cyberark`, `thales` and `fortanix` — which
+  are working implementations.
+
+What shipped:
+
+- **Algorithm-mapping tests** for the three working providers (14 tests). These cannot exercise a
+  KMS without credentials, but they pin the property where a silent, high-consequence bug lives: if
+  encode and decode disagree, a key is created as one type and read back as another — a P-384 key
+  interpreted as P-256, or RSA-3072 as RSA-2048 — with nothing thrown and the signature simply made
+  against the wrong material. Each suite checks round-trip fidelity for every advertised algorithm,
+  uniqueness of the encoding, and that unknown input decodes to null rather than a guess. Fortanix
+  gets extra attention because it encodes across three separate values (type, curve, size), which
+  has more room to disagree.
+- **Fail-closed tests** for the three stubs (15 tests). A stub's danger is not that it fails, but
+  that a later partial implementation makes one operation return `Success` while the rest do
+  nothing — callers would believe keys were generated and signatures produced. These fail the
+  moment any operation claims success.
+
+Still open: the contract suite itself remains applied to one provider. Running it requires a live
+KMS, so cloud and HSM providers need an integration source set with credentials — a CI decision, not
+a code change.
 
 Still to do on F6: apply the shared helper to Cardano, Indy and cheqd, and re-point
 `AbstractEvmAnchorClient.requireTransportSecurity` at it so the unresolvable-host fail-open is fixed

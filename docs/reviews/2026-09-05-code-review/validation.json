@@ -1,0 +1,10 @@
+{
+  "Frontend production build ? npm run build": "PASS. TypeScript and Vite completed. Main JS: 1,286.06 kB / 383.86 kB gzip. Vite reported large chunks and mixed static/dynamic imports.",
+  "Frontend tests ? npm test -- --reporter=dot": "PASS. 61 files, 290 tests. React Router and unhandled MSW request warnings appeared; those warnings were not failures.",
+  "Frontend lint ? npm run lint": "PASS. ESLint completed with the configured zero-warning policy.",
+  "Library ? :credentials:plugins:oidc4vci:test :wallet:plugins:file:test": "BUILD SUCCESSFUL. Both selected test tasks were FROM-CACHE; this is restored validation, not a fresh execution of their test bodies. Other build tasks executed.",
+  "SaaS ? :server:test --tests *CredentialVerifierService* --tests *VerificationRequest*": "24 tests passed across 2 suites, 0 failures/errors/skips. Overall command FAILED in the finalized JaCoCo gate: selected-run instruction coverage 0.16 versus 0.40 required. This does not establish whole-suite coverage or a test failure.",
+  "Backend full suite / Linux Docker / live services": "Not run. The Linux Docker endpoint issue is a source/configuration finding. No production credentials or services were used.",
+  "HTML artifact": "PASS: jsdom executed embedded JavaScript; verified 22 finding cards, all navigation targets, unique IDs, repository/priority filters and source expansion. No external assets. Visual browser inspection unavailable: browser tool reported no browser available.",
+  "Library cached suite detail": "Restored XML: OID4VCI 42 tests and file wallet 17 tests; 0 failures/errors/skips. These are cached results, not fresh test-body execution."
+}

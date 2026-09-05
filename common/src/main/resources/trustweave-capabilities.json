@@ -1,0 +1,79 @@
+{
+  "anchors:plugins:starknet": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:threebox": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:tezos": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:btcr": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:oidc4vci": {
+    "maturity": "experimental",
+    "operations": [
+      "receive",
+      "deferred-receive"
+    ],
+    "formats": [
+      "ldp_vc"
+    ]
+  },
+  "wallet:plugins:file": {
+    "maturity": "experimental",
+    "operations": [
+      "store",
+      "get",
+      "list",
+      "list-records",
+      "delete",
+      "query",
+      "recover-records"
+    ],
+    "formats": [
+      "json-vc"
+    ]
+  },
+  "wallet:plugins:database": {
+    "maturity": "experimental",
+    "operations": [
+      "store",
+      "get",
+      "list",
+      "list-records",
+      "delete",
+      "query",
+      "tags",
+      "collections",
+      "page-records"
+    ],
+    "formats": [
+      "json-vc"
+    ]
+  },
+  "wallet:plugins:cloud": {
+    "maturity": "experimental",
+    "operations": [
+      "store",
+      "get",
+      "list",
+      "list-records",
+      "recover-records",
+      "delete",
+      "query"
+    ],
+    "formats": [
+      "json-vc"
+    ]
+  }
+}

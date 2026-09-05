@@ -25,7 +25,6 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
 import java.util.Base64
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * OIDC4VCI (OpenID Connect for Verifiable Credential Issuance) service.
@@ -63,7 +62,10 @@ class Oidc4VciService(
         org.trustweave.core.net
             .ssrfGuardedOkHttpClient(),
     didResolver: DidResolver? = null,
-) {
+    private val exchangeClock: java.time.Clock = java.time.Clock.systemUTC(),
+    private val exchangeTtlMillis: Long = 15 * 60 * 1000L,
+    private val maxPendingExchanges: Int = 1000,
+) : AutoCloseable {
     companion object {
         /** Pre-authorized code grant type — OID4VCI v1.0 §4.1.1. */
         const val PRE_AUTHORIZED_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:pre-authorized_code"
@@ -77,10 +79,39 @@ class Oidc4VciService(
      */
     private val verifier: CredentialService? = didResolver?.let { credentialService(it) }
 
-    private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()
-    private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()
-    private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken
-    private val cNonces = ConcurrentHashMap<String, String>()
+    private val offers = ExpiringExchangeStore<Oidc4VciOffer>(exchangeClock, exchangeTtlMillis, maxPendingExchanges)
+    private val requests = ExpiringExchangeStore<Oidc4VciCredentialRequest>(exchangeClock, exchangeTtlMillis, maxPendingExchanges)
+
+    // requestId -> accessToken
+    private val accessTokens = ExpiringExchangeStore<String>(exchangeClock, exchangeTtlMillis, maxPendingExchanges)
+    private val cNonces = ExpiringExchangeStore<String>(exchangeClock, exchangeTtlMillis, maxPendingExchanges)
+
+    /** Receiver capabilities: unsupported formats are rejected before token exchange. */
+    fun supportedReceiveFormats(): Set<String> = setOf("ldp_vc")
+
+    fun compatibleConfigurations(metadata: CredentialIssuerMetadata): Set<String> =
+        metadata.credentialConfigurationsSupported.filterValues { it.format in supportedReceiveFormats() }.keys
+
+    fun cancelExchange(requestId: String) {
+        requests[requestId]?.let { offers.remove(it.offerId) }
+        requests.remove(requestId)
+        accessTokens.remove(requestId)
+        cNonces.remove(requestId)
+    }
+
+    fun purgeExpiredExchanges() {
+        offers.purge()
+        requests.purge()
+        accessTokens.purge()
+        cNonces.purge()
+    }
+
+    override fun close() {
+        offers.close()
+        requests.close()
+        accessTokens.close()
+        cNonces.close()
+    }
 
     // requestId -> c_nonce from token/credential endpoint
     @Volatile private var metadata: CredentialIssuerMetadata? = null
@@ -205,6 +236,11 @@ class Oidc4VciService(
                     reason = "Metadata fetch returned null",
                 )
 
+            if (issuerMetadata.credentialConfigurationsSupported.isNotEmpty()) {
+                require(offer.credentialTypes.all { it in compatibleConfigurations(issuerMetadata) }) {
+                    "Offer requests an unsupported receive format; supported formats: ${supportedReceiveFormats()}"
+                }
+            }
             val requestId = UUID.randomUUID().toString()
 
             // Step 1: Exchange the grant for an access token.
@@ -353,28 +389,33 @@ class Oidc4VciService(
 
             // Deferred issuance: issuer returns transaction_id instead of credential (OID4VCI v1.0 §9)
             val transactionId = credentialResponse.native["transaction_id"] as? String
-            return@withContext if (transactionId != null) {
-                Oidc4VciIssueResult(
-                    issueId = issueId,
-                    credential = null,
-                    transactionId = transactionId,
-                    credentialResponse = credentialResponse.native,
-                )
-            } else {
-                // Immediate issuance — parse and cryptographically verify the credential the
-                // issuer actually returned before handing it to the wallet (fails closed).
-                Oidc4VciIssueResult(
-                    issueId = issueId,
-                    credential =
-                        verifyIssuedCredential(
-                            response = credentialResponse.raw,
-                            expectedIssuer = issuerDid,
-                            holderDid = holderDid,
-                        ),
-                    transactionId = null,
-                    credentialResponse = credentialResponse.native,
-                )
-            }
+            val result =
+                if (transactionId != null) {
+                    Oidc4VciIssueResult(
+                        issueId = issueId,
+                        credential = null,
+                        transactionId = transactionId,
+                        credentialResponse = credentialResponse.native,
+                    )
+                } else {
+                    // Immediate issuance — parse and cryptographically verify the credential the
+                    // issuer actually returned before handing it to the wallet (fails closed).
+                    Oidc4VciIssueResult(
+                        issueId = issueId,
+                        credential =
+                            verifyIssuedCredential(
+                                response = credentialResponse.raw,
+                                expectedIssuer = issuerDid,
+                                holderDid = holderDid,
+                            ),
+                        transactionId = null,
+                        credentialResponse = credentialResponse.native,
+                    )
+                }
+            // Deferred callers carry their own token in DeferredCredentialRequest. Retaining
+            // another copy in the completed exchange is unnecessary.
+            cancelExchange(requestId)
+            result
         }
 
     /**

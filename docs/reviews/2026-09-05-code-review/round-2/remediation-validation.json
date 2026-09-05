@@ -1,0 +1,81 @@
+{
+  "updated": "2026-09-05T17:38:56.153844+00:00",
+  "sdkModules": {
+    "common": {
+      "tests": 428,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "wallet/wallet-core": {
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "wallet/plugins/file": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "wallet/plugins/cloud": {
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "wallet/plugins/database": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "sdkTotal": 515,
+  "backend": {
+    "tests": 516,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "backendCoverageGate": "passed",
+  "frontend": {
+    "tests": 292,
+    "files": 62,
+    "lint": "passed",
+    "build": "passed",
+    "initialJavaScriptBytes": 454703,
+    "budget": 500000
+  },
+  "wallet": {
+    "tests": 12,
+    "browserTests": 3,
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "dependencyAudits": {
+    "reference-wallet": 0,
+    "saas-frontend": 0
+  },
+  "release": {
+    "published": false,
+    "linuxCiRun": false,
+    "stagingValidated": false,
+    "sdkSourceFingerprint": "ad63266d6dab34d9a8829a77fef363cb0b10023886e3fd9f0f73c785b49d0c64"
+  },
+  "notes": [
+    "Full backend run: 516 tests, zero failures, two skipped; coverage gate passed.",
+    "Earlier full runs exposed stale expectations; those were corrected and the final full suite passed.",
+    "The isolated Stripe test passed; its automatic whole-server coverage finalizer failed as expected for a filtered run. The later full run passed the coverage gate.",
+    "No production-scale performance benchmark or live cloud-provider test is claimed."
+  ],
+  "htmlReport": {
+    "structure": "passed",
+    "filters": "passed",
+    "localLinks": "passed",
+    "desktopMobileScreenshots": "visually inspected",
+    "mobileOverflow": false
+  },
+  "assessedStubProviders": "btcr, tezos and threebox compile successfully"
+}

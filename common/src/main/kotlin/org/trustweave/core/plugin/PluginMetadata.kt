@@ -23,7 +23,9 @@ data class PluginMetadata(
     val provider: String, // "waltid", "godiddy", "native", "custom"
     val capabilities: PluginCapabilities,
     val dependencies: List<PluginDependency> = emptyList(),
-    val configuration: Map<String, Any?> = emptyMap()
+    val configuration: Map<String, Any?> = emptyMap(),
+    val maturity: PluginMaturity = PluginMaturity.EXPERIMENTAL,
+    val moduleId: String? = null,
 )
 
 /**
@@ -52,7 +54,7 @@ data class PluginMetadata(
  */
 data class PluginCapabilities(
     val features: Set<String> = emptySet(),
-    val extensions: Map<String, Any> = emptyMap()
+    val extensions: Map<String, Any> = emptyMap(),
 )
 
 /**
@@ -65,7 +67,7 @@ data class PluginCapabilities(
 data class PluginDependency(
     val pluginId: String,
     val versionRange: String? = null,
-    val isOptional: Boolean = false
+    val isOptional: Boolean = false,
 )
 
-
+enum class PluginMaturity { SUPPORTED, EXPERIMENTAL, STUB }

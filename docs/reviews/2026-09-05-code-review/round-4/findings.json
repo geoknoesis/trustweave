@@ -1,0 +1,147 @@
+[
+  {
+    "id": "SA-R4-01",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Shared verification admission",
+    "detail": "Dedicated PostgreSQL reservation transactions coordinate per-session, per-trust-space and global worker limits across application instances. HTTP timeout does not release a non-cooperative worker's reservation; connection loss prevents accepting its verdict.",
+    "evidence": "Four PostgreSQL admission tests passed in the full 526-test backend run, including the final transaction-scoped implementation. Two independent components exercise shared capacity, duplicate sessions, cleanup and timeout retention.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/ClusterVerificationAdmission.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/ClusterVerificationAdmissionTest.kt"
+    ],
+    "limit": "Database connection/transaction failure may release reservations while an external provider continues. Staging must verify connection budgets, proxy timeouts and ingress limits."
+  },
+  {
+    "id": "SA-R4-02",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Observable, access-controlled webhook recovery",
+    "detail": "Added aggregate backlog, oldest-failure, sample-age and polling-error metrics. Metric endpoints require a platform admin role. Payloads are not loaded by the monitor or used as labels.",
+    "evidence": "Metric behavior tests and real HTTP authorization regression; signed HTTP/PostgreSQL recovery exercise proves rollback, retry, ledger cleanup and duplicate suppression.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryMonitor.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryIntegrationTest.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/KeycloakSecurityConfig.kt"
+    ],
+    "limit": "Hosted alert delivery and actual provider redelivery are not exercised. The test injects the subscription-service failure; it does not make live Stripe calls."
+  },
+  {
+    "id": "TW-R4-01",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Nonce-based browser script policy",
+    "detail": "Added per-request CSP script nonces, dynamic HTML rendering and private/no-store responses. Production rejects unauthorized inline script and unsafe-eval; framing protections remain.",
+    "evidence": "28 wallet unit tests, final production build and nine Chromium tests pass, including parser-injected script rejection while legitimate hydration and camera use succeed.",
+    "files": [
+      "reference-wallet/proxy.ts",
+      "reference-wallet/app/layout.tsx",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "limit": "Trusted bundle compromise and browser key loss remain outside this protection. Dynamic rendering replaces static HTML generation."
+  },
+  {
+    "id": "TW-R4-02",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "S3 pagination failure and cancellation handling",
+    "detail": "Reject missing/repeated continuation tokens; honor cancellation before fetching another page. AWS, Azure and Google adapters rethrow cancellation instead of wrapping it as an ordinary storage error.",
+    "evidence": "Malformed-token regression and cancellation regressions for all AWS/Google storage operations plus between-page cancellation.",
+    "files": [
+      "wallet/plugins/cloud/src/main/kotlin/org/trustweave/wallet/cloud/AwsS3Wallet.kt",
+      "wallet/plugins/cloud/src/main/kotlin/org/trustweave/wallet/cloud/GoogleCloudStorageWallet.kt",
+      "wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/CloudCancellationTest.kt"
+    ],
+    "limit": "Cancellation cannot forcibly interrupt a third-party SDK call that does not cooperate; configure provider-side request deadlines."
+  },
+  {
+    "id": "TW-R4-03",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Flat Azure listing preserves slash-containing IDs",
+    "detail": "Replace hierarchical listing with a flat prefix-filtered listing so virtual directories do not hide credentials whose signed identifiers contain slash characters.",
+    "evidence": "An HTTP fixture exercises the actual Azure client request/response path, asserting the wallet prefix, no delimiter, and discovery of a URL-shaped credential ID.",
+    "files": [
+      "wallet/plugins/cloud/src/main/kotlin/org/trustweave/wallet/cloud/AzureBlobWallet.kt",
+      "wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/AzureListingContractTest.kt"
+    ],
+    "limit": "The fixture validates protocol construction and decoding, not hosted Azure authorization or durability."
+  },
+  {
+    "id": "TW-R4-04",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Real S3-compatible storage contract",
+    "detail": "Added a pinned MinIO contract using the real AWS SDK over HTTP. It covers anonymous credential handles, multi-page listing, isolated wallet prefixes, corrupt data recovery and deletion.",
+    "evidence": "The S3 contract passed. Two-object pages exercise continuation handling; a final empty page is allowed. This is separate from the existing large-list unit test.",
+    "files": [
+      "wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/S3StorageContractTest.kt"
+    ],
+    "limit": "MinIO is not live AWS. IAM, KMS, account policy, region behavior and production scale remain unvalidated."
+  },
+  {
+    "id": "TW-R4-05",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "10,000-record PostgreSQL paging evidence",
+    "detail": "Added a larger real-database regression proving complete traversal, bounded page size, no duplicate IDs, rare-type filtering and wallet isolation.",
+    "evidence": "10,000 records returned in 200 pages of 50; measured paging/filter/isolation phase took 2,129 ms, excluding fixture setup. Both database paging tests passed in the full SDK run.",
+    "files": [
+      "wallet/plugins/database/src/test/kotlin/org/trustweave/wallet/database/PostgresPagingTest.kt"
+    ],
+    "limit": "This is a local measurement, not a production latency or memory SLA."
+  },
+  {
+    "id": "TW-R4-06",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Camera cleanup survives stop and delayed permission",
+    "detail": "Handle synchronous scanner stop exceptions, release a stream acquired after cancellation, and suppress callbacks from cancelled scans. This prevents a double-stop page crash and late camera stream retention.",
+    "evidence": "Production Chromium regression uses a fake camera, confirms active video, stops normally, then delays a second permission result and confirms all returned media tracks end after cancellation.",
+    "files": [
+      "reference-wallet/lib/use-html5-qrcode-scanner.ts",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "limit": "Fake-device Chromium coverage does not replace physical mobile camera/browser testing."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Published exact-pair Linux/staging validation",
+    "detail": "The SDK remains uncommitted locally and the SaaS pin still points to the old SDK revision. Branch/staging details were requested while local work continued.",
+    "evidence": "No publication or staging execution is claimed.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "A matching local fingerprint cannot substitute for a reviewed, published and tested immutable pair."
+  },
+  {
+    "id": "PROVIDER-CUSTODY",
+    "repo": "trustweave",
+    "status": "remaining",
+    "title": "Provider maturity and production wallet custody",
+    "detail": "Most plugin capabilities remain unassessed. The reference wallet has no hardware/user-presence signing or recoverable holder-key service; supported issuer and disclosure profiles remain limited.",
+    "evidence": "Full local JVM suite passed with 15 optional/template tests skipped; live provider environments and hardware-backed custody remain unvalidated.",
+    "files": [
+      "docs/api-reference/assessed-capabilities.md",
+      "reference-wallet/lib/key-store.ts"
+    ],
+    "limit": "A complete product/profile definition and supported provider matrix are needed before these deductions can be closed."
+  },
+  {
+    "id": "BILLING-OPERATIONS",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Live billing workflow and hosted alert delivery",
+    "detail": "Two Accountly live-contract tests require a separately configured Accountly/PSP stand-in. Legacy Stripe invoice handlers remain logging-only for settlement/notification purposes.",
+    "evidence": "Local signed-webhook recovery and aggregate monitoring are tested; hosted alert delivery and live Accountly flow are not.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyLiveContractTest.kt",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "The supported Accountly cutover/legacy Stripe workflow needs to be defined and exercised before claiming completeness."
+  }
+]

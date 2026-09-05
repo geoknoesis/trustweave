@@ -1,0 +1,62 @@
+[
+  {
+    "task": ":testkit:test",
+    "test": "example test requiring multiple plugins()"
+  },
+  {
+    "task": ":testkit:test",
+    "test": "example test requiring Google Cloud KMS()"
+  },
+  {
+    "task": ":testkit:test",
+    "test": "example test requiring AWS KMS()"
+  },
+  {
+    "task": ":trust:test",
+    "test": "test with external services template()"
+  },
+  {
+    "task": ":anchors:plugins:cardano:test",
+    "test": "anchor and read back round-trip on Preview()"
+  },
+  {
+    "task": ":anchors:plugins:polygon:test",
+    "test": "should throw NotFoundException for non-existent transaction()"
+  },
+  {
+    "task": ":kms:plugins:cloudhsm:test",
+    "test": "requireClusterActive does not throw()"
+  },
+  {
+    "task": ":kms:plugins:cloudhsm:test",
+    "test": "cluster is ACTIVE()"
+  },
+  {
+    "task": ":kms:plugins:cloudhsm:test",
+    "test": "generateKey sign and deleteKey round-trip on the HSM()"
+  },
+  {
+    "task": ":kms:plugins:google:test",
+    "test": "test create with valid options()"
+  },
+  {
+    "task": ":kms:plugins:pkcs11:test",
+    "test": "generateKey(P256) returns a handle and getPublicKey round-trips it()"
+  },
+  {
+    "task": ":kms:plugins:pkcs11:test",
+    "test": "sign(P256) produces a signature that verifies with JCA SHA256withECDSA()"
+  },
+  {
+    "task": ":kms:plugins:pkcs11:test",
+    "test": "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)()"
+  },
+  {
+    "task": ":kms:plugins:pkcs11:test",
+    "test": "generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)()"
+  },
+  {
+    "task": ":kms:plugins:pkcs11:test",
+    "test": "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound()"
+  }
+]

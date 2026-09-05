@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { OfferQrScanner } from '@/components/OfferQrScanner'
 import { bootstrap, store, type WalletState } from '@/lib/wallet'
@@ -17,13 +18,16 @@ type Status =
   | { kind: 'error'; message: string }
 
 export default function ReceivePage() {
+  const [bootError, setBootError] = useState<string | null>(null)
   const [state, setState] = useState<WalletState | null>(null)
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const [scanError, setScanError] = useState<string | null>(null)
 
   useEffect(() => {
-    setState(bootstrap())
+    void bootstrap().then(setState).catch(error => setBootError(String(error)))
   }, [])
+
+  if (bootError) return <WalletRecovery message={bootError} />
 
   if (!state) {
     return (
@@ -37,10 +41,10 @@ export default function ReceivePage() {
     setStatus({ kind: 'requesting' })
     setScanError(null)
     try {
-      const wallet = bootstrap()
+      const wallet = await bootstrap()
       setState(wallet)
       const body = await fetchCredentialFromOffer(offer, wallet.holder.did)
-      const { credential, replaced } = store(
+      const { credential, replaced } = await store(
         body.credential,
         body.format,
         body.selectivelyDisclosable ?? [],
@@ -60,7 +64,7 @@ export default function ReceivePage() {
     <>
       <div className="page-hero">
         <h2>Add credential</h2>
-        <p>Scan the QR code from your issuer to receive a verified credential.</p>
+        <p>Scan your issuer’s QR code. The wallet checks the issuer signature before saving the credential.</p>
       </div>
 
       <div className="panel">

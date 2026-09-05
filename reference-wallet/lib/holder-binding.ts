@@ -1,4 +1,5 @@
 import { decodeSdJwtVc } from './sdjwt'
+import { b64uDecodeString } from './crypto'
 import type { StoredCredential } from './storage'
 
 export const HOLDER_BINDING_MISMATCH =
@@ -23,7 +24,13 @@ export function isCredentialBoundToHolder(
       return false
     }
   }
-  return cred.subjectDid === holderDid
+  try {
+    const payload = JSON.parse(b64uDecodeString(cred.credential.split('.')[1]))
+    return payload.sub === holderDid &&
+      (payload.vc?.credentialSubject?.id === undefined || payload.vc.credentialSubject.id === holderDid)
+  } catch {
+    return false
+  }
 }
 
 /** Throws with a user-facing message when the holder cannot sign this credential. */

@@ -2,13 +2,13 @@
  * JWE-like claim decryption for sensitive SD-JWT disclosures (ID photos).
  * Mirrors trustweave-saas/frontend/src/utils/claimJwe.ts.
  */
-import { edwardsToMontgomeryPriv, x25519 } from '@noble/curves/ed25519'
+import { holderSharedSecret } from './key-store'
 import { sha256 } from '@noble/hashes/sha256'
+import { hkdf } from '@noble/hashes/hkdf'
 import { b64uDecode, b64uEncodeString } from './crypto'
-import { createObjectDisclosure } from './sdjwt'
 
 export type ClaimJwePayload = {
-  alg: 'ECDH-ES+A256GCM'
+  alg: 'ECDH-ES+A256GCM' | 'X25519-HKDF-SHA256-A256GCM'
   epk: string
   iv: string
   ciphertext: string
@@ -21,12 +21,14 @@ export type ClaimJwePayload = {
 export function isClaimJwePayload(value: unknown): value is ClaimJwePayload {
   if (!value || typeof value !== 'object') return false
   const o = value as Record<string, unknown>
-  return o.alg === 'ECDH-ES+A256GCM'
+  return (o.alg === 'ECDH-ES+A256GCM' || o.alg === 'X25519-HKDF-SHA256-A256GCM')
     && typeof o.epk === 'string'
     && typeof o.iv === 'string'
     && typeof o.ciphertext === 'string'
     && typeof o.tag === 'string'
     && typeof o.encrypted_key === 'string'
+    && typeof o.key_iv === 'string'
+    && typeof o.key_tag === 'string'
 }
 
 function hkdfSha256(shared: Uint8Array, info: string, length = 32): Uint8Array {
@@ -49,18 +51,10 @@ async function aesGcmDecrypt(ciphertext: Uint8Array, tag: Uint8Array, key: Uint8
   return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, combined))
 }
 
-/** Decrypt a claim JWE payload using the holder's Ed25519 private key (32 bytes). */
-export async function decryptClaimJwe(jwe: ClaimJwePayload, holderEd25519PrivateKey: Uint8Array): Promise<string> {
-  const holderXPriv = edwardsToMontgomeryPriv(holderEd25519PrivateKey)
-  const ephemeralPub = b64uDecode(jwe.epk)
-  const shared = x25519.getSharedSecret(holderXPriv, ephemeralPub)
-  const wrapKey = hkdfSha256(shared, 'TrustWeave-ClaimJWE-v1-wrap')
-  const cek = await aesGcmDecrypt(
-    b64uDecode(jwe.encrypted_key),
-    b64uDecode(jwe.key_tag),
-    wrapKey,
-    b64uDecode(jwe.key_iv),
-  )
+/** Decrypt using the device-bound agreement key; no raw holder key leaves custody. */
+export async function decryptClaimJwe(jwe: ClaimJwePayload, holderDid: string): Promise<string> {
+  const cek = await unwrapClaimKey(jwe, holderDid)
+  try {
   const plain = await aesGcmDecrypt(
     b64uDecode(jwe.ciphertext),
     b64uDecode(jwe.tag),
@@ -68,11 +62,21 @@ export async function decryptClaimJwe(jwe: ClaimJwePayload, holderEd25519Private
     b64uDecode(jwe.iv),
   )
   return new TextDecoder().decode(plain)
-}
-
-/** Build a presentation disclosure with decrypted plaintext (Option A). */
-export function buildPlaintextDisclosure(claimName: string, plaintext: string): string {
-  return createObjectDisclosure(claimName, plaintext).disclosure
+  } finally { cek.fill(0) }
 }
 
 export { b64uEncodeString }
+
+/** The content key may be disclosed only with an explicitly selected issuer-bound encrypted claim. */
+export async function unwrapClaimKey(jwe: ClaimJwePayload, holderDid: string): Promise<Uint8Array> {
+  const shared = await holderSharedSecret(holderDid, jwe.epk)
+  const info = 'TrustWeave-ClaimJWE-v1-wrap'
+  const wrapKey = jwe.alg === 'X25519-HKDF-SHA256-A256GCM'
+    ? hkdf(sha256, shared, new Uint8Array(0), new TextEncoder().encode(info), 32)
+    : hkdfSha256(shared, info) // Read-only compatibility for the legacy demo envelope.
+  try {
+    const cek = await aesGcmDecrypt(b64uDecode(jwe.encrypted_key), b64uDecode(jwe.key_tag), wrapKey, b64uDecode(jwe.key_iv))
+    if (cek.length !== 32) throw new Error('Invalid encrypted claim key')
+    return cek
+  } finally { shared.fill(0); wrapKey.fill(0) }
+}

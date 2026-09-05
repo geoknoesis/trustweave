@@ -1,24 +1,32 @@
 package org.trustweave.testkit.credential
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.wallet.CredentialFilter
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import kotlin.test.*
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.StatusPurpose
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.CredentialStatus
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
-import org.trustweave.core.identifiers.Iri
+import org.trustweave.wallet.CredentialFilter
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class BasicWalletTest {
-
     private lateinit var wallet: BasicWallet
 
     @BeforeTest
@@ -32,232 +40,267 @@ class BasicWalletTest {
     }
 
     @Test
-    fun `test store credential`() = runBlocking<Unit> {
-        val credential = createTestCredential()
+    fun `test store credential`() =
+        runBlocking<Unit> {
+            val credential = createTestCredential()
 
-        val id = wallet.store(credential)
+            val id = wallet.store(credential)
 
-        assertNotNull(id)
-        assertEquals(credential.id?.value, id)
-    }
-
-    @Test
-    fun `test store credential without ID generates UUID`() = runBlocking<Unit> {
-        val credential = VerifiableCredential(
-            type = listOf(CredentialType.VerifiableCredential),
-            issuer = Issuer.fromDid(Did("did:example:issuer")),
-            issuanceDate = Clock.System.now(),
-            credentialSubject = CredentialSubject.fromIri(Iri("did:example:subject"), emptyMap())
-        )
-
-        val id = wallet.store(credential)
-
-        assertNotNull(id)
-        assertTrue(id.isNotEmpty())
-    }
-
-    @Test
-    fun `test get credential`() = runBlocking<Unit> {
-        val credential = createTestCredential()
-        val id = wallet.store(credential)
-
-        val retrieved = wallet.get(id)
-
-        assertNotNull(retrieved)
-        assertEquals(credential.id?.value, retrieved?.id?.value)
-        assertEquals(credential.issuer.id.value, retrieved?.issuer?.id?.value)
-    }
-
-    @Test
-    fun `test get non-existent credential returns null`() = runBlocking<Unit> {
-        val retrieved = wallet.get("non-existent-id")
-
-        assertNull(retrieved)
-    }
-
-    @Test
-    fun `test list all credentials`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1")
-        val cred2 = createTestCredential("cred-2")
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val credentials = wallet.list(null)
-
-        assertEquals(2, credentials.size)
-        assertTrue(credentials.any { it.id?.value == "cred-1" })
-        assertTrue(credentials.any { it.id?.value == "cred-2" })
-    }
-
-    @Test
-    fun `test list with issuer filter`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
-        val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val credentials = wallet.list(CredentialFilter(issuer = "did:example:issuer1"))
-
-        assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id?.value)
-    }
-
-    @Test
-    fun `test list with type filter`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1", types = listOf("VerifiableCredential", "TypeA"))
-        val cred2 = createTestCredential("cred-2", types = listOf("VerifiableCredential", "TypeB"))
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val credentials = wallet.list(CredentialFilter(type = listOf("TypeA")))
-
-        assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id?.value)
-    }
-
-    @Test
-    fun `test list with subject filter`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1", subjectId = "did:example:subject1")
-        val cred2 = createTestCredential("cred-2", subjectId = "did:example:subject2")
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val credentials = wallet.list(CredentialFilter(subjectId = "did:example:subject1"))
-
-        assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id?.value)
-    }
-
-    @Test
-    fun `test list with expired filter`() = runBlocking<Unit> {
-        val pastDate = Clock.System.now().minus(kotlin.time.Duration.parse("PT24H")).toString()
-        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
-        val cred1 = createTestCredential("cred-1", expirationDate = pastDate)
-        val cred2 = createTestCredential("cred-2", expirationDate = futureDate)
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val expired = wallet.list(CredentialFilter(expired = true))
-        val notExpired = wallet.list(CredentialFilter(expired = false))
-
-        assertEquals(1, expired.size)
-        assertEquals("cred-1", expired.first().id?.value)
-        assertEquals(1, notExpired.size)
-        assertEquals("cred-2", notExpired.first().id?.value)
-    }
-
-    @Test
-    fun `test list with revoked filter`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1", revoked = true)
-        val cred2 = createTestCredential("cred-2", revoked = false)
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val revoked = wallet.list(CredentialFilter(revoked = true))
-        val notRevoked = wallet.list(CredentialFilter(revoked = false))
-
-        assertEquals(1, revoked.size)
-        assertEquals("cred-1", revoked.first().id?.value)
-        assertEquals(1, notRevoked.size)
-        assertEquals("cred-2", notRevoked.first().id?.value)
-    }
-
-    @Test
-    fun `test delete credential`() = runBlocking<Unit> {
-        val credential = createTestCredential()
-        val id = wallet.store(credential)
-
-        val deleted = wallet.delete(id)
-
-        assertTrue(deleted)
-        assertNull(wallet.get(id))
-    }
-
-    @Test
-    fun `test delete non-existent credential returns false`() = runBlocking<Unit> {
-        val deleted = wallet.delete("non-existent-id")
-
-        assertFalse(deleted)
-    }
-
-    @Test
-    fun `test query credentials`() = runBlocking<Unit> {
-        val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
-        val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
-        wallet.store(cred1)
-        wallet.store(cred2)
-
-        val credentials = wallet.query {
-            byIssuer("did:example:issuer1")
+            assertNotNull(id)
+            assertEquals(credential.id?.value, id)
         }
 
-        assertEquals(1, credentials.size)
-        assertEquals("cred-1", credentials.first().id?.value)
-    }
-
     @Test
-    fun `test query with multiple filters`() = runBlocking<Unit> {
-        val futureDate = Clock.System.now().plus(kotlin.time.Duration.parse("PT24H")).toString()
-        val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1", expirationDate = futureDate)
-        val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer1", expirationDate = futureDate)
-        val cred3 = createTestCredential("cred-3", issuer = "did:example:issuer2", expirationDate = futureDate)
-        wallet.store(cred1)
-        wallet.store(cred2)
-        wallet.store(cred3)
+    fun `test store credential without ID generates UUID`() =
+        runBlocking<Unit> {
+            val credential =
+                VerifiableCredential(
+                    type = listOf(CredentialType.VerifiableCredential),
+                    issuer = Issuer.fromDid(Did("did:example:issuer")),
+                    issuanceDate = Clock.System.now(),
+                    credentialSubject = CredentialSubject.fromIri(Iri("did:example:subject"), emptyMap()),
+                )
 
-        val credentials = wallet.query {
-            byIssuer("did:example:issuer1")
-            notExpired()
+            val id = wallet.store(credential)
+
+            assertNotNull(id)
+            assertTrue(id.isNotEmpty())
         }
 
-        assertEquals(2, credentials.size)
-        assertTrue(credentials.all { it.issuer.id.value == "did:example:issuer1" })
-    }
-
     @Test
-    fun `test query with byTag throws instead of silently returning all credentials`() = runBlocking<Unit> {
-        wallet.store(createTestCredential("cred-1"))
+    fun `test get credential`() =
+        runBlocking<Unit> {
+            val credential = createTestCredential()
+            val id = wallet.store(credential)
 
-        val exception = assertFailsWith<UnsupportedOperationException> {
-            wallet.query { byTag("important") }
+            val retrieved = wallet.get(id)
+
+            assertNotNull(retrieved)
+            assertEquals(credential.id?.value, retrieved?.id?.value)
+            assertEquals(credential.issuer.id.value, retrieved?.issuer?.id?.value)
         }
-        assertTrue(exception.message!!.contains("byTag"))
-    }
 
     @Test
-    fun `test query with byCollection throws instead of silently returning all credentials`() = runBlocking<Unit> {
-        wallet.store(createTestCredential("cred-1"))
+    fun `test get non-existent credential returns null`() =
+        runBlocking<Unit> {
+            val retrieved = wallet.get("non-existent-id")
 
-        val exception = assertFailsWith<UnsupportedOperationException> {
-            wallet.query { byCollection("collection-1") }
+            assertNull(retrieved)
         }
-        assertTrue(exception.message!!.contains("byCollection"))
-    }
 
     @Test
-    fun `test clear all credentials`() = runBlocking<Unit> {
-        wallet.store(createTestCredential("cred-1"))
-        wallet.store(createTestCredential("cred-2"))
+    fun `test list all credentials`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1")
+            val cred2 = createTestCredential("cred-2")
+            wallet.store(cred1)
+            wallet.store(cred2)
 
-        wallet.clear()
+            val credentials = wallet.list(null)
 
-        assertEquals(0, wallet.list(null).size)
-        assertEquals(0, wallet.size())
-    }
+            assertEquals(2, credentials.size)
+            assertTrue(credentials.any { it.id?.value == "cred-1" })
+            assertTrue(credentials.any { it.id?.value == "cred-2" })
+        }
 
     @Test
-    fun `test size returns correct count`() = runBlocking<Unit> {
-        assertEquals(0, wallet.size())
+    fun `test list with issuer filter`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
+            val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
+            wallet.store(cred1)
+            wallet.store(cred2)
 
-        wallet.store(createTestCredential("cred-1"))
-        assertEquals(1, wallet.size())
+            val credentials = wallet.list(CredentialFilter(issuer = "did:example:issuer1"))
 
-        wallet.store(createTestCredential("cred-2"))
-        assertEquals(2, wallet.size())
+            assertEquals(1, credentials.size)
+            assertEquals("cred-1", credentials.first().id?.value)
+        }
 
-        wallet.delete("cred-1")
-        assertEquals(1, wallet.size())
-    }
+    @Test
+    fun `test list with type filter`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1", types = listOf("VerifiableCredential", "TypeA"))
+            val cred2 = createTestCredential("cred-2", types = listOf("VerifiableCredential", "TypeB"))
+            wallet.store(cred1)
+            wallet.store(cred2)
+
+            val credentials = wallet.list(CredentialFilter(type = listOf("TypeA")))
+
+            assertEquals(1, credentials.size)
+            assertEquals("cred-1", credentials.first().id?.value)
+        }
+
+    @Test
+    fun `test list with subject filter`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1", subjectId = "did:example:subject1")
+            val cred2 = createTestCredential("cred-2", subjectId = "did:example:subject2")
+            wallet.store(cred1)
+            wallet.store(cred2)
+
+            val credentials = wallet.list(CredentialFilter(subjectId = "did:example:subject1"))
+
+            assertEquals(1, credentials.size)
+            assertEquals("cred-1", credentials.first().id?.value)
+        }
+
+    @Test
+    fun `test list with expired filter`() =
+        runBlocking<Unit> {
+            val pastDate =
+                Clock.System
+                    .now()
+                    .minus(kotlin.time.Duration.parse("PT24H"))
+                    .toString()
+            val futureDate =
+                Clock.System
+                    .now()
+                    .plus(kotlin.time.Duration.parse("PT24H"))
+                    .toString()
+            val cred1 = createTestCredential("cred-1", expirationDate = pastDate)
+            val cred2 = createTestCredential("cred-2", expirationDate = futureDate)
+            wallet.store(cred1)
+            wallet.store(cred2)
+
+            val expired = wallet.list(CredentialFilter(expired = true))
+            val notExpired = wallet.list(CredentialFilter(expired = false))
+
+            assertEquals(1, expired.size)
+            assertEquals("cred-1", expired.first().id?.value)
+            assertEquals(1, notExpired.size)
+            assertEquals("cred-2", notExpired.first().id?.value)
+        }
+
+    @Test
+    fun `test list with status entry filter`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1", revoked = true)
+            val cred2 = createTestCredential("cred-2", revoked = false)
+            wallet.store(cred1)
+            wallet.store(cred2)
+
+            val revoked = wallet.list(CredentialFilter(hasStatusEntry = true))
+            val notRevoked = wallet.list(CredentialFilter(hasStatusEntry = false))
+
+            assertEquals(1, revoked.size)
+            assertEquals("cred-1", revoked.first().id?.value)
+            assertEquals(1, notRevoked.size)
+            assertEquals("cred-2", notRevoked.first().id?.value)
+        }
+
+    @Test
+    fun `test delete credential`() =
+        runBlocking<Unit> {
+            val credential = createTestCredential()
+            val id = wallet.store(credential)
+
+            val deleted = wallet.delete(id)
+
+            assertTrue(deleted)
+            assertNull(wallet.get(id))
+        }
+
+    @Test
+    fun `test delete non-existent credential returns false`() =
+        runBlocking<Unit> {
+            val deleted = wallet.delete("non-existent-id")
+
+            assertFalse(deleted)
+        }
+
+    @Test
+    fun `test query credentials`() =
+        runBlocking<Unit> {
+            val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1")
+            val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer2")
+            wallet.store(cred1)
+            wallet.store(cred2)
+
+            val credentials =
+                wallet.query {
+                    byIssuer("did:example:issuer1")
+                }
+
+            assertEquals(1, credentials.size)
+            assertEquals("cred-1", credentials.first().id?.value)
+        }
+
+    @Test
+    fun `test query with multiple filters`() =
+        runBlocking<Unit> {
+            val futureDate =
+                Clock.System
+                    .now()
+                    .plus(kotlin.time.Duration.parse("PT24H"))
+                    .toString()
+            val cred1 = createTestCredential("cred-1", issuer = "did:example:issuer1", expirationDate = futureDate)
+            val cred2 = createTestCredential("cred-2", issuer = "did:example:issuer1", expirationDate = futureDate)
+            val cred3 = createTestCredential("cred-3", issuer = "did:example:issuer2", expirationDate = futureDate)
+            wallet.store(cred1)
+            wallet.store(cred2)
+            wallet.store(cred3)
+
+            val credentials =
+                wallet.query {
+                    byIssuer("did:example:issuer1")
+                    notExpired()
+                }
+
+            assertEquals(2, credentials.size)
+            assertTrue(credentials.all { it.issuer.id.value == "did:example:issuer1" })
+        }
+
+    @Test
+    fun `test query with byTag throws instead of silently returning all credentials`() =
+        runBlocking<Unit> {
+            wallet.store(createTestCredential("cred-1"))
+
+            val exception =
+                assertFailsWith<UnsupportedOperationException> {
+                    wallet.query { byTag("important") }
+                }
+            assertTrue(exception.message!!.contains("byTag"))
+        }
+
+    @Test
+    fun `test query with byCollection throws instead of silently returning all credentials`() =
+        runBlocking<Unit> {
+            wallet.store(createTestCredential("cred-1"))
+
+            val exception =
+                assertFailsWith<UnsupportedOperationException> {
+                    wallet.query { byCollection("collection-1") }
+                }
+            assertTrue(exception.message!!.contains("byCollection"))
+        }
+
+    @Test
+    fun `test clear all credentials`() =
+        runBlocking<Unit> {
+            wallet.store(createTestCredential("cred-1"))
+            wallet.store(createTestCredential("cred-2"))
+
+            wallet.clear()
+
+            assertEquals(0, wallet.list(null).size)
+            assertEquals(0, wallet.size())
+        }
+
+    @Test
+    fun `test size returns correct count`() =
+        runBlocking<Unit> {
+            assertEquals(0, wallet.size())
+
+            wallet.store(createTestCredential("cred-1"))
+            assertEquals(1, wallet.size())
+
+            wallet.store(createTestCredential("cred-2"))
+            assertEquals(2, wallet.size())
+
+            wallet.delete("cred-1")
+            assertEquals(1, wallet.size())
+        }
 
     @Test
     fun `test wallet ID is set`() {
@@ -296,11 +339,12 @@ class BasicWalletTest {
         types: List<String> = listOf("VerifiableCredential", "TestCredential"),
         subjectId: String = "did:example:subject",
         expirationDate: String? = null,
-        revoked: Boolean = false
+        revoked: Boolean = false,
     ): VerifiableCredential {
-        val claims = buildJsonObject {
-            put("name", "Test Subject")
-        }.toMutableMap()
+        val claims =
+            buildJsonObject {
+                put("name", "Test Subject")
+            }.toMutableMap()
         return VerifiableCredential(
             id = CredentialId(id),
             type = types.map { CredentialType.Custom(it) },
@@ -308,17 +352,17 @@ class BasicWalletTest {
             issuanceDate = Clock.System.now(),
             expirationDate = expirationDate?.let { Instant.parse(it) },
             credentialSubject = CredentialSubject.fromIri(Iri(subjectId), claims = claims),
-            credentialStatus = if (revoked) {
-                CredentialStatus(
-                    id = StatusListId("https://example.com/status/1"),
-                    type = "StatusList2021Entry",
-                    statusPurpose = StatusPurpose.REVOCATION,
-                    statusListIndex = "1"
-                )
-            } else null
+            credentialStatus =
+                if (revoked) {
+                    CredentialStatus(
+                        id = StatusListId("https://example.com/status/1"),
+                        type = "StatusList2021Entry",
+                        statusPurpose = StatusPurpose.REVOCATION,
+                        statusListIndex = "1",
+                    )
+                } else {
+                    null
+                },
         )
     }
 }
-
-
-

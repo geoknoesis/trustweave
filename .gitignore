@@ -81,3 +81,6 @@ docs/**/*.pdf
 
 # Superpowers SDD scratch workspace (ledgers, briefs, review packages)
 .superpowers/
+
+# Reference wallet CI uses reproducible npm installs.
+!reference-wallet/package-lock.json

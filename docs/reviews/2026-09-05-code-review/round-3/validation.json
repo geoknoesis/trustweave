@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-09-05T19:08:32.435Z",
+  "wallet": {
+    "unit_tests": 28,
+    "browser_tests": 7,
+    "production_build": "passed",
+    "typecheck": "passed",
+    "audit_vulnerabilities": 0
+  },
+  "backend": {
+    "tests": 517,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "coverage_gate": "passed"
+  },
+  "frontend": {
+    "tests": 292,
+    "files": 62,
+    "failures": 0,
+    "lint": "passed",
+    "audit_vulnerabilities": 0
+  },
+  "fingerprint": {
+    "regression_tests": 1,
+    "status": "passed",
+    "value": "43556aec913db35df553882c22b4f775a1bd2c567b9358c54f31983d4491e8e5",
+    "release_pin_updated": false
+  },
+  "prior_evidence": {
+    "sdk_tests": 515,
+    "note": "Prior-round result; full SDK suite not rerun in round 3. SaaS composite build recompiled SDK dependencies."
+  },
+  "release": {
+    "published": false,
+    "linux_ci": false,
+    "staging": false
+  },
+  "logs": [
+    "../round-2/round3-backend.log",
+    "../round-2/round3-frontend.log",
+    "../round-2/round3-wallet-build.log",
+    "../round-2/round3-browser.log"
+  ],
+  "report": {
+    "links": "passed",
+    "filters": "passed",
+    "desktop_mobile": "visually inspected",
+    "mobile_overflow": false
+  }
+}

@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-
 }
 
 dependencies {
@@ -17,4 +16,3 @@ dependencies {
     implementation(libs.okhttp)
     // Test dependencies are standardized in root build.gradle.kts
 }
-

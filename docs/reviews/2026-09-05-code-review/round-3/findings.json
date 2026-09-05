@@ -1,0 +1,176 @@
+[
+  {
+    "id": "TW-R3-01",
+    "repo": "trustweave",
+    "severity": "P1",
+    "status": "fixed",
+    "title": "Ambiguous SD-JWT disclosure parsing and placement",
+    "problem": "Malformed tuples were coerced to strings, and nested commitments could be treated as top-level claims. Visible claims could be shadowed.",
+    "change": "Strict tuple/name checks; reject reserved names, duplicate digests, visible-claim collisions and unsupported nested commitments. Keep supported top-level claims bound to issuer-signed digests.",
+    "files": [
+      "reference-wallet/lib/credential-verification.ts",
+      "reference-wallet/lib/sdjwt.ts",
+      "reference-wallet/tests/import-profile.test.ts"
+    ],
+    "validation": "Adversarial import-profile unit tests and real browser issuer/import/presentation tests.",
+    "limit": "Nested SD-JWT and array disclosures remain unsupported and fail closed."
+  },
+  {
+    "id": "TW-R3-02",
+    "repo": "trustweave",
+    "severity": "P1",
+    "status": "fixed",
+    "title": "Plain VC holder binding trusted mutable local metadata",
+    "problem": "Changing a stored record's subjectDid could satisfy the wallet's local holder-selection check despite a different signed subject.",
+    "change": "Read holder binding from the credential payload; reject contradictory JWT and VC subject identifiers. Issuer signature verification still occurs before import and presentation.",
+    "files": [
+      "reference-wallet/lib/holder-binding.ts",
+      "reference-wallet/lib/wallet.ts",
+      "reference-wallet/tests/import-profile.test.ts"
+    ],
+    "validation": "Forged metadata and contradictory subject regression tests.",
+    "limit": "A downstream verifier must still independently validate holder binding."
+  },
+  {
+    "id": "TW-R3-03",
+    "repo": "trustweave",
+    "severity": "P1",
+    "status": "fixed",
+    "title": "Demo issuers leaked claims advertised as selective",
+    "problem": "Student identifiers and other profile claims appeared both in disclosures and in the always-visible issuer payload. Withholding the disclosure did not hide the claim.",
+    "change": "Remove overlaps in university, CAC, FAA and spatial issuers. Reject duplicate selective claims and attempts to override issuer/holder binding through alwaysVisible.",
+    "files": [
+      "reference-wallet/lib/sdjwt.ts",
+      "reference-wallet/app/api/demo-issuer/credential/route.ts",
+      "reference-wallet/app/api/demo-issuer/cac/credential/route.ts",
+      "reference-wallet/app/api/demo-issuer/faa/credential/route.ts",
+      "reference-wallet/app/api/demo-issuer/spatial/credential/route.ts",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "validation": "All four real issuer routes checked for visible/selective overlap; imported credentials can withhold claims.",
+    "limit": "Old credentials with overlapping claims require reissuance; existing stored data is preserved."
+  },
+  {
+    "id": "TW-R3-04",
+    "repo": "trustweave",
+    "severity": "P2",
+    "status": "fixed",
+    "title": "Wallet lacked framing and referrer protections",
+    "problem": "Wallet pages could be embedded by another origin and invitation URLs could be exposed through browser referrers.",
+    "change": "Add frame denial, restrictive frame-ancestors/object/base directives, no-referrer, nosniff and camera/microphone/geolocation permissions policy.",
+    "files": [
+      "reference-wallet/next.config.mjs",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "validation": "Production HTTP header browser test and production build.",
+    "limit": "The CSP is not a nonce-based script policy and does not remove same-origin script risk."
+  },
+  {
+    "id": "TW-R3-05",
+    "repo": "trustweave",
+    "severity": "P2",
+    "status": "fixed",
+    "title": "Recovery export failures and repeated resets lacked feedback",
+    "problem": "Storage errors during export escaped without useful feedback; repeated reset actions stayed enabled.",
+    "change": "Show a preservation-focused export error, disable reset while pending, and defer blob URL revocation so downloads can start.",
+    "files": [
+      "reference-wallet/components/WalletRecovery.tsx"
+    ],
+    "validation": "Typecheck/build and existing production recovery-page browser test; export-error/reset timing branches reviewed in code.",
+    "limit": "Credential export cannot recover a lost non-extractable holder key."
+  },
+  {
+    "id": "SA-R3-01",
+    "repo": "trustweave-saas",
+    "severity": "P1",
+    "status": "fixed",
+    "title": "Timeouts released tenant capacity before providers stopped",
+    "problem": "A provider ignoring interruption retained a worker while its tenant/session reservation was removed. Repeated requests could consume capacity beyond the per-tenant budget.",
+    "change": "Release reservations when the callable actually exits, including cancelled-before-start and rejected task handling. Preserve timeout responses without treating interruption as proof of completion.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationWorkGate.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationWorkGateTest.kt"
+    ],
+    "validation": "Non-cooperative provider regression verifies 504 deadline, 409 duplicate, 429 tenant capacity and another tenant's successful work.",
+    "limit": "Reservations are per process; finite database session leases are not cluster-wide tenant admission control."
+  },
+  {
+    "id": "SA-R3-02",
+    "repo": "trustweave-saas",
+    "severity": "P2",
+    "status": "fixed",
+    "title": "SDK fingerprint omitted dependency catalogs and runtime resources",
+    "problem": "Changing version catalogs, SPI descriptors or other build inputs could leave the old source fingerprint unchanged.",
+    "change": "Include TOML catalogs, lockfiles, runtime resources and Gradle wrapper inputs; preserve binary bytes and normalize text line endings. Add a regression test and run it in CI.",
+    "files": [
+      "scripts/verify-sdk-source.py",
+      "scripts/test_verify_sdk_source.py",
+      ".github/workflows/ci.yml",
+      ".trustweave-source-sha256"
+    ],
+    "validation": "Temporary Git repository regression checks additions/changes to build inputs and resources, cross-platform text normalization, and exclusion of test-only changes.",
+    "limit": "The stronger fingerprint was recorded for the reviewed local source inventory. The old SDK commit pin remains unresolved."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "severity": "P2",
+    "status": "release-pending",
+    "title": "Published SDK/SaaS pair and staging evidence remain outstanding",
+    "problem": "The working tree uses reviewed but uncommitted SDK changes while .trustweave-revision still references the older commit. Local success cannot validate that published pair.",
+    "change": "Keep the fail-closed parity gate. Publish the reviewed SDK revision, pin its full SHA and run exact-pair Linux CI plus staging checks.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-2-operations.md"
+    ],
+    "validation": "No publication, remote Linux CI or staging deployment performed in this pass.",
+    "limit": "Do not deploy the old pin or update the fingerprint solely to bypass parity checks."
+  },
+  {
+    "id": "GAP-TW-PROVIDERS",
+    "repo": "trustweave",
+    "severity": "P2",
+    "status": "evidence-gap",
+    "title": "Provider coverage and production-scale storage evidence",
+    "problem": "Most plugin modules are unassessed. Live cloud-provider behavior and large-scale storage performance are not established by the local tests.",
+    "change": "Next validation: provider-specific contract suites against supported services, realistic data volumes, latency/memory budgets and failure injection.",
+    "files": [
+      "docs/api-reference/assessed-capabilities.md",
+      "wallet/plugins/database/src/test/kotlin/org/trustweave/wallet/database/PostgresPagingTest.kt"
+    ],
+    "validation": "Prior round: 515 targeted SDK tests, PostgreSQL paging/index eligibility and bounded H2 paging. Not rerun as a full SDK suite in this pass.",
+    "limit": "Legacy list APIs materialize complete results. File mutation locks are JVM-local."
+  },
+  {
+    "id": "GAP-TW-CUSTODY",
+    "repo": "trustweave",
+    "severity": "P2",
+    "status": "design-limit",
+    "title": "Browser custody and supported-format boundaries",
+    "problem": "Non-extractable browser keys do not enforce user presence, survive profile loss or resist hostile same-origin scripts. Imports support a limited issuer/disclosure profile.",
+    "change": "For production custody, select a supported hardware/user-presence or external-wallet approach and validate recovery and interoperability against that profile.",
+    "files": [
+      "reference-wallet/lib/key-store.ts",
+      "reference-wallet/lib/credential-verification.ts"
+    ],
+    "validation": "Real Chromium persistence, cross-tab mutations, non-extractability and signed presentation tests pass.",
+    "limit": "A hardware-wallet redesign is not claimed as completed."
+  },
+  {
+    "id": "GAP-SA-OPERATIONS",
+    "repo": "trustweave-saas",
+    "severity": "P2",
+    "status": "evidence-gap",
+    "title": "Cluster admission and webhook recovery require operational validation",
+    "problem": "Per-instance worker budgets do not establish cluster-wide tenant quotas. Failed webhook replay relies on operator-driven authenticated redelivery; queue monitoring is documented rather than validated in staging.",
+    "change": "Exercise two or more instances with shared ingress quotas and slow providers; rehearse a signed webhook failure, alert, parser repair and deduplicated redelivery.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationWorkGate.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/FailedWebhookStore.kt",
+      "docs/round-2-operations.md"
+    ],
+    "validation": "Local worker regression and backend tests; no distributed load run or operational recovery drill.",
+    "limit": "Stripe invoice-paid/payment-failed handlers also remain logging-only for transaction-cost settlement/notifications; completion needs a defined billing workflow."
+  }
+]

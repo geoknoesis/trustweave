@@ -1,13 +1,16 @@
 import './globals.css'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { connection } from 'next/server'
 
 export const metadata = {
   title: 'TrustWeave Wallet',
   description: 'Store, view, and share your verified digital credentials',
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Request-specific CSP nonces cannot be embedded in a statically generated shell.
+  await connection()
   return (
     <html lang="en">
       <body>
@@ -32,7 +35,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </nav>
           </div>
         </header>
-        <main className="container">{children}</main>
+        <main className="container">
+          <aside className="callout">Reference wallet: keys stay on this browser and cannot be exported. Keep credential backups; device loss requires reissuance. This demo has no platform user-verification or account recovery service.</aside>
+          {children}
+        </main>
         <footer className="app-footer">
           <div className="container">
             <a href="https://github.com/geoknoesis/trustweave" target="_blank" rel="noreferrer">

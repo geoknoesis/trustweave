@@ -1,5 +1,9 @@
 package org.trustweave.wallet.file
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import org.junit.jupiter.api.io.TempDir
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -7,9 +11,6 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.exception.WalletException
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Base64
@@ -23,7 +24,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FileWalletTest {
-
     @TempDir
     lateinit var tempDir: Path
 
@@ -33,13 +33,16 @@ class FileWalletTest {
     /** Base64-encoded 32-byte (AES-256) key. */
     private val validKey: String = Base64.getEncoder().encodeToString(ByteArray(32) { it.toByte() })
 
-    private fun wallet(dir: Path, encryptionKey: String? = validKey): FileWallet =
+    private fun wallet(
+        dir: Path,
+        encryptionKey: String? = validKey,
+    ): FileWallet =
         FileWallet(
             walletId = "wallet-test",
             walletDid = "did:key:z6MkWallet",
             holderDid = "did:key:z6MkHolder",
             walletDir = dir,
-            encryptionKey = encryptionKey
+            encryptionKey = encryptionKey,
         )
 
     private fun credential(id: String = "urn:uuid:${UUID.randomUUID()}"): VerifiableCredential =
@@ -49,14 +52,73 @@ class FileWalletTest {
             issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = CredentialSubject.fromIri(subjectDid),
             issuanceDate = Clock.System.now(),
-            proof = null
+            proof = null,
         )
 
     private fun credentialFiles(walletDir: Path): List<Path> =
         Files.list(walletDir.resolve("credentials")).use { stream -> stream.toList() }
 
-    private fun metadataFiles(walletDir: Path): List<Path> =
-        Files.list(walletDir.resolve("metadata")).use { stream -> stream.toList() }
+    private fun metadataFiles(walletDir: Path): List<Path> = Files.list(walletDir.resolve("metadata")).use { stream -> stream.toList() }
+
+    @Test
+    fun `anonymous records retain their storage handles after reopening`() =
+        runBlocking {
+            val dir = tempDir.resolve("anonymous")
+            val original = credential().copy(id = null)
+            val id = wallet(dir).store(original)
+            val reopened = wallet(dir)
+            assertEquals(id, reopened.store(original))
+            val record = reopened.listRecords().single()
+            assertEquals(id, record.storageId)
+            assertEquals(original, record.credential)
+            assertTrue(reopened.delete(record.storageId))
+        }
+
+    @Test
+    fun `status references are unknown until resolved and never imply revoked`() =
+        runBlocking {
+            val dir = tempDir.resolve("status")
+            val original =
+                credential().copy(
+                    credentialStatus =
+                        org.trustweave.credential.model.vc.CredentialStatus(
+                            org.trustweave.credential.identifiers
+                                .StatusListId("https://issuer.example/status"),
+                            "BitstringStatusListEntry",
+                        ),
+                )
+            val unresolved = wallet(dir)
+            unresolved.store(original)
+            assertEquals(0, unresolved.getStatistics().revokedCredentials)
+            assertEquals(1, unresolved.getStatistics().unknownStatusCredentials)
+            assertFailsWith<IllegalStateException> { unresolved.list(org.trustweave.wallet.CredentialFilter(revoked = true)) }
+            val active =
+                FileWallet(
+                    "wallet-test",
+                    "did:key:wallet",
+                    "did:key:holder",
+                    dir,
+                    validKey,
+                    org.trustweave.wallet.WalletStatusResolver { org.trustweave.wallet.StoredCredentialStatus.ACTIVE },
+                )
+            assertEquals(1, active.list(org.trustweave.wallet.CredentialFilter(revoked = false)).size)
+            assertEquals(0, active.list(org.trustweave.wallet.CredentialFilter(revoked = true)).size)
+        }
+
+    @Test
+    fun `concurrent replacement never exposes partial credential bytes`() =
+        runBlocking {
+            val dir = tempDir.resolve("atomic")
+            val stored = wallet(dir)
+            val original = credential("same-id")
+            stored.store(original)
+            kotlinx.coroutines.coroutineScope {
+                val writer = launch(kotlinx.coroutines.Dispatchers.IO) { repeat(50) { stored.store(original) } }
+                val reader = launch(kotlinx.coroutines.Dispatchers.IO) { repeat(50) { assertEquals(original, stored.get("same-id")) } }
+                writer.join()
+                reader.join()
+            }
+        }
 
     // ========== Encryption ==========
 
@@ -93,9 +155,10 @@ class FileWalletTest {
             bytes[bytes.size - 1] = (bytes[bytes.size - 1].toInt() xor 0x01).toByte()
             Files.write(file, bytes)
 
-            val exception = assertFailsWith<WalletException.StorageError> {
-                wallet.get(id)
-            }
+            val exception =
+                assertFailsWith<WalletException.StorageError> {
+                    wallet.get(id)
+                }
             assertTrue(exception.message.contains("tampered"))
         }
     }
@@ -131,7 +194,7 @@ class FileWalletTest {
             val listed = wallet.list(null)
             assertEquals(
                 setOf(first.id?.value, second.id?.value),
-                listed.map { it.id?.value }.toSet()
+                listed.map { it.id?.value }.toSet(),
             )
         }
     }
@@ -190,9 +253,10 @@ class FileWalletTest {
     @Test
     fun `invalid key length is rejected at construction`() {
         val tooShort = Base64.getEncoder().encodeToString(ByteArray(10))
-        val exception = assertFailsWith<WalletException.WalletCreationFailed> {
-            wallet(tempDir.resolve("bad-key-length"), encryptionKey = tooShort)
-        }
+        val exception =
+            assertFailsWith<WalletException.WalletCreationFailed> {
+                wallet(tempDir.resolve("bad-key-length"), encryptionKey = tooShort)
+            }
         assertTrue(exception.message.contains("16, 24, or 32"))
     }
 
@@ -208,7 +272,7 @@ class FileWalletTest {
         for (length in listOf(16, 24, 32)) {
             wallet(
                 tempDir.resolve("key-$length"),
-                encryptionKey = Base64.getEncoder().encodeToString(ByteArray(length))
+                encryptionKey = Base64.getEncoder().encodeToString(ByteArray(length)),
             )
         }
     }
@@ -255,7 +319,11 @@ class FileWalletTest {
             assertEquals(1, files.size)
             assertEquals(
                 dir.resolve("credentials").toAbsolutePath().normalize(),
-                files.single().toAbsolutePath().normalize().parent
+                files
+                    .single()
+                    .toAbsolutePath()
+                    .normalize()
+                    .parent,
             )
 
             assertEquals(evilId, wallet.get(evilId)?.id?.value)
@@ -287,9 +355,10 @@ class FileWalletTest {
             val wallet = wallet(dir)
             wallet.store(credential())
 
-            val exception = assertFailsWith<UnsupportedOperationException> {
-                wallet.query { byTag("important") }
-            }
+            val exception =
+                assertFailsWith<UnsupportedOperationException> {
+                    wallet.query { byTag("important") }
+                }
             assertTrue(exception.message!!.contains("byTag"))
         }
     }
@@ -340,4 +409,19 @@ class FileWalletTest {
             assertTrue(onDisk.contains(issuerDid))
         }
     }
+
+    @Test
+    fun `corruption fails normal reads and is reported by explicit recovery`() =
+        runBlocking {
+            val wallet = wallet(tempDir)
+            wallet.store(credential("one"))
+            wallet.store(credential("two"))
+            Files.write(credentialFiles(tempDir).first(), byteArrayOf(1, 2, 3))
+            assertFailsWith<Exception> { wallet.list() }
+            assertFailsWith<Exception> { wallet.getStatistics() }
+            val recovered = wallet.recoverRecords()
+            assertFalse(recovered.complete)
+            assertEquals(1, recovered.records.size)
+            assertEquals(1, recovered.failures.size)
+        }
 }

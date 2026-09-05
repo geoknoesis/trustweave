@@ -1,0 +1,56 @@
+{
+  "checks": [
+    {
+      "area": "SDK JVM suite",
+      "result": "3,697 tests: 3,682 passed, 15 skipped; no failures/errors",
+      "scope": "Full gradlew test --continue, 79 modules with tests; optional/template skips listed separately."
+    },
+    {
+      "area": "Multiplatform JVM",
+      "result": "32 tests passed (cached)",
+      "scope": "DID identifiers, wallet core and credential models; common-mp has no JVM test sources. JS/native targets not run."
+    },
+    {
+      "area": "SDK lint",
+      "result": "Repository-wide ktlintCheck passed",
+      "scope": "Fixed import/format violations in three integration stubs and cloud storage. Final import-only changes followed the full test run."
+    },
+    {
+      "area": "SaaS backend",
+      "result": "526 tests: 524 passed, 2 skipped; coverage gate passed",
+      "scope": "Full server:test and JaCoCo verification; includes four shared-admission, two monitor and three signed-recovery/access tests. Accountly live-contract tests skipped."
+    },
+    {
+      "area": "Reference wallet",
+      "result": "28 unit tests and 9 Chromium tests passed; production build passed",
+      "scope": "Final camera cleanup code, nonce policy, disclosure/import/custody/recovery paths. Fake camera; no physical mobile browser claim."
+    },
+    {
+      "area": "Database/storage",
+      "result": "10,000 PostgreSQL records / 200 pages / 2,129 ms; MinIO and Azure contracts passed",
+      "scope": "Local PostgreSQL; real S3-compatible HTTP with two-object pages; Azure client against an HTTP fixture. No hosted IAM/KMS/durability claim."
+    },
+    {
+      "area": "SDK source gate",
+      "result": "Fingerprint check and its regression test passed",
+      "scope": "SHA256 7a436c8e1fff33cbbd7a4b4117e8b4f9e46ed446fe727f308a6655f7bc839f72. Old published revision pin unchanged; local matching source is not a completed release."
+    },
+    {
+      "area": "SaaS frontend",
+      "result": "Round 3 evidence retained: 292 tests and lint passed",
+      "scope": "No round 4 frontend edits or rerun. No new dependency audit or remote staging claim."
+    }
+  ],
+  "logs": [
+    "sdk-full.log",
+    "sdk-lint.log",
+    "sdk-tests.json",
+    "sdk-skips.json",
+    "sdk-multiplatform-tests.json",
+    "backend-full.log",
+    "backend-tests.json",
+    "wallet-build.log",
+    "wallet-unit.log",
+    "browser.log"
+  ]
+}

@@ -58,11 +58,12 @@ export function createObjectDisclosure(
 
 /** Parse a disclosure back to its [salt, name, value] tuple. */
 export function parseDisclosure(d: string): [string, string, unknown] {
-  const arr = JSON.parse(b64uDecodeString(d)) as unknown[]
-  if (arr.length !== 3) {
-    throw new Error(`Object disclosure must be [salt, name, value], got length ${arr.length}`)
+  const arr: unknown = JSON.parse(b64uDecodeString(d))
+  if (!Array.isArray(arr) || arr.length !== 3 || typeof arr[0] !== 'string' || !arr[0] ||
+      typeof arr[1] !== 'string' || !arr[1] || ['_sd', '...', '__proto__', 'constructor', 'prototype'].includes(arr[1])) {
+    throw new Error('Object disclosure must contain a string salt and a supported string claim name')
   }
-  return [String(arr[0]), String(arr[1]), arr[2]]
+  return [arr[0], arr[1], arr[2]]
 }
 
 /** A claim the issuer is willing to selectively disclose. */
@@ -95,7 +96,14 @@ export function issueSdJwtVc(args: {
   const oneYear = args.oneYear ?? 365 * 24 * 60 * 60
   const disclosures: string[] = []
   const sdHashes: string[] = []
+  const reserved = new Set(['iss', 'iat', 'nbf', 'exp', 'vct', 'sub', 'cnf', '_sd', '_sd_alg', '...', '__proto__', 'constructor', 'prototype'])
+  if (Object.keys(args.alwaysVisible).some(name => reserved.has(name)))
+    throw new Error('Always-visible claims cannot override issuer or holder binding')
+  const names = new Set<string>()
   for (const c of args.selectivelyDisclosable) {
+    if (!c.name || reserved.has(c.name) || names.has(c.name) || Object.hasOwn(args.alwaysVisible, c.name))
+      throw new Error('Selective claims must be unique and must not overlap always-visible or reserved claims')
+    names.add(c.name)
     const d = createObjectDisclosure(c.name, c.value)
     disclosures.push(d.disclosure)
     sdHashes.push(d.hash)
@@ -118,7 +126,7 @@ export function issueSdJwtVc(args: {
   }
 
   const issuerJwt = signJws(payload, args.issuerPrivateKey, args.issuerKid)
-  return [issuerJwt, ...disclosures].join('~')
+  return [issuerJwt, ...disclosures, ''].join('~')
 }
 
 /**
@@ -210,11 +218,10 @@ export function decodeSdJwtVc(sdJwtVc: string): DecodedSdJwtVc {
   const parts = sdJwtVc.split('~')
   if (parts.length < 1) throw new Error('Empty SD-JWT VC')
   const issuerJwt = parts[0]
-  // The last segment is empty if there's no KB-JWT; non-empty if there is one.
-  // disclosures are everything in between, non-empty strings only.
+  // A KB-JWT has three dot-separated segments; legacy issuer outputs omitted the trailing tilde.
   let kbJwt: string | undefined
   let lastIdx = parts.length - 1
-  if (parts[lastIdx] !== '') {
+  if (lastIdx > 0 && parts[lastIdx].includes('.')) {
     // It's a KB-JWT.
     kbJwt = parts[lastIdx]
     lastIdx -= 1

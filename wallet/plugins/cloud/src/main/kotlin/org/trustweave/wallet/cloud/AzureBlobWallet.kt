@@ -3,8 +3,6 @@ package org.trustweave.wallet.cloud
 import com.azure.storage.blob.BlobClient
 import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.BlobServiceClient
-import com.azure.storage.blob.BlobServiceClientBuilder
-import com.azure.storage.blob.models.BlobItem
 import com.azure.storage.blob.models.BlobStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,9 +34,8 @@ class AzureBlobWallet(
     holderDid: String,
     private val containerName: String,
     basePath: String,
-    private val blobServiceClient: BlobServiceClient
+    private val blobServiceClient: BlobServiceClient,
 ) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath) {
-
     private val containerClient: BlobContainerClient = blobServiceClient.getBlobContainerClient(containerName)
 
     init {
@@ -48,59 +45,78 @@ class AzureBlobWallet(
         }
     }
 
-    override suspend fun upload(key: String, data: ByteArray): Unit = withContext(Dispatchers.IO) {
-        try {
-            val blobClient: BlobClient = containerClient.getBlobClient(key)
-            blobClient.upload(data.inputStream(), data.size.toLong(), true)
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to upload to Azure Blob Storage: ${e.message}", e)
-        }
-    }
-
-    override suspend fun download(key: String): ByteArray? = withContext(Dispatchers.IO) {
-        try {
-            val blobClient: BlobClient = containerClient.getBlobClient(key)
-            if (!blobClient.exists()) {
-                return@withContext null
+    override suspend fun upload(
+        key: String,
+        data: ByteArray,
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            try {
+                val blobClient: BlobClient = containerClient.getBlobClient(key)
+                blobClient.upload(data.inputStream(), data.size.toLong(), true)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to upload to Azure Blob Storage: ${e.message}", e)
             }
-
-            val outputStream = java.io.ByteArrayOutputStream()
-            blobClient.downloadStream(outputStream)
-            outputStream.toByteArray()
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to download from Azure Blob Storage: ${e.message}", e)
         }
-    }
 
-    override suspend fun deleteFromStorage(key: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            // Delete directly and rely on the service's 404 instead of a racy
-            // exists() pre-check (TOCTOU between exists() and delete()).
-            val blobClient: BlobClient = containerClient.getBlobClient(key)
-            blobClient.delete()
-            true
-        } catch (e: BlobStorageException) {
-            if (e.statusCode == 404) {
-                // Missing blob means "nothing to delete" — not a storage failure.
-                false
-            } else {
-                // Auth failures, networking errors, etc. must NOT be reported as
-                // "not found" — propagate them as storage errors.
+    override suspend fun download(key: String): ByteArray? =
+        withContext(Dispatchers.IO) {
+            try {
+                val blobClient: BlobClient = containerClient.getBlobClient(key)
+                if (!blobClient.exists()) {
+                    return@withContext null
+                }
+
+                val outputStream = java.io.ByteArrayOutputStream()
+                blobClient.downloadStream(outputStream)
+                outputStream.toByteArray()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to download from Azure Blob Storage: ${e.message}", e)
+            }
+        }
+
+    override suspend fun deleteFromStorage(key: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                // Delete directly and rely on the service's 404 instead of a racy
+                // exists() pre-check (TOCTOU between exists() and delete()).
+                val blobClient: BlobClient = containerClient.getBlobClient(key)
+                blobClient.delete()
+                true
+            } catch (e: BlobStorageException) {
+                if (e.statusCode == 404) {
+                    // Missing blob means "nothing to delete" — not a storage failure.
+                    false
+                } else {
+                    // Auth failures, networking errors, etc. must NOT be reported as
+                    // "not found" — propagate them as storage errors.
+                    throw RuntimeException("Failed to delete from Azure Blob Storage: ${e.message}", e)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 throw RuntimeException("Failed to delete from Azure Blob Storage: ${e.message}", e)
             }
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to delete from Azure Blob Storage: ${e.message}", e)
         }
-    }
 
-    override suspend fun listKeys(prefix: String): List<String> = withContext(Dispatchers.IO) {
-        try {
-            containerClient.listBlobsByHierarchy(prefix)
-                .map { it.name }
-                .toList()
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to list blobs from Azure Blob Storage: ${e.message}", e)
+    override suspend fun listKeys(prefix: String): List<String> =
+        withContext(Dispatchers.IO) {
+            try {
+                containerClient
+                    .listBlobs(
+                        com.azure.storage.blob.models
+                            .ListBlobsOptions()
+                            .setPrefix(prefix),
+                        null,
+                    ).map { it.name }
+                    .toList()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to list blobs from Azure Blob Storage: ${e.message}", e)
+            }
         }
-    }
 }
-

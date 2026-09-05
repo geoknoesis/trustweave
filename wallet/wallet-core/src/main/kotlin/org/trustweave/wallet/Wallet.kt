@@ -1,7 +1,5 @@
 package org.trustweave.wallet
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
 
 /**
@@ -45,7 +43,9 @@ import kotlinx.datetime.Clock
  * println("Total credentials: ${stats.totalCredentials}")
  * ```
  */
-interface Wallet : CredentialStorage, AutoCloseable {
+interface Wallet :
+    CredentialStorage,
+    AutoCloseable {
     /**
      * Wallet identifier (DID or UUID).
      */
@@ -78,41 +78,21 @@ interface Wallet : CredentialStorage, AutoCloseable {
      * `wallet is CredentialTagging` instead.
      */
     val capabilities: WalletCapabilities
-        get() = WalletCapabilities(
-            credentialStorage = true,
-            credentialQuery = true,
-            collections = this is CredentialCollections,
-            tags = this is CredentialTagging,
-            metadata = this is CredentialTagging,
-            archive = this is CredentialLifecycle,
-            refresh = this is CredentialLifecycle,
-            createPresentation = this is CredentialPresentation,
-            selectiveDisclosure = this is CredentialPresentation,
-            didManagement = this is DidManagement,
-            keyManagement = this is KeyManagement,
-            credentialIssuance = this is CredentialIssuance
-        )
-
-    /**
-     * Check if wallet supports a capability.
-     *
-     * **Note**: For compile-time type safety, prefer `wallet is CredentialCollections` or
-     * `wallet is CredentialTagging` instead.
-     * For runtime discovery, use `wallet.capabilities.supports("collections")`.
-     *
-     * **Example**:
-     * ```kotlin
-     * // Compile-time type safety (preferred)
-     * if (wallet is CredentialCollections) {
-     *     wallet.createCollection("My Collection")
-     * }
-     *
-     * // Runtime discovery (for UI)
-     * if (wallet.capabilities.collections) {
-     *     // Show collection UI
-     * }
-     * ```
-     */
+        get() =
+            WalletCapabilities(
+                credentialStorage = true,
+                credentialQuery = true,
+                collections = this is CredentialCollections,
+                tags = this is CredentialTagging,
+                metadata = this is CredentialTagging,
+                archive = this is CredentialLifecycle,
+                refresh = this is CredentialLifecycle,
+                createPresentation = this is CredentialPresentation,
+                selectiveDisclosure = this is CredentialPresentation,
+                didManagement = this is DidManagement,
+                keyManagement = this is KeyManagement,
+                credentialIssuance = this is CredentialIssuance,
+            )
 
     /**
      * Get wallet statistics.
@@ -133,34 +113,42 @@ interface Wallet : CredentialStorage, AutoCloseable {
 
         return WalletStatistics(
             totalCredentials = credentials.size,
-            validCredentials = credentials.count { credential ->
-                credential.proof != null &&
-                (credential.expirationDate?.let { expirationDate ->
-                    now < expirationDate
-                } ?: true) &&
-                credential.credentialStatus == null
-            },
-            expiredCredentials = credentials.count { credential ->
-                credential.expirationDate?.let { expirationDate ->
-                    now > expirationDate
-                } ?: false
-            },
-            revokedCredentials = credentials.count { it.credentialStatus != null },
-            collectionsCount = if (this is CredentialCollections) {
-                listCollections().size
-            } else {
-                0
-            },
-            tagsCount = if (this is CredentialTagging) {
-                getAllTags().size
-            } else {
-                0
-            },
-            archivedCount = if (this is CredentialLifecycle) {
-                getArchived().size
-            } else {
-                0
-            }
+            validCredentials =
+                credentials.count { credential ->
+                    credential.proof != null &&
+                        (
+                            credential.expirationDate?.let { expirationDate ->
+                                now < expirationDate
+                            } ?: true
+                        ) &&
+                        credential.credentialStatus == null
+                },
+            expiredCredentials =
+                credentials.count { credential ->
+                    credential.expirationDate?.let { expirationDate ->
+                        now > expirationDate
+                    } ?: false
+                },
+            revokedCredentials = 0,
+            unknownStatusCredentials = credentials.count { it.credentialStatus != null },
+            collectionsCount =
+                if (this is CredentialCollections) {
+                    listCollections().size
+                } else {
+                    0
+                },
+            tagsCount =
+                if (this is CredentialTagging) {
+                    getAllTags().size
+                } else {
+                    0
+                },
+            archivedCount =
+                if (this is CredentialLifecycle) {
+                    getArchived().size
+                } else {
+                    0
+                },
         )
     }
 }
@@ -173,8 +161,7 @@ interface Wallet : CredentialStorage, AutoCloseable {
  * wallet.withCollections { it.createCollection("My Collection") }
  * ```
  */
-inline fun <T> Wallet.withCollections(block: (CredentialCollections) -> T): T? =
-    (this as? CredentialCollections)?.let(block)
+inline fun <T> Wallet.withCollections(block: (CredentialCollections) -> T): T? = (this as? CredentialCollections)?.let(block)
 
 /**
  * Extension function for type-safe access to the [CredentialTagging] capability.
@@ -184,49 +171,36 @@ inline fun <T> Wallet.withCollections(block: (CredentialCollections) -> T): T? =
  * wallet.withTagging { it.tagCredential(id, setOf("important")) }
  * ```
  */
-inline fun <T> Wallet.withTagging(block: (CredentialTagging) -> T): T? =
-    (this as? CredentialTagging)?.let(block)
+inline fun <T> Wallet.withTagging(block: (CredentialTagging) -> T): T? = (this as? CredentialTagging)?.let(block)
 
 /**
  * Extension function for type-safe access to the combined [CredentialOrganization] capability.
  *
  * Prefer [withCollections] or [withTagging] when only one capability is needed.
  */
-inline fun <T> Wallet.withOrganization(block: (CredentialOrganization) -> T): T? =
-    (this as? CredentialOrganization)?.let(block)
+inline fun <T> Wallet.withOrganization(block: (CredentialOrganization) -> T): T? = (this as? CredentialOrganization)?.let(block)
 
 /**
  * Extension function for type-safe capability access.
  */
-inline fun <T> Wallet.withLifecycle(block: (CredentialLifecycle) -> T): T? {
-    return (this as? CredentialLifecycle)?.let(block)
-}
+inline fun <T> Wallet.withLifecycle(block: (CredentialLifecycle) -> T): T? = (this as? CredentialLifecycle)?.let(block)
 
 /**
  * Extension function for type-safe capability access.
  */
-inline fun <T> Wallet.withPresentation(block: (CredentialPresentation) -> T): T? {
-    return (this as? CredentialPresentation)?.let(block)
-}
+inline fun <T> Wallet.withPresentation(block: (CredentialPresentation) -> T): T? = (this as? CredentialPresentation)?.let(block)
 
 /**
  * Extension function for type-safe capability access.
  */
-inline fun <T> Wallet.withDidManagement(block: (DidManagement) -> T): T? {
-    return (this as? DidManagement)?.let(block)
-}
+inline fun <T> Wallet.withDidManagement(block: (DidManagement) -> T): T? = (this as? DidManagement)?.let(block)
 
 /**
  * Extension function for type-safe capability access.
  */
-inline fun <T> Wallet.withKeyManagement(block: (KeyManagement) -> T): T? {
-    return (this as? KeyManagement)?.let(block)
-}
+inline fun <T> Wallet.withKeyManagement(block: (KeyManagement) -> T): T? = (this as? KeyManagement)?.let(block)
 
 /**
  * Extension function for type-safe capability access.
  */
-inline fun <T> Wallet.withIssuance(block: (CredentialIssuance) -> T): T? {
-    return (this as? CredentialIssuance)?.let(block)
-}
-
+inline fun <T> Wallet.withIssuance(block: (CredentialIssuance) -> T): T? = (this as? CredentialIssuance)?.let(block)

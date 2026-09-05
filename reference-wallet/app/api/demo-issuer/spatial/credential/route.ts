@@ -58,8 +58,6 @@ export async function GET(req: NextRequest): Promise<NextResponse<CredentialResp
     holderDid: subject,
     alwaysVisible: {
       jti: `urn:uuid:${crypto.randomUUID()}`,
-      trustDomainId: domain.domainId,
-      droneId: droneRecord.droneId,
     },
     selectivelyDisclosable,
     vct: droneRecord.vct,

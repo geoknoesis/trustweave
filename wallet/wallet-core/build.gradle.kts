@@ -5,9 +5,9 @@ plugins {
 
 group = "org.trustweave"
 dependencies {
-    implementation(project(":common"))     // For JSON utilities and common types
-    implementation(project(":credentials:credential-api"))  // For VerifiableCredential models
-    implementation(project(":did:did-core"))    // For DID operations
+    implementation(project(":common")) // For JSON utilities and common types
+    implementation(project(":credentials:credential-api")) // For VerifiableCredential models
+    implementation(project(":did:did-core")) // For DID operations
     api(project(":wallet:wallet-core-mp"))
 
     // Kotlin Coroutines
@@ -22,4 +22,3 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
 }
-

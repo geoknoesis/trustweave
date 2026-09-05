@@ -1,0 +1,276 @@
+{
+  "updated": "2026-09-05T17:37:16.431317+00:00",
+  "findings": [
+    {
+      "id": "TW01",
+      "repo": "trustweave",
+      "priority": "P1",
+      "title": "Issuer proof validation",
+      "originalTitle": "Credential import accepts invalid issuer signatures",
+      "status": "Implemented",
+      "change": "Imports verify Ed25519 did:key issuer signatures, holder binding, supported algorithms and JWT time bounds before saving. Library copy distinguishes signature checks from live trust/status checks.",
+      "validation": "12 wallet tests; forged signature rejection; real issuer/browser/verifier contract."
+    },
+    {
+      "id": "TW02",
+      "repo": "trustweave",
+      "priority": "P1",
+      "title": "Issuer disclosures preserved",
+      "originalTitle": "Decrypting a claim creates a disclosure the issuer never signed",
+      "status": "Implemented",
+      "change": "Encrypted disclosures retain their original bytes. Selected content keys are bound to disclosure digests inside the signed KB-JWT TrustWeave extension. The verifier authenticates the presentation before decrypting.",
+      "validation": "Real encryption regression checks exact disclosure bytes, digest membership, selected key release, and no key for withheld claims."
+    },
+    {
+      "id": "TW03",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Selective disclosure stays explicit",
+      "originalTitle": "Multiple SD-JWT credentials fall into the full-disclosure path",
+      "status": "Implemented",
+      "change": "Multi-credential presentations containing SD-JWT credentials are refused. Missing/duplicate IDs fail, and selective claims start unchecked.",
+      "validation": "Concurrent-import and multi-SD-JWT rejection regression; actual verifier checks only selected claims."
+    },
+    {
+      "id": "TW04",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Cloud failures propagate",
+      "originalTitle": "Cloud listing hides storage and status-resolution errors",
+      "status": "Implemented",
+      "change": "Cloud list/statistics fail on storage/filter errors. Recovery is explicit, includes per-record failures, and propagates cancellation.",
+      "validation": "CloudRecoveryTest and existing cloud plugin suites."
+    },
+    {
+      "id": "TW05",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Cloud storage handles exposed",
+      "originalTitle": "Anonymous cloud credentials still lose their discoverable storage handle",
+      "status": "Implemented",
+      "change": "CloudWallet implements CredentialRecordStorage and returns storage IDs independently of signed VC IDs.",
+      "validation": "Cloud plugin tests; stored-key reconstruction in listRecords/recovery."
+    },
+    {
+      "id": "TW06",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Bounded database paging",
+      "originalTitle": "Database queries now materialize every credential",
+      "status": "Implemented",
+      "change": "New cursor capability bounds page sizes to 1-500 and preserves continuations for empty filtered pages. PostgreSQL uses indexed JSON containment for issuer/type/subject predicates. Legacy List behavior remains explicit.",
+      "validation": "1,002-record H2 pagination regression and real PostgreSQL filtering/index-plan test pass. Production-scale performance benchmarking remains outside this local run."
+    },
+    {
+      "id": "TW07",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Explicit file recovery",
+      "originalTitle": "File listing presents partial recovery as a complete result",
+      "status": "Implemented",
+      "change": "Normal listings, record listings and statistics consistently fail on corrupt credentials or metadata; recoverRecords reports partial data explicitly.",
+      "validation": "File corruption/recovery and existing file-wallet tests."
+    },
+    {
+      "id": "TW08",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Record mutations serialized",
+      "originalTitle": "Atomic replacement does not coordinate delete and metadata",
+      "status": "Implemented",
+      "change": "Store/delete coordinate credential and metadata locks in stable order across wallet instances in the same JVM. Atomic replacement remains in use.",
+      "validation": "File wallet regression suite; record lock ordering reviewed. Cross-process distributed filesystem transactions are not claimed."
+    },
+    {
+      "id": "TW09",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Origin-wide browser locking",
+      "originalTitle": "Credential writes are not serialized across tabs",
+      "status": "Implemented",
+      "change": "Bootstrap, imports, signing, deletion and reset share a Web Lock. Facade mutations are asynchronous; callers await them.",
+      "validation": "Real Chromium tabs concurrently import without lost updates; reload preserves both records and signing identity."
+    },
+    {
+      "id": "TW10",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Stored data validated",
+      "originalTitle": "Current-schema data is cast without runtime validation",
+      "status": "Implemented",
+      "change": "Credential collections and holder metadata receive runtime validation. Malformed data enters recovery without replacement; the Share page now displays recovery correctly.",
+      "validation": "Malformed JSON-shape regressions and production-page recovery browser test."
+    },
+    {
+      "id": "TW11",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Catalog-backed requirements",
+      "originalTitle": "Capability checks and the catalog remain separate sources of truth",
+      "status": "Implemented",
+      "change": "Runtime metadata can be generated from the capability catalog. Registry application requirements validate assessed operations; format checks fail closed. Assessed stub providers refuse construction; docs enumerate unassessed modules.",
+      "validation": "Common capability/registry tests and generated documentation drift check."
+    },
+    {
+      "id": "TW12",
+      "repo": "trustweave",
+      "priority": "P2",
+      "title": "Real browser contracts",
+      "originalTitle": "Browser custody and cross-profile flows lack end-to-end coverage",
+      "status": "Implemented",
+      "change": "Added Chromium coverage for issuer/import/disclosure/verifier contracts, nonce failure, persistent non-extractable keys, cross-tab writes and recovery. CI runs these after building.",
+      "validation": "3 Chromium tests and 12 wallet unit/crypto tests pass. Custody and custom encrypted-profile limits are documented."
+    },
+    {
+      "id": "TW13",
+      "repo": "trustweave",
+      "priority": "P1",
+      "title": "Wallet dependencies updated",
+      "originalTitle": "Reference-wallet dependency graph has unresolved advisories",
+      "status": "Implemented",
+      "change": "Next.js, Vite, Vitest and browser-test tooling updated; dynamic route parameters migrated. Node 24 is the supported CI/runtime baseline.",
+      "validation": "Wallet audit reports 0 vulnerabilities; production build and typecheck pass."
+    },
+    {
+      "id": "SA01",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Legacy lookup removed",
+      "originalTitle": "Public legacy redemption exposes credentials without proof of possession",
+      "status": "Implemented",
+      "change": "Public credential IDs no longer expose expected holder IDs or raw credentials. Staged invitations and proof-bound OID4VCI remain the retrieval routes.",
+      "validation": "PublicCredentialOfferSecurityTest covers attacker and known-holder guesses without touching the credential repository."
+    },
+    {
+      "id": "SA02",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Offer redemption locked",
+      "originalTitle": "An offer can be redeemed concurrently through multiple grants",
+      "status": "Implemented",
+      "change": "A pessimistic database lock serializes redemption of one offer across calls while status and issuance are processed.",
+      "validation": "Backend compilation/integration validation; locked repository query used by the transactional redemption service."
+    },
+    {
+      "id": "SA03",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Resource audience required",
+      "originalTitle": "azp bypasses the intended API audience requirement",
+      "status": "Implemented",
+      "change": "Validation requires aud; azp cannot substitute. Blank audience configuration fails startup. Keycloak integration fixtures now add the API audience mapper.",
+      "validation": "AudienceValidatorTest and authenticated Keycloak controller integrations."
+    },
+    {
+      "id": "SA04",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Policy switches explicit",
+      "originalTitle": "Adding a trusted issuer changes disabled checks back to enabled",
+      "status": "Implemented",
+      "change": "The verification DSL explicitly calls skipRevocation/skipExpiration when disabled, including allowlist verification.",
+      "validation": "Credential verifier and policy tests; complete backend suite."
+    },
+    {
+      "id": "SA05",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Unchecked is not passed",
+      "originalTitle": "Unchecked expiry and revocation are reported as passing checks",
+      "status": "Implemented",
+      "change": "Verification checks carry an evaluated flag. Disabled expiry/revocation/trust checks are shown as not evaluated, including neutral frontend indicators.",
+      "validation": "Frontend build/tests and backend verifier policy tests."
+    },
+    {
+      "id": "SA06",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Strict trust fails closed",
+      "originalTitle": "Strict verification silently relaxes issuer trust when the list is empty",
+      "status": "Implemented",
+      "change": "Strict verification refuses to produce a valid result when no trusted issuer can be evaluated.",
+      "validation": "Regression now expects a failed Strict result with a trusted-issuer configuration error."
+    },
+    {
+      "id": "SA07",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Disclosure limitations honest",
+      "originalTitle": "The request requires selective disclosure while accepting whole JSON credentials",
+      "status": "Implemented",
+      "change": "The full-JSON profile requests preferred disclosure and communicates complete-credential disclosure in metadata and UI.",
+      "validation": "Verification request tests and frontend build."
+    },
+    {
+      "id": "SA08",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "History paging and retention",
+      "originalTitle": "Verification history causes unbounded N+1 read/write work",
+      "status": "Implemented",
+      "change": "Tenant history returns a bounded Page with no per-row writes. A history index supports ordering. Configurable 90-day retention deletes at most 500 expired records hourly.",
+      "validation": "History paging, retention cutoff and database purge tests; V22 migration."
+    },
+    {
+      "id": "SA09",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Server-side cancellation",
+      "originalTitle": "Cancel only dismisses the operator\u2019s local view",
+      "status": "Implemented",
+      "change": "Tenant-authorized cancellation becomes a terminal database state. The UI posts cancellation and uses the server result rather than only clearing local state.",
+      "validation": "Cancellation regression rejects later submission and checks tenant isolation; frontend tests/build."
+    },
+    {
+      "id": "SA10",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Verification work bounded",
+      "originalTitle": "Presentation cost is not bounded by credential count or concurrency",
+      "status": "Implemented",
+      "change": "Byte, depth, descriptor and credential-count bounds precede cryptography. Per-instance/per-tenant worker limits, a 15-second deadline and a 30-second database lease bound and deduplicate work.",
+      "validation": "Work gate duplicate/deadline tests and session regressions; deployment shared ingress quotas still require staging validation."
+    },
+    {
+      "id": "SA11",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Webhook failures recoverable",
+      "originalTitle": "Undeserializable subscription events are permanently acknowledged",
+      "status": "Implemented",
+      "change": "Unsupported signed subscription events return retryable failures, retain the verified payload in a recovery table, and do not keep a successful dedup marker. Successful retry removes recovery data.",
+      "validation": "Updated Stripe controller tests pass; V23 migration and privileged-operator recovery runbook."
+    },
+    {
+      "id": "SA12",
+      "repo": "trustweave-saas",
+      "priority": "P1",
+      "title": "Frontend dependencies and workbook isolation",
+      "originalTitle": "Frontend dependency graph includes vulnerable spreadsheet parsing",
+      "status": "Implemented",
+      "change": "Upgraded dependencies, replaced vulnerable npm SheetJS with the patched distribution, and moved workbook parsing to a worker with file/row/column/time bounds.",
+      "validation": "0 audit vulnerabilities; 292 frontend tests, lint and production build pass; initial JavaScript remains below 500 KB."
+    },
+    {
+      "id": "SA13",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Release parity gate prepared",
+      "originalTitle": "CI does not yet validate the remediated SDK revision",
+      "status": "Release validation pending",
+      "change": "CI now compares the checked-out SDK against the reviewed runtime-source fingerprint. Publishing the SDK commit, updating the immutable pin and running Linux/staging validation remain outstanding.",
+      "validation": "Local fingerprint check passes. No commit publication, Linux pipeline or staging ingress/shared-limit result is claimed."
+    },
+    {
+      "id": "SA14",
+      "repo": "trustweave-saas",
+      "priority": "P2",
+      "title": "Token grants respect offer state",
+      "originalTitle": "Token creation ignores revoked/redeemed offer status",
+      "status": "Implemented",
+      "change": "Token issuance locks the offer, validates tenant/status/expiry and lifetime, and invalidates earlier unconsumed grants before issuing a replacement.",
+      "validation": "AccessTokenStore integration tests verify one-time consumption, grant rotation and invalid lifetimes."
+    }
+  ],
+  "backendFinalRun": "516 tests, zero failures, two skipped; coverage gate passed"
+}

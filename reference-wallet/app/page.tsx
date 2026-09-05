@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { CredentialDetailPanel } from '@/components/CredentialDetailPanel'
 import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
@@ -9,12 +10,15 @@ import { bootstrap, deleteCredential, resetWallet, type WalletState } from '@/li
 import type { StoredCredential } from '@/lib/storage'
 
 export default function HomePage() {
+  const [bootError, setBootError] = useState<string | null>(null)
   const [state, setState] = useState<WalletState | null>(null)
   const [detailCred, setDetailCred] = useState<StoredCredential | null>(null)
 
   useEffect(() => {
-    setState(bootstrap())
+    void bootstrap().then(setState).catch(error => setBootError(String(error)))
   }, [])
+
+  if (bootError) return <WalletRecovery message={bootError} />
 
   if (!state) {
     return (
@@ -27,18 +31,20 @@ export default function HomePage() {
   const { holder, credentials } = state
   const count = credentials.length
 
-  const onDelete = (id: string) => {
+  const onDelete = async (id: string) => {
     if (!confirm('Remove this credential from your wallet?')) return
-    deleteCredential(id)
+    try { await deleteCredential(id) } catch (error) { setBootError(String(error)); return }
     setDetailCred(null)
     setState({ holder, credentials: credentials.filter((c) => c.id !== id) })
   }
 
-  const onReset = () => {
+  const onReset = async () => {
     if (!confirm('Reset your wallet? This removes all credentials and your digital identity.')) return
-    resetWallet()
-    setDetailCred(null)
-    setState(bootstrap())
+    try {
+      await resetWallet()
+      setDetailCred(null)
+      setState(await bootstrap())
+    } catch (error) { setBootError(String(error)) }
   }
 
   return (
@@ -47,7 +53,7 @@ export default function HomePage() {
         <h2>My credentials</h2>
         <p>
           {count === 0
-            ? 'Your personal library of verified credentials.'
+            ? 'Your credential library. Issuer signatures are checked on import; verifiers check current trust and status.'
             : `${count} credential${count === 1 ? '' : 's'} stored securely on this device.`}
         </p>
       </div>

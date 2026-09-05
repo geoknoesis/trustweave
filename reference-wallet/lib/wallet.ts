@@ -1,3 +1,6 @@
+import { withWalletLock } from './wallet-lock'
+import { verifyImportedCredential } from './credential-verification'
+import { importHolderKeys, loadHolderKeys, signHolderJws, clearHolderKeys } from './key-store'
 /**
  * Wallet facade — the holder-side API surface for the reference wallet.
  *
@@ -22,7 +25,7 @@ import {
 import { decodeSdJwtVc, parseDisclosure } from './sdjwt'
 import { sha256 } from '@noble/hashes/sha256'
 import {
-  buildPlaintextDisclosure,
+  unwrapClaimKey,
   decryptClaimJwe,
   isClaimJwePayload,
 } from './claim-jwe'
@@ -45,21 +48,32 @@ export interface WalletState {
   credentials: StoredCredential[]
 }
 
+let holderInitialization: Promise<HolderIdentity> | undefined
+
 /** Bootstrap. Idempotent — generates a holder identity on first run. */
-export function bootstrap(): WalletState {
-  const holder = loadOrCreateHolder()
-  pruneCredentialsNotBoundToHolder(holder.did)
+export async function bootstrap(): Promise<WalletState> {
+  const holder = await (holderInitialization ??= withWalletLock(loadOrCreateHolder).finally(() => { holderInitialization = undefined }))
+  // Never delete user data merely by opening the wallet; selection enforces holder binding.
   return { holder, credentials: loadCredentials() }
 }
 
-function loadOrCreateHolder(): HolderIdentity {
+async function loadOrCreateHolder(): Promise<HolderIdentity> {
+  // Validate credentials before migrating keys or writing holder metadata.
+  loadCredentials()
   const existing = loadHolder()
   if (existing) {
     const derivedDid = publicKeyToDidKey(b64uDecode(existing.publicKey))
     if (derivedDid !== existing.did) {
       throw new Error('Wallet identity is corrupted. Reset wallet and start again.')
     }
-    return existing
+    const legacySeed = (existing as HolderIdentity & { privateKey?: string }).privateKey
+    if (legacySeed) {
+      await importHolderKeys(existing.did, b64uDecode(legacySeed))
+      saveHolder(existing)
+    } else {
+      await loadHolderKeys(existing.did)
+    }
+    return { did: existing.did, publicKey: existing.publicKey, createdAt: existing.createdAt }
   }
 
   if (loadCredentials().length > 0) {
@@ -72,9 +86,9 @@ function loadOrCreateHolder(): HolderIdentity {
   const holder: HolderIdentity = {
     did: publicKeyToDidKey(keyPair.publicKey),
     publicKey: b64uEncode(keyPair.publicKey),
-    privateKey: b64uEncode(keyPair.privateKey),
     createdAt: new Date().toISOString(),
   }
+  await importHolderKeys(holder.did, keyPair.privateKey)
   saveHolder(holder)
   return holder
 }
@@ -104,12 +118,15 @@ export interface StoreResult {
  * @param selectivelyDisclosable for SD-JWT VC, the issuer-declared list of
  *   selectively-disclosable claim names; ignored for VC-JWT
  */
-export function store(
+export async function store(
   credential: string,
   format: StoredCredential['format'],
   selectivelyDisclosable: string[] = [],
-): StoreResult {
-  const holder = loadOrCreateHolder()
+): Promise<StoreResult> {
+  return withWalletLock(() => {
+  const holder = loadHolder()
+  if (!holder) throw new Error("Open the wallet before importing a credential")
+  verifyImportedCredential(credential, format)
   const meta = format === 'vc+sd-jwt'
     ? extractSdJwtMeta(credential)
     : extractVcJwtMeta(credential)
@@ -124,14 +141,16 @@ export function store(
     preview: meta.preview,
     selectivelyDisclosable,
   }
+  if (!isCredentialBoundToHolder(cred, holder.did)) throw new Error("Credential was not issued to this wallet")
   const result = upsertCredential(cred)
   pruneStaleCredentialsForBusinessIdentity(cred)
-  pruneCredentialsNotBoundToHolder(holder.did)
+  // Never delete user data merely by opening the wallet; selection enforces holder binding.
   if (!isCredentialBoundToHolder(result.credential, holder.did)) {
     deleteCredFromStorage(result.credential.id)
     throw new Error('Credential was not issued to this wallet. Scan the issuer QR again.')
   }
   return result
+  })
 }
 
 /** Drop older copies of the same credential issued to a previous wallet identity. */
@@ -152,12 +171,15 @@ export function list(): StoredCredential[] {
   return loadCredentials()
 }
 
-export function deleteCredential(id: string): void {
-  deleteCredFromStorage(id)
+export async function deleteCredential(id: string): Promise<void> {
+  await withWalletLock(() => deleteCredFromStorage(id))
 }
 
-export function resetWallet(): void {
-  resetWalletStorage()
+export async function resetWallet(): Promise<void> {
+  await withWalletLock(async () => {
+    await clearHolderKeys()
+    resetWalletStorage()
+  })
 }
 
 /**
@@ -185,12 +207,19 @@ export async function createPresentation(
   challenge: string,
   disclose: string[] = [],
 ): Promise<string> {
+  return withWalletLock(async () => {
   const holder = loadHolder()
   if (!holder) throw new Error('Wallet not bootstrapped')
   const creds = loadCredentials().filter((c) => credentialIds.includes(c.id))
-  if (creds.length === 0) throw new Error('No matching credentials to present')
+  if (credentialIds.length === 0 || new Set(credentialIds).size !== credentialIds.length || creds.length !== credentialIds.length)
+    throw new Error('Select existing credentials exactly once')
+  if (creds.length > 1 && creds.some(credential => credential.format === 'vc+sd-jwt'))
+    throw new Error('Share SD-JWT credentials one at a time; multiple selective-disclosure credentials are not supported')
+  for (const credential of creds) {
+    verifyImportedCredential(credential.credential, credential.format)
+    if (!isCredentialBoundToHolder(credential, holder.did)) throw new Error('Credential belongs to another holder')
+  }
 
-  const privateKey = b64uDecode(holder.privateKey)
   const now = Math.floor(Date.now() / 1000)
 
   // SD-JWT VC: spec-compliant single-credential path with KB-JWT.
@@ -199,7 +228,6 @@ export async function createPresentation(
     return presentSdJwtVcWithDecryption({
       sdJwtVc: creds[0].credential,
       selectDisclose: disclose,
-      holderPrivateKey: privateKey,
       holderDid: holder.did,
       audience: verifierUri,
       nonce: challenge,
@@ -222,14 +250,14 @@ export async function createPresentation(
       verifiableCredential: creds.map((c) => c.credential),
     },
   }
-  return signJws(payload, privateKey, `${holder.did}#${holder.did.slice('did:key:'.length)}`)
+  return signHolderJws(payload, holder.did)
+  })
 }
 
-/** Present SD-JWT VC; decrypts JWE claim values to plaintext when sharing (Option A). */
+/** Preserve issuer disclosures; selected encrypted claims carry a content key in the signed KB-JWT extension. */
 async function presentSdJwtVcWithDecryption(args: {
   sdJwtVc: string
   selectDisclose: string[]
-  holderPrivateKey: Uint8Array
   holderDid: string
   audience: string
   nonce: string
@@ -241,12 +269,15 @@ async function presentSdJwtVcWithDecryption(args: {
   const allDisclosures = parts.slice(1)
 
   const selected: string[] = []
+  const claimKeys: Record<string, string> = {}
   for (const d of allDisclosures) {
     const [, name, value] = parseDisclosure(d)
     if (!args.selectDisclose.includes(name)) continue
     if (isClaimJwePayload(value)) {
-      const plaintext = await decryptClaimJwe(value, args.holderPrivateKey)
-      selected.push(buildPlaintextDisclosure(name, plaintext))
+      const key = await unwrapClaimKey(value, args.holderDid)
+      try { claimKeys[b64uEncode(sha256(new TextEncoder().encode(d)))] = b64uEncode(key) }
+      finally { key.fill(0) }
+      selected.push(d) // Preserve the exact issuer-committed salt, name, and ciphertext.
     } else {
       selected.push(d)
     }
@@ -260,13 +291,9 @@ async function presentSdJwtVcWithDecryption(args: {
     aud: args.audience,
     nonce: args.nonce,
     sd_hash: sdHash,
+    ...(Object.keys(claimKeys).length ? { trustweave_claim_keys: claimKeys } : {}),
   }
-  const header = { alg: 'EdDSA', typ: 'kb+jwt', kid: args.holderDid }
-  const encodedHeader = b64uEncodeString(JSON.stringify(header))
-  const encodedPayload = b64uEncodeString(JSON.stringify(kbPayload))
-  const signingInput = `${encodedHeader}.${encodedPayload}`
-  const signature = signEd25519(signingInput, args.holderPrivateKey)
-  const kbJwt = `${signingInput}.${b64uEncode(signature)}`
+  const kbJwt = await signHolderJws(kbPayload, args.holderDid, 'kb+jwt')
 
   return prefix + kbJwt
 }

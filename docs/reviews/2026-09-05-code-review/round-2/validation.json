@@ -1,0 +1,54 @@
+{
+  "scope": "Current working trees including uncommitted remediation; fresh targeted review, not exhaustive formal verification",
+  "heads": {
+    "trustweave": "6c62fa0e9a9a589e359a81db902087c873e98884",
+    "trustweave-saas": "34740a945af0465a42e87892c179fdf1a9a233e1"
+  },
+  "probes": {
+    "cloud": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "saas": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "wallet": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "probe_meaning": "Passing probes confirm undesirable current behavior. These are reproductions, not fixes.",
+  "coverage": "SaaS targeted run excluded aggregate JaCoCo coverage gate because only 3 probe tests ran. No fresh whole-suite/coverage claim.",
+  "audits": {
+    "wallet": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 2,
+      "critical": 2,
+      "total": 6
+    },
+    "saas": {
+      "info": 0,
+      "low": 2,
+      "moderate": 5,
+      "high": 18,
+      "critical": 3,
+      "total": 28
+    }
+  },
+  "limitations": [
+    "No live production or browser automation",
+    "No full SDK/plugin or backend/tenant matrix rerun",
+    "Dependency findings require reachability triage; no exploit attempted",
+    "Concurrency race described from source, not reproduced against a live database"
+  ],
+  "html_validation": "jsdom: 27 finding cards, unique IDs, navigation/local links, repository/priority/search filters, empty state and reset"
+}

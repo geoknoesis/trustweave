@@ -1,5 +1,6 @@
 package org.trustweave.did.tezos
 
+import org.trustweave.core.plugin.ModuleCapabilities
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.base.AbstractDidMethodProvider
@@ -12,14 +13,13 @@ import org.trustweave.did.base.AbstractDidMethodProvider
  * by ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class TezosIntegration : AbstractDidMethodProvider() {
-
     override val name: String = "tezos"
 
     override val supportedMethods: List<String> = listOf("tz")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
         if (methodName != "tz") return null
+        ModuleCapabilities.requireOperations("did:plugins:tezos", setOf("create"))
         return TezosDidMethod(resolveKms(options))
     }
 }
-

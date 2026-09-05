@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
 import { VerifierQrScanner } from '@/components/VerifierQrScanner'
@@ -29,6 +30,7 @@ type Status =
   | { kind: 'error'; message: string }
 
 export default function PresentPage() {
+  const [bootError, setBootError] = useState<string | null>(null)
   const [state, setState] = useState<WalletState | null>(null)
   const [credentials, setCredentials] = useState<StoredCredential[]>([])
   const [phase, setPhase] = useState<Phase>('scan')
@@ -40,8 +42,7 @@ export default function PresentPage() {
   const [scanError, setScanError] = useState<string | null>(null)
 
   useEffect(() => {
-    setState(bootstrap())
-    setCredentials(list())
+    void bootstrap().then(wallet => { setState(wallet); setCredentials(wallet.credentials) }).catch(error => setBootError(String(error)))
   }, [])
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function PresentPage() {
     const cred = credentials.find((c) => c.id === selectedId)
     if (!cred) return
     const initial: Record<string, boolean> = {}
-    for (const name of cred.selectivelyDisclosable) initial[name] = true
+    for (const name of cred.selectivelyDisclosable) initial[name] = false
     setDisclose(initial)
   }, [selectedId, credentials])
 
@@ -152,6 +153,8 @@ export default function PresentPage() {
     setStatus({ kind: 'idle' })
     setScanError(null)
   }
+
+  if (bootError) return <WalletRecovery message={bootError} />
 
   if (!state) {
     return (

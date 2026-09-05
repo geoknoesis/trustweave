@@ -86,14 +86,10 @@ data class CredentialFilter(
     val type: List<String>? = null,
     val subjectId: String? = null,
     val expired: Boolean? = null,
-    /**
-     * When true, returns only credentials that have a [credentialStatus] entry.
-     * Note: this does NOT perform a live revocation check — it only filters by
-     * the presence of a status entry. Credentials may be suspended or valid even
-     * when this filter returns them. Use a [CredentialRevocationManager] for
-     * definitive revocation status.
-     */
-    val revoked: Boolean? = null
+    /** Actual revocation status. Status-aware stores require a resolver for status-list credentials. */
+    val revoked: Boolean? = null,
+    /** Metadata-only filter; does not imply a credential is revoked. */
+    val hasStatusEntry: Boolean? = null,
 )
 
 /**
@@ -122,11 +118,10 @@ class CredentialQueryBuilder {
      * Get the query predicate.
      * This is the public API for getting the predicate function.
      */
-    public fun toPredicate(): (VerifiableCredential) -> Boolean {
-        return { credential ->
+    public fun toPredicate(): (VerifiableCredential) -> Boolean =
+        { credential ->
             filters.all { it(credential) }
         }
-    }
 
     /**
      * Filter by issuer DID.
@@ -165,7 +160,8 @@ class CredentialQueryBuilder {
     fun notExpired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                kotlinx.datetime.Clock.System.now() < expirationDate
+                kotlinx.datetime.Clock.System
+                    .now() < expirationDate
             } ?: true // No expiration date means not expired
         }
     }
@@ -176,7 +172,8 @@ class CredentialQueryBuilder {
     fun expired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                kotlinx.datetime.Clock.System.now() > expirationDate
+                kotlinx.datetime.Clock.System
+                    .now() > expirationDate
             } ?: false
         }
     }
@@ -220,9 +217,12 @@ class CredentialQueryBuilder {
     fun valid() {
         filters.add { credential ->
             credential.proof != null &&
-                (credential.expirationDate?.let { expirationDate ->
-                    kotlinx.datetime.Clock.System.now() < expirationDate
-                } ?: true) &&
+                (
+                    credential.expirationDate?.let { expirationDate ->
+                        kotlinx.datetime.Clock.System
+                            .now() < expirationDate
+                    } ?: true
+                ) &&
                 credential.credentialStatus == null
         }
     }
@@ -260,4 +260,3 @@ class CredentialQueryBuilder {
         requestedCollections.add(collectionId)
     }
 }
-

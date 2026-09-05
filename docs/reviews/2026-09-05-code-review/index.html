@@ -1,0 +1,387 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TrustWeave · Engineering review · 05 September 2026</title><style>
+    :root{--ink:#17243b;--muted:#56657c;--line:#dae2ed;--blue:#205ccc}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f2f5fa;color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1160px;margin:auto;padding:48px 28px 80px}header{background:#13213b;color:white;padding:48px;border-radius:20px}header p{max-width:850px;color:#d2deef}h1{font-size:clamp(32px,5vw,52px);line-height:1.13;margin:15px 0 22px;letter-spacing:-1.5px}h2{font-size:26px;line-height:1.25}h3{font-size:21px;line-height:1.4}h4{margin-bottom:4px}p{margin-top:8px}.eyebrow{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--muted)}header .eyebrow{color:#90b6ff}.stats{display:flex;gap:14px;flex-wrap:wrap}.stats span{border:1px solid #465675;border-radius:8px;padding:8px 16px}nav{display:flex;gap:20px;flex-wrap:wrap;padding:22px 0}a{color:var(--blue);text-underline-offset:3px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.score,section,.finding{background:white;border:1px solid var(--line);border-radius:14px;padding:28px;margin-bottom:24px}.score h2{margin-top:8px}.number{font-size:70px;font-weight:750;line-height:1.2;letter-spacing:-3px}.number span{font-size:24px;color:var(--muted);letter-spacing:0}table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}th,td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-size:12px;text-transform:uppercase}td:first-child,th:first-child{padding-left:0}.pill{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800;vertical-align:middle}.P1{background:#ffe6e5;color:#962b23}.P2{background:#fff0d0;color:#815200}.P3{background:#e8effa;color:#31557c}.note{border-left:4px solid #4374ca;padding-left:18px;color:var(--muted)}.finding{scroll-margin-top:20px}.finding .eyebrow{letter-spacing:.5px}.evidence{margin-top:20px}details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,Consolas,monospace;color:#285292}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f9;padding:16px;border-radius:7px;font:12px/1.6 ui-monospace,Consolas,monospace}.controls{display:flex;gap:15px;flex-wrap:wrap;margin:18px 0}select,input,button{font:inherit;padding:8px 12px;border:1px solid #bac7da;border-radius:7px;background:white;color:var(--ink)}input{flex:1;min-width:180px}footer{font-size:13px;color:var(--muted)}.scroll{overflow-x:auto}li{margin:8px 0}.hidden{display:none}@media(max-width:700px){main{padding:18px 12px}header{padding:28px}.grid{grid-template-columns:1fr}.score,section,.finding{padding:20px}.number{font-size:58px}}@media print{body{background:white;font-size:11px}main{max-width:none;padding:0}header{border-radius:0;padding:25px;print-color-adjust:exact}nav,.controls,.print{display:none}.finding,section,.score{break-inside:avoid;padding:18px}h1{font-size:32px}.number{font-size:44px}details{display:block}pre{font-size:9px}.hidden{display:block}}
+    </style></head><body><main><aside class="note" style="padding:18px;margin:20px 0"><strong>Remediation update:</strong> Changes have been implemented for the 22 findings. <a href="remediation.html">View fixes, validation and release boundaries</a>. Scores below describe the original review snapshot.</aside><header><div class="eyebrow">INDEPENDENT WORKSPACE REVIEW · 05 SEPTEMBER 2026</div><h1>A strong foundation.<br>Trust decisions need tighter contracts.</h1><p>Detailed source review of TrustWeave and TrustWeave SaaS: security boundaries, correctness, storage, protocol integration, delivery quality and user experience.</p><div class="stats"><span>22 findings & improvements</span><span>7 P1 · 14 P2 · 1 P3</span><span>No application code changed</span></div></header><nav aria-label="Report navigation"><a href="#scores">Scores</a><a href="#scope">Scope</a><a href="#index">Finding index</a><a href="#validation">Validation</a><a href="#roadmap">Action plan</a><a href="#findings">Detailed findings</a></nav><div class="grid" id="scores"><article class="score"><div class="eyebrow">REPOSITORY SCORE</div><h2>trustweave</h2><div class="number">69<span>/100</span></div><p>Strong modular foundation; wallet semantics and integration gaps need attention.</p><table><thead><tr><th>Dimension</th><th>Points</th></tr></thead><tbody><tr><td>Security & trust</td><td>21 / 30</td></tr><tr><td>Correctness & data integrity</td><td>16 / 25</td></tr><tr><td>Architecture & maintainability</td><td>16 / 20</td></tr><tr><td>Testing & delivery</td><td>10 / 15</td></tr><tr><td>Developer / user experience</td><td>6 / 10</td></tr></tbody></table></article><article class="score"><div class="eyebrow">REPOSITORY SCORE</div><h2>trustweave-saas</h2><div class="number">58<span>/100</span></div><p>Broad product functionality; verification trust gaps should block production identity checks.</p><table><thead><tr><th>Dimension</th><th>Points</th></tr></thead><tbody><tr><td>Security & trust</td><td>13 / 30</td></tr><tr><td>Correctness & data integrity</td><td>13 / 25</td></tr><tr><td>Architecture & maintainability</td><td>15 / 20</td></tr><tr><td>Testing & delivery</td><td>11 / 15</td></tr><tr><td>Developer / user experience</td><td>6 / 10</td></tr></tbody></table></article></div>
+    <section><h2>Assessment</h2><p><strong>TrustWeave: 69/100.</strong> Modular SPI boundaries, typed outcomes, a candid maturity matrix, guarded network defaults and fail-closed credential verification provide a useful foundation. The main deductions concern wallet data semantics, bounded lifecycle management, uneven format support and incomplete browser-wallet delivery gates.</p><p><strong>TrustWeave SaaS: 58/100.</strong> The product has coherent tenant helpers, schema migrations, billing boundaries, reusable UI components and a passing frontend suite. The largest deductions are for verification decisions that can pass without proving the required holder relationship or satisfying the requested credential requirements. These are release-blocking for identity-dependent workflows.</p><p class="note">Scores are reviewer judgments for the inspected repository scope, not measured test coverage, certification or a security guarantee. The same five weighted dimensions apply to both repositories. Security/correctness gaps dominate deductions; demo limitations and experimental plugins are explicitly scoped. No P0 issue was established.</p></section>
+    <section id="scope"><h2>Scope and method</h2><p>Reviewed the local working trees, traced selected high-risk operations from entry point to storage/verification, inspected CI and frontend behavior, and ran the checks listed below. This is a detailed, risk-based review, not an exhaustive audit of every module or a live penetration test.</p><ul><li><strong>TrustWeave snapshot:</strong> <code>6c62fa0e9a9a589e359a81db902087c873e98884</code>. Existing uncommitted documentation and untracked files were present and preserved. Findings are grounded in source, not inherited from earlier review reports.</li><li><strong>SaaS snapshot:</strong> <code>34740a945af0465a42e87892c179fdf1a9a233e1</code>. Working tree was clean at initial inspection.</li><li><strong>Deep inspection:</strong> OID4VCI receive/verification, file and database wallets, SaaS presentation verification and sessions, auth/tenant helpers, rate limiting, token consumption, selected billing/configuration paths, React routing, credential checks, modal/scanner interaction and reference-wallet storage.</li><li><strong>Limited inspection:</strong> individual cloud KMS/chain adapters, signature-format implementations and native mobile wallets were not comprehensively audited. No live Keycloak, payment provider, blockchain or production ingress was exercised.</li><li><strong>UX evidence:</strong> source and component tests; no authenticated browser usability study or accessibility conformance audit. Timing/performance conclusions are limited to generated bundle measurements.</li></ul><p>Priorities: <strong>P1</strong> address before production reliance or repair delivery gate; <strong>P2</strong> next planned engineering cycle; <strong>P3</strong> lower-risk improvement. Each finding includes a concrete regression scenario; those proposed scenarios are not claimed as executed tests.</p></section>
+    <section><h2>What is already working well</h2><ul><li>The library’s OID4VCI client verifies received credentials and fails closed without a resolver; the default HTTP client is SSRF guarded. A scheme-only helper is therefore not, by itself, evidence of an SSRF vulnerability.</li><li>File wallet paths use SHA-256-derived names and configured encryption uses authenticated AES-GCM. These protect different concerns than the remaining overwrite and status-semantics defects.</li><li>SaaS TenantContext centralizes organization/space checks and provides an owner-only billing boundary. The inspected security configuration denies unspecified routes.</li><li>Production/dev profile conflicts are explicitly guarded; staging rejects ephemeral KMS use and uses schema validation.</li><li>OID4VCI token consumption already uses a conditional database update, a useful model for repairing presentation session transitions.</li><li>Frontend build, lint and 290 tests pass. Shared form, modal, schema and vocabulary infrastructure gives the UX improvements a practical place to land.</li></ul></section>
+    <section id="index"><h2>Prioritized finding index</h2><div class="scroll"><table><thead><tr><th>ID</th><th>Repository</th><th>Priority</th><th>Finding</th><th>Area</th></tr></thead><tbody><tr><td><a href="#T01">T01</a></td><td>trustweave</td><td><span class="pill P1">P1</span></td><td>A status-list reference is treated as proof of revocation</td><td>Correctness</td></tr><tr><td><a href="#T02">T02</a></td><td>trustweave</td><td><span class="pill P1">P1</span></td><td>Database wallet truncates before applying filters</td><td>Data correctness</td></tr><tr><td><a href="#S01">S01</a></td><td>trustweave-saas</td><td><span class="pill P1">P1</span></td><td>Holder proof does not bind the presenter to the credentials</td><td>Security</td></tr><tr><td><a href="#S02">S02</a></td><td>trustweave-saas</td><td><span class="pill P1">P1</span></td><td>Requested credential types and claims are never enforced</td><td>Correctness</td></tr><tr><td><a href="#S03">S03</a></td><td>trustweave-saas</td><td><span class="pill P1">P1</span></td><td>Verification completion is a read–check–write race</td><td>Concurrency</td></tr><tr><td><a href="#S06">S06</a></td><td>trustweave-saas</td><td><span class="pill P1">P1</span></td><td>Public rate-limit identity trusts arbitrary forwarded headers</td><td>Deployment-dependent security</td></tr><tr><td><a href="#S08">S08</a></td><td>trustweave-saas</td><td><span class="pill P1">P1</span></td><td>Backend tests default to a Windows Docker pipe on Linux CI</td><td>CI / portability</td></tr><tr><td><a href="#T03">T03</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>File wallet overwrites are not atomic</td><td>Durability</td></tr><tr><td><a href="#T04">T04</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>Generated storage IDs are not embedded in anonymous credentials</td><td>API consistency</td></tr><tr><td><a href="#T05">T05</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>OID4VCI session maps retain offers and bearer tokens indefinitely</td><td>Resource management</td></tr><tr><td><a href="#T06">T06</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>Holder-side OID4VCI only accepts JSON-LD credentials</td><td>Format gap</td></tr><tr><td><a href="#T07">T07</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>Reference wallet keeps exportable holder keys in localStorage</td><td>Demo-to-production gap</td></tr><tr><td><a href="#T08">T08</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>Reference wallet schema mismatch silently erases identity and credentials</td><td>UX / data loss</td></tr><tr><td><a href="#T09">T09</a></td><td>trustweave</td><td><span class="pill P2">P2</span></td><td>Reference web wallet has no automated CI test gate</td><td>Quality / improvement</td></tr><tr><td><a href="#S04">S04</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Unanswered verification requests never become expired on reads</td><td>UX / correctness</td></tr><tr><td><a href="#S05">S05</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Completed verification checks keep polling every two seconds</td><td>UX / performance</td></tr><tr><td><a href="#S07">S07</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Rate-limiter keys accumulate without eviction</td><td>Resource management</td></tr><tr><td><a href="#S09">S09</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Nested modal Escape handlers can dismiss both dialogs</td><td>Accessibility / UX</td></tr><tr><td><a href="#S10">S10</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Eager page imports produce a large initial JavaScript bundle</td><td>Performance / improvement</td></tr><tr><td><a href="#S11">S11</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>CI tests against mutable library main rather than a recorded revision</td><td>Reproducibility / improvement</td></tr><tr><td><a href="#S12">S12</a></td><td>trustweave-saas</td><td><span class="pill P2">P2</span></td><td>Verifier drops unsupported embedded credential entries</td><td>Format interoperability</td></tr><tr><td><a href="#T10">T10</a></td><td>trustweave</td><td><span class="pill P3">P3</span></td><td>Plugin breadth needs a machine-readable capability contract</td><td>Developer experience / improvement</td></tr></tbody></table></div></section>
+    <section id="validation"><h2>Validation and limitations</h2><table><thead><tr><th>Check</th><th>Observed result</th></tr></thead><tbody><tr><td>Frontend production build ? npm run build</td><td>PASS. TypeScript and Vite completed. Main JS: 1,286.06 kB / 383.86 kB gzip. Vite reported large chunks and mixed static/dynamic imports.</td></tr><tr><td>Frontend tests ? npm test -- --reporter=dot</td><td>PASS. 61 files, 290 tests. React Router and unhandled MSW request warnings appeared; those warnings were not failures.</td></tr><tr><td>Frontend lint ? npm run lint</td><td>PASS. ESLint completed with the configured zero-warning policy.</td></tr><tr><td>Library ? :credentials:plugins:oidc4vci:test :wallet:plugins:file:test</td><td>BUILD SUCCESSFUL. Both selected test tasks were FROM-CACHE; this is restored validation, not a fresh execution of their test bodies. Other build tasks executed.</td></tr><tr><td>SaaS ? :server:test --tests *CredentialVerifierService* --tests *VerificationRequest*</td><td>24 tests passed across 2 suites, 0 failures/errors/skips. Overall command FAILED in the finalized JaCoCo gate: selected-run instruction coverage 0.16 versus 0.40 required. This does not establish whole-suite coverage or a test failure.</td></tr><tr><td>Backend full suite / Linux Docker / live services</td><td>Not run. The Linux Docker endpoint issue is a source/configuration finding. No production credentials or services were used.</td></tr><tr><td>HTML artifact</td><td>PASS: jsdom executed embedded JavaScript; verified 22 finding cards, all navigation targets, unique IDs, repository/priority filters and source expansion. No external assets. Visual browser inspection unavailable: browser tool reported no browser available.</td></tr><tr><td>Library cached suite detail</td><td>Restored XML: OID4VCI 42 tests and file wallet 17 tests; 0 failures/errors/skips. These are cached results, not fresh test-body execution.</td></tr></tbody></table><p class="note">No full repository-wide coverage percentage was measured. Cached Gradle results are identified explicitly. The source findings do not imply a successful exploit against a deployed service. Dependency advisory scanning and external protocol conformance validation were outside this review; no CVE or compliance assertions are made.</p></section>
+    <section id="roadmap"><h2>Recommended action plan</h2><ol><li><strong>Before production identity checks:</strong> fix S01/S02 together as a verified-presentation contract, reject unsupported entries (S12), and add adversarial real-signature tests. Resolve S03 using atomic session transitions.</li><li><strong>Restore trustworthy delivery:</strong> fix Linux Docker discovery (S08), pin the library revision (S11), and run the full backend suite including migrations and tenant-isolation tests on a fresh database.</li><li><strong>Protect storage correctness:</strong> fix revocation semantics and database truncation (T01/T02), then atomic file updates and storage handles (T03/T04).</li><li><strong>Complete the operator workflow:</strong> fix expiry and terminal polling (S04/S05), modal stacking (S09), and give waiting/error states a countdown, retry and clear restart action. Cancel currently only clears local UI state; decide whether it should also invalidate the server request.</li><li><strong>Harden long-lived deployments:</strong> trusted proxy addressing and bounded rate-limit/session storage (S06/S07/T05), with metrics for rejection, queue age, state cardinality and verification latency.</li><li><strong>Unify the product family:</strong> publish an issuer → wallet → verifier format matrix (T06/S12), add wallet CI (T09), and keep demo key custody and destructive schema upgrades out of production use (T07/T08).</li><li><strong>Improve first use and maintainability:</strong> split public-route bundles (S10), generate capability metadata (T10), and revise onboarding/setup documentation to match actual runtime-only Docker builds and current configuration.</li></ol><p>Suggested ownership: identity/security team for presentation contracts; storage/SDK team for wallet semantics; platform team for CI and ingress; frontend team for polling, modal behavior and route budgets. Sequence work by dependencies rather than treating findings as independent cosmetic tickets.</p></section>
+    <div id="findings"><h2>Detailed findings</h2><div class="controls"><label>Repository <select id="repo"><option value="">Both repositories</option><option>trustweave</option><option>trustweave-saas</option></select></label><label>Priority <select id="priority"><option value="">All priorities</option><option>P1</option><option>P2</option><option>P3</option></select></label><input id="search" aria-label="Search findings" placeholder="Search findings and recommendations"><button id="expand">Expand source excerpts</button><button class="print" onclick="window.print()">Print / PDF</button></div><p id="shown" aria-live="polite"></p><article class="finding" id="S01" data-repo="trustweave-saas" data-priority="P1"><div class="eyebrow">trustweave-saas · Security · High — source trace</div><h3><span class="pill P1">P1</span> S01 — Holder proof does not bind the presenter to the credentials</h3><p>A caller with a copied valid credential can generate their own did:key and sign the public request nonce/audience. The verifier checks that signature and independently verifies the credential, but never checks that the credential authorizes this holder or that the JWS covers the presentation contents. The top-level holder can also disagree with proof.verificationMethod, yet is later displayed as the presenter. This undermines identity checks even when all cryptographic operations succeed. Bearer/delegated credentials need an explicit policy rather than a blanket subject-equality rule.</p><h4>Recommended change</h4><p>Use a supported presentation proof format that signs the complete presentation or a canonical digest; validate credential-specific holder authorization (subject/key binding, cnf, or explicit delegation policy). Derive the displayed holder from the verified proof and reject inconsistent identity fields.</p><h4>Regression check</h4><p>Use real signatures: issue to Alice, present with Mallory’s challenge signature, and assert rejection; mutate embedded credentials after signing; mismatch holder and verificationMethod. Keep an explicit authorized-delegation case.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt:253</summary><pre>251:         )
+252: 
+253:         val bound = nonceOk &amp;&amp; audOk
+254:         return HolderBindingOutcome(
+255:             bound = bound,
+256:             checks = checks,
+257:             error = if (bound) null else &quot;Holder proof not bound to expected nonce/audience&quot;,
+258:         )
+259:     }
+260: 
+261:     /** Parse + verify a raw credential string (VC-LD JSON or compact SD-JWT VC) and map to the API shape. */</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt:133</summary><pre>131:             var allValid = true
+132:             val errors = mutableListOf&lt;String&gt;()
+133:             credentials.forEachIndexed { index, credJson -&gt;
+134:                 val label = &quot;Credential #${index + 1}&quot;
+135:                 val result = verifyCredential(credJson, policy)
+136:                 result.fold(
+137:                     onSuccess = { vr -&gt;
+138:                         val response = toResponse(vr, trustEvaluated = policy.checkIssuerTrust)
+139:                         response.checks.forEach { c -&gt;
+140:                             checks += VerificationCheck(&quot;$label — ${c.name}&quot;, c.passed, c.detail)
+141:                         }</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt:216</summary><pre>214:         val verificationMethod = (proof[&quot;verificationMethod&quot;] as? JsonPrimitive)?.content
+215:         val holderField = (presentationJson[&quot;holder&quot;] as? JsonPrimitive)?.content
+216:         val holderDid = listOfNotNull(verificationMethod?.substringBefore(&#x27;#&#x27;), holderField)
+217:             .firstOrNull { it.startsWith(&quot;did:key:z&quot;) }
+218:         if (holderDid == null) {
+219:             checks += VerificationCheck(&quot;Resolve holder DID&quot;, false, &quot;No holder did:key in proof.verificationMethod / holder&quot;)
+220:             return HolderBindingOutcome(false, checks, &quot;No holder did:key in presentation&quot;)
+221:         }
+222:         checks += VerificationCheck(&quot;Resolve holder DID&quot;, true, holderDid)
+223: 
+224:         val claims = runCatching {</pre></details></div></article><article class="finding" id="S02" data-repo="trustweave-saas" data-priority="P1"><div class="eyebrow">trustweave-saas · Correctness · High — source trace</div><h3><span class="pill P1">P1</span> S02 — Requested credential types and claims are never enforced</h3><p>The QR request advertises type and claim requirements, but submitPresentation passes only nonce, audience and trust-space policy to the verifier. presentation_submission is accepted by the controller and ignored. A trusted, valid credential of the wrong type or missing a requested claim can yield VERIFIED.</p><h4>Recommended change</h4><p>Evaluate the submitted descriptor mapping and every required type/claim against verified credential data before marking VERIFIED. Reject missing, duplicate, mismatched or unsatisfied descriptors with an operator-readable reason.</p><h4>Regression check</h4><p>Ask for an employee credential with department; submit a valid unrelated credential or omit department. Both must fail even with a valid holder proof.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt:190</summary><pre>188: 
+189:         val result = runBlocking {
+190:             verifier.verifyPresentation(
+191:                 presentationJson = presentation,
+192:                 expectedNonce = session.nonce,
+193:                 expectedAudience = session.audience,
+194:                 policy = policyResolver.forTrustSpace(session.trustSpaceId),
+195:             )
+196:         }
+197: 
+198:         val holderDid = presentation[&quot;holder&quot;]?.toString()?.trim(&#x27;&quot;&#x27;)</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt:58</summary><pre>56:         @PathVariable sessionId: String,
+57:         @RequestParam(&quot;vp_token&quot;) vpToken: String,
+58:         @RequestParam(&quot;presentation_submission&quot;, required = false) presentationSubmission: String?,
+59:         request: HttpServletRequest,
+60:     ): ResponseEntity&lt;Any&gt; {
+61:         rateLimiter.check(&quot;oid4vp-response:&quot; + clientIp(request), maxRequests = 20, windowSeconds = 60)
+62: 
+63:         val session = requests.submitPresentation(sessionId, vpToken)
+64:             ?: return ResponseEntity.notFound().build()
+65: 
+66:         return when (session.status) {</pre></details></div></article><article class="finding" id="S03" data-repo="trustweave-saas" data-priority="P1"><div class="eyebrow">trustweave-saas · Concurrency · High — source trace</div><h3><span class="pill P1">P1</span> S03 — Verification completion is a read–check–write race</h3><p>Two requests can both read PENDING, verify independently, then overwrite the same session. @Transactional alone supplies no optimistic version or conditional transition. A malformed response can race a legitimate response and overwrite the final verdict. A sequential repeat of a VERIFIED session also returns accepted without checking the new token, because the previous result is returned.</p><h4>Recommended change</h4><p>Claim the pending session with a database conditional update or versioned state transition. Define replay responses separately from a newly accepted submission. Avoid holding a row lock during slow network verification.</p><h4>Regression check</h4><p>Run concurrent valid/invalid submissions using PostgreSQL and assert exactly one terminal transition; repeat with a different token after completion and assert explicit already-used behavior.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt:169</summary><pre>167:     @Transactional
+168:     fun submitPresentation(sessionId: String, vpToken: String): VerificationSession? {
+169:         val session = sessions.findById(sessionId).orElse(null) ?: return null
+170: 
+171:         if (session.status != VerificationSessionStatus.PENDING) {
+172:             // Single-use: a second presentation against a completed session is refused rather than
+173:             // silently overwriting the first verdict.
+174:             return session
+175:         }
+176:         if (session.expiresAt.isBefore(Instant.now())) {
+177:             return sessions.save(</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationSession.kt:107</summary><pre>105: 
+106: @Repository
+107: interface VerificationSessionRepository : JpaRepository&lt;VerificationSession, String&gt; {
+108:     fun findByTrustSpaceIdOrderByCreatedAtDesc(trustSpaceId: Long): List&lt;VerificationSession&gt;
+109: }</pre></details></div></article><article class="finding" id="S04" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · UX / correctness · High — source trace</div><h3><span class="pill P2">P2</span> S04 — Unanswered verification requests never become expired on reads</h3><p>Expiry is applied only when someone submits a presentation. A request that nobody answers remains PENDING in get/list, and its public request object remains available. The operator can wait indefinitely despite the ten-minute lifetime.</p><h4>Recommended change</h4><p>Derive expiration consistently on reads or persist it in a scheduled/conditional transition; return 410 for an expired request object. Show a countdown and a restart action.</p><h4>Regression check</h4><p>Advance a controlled clock beyond TTL without submitting; private get/list must show EXPIRED and public request fetch must return 410.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt:281</summary><pre>279:     }.getOrDefault(false)
+280: 
+281:     fun get(sessionId: String): VerificationSession? = sessions.findById(sessionId).orElse(null)
+282: 
+283:     fun listFor(trustSpaceId: Long): List&lt;VerificationSession&gt; =
+284:         sessions.findByTrustSpaceIdOrderByCreatedAtDesc(trustSpaceId)
+285: 
+286:     private fun rejected(session: VerificationSession, reason: String) = session.copy(
+287:         status = VerificationSessionStatus.REJECTED,
+288:         resultJson = errorJson(reason),
+289:         completedAt = Instant.now(),</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt:36</summary><pre>34:         rateLimiter.check(&quot;oid4vp-request:&quot; + clientIp(request), maxRequests = 30, windowSeconds = 60)
+35:         val session = requests.get(sessionId) ?: return ResponseEntity.notFound().build()
+36:         if (session.status != VerificationSessionStatus.PENDING) {
+37:             return ResponseEntity.status(HttpStatus.GONE)
+38:                 .body(mapOf(&quot;error&quot; to &quot;This verification request has already been used.&quot;))
+39:         }
+40:         return ResponseEntity.ok(requests.requestObject(session))
+41:     }
+42: 
+43:     /**
+44:      * Where the wallet posts the presentation.</pre></details></div></article><article class="finding" id="S05" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · UX / performance · High — source trace</div><h3><span class="pill P2">P2</span> S05 — Completed verification checks keep polling every two seconds</h3><p>session is the original create response and remains PENDING. Poll results are held in polled, so the enabled condition never changes when the server returns VERIFIED or REJECTED. The comment promises polling stops, but the fixed interval continues until reset/unmount.</p><h4>Recommended change</h4><p>Make refetchInterval depend on the latest query data and return false for terminal states; stop at expiry and expose polling errors with a retry action.</p><h4>Regression check</h4><p>With fake timers, return VERIFIED on the first poll and assert no further requests after several intervals. Also test expiry and a disconnected network.</p><div class="evidence"><details><summary>frontend/src/pages/CheckCredential.tsx:78</summary><pre>76:     queryKey: [&#x27;verification-session&#x27;, spaceIdNum, session?.id],
+77:     queryFn: () =&gt; verificationRequestsApi.get(spaceIdNum, session!.id),
+78:     enabled: !!session &amp;&amp; session.status === &#x27;PENDING&#x27;,
+79:     refetchInterval: POLL_MS,
+80:   })
+81: 
+82:   const current = polled ?? session
+83:   const result = current?.result
+84: 
+85:   const toggleType = (vcType: string) =&gt; {
+86:     // The claims on offer belong to a specific type, so a change of type invalidates them.</pre></details></div></article><article class="finding" id="S06" data-repo="trustweave-saas" data-priority="P1"><div class="eyebrow">trustweave-saas · Deployment-dependent security · High code confidence; exposure depends on ingress</div><h3><span class="pill P1">P1</span> S06 — Public rate-limit identity trusts arbitrary forwarded headers</h3><p>The public OID4VP controller uses the first caller-supplied X-Forwarded-For value as the rate-limit key. If the backend is reachable directly or the ingress preserves an untrusted first value, clients can rotate the header and bypass limits. This is conditional on ingress configuration; the repository code does not enforce the trust boundary.</p><h4>Recommended change</h4><p>Resolve client addresses through an explicitly trusted proxy configuration and block direct backend access. Apply an independent endpoint/global budget so a changing address cannot exhaust cryptographic workers.</p><h4>Regression check</h4><p>Send repeated requests with changing forwarded headers directly and through the production ingress configuration. Untrusted headers must not reset the effective budget.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt:75</summary><pre>73: 
+74:     private fun clientIp(request: HttpServletRequest): String {
+75:         val forwarded = request.getHeader(&quot;X-Forwarded-For&quot;)
+76:         return if (!forwarded.isNullOrBlank()) forwarded.substringBefore(&quot;,&quot;).trim()
+77:         else request.remoteAddr ?: &quot;unknown&quot;
+78:     }
+79: }
+80: 
+81: /**
+82:  * The verifier&#x27;s own API: create a request, watch for a result.
+83:  *</pre></details><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt:24</summary><pre>22:     private data class Window(val windowStartEpochSec: Long, val count: Int)
+23: 
+24:     private val windows = ConcurrentHashMap&lt;String, AtomicReference&lt;Window&gt;&gt;()
+25: 
+26:     /**
+27:      * Records one request against [key]. Throws [TooManyRequestsException] when more than
+28:      * [maxRequests] requests are seen for [key] within any [windowSeconds] window.
+29:      */
+30:     fun check(key: String, maxRequests: Int, windowSeconds: Long) {
+31:         val nowSec = System.currentTimeMillis() / 1000L
+32:         var rejected = false</pre></details></div></article><article class="finding" id="S07" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · Resource management · High — source trace</div><h3><span class="pill P2">P2</span> S07 — Rate-limiter keys accumulate without eviction</h3><p>The map resets counters but never removes expired keys. A long-running service accumulates an entry for every distinct key, including attacker-selected header values on the path in S06. Multiple instances also maintain independent limits, as the class documentation acknowledges.</p><h4>Recommended change</h4><p>Use bounded expiring storage, remove idle windows, and publish cardinality/rejection metrics. Use a shared limiter or ingress enforcement when deploying multiple instances.</p><h4>Regression check</h4><p>Generate many unique keys, advance beyond their TTL, and assert memory/state returns to a bounded baseline; test multi-instance effective limits.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt:34</summary><pre>32:         var rejected = false
+33: 
+34:         val ref = windows.computeIfAbsent(key) { AtomicReference(Window(nowSec, 0)) }
+35:         ref.updateAndGet { current -&gt;
+36:             if (nowSec - current.windowStartEpochSec &gt;= windowSeconds) {
+37:                 // Window elapsed: start a fresh window counting this request.
+38:                 Window(nowSec, 1)
+39:             } else if (current.count &gt;= maxRequests) {
+40:                 // Over the limit within the current window: reject, do not increment.
+41:                 rejected = true
+42:                 current</pre></details></div></article><article class="finding" id="S08" data-repo="trustweave-saas" data-priority="P1"><div class="eyebrow">trustweave-saas · CI / portability · High — configuration mismatch; Linux run not performed</div><h3><span class="pill P1">P1</span> S08 — Backend tests default to a Windows Docker pipe on Linux CI</h3><p>The test task unconditionally falls back to npipe:////./pipe/dockerDesktopLinuxEngine and injects it into both environment and system properties. The Ubuntu workflow does not set DOCKER_HOST. On Linux runners without that variable, Testcontainers receives a Windows endpoint instead of discovering the local Unix socket. This threatens the migration and smoke-boot checks the workflow is meant to guarantee.</p><h4>Recommended change</h4><p>Apply the named-pipe fallback only on Windows; otherwise leave Docker discovery untouched. Keep an explicit environment override for remote engines.</p><h4>Regression check</h4><p>Run the integration suite on Ubuntu with DOCKER_HOST unset and verify PostgreSQL containers start. Retain a Windows Docker Desktop check.</p><div class="evidence"><details><summary>server/build.gradle.kts:169</summary><pre>167:     // reads from different sources depending on the version. The Gradle test worker does not inherit
+168:     // the shell environment, so both must be set explicitly here.
+169:     val dockerHost = System.getenv(&quot;DOCKER_HOST&quot;) ?: &quot;npipe:////./pipe/dockerDesktopLinuxEngine&quot;
+170:     environment(&quot;DOCKER_HOST&quot;, dockerHost)
+171:     systemProperty(&quot;DOCKER_HOST&quot;, dockerHost)
+172:     testLogging {
+173:         events(&quot;passed&quot;, &quot;skipped&quot;, &quot;failed&quot;)
+174:     }
+175:     finalizedBy(tasks.jacocoTestReport)
+176: }
+177: </pre></details><details><summary>.github/workflows/ci.yml:32</summary><pre>30:   frontend:
+31:     name: Frontend
+32:     runs-on: ubuntu-latest
+33:     defaults:
+34:       run:
+35:         working-directory: frontend
+36:     steps:
+37:       - uses: actions/checkout@v4
+38: 
+39:       - uses: actions/setup-node@v4
+40:         with:</pre></details></div></article><article class="finding" id="S09" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · Accessibility / UX · High — source trace</div><h3><span class="pill P2">P2</span> S09 — Nested modal Escape handlers can dismiss both dialogs</h3><p>Every Modal attaches a keydown listener to document. The issuer form can open a scanner as a second modal. stopPropagation does not suppress other listeners on the same document, so Escape can close the underlying form as well as the scanner; both focus traps also remain active. Form input may be lost.</p><h4>Recommended change</h4><p>Manage a modal stack and let only its top entry handle Escape/Tab; mark the background inert and restore focus to the scanner trigger. Keep accessible names for ReactNode titles via aria-labelledby.</p><h4>Regression check</h4><p>Open the issuer form, enter values, open its scanner, press Escape: only the scanner should close, values should remain, and focus should return to its trigger.</p><div class="evidence"><details><summary>frontend/src/components/ui/Modal.tsx:44</summary><pre>42: 
+43:     const onKey = (e: KeyboardEvent) =&gt; {
+44:       if (e.key === &#x27;Escape&#x27; &amp;&amp; dismissable) { e.stopPropagation(); onClose(); return }
+45: 
+46:       if (e.key === &#x27;Tab&#x27; &amp;&amp; dialogRef.current) {
+47:         const focusable = Array.from(dialogRef.current.querySelectorAll&lt;HTMLElement&gt;(FOCUSABLE))
+48:         if (focusable.length === 0) { e.preventDefault(); return }
+49:         const first = focusable[0]
+50:         const last = focusable[focusable.length - 1]
+51:         if (e.shiftKey) {
+52:           if (document.activeElement === first || document.activeElement === dialogRef.current) {</pre></details><details><summary>frontend/src/components/IssueCredentialModal.tsx:388</summary><pre>386:     &lt;/Modal&gt;
+387: 
+388:     {scanHolderOpen &amp;&amp; (
+389:       &lt;HolderDidScannerModal
+390:         onClose={() =&gt; setScanHolderOpen(false)}
+391:         onScan={(did) =&gt; setSubjectDid(did)}
+392:       /&gt;
+393:     )}
+394:     &lt;/&gt;
+395:   )
+396: }</pre></details><details><summary>frontend/src/components/DidScannerModal.tsx:58</summary><pre>56:       title={title}
+57:       size=&quot;md&quot;
+58:       z={60}
+59:       onClose={close}
+60:       footer={
+61:         &lt;button type=&quot;button&quot; onClick={close} className=&quot;btn btn-secondary btn-sm&quot;&gt;
+62:           Cancel
+63:         &lt;/button&gt;
+64:       }
+65:     &gt;
+66:       {hint &amp;&amp; &lt;p className=&quot;text-sm text-surface-500 mb-4&quot;&gt;{hint}&lt;/p&gt;}</pre></details></div></article><article class="finding" id="S10" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · Performance / improvement · High — production build measurement</div><h3><span class="pill P2">P2</span> S10 — Eager page imports produce a large initial JavaScript bundle</h3><p>The production build generated a 1,286.06 kB main JS chunk (383.86 kB gzip), plus a 429.03 kB spreadsheet chunk. App.tsx imports route pages eagerly, so public claim/verification visitors load much of the authenticated application. This is an observed bundle cost; no mobile timing benchmark was run.</p><h4>Recommended change</h4><p>Introduce route-level lazy loading with useful loading/error boundaries, isolate visualization/scanner dependencies, and enforce bundle budgets for public routes.</p><h4>Regression check</h4><p>Compare generated chunks and cold-load network traces for /claim and /verify on a throttled mobile profile; set a performance budget based on those measurements.</p><div class="evidence"><details><summary>frontend/src/App.tsx:9</summary><pre>7: import { Login } from &#x27;./components/Login&#x27;
+8: import Layout from &#x27;./components/Layout&#x27;
+9: import Dashboard from &#x27;./pages/Dashboard&#x27;
+10: import TrustSpaces from &#x27;./pages/TrustSpaces&#x27;
+11: import Issuers from &#x27;./pages/Issuers&#x27;
+12: import CheckCredential from &#x27;./pages/CheckCredential&#x27;
+13: import CredentialTypes from &#x27;./pages/CredentialTypes&#x27;
+14: import StarterKits from &#x27;./pages/StarterKits&#x27;
+15: import AuditLogs from &#x27;./pages/AuditLogs&#x27;
+16: import Credentials, { DocumentsRedirect } from &#x27;./pages/Credentials&#x27;
+17: import PeopleAndAgents from &#x27;./pages/PeopleAndAgents&#x27;</pre></details></div></article><article class="finding" id="S11" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · Reproducibility / improvement · High — source trace</div><h3><span class="pill P2">P2</span> S11 — CI tests against mutable library main rather than a recorded revision</h3><p>The same SaaS commit can resolve different library source on successive CI runs. Passing results cannot reliably identify the dependency revision that was tested, and a library change can break an unrelated SaaS pull request.</p><h4>Recommended change</h4><p>Record a library commit or release version in the repository, use it for CI and release builds, and update it through explicit integration changes. Publish both commit IDs with build artifacts.</p><h4>Regression check</h4><p>Re-run the same SaaS revision after library main advances and verify the dependency graph and selected library commit remain identical.</p><div class="evidence"><details><summary>.github/workflows/ci.yml:74</summary><pre>72:           repository: geoknoesis/trustweave
+73:           # Defaults to main; workflow_dispatch can point at a branch carrying an unmerged fix.
+74:           ref: ${{ inputs.trustweave_ref || &#x27;main&#x27; }}
+75:           path: trustweave-lib
+76:           token: ${{ secrets.TRUSTWEAVE_REPO_TOKEN || github.token }}
+77: 
+78:       - name: Place the library where the composite build expects it
+79:         run: mv trustweave-lib ../trustweave
+80: 
+81:       - uses: actions/setup-java@v4
+82:         with:</pre></details></div></article><article class="finding" id="S12" data-repo="trustweave-saas" data-priority="P2"><div class="eyebrow">trustweave-saas · Format interoperability · High — source trace</div><h3><span class="pill P2">P2</span> S12 — Verifier drops unsupported embedded credential entries</h3><p>extractCredentials silently removes non-object array entries, although the service promises to verify every embedded credential. A mixed array containing a valid JSON credential and an invalid string can pass based solely on the JSON object. Compact credentials are also unsupported in this path, while the reference wallet stores compact JWT/SD-JWT credentials.</p><h4>Recommended change</h4><p>Reject unsupported entries explicitly, or dispatch each recognized format to its verifier. Advertise the accepted formats at request creation so incompatible wallets fail early with actionable guidance.</p><h4>Regression check</h4><p>Submit [validObject, invalidString], an all-compact array, and a mixed supported-format presentation. Every element must be verified or cause explicit rejection.</p><div class="evidence"><details><summary>server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt:174</summary><pre>172:     private fun extractCredentials(presentationJson: JsonObject): List&lt;JsonObject&gt; {
+173:         return when (val node = presentationJson[&quot;verifiableCredential&quot;]) {
+174:             is JsonArray -&gt; node.mapNotNull { it as? JsonObject }
+175:             is JsonObject -&gt; listOf(node)
+176:             else -&gt; emptyList()
+177:         }
+178:     }
+179: 
+180:     private data class HolderBindingOutcome(
+181:         val bound: Boolean,
+182:         val checks: List&lt;VerificationCheck&gt;,</pre></details></div></article><article class="finding" id="T01" data-repo="trustweave" data-priority="P1"><div class="eyebrow">trustweave · Correctness · High — source trace</div><h3><span class="pill P1">P1</span> T01 — A status-list reference is treated as proof of revocation</h3><p>FileWallet classifies any credential with credentialStatus as revoked, excludes it from valid statistics, and uses the same shortcut in revoked filtering. DatabaseWallet also uses status-entry presence as its filter proxy. An active credential issued with a status-list reference is therefore mislabeled or filtered out. Status support is metadata; it is not the current status bit.</p><h4>Recommended change</h4><p>Resolve status through the revocation abstraction or expose an explicit unknown status when offline. Align filter and statistics semantics across storage providers, and distinguish a status-capable credential from a revoked one.</p><h4>Regression check</h4><p>Store two credentials pointing to a status list with one active bit and one revoked bit; assert correct filtering and statistics. Include unavailable-status behavior.</p><div class="evidence"><details><summary>wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt:310</summary><pre>308:         }
+309:         if (filter.revoked != null) {
+310:             val isRevoked = credential.credentialStatus != null
+311:             if (isRevoked != filter.revoked) return false
+312:         }
+313:         return true
+314:     }
+315: 
+316:     /**
+317:      * Get wallet statistics.
+318:      */</pre></details><details><summary>wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt:337</summary><pre>335:                 } ?: false
+336:             },
+337:             revokedCredentials = allCredentials.count { it.credentialStatus != null },
+338:             collectionsCount = 0, // Would require collection implementation
+339:             tagsCount = 0, // Would require tag implementation
+340:             archivedCount = 0 // Would require archive implementation
+341:         )
+342:     }
+343: 
+344:     /**
+345:      * Encrypt data using AES/GCM/NoPadding with a fresh random 12-byte IV.</pre></details><details><summary>wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt:1046</summary><pre>1044:             // filter.revoked=true  → returns only credentials that have a status entry
+1045:             // filter.revoked=false → returns only credentials that have no status entry
+1046:             val hasStatusEntry = credential.credentialStatus != null
+1047:             if (hasStatusEntry != filter.revoked) return false
+1048:         }
+1049:         return true
+1050:     }
+1051: 
+1052:     /**
+1053:      * Get wallet statistics.
+1054:      */</pre></details></div></article><article class="finding" id="T02" data-repo="trustweave" data-priority="P1"><div class="eyebrow">trustweave · Data correctness · High — source trace</div><h3><span class="pill P1">P1</span> T02 — Database wallet truncates before applying filters</h3><p>list() fetches at most 1,000 rows without stable ordering and then applies the filter in memory. A matching credential outside that arbitrary prefix is invisible. A log warning does not inform API consumers that their result is incomplete; presentation selection can wrongly conclude no suitable credential exists.</p><h4>Recommended change</h4><p>Push supported filters into SQL and introduce stable cursor pagination. Until the API can express pagination, return an explicit truncation/error result instead of an apparently complete list.</p><h4>Regression check</h4><p>Insert more than 1,000 credentials with the only matching item outside the initial window; verify it is discoverable and pagination has no duplicates or omissions.</p><div class="evidence"><details><summary>wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt:348</summary><pre>346:                     SELECT credential_data FROM credentials
+347:                     WHERE wallet_id = ? AND archived = FALSE
+348:                     LIMIT 1000
+349:                 &quot;&quot;&quot;).use { stmt -&gt;
+350:                     stmt.setString(1, walletId)
+351:                     stmt.executeQuery().use { rs -&gt;
+352:                         while (rs.next()) {
+353:                             val credentialJson = rs.getString(&quot;credential_data&quot;)
+354:                             rawResults.add(json.decodeFromString(VerifiableCredential.serializer(), credentialJson))
+355:                         }
+356:                     }</pre></details><details><summary>wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt:369</summary><pre>367: 
+368:             // Apply in-memory filter after the truncation check so the warning fires on raw size.
+369:             if (filter == null) rawResults else rawResults.filter { matchesFilter(it, filter) }
+370:         } catch (e: Exception) {
+371:             if (e is CancellationException) throw e
+372:             throw WalletException.StorageError(
+373:                 operation = &quot;list&quot;,
+374:                 reason = &quot;Failed to list credentials: ${e.message}&quot;,
+375:                 cause = e
+376:             )
+377:         }</pre></details></div></article><article class="finding" id="T03" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · Durability · High — source trace</div><h3><span class="pill P2">P2</span> T03 — File wallet overwrites are not atomic</h3><p>Updating an existing credential truncates the live file before the replacement bytes are safely written. A process crash or disk failure can destroy the previous valid credential. Readers can observe a partial file; list() then logs and skips it. AES-GCM detects corruption but cannot restore the lost record.</p><h4>Recommended change</h4><p>Write to a sibling temporary file, flush it as required by the durability contract, and atomically replace the target. Coordinate writes per credential and define recovery/consistency for metadata sidecars.</p><h4>Regression check</h4><p>Inject failure during overwrite and concurrent reads. After restart, readers must see either the full old record or the full new record, never partial content.</p><div class="evidence"><details><summary>wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt:178</summary><pre>176:         }
+177: 
+178:         Files.write(credentialFile, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+179: 
+180:         // Initialize metadata if not exists. The sidecar embeds the raw credential id
+181:         // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM
+182:         // scheme as the credential file whenever an encryption key is configured.
+183:         val metadataFile = resolveDataFile(metadataDir, id)
+184:         if (!Files.exists(metadataFile)) {
+185:             val metadata = buildJsonObject {
+186:                 put(&quot;credentialId&quot;, id)</pre></details></div></article><article class="finding" id="T04" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · API consistency · High — source trace</div><h3><span class="pill P2">P2</span> T04 — Generated storage IDs are not embedded in anonymous credentials</h3><p>store() returns a generated ID when credential.id is absent but serializes the unchanged credential. A subsequent list() returns an item with no ID, leaving callers unable to recover the storage handle for get/delete from that item. Re-storing the same anonymous credential creates another random entry.</p><h4>Recommended change</h4><p>Expose a stored-record wrapper with a stable storage ID independent of the signed credential ID. Do not silently edit a signed credential to insert an ID, which could invalidate its proof.</p><h4>Regression check</h4><p>Store an ID-less credential, restart, list records and delete the intended record using the returned storage handle. Verify the signed credential bytes remain unchanged.</p><div class="evidence"><details><summary>wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt:168</summary><pre>166:     // CredentialStorage implementation
+167:     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
+168:         val id = credential.id?.value ?: UUID.randomUUID().toString()
+169:         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
+170: 
+171:         val credentialFile = resolveDataFile(credentialsDir, id)
+172:         val content = if (secretKey != null) {
+173:             encrypt(credentialJson)
+174:         } else {
+175:             credentialJson.toByteArray(Charsets.UTF_8)
+176:         }</pre></details></div></article><article class="finding" id="T05" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · Resource management · High — source trace</div><h3><span class="pill P2">P2</span> T05 — OID4VCI session maps retain offers and bearer tokens indefinitely</h3><p>The service retains offers, requests, access tokens and nonces in concurrent maps with no removal/clear path in the class. A long-lived issuer-bound service grows with every exchange and keeps sensitive token material after completion. Application-scoped use makes this an availability and retention concern.</p><h4>Recommended change</h4><p>Add bounded TTL-backed exchange storage, remove completed/cancelled request secrets, and define a lifecycle close/purge operation. Preserve deferred requests only until their documented expiry.</p><h4>Regression check</h4><p>Complete and abandon large numbers of exchanges using a fake clock; verify bounded cardinality, token removal, and continued availability of valid deferred exchanges.</p><div class="evidence"><details><summary>credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt:80</summary><pre>78:     private val verifier: CredentialService? = didResolver?.let { credentialService(it) }
+79: 
+80:     private val offers = ConcurrentHashMap&lt;String, Oidc4VciOffer&gt;()
+81:     private val requests = ConcurrentHashMap&lt;String, Oidc4VciCredentialRequest&gt;()
+82:     private val accessTokens = ConcurrentHashMap&lt;String, String&gt;() // requestId -&gt; accessToken
+83:     private val cNonces = ConcurrentHashMap&lt;String, String&gt;()
+84: 
+85:     // requestId -&gt; c_nonce from token/credential endpoint
+86:     @Volatile private var metadata: CredentialIssuerMetadata? = null
+87: 
+88:     /** Token endpoint resolved from the authorization server&#x27;s RFC 8414 metadata (cached). */</pre></details><details><summary>credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt:82</summary><pre>80:     private val offers = ConcurrentHashMap&lt;String, Oidc4VciOffer&gt;()
+81:     private val requests = ConcurrentHashMap&lt;String, Oidc4VciCredentialRequest&gt;()
+82:     private val accessTokens = ConcurrentHashMap&lt;String, String&gt;() // requestId -&gt; accessToken
+83:     private val cNonces = ConcurrentHashMap&lt;String, String&gt;()
+84: 
+85:     // requestId -&gt; c_nonce from token/credential endpoint
+86:     @Volatile private var metadata: CredentialIssuerMetadata? = null
+87: 
+88:     /** Token endpoint resolved from the authorization server&#x27;s RFC 8414 metadata (cached). */
+89:     @Volatile private var resolvedTokenEndpoint: String? = null
+90: </pre></details></div></article><article class="finding" id="T06" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · Format gap · High — source trace</div><h3><span class="pill P2">P2</span> T06 — Holder-side OID4VCI only accepts JSON-LD credentials</h3><p>The new holder verification path correctly fails closed, but rejects compact JWT and SD-JWT credentials. The reference wallet stores those formats and the SaaS has multiple issuance formats, so the product family does not yet offer a consistent acceptance matrix. This is a documented capability gap, not an unverified-signature vulnerability.</p><h4>Recommended change</h4><p>Expose supported receive formats through capability discovery and constrain offers accordingly. Add compact-format parsing and verification before claiming those formats work through this SDK flow.</p><h4>Regression check</h4><p>Run issuance-to-wallet-to-verifier contract scenarios for each advertised format, with explicit expected rejection for unsupported combinations.</p><div class="evidence"><details><summary>credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt:444</summary><pre>442:      * Parses the `credential` member of an issuer response into a [VerifiableCredential].
+443:      *
+444:      * Only VC-LD (JSON-LD) is supported today. Compact representations (JWT / SD-JWT-VC) have no
+445:      * compact-to-model parser in `credential-api`, so they are rejected rather than trusted.
+446:      */
+447:     private suspend fun parseIssuedCredential(
+448:         response: JsonObject,
+449:         expectedIssuer: String,
+450:     ): VerifiableCredential {
+451:         val raw = response[&quot;credential&quot;]
+452:         if (raw == null || raw is JsonNull) {</pre></details><details><summary>credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt:463</summary><pre>461:                 is JsonPrimitive -&gt; throw Oidc4VciException.CredentialVerificationFailed(
+462:                     reason =
+463:                         &quot;compact (JWT / SD-JWT-VC) issued credentials are not yet verified; &quot; +
+464:                             &quot;only VC-LD (JSON-LD) is supported&quot;,
+465:                     credentialIssuer = expectedIssuer,
+466:                 )
+467:                 else -&gt; throw Oidc4VciException.CredentialVerificationFailed(
+468:                     reason = &quot;unsupported &#x27;credential&#x27; representation: ${raw::class.simpleName}&quot;,
+469:                     credentialIssuer = expectedIssuer,
+470:                 )
+471:             }</pre></details></div></article><article class="finding" id="T07" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · Demo-to-production gap · High — explicitly documented demo limitation</div><h3><span class="pill P2">P2</span> T07 — Reference wallet keeps exportable holder keys in localStorage</h3><p>The browser reference wallet stores the holder private key as cleartext base64url. Any script executing in its origin can read it. The source clearly labels this a walking-skeleton demo limitation, so this finding is a promotion gate for a production wallet, not a claim that the library KMS is insecure.</p><h4>Recommended change</h4><p>Keep the demo limitation visible in the UI and deployment documentation. Before production use, implement platform-backed key custody, user verification, recovery and a credential export strategy appropriate to supported algorithms.</p><h4>Regression check</h4><p>Verify production wallet code cannot export raw private key material and that recovery, device loss and signing cancellation are explicitly tested.</p><div class="evidence"><details><summary>reference-wallet/lib/storage.ts:23</summary><pre>21:   did: string
+22:   publicKey: string  // base64url
+23:   privateKey: string  // base64url
+24:   createdAt: string
+25: }
+26: 
+27: export interface StoredCredential {
+28:   id: string  // local UUID for the wallet&#x27;s record
+29:   format: &#x27;vc+jwt&#x27; | &#x27;vc+sd-jwt&#x27;
+30:   credential: string  // the credential as-issued (VC-JWT or SD-JWT VC compact form)
+31:   receivedAt: string</pre></details><details><summary>reference-wallet/lib/storage.ts:75</summary><pre>73:   if (!isBrowser()) throw new Error(&#x27;saveHolder requires a browser environment&#x27;)
+74:   ensureSchemaVersion()
+75:   window.localStorage.setItem(HOLDER_KEY, JSON.stringify(holder))
+76: }
+77: 
+78: export function loadCredentials(): StoredCredential[] {
+79:   if (!isBrowser()) return []
+80:   ensureSchemaVersion()
+81:   const raw = window.localStorage.getItem(CREDENTIALS_KEY)
+82:   return raw ? (JSON.parse(raw) as StoredCredential[]) : []
+83: }</pre></details></div></article><article class="finding" id="T08" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · UX / data loss · High — source trace</div><h3><span class="pill P2">P2</span> T08 — Reference wallet schema mismatch silently erases identity and credentials</h3><p>Any non-current stored version triggers removal of the holder identity and every credential. This includes older and newer versions, so an upgrade or rollback can silently change the holder DID and destroy access to previously issued credentials. The source accepts this for the demo; it is still a disruptive demo-user experience.</p><h4>Recommended change</h4><p>Migrate supported older schemas without rotating identity. For unknown/newer versions, stop with a recovery/export screen and require an explicit reset action.</p><h4>Regression check</h4><p>Open v1, v2, future-version and corrupt-version stores; preserve identity and credentials or present a recoverable error. Never delete records merely by loading the page.</p><div class="evidence"><details><summary>reference-wallet/lib/storage.ts:55</summary><pre>53:   if (!existing) {
+54:     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
+55:   } else if (Number(existing) !== CURRENT_VERSION) {
+56:     // v1 → v2: storage shape changed (added `format`, `credential` replaces `vcJwt`,
+57:     // added `selectivelyDisclosable`). No automatic migration — wipe and let the user
+58:     // re-receive. Acceptable for a demo wallet; a real wallet would migrate in place.
+59:     window.localStorage.removeItem(HOLDER_KEY)
+60:     window.localStorage.removeItem(CREDENTIALS_KEY)
+61:     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
+62:   }
+63: }</pre></details></div></article><article class="finding" id="T09" data-repo="trustweave" data-priority="P2"><div class="eyebrow">trustweave · Quality / improvement · High — source trace</div><h3><span class="pill P2">P2</span> T09 — Reference web wallet has no automated CI test gate</h3><p>The reference-wallet package defines build, lint and typecheck commands but no test command. The inspected root CI workflow runs only Gradle checks. Browser storage migrations, consent, QR flows and cross-repository presentation contracts therefore need an independent automated gate; Kotlin green builds do not validate them.</p><h4>Recommended change</h4><p>Add a wallet CI job for clean install, typecheck/build and focused browser tests, including credential import, selective disclosure, storage upgrades and a SaaS verification round trip.</p><h4>Regression check</h4><p>Introduce a deliberate wallet TypeScript error and a broken storage migration in a test branch; CI should reject both. Add at least one real-signature end-to-end contract fixture.</p><div class="evidence"><details><summary>reference-wallet/package.json:6</summary><pre>4:   &quot;private&quot;: true,
+5:   &quot;description&quot;: &quot;Walking-skeleton holder wallet demo for the TrustWeave Wallet SDK&quot;,
+6:   &quot;scripts&quot;: {
+7:     &quot;dev&quot;: &quot;next dev&quot;,
+8:     &quot;build&quot;: &quot;next build&quot;,
+9:     &quot;start&quot;: &quot;next start&quot;,
+10:     &quot;lint&quot;: &quot;next lint&quot;,
+11:     &quot;typecheck&quot;: &quot;tsc --noEmit&quot;,
+12:     &quot;resize-demo-photos&quot;: &quot;python scripts/resize-demo-photos.py&quot;,
+13:     &quot;generate-subject-portraits&quot;: &quot;python scripts/generate-subject-portraits.py&quot;
+14:   },</pre></details><details><summary>.github/workflows/ci.yml:37</summary><pre>35: 
+36:       - name: Build with Gradle
+37:         run: ./gradlew build --no-daemon --stacktrace</pre></details></div></article><article class="finding" id="T10" data-repo="trustweave" data-priority="P3"><div class="eyebrow">trustweave · Developer experience / improvement · High — source trace</div><h3><span class="pill P3">P3</span> T10 — Plugin breadth needs a machine-readable capability contract</h3><p>The maturity matrix is a useful and candid strength, but experimental modules and explicit stubs still exist alongside production-oriented core APIs. Integrators need to discover supported operations/formats before selecting a plugin, rather than finding a failure during a real workflow.</p><h4>Recommended change</h4><p>Publish operation-level capabilities and maturity with plugin metadata; validate required capabilities during startup and generate the human-readable maturity table from the same source.</p><h4>Regression check</h4><p>Select a stub or unsupported operation in a configuration fixture and assert a clear startup validation error rather than a late workflow failure.</p><div class="evidence"><details><summary>docs/api-reference/module-maturity.md:17</summary><pre>15: # Module maturity matrix
+16: 
+17: TrustWeave is a multi-module repository. **Publishing a JAR to Maven Central does not imply the module is complete or recommended for all production use cases.** This matrix states intended support level for integrators.
+18: 
+19: | Tier | Meaning |
+20: |------|--------|
+21: | **Supported (GA)** | Intended for production use when configured correctly; breaking API changes follow semver + [Deprecation policy](deprecation-policy.md). |
+22: | **Supported with provider** | Core APIs are stable; you must use a mature KMS/DID/anchor **implementation** you trust. |
+23: | **Experimental** | APIs may change; may contain `TODO` or stub behavior—verify in your environment before production. |
+24: 
+25: ## Core platform (typical SDK dependencies)</pre></details><details><summary>anchors/plugins/starknet/src/main/kotlin/org/trustweave/anchor/starknet/StarkNetBlockchainAnchorClient.kt:80</summary><pre>78:             chainId = chainId,
+79:             operation = &quot;submitTransaction&quot;,
+80:             reason = &quot;The StarkNet anchor client is a stub and is not implemented: &quot; +
+81:                 &quot;transaction submission would require a StarkNet SDK and a Cairo storage &quot; +
+82:                 &quot;contract, neither of which exists.&quot;
+83:         )
+84:     }
+85: 
+86:     override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
+87:         throw BlockchainException.UnsupportedOperation(
+88:             chainId = chainId,</pre></details></div></article></div><footer>Prepared from local source on 05 September 2026. Self-contained HTML; no network requests, analytics or external assets. Source excerpts preserve snapshot line numbers and remain available when the report is shared.</footer></main><script>
+    const cards=[...document.querySelectorAll('.finding')];function filter(){const r=document.querySelector('#repo').value,p=document.querySelector('#priority').value,q=document.querySelector('#search').value.toLowerCase();let n=0;cards.forEach(c=>{const visible=(!r||c.dataset.repo===r)&&(!p||c.dataset.priority===p)&&(!q||c.textContent.toLowerCase().includes(q));c.classList.toggle('hidden',!visible);if(visible)n++});document.querySelector('#shown').textContent=n+' of '+cards.length+' findings shown'}['repo','priority','search'].forEach(id=>document.getElementById(id).addEventListener('input',filter));document.getElementById('expand').addEventListener('click',()=>{const all=[...document.querySelectorAll('details')],open=all.some(d=>!d.open);all.forEach(d=>d.open=open);document.getElementById('expand').textContent=open?'Collapse source excerpts':'Expand source excerpts'});window.addEventListener('hashchange',()=>{const target=document.querySelector(location.hash);if(target?.classList.contains('finding')){document.querySelector('#repo').value='';document.querySelector('#priority').value='';document.querySelector('#search').value='';filter();target.scrollIntoView()}});filter();</script></body></html>

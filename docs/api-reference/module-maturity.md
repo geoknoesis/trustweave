@@ -101,3 +101,7 @@ The root build applies `maven-publish` to Kotlin/JVM library subprojects so arti
 - [Production integration checklist](../getting-started/production-integration-checklist.md)
 - [Result types guide](result-types-guide.md)
 - Security policy (repository root `SECURITY.md`)
+
+## Operation-level capability checks
+
+See the [generated assessed capability table](assessed-capabilities.md). The runtime catalog is deliberately conservative: unlisted modules are unassessed. Applications can fail at startup using `ModuleCapabilities.requireOperations(module, required)`. Plugin registry configurations can also specify `requiredCapabilities` to validate feature requirements before lifecycle initialization.

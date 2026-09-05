@@ -1,5 +1,6 @@
 package org.trustweave.did.btcr
 
+import org.trustweave.core.plugin.ModuleCapabilities
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.base.AbstractDidMethodProvider
@@ -12,14 +13,13 @@ import org.trustweave.did.base.AbstractDidMethodProvider
  * by ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class BtcrIntegration : AbstractDidMethodProvider() {
-
     override val name: String = "btcr"
 
     override val supportedMethods: List<String> = listOf("btcr")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
         if (methodName != "btcr") return null
+        ModuleCapabilities.requireOperations("did:plugins:btcr", setOf("create"))
         return BtcrDidMethod(resolveKms(options))
     }
 }
-

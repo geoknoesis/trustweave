@@ -3,11 +3,8 @@
  * said are selectively-disclosable. The wallet uses that list to drive the
  * presentation consent UI (checkbox per disclosable claim).
  *
- * SECURITY NOTE: localStorage is NOT a secure key store. The holder private key
- * sits in cleartext, accessible to any JS running in the page (and to extensions).
- * Acceptable for a Phase 1/2 walking-skeleton demo; would NOT be acceptable for
- * any production wallet. Phase 2.5 moves the holder key behind WebAuthn-bound
- * non-extractable WebCrypto keys for the web build.
+ * Holder metadata is public. Signing/agreement keys live as non-extractable
+ * CryptoKeys in IndexedDB; legacy raw seeds are migrated by wallet.bootstrap().
  */
 
 import { credentialDedupKey } from './credential-dedup'
@@ -20,7 +17,6 @@ const CURRENT_VERSION = 2
 export interface HolderIdentity {
   did: string
   publicKey: string  // base64url
-  privateKey: string  // base64url
   createdAt: string
 }
 
@@ -47,18 +43,42 @@ function isBrowser(): boolean {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 }
 
+function validateCredentials(value: unknown): asserts value is StoredCredential[] {
+  if (!Array.isArray(value)) throw new Error('Invalid wallet credential collection. Export it before recovery.')
+  const seen = new Set<string>()
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || typeof item.id !== 'string' || seen.has(item.id) ||
+        typeof item.credential !== 'string' || !['vc+jwt', 'vc+sd-jwt'].includes(item.format) ||
+        typeof item.issuerDid !== 'string' || typeof item.subjectDid !== 'string' || typeof item.receivedAt !== 'string' ||
+        !Array.isArray(item.type) || item.type.some((v: unknown) => typeof v !== 'string') ||
+        !Array.isArray(item.selectivelyDisclosable) || item.selectivelyDisclosable.some((v: unknown) => typeof v !== 'string') ||
+        !item.preview || typeof item.preview.title !== 'string' ||
+        (item.preview.subtitle !== undefined && typeof item.preview.subtitle !== 'string'))
+      throw new Error('Invalid stored credential. Your original data has been preserved; export it before recovery.')
+    seen.add(item.id)
+  }
+}
+
 function ensureSchemaVersion(): void {
   if (!isBrowser()) return
   const existing = window.localStorage.getItem(VERSION_KEY)
-  if (!existing) {
+  if (!existing && !window.localStorage.getItem(CREDENTIALS_KEY)) {
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
-  } else if (Number(existing) !== CURRENT_VERSION) {
-    // v1 → v2: storage shape changed (added `format`, `credential` replaces `vcJwt`,
-    // added `selectivelyDisclosable`). No automatic migration — wipe and let the user
-    // re-receive. Acceptable for a demo wallet; a real wallet would migrate in place.
-    window.localStorage.removeItem(HOLDER_KEY)
-    window.localStorage.removeItem(CREDENTIALS_KEY)
+  } else if (!existing || existing === '1') {
+    const raw = window.localStorage.getItem(CREDENTIALS_KEY)
+    const credentials: unknown = raw ? JSON.parse(raw) : []
+    if (!Array.isArray(credentials)) throw new Error('Invalid legacy wallet data. Export it before recovery.')
+    const migrated = credentials.map((credential: Record<string, unknown>) => {
+      const compact = credential.credential ?? credential.vcJwt
+      if (typeof compact !== 'string' || typeof credential.id !== 'string') throw new Error('Unsupported legacy credential. Your original data has been preserved.')
+      return { ...credential, credential: compact, format: credential.format ?? 'vc+jwt', selectivelyDisclosable: credential.selectivelyDisclosable ?? [] }
+    })
+    validateCredentials(migrated)
+    // Save version last: an interrupted upgrade can be safely repeated. Never rotate the holder.
+    window.localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(migrated))
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))
+  } else if (existing !== String(CURRENT_VERSION)) {
+    throw new Error(`Wallet schema ${existing} is not supported by this version. Open the version that created it or export your credentials.`)
   }
 }
 
@@ -66,25 +86,32 @@ export function loadHolder(): HolderIdentity | null {
   if (!isBrowser()) return null
   ensureSchemaVersion()
   const raw = window.localStorage.getItem(HOLDER_KEY)
-  return raw ? (JSON.parse(raw) as HolderIdentity) : null
+  if (!raw) return null
+  const holder = JSON.parse(raw)
+  if (!holder || typeof holder.did !== 'string' || typeof holder.publicKey !== 'string' || typeof holder.createdAt !== 'string')
+    throw new Error('Invalid wallet identity metadata. Export your credentials before recovery.')
+  return holder as HolderIdentity
 }
 
 export function saveHolder(holder: HolderIdentity): void {
   if (!isBrowser()) throw new Error('saveHolder requires a browser environment')
   ensureSchemaVersion()
-  window.localStorage.setItem(HOLDER_KEY, JSON.stringify(holder))
+  window.localStorage.setItem(HOLDER_KEY, JSON.stringify({ did: holder.did, publicKey: holder.publicKey, createdAt: holder.createdAt }))
 }
 
 export function loadCredentials(): StoredCredential[] {
   if (!isBrowser()) return []
   ensureSchemaVersion()
   const raw = window.localStorage.getItem(CREDENTIALS_KEY)
-  return raw ? (JSON.parse(raw) as StoredCredential[]) : []
+  const records: unknown = raw ? JSON.parse(raw) : []
+  validateCredentials(records)
+  return records
 }
 
 export function saveCredentials(creds: StoredCredential[]): void {
   if (!isBrowser()) throw new Error('saveCredentials requires a browser environment')
   ensureSchemaVersion()
+  validateCredentials(creds)
   window.localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(creds))
 }
 
@@ -125,4 +152,12 @@ export function resetWallet(): void {
   window.localStorage.removeItem(HOLDER_KEY)
   window.localStorage.removeItem(CREDENTIALS_KEY)
   window.localStorage.removeItem(VERSION_KEY)
+}
+
+/** Recovery export intentionally excludes private key material, including legacy seeds. */
+export function exportWalletData(): string {
+  const raw = window.localStorage.getItem(HOLDER_KEY)
+  let holder: Partial<HolderIdentity> = {}
+  try { const parsed = JSON.parse(raw ?? '{}'); holder = { did: parsed.did, publicKey: parsed.publicKey, createdAt: parsed.createdAt } } catch { /* preserve credential data even if identity metadata is corrupt */ }
+  return JSON.stringify({ version: window.localStorage.getItem(VERSION_KEY), holder, credentials: window.localStorage.getItem(CREDENTIALS_KEY) }, null, 2)
 }

@@ -1,0 +1,27 @@
+{
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    22,
+    19,
+    17,
+    13,
+    8
+  ],
+  "trustweave-saas": [
+    20,
+    19,
+    16,
+    12,
+    8
+  ],
+  "totals": {
+    "trustweave": 79,
+    "trustweave-saas": 75
+  }
+}

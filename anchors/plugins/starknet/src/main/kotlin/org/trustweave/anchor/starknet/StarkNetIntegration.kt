@@ -15,18 +15,22 @@ import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 class StarkNetIntegration : BlockchainAnchorClientProvider {
     override val name: String = "starknet"
 
-    override val supportedChains: List<String> = listOf(
-        StarkNetBlockchainAnchorClient.MAINNET,
-        StarkNetBlockchainAnchorClient.TESTNET
-    )
+    override val supportedChains: List<String> =
+        listOf(
+            StarkNetBlockchainAnchorClient.MAINNET,
+            StarkNetBlockchainAnchorClient.TESTNET,
+        )
 
-    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
-        return if (supportedChains.contains(chainId) || chainId.startsWith("starknet:")) {
+    override fun create(
+        chainId: String,
+        options: Map<String, Any?>,
+    ): BlockchainAnchorClient? =
+        if (supportedChains.contains(chainId) || chainId.startsWith("starknet:")) {
+            org.trustweave.core.plugin.ModuleCapabilities
+                .requireOperations("anchors:plugins:starknet", setOf("anchor", "read"))
             PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             StarkNetBlockchainAnchorClient(chainId, options)
         } else {
             null
         }
-    }
 }
-

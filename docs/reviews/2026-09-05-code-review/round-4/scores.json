@@ -1,0 +1,48 @@
+{
+  "assessment": "Round 4 post-remediation review of both local working trees, with full SDK JVM and SaaS backend validation plus targeted browser and storage regressions. This is not an exhaustive proof of correctness or certification.",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24,
+    19,
+    15,
+    9
+  ],
+  "totals": {
+    "trustweave": 96,
+    "trustweave-saas": 95
+  },
+  "previous": {
+    "trustweave": 95,
+    "trustweave-saas": 93
+  },
+  "trustweave-saas": [
+    29,
+    24,
+    19,
+    14,
+    9
+  ],
+  "deductions": {
+    "trustweave": [
+      "Security -1: browser custody lacks hardware/user-presence signing and remains exposed to trusted-bundle compromise.",
+      "Correctness -1: issuer/disclosure profiles and hosted provider behavior remain limited or unvalidated.",
+      "Architecture -1: provider maturity and legacy storage boundaries remain uneven.",
+      "Experience -1: holder-key loss requires reissuance; physical mobile camera coverage remains outstanding.",
+      "Testing receives full local-validation credit for the full JVM suite, lint, database/HTTP contracts and production browser regressions. This does not certify optional hosted providers; those limitations remain in correctness/architecture."
+    ],
+    "trustweave-saas": [
+      "Security -1: exact published SDK/SaaS pair and staging admission failure boundaries remain unvalidated.",
+      "Correctness -1: live Accountly/PSP and supported legacy invoice behavior remain incomplete.",
+      "Architecture -1: release coupling and hosted recovery/alert integration remain outstanding.",
+      "Testing -1: two live-contract skips and no exact-pair remote Linux/staging evidence.",
+      "Experience -1: operator-heavy recovery and limited credential-format support."
+    ]
+  }
+}

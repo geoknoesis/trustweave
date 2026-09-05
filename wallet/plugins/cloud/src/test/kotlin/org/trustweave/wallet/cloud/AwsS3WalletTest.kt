@@ -1,13 +1,13 @@
 package org.trustweave.wallet.cloud
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.http.AbortableInputStream
@@ -41,7 +41,6 @@ import kotlin.test.assertTrue
  * the operations used by the wallet is sufficient — no mocking library needed.
  */
 class AwsS3WalletTest {
-
     private val issuerDid = "did:key:z6MkTestIssuer"
     private val basePath = "wallets/wallet-test"
 
@@ -52,7 +51,7 @@ class AwsS3WalletTest {
             holderDid = "did:key:z6MkHolder",
             bucketName = "test-bucket",
             basePath = basePath,
-            s3Client = s3
+            s3Client = s3,
         )
 
     private fun credential(id: String? = "urn:uuid:${UUID.randomUUID()}"): VerifiableCredential =
@@ -62,7 +61,7 @@ class AwsS3WalletTest {
             issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = CredentialSubject.fromIri("did:key:z6MkTestSubject"),
             issuanceDate = Clock.System.now(),
-            proof = null
+            proof = null,
         )
 
     // ========== store() id handling (P1: ClassCastException on CredentialId) ==========
@@ -129,7 +128,7 @@ class AwsS3WalletTest {
             assertTrue(fake.openStreams.isNotEmpty())
             assertTrue(
                 fake.openStreams.all { it.closed },
-                "Every ResponseInputStream returned by getObject must be closed"
+                "Every ResponseInputStream returned by getObject must be closed",
             )
         }
     }
@@ -163,14 +162,21 @@ class AwsS3WalletTest {
     @Test
     fun `delete propagates unexpected S3 failures instead of returning false`() {
         runBlocking {
-            val fake = FakeS3Client().apply {
-                deleteFailure = S3Exception.builder().message("Access Denied").statusCode(403).build()
-            }
+            val fake =
+                FakeS3Client().apply {
+                    deleteFailure =
+                        S3Exception
+                            .builder()
+                            .message("Access Denied")
+                            .statusCode(403)
+                            .build()
+                }
             val wallet = wallet(fake)
 
-            val exception = assertFailsWith<RuntimeException> {
-                wallet.delete("some-credential")
-            }
+            val exception =
+                assertFailsWith<RuntimeException> {
+                    wallet.delete("some-credential")
+                }
             assertTrue(exception.message!!.contains("Failed to delete from S3"))
         }
     }
@@ -178,9 +184,10 @@ class AwsS3WalletTest {
     @Test
     fun `delete maps NoSuchKeyException to false`() {
         runBlocking {
-            val fake = FakeS3Client().apply {
-                deleteFailure = NoSuchKeyException.builder().message("no such key").build()
-            }
+            val fake =
+                FakeS3Client().apply {
+                    deleteFailure = NoSuchKeyException.builder().message("no such key").build()
+                }
             val wallet = wallet(fake)
 
             assertFalse(wallet.delete("missing-credential"))
@@ -195,9 +202,10 @@ class AwsS3WalletTest {
             val wallet = wallet(FakeS3Client())
             wallet.store(credential())
 
-            val exception = assertFailsWith<UnsupportedOperationException> {
-                wallet.query { byTag("important") }
-            }
+            val exception =
+                assertFailsWith<UnsupportedOperationException> {
+                    wallet.query { byTag("important") }
+                }
             assertTrue(exception.message!!.contains("byTag"))
         }
     }
@@ -227,9 +235,38 @@ class AwsS3WalletTest {
         }
     }
 
+    @Test
+    fun `truncated listings with missing or repeated tokens fail instead of losing data or looping`() =
+        runBlocking {
+            for (token in listOf<String?>(null, "", "same-token")) {
+                var calls = 0
+                val client =
+                    object : S3Client {
+                        override fun serviceName() = "s3"
+
+                        override fun close() {}
+
+                        override fun listObjectsV2(request: ListObjectsV2Request): ListObjectsV2Response {
+                            calls++
+                            check(calls <= 2) { "Listing did not terminate" }
+                            return ListObjectsV2Response
+                                .builder()
+                                .isTruncated(true)
+                                .nextContinuationToken(token)
+                                .build()
+                        }
+                    }
+                val error = assertFailsWith<RuntimeException> { wallet(client).list() }
+                assertTrue(error.message.orEmpty().contains("continuation token"))
+                assertTrue(calls <= 2)
+            }
+        }
+
     // ========== Fakes ==========
 
-    private class CloseTrackingInputStream(bytes: ByteArray) : ByteArrayInputStream(bytes) {
+    private class CloseTrackingInputStream(
+        bytes: ByteArray,
+    ) : ByteArrayInputStream(bytes) {
         @Volatile
         var closed = false
 
@@ -254,14 +291,18 @@ class AwsS3WalletTest {
 
         override fun close() {}
 
-        override fun putObject(request: PutObjectRequest, requestBody: RequestBody): PutObjectResponse {
+        override fun putObject(
+            request: PutObjectRequest,
+            requestBody: RequestBody,
+        ): PutObjectResponse {
             objects[request.key()] = requestBody.contentStreamProvider().newStream().use { it.readAllBytes() }
             return PutObjectResponse.builder().build()
         }
 
         override fun getObject(request: GetObjectRequest): ResponseInputStream<GetObjectResponse> {
-            val bytes = objects[request.key()]
-                ?: throw NoSuchKeyException.builder().message("No such key: ${request.key()}").build()
+            val bytes =
+                objects[request.key()]
+                    ?: throw NoSuchKeyException.builder().message("No such key: ${request.key()}").build()
             val stream = CloseTrackingInputStream(bytes)
             openStreams.add(stream)
             return ResponseInputStream(GetObjectResponse.builder().build(), AbortableInputStream.create(stream))
@@ -280,9 +321,11 @@ class AwsS3WalletTest {
             val page = matching.drop(startIndex).take(listPageSize)
             val nextIndex = startIndex + page.size
             val truncated = nextIndex < matching.size
-            val builder = ListObjectsV2Response.builder()
-                .contents(page.map { key -> S3Object.builder().key(key).build() })
-                .isTruncated(truncated)
+            val builder =
+                ListObjectsV2Response
+                    .builder()
+                    .contents(page.map { key -> S3Object.builder().key(key).build() })
+                    .isTruncated(truncated)
             if (truncated) {
                 builder.nextContinuationToken(nextIndex.toString())
             }

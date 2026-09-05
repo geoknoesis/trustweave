@@ -1,5 +1,6 @@
 package org.trustweave.did.threebox
 
+import org.trustweave.core.plugin.ModuleCapabilities
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
 import org.trustweave.did.base.AbstractDidMethodProvider
@@ -12,14 +13,13 @@ import org.trustweave.did.base.AbstractDidMethodProvider
  * by ServiceLoader discovery. It exists only for explicit, opt-in construction.
  */
 class ThreeBoxIntegration : AbstractDidMethodProvider() {
-
     override val name: String = "threebox"
 
     override val supportedMethods: List<String> = listOf("3")
 
     override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
         if (methodName != "3") return null
+        ModuleCapabilities.requireOperations("did:plugins:threebox", setOf("create"))
         return ThreeBoxDidMethod(resolveKms(options))
     }
 }
-

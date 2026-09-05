@@ -1,0 +1,786 @@
+[
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$FullLifecycle",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$DeleteNetwork",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookVerifierTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PlanFeatureFormatterTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.BillingProxyControllerTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionControllerIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionPagingTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.CredentialTypeControllerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.PublicCredentialOfferSecurityTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$GetNetwork",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$ListNetworks",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.domain.OrganizationBillingFieldsTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.domain.UsageOutboxEntityTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationHistoryRetentionTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest",
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.provisioning.ProvisionRequestTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.provisioning.TrustSpaceProvisioningBusinessRulesTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.security.RateLimiterTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeMigrationServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest",
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.credentialtype.StarterPackServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.IssuingKeyDirectoryTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.starterkit.BuiltInStarterKitsTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.BlockchainAnchorServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialIssuanceGateTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.SdJwtRawCredentialParserTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.AccountlyWebhookControllerTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitorTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]

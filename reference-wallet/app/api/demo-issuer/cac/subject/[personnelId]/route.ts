@@ -10,9 +10,9 @@ import { getCacIssuer } from '@/lib/server-keys'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { personnelId: string } },
+  { params }: { params: Promise<{ personnelId: string }> },
 ) {
-  const personnelId = params.personnelId
+  const { personnelId } = await params
   try {
     const record = resolveCacSubject(personnelId)
     const domain = getCacTrustDomain()

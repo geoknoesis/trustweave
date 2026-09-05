@@ -1,8 +1,7 @@
 package org.trustweave.wallet
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Credential collection model.
@@ -18,7 +17,7 @@ data class CredentialCollection(
     val name: String,
     val description: String? = null,
     val createdAt: Instant = Clock.System.now(),
-    val credentialCount: Int = 0
+    val credentialCount: Int = 0,
 )
 
 /**
@@ -37,7 +36,7 @@ data class CredentialMetadata(
     val tags: Set<String> = emptySet(),
     val metadata: Map<String, Any> = emptyMap(),
     val createdAt: Instant = Clock.System.now(),
-    val updatedAt: Instant = Clock.System.now()
+    val updatedAt: Instant = Clock.System.now(),
 )
 
 /**
@@ -54,7 +53,7 @@ data class KeyInfo(
     val algorithm: String,
     val publicKeyJwk: Map<String, Any?>? = null,
     val publicKeyMultibase: String? = null,
-    val createdAt: Instant = Clock.System.now()
+    val createdAt: Instant = Clock.System.now(),
 )
 
 /**
@@ -75,6 +74,7 @@ data class WalletStatistics(
     val revokedCredentials: Int = 0,
     val collectionsCount: Int = 0,
     val tagsCount: Int = 0,
-    val archivedCount: Int = 0
+    val archivedCount: Int = 0,
+    /** Status-list credentials whose current status has not been resolved. */
+    val unknownStatusCredentials: Int = 0,
 )
-

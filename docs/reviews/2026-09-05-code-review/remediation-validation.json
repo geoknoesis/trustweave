@@ -1,0 +1,80 @@
+{
+  "date": "2026-09-05",
+  "sdk_modules": [
+    {
+      "module": "common",
+      "tests": 427,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet/wallet-core",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet/plugins/file",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet/plugins/database",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet/plugins/cloud",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "testkit",
+      "tests": 250,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3
+    },
+    {
+      "module": "credentials/plugins/oidc4vci",
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "sdk_test_and_lint_build": "PASS",
+  "saas_backend": {
+    "tests": 507,
+    "skipped": 2,
+    "failures": 0,
+    "coverage_gate": "PASS"
+  },
+  "saas_frontend": {
+    "tests": 292,
+    "files": 62,
+    "lint": "PASS",
+    "build": "PASS",
+    "initial_js_bytes": 441620,
+    "budget_bytes": 500000
+  },
+  "reference_wallet": {
+    "tests": 6,
+    "typecheck": "PASS",
+    "build": "PASS",
+    "environment": "Node WebCrypto / fake IndexedDB"
+  },
+  "limitations": [
+    "Affected SDK modules, not repository-wide matrix",
+    "No live browser or production validation",
+    "SDK revision pin must be updated to published remediation commit before release"
+  ]
+}

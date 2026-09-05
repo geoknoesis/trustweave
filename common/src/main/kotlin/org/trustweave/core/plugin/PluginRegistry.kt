@@ -3,7 +3,6 @@ package org.trustweave.core.plugin
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.PluginException
-import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -34,7 +33,10 @@ internal interface PluginRegistry {
      * @throws org.trustweave.core.exception.PluginException.DependencyVersionMismatch if a required
      *   dependency is registered with a version outside the declared range
      */
-    fun register(metadata: PluginMetadata, instance: Any)
+    fun register(
+        metadata: PluginMetadata,
+        instance: Any,
+    )
 
     /**
      * Unregister a plugin.
@@ -66,7 +68,10 @@ internal interface PluginRegistry {
      * @param clazz Expected class type
      * @return Plugin instance, or null if not found or type mismatch
      */
-    fun <T> getInstance(pluginId: String, clazz: Class<T>): T?
+    fun <T> getInstance(
+        pluginId: String,
+        clazz: Class<T>,
+    ): T?
 
     /**
      * Find plugins by capability/feature.
@@ -95,7 +100,7 @@ internal interface PluginRegistry {
      */
     fun selectProvider(
         capability: String,
-        preferences: List<String>
+        preferences: List<String>,
     ): PluginMetadata?
 
     /**
@@ -151,8 +156,9 @@ internal interface PluginRegistry {
  *
  * @suppress This is an internal API
  */
-internal class DefaultPluginRegistry : PluginRegistry {
-
+internal class DefaultPluginRegistry(
+    private val requiredCapabilities: Map<String, Set<String>> = emptyMap(),
+) : PluginRegistry {
     private val logger = LoggerFactory.getLogger(DefaultPluginRegistry::class.java)
 
     /**
@@ -167,6 +173,7 @@ internal class DefaultPluginRegistry : PluginRegistry {
 
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
+
     // Store runtime class information for each instance to enable type-safe retrieval
     private val instanceTypes = ConcurrentHashMap<String, Class<*>>()
 
@@ -178,7 +185,10 @@ internal class DefaultPluginRegistry : PluginRegistry {
     // Maps provider name -> set of plugin IDs from that provider
     private val providerIndex = ConcurrentHashMap<String, MutableSet<String>>()
 
-    override fun register(metadata: PluginMetadata, instance: Any) {
+    override fun register(
+        metadata: PluginMetadata,
+        instance: Any,
+    ) {
         if (metadata.id.isBlank()) {
             throw PluginException.BlankId
         }
@@ -188,10 +198,36 @@ internal class DefaultPluginRegistry : PluginRegistry {
             if (existing != null) {
                 throw PluginException.AlreadyRegistered(
                     pluginId = metadata.id,
-                    existingPlugin = existing.name
+                    existingPlugin = existing.name,
                 )
             }
 
+            val module = metadata.moduleId ?: metadata.id
+            val assessed = ModuleCapabilities.get(module)
+            if (assessed != null) {
+                require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
+                require(assessed.operations.containsAll(metadata.capabilities.features)) {
+                    "Plugin ${metadata.id} advertises operations outside the assessed catalog"
+                }
+            }
+            requiredCapabilities[metadata.id]?.let { required ->
+                ModuleCapabilities.requireOperations(module, required)
+                require(
+                    metadata.capabilities.features.containsAll(required),
+                ) { "Plugin ${metadata.id} lacks application-required operations" }
+            }
+            val required = metadata.configuration["requiredCapabilities"]
+            if (required != null) {
+                require(
+                    required is Collection<*> && required.all { it is String },
+                ) { "requiredCapabilities must be a collection of feature names" }
+                require(
+                    metadata.maturity != PluginMaturity.STUB &&
+                        metadata.capabilities.features.containsAll(required.filterIsInstance<String>()),
+                ) {
+                    "Plugin ${metadata.id} cannot supply required capabilities $required"
+                }
+            }
             checkDependencyVersionRanges(metadata)
 
             // Populate instance state and indexes BEFORE publishing metadata, so a
@@ -201,13 +237,15 @@ internal class DefaultPluginRegistry : PluginRegistry {
             instanceTypes[metadata.id] = instance.javaClass
 
             metadata.capabilities.features.forEach { capability ->
-                capabilityIndex.computeIfAbsent(capability) {
+                capabilityIndex
+                    .computeIfAbsent(capability) {
+                        ConcurrentHashMap.newKeySet()
+                    }.add(metadata.id)
+            }
+            providerIndex
+                .computeIfAbsent(metadata.provider) {
                     ConcurrentHashMap.newKeySet()
                 }.add(metadata.id)
-            }
-            providerIndex.computeIfAbsent(metadata.provider) {
-                ConcurrentHashMap.newKeySet()
-            }.add(metadata.id)
 
             // Drive the plugin lifecycle BEFORE publishing metadata: a plugin that
             // fails initialize()/start() must never become visible. On failure the
@@ -219,13 +257,13 @@ internal class DefaultPluginRegistry : PluginRegistry {
                         if (!instance.initialize(metadata.configuration)) {
                             throw PluginException.InitializationFailed(
                                 pluginId = metadata.id,
-                                reason = "initialize() returned false"
+                                reason = "initialize() returned false",
                             )
                         }
                         if (!instance.start()) {
                             throw PluginException.InitializationFailed(
                                 pluginId = metadata.id,
-                                reason = "start() returned false"
+                                reason = "start() returned false",
                             )
                         }
                     }
@@ -237,7 +275,7 @@ internal class DefaultPluginRegistry : PluginRegistry {
                         else -> throw PluginException.InitializationFailed(
                             pluginId = metadata.id,
                             reason = t.message ?: t::class.simpleName ?: "Unknown error",
-                            cause = t
+                            cause = t,
                         )
                     }
                 }
@@ -286,22 +324,29 @@ internal class DefaultPluginRegistry : PluginRegistry {
                         logger.warn(
                             "Plugin '{}' optional dependency '{}' version '{}' is outside " +
                                 "declared range '{}'; continuing because the dependency is optional",
-                            metadata.id, dependency.pluginId, depMetadata.version, range
+                            metadata.id,
+                            dependency.pluginId,
+                            depMetadata.version,
+                            range,
                         )
                     } else {
                         throw PluginException.DependencyVersionMismatch(
                             pluginId = metadata.id,
                             dependencyId = dependency.pluginId,
                             requiredRange = range,
-                            actualVersion = depMetadata.version
+                            actualVersion = depMetadata.version,
                         )
                     }
                 }
-                null -> logger.warn(
-                    "Plugin '{}' dependency '{}' declares version range '{}' that cannot be " +
-                        "parsed against version '{}'; range enforcement skipped",
-                    metadata.id, dependency.pluginId, range, depMetadata.version
-                )
+                null ->
+                    logger.warn(
+                        "Plugin '{}' dependency '{}' declares version range '{}' that cannot be " +
+                            "parsed against version '{}'; range enforcement skipped",
+                        metadata.id,
+                        dependency.pluginId,
+                        range,
+                        depMetadata.version,
+                    )
             }
         }
     }
@@ -311,7 +356,10 @@ internal class DefaultPluginRegistry : PluginRegistry {
      * retracted. Teardown failures must never break unregistration: every exception is
      * logged and swallowed, and cleanup() still runs when stop() fails.
      */
-    private fun teardownQuietly(pluginId: String, lifecycle: PluginLifecycle) {
+    private fun teardownQuietly(
+        pluginId: String,
+        lifecycle: PluginLifecycle,
+    ) {
         try {
             runBlocking {
                 try {
@@ -367,11 +415,12 @@ internal class DefaultPluginRegistry : PluginRegistry {
         }
     }
 
-    override fun getMetadata(pluginId: String): PluginMetadata? {
-        return plugins[pluginId]
-    }
+    override fun getMetadata(pluginId: String): PluginMetadata? = plugins[pluginId]
 
-    override fun <T> getInstance(pluginId: String, clazz: Class<T>): T? {
+    override fun <T> getInstance(
+        pluginId: String,
+        clazz: Class<T>,
+    ): T? {
         val instance = instances[pluginId] ?: return null
         val storedClass = instanceTypes[pluginId] ?: return null
 
@@ -400,10 +449,9 @@ internal class DefaultPluginRegistry : PluginRegistry {
         return pluginIds.mapNotNull { plugins[it] }
     }
 
-
     override fun selectProvider(
         capability: String,
-        preferences: List<String>
+        preferences: List<String>,
     ): PluginMetadata? {
         require(capability.isNotBlank()) { "Capability cannot be blank" }
         val candidates = findByCapability(capability)
@@ -426,21 +474,18 @@ internal class DefaultPluginRegistry : PluginRegistry {
         return candidates.firstOrNull()
     }
 
-    override fun selectProvider(capability: String): PluginMetadata? {
-        return selectProvider(capability, emptyList())
-    }
+    override fun selectProvider(capability: String): PluginMetadata? = selectProvider(capability, emptyList())
 
-    override fun getAllPlugins(): List<PluginMetadata> {
-        return plugins.values.toList()
-    }
+    override fun getAllPlugins(): List<PluginMetadata> = plugins.values.toList()
 
     override fun clear() {
         synchronized(mutationLock) {
             // Snapshot lifecycle-bearing instances before retraction so they can be
             // torn down once they are no longer observable.
-            val lifecycleInstances = instances.mapNotNull { (id, instance) ->
-                (instance as? PluginLifecycle)?.let { id to it }
-            }
+            val lifecycleInstances =
+                instances.mapNotNull { (id, instance) ->
+                    (instance as? PluginLifecycle)?.let { id to it }
+                }
 
             // Retract metadata first (mirrors unregister) so readers never observe
             // metadata without a corresponding instance.
@@ -457,9 +502,7 @@ internal class DefaultPluginRegistry : PluginRegistry {
         }
     }
 
-    override fun isRegistered(pluginId: String): Boolean {
-        return plugins.containsKey(pluginId)
-    }
+    override fun isRegistered(pluginId: String): Boolean = plugins.containsKey(pluginId)
 }
 
 /**

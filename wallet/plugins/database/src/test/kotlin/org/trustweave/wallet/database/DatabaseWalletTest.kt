@@ -1,5 +1,9 @@
 package org.trustweave.wallet.database
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -7,10 +11,6 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.exception.WalletException
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import java.util.UUID
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -29,7 +29,6 @@ import kotlin.test.assertTrue
  * no-op) and connection-pool ownership on [DatabaseWallet.close].
  */
 class DatabaseWalletTest {
-
     private val issuerDid = "did:key:z6MkTestIssuer"
 
     private fun newDataSource(): HikariDataSource {
@@ -39,24 +38,75 @@ class DatabaseWalletTest {
         return HikariDataSource(config)
     }
 
-    private fun newWallet(dataSource: DataSource, ownsDataSource: Boolean = false): DatabaseWallet =
+    private fun newWallet(
+        dataSource: DataSource,
+        ownsDataSource: Boolean = false,
+    ): DatabaseWallet =
         DatabaseWallet.create(
             walletId = "wallet-test",
             walletDid = "did:key:z6MkWallet",
             holderDid = "did:key:z6MkHolder",
             dataSource = dataSource,
-            ownsDataSource = ownsDataSource
+            ownsDataSource = ownsDataSource,
         )
 
-    private fun credential(id: String, type: String = "TestCredential"): VerifiableCredential =
+    private fun credential(
+        id: String,
+        type: String = "TestCredential",
+    ): VerifiableCredential =
         VerifiableCredential(
             id = CredentialId(id),
             type = listOf(CredentialType.Custom(type)),
             issuer = Issuer.fromDid(Did(issuerDid)),
             credentialSubject = CredentialSubject.fromIri("did:key:z6MkTestSubject"),
             issuanceDate = Clock.System.now(),
-            proof = null
+            proof = null,
         )
+
+    @Test
+    fun `list and query find matches beyond the old thousand-row limit`() =
+        runBlocking {
+            newDataSource().use { source ->
+                val wallet = newWallet(source)
+                repeat(1001) { wallet.store(credential("cred-%04d".format(it))) }
+                wallet.store(credential("zz-match", "RareCredential"))
+                assertEquals(1002, wallet.list().size)
+                val allIds = mutableSetOf<String>()
+                var cursor: String? = null
+                do {
+                    val page = wallet.pageRecords(limit = 37, after = cursor)
+                    assertTrue(page.records.size <= 37)
+                    page.records.forEach { assertTrue(allIds.add(it.storageId), "Cursor repeated a row") }
+                    cursor = page.nextCursor
+                } while (cursor != null)
+                assertEquals(1002, allIds.size)
+                val filtered =
+                    wallet.pageRecords(
+                        limit = 37,
+                        filter = org.trustweave.wallet.CredentialFilter(type = listOf("RareCredential")),
+                    )
+                assertTrue(filtered.records.isEmpty())
+                assertNotNull(filtered.nextCursor, "Empty filtered page must retain continuation")
+                assertFailsWith<IllegalArgumentException> { wallet.pageRecords(limit = 501) }
+
+                assertEquals(
+                    "zz-match",
+                    wallet
+                        .list(org.trustweave.wallet.CredentialFilter(type = listOf("RareCredential")))
+                        .single()
+                        .id!!
+                        .value,
+                )
+                assertEquals(
+                    "zz-match",
+                    wallet
+                        .query { byType("RareCredential") }
+                        .single()
+                        .id!!
+                        .value,
+                )
+            }
+        }
 
     // ========== Sanity ==========
 
@@ -94,12 +144,13 @@ class DatabaseWalletTest {
         runBlocking {
             newDataSource().use { dataSource ->
                 val walletA = newWallet(dataSource)
-                val walletB = DatabaseWallet.create(
-                    walletId = "wallet-other",
-                    walletDid = "did:key:z6MkOtherWallet",
-                    holderDid = "did:key:z6MkOtherHolder",
-                    dataSource = dataSource
-                )
+                val walletB =
+                    DatabaseWallet.create(
+                        walletId = "wallet-other",
+                        walletDid = "did:key:z6MkOtherWallet",
+                        holderDid = "did:key:z6MkOtherHolder",
+                        dataSource = dataSource,
+                    )
                 walletA.store(credential("cred-shared-id"))
 
                 assertFailsWith<WalletException.StorageError> {
@@ -152,10 +203,11 @@ class DatabaseWalletTest {
                 wallet.tagCredential("cred-both", setOf("a", "b"))
                 wallet.tagCredential("cred-one", setOf("a"))
 
-                val results = wallet.query {
-                    byTag("a")
-                    byTag("b")
-                }
+                val results =
+                    wallet.query {
+                        byTag("a")
+                        byTag("b")
+                    }
 
                 assertEquals(listOf("cred-both"), results.map { it.id?.value })
             }
@@ -189,10 +241,11 @@ class DatabaseWalletTest {
                 wallet.tagCredential("cred-match", setOf("important"))
                 wallet.tagCredential("cred-wrong-type", setOf("important"))
 
-                val results = wallet.query {
-                    byTag("important")
-                    byType("PersonCredential")
-                }
+                val results =
+                    wallet.query {
+                        byTag("important")
+                        byType("PersonCredential")
+                    }
 
                 assertEquals(listOf("cred-match"), results.map { it.id?.value })
             }
@@ -268,12 +321,13 @@ class DatabaseWalletTest {
         runBlocking {
             newDataSource().use { dataSource ->
                 val walletA = newWallet(dataSource)
-                val walletB = DatabaseWallet.create(
-                    walletId = "wallet-other",
-                    walletDid = "did:key:z6MkOtherWallet",
-                    holderDid = "did:key:z6MkOtherHolder",
-                    dataSource = dataSource
-                )
+                val walletB =
+                    DatabaseWallet.create(
+                        walletId = "wallet-other",
+                        walletDid = "did:key:z6MkOtherWallet",
+                        holderDid = "did:key:z6MkOtherHolder",
+                        dataSource = dataSource,
+                    )
                 walletA.store(credential("cred-a"))
                 walletA.tagCredential("cred-a", setOf("shared-tag"))
 
@@ -340,7 +394,7 @@ class DatabaseWalletTest {
                 assertEquals(1, wallet.getCollection(collectionId)?.credentialCount)
                 assertEquals(
                     listOf("cred-coll"),
-                    wallet.getCredentialsInCollection(collectionId).map { it.id?.value }
+                    wallet.getCredentialsInCollection(collectionId).map { it.id?.value },
                 )
                 assertEquals(listOf(collectionId), wallet.listCollections().map { it.id })
 
@@ -374,12 +428,13 @@ class DatabaseWalletTest {
         runBlocking {
             newDataSource().use { dataSource ->
                 val walletA = newWallet(dataSource)
-                val walletB = DatabaseWallet.create(
-                    walletId = "wallet-other",
-                    walletDid = "did:key:z6MkOtherWallet",
-                    holderDid = "did:key:z6MkOtherHolder",
-                    dataSource = dataSource
-                )
+                val walletB =
+                    DatabaseWallet.create(
+                        walletId = "wallet-other",
+                        walletDid = "did:key:z6MkOtherWallet",
+                        holderDid = "did:key:z6MkOtherHolder",
+                        dataSource = dataSource,
+                    )
                 walletA.store(credential("cred-a"))
                 val collectionA = walletA.createCollection("A's collection")
                 walletA.addToCollection("cred-a", collectionA)

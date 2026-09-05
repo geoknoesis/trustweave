@@ -1,14 +1,10 @@
 package org.trustweave.testkit.credential
 
+import kotlinx.datetime.Clock
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialFilter
 import org.trustweave.wallet.CredentialQueryBuilder
-import org.trustweave.wallet.CredentialStorage
 import org.trustweave.wallet.Wallet
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -32,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
  * ```
  */
 class BasicWallet(
-    override val walletId: String = UUID.randomUUID().toString()
+    override val walletId: String = UUID.randomUUID().toString(),
 ) : Wallet {
     private val credentials = ConcurrentHashMap<String, VerifiableCredential>()
 
@@ -42,9 +38,7 @@ class BasicWallet(
         return id
     }
 
-    override suspend fun get(credentialId: String): VerifiableCredential? {
-        return credentials[credentialId]
-    }
+    override suspend fun get(credentialId: String): VerifiableCredential? = credentials[credentialId]
 
     override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> {
         val allCredentials = credentials.values.toList()
@@ -56,26 +50,29 @@ class BasicWallet(
         val filterType = filter.type // Store in local variable to avoid smart cast issue
         return allCredentials.filter { credential ->
             (filter.issuer == null || credential.issuer.id.value == filter.issuer) &&
-            (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
-            (filter.subjectId == null || {
-                credential.credentialSubject.id?.value == filter.subjectId
-            }()) &&
-            (filter.expired == null || {
-                credential.expirationDate?.let { expirationDate ->
-                    val isExpired = kotlinx.datetime.Clock.System.now() > expirationDate
-                    isExpired == filter.expired
-                } ?: (filter.expired == false)
-            }()) &&
-            (filter.revoked == null || {
-                val isRevoked = credential.credentialStatus != null
-                isRevoked == filter.revoked
-            }())
+                (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
+                (
+                    filter.subjectId == null ||
+                        {
+                            credential.credentialSubject.id?.value == filter.subjectId
+                        }()
+                ) &&
+                (
+                    filter.expired == null ||
+                        {
+                            credential.expirationDate?.let { expirationDate ->
+                                val isExpired =
+                                    kotlinx.datetime.Clock.System
+                                        .now() > expirationDate
+                                isExpired == filter.expired
+                            } ?: (filter.expired == false)
+                        }()
+                ) &&
+                org.trustweave.wallet.matchesOfflineStatusFilter(credential, filter)
         }
     }
 
-    override suspend fun delete(credentialId: String): Boolean {
-        return credentials.remove(credentialId) != null
-    }
+    override suspend fun delete(credentialId: String): Boolean = credentials.remove(credentialId) != null
 
     override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> {
         val builder = CredentialQueryBuilder()
@@ -89,7 +86,7 @@ class BasicWallet(
             throw UnsupportedOperationException(
                 "BasicWallet does not support byTag/byCollection query filters " +
                     "(requested tags=${builder.requestedTags}, collections=${builder.requestedCollections}). " +
-                    "Use a wallet with CredentialTagging/CredentialCollections support instead (e.g. InMemoryWallet)."
+                    "Use a wallet with CredentialTagging/CredentialCollections support instead (e.g. InMemoryWallet).",
             )
         }
 
@@ -110,4 +107,3 @@ class BasicWallet(
      */
     fun size(): Int = credentials.size
 }
-

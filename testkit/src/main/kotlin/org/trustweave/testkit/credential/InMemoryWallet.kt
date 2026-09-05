@@ -1,8 +1,17 @@
 package org.trustweave.testkit.credential
 
+import kotlinx.datetime.Clock
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.proof.ProofOptions
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.wallet.CredentialCollection
 import org.trustweave.wallet.CredentialFilter
 import org.trustweave.wallet.CredentialLifecycle
@@ -12,18 +21,6 @@ import org.trustweave.wallet.CredentialPresentation
 import org.trustweave.wallet.CredentialQueryBuilder
 import org.trustweave.wallet.DidManagement
 import org.trustweave.wallet.Wallet
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.credential.proof.ProofOptions
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.did.DidCreationOptions
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -62,13 +59,12 @@ class InMemoryWallet(
     walletDid: String? = null,
     holderDid: String? = null,
     walletDidObj: Did? = null,
-    holderDidObj: Did? = null
+    holderDidObj: Did? = null,
 ) : Wallet,
     CredentialOrganization,
     CredentialLifecycle,
     CredentialPresentation,
     DidManagement {
-
     override val walletDid: String = walletDidObj?.value ?: walletDid ?: "did:key:test-wallet-$walletId"
     override val holderDid: String = holderDidObj?.value ?: holderDid ?: "did:key:test-holder-$walletId"
 
@@ -88,18 +84,17 @@ class InMemoryWallet(
         val id = credential.id?.value ?: UUID.randomUUID().toString()
         credentials[id] = credential
         if (!credentialMetadata.containsKey(id)) {
-            credentialMetadata[id] = CredentialMetadata(
-                credentialId = id,
-                createdAt = Clock.System.now(),
-                updatedAt = Clock.System.now()
-            )
+            credentialMetadata[id] =
+                CredentialMetadata(
+                    credentialId = id,
+                    createdAt = Clock.System.now(),
+                    updatedAt = Clock.System.now(),
+                )
         }
         return id
     }
 
-    override suspend fun get(credentialId: String): VerifiableCredential? {
-        return credentials[credentialId] ?: archivedCredentials[credentialId]
-    }
+    override suspend fun get(credentialId: String): VerifiableCredential? = credentials[credentialId] ?: archivedCredentials[credentialId]
 
     override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> {
         val allCredentials = credentials.values.toList()
@@ -109,20 +104,23 @@ class InMemoryWallet(
             val filterType = filter.type // Store in local variable to avoid smart cast issue
             allCredentials.filter { credential ->
                 (filter.issuer == null || credential.issuer.id.value == filter.issuer) &&
-                (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
-                (filter.subjectId == null || {
-                    credential.credentialSubject.id?.value == filter.subjectId
-                }()) &&
-                (filter.expired == null || {
-                    credential.expirationDate?.let { expirationDate ->
-                        val isExpired = Clock.System.now() > expirationDate
-                        isExpired == filter.expired
-                    } ?: (filter.expired == false)
-                }()) &&
-                (filter.revoked == null || {
-                    val isRevoked = credential.credentialStatus != null
-                    isRevoked == filter.revoked
-                }())
+                    (filterType == null || filterType.any { typeStr -> credential.type.any { ct -> ct.value == typeStr } }) &&
+                    (
+                        filter.subjectId == null ||
+                            {
+                                credential.credentialSubject.id?.value == filter.subjectId
+                            }()
+                    ) &&
+                    (
+                        filter.expired == null ||
+                            {
+                                credential.expirationDate?.let { expirationDate ->
+                                    val isExpired = Clock.System.now() > expirationDate
+                                    isExpired == filter.expired
+                                } ?: (filter.expired == false)
+                            }()
+                    ) &&
+                    org.trustweave.wallet.matchesOfflineStatusFilter(credential, filter)
             }
         }
     }
@@ -152,21 +150,24 @@ class InMemoryWallet(
                     builder.requestedCollections.all { collectionId ->
                         credentialCollections[id]?.contains(collectionId) == true
                     }
-            }
-            .map { it.value }
+            }.map { it.value }
             .filter(predicate)
     }
 
     // Organization implementation
-    override suspend fun createCollection(name: String, description: String?): String {
+    override suspend fun createCollection(
+        name: String,
+        description: String?,
+    ): String {
         val id = UUID.randomUUID().toString()
-        collections[id] = CredentialCollection(
-            id = id,
-            name = name,
-            description = description,
-            createdAt = Clock.System.now(),
-            credentialCount = 0
-        )
+        collections[id] =
+            CredentialCollection(
+                id = id,
+                name = name,
+                description = description,
+                createdAt = Clock.System.now(),
+                credentialCount = 0,
+            )
         collectionCredentials[id] = mutableSetOf()
         return id
     }
@@ -177,11 +178,10 @@ class InMemoryWallet(
         return collection.copy(credentialCount = collectionCredentials[collectionId]?.size ?: 0)
     }
 
-    override suspend fun listCollections(): List<CredentialCollection> {
-        return collections.values.map { collection ->
+    override suspend fun listCollections(): List<CredentialCollection> =
+        collections.values.map { collection ->
             collection.copy(credentialCount = collectionCredentials[collection.id]?.size ?: 0)
         }
-    }
 
     override suspend fun deleteCollection(collectionId: String): Boolean {
         val removed = collections.remove(collectionId) != null
@@ -194,7 +194,10 @@ class InMemoryWallet(
         return removed
     }
 
-    override suspend fun addToCollection(credentialId: String, collectionId: String): Boolean {
+    override suspend fun addToCollection(
+        credentialId: String,
+        collectionId: String,
+    ): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
         }
@@ -206,7 +209,10 @@ class InMemoryWallet(
         return true
     }
 
-    override suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean {
+    override suspend fun removeFromCollection(
+        credentialId: String,
+        collectionId: String,
+    ): Boolean {
         // Contract (CredentialOrganization): true only if an existing membership was removed;
         // false for unknown credential, unknown collection, or non-member.
         val removedFromCredentialSide = credentialCollections[credentialId]?.remove(collectionId) ?: false
@@ -219,7 +225,10 @@ class InMemoryWallet(
         return credentialIds.mapNotNull { id -> credentials[id] ?: archivedCredentials[id] }
     }
 
-    override suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean {
+    override suspend fun tagCredential(
+        credentialId: String,
+        tags: Set<String>,
+    ): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
         }
@@ -228,7 +237,10 @@ class InMemoryWallet(
         return true
     }
 
-    override suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean {
+    override suspend fun untagCredential(
+        credentialId: String,
+        tags: Set<String>,
+    ): Boolean {
         // Contract (CredentialOrganization): false if the credential is not found.
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
@@ -238,38 +250,37 @@ class InMemoryWallet(
         return true
     }
 
-    override suspend fun getTags(credentialId: String): Set<String> {
-        return credentialTags[credentialId] ?: emptySet()
-    }
+    override suspend fun getTags(credentialId: String): Set<String> = credentialTags[credentialId] ?: emptySet()
 
-    override suspend fun getAllTags(): Set<String> {
-        return credentialTags.values.flatten().toSet()
-    }
+    override suspend fun getAllTags(): Set<String> = credentialTags.values.flatten().toSet()
 
-    override suspend fun findByTag(tag: String): List<VerifiableCredential> {
-        return credentialTags.entries
+    override suspend fun findByTag(tag: String): List<VerifiableCredential> =
+        credentialTags.entries
             .filter { tag in it.value }
             .mapNotNull { (id, _) -> credentials[id] ?: archivedCredentials[id] }
-    }
 
-    override suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean {
+    override suspend fun addMetadata(
+        credentialId: String,
+        metadata: Map<String, Any>,
+    ): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
         }
         updateMetadata(credentialId) { existing ->
             existing.copy(
                 metadata = existing.metadata + metadata,
-                updatedAt = Clock.System.now()
+                updatedAt = Clock.System.now(),
             )
         }
         return true
     }
 
-    override suspend fun getMetadata(credentialId: String): CredentialMetadata? {
-        return credentialMetadata[credentialId]
-    }
+    override suspend fun getMetadata(credentialId: String): CredentialMetadata? = credentialMetadata[credentialId]
 
-    override suspend fun updateNotes(credentialId: String, notes: String?): Boolean {
+    override suspend fun updateNotes(
+        credentialId: String,
+        notes: String?,
+    ): Boolean {
         if (!credentials.containsKey(credentialId) && !archivedCredentials.containsKey(credentialId)) {
             return false
         }
@@ -290,9 +301,7 @@ class InMemoryWallet(
         return true
     }
 
-    override suspend fun getArchived(): List<VerifiableCredential> {
-        return archivedCredentials.values.toList()
-    }
+    override suspend fun getArchived(): List<VerifiableCredential> = archivedCredentials.values.toList()
 
     override suspend fun refreshCredential(credentialId: String): VerifiableCredential? {
         // In-memory implementation: just return the credential as-is
@@ -304,11 +313,12 @@ class InMemoryWallet(
     override suspend fun createPresentation(
         credentialIds: List<String>,
         holderDid: String,
-        options: ProofOptions
+        options: ProofOptions,
     ): VerifiablePresentation {
-        val credentialsToInclude = credentialIds.mapNotNull { id ->
-            credentials[id] ?: archivedCredentials[id]
-        }
+        val credentialsToInclude =
+            credentialIds.mapNotNull { id ->
+                credentials[id] ?: archivedCredentials[id]
+            }
 
         if (credentialsToInclude.size != credentialIds.size) {
             throw IllegalArgumentException("One or more credential IDs not found")
@@ -321,7 +331,7 @@ class InMemoryWallet(
             holder = Iri(holderDid),
             proof = null, // Proof generation would be handled by PresentationService
             challenge = options.challenge,
-            domain = options.domain
+            domain = options.domain,
         )
     }
 
@@ -329,7 +339,7 @@ class InMemoryWallet(
         credentialIds: List<String>,
         disclosedFields: List<String>,
         holderDid: String,
-        options: ProofOptions
+        options: ProofOptions,
     ): VerifiablePresentation {
         // Simplified implementation - real selective disclosure would filter fields
         return createPresentation(credentialIds, holderDid, options)
@@ -343,28 +353,26 @@ class InMemoryWallet(
         managedDids.add(this@InMemoryWallet.holderDid)
     }
 
-    override suspend fun createDid(method: String, options: DidCreationOptions): String {
+    override suspend fun createDid(
+        method: String,
+        options: DidCreationOptions,
+    ): String {
         val did = "did:$method:test-${UUID.randomUUID()}"
         managedDids.add(did)
         return did
     }
 
-    override suspend fun getDids(): List<String> {
-        return managedDids.toList()
-    }
+    override suspend fun getDids(): List<String> = managedDids.toList()
 
-    override suspend fun getPrimaryDid(): String {
-        return holderDid
-    }
+    override suspend fun getPrimaryDid(): String = holderDid
 
-    override suspend fun setPrimaryDid(did: String): Boolean {
-        return if (managedDids.contains(did)) {
+    override suspend fun setPrimaryDid(did: String): Boolean =
+        if (managedDids.contains(did)) {
             managedDids.add(did) // Add if not present
             true
         } else {
             false
         }
-    }
 
     override suspend fun resolveDid(did: String): DidDocument? {
         if (!managedDids.contains(did)) return null
@@ -374,27 +382,32 @@ class InMemoryWallet(
         // the wrong reason (empty VM list → no matching key).
         val didObj = Did(did)
         val vmId = VerificationMethodId(did = didObj, keyId = KeyId("key-1"))
-        val vm = VerificationMethod(
-            id = vmId,
-            type = "Ed25519VerificationKey2020",
-            controller = didObj,
-            publicKeyMultibase = "z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP"
-        )
+        val vm =
+            VerificationMethod(
+                id = vmId,
+                type = "Ed25519VerificationKey2020",
+                controller = didObj,
+                publicKeyMultibase = "z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP",
+            )
         return DidDocument(
             id = didObj,
             verificationMethod = listOf(vm),
             authentication = listOf(vmId),
-            assertionMethod = listOf(vmId)
+            assertionMethod = listOf(vmId),
         )
     }
 
     // Helper methods
-    private fun updateMetadata(credentialId: String, updater: (CredentialMetadata) -> CredentialMetadata) {
-        val existing = credentialMetadata[credentialId] ?: CredentialMetadata(
-            credentialId = credentialId,
-            createdAt = Clock.System.now(),
-            updatedAt = Clock.System.now()
-        )
+    private fun updateMetadata(
+        credentialId: String,
+        updater: (CredentialMetadata) -> CredentialMetadata,
+    ) {
+        val existing =
+            credentialMetadata[credentialId] ?: CredentialMetadata(
+                credentialId = credentialId,
+                createdAt = Clock.System.now(),
+                updatedAt = Clock.System.now(),
+            )
         credentialMetadata[credentialId] = updater(existing)
     }
 
@@ -416,4 +429,3 @@ class InMemoryWallet(
      */
     fun totalSize(): Int = credentials.size + archivedCredentials.size
 }
-

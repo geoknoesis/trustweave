@@ -5,6 +5,16 @@ plugins {
 
 group = "org.trustweave.wallet"
 
+tasks.test {
+    val dockerHost =
+        System.getenv("DOCKER_HOST")?.takeIf { it.isNotBlank() }
+            ?: if (System.getProperty("os.name").startsWith("Windows")) "npipe:////./pipe/dockerDesktopLinuxEngine" else null
+    if (dockerHost != null) {
+        environment("DOCKER_HOST", dockerHost)
+        systemProperty("DOCKER_HOST", dockerHost)
+    }
+}
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
@@ -27,4 +37,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.testcontainers)
 }

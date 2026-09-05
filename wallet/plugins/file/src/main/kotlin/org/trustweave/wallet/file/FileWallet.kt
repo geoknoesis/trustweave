@@ -1,25 +1,44 @@
 package org.trustweave.wallet.file
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.wallet.*
-import org.trustweave.wallet.exception.WalletException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.wallet.CredentialFilter
+import org.trustweave.wallet.CredentialQueryBuilder
+import org.trustweave.wallet.CredentialReadFailure
+import org.trustweave.wallet.CredentialRecordStorage
+import org.trustweave.wallet.CredentialRecovery
+import org.trustweave.wallet.CredentialRecoveryResult
+import org.trustweave.wallet.CredentialStorage
+import org.trustweave.wallet.StoredCredentialRecord
+import org.trustweave.wallet.StoredCredentialStatus
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.WalletStatistics
+import org.trustweave.wallet.WalletStatusResolver
+import org.trustweave.wallet.exception.WalletException
+import org.trustweave.wallet.resolveStoredStatus
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.security.GeneralSecurityException
 import java.security.MessageDigest
 import java.security.SecureRandom
-import kotlinx.datetime.Clock
-import java.util.UUID
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import java.util.Base64
+import kotlin.concurrent.withLock
 
 /**
  * File-based wallet implementation.
@@ -63,10 +82,18 @@ class FileWallet(
     val walletDid: String,
     val holderDid: String,
     private val walletDir: Path,
-    private val encryptionKey: String? = null
-) : Wallet, CredentialStorage {
-
+    private val encryptionKey: String? = null,
+    private val statusResolver: WalletStatusResolver? = null,
+) : Wallet,
+    CredentialStorage,
+    CredentialRecordStorage,
+    CredentialRecovery {
     private companion object {
+        private val ioLocks =
+            Array(64) {
+                java.util.concurrent.locks
+                    .ReentrantLock()
+            }
         private val logger = LoggerFactory.getLogger(FileWallet::class.java)
 
         private const val CIPHER_TRANSFORMATION = "AES/GCM/NoPadding"
@@ -82,31 +109,34 @@ class FileWallet(
      * AES key derived from [encryptionKey], validated at construction.
      * Null means plaintext storage (legacy/default behavior — discouraged).
      */
-    private val secretKey: SecretKeySpec? = encryptionKey?.let { key ->
-        val keyBytes = try {
-            Base64.getDecoder().decode(key)
-        } catch (e: IllegalArgumentException) {
-            throw WalletException.WalletCreationFailed(
-                reason = "encryptionKey must be valid Base64-encoded AES key material",
-                provider = "file",
-                walletId = walletId
-            )
+    private val secretKey: SecretKeySpec? =
+        encryptionKey?.let { key ->
+            val keyBytes =
+                try {
+                    Base64.getDecoder().decode(key)
+                } catch (e: IllegalArgumentException) {
+                    throw WalletException.WalletCreationFailed(
+                        reason = "encryptionKey must be valid Base64-encoded AES key material",
+                        provider = "file",
+                        walletId = walletId,
+                    )
+                }
+            if (keyBytes.size !in VALID_AES_KEY_LENGTHS) {
+                throw WalletException.WalletCreationFailed(
+                    reason = "encryptionKey must decode to 16, 24, or 32 bytes (AES-128/192/256), but decoded to ${keyBytes.size} bytes",
+                    provider = "file",
+                    walletId = walletId,
+                )
+            }
+            SecretKeySpec(keyBytes, "AES")
         }
-        if (keyBytes.size !in VALID_AES_KEY_LENGTHS) {
-            throw WalletException.WalletCreationFailed(
-                reason = "encryptionKey must decode to 16, 24, or 32 bytes (AES-128/192/256), but decoded to ${keyBytes.size} bytes",
-                provider = "file",
-                walletId = walletId
-            )
-        }
-        SecretKeySpec(keyBytes, "AES")
-    }
 
-    private val json = Json {
-        prettyPrint = false
-        encodeDefaults = false
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+        }
 
     private val credentialsDir: Path = walletDir.resolve("credentials")
     private val collectionsDir: Path = walletDir.resolve("collections")
@@ -122,7 +152,7 @@ class FileWallet(
                     "in plaintext under {}. Provide a Base64-encoded 16/24/32-byte 'encryptionKey' " +
                     "to enable AES-GCM encryption at rest.",
                 walletId,
-                walletDir
+                walletDir,
             )
         }
     }
@@ -145,152 +175,137 @@ class FileWallet(
      * wallet directory. As defense-in-depth the normalized result is verified to be
      * inside [dir]; escaping paths throw [WalletException.StorageError].
      */
-    private fun resolveDataFile(dir: Path, credentialId: String): Path {
+    private fun resolveDataFile(
+        dir: Path,
+        credentialId: String,
+    ): Path {
         val fileName = sha256Hex(credentialId) + ".json"
         val normalizedDir = dir.toAbsolutePath().normalize()
         val resolved = normalizedDir.resolve(fileName).normalize()
         if (!resolved.startsWith(normalizedDir)) {
             throw WalletException.StorageError(
                 operation = "resolvePath",
-                reason = "Resolved credential file path escapes the wallet directory: $resolved"
+                reason = "Resolved credential file path escapes the wallet directory: $resolved",
             )
         }
         return resolved
     }
 
     private fun sha256Hex(value: String): String =
-        MessageDigest.getInstance("SHA-256")
+        MessageDigest
+            .getInstance("SHA-256")
             .digest(value.toByteArray(Charsets.UTF_8))
             .joinToString("") { byte -> "%02x".format(byte) }
 
     // CredentialStorage implementation
-    override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {
-        val id = credential.id?.value ?: UUID.randomUUID().toString()
-        val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
+    override suspend fun store(credential: VerifiableCredential): String =
+        withContext(Dispatchers.IO) {
+            val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
+            val id = credential.id?.value ?: "urn:trustweave:stored:${sha256Hex(credentialJson)}"
 
-        val credentialFile = resolveDataFile(credentialsDir, id)
-        val content = if (secretKey != null) {
-            encrypt(credentialJson)
-        } else {
-            credentialJson.toByteArray(Charsets.UTF_8)
-        }
-
-        Files.write(credentialFile, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
-
-        // Initialize metadata if not exists. The sidecar embeds the raw credential id
-        // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM
-        // scheme as the credential file whenever an encryption key is configured.
-        val metadataFile = resolveDataFile(metadataDir, id)
-        if (!Files.exists(metadataFile)) {
-            val metadata = buildJsonObject {
-                put("credentialId", id)
-                put("createdAt", Clock.System.now().toString())
-                put("updatedAt", Clock.System.now().toString())
-                put("notes", JsonNull)
-                put("tags", buildJsonArray { })
-                put("metadata", buildJsonObject { })
-            }
-            val metadataJson = json.encodeToString(JsonObject.serializer(), metadata)
-            val metadataContent = if (secretKey != null) {
-                encrypt(metadataJson)
-            } else {
-                metadataJson.toByteArray(Charsets.UTF_8)
-            }
-            Files.write(metadataFile, metadataContent, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-        }
-
-        id
-    }
-
-    override suspend fun get(credentialId: String): VerifiableCredential? = withContext(Dispatchers.IO) {
-        val credentialFile = resolveDataFile(credentialsDir, credentialId)
-        if (!Files.exists(credentialFile)) {
-            return@withContext null
-        }
-
-        val content = Files.readAllBytes(credentialFile)
-        val credentialJson = if (secretKey != null) {
-            decrypt(content)
-        } else {
-            String(content, Charsets.UTF_8)
-        }
-
-        json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
-    }
-
-    override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> = withContext(Dispatchers.IO) {
-        val credentials = mutableListOf<VerifiableCredential>()
-
-        if (!Files.exists(credentialsDir)) {
-            return@withContext emptyList()
-        }
-
-        Files.list(credentialsDir).use { stream ->
-            stream.filter { it.fileName.toString().endsWith(".json") }
-                .forEach { file ->
-                    try {
-                        // Filenames are SHA-256 digests of the credential id; the id itself
-                        // is part of the (decrypted) JSON content, so read the file directly.
-                        val content = Files.readAllBytes(file)
-                        val credentialJson = if (secretKey != null) {
-                            decrypt(content)
-                        } else {
-                            String(content, Charsets.UTF_8)
-                        }
-                        val credential = json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
-                        if (filter == null || matchesFilter(credential, filter)) {
-                            credentials.add(credential)
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        // Skip corrupted/unreadable files, but record why so failures are diagnosable.
-                        logger.warn("Skipping credential file that could not be read: {}", file, e)
+            val credentialFile = resolveDataFile(credentialsDir, id)
+            withRecordLocks(credentialFile, resolveDataFile(metadataDir, id)) {
+                val content =
+                    if (secretKey != null) {
+                        encrypt(credentialJson)
+                    } else {
+                        credentialJson.toByteArray(Charsets.UTF_8)
                     }
+
+                // Initialize metadata if not exists. The sidecar embeds the raw credential id
+                // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM
+                // scheme as the credential file whenever an encryption key is configured.
+                val metadataFile = resolveDataFile(metadataDir, id)
+                if (!Files.exists(metadataFile)) {
+                    val metadata =
+                        buildJsonObject {
+                            put("credentialId", id)
+                            put("createdAt", Clock.System.now().toString())
+                            put("updatedAt", Clock.System.now().toString())
+                            put("notes", JsonNull)
+                            put("tags", buildJsonArray { })
+                            put("metadata", buildJsonObject { })
+                        }
+                    val metadataJson = json.encodeToString(JsonObject.serializer(), metadata)
+                    val metadataContent =
+                        if (secretKey != null) {
+                            encrypt(metadataJson)
+                        } else {
+                            metadataJson.toByteArray(Charsets.UTF_8)
+                        }
+                    atomicWrite(metadataFile, metadataContent)
                 }
+
+                atomicWrite(credentialFile, content)
+                id
+            }
         }
 
-        credentials
-    }
+    override suspend fun get(credentialId: String): VerifiableCredential? =
+        withContext(Dispatchers.IO) {
+            val credentialFile = resolveDataFile(credentialsDir, credentialId)
+            if (!Files.exists(credentialFile)) {
+                return@withContext null
+            }
 
-    override suspend fun delete(credentialId: String): Boolean = withContext(Dispatchers.IO) {
-        val credentialFile = resolveDataFile(credentialsDir, credentialId)
-        val deleted = Files.deleteIfExists(credentialFile)
+            val content = readBytes(credentialFile)
+            val credentialJson =
+                if (secretKey != null) {
+                    decrypt(content)
+                } else {
+                    String(content, Charsets.UTF_8)
+                }
 
-        if (deleted) {
-            // Clean up related files
-            Files.deleteIfExists(resolveDataFile(metadataDir, credentialId))
-            Files.deleteIfExists(resolveDataFile(tagsDir, credentialId))
+            json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
         }
 
-        deleted
-    }
+    override suspend fun list(filter: CredentialFilter?): List<VerifiableCredential> = listRecords(filter).map { it.credential }
 
-    override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> = withContext(Dispatchers.IO) {
-        val builder = CredentialQueryBuilder()
-        builder.query()
+    override suspend fun delete(credentialId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            val credentialFile = resolveDataFile(credentialsDir, credentialId)
+            withRecordLocks(credentialFile, resolveDataFile(metadataDir, credentialId)) {
+                val deleted = Files.deleteIfExists(credentialFile)
 
-        // FileWallet stores no queryable tag/collection data, so byTag/byCollection
-        // cannot be honored. Failing loudly is required by the CredentialQueryBuilder
-        // contract — silently returning unfiltered credentials would feed wrong
-        // candidates into presentation selection.
-        if (builder.requestedTags.isNotEmpty() || builder.requestedCollections.isNotEmpty()) {
-            throw UnsupportedOperationException(
-                "FileWallet does not support byTag/byCollection query filters " +
-                    "(requested tags=${builder.requestedTags}, collections=${builder.requestedCollections}). " +
-                    "Use a wallet with CredentialTagging/CredentialCollections support instead."
-            )
+                if (deleted) {
+                    // Clean up related files
+                    Files.deleteIfExists(resolveDataFile(metadataDir, credentialId))
+                    Files.deleteIfExists(resolveDataFile(tagsDir, credentialId))
+                }
+
+                deleted
+            }
         }
 
-        val predicate = builder.toPredicate()
-        val allCredentials = list(null)
-        allCredentials.filter(predicate)
-    }
+    override suspend fun query(query: CredentialQueryBuilder.() -> Unit): List<VerifiableCredential> =
+        withContext(Dispatchers.IO) {
+            val builder = CredentialQueryBuilder()
+            builder.query()
+
+            // FileWallet stores no queryable tag/collection data, so byTag/byCollection
+            // cannot be honored. Failing loudly is required by the CredentialQueryBuilder
+            // contract — silently returning unfiltered credentials would feed wrong
+            // candidates into presentation selection.
+            if (builder.requestedTags.isNotEmpty() || builder.requestedCollections.isNotEmpty()) {
+                throw UnsupportedOperationException(
+                    "FileWallet does not support byTag/byCollection query filters " +
+                        "(requested tags=${builder.requestedTags}, collections=${builder.requestedCollections}). " +
+                        "Use a wallet with CredentialTagging/CredentialCollections support instead.",
+                )
+            }
+
+            val predicate = builder.toPredicate()
+            val allCredentials = list(null)
+            allCredentials.filter(predicate)
+        }
 
     /**
      * Check if credential matches filter criteria.
      */
-    private fun matchesFilter(credential: VerifiableCredential, filter: CredentialFilter): Boolean {
+    private suspend fun matchesFilter(
+        credential: VerifiableCredential,
+        filter: CredentialFilter,
+    ): Boolean {
         if (filter.issuer != null && credential.issuer.id.value != filter.issuer) return false
         if (filter.type != null) {
             val filterTypes = filter.type
@@ -301,45 +316,137 @@ class FileWallet(
             if (subjectId != filter.subjectId) return false
         }
         if (filter.expired != null) {
-            val isExpired = credential.expirationDate?.let {
-                Clock.System.now() > it
-            } ?: false
+            val isExpired =
+                (credential.validUntil ?: credential.expirationDate)?.let {
+                    Clock.System.now() > it
+                } ?: false
             if (isExpired != filter.expired) return false
         }
+        if (filter.hasStatusEntry != null && (credential.credentialStatus != null) != filter.hasStatusEntry) return false
         if (filter.revoked != null) {
-            val isRevoked = credential.credentialStatus != null
-            if (isRevoked != filter.revoked) return false
+            val status = resolveStoredStatus(credential, statusResolver)
+            check(status != StoredCredentialStatus.UNKNOWN) { "Revocation status is unknown; configure a WalletStatusResolver" }
+            if ((status == StoredCredentialStatus.REVOKED) != filter.revoked) return false
         }
         return true
     }
 
-    /**
-     * Get wallet statistics.
-     */
-    override suspend fun getStatistics(): WalletStatistics = withContext(Dispatchers.IO) {
-        val allCredentials = list(null)
-        val now = Clock.System.now()
-
-        WalletStatistics(
-            totalCredentials = allCredentials.size,
-            validCredentials = allCredentials.count { credential ->
-                credential.proof != null &&
-                (credential.expirationDate?.let { expirationDate ->
-                    now < expirationDate
-                } ?: true) &&
-                credential.credentialStatus == null
-            },
-            expiredCredentials = allCredentials.count { credential ->
-                credential.expirationDate?.let { expirationDate ->
-                    now > expirationDate
-                } ?: false
-            },
-            revokedCredentials = allCredentials.count { it.credentialStatus != null },
-            collectionsCount = 0, // Would require collection implementation
-            tagsCount = 0, // Would require tag implementation
-            archivedCount = 0 // Would require archive implementation
-        )
+    private inline fun <T> withRecordLocks(
+        credential: Path,
+        metadata: Path,
+        block: () -> T,
+    ): T {
+        val indexes =
+            listOf(credential, metadata)
+                .map {
+                    (it.toAbsolutePath().normalize().hashCode() and Int.MAX_VALUE) % ioLocks.size
+                }.distinct()
+                .sorted()
+        indexes.forEach { ioLocks[it].lock() }
+        try {
+            return block()
+        } finally {
+            indexes.asReversed().forEach { ioLocks[it].unlock() }
+        }
     }
+
+    private fun ioLock(path: Path) = ioLocks[(path.toAbsolutePath().normalize().hashCode() and Int.MAX_VALUE) % ioLocks.size]
+
+    private fun readBytes(path: Path): ByteArray = ioLock(path).withLock { Files.readAllBytes(path) }
+
+    /** Atomically replace a record. Unsupported filesystems fail without truncating the old record. */
+    private fun atomicWrite(
+        target: Path,
+        content: ByteArray,
+    ) {
+        val temporary = Files.createTempFile(target.parent, ".wallet-", ".tmp")
+        try {
+            java.nio.channels.FileChannel.open(temporary, StandardOpenOption.WRITE).use { channel ->
+                val bytes = java.nio.ByteBuffer.wrap(content)
+                while (bytes.hasRemaining()) channel.write(bytes)
+                channel.force(true)
+            }
+            ioLock(target).withLock {
+                // Windows indexers/antivirus may briefly hold a handle without delete sharing.
+                // Retry only access-denied, with a fixed bound; never fall back to truncating writes.
+                for (attempt in 0..8) {
+                    try {
+                        Files.move(
+                            temporary,
+                            target,
+                            java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        )
+                        break
+                    } catch (error: java.nio.file.AccessDeniedException) {
+                        if (attempt == 8) throw error
+                        Thread.sleep(25L * (attempt + 1))
+                    }
+                }
+            }
+        } finally {
+            Files.deleteIfExists(temporary)
+        }
+    }
+
+    private fun recordPaths(): List<Path> =
+        Files.list(credentialsDir).use { stream ->
+            stream.filter { it.fileName.toString().endsWith(".json") }.sorted().toList()
+        }
+
+    private fun readRecord(path: Path): StoredCredentialRecord =
+        withRecordLocks(path, metadataDir.resolve(path.fileName)) {
+            fun decode(bytes: ByteArray) = if (secretKey != null) decrypt(bytes) else String(bytes, Charsets.UTF_8)
+            val credential = json.decodeFromString(VerifiableCredential.serializer(), decode(readBytes(path)))
+            val metadata = json.parseToJsonElement(decode(readBytes(metadataDir.resolve(path.fileName)))).jsonObject
+            val handle = metadata.getValue("credentialId").jsonPrimitive.content
+            check(resolveDataFile(credentialsDir, handle) == path) { "Metadata handle does not match credential file" }
+            StoredCredentialRecord(handle, credential)
+        }
+
+    override suspend fun listRecords(filter: CredentialFilter?): List<StoredCredentialRecord> =
+        withContext(Dispatchers.IO) {
+            recordPaths().map { readRecord(it) }.filter { filter == null || matchesFilter(it.credential, filter) }
+        }
+
+    override suspend fun recoverRecords(): CredentialRecoveryResult =
+        withContext(Dispatchers.IO) {
+            val records = mutableListOf<StoredCredentialRecord>()
+            val failures = mutableListOf<CredentialReadFailure>()
+            for (path in recordPaths()) {
+                try {
+                    records.add(readRecord(path))
+                } catch (
+                    error: CancellationException,
+                ) {
+                    throw error
+                } catch (
+                    error: Exception,
+                ) {
+                    failures.add(CredentialReadFailure(path.fileName.toString(), error.javaClass.simpleName))
+                }
+            }
+            CredentialRecoveryResult(records, failures)
+        }
+
+    override suspend fun getStatistics(): WalletStatistics =
+        withContext(Dispatchers.IO) {
+            val credentials = list(null)
+            val statuses = credentials.map { resolveStoredStatus(it, statusResolver) }
+            val now = Clock.System.now()
+            WalletStatistics(
+                totalCredentials = credentials.size,
+                validCredentials =
+                    credentials.indices.count { i ->
+                        credentials[i].proof != null &&
+                            statuses[i] == StoredCredentialStatus.ACTIVE &&
+                            (credentials[i].expirationDate ?: credentials[i].validUntil)?.let { it > now } != false
+                    },
+                expiredCredentials = credentials.count { (it.expirationDate ?: it.validUntil)?.let { expiry -> expiry <= now } == true },
+                revokedCredentials = statuses.count { it == StoredCredentialStatus.REVOKED },
+                unknownStatusCredentials = statuses.count { it == StoredCredentialStatus.UNKNOWN },
+            )
+        }
 
     /**
      * Encrypt data using AES/GCM/NoPadding with a fresh random 12-byte IV.
@@ -347,8 +454,9 @@ class FileWallet(
      * Output layout: `[1-byte format version][12-byte IV][ciphertext + 128-bit tag]`.
      */
     private fun encrypt(data: String): ByteArray {
-        val key = secretKey
-            ?: throw IllegalStateException("Encryption key not provided")
+        val key =
+            secretKey
+                ?: throw IllegalStateException("Encryption key not provided")
 
         val iv = ByteArray(GCM_IV_LENGTH_BYTES).also { secureRandom.nextBytes(it) }
         val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
@@ -369,15 +477,17 @@ class FileWallet(
      * [WalletException.StorageError] — corrupted plaintext is never returned.
      */
     private fun decrypt(encryptedData: ByteArray): String {
-        val key = secretKey
-            ?: throw IllegalStateException("Encryption key not provided")
+        val key =
+            secretKey
+                ?: throw IllegalStateException("Encryption key not provided")
 
         val minLength = 1 + GCM_IV_LENGTH_BYTES + GCM_TAG_LENGTH_BITS / 8
         if (encryptedData.size < minLength || encryptedData[0] != FORMAT_VERSION) {
             throw WalletException.StorageError(
                 operation = "decrypt",
-                reason = "Credential file is not in the expected AES-GCM format (version $FORMAT_VERSION); " +
-                    "it may be corrupted, tampered with, or written by an older FileWallet version"
+                reason =
+                    "Credential file is not in the expected AES-GCM format (version $FORMAT_VERSION); " +
+                        "it may be corrupted, tampered with, or written by an older FileWallet version",
             )
         }
 
@@ -386,16 +496,16 @@ class FileWallet(
         val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
         cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
 
-        val decrypted = try {
-            cipher.doFinal(ciphertext)
-        } catch (e: GeneralSecurityException) {
-            throw WalletException.StorageError(
-                operation = "decrypt",
-                reason = "Credential decryption failed: data is corrupted or has been tampered with",
-                cause = e
-            )
-        }
+        val decrypted =
+            try {
+                cipher.doFinal(ciphertext)
+            } catch (e: GeneralSecurityException) {
+                throw WalletException.StorageError(
+                    operation = "decrypt",
+                    reason = "Credential decryption failed: data is corrupted or has been tampered with",
+                    cause = e,
+                )
+            }
         return String(decrypted, Charsets.UTF_8)
     }
 }
-

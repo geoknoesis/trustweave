@@ -1,0 +1,483 @@
+[
+  {
+    "repo": "trustweave-saas",
+    "id": "S01",
+    "priority": "P1",
+    "kind": "Security",
+    "title": "Holder proof does not bind the presenter to the credentials",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt",
+        "line": 253,
+        "excerpt": "251:         )\n252: \n253:         val bound = nonceOk && audOk\n254:         return HolderBindingOutcome(\n255:             bound = bound,\n256:             checks = checks,\n257:             error = if (bound) null else \"Holder proof not bound to expected nonce/audience\",\n258:         )\n259:     }\n260: \n261:     /** Parse + verify a raw credential string (VC-LD JSON or compact SD-JWT VC) and map to the API shape. */"
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt",
+        "line": 133,
+        "excerpt": "131:             var allValid = true\n132:             val errors = mutableListOf<String>()\n133:             credentials.forEachIndexed { index, credJson ->\n134:                 val label = \"Credential #${index + 1}\"\n135:                 val result = verifyCredential(credJson, policy)\n136:                 result.fold(\n137:                     onSuccess = { vr ->\n138:                         val response = toResponse(vr, trustEvaluated = policy.checkIssuerTrust)\n139:                         response.checks.forEach { c ->\n140:                             checks += VerificationCheck(\"$label — ${c.name}\", c.passed, c.detail)\n141:                         }"
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt",
+        "line": 216,
+        "excerpt": "214:         val verificationMethod = (proof[\"verificationMethod\"] as? JsonPrimitive)?.content\n215:         val holderField = (presentationJson[\"holder\"] as? JsonPrimitive)?.content\n216:         val holderDid = listOfNotNull(verificationMethod?.substringBefore('#'), holderField)\n217:             .firstOrNull { it.startsWith(\"did:key:z\") }\n218:         if (holderDid == null) {\n219:             checks += VerificationCheck(\"Resolve holder DID\", false, \"No holder did:key in proof.verificationMethod / holder\")\n220:             return HolderBindingOutcome(false, checks, \"No holder did:key in presentation\")\n221:         }\n222:         checks += VerificationCheck(\"Resolve holder DID\", true, holderDid)\n223: \n224:         val claims = runCatching {"
+      }
+    ],
+    "impact": "A caller with a copied valid credential can generate their own did:key and sign the public request nonce/audience. The verifier checks that signature and independently verifies the credential, but never checks that the credential authorizes this holder or that the JWS covers the presentation contents. The top-level holder can also disagree with proof.verificationMethod, yet is later displayed as the presenter. This undermines identity checks even when all cryptographic operations succeed. Bearer/delegated credentials need an explicit policy rather than a blanket subject-equality rule.",
+    "fix": "Use a supported presentation proof format that signs the complete presentation or a canonical digest; validate credential-specific holder authorization (subject/key binding, cnf, or explicit delegation policy). Derive the displayed holder from the verified proof and reject inconsistent identity fields.",
+    "test": "Use real signatures: issue to Alice, present with Mallory’s challenge signature, and assert rejection; mutate embedded credentials after signing; mismatch holder and verificationMethod. Keep an explicit authorized-delegation case.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S02",
+    "priority": "P1",
+    "kind": "Correctness",
+    "title": "Requested credential types and claims are never enforced",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt",
+        "line": 190,
+        "excerpt": "188: \n189:         val result = runBlocking {\n190:             verifier.verifyPresentation(\n191:                 presentationJson = presentation,\n192:                 expectedNonce = session.nonce,\n193:                 expectedAudience = session.audience,\n194:                 policy = policyResolver.forTrustSpace(session.trustSpaceId),\n195:             )\n196:         }\n197: \n198:         val holderDid = presentation[\"holder\"]?.toString()?.trim('\"')"
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt",
+        "line": 58,
+        "excerpt": "56:         @PathVariable sessionId: String,\n57:         @RequestParam(\"vp_token\") vpToken: String,\n58:         @RequestParam(\"presentation_submission\", required = false) presentationSubmission: String?,\n59:         request: HttpServletRequest,\n60:     ): ResponseEntity<Any> {\n61:         rateLimiter.check(\"oid4vp-response:\" + clientIp(request), maxRequests = 20, windowSeconds = 60)\n62: \n63:         val session = requests.submitPresentation(sessionId, vpToken)\n64:             ?: return ResponseEntity.notFound().build()\n65: \n66:         return when (session.status) {"
+      }
+    ],
+    "impact": "The QR request advertises type and claim requirements, but submitPresentation passes only nonce, audience and trust-space policy to the verifier. presentation_submission is accepted by the controller and ignored. A trusted, valid credential of the wrong type or missing a requested claim can yield VERIFIED.",
+    "fix": "Evaluate the submitted descriptor mapping and every required type/claim against verified credential data before marking VERIFIED. Reject missing, duplicate, mismatched or unsatisfied descriptors with an operator-readable reason.",
+    "test": "Ask for an employee credential with department; submit a valid unrelated credential or omit department. Both must fail even with a valid holder proof.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S03",
+    "priority": "P1",
+    "kind": "Concurrency",
+    "title": "Verification completion is a read–check–write race",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt",
+        "line": 169,
+        "excerpt": "167:     @Transactional\n168:     fun submitPresentation(sessionId: String, vpToken: String): VerificationSession? {\n169:         val session = sessions.findById(sessionId).orElse(null) ?: return null\n170: \n171:         if (session.status != VerificationSessionStatus.PENDING) {\n172:             // Single-use: a second presentation against a completed session is refused rather than\n173:             // silently overwriting the first verdict.\n174:             return session\n175:         }\n176:         if (session.expiresAt.isBefore(Instant.now())) {\n177:             return sessions.save("
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationSession.kt",
+        "line": 107,
+        "excerpt": "105: \n106: @Repository\n107: interface VerificationSessionRepository : JpaRepository<VerificationSession, String> {\n108:     fun findByTrustSpaceIdOrderByCreatedAtDesc(trustSpaceId: Long): List<VerificationSession>\n109: }"
+      }
+    ],
+    "impact": "Two requests can both read PENDING, verify independently, then overwrite the same session. @Transactional alone supplies no optimistic version or conditional transition. A malformed response can race a legitimate response and overwrite the final verdict. A sequential repeat of a VERIFIED session also returns accepted without checking the new token, because the previous result is returned.",
+    "fix": "Claim the pending session with a database conditional update or versioned state transition. Define replay responses separately from a newly accepted submission. Avoid holding a row lock during slow network verification.",
+    "test": "Run concurrent valid/invalid submissions using PostgreSQL and assert exactly one terminal transition; repeat with a different token after completion and assert explicit already-used behavior.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S04",
+    "priority": "P2",
+    "kind": "UX / correctness",
+    "title": "Unanswered verification requests never become expired on reads",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationRequestService.kt",
+        "line": 281,
+        "excerpt": "279:     }.getOrDefault(false)\n280: \n281:     fun get(sessionId: String): VerificationSession? = sessions.findById(sessionId).orElse(null)\n282: \n283:     fun listFor(trustSpaceId: Long): List<VerificationSession> =\n284:         sessions.findByTrustSpaceIdOrderByCreatedAtDesc(trustSpaceId)\n285: \n286:     private fun rejected(session: VerificationSession, reason: String) = session.copy(\n287:         status = VerificationSessionStatus.REJECTED,\n288:         resultJson = errorJson(reason),\n289:         completedAt = Instant.now(),"
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt",
+        "line": 36,
+        "excerpt": "34:         rateLimiter.check(\"oid4vp-request:\" + clientIp(request), maxRequests = 30, windowSeconds = 60)\n35:         val session = requests.get(sessionId) ?: return ResponseEntity.notFound().build()\n36:         if (session.status != VerificationSessionStatus.PENDING) {\n37:             return ResponseEntity.status(HttpStatus.GONE)\n38:                 .body(mapOf(\"error\" to \"This verification request has already been used.\"))\n39:         }\n40:         return ResponseEntity.ok(requests.requestObject(session))\n41:     }\n42: \n43:     /**\n44:      * Where the wallet posts the presentation."
+      }
+    ],
+    "impact": "Expiry is applied only when someone submits a presentation. A request that nobody answers remains PENDING in get/list, and its public request object remains available. The operator can wait indefinitely despite the ten-minute lifetime.",
+    "fix": "Derive expiration consistently on reads or persist it in a scheduled/conditional transition; return 410 for an expired request object. Show a countdown and a restart action.",
+    "test": "Advance a controlled clock beyond TTL without submitting; private get/list must show EXPIRED and public request fetch must return 410.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S05",
+    "priority": "P2",
+    "kind": "UX / performance",
+    "title": "Completed verification checks keep polling every two seconds",
+    "evidence": [
+      {
+        "path": "frontend/src/pages/CheckCredential.tsx",
+        "line": 78,
+        "excerpt": "76:     queryKey: ['verification-session', spaceIdNum, session?.id],\n77:     queryFn: () => verificationRequestsApi.get(spaceIdNum, session!.id),\n78:     enabled: !!session && session.status === 'PENDING',\n79:     refetchInterval: POLL_MS,\n80:   })\n81: \n82:   const current = polled ?? session\n83:   const result = current?.result\n84: \n85:   const toggleType = (vcType: string) => {\n86:     // The claims on offer belong to a specific type, so a change of type invalidates them."
+      }
+    ],
+    "impact": "session is the original create response and remains PENDING. Poll results are held in polled, so the enabled condition never changes when the server returns VERIFIED or REJECTED. The comment promises polling stops, but the fixed interval continues until reset/unmount.",
+    "fix": "Make refetchInterval depend on the latest query data and return false for terminal states; stop at expiry and expose polling errors with a retry action.",
+    "test": "With fake timers, return VERIFIED on the first poll and assert no further requests after several intervals. Also test expiry and a disconnected network.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S06",
+    "priority": "P1",
+    "kind": "Deployment-dependent security",
+    "title": "Public rate-limit identity trusts arbitrary forwarded headers",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/Oid4VpControllers.kt",
+        "line": 75,
+        "excerpt": "73: \n74:     private fun clientIp(request: HttpServletRequest): String {\n75:         val forwarded = request.getHeader(\"X-Forwarded-For\")\n76:         return if (!forwarded.isNullOrBlank()) forwarded.substringBefore(\",\").trim()\n77:         else request.remoteAddr ?: \"unknown\"\n78:     }\n79: }\n80: \n81: /**\n82:  * The verifier's own API: create a request, watch for a result.\n83:  *"
+      },
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt",
+        "line": 24,
+        "excerpt": "22:     private data class Window(val windowStartEpochSec: Long, val count: Int)\n23: \n24:     private val windows = ConcurrentHashMap<String, AtomicReference<Window>>()\n25: \n26:     /**\n27:      * Records one request against [key]. Throws [TooManyRequestsException] when more than\n28:      * [maxRequests] requests are seen for [key] within any [windowSeconds] window.\n29:      */\n30:     fun check(key: String, maxRequests: Int, windowSeconds: Long) {\n31:         val nowSec = System.currentTimeMillis() / 1000L\n32:         var rejected = false"
+      }
+    ],
+    "impact": "The public OID4VP controller uses the first caller-supplied X-Forwarded-For value as the rate-limit key. If the backend is reachable directly or the ingress preserves an untrusted first value, clients can rotate the header and bypass limits. This is conditional on ingress configuration; the repository code does not enforce the trust boundary.",
+    "fix": "Resolve client addresses through an explicitly trusted proxy configuration and block direct backend access. Apply an independent endpoint/global budget so a changing address cannot exhaust cryptographic workers.",
+    "test": "Send repeated requests with changing forwarded headers directly and through the production ingress configuration. Untrusted headers must not reset the effective budget.",
+    "confidence": "High code confidence; exposure depends on ingress"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S07",
+    "priority": "P2",
+    "kind": "Resource management",
+    "title": "Rate-limiter keys accumulate without eviction",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt",
+        "line": 34,
+        "excerpt": "32:         var rejected = false\n33: \n34:         val ref = windows.computeIfAbsent(key) { AtomicReference(Window(nowSec, 0)) }\n35:         ref.updateAndGet { current ->\n36:             if (nowSec - current.windowStartEpochSec >= windowSeconds) {\n37:                 // Window elapsed: start a fresh window counting this request.\n38:                 Window(nowSec, 1)\n39:             } else if (current.count >= maxRequests) {\n40:                 // Over the limit within the current window: reject, do not increment.\n41:                 rejected = true\n42:                 current"
+      }
+    ],
+    "impact": "The map resets counters but never removes expired keys. A long-running service accumulates an entry for every distinct key, including attacker-selected header values on the path in S06. Multiple instances also maintain independent limits, as the class documentation acknowledges.",
+    "fix": "Use bounded expiring storage, remove idle windows, and publish cardinality/rejection metrics. Use a shared limiter or ingress enforcement when deploying multiple instances.",
+    "test": "Generate many unique keys, advance beyond their TTL, and assert memory/state returns to a bounded baseline; test multi-instance effective limits.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S08",
+    "priority": "P1",
+    "kind": "CI / portability",
+    "title": "Backend tests default to a Windows Docker pipe on Linux CI",
+    "evidence": [
+      {
+        "path": "server/build.gradle.kts",
+        "line": 169,
+        "excerpt": "167:     // reads from different sources depending on the version. The Gradle test worker does not inherit\n168:     // the shell environment, so both must be set explicitly here.\n169:     val dockerHost = System.getenv(\"DOCKER_HOST\") ?: \"npipe:////./pipe/dockerDesktopLinuxEngine\"\n170:     environment(\"DOCKER_HOST\", dockerHost)\n171:     systemProperty(\"DOCKER_HOST\", dockerHost)\n172:     testLogging {\n173:         events(\"passed\", \"skipped\", \"failed\")\n174:     }\n175:     finalizedBy(tasks.jacocoTestReport)\n176: }\n177: "
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "line": 32,
+        "excerpt": "30:   frontend:\n31:     name: Frontend\n32:     runs-on: ubuntu-latest\n33:     defaults:\n34:       run:\n35:         working-directory: frontend\n36:     steps:\n37:       - uses: actions/checkout@v4\n38: \n39:       - uses: actions/setup-node@v4\n40:         with:"
+      }
+    ],
+    "impact": "The test task unconditionally falls back to npipe:////./pipe/dockerDesktopLinuxEngine and injects it into both environment and system properties. The Ubuntu workflow does not set DOCKER_HOST. On Linux runners without that variable, Testcontainers receives a Windows endpoint instead of discovering the local Unix socket. This threatens the migration and smoke-boot checks the workflow is meant to guarantee.",
+    "fix": "Apply the named-pipe fallback only on Windows; otherwise leave Docker discovery untouched. Keep an explicit environment override for remote engines.",
+    "test": "Run the integration suite on Ubuntu with DOCKER_HOST unset and verify PostgreSQL containers start. Retain a Windows Docker Desktop check.",
+    "confidence": "High — configuration mismatch; Linux run not performed"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S09",
+    "priority": "P2",
+    "kind": "Accessibility / UX",
+    "title": "Nested modal Escape handlers can dismiss both dialogs",
+    "evidence": [
+      {
+        "path": "frontend/src/components/ui/Modal.tsx",
+        "line": 44,
+        "excerpt": "42: \n43:     const onKey = (e: KeyboardEvent) => {\n44:       if (e.key === 'Escape' && dismissable) { e.stopPropagation(); onClose(); return }\n45: \n46:       if (e.key === 'Tab' && dialogRef.current) {\n47:         const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE))\n48:         if (focusable.length === 0) { e.preventDefault(); return }\n49:         const first = focusable[0]\n50:         const last = focusable[focusable.length - 1]\n51:         if (e.shiftKey) {\n52:           if (document.activeElement === first || document.activeElement === dialogRef.current) {"
+      },
+      {
+        "path": "frontend/src/components/IssueCredentialModal.tsx",
+        "line": 388,
+        "excerpt": "386:     </Modal>\n387: \n388:     {scanHolderOpen && (\n389:       <HolderDidScannerModal\n390:         onClose={() => setScanHolderOpen(false)}\n391:         onScan={(did) => setSubjectDid(did)}\n392:       />\n393:     )}\n394:     </>\n395:   )\n396: }"
+      },
+      {
+        "path": "frontend/src/components/DidScannerModal.tsx",
+        "line": 58,
+        "excerpt": "56:       title={title}\n57:       size=\"md\"\n58:       z={60}\n59:       onClose={close}\n60:       footer={\n61:         <button type=\"button\" onClick={close} className=\"btn btn-secondary btn-sm\">\n62:           Cancel\n63:         </button>\n64:       }\n65:     >\n66:       {hint && <p className=\"text-sm text-surface-500 mb-4\">{hint}</p>}"
+      }
+    ],
+    "impact": "Every Modal attaches a keydown listener to document. The issuer form can open a scanner as a second modal. stopPropagation does not suppress other listeners on the same document, so Escape can close the underlying form as well as the scanner; both focus traps also remain active. Form input may be lost.",
+    "fix": "Manage a modal stack and let only its top entry handle Escape/Tab; mark the background inert and restore focus to the scanner trigger. Keep accessible names for ReactNode titles via aria-labelledby.",
+    "test": "Open the issuer form, enter values, open its scanner, press Escape: only the scanner should close, values should remain, and focus should return to its trigger.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S10",
+    "priority": "P2",
+    "kind": "Performance / improvement",
+    "title": "Eager page imports produce a large initial JavaScript bundle",
+    "evidence": [
+      {
+        "path": "frontend/src/App.tsx",
+        "line": 9,
+        "excerpt": "7: import { Login } from './components/Login'\n8: import Layout from './components/Layout'\n9: import Dashboard from './pages/Dashboard'\n10: import TrustSpaces from './pages/TrustSpaces'\n11: import Issuers from './pages/Issuers'\n12: import CheckCredential from './pages/CheckCredential'\n13: import CredentialTypes from './pages/CredentialTypes'\n14: import StarterKits from './pages/StarterKits'\n15: import AuditLogs from './pages/AuditLogs'\n16: import Credentials, { DocumentsRedirect } from './pages/Credentials'\n17: import PeopleAndAgents from './pages/PeopleAndAgents'"
+      }
+    ],
+    "impact": "The production build generated a 1,286.06 kB main JS chunk (383.86 kB gzip), plus a 429.03 kB spreadsheet chunk. App.tsx imports route pages eagerly, so public claim/verification visitors load much of the authenticated application. This is an observed bundle cost; no mobile timing benchmark was run.",
+    "fix": "Introduce route-level lazy loading with useful loading/error boundaries, isolate visualization/scanner dependencies, and enforce bundle budgets for public routes.",
+    "test": "Compare generated chunks and cold-load network traces for /claim and /verify on a throttled mobile profile; set a performance budget based on those measurements.",
+    "confidence": "High — production build measurement"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S11",
+    "priority": "P2",
+    "kind": "Reproducibility / improvement",
+    "title": "CI tests against mutable library main rather than a recorded revision",
+    "evidence": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "line": 74,
+        "excerpt": "72:           repository: geoknoesis/trustweave\n73:           # Defaults to main; workflow_dispatch can point at a branch carrying an unmerged fix.\n74:           ref: ${{ inputs.trustweave_ref || 'main' }}\n75:           path: trustweave-lib\n76:           token: ${{ secrets.TRUSTWEAVE_REPO_TOKEN || github.token }}\n77: \n78:       - name: Place the library where the composite build expects it\n79:         run: mv trustweave-lib ../trustweave\n80: \n81:       - uses: actions/setup-java@v4\n82:         with:"
+      }
+    ],
+    "impact": "The same SaaS commit can resolve different library source on successive CI runs. Passing results cannot reliably identify the dependency revision that was tested, and a library change can break an unrelated SaaS pull request.",
+    "fix": "Record a library commit or release version in the repository, use it for CI and release builds, and update it through explicit integration changes. Publish both commit IDs with build artifacts.",
+    "test": "Re-run the same SaaS revision after library main advances and verify the dependency graph and selected library commit remain identical.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave-saas",
+    "id": "S12",
+    "priority": "P2",
+    "kind": "Format interoperability",
+    "title": "Verifier drops unsupported embedded credential entries",
+    "evidence": [
+      {
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/trustweave/CredentialVerifierService.kt",
+        "line": 174,
+        "excerpt": "172:     private fun extractCredentials(presentationJson: JsonObject): List<JsonObject> {\n173:         return when (val node = presentationJson[\"verifiableCredential\"]) {\n174:             is JsonArray -> node.mapNotNull { it as? JsonObject }\n175:             is JsonObject -> listOf(node)\n176:             else -> emptyList()\n177:         }\n178:     }\n179: \n180:     private data class HolderBindingOutcome(\n181:         val bound: Boolean,\n182:         val checks: List<VerificationCheck>,"
+      }
+    ],
+    "impact": "extractCredentials silently removes non-object array entries, although the service promises to verify every embedded credential. A mixed array containing a valid JSON credential and an invalid string can pass based solely on the JSON object. Compact credentials are also unsupported in this path, while the reference wallet stores compact JWT/SD-JWT credentials.",
+    "fix": "Reject unsupported entries explicitly, or dispatch each recognized format to its verifier. Advertise the accepted formats at request creation so incompatible wallets fail early with actionable guidance.",
+    "test": "Submit [validObject, invalidString], an all-compact array, and a mixed supported-format presentation. Every element must be verified or cause explicit rejection.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T01",
+    "priority": "P1",
+    "kind": "Correctness",
+    "title": "A status-list reference is treated as proof of revocation",
+    "evidence": [
+      {
+        "path": "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt",
+        "line": 310,
+        "excerpt": "308:         }\n309:         if (filter.revoked != null) {\n310:             val isRevoked = credential.credentialStatus != null\n311:             if (isRevoked != filter.revoked) return false\n312:         }\n313:         return true\n314:     }\n315: \n316:     /**\n317:      * Get wallet statistics.\n318:      */"
+      },
+      {
+        "path": "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt",
+        "line": 337,
+        "excerpt": "335:                 } ?: false\n336:             },\n337:             revokedCredentials = allCredentials.count { it.credentialStatus != null },\n338:             collectionsCount = 0, // Would require collection implementation\n339:             tagsCount = 0, // Would require tag implementation\n340:             archivedCount = 0 // Would require archive implementation\n341:         )\n342:     }\n343: \n344:     /**\n345:      * Encrypt data using AES/GCM/NoPadding with a fresh random 12-byte IV."
+      },
+      {
+        "path": "wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt",
+        "line": 1046,
+        "excerpt": "1044:             // filter.revoked=true  → returns only credentials that have a status entry\n1045:             // filter.revoked=false → returns only credentials that have no status entry\n1046:             val hasStatusEntry = credential.credentialStatus != null\n1047:             if (hasStatusEntry != filter.revoked) return false\n1048:         }\n1049:         return true\n1050:     }\n1051: \n1052:     /**\n1053:      * Get wallet statistics.\n1054:      */"
+      }
+    ],
+    "impact": "FileWallet classifies any credential with credentialStatus as revoked, excludes it from valid statistics, and uses the same shortcut in revoked filtering. DatabaseWallet also uses status-entry presence as its filter proxy. An active credential issued with a status-list reference is therefore mislabeled or filtered out. Status support is metadata; it is not the current status bit.",
+    "fix": "Resolve status through the revocation abstraction or expose an explicit unknown status when offline. Align filter and statistics semantics across storage providers, and distinguish a status-capable credential from a revoked one.",
+    "test": "Store two credentials pointing to a status list with one active bit and one revoked bit; assert correct filtering and statistics. Include unavailable-status behavior.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T02",
+    "priority": "P1",
+    "kind": "Data correctness",
+    "title": "Database wallet truncates before applying filters",
+    "evidence": [
+      {
+        "path": "wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt",
+        "line": 348,
+        "excerpt": "346:                     SELECT credential_data FROM credentials\n347:                     WHERE wallet_id = ? AND archived = FALSE\n348:                     LIMIT 1000\n349:                 \"\"\").use { stmt ->\n350:                     stmt.setString(1, walletId)\n351:                     stmt.executeQuery().use { rs ->\n352:                         while (rs.next()) {\n353:                             val credentialJson = rs.getString(\"credential_data\")\n354:                             rawResults.add(json.decodeFromString(VerifiableCredential.serializer(), credentialJson))\n355:                         }\n356:                     }"
+      },
+      {
+        "path": "wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt",
+        "line": 369,
+        "excerpt": "367: \n368:             // Apply in-memory filter after the truncation check so the warning fires on raw size.\n369:             if (filter == null) rawResults else rawResults.filter { matchesFilter(it, filter) }\n370:         } catch (e: Exception) {\n371:             if (e is CancellationException) throw e\n372:             throw WalletException.StorageError(\n373:                 operation = \"list\",\n374:                 reason = \"Failed to list credentials: ${e.message}\",\n375:                 cause = e\n376:             )\n377:         }"
+      }
+    ],
+    "impact": "list() fetches at most 1,000 rows without stable ordering and then applies the filter in memory. A matching credential outside that arbitrary prefix is invisible. A log warning does not inform API consumers that their result is incomplete; presentation selection can wrongly conclude no suitable credential exists.",
+    "fix": "Push supported filters into SQL and introduce stable cursor pagination. Until the API can express pagination, return an explicit truncation/error result instead of an apparently complete list.",
+    "test": "Insert more than 1,000 credentials with the only matching item outside the initial window; verify it is discoverable and pagination has no duplicates or omissions.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T03",
+    "priority": "P2",
+    "kind": "Durability",
+    "title": "File wallet overwrites are not atomic",
+    "evidence": [
+      {
+        "path": "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt",
+        "line": 178,
+        "excerpt": "176:         }\n177: \n178:         Files.write(credentialFile, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)\n179: \n180:         // Initialize metadata if not exists. The sidecar embeds the raw credential id\n181:         // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM\n182:         // scheme as the credential file whenever an encryption key is configured.\n183:         val metadataFile = resolveDataFile(metadataDir, id)\n184:         if (!Files.exists(metadataFile)) {\n185:             val metadata = buildJsonObject {\n186:                 put(\"credentialId\", id)"
+      }
+    ],
+    "impact": "Updating an existing credential truncates the live file before the replacement bytes are safely written. A process crash or disk failure can destroy the previous valid credential. Readers can observe a partial file; list() then logs and skips it. AES-GCM detects corruption but cannot restore the lost record.",
+    "fix": "Write to a sibling temporary file, flush it as required by the durability contract, and atomically replace the target. Coordinate writes per credential and define recovery/consistency for metadata sidecars.",
+    "test": "Inject failure during overwrite and concurrent reads. After restart, readers must see either the full old record or the full new record, never partial content.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T04",
+    "priority": "P2",
+    "kind": "API consistency",
+    "title": "Generated storage IDs are not embedded in anonymous credentials",
+    "evidence": [
+      {
+        "path": "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt",
+        "line": 168,
+        "excerpt": "166:     // CredentialStorage implementation\n167:     override suspend fun store(credential: VerifiableCredential): String = withContext(Dispatchers.IO) {\n168:         val id = credential.id?.value ?: UUID.randomUUID().toString()\n169:         val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)\n170: \n171:         val credentialFile = resolveDataFile(credentialsDir, id)\n172:         val content = if (secretKey != null) {\n173:             encrypt(credentialJson)\n174:         } else {\n175:             credentialJson.toByteArray(Charsets.UTF_8)\n176:         }"
+      }
+    ],
+    "impact": "store() returns a generated ID when credential.id is absent but serializes the unchanged credential. A subsequent list() returns an item with no ID, leaving callers unable to recover the storage handle for get/delete from that item. Re-storing the same anonymous credential creates another random entry.",
+    "fix": "Expose a stored-record wrapper with a stable storage ID independent of the signed credential ID. Do not silently edit a signed credential to insert an ID, which could invalidate its proof.",
+    "test": "Store an ID-less credential, restart, list records and delete the intended record using the returned storage handle. Verify the signed credential bytes remain unchanged.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T05",
+    "priority": "P2",
+    "kind": "Resource management",
+    "title": "OID4VCI session maps retain offers and bearer tokens indefinitely",
+    "evidence": [
+      {
+        "path": "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt",
+        "line": 80,
+        "excerpt": "78:     private val verifier: CredentialService? = didResolver?.let { credentialService(it) }\n79: \n80:     private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()\n81:     private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()\n82:     private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken\n83:     private val cNonces = ConcurrentHashMap<String, String>()\n84: \n85:     // requestId -> c_nonce from token/credential endpoint\n86:     @Volatile private var metadata: CredentialIssuerMetadata? = null\n87: \n88:     /** Token endpoint resolved from the authorization server's RFC 8414 metadata (cached). */"
+      },
+      {
+        "path": "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt",
+        "line": 82,
+        "excerpt": "80:     private val offers = ConcurrentHashMap<String, Oidc4VciOffer>()\n81:     private val requests = ConcurrentHashMap<String, Oidc4VciCredentialRequest>()\n82:     private val accessTokens = ConcurrentHashMap<String, String>() // requestId -> accessToken\n83:     private val cNonces = ConcurrentHashMap<String, String>()\n84: \n85:     // requestId -> c_nonce from token/credential endpoint\n86:     @Volatile private var metadata: CredentialIssuerMetadata? = null\n87: \n88:     /** Token endpoint resolved from the authorization server's RFC 8414 metadata (cached). */\n89:     @Volatile private var resolvedTokenEndpoint: String? = null\n90: "
+      }
+    ],
+    "impact": "The service retains offers, requests, access tokens and nonces in concurrent maps with no removal/clear path in the class. A long-lived issuer-bound service grows with every exchange and keeps sensitive token material after completion. Application-scoped use makes this an availability and retention concern.",
+    "fix": "Add bounded TTL-backed exchange storage, remove completed/cancelled request secrets, and define a lifecycle close/purge operation. Preserve deferred requests only until their documented expiry.",
+    "test": "Complete and abandon large numbers of exchanges using a fake clock; verify bounded cardinality, token removal, and continued availability of valid deferred exchanges.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T06",
+    "priority": "P2",
+    "kind": "Format gap",
+    "title": "Holder-side OID4VCI only accepts JSON-LD credentials",
+    "evidence": [
+      {
+        "path": "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt",
+        "line": 444,
+        "excerpt": "442:      * Parses the `credential` member of an issuer response into a [VerifiableCredential].\n443:      *\n444:      * Only VC-LD (JSON-LD) is supported today. Compact representations (JWT / SD-JWT-VC) have no\n445:      * compact-to-model parser in `credential-api`, so they are rejected rather than trusted.\n446:      */\n447:     private suspend fun parseIssuedCredential(\n448:         response: JsonObject,\n449:         expectedIssuer: String,\n450:     ): VerifiableCredential {\n451:         val raw = response[\"credential\"]\n452:         if (raw == null || raw is JsonNull) {"
+      },
+      {
+        "path": "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/Oidc4VciService.kt",
+        "line": 463,
+        "excerpt": "461:                 is JsonPrimitive -> throw Oidc4VciException.CredentialVerificationFailed(\n462:                     reason =\n463:                         \"compact (JWT / SD-JWT-VC) issued credentials are not yet verified; \" +\n464:                             \"only VC-LD (JSON-LD) is supported\",\n465:                     credentialIssuer = expectedIssuer,\n466:                 )\n467:                 else -> throw Oidc4VciException.CredentialVerificationFailed(\n468:                     reason = \"unsupported 'credential' representation: ${raw::class.simpleName}\",\n469:                     credentialIssuer = expectedIssuer,\n470:                 )\n471:             }"
+      }
+    ],
+    "impact": "The new holder verification path correctly fails closed, but rejects compact JWT and SD-JWT credentials. The reference wallet stores those formats and the SaaS has multiple issuance formats, so the product family does not yet offer a consistent acceptance matrix. This is a documented capability gap, not an unverified-signature vulnerability.",
+    "fix": "Expose supported receive formats through capability discovery and constrain offers accordingly. Add compact-format parsing and verification before claiming those formats work through this SDK flow.",
+    "test": "Run issuance-to-wallet-to-verifier contract scenarios for each advertised format, with explicit expected rejection for unsupported combinations.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T07",
+    "priority": "P2",
+    "kind": "Demo-to-production gap",
+    "title": "Reference wallet keeps exportable holder keys in localStorage",
+    "evidence": [
+      {
+        "path": "reference-wallet/lib/storage.ts",
+        "line": 23,
+        "excerpt": "21:   did: string\n22:   publicKey: string  // base64url\n23:   privateKey: string  // base64url\n24:   createdAt: string\n25: }\n26: \n27: export interface StoredCredential {\n28:   id: string  // local UUID for the wallet's record\n29:   format: 'vc+jwt' | 'vc+sd-jwt'\n30:   credential: string  // the credential as-issued (VC-JWT or SD-JWT VC compact form)\n31:   receivedAt: string"
+      },
+      {
+        "path": "reference-wallet/lib/storage.ts",
+        "line": 75,
+        "excerpt": "73:   if (!isBrowser()) throw new Error('saveHolder requires a browser environment')\n74:   ensureSchemaVersion()\n75:   window.localStorage.setItem(HOLDER_KEY, JSON.stringify(holder))\n76: }\n77: \n78: export function loadCredentials(): StoredCredential[] {\n79:   if (!isBrowser()) return []\n80:   ensureSchemaVersion()\n81:   const raw = window.localStorage.getItem(CREDENTIALS_KEY)\n82:   return raw ? (JSON.parse(raw) as StoredCredential[]) : []\n83: }"
+      }
+    ],
+    "impact": "The browser reference wallet stores the holder private key as cleartext base64url. Any script executing in its origin can read it. The source clearly labels this a walking-skeleton demo limitation, so this finding is a promotion gate for a production wallet, not a claim that the library KMS is insecure.",
+    "fix": "Keep the demo limitation visible in the UI and deployment documentation. Before production use, implement platform-backed key custody, user verification, recovery and a credential export strategy appropriate to supported algorithms.",
+    "test": "Verify production wallet code cannot export raw private key material and that recovery, device loss and signing cancellation are explicitly tested.",
+    "confidence": "High — explicitly documented demo limitation"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T08",
+    "priority": "P2",
+    "kind": "UX / data loss",
+    "title": "Reference wallet schema mismatch silently erases identity and credentials",
+    "evidence": [
+      {
+        "path": "reference-wallet/lib/storage.ts",
+        "line": 55,
+        "excerpt": "53:   if (!existing) {\n54:     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))\n55:   } else if (Number(existing) !== CURRENT_VERSION) {\n56:     // v1 → v2: storage shape changed (added `format`, `credential` replaces `vcJwt`,\n57:     // added `selectivelyDisclosable`). No automatic migration — wipe and let the user\n58:     // re-receive. Acceptable for a demo wallet; a real wallet would migrate in place.\n59:     window.localStorage.removeItem(HOLDER_KEY)\n60:     window.localStorage.removeItem(CREDENTIALS_KEY)\n61:     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION))\n62:   }\n63: }"
+      }
+    ],
+    "impact": "Any non-current stored version triggers removal of the holder identity and every credential. This includes older and newer versions, so an upgrade or rollback can silently change the holder DID and destroy access to previously issued credentials. The source accepts this for the demo; it is still a disruptive demo-user experience.",
+    "fix": "Migrate supported older schemas without rotating identity. For unknown/newer versions, stop with a recovery/export screen and require an explicit reset action.",
+    "test": "Open v1, v2, future-version and corrupt-version stores; preserve identity and credentials or present a recoverable error. Never delete records merely by loading the page.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T09",
+    "priority": "P2",
+    "kind": "Quality / improvement",
+    "title": "Reference web wallet has no automated CI test gate",
+    "evidence": [
+      {
+        "path": "reference-wallet/package.json",
+        "line": 6,
+        "excerpt": "4:   \"private\": true,\n5:   \"description\": \"Walking-skeleton holder wallet demo for the TrustWeave Wallet SDK\",\n6:   \"scripts\": {\n7:     \"dev\": \"next dev\",\n8:     \"build\": \"next build\",\n9:     \"start\": \"next start\",\n10:     \"lint\": \"next lint\",\n11:     \"typecheck\": \"tsc --noEmit\",\n12:     \"resize-demo-photos\": \"python scripts/resize-demo-photos.py\",\n13:     \"generate-subject-portraits\": \"python scripts/generate-subject-portraits.py\"\n14:   },"
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "line": 37,
+        "excerpt": "35: \n36:       - name: Build with Gradle\n37:         run: ./gradlew build --no-daemon --stacktrace"
+      }
+    ],
+    "impact": "The reference-wallet package defines build, lint and typecheck commands but no test command. The inspected root CI workflow runs only Gradle checks. Browser storage migrations, consent, QR flows and cross-repository presentation contracts therefore need an independent automated gate; Kotlin green builds do not validate them.",
+    "fix": "Add a wallet CI job for clean install, typecheck/build and focused browser tests, including credential import, selective disclosure, storage upgrades and a SaaS verification round trip.",
+    "test": "Introduce a deliberate wallet TypeScript error and a broken storage migration in a test branch; CI should reject both. Add at least one real-signature end-to-end contract fixture.",
+    "confidence": "High — source trace"
+  },
+  {
+    "repo": "trustweave",
+    "id": "T10",
+    "priority": "P3",
+    "kind": "Developer experience / improvement",
+    "title": "Plugin breadth needs a machine-readable capability contract",
+    "evidence": [
+      {
+        "path": "docs/api-reference/module-maturity.md",
+        "line": 17,
+        "excerpt": "15: # Module maturity matrix\n16: \n17: TrustWeave is a multi-module repository. **Publishing a JAR to Maven Central does not imply the module is complete or recommended for all production use cases.** This matrix states intended support level for integrators.\n18: \n19: | Tier | Meaning |\n20: |------|--------|\n21: | **Supported (GA)** | Intended for production use when configured correctly; breaking API changes follow semver + [Deprecation policy](deprecation-policy.md). |\n22: | **Supported with provider** | Core APIs are stable; you must use a mature KMS/DID/anchor **implementation** you trust. |\n23: | **Experimental** | APIs may change; may contain `TODO` or stub behavior—verify in your environment before production. |\n24: \n25: ## Core platform (typical SDK dependencies)"
+      },
+      {
+        "path": "anchors/plugins/starknet/src/main/kotlin/org/trustweave/anchor/starknet/StarkNetBlockchainAnchorClient.kt",
+        "line": 80,
+        "excerpt": "78:             chainId = chainId,\n79:             operation = \"submitTransaction\",\n80:             reason = \"The StarkNet anchor client is a stub and is not implemented: \" +\n81:                 \"transaction submission would require a StarkNet SDK and a Cairo storage \" +\n82:                 \"contract, neither of which exists.\"\n83:         )\n84:     }\n85: \n86:     override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {\n87:         throw BlockchainException.UnsupportedOperation(\n88:             chainId = chainId,"
+      }
+    ],
+    "impact": "The maturity matrix is a useful and candid strength, but experimental modules and explicit stubs still exist alongside production-oriented core APIs. Integrators need to discover supported operations/formats before selecting a plugin, rather than finding a failure during a real workflow.",
+    "fix": "Publish operation-level capabilities and maturity with plugin metadata; validate required capabilities during startup and generate the human-readable maturity table from the same source.",
+    "test": "Select a stub or unsupported operation in a configuration fixture and assert a clear startup validation error rather than a late workflow failure.",
+    "confidence": "High — source trace"
+  }
+]

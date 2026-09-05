@@ -3,6 +3,16 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+tasks.test {
+    val dockerHost =
+        System.getenv("DOCKER_HOST")?.takeIf { it.isNotBlank() }
+            ?: if (System.getProperty("os.name").startsWith("Windows")) "npipe:////./pipe/dockerDesktopLinuxEngine" else null
+    if (dockerHost != null) {
+        environment("DOCKER_HOST", dockerHost)
+        systemProperty("DOCKER_HOST", dockerHost)
+    }
+}
+
 group = "org.trustweave.wallet"
 
 dependencies {
@@ -22,4 +32,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation("org.testcontainers:postgresql:1.21.4")
 }

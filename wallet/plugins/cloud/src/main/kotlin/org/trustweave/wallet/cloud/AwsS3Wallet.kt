@@ -1,10 +1,15 @@
 package org.trustweave.wallet.cloud
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.*
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.nio.ByteBuffer
 
 /**
@@ -34,81 +39,107 @@ class AwsS3Wallet(
     holderDid: String,
     bucketName: String,
     basePath: String,
-    private val s3Client: S3Client
+    private val s3Client: S3Client,
 ) : CloudWallet(walletId, walletDid, holderDid, bucketName, basePath) {
+    override suspend fun upload(
+        key: String,
+        data: ByteArray,
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            try {
+                val request =
+                    PutObjectRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType("application/json")
+                        .build()
 
-    override suspend fun upload(key: String, data: ByteArray): Unit = withContext(Dispatchers.IO) {
-        try {
-            val request = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .contentType("application/json")
-                .build()
-
-            s3Client.putObject(request, RequestBody.fromByteBuffer(ByteBuffer.wrap(data)))
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to upload to S3: ${e.message}", e)
+                s3Client.putObject(request, RequestBody.fromByteBuffer(ByteBuffer.wrap(data)))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to upload to S3: ${e.message}", e)
+            }
         }
-    }
 
-    override suspend fun download(key: String): ByteArray? = withContext(Dispatchers.IO) {
-        try {
-            val request = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build()
+    override suspend fun download(key: String): ByteArray? =
+        withContext(Dispatchers.IO) {
+            try {
+                val request =
+                    GetObjectRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build()
 
-            // ResponseInputStream holds the underlying HTTP connection — it MUST be
-            // closed after reading, otherwise the connection pool is exhausted.
-            s3Client.getObject(request).use { it.readAllBytes() }
-        } catch (e: NoSuchKeyException) {
-            null
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to download from S3: ${e.message}", e)
+                // ResponseInputStream holds the underlying HTTP connection — it MUST be
+                // closed after reading, otherwise the connection pool is exhausted.
+                s3Client.getObject(request).use { it.readAllBytes() }
+            } catch (e: NoSuchKeyException) {
+                null
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to download from S3: ${e.message}", e)
+            }
         }
-    }
 
-    override suspend fun deleteFromStorage(key: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val request = DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build()
+    override suspend fun deleteFromStorage(key: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val request =
+                    DeleteObjectRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build()
 
-            s3Client.deleteObject(request)
-            true
-        } catch (e: NoSuchKeyException) {
-            // Missing key means "nothing to delete" — not a storage failure.
-            false
-        } catch (e: Exception) {
-            // Auth failures, networking errors, etc. must NOT be reported as
-            // "not found" — propagate them as storage errors.
-            throw RuntimeException("Failed to delete from S3: ${e.message}", e)
+                s3Client.deleteObject(request)
+                true
+            } catch (e: NoSuchKeyException) {
+                // Missing key means "nothing to delete" — not a storage failure.
+                false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Auth failures, networking errors, etc. must NOT be reported as
+                // "not found" — propagate them as storage errors.
+                throw RuntimeException("Failed to delete from S3: ${e.message}", e)
+            }
         }
-    }
 
-    override suspend fun listKeys(prefix: String): List<String> = withContext(Dispatchers.IO) {
-        try {
-            // S3 returns at most 1000 keys per ListObjectsV2 call. Follow the
-            // continuation token until the listing is complete; otherwise wallets
-            // with >1000 credentials are silently truncated.
-            val keys = mutableListOf<String>()
-            var continuationToken: String? = null
-            do {
-                val request = ListObjectsV2Request.builder()
-                    .bucket(bucketName)
-                    .prefix(prefix)
-                    .continuationToken(continuationToken)
-                    .build()
+    override suspend fun listKeys(prefix: String): List<String> =
+        withContext(Dispatchers.IO) {
+            try {
+                // S3 returns at most 1000 keys per ListObjectsV2 call. Follow the
+                // continuation token until the listing is complete; otherwise wallets
+                // with >1000 credentials are silently truncated.
+                val keys = mutableListOf<String>()
+                val seenTokens = mutableSetOf<String>()
+                var continuationToken: String? = null
+                do {
+                    coroutineContext.ensureActive()
+                    val request =
+                        ListObjectsV2Request
+                            .builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .continuationToken(continuationToken)
+                            .build()
 
-                val response = s3Client.listObjectsV2(request)
-                response.contents().forEach { keys.add(it.key()) }
-                continuationToken = if (response.isTruncated == true) response.nextContinuationToken() else null
-            } while (continuationToken != null)
-            keys
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to list keys from S3: ${e.message}", e)
+                    val response = s3Client.listObjectsV2(request)
+                    response.contents().forEach { keys.add(it.key()) }
+                    continuationToken = if (response.isTruncated == true) response.nextContinuationToken() else null
+                    if (response.isTruncated == true && (continuationToken.isNullOrBlank() || !seenTokens.add(continuationToken))) {
+                        error("S3 returned an invalid or repeated continuation token")
+                    }
+                } while (continuationToken != null)
+                keys
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to list keys from S3: ${e.message}", e)
+            }
         }
-    }
 }
-

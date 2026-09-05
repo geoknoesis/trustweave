@@ -1,0 +1,52 @@
+{
+  "assessment": "Round 3 targeted post-remediation review; professional judgment, not certification or exhaustive audit",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24,
+    19,
+    14,
+    9
+  ],
+  "trustweave-saas": [
+    28,
+    24,
+    18,
+    14,
+    9
+  ],
+  "totals": {
+    "trustweave": 95,
+    "trustweave-saas": 93
+  },
+  "previous_provisional": {
+    "trustweave": 94,
+    "trustweave-saas": 92
+  },
+  "round2_original": {
+    "trustweave": 79,
+    "trustweave-saas": 75
+  },
+  "deductions": {
+    "trustweave": [
+      "Security -1: browser custody and script-compromise limits",
+      "Correctness -1: limited issuer/disclosure/interoperability profile",
+      "Architecture -1: provider maturity and legacy list/JVM-local storage boundaries",
+      "Testing -1: no live-provider/production-scale validation or complete SDK rerun",
+      "Experience -1: profile/key-loss recovery requires reissuance"
+    ],
+    "trustweave-saas": [
+      "Security -2: exact-pair release/staging and distributed admission evidence outstanding",
+      "Correctness -1: operational concurrency and billing-recovery scenarios remain incompletely validated",
+      "Architecture -2: deployment coupling and manual recovery/logging-only invoice workflows",
+      "Testing -1: two skipped backend tests and no remote Linux/staging evidence",
+      "Experience -1: limited credential-format support and operator-heavy recovery"
+    ]
+  }
+}

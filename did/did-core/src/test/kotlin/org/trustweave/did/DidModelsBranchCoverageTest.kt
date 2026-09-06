@@ -1,5 +1,7 @@
 package org.trustweave.did
 
+import kotlinx.datetime.Instant
+import org.junit.jupiter.api.Test
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
@@ -8,20 +10,16 @@ import org.trustweave.did.model.DidOrUrl
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolutionMetadata
-import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidErrorType
-import org.trustweave.did.exception.DidException.InvalidDidFormat
-import org.junit.jupiter.api.Test
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.*
-import kotlinx.datetime.Instant
 
 /**
  * Branch coverage tests for Did models.
  */
 class DidModelsBranchCoverageTest {
-
     @Test
     fun `test Did toString formats correctly`() {
         val did = Did("did:web:example.com")
@@ -65,13 +63,14 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test VerificationMethod constructor with all fields`() {
         val did = Did("did:key:123")
-        val vm = VerificationMethod(
-            id = VerificationMethodId.parse("did:key:123#key-1"),
-            type = "Ed25519VerificationKey2020",
-            controller = did,
-            publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
-            publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-        )
+        val vm =
+            VerificationMethod(
+                id = VerificationMethodId.parse("did:key:123#key-1"),
+                type = "Ed25519VerificationKey2020",
+                controller = did,
+                publicKeyJwk = mapOf("kty" to "OKP", "crv" to "Ed25519"),
+                publicKeyMultibase = "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            )
 
         assertEquals("did:key:123#key-1", vm.id.value)
         assertEquals("Ed25519VerificationKey2020", vm.type)
@@ -82,11 +81,12 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test VerificationMethod constructor with minimal fields`() {
         val did = Did("did:key:123")
-        val vm = VerificationMethod(
-            id = VerificationMethodId.parse("did:key:123#key-1"),
-            type = "Ed25519VerificationKey2020",
-            controller = did
-        )
+        val vm =
+            VerificationMethod(
+                id = VerificationMethodId.parse("did:key:123#key-1"),
+                type = "Ed25519VerificationKey2020",
+                controller = did,
+            )
 
         assertNull(vm.publicKeyJwk)
         assertNull(vm.publicKeyMultibase)
@@ -94,11 +94,12 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test Service constructor with string endpoint`() {
-        val service = DidService(
-            id = "did:key:123#service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-        )
+        val service =
+            DidService(
+                id = "did:key:123#service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+            )
 
         assertEquals(ServiceEndpoint.Url("https://example.com"), service.serviceEndpoint)
     }
@@ -106,11 +107,12 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test Service constructor with object endpoint`() {
         val endpoint = mapOf("uri" to "https://example.com", "routingKeys" to listOf("key1"))
-        val service = DidService(
-            id = "did:key:123#service-1",
-            type = listOf("DIDCommMessaging"),
-            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpoint)
-        )
+        val service =
+            DidService(
+                id = "did:key:123#service-1",
+                type = listOf("DIDCommMessaging"),
+                serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpoint),
+            )
 
         assertEquals(ServiceEndpoint.ObjectEndpoint(endpoint), service.serviceEndpoint)
     }
@@ -118,11 +120,12 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test Service constructor with array endpoint`() {
         val endpoint = listOf("https://example.com", "https://backup.com")
-        val service = DidService(
-            id = "did:key:123#service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.of(endpoint)
-        )
+        val service =
+            DidService(
+                id = "did:key:123#service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.of(endpoint),
+            )
 
         assertEquals(ServiceEndpoint.of(endpoint), service.serviceEndpoint)
     }
@@ -131,28 +134,31 @@ class DidModelsBranchCoverageTest {
     fun `test DidDocument constructor with all fields`() {
         val did = Did("did:key:123")
         val vmId = VerificationMethodId.parse("did:key:123#key-1")
-        val doc = DidDocument(
-            id = did,
-            alsoKnownAs = listOf(DidOrUrl.AsDid(Did("did:web:example.com"))),
-            controller = listOf(Did("did:key:controller")),
-            verificationMethod = listOf(
-                VerificationMethod(
-                    id = vmId,
-                    type = "Ed25519VerificationKey2020",
-                    controller = did
-                )
-            ),
-            authentication = listOf(vmId),
-            assertionMethod = listOf(vmId),
-            keyAgreement = listOf(VerificationMethodId.parse("did:key:123#key-2")),
-            service = listOf(
-                DidService(
-                    id = "did:key:123#service-1",
-                    type = listOf("LinkedDomains"),
-                    serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-                )
+        val doc =
+            DidDocument(
+                id = did,
+                alsoKnownAs = listOf(DidOrUrl.AsDid(Did("did:web:example.com"))),
+                controller = listOf(Did("did:key:controller")),
+                verificationMethod =
+                    listOf(
+                        VerificationMethod(
+                            id = vmId,
+                            type = "Ed25519VerificationKey2020",
+                            controller = did,
+                        ),
+                    ),
+                authentication = listOf(vmId),
+                assertionMethod = listOf(vmId),
+                keyAgreement = listOf(VerificationMethodId.parse("did:key:123#key-2")),
+                service =
+                    listOf(
+                        DidService(
+                            id = "did:key:123#service-1",
+                            type = listOf("LinkedDomains"),
+                            serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+                        ),
+                    ),
             )
-        )
 
         assertEquals("did:key:123", doc.id.value)
         assertEquals(1, doc.alsoKnownAs.size)
@@ -173,13 +179,15 @@ class DidModelsBranchCoverageTest {
     @Test
     fun `test DidResolutionResult constructor with document`() {
         val doc = DidDocument(id = Did("did:key:123"))
-        val result = DidResolutionResult.Success(
-            document = doc,
-            documentMetadata = DidDocumentMetadata(
-                created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z")
-            ),
-            resolutionMetadata = DidResolutionMetadata(duration = 100L)
-        )
+        val result =
+            DidResolutionResult.Success(
+                document = doc,
+                documentMetadata =
+                    DidDocumentMetadata(
+                        created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                    ),
+                resolutionMetadata = DidResolutionMetadata(duration = 100L),
+            )
 
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata.created)
@@ -188,12 +196,14 @@ class DidModelsBranchCoverageTest {
 
     @Test
     fun `test DidResolutionResult constructor without document`() {
-        val result = DidResolutionResult.Failure.NotFound(
-            did = Did("did:key:test"),
-            resolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.notFound("notFound")
+        val result =
+            DidResolutionResult.Failure.NotFound(
+                did = Did("did:key:test"),
+                resolutionMetadata =
+                    DidResolutionMetadata(
+                        error = DidResolutionError.notFound("notFound"),
+                    ),
             )
-        )
 
         assertTrue(result is DidResolutionResult.Failure.NotFound)
         assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
@@ -209,4 +219,3 @@ class DidModelsBranchCoverageTest {
         assertNull(result.resolutionMetadata.error)
     }
 }
-

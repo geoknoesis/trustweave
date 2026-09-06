@@ -6,7 +6,7 @@ import subprocess
 
 root = pathlib.Path(__file__).resolve().parents[1]
 catalog = json.loads((root / 'common/src/main/resources/trustweave-capabilities.json').read_text())
-text = '# Assessed module capabilities\n\nGenerated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireOperations` during startup.\n\n| Module | Maturity | Operations | Formats |\n|---|---|---|---|\n'
+text = '# Assessed module capabilities\n\nGenerated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireDeployment` before constructing production clients. It checks maturity, operations and formats; `requireOperations` alone checks functionality only. No catalog entry currently meets the supported-only production policy. See [deployment profiles](provider-deployment-profiles.md).\n\n| Module | Maturity | Operations | Formats |\n|---|---|---|---|\n'
 for name, value in sorted(catalog.items()):
     text += f'| `{name}` | {value["maturity"]} | {", ".join(value["operations"]) or "None"} | {", ".join(value["formats"]) or "None"} |\n'
 modules = subprocess.check_output(

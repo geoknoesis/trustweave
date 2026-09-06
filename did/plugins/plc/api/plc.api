@@ -1,0 +1,50 @@
+public final class org/trustweave/plcdid/PlcDidConfig {
+	public static final field Companion Lorg/trustweave/plcdid/PlcDidConfig$Companion;
+	public static final field DEFAULT_PLC_REGISTRY_URL Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ILjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;ILjava/util/Map;)Lorg/trustweave/plcdid/PlcDidConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/plcdid/PlcDidConfig;Ljava/lang/String;ILjava/util/Map;ILjava/lang/Object;)Lorg/trustweave/plcdid/PlcDidConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getPlcRegistryUrl ()Ljava/lang/String;
+	public final fun getTimeoutSeconds ()I
+	public fun hashCode ()I
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/plcdid/PlcDidConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/plcdid/PlcDidConfig;
+	public final fun plcRegistryUrl (Ljava/lang/String;)Lorg/trustweave/plcdid/PlcDidConfig$Builder;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)Lorg/trustweave/plcdid/PlcDidConfig$Builder;
+	public final fun timeoutSeconds (I)Lorg/trustweave/plcdid/PlcDidConfig$Builder;
+}
+
+public final class org/trustweave/plcdid/PlcDidConfig$Companion {
+	public final fun builder ()Lorg/trustweave/plcdid/PlcDidConfig$Builder;
+	public final fun default ()Lorg/trustweave/plcdid/PlcDidConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/plcdid/PlcDidConfig;
+}
+
+public final class org/trustweave/plcdid/PlcDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/plcdid/PlcDidConfig;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/plcdid/PlcDidConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/plcdid/spi/PlcDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

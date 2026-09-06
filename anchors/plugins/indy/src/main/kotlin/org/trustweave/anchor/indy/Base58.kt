@@ -13,12 +13,12 @@ import java.math.BigInteger
  * `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz` (no `0`, `O`, `I`, `l`).
  */
 internal object Base58 {
-
     private const val ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-    private val INDEXES = IntArray(128).also { arr ->
-        arr.fill(-1)
-        ALPHABET.forEachIndexed { i, c -> arr[c.code] = i }
-    }
+    private val INDEXES =
+        IntArray(128).also { arr ->
+            arr.fill(-1)
+            ALPHABET.forEachIndexed { i, c -> arr[c.code] = i }
+        }
 
     fun encode(input: ByteArray): String {
         if (input.isEmpty()) return ""
@@ -66,7 +66,10 @@ internal object Base58 {
         return decoded.copyOfRange(outputStart, decoded.size)
     }
 
-    private fun divmod58(number: ByteArray, startAt: Int): Byte {
+    private fun divmod58(
+        number: ByteArray,
+        startAt: Int,
+    ): Byte {
         var remainder = 0
         for (i in startAt until number.size) {
             val digit = number[i].toInt() and 0xFF
@@ -77,7 +80,10 @@ internal object Base58 {
         return remainder.toByte()
     }
 
-    private fun divmod256(number58: ByteArray, startAt: Int): Byte {
+    private fun divmod256(
+        number58: ByteArray,
+        startAt: Int,
+    ): Byte {
         var remainder = 0
         for (i in startAt until number58.size) {
             val digit = number58[i].toInt() and 0xFF

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

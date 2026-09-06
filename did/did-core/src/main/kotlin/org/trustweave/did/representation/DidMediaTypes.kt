@@ -21,8 +21,7 @@ object DidMediaTypes {
     val SUPPORTED_DOCUMENT_TYPES: List<String> = listOf(DID, DID_LD_JSON, DID_JSON, JSON)
 
     /** True when [mediaType] (parameters and case ignored) is a supported document representation. */
-    fun isSupportedDocumentType(mediaType: String): Boolean =
-        SUPPORTED_DOCUMENT_TYPES.contains(normalize(mediaType))
+    fun isSupportedDocumentType(mediaType: String): Boolean = SUPPORTED_DOCUMENT_TYPES.contains(normalize(mediaType))
 
     /** Strips media type parameters and lowercases, per RFC 9110 §8.3.1. */
     fun normalize(mediaType: String): String = mediaType.substringBefore(';').trim().lowercase()

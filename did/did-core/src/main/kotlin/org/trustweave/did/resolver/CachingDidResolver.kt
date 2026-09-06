@@ -1,9 +1,9 @@
 package org.trustweave.did.resolver
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.resolution.ResolutionOptions
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.resolution.ResolutionOptions
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
@@ -61,9 +61,8 @@ class CachingDidResolver(
     private val delegate: DidResolver,
     private val ttl: Duration = 5.minutes,
     private val maxSize: Int = 1000,
-    private val clock: Clock = Clock.System
+    private val clock: Clock = Clock.System,
 ) : DidResolver {
-
     init {
         require(ttl.isPositive()) { "ttl must be positive, got $ttl" }
         require(maxSize > 0) { "maxSize must be positive, got $maxSize" }
@@ -71,7 +70,7 @@ class CachingDidResolver(
 
     private class CacheEntry(
         val result: DidResolutionResult,
-        val expiresAt: Instant
+        val expiresAt: Instant,
     ) {
         init {
             require(result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
@@ -109,12 +108,15 @@ class CachingDidResolver(
      * (`versionId`, `versionTime`), is forwarded to [delegate] unchanged. This layer has no basis
      * to judge support for those; the delegate — ultimately the DID method — does.
      */
-    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+    override suspend fun resolve(
+        did: Did,
+        options: ResolutionOptions,
+    ): DidResolutionResult {
         options.validate()?.let { error ->
             return DidResolutionResult.Failure.OptionsError(
                 did = did,
                 reason = error.detail ?: "Invalid resolution options",
-                errorType = error.type
+                errorType = error.type,
             )
         }
 
@@ -147,7 +149,10 @@ class CachingDidResolver(
     }
 
     /** Returns the cached, still-fresh result for [key], if any; evicts an expired entry found. */
-    private fun readCache(key: String, now: Instant): DidResolutionResult? {
+    private fun readCache(
+        key: String,
+        now: Instant,
+    ): DidResolutionResult? {
         val entry = cache[key] ?: return null
         if (now < entry.expiresAt) {
             entry.lastAccess = accessCounter.incrementAndGet()
@@ -160,7 +165,11 @@ class CachingDidResolver(
     }
 
     /** Caches [result] for [key] if it is a cacheable variant and its expiry is in the future. */
-    private fun writeCache(key: String, now: Instant, result: DidResolutionResult) {
+    private fun writeCache(
+        key: String,
+        now: Instant,
+        result: DidResolutionResult,
+    ) {
         if (result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
             val expiresAt = expiryFor(now, result)
             if (expiresAt > now) {
@@ -194,7 +203,10 @@ class CachingDidResolver(
      * Uses the [documentMetadata] extension property (not a member) so it reads correctly
      * for either variant.
      */
-    private fun expiryFor(now: Instant, result: DidResolutionResult): Instant {
+    private fun expiryFor(
+        now: Instant,
+        result: DidResolutionResult,
+    ): Instant {
         val ttlExpiry = now + ttl
         val nextUpdate = result.documentMetadata.nextUpdate
         return if (nextUpdate != null && nextUpdate < ttlExpiry) nextUpdate else ttlExpiry

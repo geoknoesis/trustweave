@@ -1,0 +1,258 @@
+public final class org/trustweave/signatures/trustlists/DefaultLotlSignatureVerifier : org/trustweave/signatures/trustlists/LotlSignatureVerifier {
+	public static final field Companion Lorg/trustweave/signatures/trustlists/DefaultLotlSignatureVerifier$Companion;
+	public fun <init> ()V
+	public fun verify ([BLjava/util/List;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult;
+}
+
+public final class org/trustweave/signatures/trustlists/DefaultLotlSignatureVerifier$Companion {
+}
+
+public final class org/trustweave/signatures/trustlists/DefaultTrustAnchorResolver : org/trustweave/signatures/trustlists/TrustAnchorResolver {
+	public static final field Companion Lorg/trustweave/signatures/trustlists/DefaultTrustAnchorResolver$Companion;
+	public fun <init> (Lorg/trustweave/signatures/trustlists/TrustList;)V
+	public fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+}
+
+public final class org/trustweave/signatures/trustlists/DefaultTrustAnchorResolver$Companion {
+}
+
+public final class org/trustweave/signatures/trustlists/EtsiTrustListParser : org/trustweave/signatures/trustlists/TrustListParser {
+	public static final field Companion Lorg/trustweave/signatures/trustlists/EtsiTrustListParser$Companion;
+	public fun <init> ()V
+	public fun parse ([BLjava/util/Map;)Lorg/trustweave/signatures/trustlists/TrustList;
+}
+
+public final class org/trustweave/signatures/trustlists/EtsiTrustListParser$Companion {
+}
+
+public abstract class org/trustweave/signatures/trustlists/LotlSignatureValidationResult {
+}
+
+public abstract class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid : org/trustweave/signatures/trustlists/LotlSignatureValidationResult {
+}
+
+public final class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$Malformed : org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$Malformed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$Malformed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$Malformed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$MissingSignature : org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid {
+	public static final field INSTANCE Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$MissingSignature;
+}
+
+public final class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$SignatureCryptoFailed : org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$SignatureCryptoFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$SignatureCryptoFailed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$SignatureCryptoFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$UntrustedSigner : org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid {
+	public fun <init> (Ljava/security/cert/X509Certificate;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun copy (Ljava/security/cert/X509Certificate;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$UntrustedSigner;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$UntrustedSigner;Ljava/security/cert/X509Certificate;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Invalid$UntrustedSigner;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/LotlSignatureValidationResult$Valid : org/trustweave/signatures/trustlists/LotlSignatureValidationResult {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Valid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Valid;Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignerCert ()Ljava/security/cert/X509Certificate;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/trustlists/LotlSignatureVerifier {
+	public abstract fun verify ([BLjava/util/List;)Lorg/trustweave/signatures/trustlists/LotlSignatureValidationResult;
+}
+
+public final class org/trustweave/signatures/trustlists/MemberStateTsl {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlinx/datetime/Instant;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()I
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ILkotlinx/datetime/Instant;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/MemberStateTsl;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/MemberStateTsl;Ljava/lang/String;Ljava/lang/String;ILkotlinx/datetime/Instant;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/MemberStateTsl;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIssuedAt ()Lkotlinx/datetime/Instant;
+	public final fun getSchemeOperator ()Ljava/lang/String;
+	public final fun getSequenceNumber ()I
+	public final fun getTerritory ()Ljava/lang/String;
+	public final fun getTrustedTsps ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/QualifierUris {
+	public static final field INSTANCE Lorg/trustweave/signatures/trustlists/QualifierUris;
+	public static final field QC_FOR_ESEAL Ljava/lang/String;
+	public static final field QC_FOR_ESIG Ljava/lang/String;
+	public static final field QC_FOR_WSA Ljava/lang/String;
+	public static final field QC_NO_SSCD Ljava/lang/String;
+	public static final field QC_SSCD_STATUS_AS_IN_CERT Ljava/lang/String;
+	public static final field QC_WITH_SSCD Ljava/lang/String;
+}
+
+public abstract class org/trustweave/signatures/trustlists/TrustAnchorMatch {
+}
+
+public final class org/trustweave/signatures/trustlists/TrustAnchorMatch$NotTrusted : org/trustweave/signatures/trustlists/TrustAnchorMatch {
+	public static final field INSTANCE Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$NotTrusted;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedActive : org/trustweave/signatures/trustlists/TrustAnchorMatch {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspService;ZZ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/signatures/trustlists/TspService;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspService;ZZ)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedActive;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedActive;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspService;ZZILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedActive;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getQcForESig ()Z
+	public final fun getQcWithSscd ()Z
+	public final fun getService ()Lorg/trustweave/signatures/trustlists/TspService;
+	public final fun getTerritory ()Ljava/lang/String;
+	public final fun getTspName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedWithdrawn : org/trustweave/signatures/trustlists/TrustAnchorMatch {
+	public fun <init> (Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedWithdrawn;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedWithdrawn;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch$QualifiedWithdrawn;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTspName ()Ljava/lang/String;
+	public final fun getWithdrawnAt ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/trustlists/TrustAnchorResolver {
+	public abstract fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustList {
+	public fun <init> (Ljava/lang/String;ILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;ILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustList;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/TrustList;Ljava/lang/String;ILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/TrustList;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIssuedAt ()Lkotlinx/datetime/Instant;
+	public final fun getMemberStateLists ()Ljava/util/List;
+	public final fun getNextUpdateAt ()Lkotlinx/datetime/Instant;
+	public final fun getSchemeOperator ()Ljava/lang/String;
+	public final fun getSequenceNumber ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustListParseException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class org/trustweave/signatures/trustlists/TrustListParser {
+	public abstract fun parse ([BLjava/util/Map;)Lorg/trustweave/signatures/trustlists/TrustList;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustedTSP {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustedTSP;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/TrustedTSP;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/TrustedTSP;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getServices ()Ljava/util/List;
+	public final fun getTradeName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/TspService {
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspServiceType;Lorg/trustweave/signatures/trustlists/TspServiceStatus;Lkotlinx/datetime/Instant;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public final fun component3 ()Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspServiceType;Lorg/trustweave/signatures/trustlists/TspServiceStatus;Lkotlinx/datetime/Instant;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TspService;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/trustlists/TspService;Ljava/lang/String;Lorg/trustweave/signatures/trustlists/TspServiceType;Lorg/trustweave/signatures/trustlists/TspServiceStatus;Lkotlinx/datetime/Instant;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/trustlists/TspService;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getQualifierUris ()Ljava/util/List;
+	public final fun getServiceCertificates ()Ljava/util/List;
+	public final fun getServiceName ()Ljava/lang/String;
+	public final fun getServiceType ()Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public final fun getStatus ()Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public final fun getStatusStartingTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/trustlists/TspServiceStatus : java/lang/Enum {
+	public static final field Companion Lorg/trustweave/signatures/trustlists/TspServiceStatus$Companion;
+	public static final field GRANTED Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public static final field OTHER Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public static final field RECOGNISEDATNATIONALLEVEL Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public static final field WITHDRAWN Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getUri ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+	public static fun values ()[Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+}
+
+public final class org/trustweave/signatures/trustlists/TspServiceStatus$Companion {
+	public final fun fromUri (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/TspServiceStatus;
+}
+
+public final class org/trustweave/signatures/trustlists/TspServiceType : java/lang/Enum {
+	public static final field CA_FOR_QUALIFIED_CERTIFICATES Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public static final field Companion Lorg/trustweave/signatures/trustlists/TspServiceType$Companion;
+	public static final field OTHER Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public static final field QUALIFIED_TIMESTAMP Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public static final field QUALIFIED_VALIDATION_SERVICE Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getUri ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/TspServiceType;
+	public static fun values ()[Lorg/trustweave/signatures/trustlists/TspServiceType;
+}
+
+public final class org/trustweave/signatures/trustlists/TspServiceType$Companion {
+	public final fun fromUri (Ljava/lang/String;)Lorg/trustweave/signatures/trustlists/TspServiceType;
+}
+

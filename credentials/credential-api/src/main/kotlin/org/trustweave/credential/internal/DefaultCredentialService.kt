@@ -1,6 +1,7 @@
 package org.trustweave.credential.internal
 
-import org.trustweave.credential.*
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.issue
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
@@ -17,76 +18,81 @@ import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.schema.SchemaRegistry
 import org.trustweave.credential.trust.TrustEvaluator
 // ProofEngineUtils is imported for DID resolution
-import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlinx.datetime.Clock
-import kotlin.time.toKotlinDuration
 
 /**
  * Default implementation of CredentialService.
- * 
+ *
  * Delegates format-specific operations to registered proof engines.
  */
 internal class DefaultCredentialService(
     private val engines: Map<ProofSuiteId, ProofEngine>,
     private val didResolver: DidResolver,
     private val schemaRegistry: SchemaRegistry? = null,
-    private val revocationManager: CredentialRevocationManager? = null
+    private val revocationManager: CredentialRevocationManager? = null,
 ) : CredentialService {
-    
     // Json instance configured with Instant serialization for ISO 8601 formatting
-    private val json = Json {
-        serializersModule = SerializationModule.default
-    }
-    
+    private val json =
+        Json {
+            serializersModule = SerializationModule.default
+        }
+
     override suspend fun issue(request: IssuanceRequest): IssuanceResult {
         // Input validation
         try {
             request.id?.let { InputValidation.validateCredentialId(it) }
             InputValidation.validateIri(request.issuer.id)
             request.credentialSubject.id?.let { InputValidation.validateIri(it) }
-            request.credentialSchema?.id?.value?.let { InputValidation.validateSchemaId(it) }
+            request.credentialSchema
+                ?.id
+                ?.value
+                ?.let { InputValidation.validateSchemaId(it) }
             request.issuerKeyId?.value?.let { InputValidation.validateVerificationMethodId(it) }
-            
+
             // Validate claims count
             val claimsCount = request.credentialSubject.claims.size
             if (claimsCount > SecurityConstants.MAX_CLAIMS_PER_CREDENTIAL) {
                 return IssuanceResult.Failure.InvalidRequest(
                     field = "credentialSubject.claims",
-                    reason = "Credential exceeds maximum claims count of " +
-                            "${SecurityConstants.MAX_CLAIMS_PER_CREDENTIAL}: $claimsCount claims"
+                    reason =
+                        "Credential exceeds maximum claims count of " +
+                            "${SecurityConstants.MAX_CLAIMS_PER_CREDENTIAL}: $claimsCount claims",
                 )
             }
         } catch (e: IllegalArgumentException) {
             return IssuanceResult.Failure.InvalidRequest(
                 field = "request",
-                reason = "Input validation failed: ${e.message}"
+                reason = "Input validation failed: ${e.message}",
             )
         }
-        
+
         // Validate engine availability
         ErrorHandling.validateEngineAvailability(request.format, engines)?.let { return it }
-        
+
         val engine = engines[request.format]!! // Safe because validateEngineAvailability ensures it exists
-        
+
         // Handle issuance with centralized error handling
         return ErrorHandling.handleIssuanceErrors(request.format) {
             engine.issue(request)
         }
     }
-    
+
     override suspend fun verify(
         credential: VerifiableCredential,
         trustEvaluator: TrustEvaluator?,
-        options: VerificationOptions
+        options: VerificationOptions,
     ): VerificationResult {
         // Input validation for security and stability
         try {
@@ -95,69 +101,73 @@ internal class DefaultCredentialService(
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
                 reason = "Credential input validation failed: ${e.message}",
-                errors = listOf("Invalid credential structure: ${e.message}")
+                errors = listOf("Invalid credential structure: ${e.message}"),
             )
         }
-        
+
         // Validate VC context
         CredentialValidation.validateContext(credential)?.let { return it }
-        
+
         // Validate proof exists
         CredentialValidation.validateProofExists(credential)?.let { return it }
-        
+
         // Get format from proof — at this point proof is non-null (validateProofExists passed),
         // so a null proofSuiteId means the proof type is present but unrecognised/unsupported.
-        val proofSuiteId = credential.proof?.getFormatId()
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "Proof type is unrecognized or unsupported",
-                errors = listOf("Proof format ID could not be determined from proof type")
-            )
-        
-        val engine = engines[proofSuiteId]
-            ?: return VerificationResult.Invalid.UnsupportedFormat(
-                credential = credential,
-                format = proofSuiteId,
-                errors = listOf(
-                    "Format ${proofSuiteId.value} is not supported. " +
-                    "Supported formats: ${engines.keys.map { it.value }}"
+        val proofSuiteId =
+            credential.proof?.getFormatId()
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Proof type is unrecognized or unsupported",
+                    errors = listOf("Proof format ID could not be determined from proof type"),
                 )
-            )
-        
+
+        val engine =
+            engines[proofSuiteId]
+                ?: return VerificationResult.Invalid.UnsupportedFormat(
+                    credential = credential,
+                    format = proofSuiteId,
+                    errors =
+                        listOf(
+                            "Format ${proofSuiteId.value} is not supported. " +
+                                "Supported formats: ${engines.keys.map { it.value }}",
+                        ),
+                )
+
         if (!engine.isReady()) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
                 reason = "Proof engine for format ${proofSuiteId.value} is not ready",
-                errors = listOf("Proof engine not initialized")
+                errors = listOf("Proof engine not initialized"),
             )
         }
-        
+
         // Perform temporal validity checks (format-agnostic)
         val now = Clock.System.now()
         CredentialValidation.validateNotBefore(credential, options, now)?.let { return it }
         CredentialValidation.validateExpiration(credential, options, now)?.let { return it }
-        
+
         // Schema validation (format-agnostic)
         CredentialValidation.validateSchema(credential, options, schemaRegistry)?.let { return it }
-        
+
         // Revocation check (format-agnostic) with proper warning collection
         val revocationWarnings = mutableListOf<String>()
         if (options.checkRevocation) {
-            val (revocationFailure, warnings) = RevocationChecker.checkRevocationStatus(
-                credential = credential,
-                revocationManager = revocationManager,
-                policy = options.revocationFailurePolicy
-            )
+            val (revocationFailure, warnings) =
+                RevocationChecker.checkRevocationStatus(
+                    credential = credential,
+                    revocationManager = revocationManager,
+                    policy = options.revocationFailurePolicy,
+                )
             revocationFailure?.let { return it }
             revocationWarnings.addAll(warnings)
         }
-        
+
         // Trust policy check (format-agnostic)
         CredentialValidation.validateTrust(credential, trustEvaluator)?.let { return it }
-        
+
         // Delegate to proof engine for format-specific verification
         val engineResult = engine.verify(credential, options)
-        
+
         // Add revocation warnings to the result if verification succeeded
         return when (engineResult) {
             is VerificationResult.Valid -> {
@@ -170,21 +180,21 @@ internal class DefaultCredentialService(
             is VerificationResult.Invalid -> engineResult
         }
     }
-    
+
     override suspend fun createPresentation(
         credentials: List<VerifiableCredential>,
-        request: PresentationRequest
+        request: PresentationRequest,
     ): VerifiablePresentation {
         require(credentials.isNotEmpty()) { "At least one credential is required" }
-        
+
         // Input validation
         if (credentials.size > SecurityConstants.MAX_CREDENTIALS_PER_PRESENTATION) {
             throw IllegalArgumentException(
                 "Presentation exceeds maximum credentials count of " +
-                "${SecurityConstants.MAX_CREDENTIALS_PER_PRESENTATION}: ${credentials.size} credentials"
+                    "${SecurityConstants.MAX_CREDENTIALS_PER_PRESENTATION}: ${credentials.size} credentials",
             )
         }
-        
+
         // Validate each credential structure
         credentials.forEach { credential ->
             try {
@@ -192,80 +202,87 @@ internal class DefaultCredentialService(
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException(
                     "Invalid credential in presentation: ${e.message}",
-                    e
+                    e,
                 )
             }
         }
-        
+
         // For now, use the first credential's format engine
         // Multi-format presentations can be handled in the future
         val credential = credentials.first()
-        val proofSuiteId = credential.proof?.getFormatId()
-            ?: throw IllegalArgumentException("Credential has no proof")
-        
-        val engine = engines[proofSuiteId]
-            ?: throw IllegalArgumentException("Unsupported format: ${proofSuiteId.value}")
-        
+        val proofSuiteId =
+            credential.proof?.getFormatId()
+                ?: throw IllegalArgumentException("Credential has no proof")
+
+        val engine =
+            engines[proofSuiteId]
+                ?: throw IllegalArgumentException("Unsupported format: ${proofSuiteId.value}")
+
         if (!engine.capabilities.presentation) {
             throw UnsupportedOperationException(
-                "Format ${proofSuiteId.value} does not support presentations"
+                "Format ${proofSuiteId.value} does not support presentations",
             )
         }
-        
+
         return engine.createPresentation(credentials, request)
     }
-    
+
     override suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
         trustEvaluator: TrustEvaluator?,
-        options: VerificationOptions
+        options: VerificationOptions,
     ): VerificationResult {
         // Input validation for security and stability
         try {
             InputValidation.validatePresentationStructure(presentation)
         } catch (e: IllegalArgumentException) {
             // Create a minimal error credential for the InvalidProof result
-            val errorCredential = VerifiableCredential(
-                type = listOf(CredentialType.fromString("VerifiableCredential")),
-                issuer = Issuer.IriIssuer(Iri("did:error:invalid-presentation")),
-                issuanceDate = Clock.System.now(),
-                credentialSubject = CredentialSubject(
-                    id = Iri("did:error:invalid-presentation"),
-                    claims = emptyMap()
+            val errorCredential =
+                VerifiableCredential(
+                    type = listOf(CredentialType.fromString("VerifiableCredential")),
+                    issuer = Issuer.IriIssuer(Iri("did:error:invalid-presentation")),
+                    issuanceDate = Clock.System.now(),
+                    credentialSubject =
+                        CredentialSubject(
+                            id = Iri("did:error:invalid-presentation"),
+                            claims = emptyMap(),
+                        ),
                 )
-            )
             return VerificationResult.Invalid.InvalidProof(
                 credential = errorCredential,
                 reason = "Presentation input validation failed: ${e.message}",
-                errors = listOf("Invalid presentation structure: ${e.message}")
+                errors = listOf("Invalid presentation structure: ${e.message}"),
             )
         }
-        
+
         // Check that presentation has credentials
         if (presentation.verifiableCredential.isEmpty()) {
             // Create a minimal error credential for the InvalidProof result
             // We can't throw here because we need to return a VerificationResult
-            val errorCredential = VerifiableCredential(
-                type = listOf(CredentialType.fromString("VerifiableCredential")),
-                issuer = Issuer.IriIssuer(Iri("did:error:empty-presentation")),
-                issuanceDate = Clock.System.now(),
-                credentialSubject = CredentialSubject(
-                    id = Iri("did:error:empty-presentation"),
-                    claims = emptyMap()
+            val errorCredential =
+                VerifiableCredential(
+                    type = listOf(CredentialType.fromString("VerifiableCredential")),
+                    issuer = Issuer.IriIssuer(Iri("did:error:empty-presentation")),
+                    issuanceDate = Clock.System.now(),
+                    credentialSubject =
+                        CredentialSubject(
+                            id = Iri("did:error:empty-presentation"),
+                            claims = emptyMap(),
+                        ),
                 )
-            )
             return VerificationResult.Invalid.InvalidProof(
                 credential = errorCredential,
                 reason = "Presentation must contain at least one credential",
-                errors = listOf("VerifiablePresentation must contain at least one VerifiableCredential")
+                errors = listOf("VerifiablePresentation must contain at least one VerifiableCredential"),
             )
         }
-        
+
         // Verify each credential in the presentation
-        val credentialResults = presentation.verifiableCredential.map { credential ->
-            verify(credential, trustEvaluator, options)
-        }
-        
+        val credentialResults =
+            presentation.verifiableCredential.map { credential ->
+                verify(credential, trustEvaluator, options)
+            }
+
         // If any credential is invalid, return failure
         val firstInvalidCredential = credentialResults.firstOrNull { it is VerificationResult.Invalid }
         if (firstInvalidCredential != null) {
@@ -280,9 +297,10 @@ internal class DefaultCredentialService(
                 return VerificationResult.Invalid.InvalidProof(
                     credential = presentation.verifiableCredential.first(),
                     reason = "Presentation proof is required but missing",
-                    errors = listOf(
-                        "VerifiablePresentation must have a proof when presentation proof verification is enabled"
-                    )
+                    errors =
+                        listOf(
+                            "VerifiablePresentation must have a proof when presentation proof verification is enabled",
+                        ),
                 )
             } else {
                 // Copy nullable property to a local — cross-module smart cast not possible.
@@ -306,23 +324,26 @@ internal class DefaultCredentialService(
                     // Verify the proof signature
                     val holderIri = presentation.holder
                     if (holderIri.isDid) {
-                        val verificationMethod = PresentationVerification.resolvePresentationProofVerificationMethod(
-                            holderIri = holderIri,
-                            verificationMethodId = proof.verificationMethod,
-                            didResolver = didResolver,
-                            declaredProofPurpose = proof.proofPurpose
-                        )
+                        val verificationMethod =
+                            PresentationVerification.resolvePresentationProofVerificationMethod(
+                                holderIri = holderIri,
+                                verificationMethodId = proof.verificationMethod,
+                                didResolver = didResolver,
+                                declaredProofPurpose = proof.proofPurpose,
+                            )
 
                         if (verificationMethod == null) {
                             return VerificationResult.Invalid.InvalidProof(
                                 credential = null,
-                                reason = "Presentation proof verification failed: could not resolve holder DID, " +
-                                    "get verification key for '${holderIri.value}', or the proof's verification " +
-                                    "method/proofPurpose is not authorized for 'authentication'",
-                                errors = listOf(
-                                    "Failed to resolve holder '${holderIri.value}' or its verification method is " +
-                                        "not authorized for the 'authentication' proof purpose"
-                                )
+                                reason =
+                                    "Presentation proof verification failed: could not resolve holder DID, " +
+                                        "get verification key for '${holderIri.value}', or the proof's verification " +
+                                        "method/proofPurpose is not authorized for 'authentication'",
+                                errors =
+                                    listOf(
+                                        "Failed to resolve holder '${holderIri.value}' or its verification method is " +
+                                            "not authorized for the 'authentication' proof purpose",
+                                    ),
                             )
                         }
 
@@ -331,17 +352,18 @@ internal class DefaultCredentialService(
 
                         // Verify signature (covers canonicalized proof options + document,
                         // per W3C Data Integrity)
-                        val isValid = PresentationVerification.verifyPresentationSignature(
-                            vpDocument = vpDocument,
-                            proof = proof,
-                            verificationMethod = verificationMethod
-                        )
+                        val isValid =
+                            PresentationVerification.verifyPresentationSignature(
+                                vpDocument = vpDocument,
+                                proof = proof,
+                                verificationMethod = verificationMethod,
+                            )
 
                         if (!isValid) {
                             return VerificationResult.Invalid.InvalidProof(
                                 credential = presentation.verifiableCredential.first(),
                                 reason = "Presentation proof signature verification failed",
-                                errors = listOf("Invalid signature on VerifiablePresentation proof")
+                                errors = listOf("Invalid signature on VerifiablePresentation proof"),
                             )
                         }
 
@@ -356,13 +378,15 @@ internal class DefaultCredentialService(
                             // check would let 'did:example:abcdef#key-1' satisfy holder
                             // 'did:example:abc'.
                             if (!PresentationVerification.verificationMethodBelongsToHolder(
-                                    proof.verificationMethod, holderDid
+                                    proof.verificationMethod,
+                                    holderDid,
                                 )
                             ) {
                                 return VerificationResult.Invalid.InvalidProof(
                                     credential = null,
-                                    reason = "Presentation proof verificationMethod '${proof.verificationMethod}' " +
-                                        "does not belong to holder '$holderDid'"
+                                    reason =
+                                        "Presentation proof verificationMethod '${proof.verificationMethod}' " +
+                                            "does not belong to holder '$holderDid'",
                                 )
                             }
                         }
@@ -370,7 +394,7 @@ internal class DefaultCredentialService(
                         return VerificationResult.Invalid.InvalidProof(
                             credential = null,
                             reason = "Presentation holder '${holderIri.value}' is not a DID",
-                            errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}")
+                            errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}"),
                         )
                     }
                 } else if (presentationProof is org.trustweave.credential.model.vc.CredentialProof.SdJwtVcProof) {
@@ -378,18 +402,19 @@ internal class DefaultCredentialService(
                     // (KB-JWT) appended to the compact SD-JWT. Verify its signature against
                     // the holder's DID keys, plus sd_hash/iat. The KB-JWT nonce/aud are
                     // checked against expectedChallenge/expectedDomain further below.
-                    PresentationVerification.verifySdJwtKeyBinding(
-                        presentation = presentation,
-                        proof = presentationProof,
-                        options = options,
-                        didResolver = didResolver
-                    )?.let { return it }
+                    PresentationVerification
+                        .verifySdJwtKeyBinding(
+                            presentation = presentation,
+                            proof = presentationProof,
+                            options = options,
+                            didResolver = didResolver,
+                        )?.let { return it }
                 } else {
                     val proofTypeName = presentation.proof!!::class.simpleName
                     return VerificationResult.Invalid.InvalidProof(
                         credential = presentation.verifiableCredential.first(),
                         reason = "Unsupported presentation proof type: $proofTypeName",
-                        errors = listOf("Presentation proof type '$proofTypeName' is not supported for verification")
+                        errors = listOf("Presentation proof type '$proofTypeName' is not supported for verification"),
                     )
                 }
             }
@@ -413,7 +438,7 @@ internal class DefaultCredentialService(
             return VerificationResult.Invalid.InvalidProof(
                 credential = null,
                 reason = "Holder binding cannot be enforced without presentation proof verification",
-                errors = listOf("verifyPresentationProof must be true when enforceHolderBinding is true")
+                errors = listOf("verifyPresentationProof must be true when enforceHolderBinding is true"),
             )
         }
 
@@ -426,7 +451,7 @@ internal class DefaultCredentialService(
                     return VerificationResult.Invalid.InvalidProof(
                         credential = null,
                         reason = "Holder binding failed: credential subject ID does not match presentation holder",
-                        errors = listOf("credentialSubject.id is missing or does not match holder DID")
+                        errors = listOf("credentialSubject.id is missing or does not match holder DID"),
                     )
                 }
             }
@@ -438,7 +463,7 @@ internal class DefaultCredentialService(
             return VerificationResult.Invalid.InvalidProof(
                 credential = null,
                 reason = "Challenge/domain verification requires presentation proof verification",
-                errors = listOf("verifyPresentationProof must be true when verifyChallenge or verifyDomain is enabled")
+                errors = listOf("verifyPresentationProof must be true when verifyChallenge or verifyDomain is enabled"),
             )
         }
 
@@ -447,55 +472,63 @@ internal class DefaultCredentialService(
 
         // Verify domain if required
         PresentationVerification.verifyDomain(presentation, options)?.let { return it }
-        
+
         // All checks passed - return success
-        val firstValidResult = credentialResults.firstOrNull { it is VerificationResult.Valid }
-            as? VerificationResult.Valid
+        val firstValidResult =
+            credentialResults.firstOrNull { it is VerificationResult.Valid }
+                as? VerificationResult.Valid
 
         // F-07: Warn when a presentation contains credentials from more than one issuer.
         // Only the first issuer is reflected in the top-level result field, which may mislead
         // relying parties that inspect only that field.
-        val distinctIssuers = credentialResults
-            .filterIsInstance<VerificationResult.Valid>()
-            .mapNotNull { it.issuerIri }
-            .distinct()
-        val multiIssuerWarnings = if (distinctIssuers.size > 1) {
-            listOf(
-                "Presentation contains credentials from ${distinctIssuers.size} distinct issuers: " +
-                    "$distinctIssuers. Only the first issuer is reflected in this result."
-            )
-        } else {
-            emptyList()
-        }
+        val distinctIssuers =
+            credentialResults
+                .filterIsInstance<VerificationResult.Valid>()
+                .mapNotNull { it.issuerIri }
+                .distinct()
+        val multiIssuerWarnings =
+            if (distinctIssuers.size > 1) {
+                listOf(
+                    "Presentation contains credentials from ${distinctIssuers.size} distinct issuers: " +
+                        "$distinctIssuers. Only the first issuer is reflected in this result.",
+                )
+            } else {
+                emptyList()
+            }
 
         // SEC-06: When the presentation proof was not verified, subjectIri is unverified — set it
         // to null so callers cannot rely on an unverified holder DID.
         val warnings = credentialResults.flatMap { it.allWarnings } + multiIssuerWarnings
-        val proofWarnings = if (trustEvaluator != null && !options.verifyPresentationProof) {
-            listOf(
-                "Trust evaluation was performed but presentation proof was not verified. subjectIri is unverified."
-            )
-        } else {
-            emptyList()
-        }
+        val proofWarnings =
+            if (trustEvaluator != null && !options.verifyPresentationProof) {
+                listOf(
+                    "Trust evaluation was performed but presentation proof was not verified. subjectIri is unverified.",
+                )
+            } else {
+                emptyList()
+            }
 
         return VerificationResult.Valid(
             credential = presentation.verifiableCredential.first(),
-            issuerIri = firstValidResult?.issuerIri ?: presentation.verifiableCredential.first().issuer.id,
+            issuerIri =
+                firstValidResult?.issuerIri ?: presentation.verifiableCredential
+                    .first()
+                    .issuer.id,
             // SEC-06: only populate subjectIri from the holder when the proof has been verified;
             // an unverified holder value could be trivially forged by an attacker.
             subjectIri = if (options.verifyPresentationProof) presentation.holder else null,
-            issuedAt = firstValidResult?.issuedAt
-                ?: presentation.verifiableCredential.firstOrNull()?.issuanceDate
-                ?: presentation.verifiableCredential.firstOrNull()?.validFrom
-                ?: Clock.System.now(),
+            issuedAt =
+                firstValidResult?.issuedAt
+                    ?: presentation.verifiableCredential.firstOrNull()?.issuanceDate
+                    ?: presentation.verifiableCredential.firstOrNull()?.validFrom
+                    ?: Clock.System.now(),
             expiresAt = presentation.expirationDate ?: firstValidResult?.expiresAt,
-            warnings = warnings + proofWarnings
+            warnings = warnings + proofWarnings,
         )
     }
-    
+
     // Helper methods for presentation verification
-    
+
     private fun buildPresentationDocumentWithoutProof(presentation: VerifiablePresentation): kotlinx.serialization.json.JsonObject {
         val fullJson = json.encodeToJsonElement(VerifiablePresentation.serializer(), presentation).jsonObject
         return kotlinx.serialization.json.buildJsonObject {
@@ -504,10 +537,10 @@ internal class DefaultCredentialService(
             }
         }
     }
-    
+
     override suspend fun status(
         credential: VerifiableCredential,
-        clockSkewTolerance: kotlin.time.Duration
+        clockSkewTolerance: kotlin.time.Duration,
     ): CredentialStatusInfo {
         val now = Clock.System.now()
         val clockSkewKt = clockSkewTolerance
@@ -515,33 +548,36 @@ internal class DefaultCredentialService(
         // Use the same VC-version-aware expiry/notBefore logic as CredentialValidation so that
         // status() and verify() always agree on which field is authoritative for each VC version.
         // SEC-03: was incorrectly using raw `validUntil ?: expirationDate` for all VC versions.
-        val effectiveExpiry = if (credential.isVc2 && !credential.isVc1) {
-            credential.validUntil
-        } else {
-            credential.validUntil ?: credential.expirationDate
-        }
+        val effectiveExpiry =
+            if (credential.isVc2 && !credential.isVc1) {
+                credential.validUntil
+            } else {
+                credential.validUntil ?: credential.expirationDate
+            }
         // SEC-05: apply clock-skew tolerance, matching verify()'s behaviour.
         val expired = effectiveExpiry != null && now > effectiveExpiry.plus(clockSkewKt)
 
-        val revoked = if (credential.credentialStatus != null && revocationManager != null) {
-            try {
-                val revocationStatus = revocationManager.checkRevocationStatus(credential)
-                revocationStatus.revoked || revocationStatus.suspended
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                true // Fail-closed: treat revocation check errors as revoked
+        val revoked =
+            if (credential.credentialStatus != null && revocationManager != null) {
+                try {
+                    val revocationStatus = revocationManager.checkRevocationStatus(credential)
+                    revocationStatus.revoked || revocationStatus.suspended
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    true // Fail-closed: treat revocation check errors as revoked
+                }
+            } else {
+                false
             }
-        } else {
-            false
-        }
 
         // SEC-03: VC-version-aware notBefore (matches CredentialValidation.validateNotBefore).
-        val effectiveNotBefore = if (credential.isVc2 && !credential.isVc1) {
-            credential.validFrom
-        } else {
-            credential.validFrom ?: credential.issuanceDate
-        }
+        val effectiveNotBefore =
+            if (credential.isVc2 && !credential.isVc1) {
+                credential.validFrom
+            } else {
+                credential.validFrom ?: credential.issuanceDate
+            }
         // SEC-05: apply clock-skew tolerance.
         val notYetValid = effectiveNotBefore != null && now < effectiveNotBefore.minus(clockSkewKt)
 
@@ -549,25 +585,19 @@ internal class DefaultCredentialService(
             valid = !expired && !revoked && !notYetValid,
             revoked = revoked,
             expired = expired,
-            notYetValid = notYetValid
+            notYetValid = notYetValid,
         )
     }
-    
-    override fun supports(format: ProofSuiteId): Boolean {
-        return engines.containsKey(format)
-    }
-    
-    override fun supportedFormats(): List<ProofSuiteId> {
-        return engines.keys.toList()
-    }
-    
+
+    override fun supports(format: ProofSuiteId): Boolean = engines.containsKey(format)
+
+    override fun supportedFormats(): List<ProofSuiteId> = engines.keys.toList()
+
     override fun supportsCapability(
         format: ProofSuiteId,
-        capability: ProofEngineCapabilities.() -> Boolean
+        capability: ProofEngineCapabilities.() -> Boolean,
     ): Boolean {
         val engine = engines[format] ?: return false
         return capability(engine.capabilities)
     }
-    
-    
 }

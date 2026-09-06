@@ -20,31 +20,23 @@ data class DidRegistrationResponse(
      * - Absent when operation is finished or failed
      */
     val jobId: String? = null,
-
     /**
      * Current state of the DID operation.
      */
-    val didState: DidState
+    val didState: DidState,
 ) {
     /**
      * Returns true if the operation is complete (finished or failed).
      */
-    fun isComplete(): Boolean {
-        return didState.state == OperationState.FINISHED || didState.state == OperationState.FAILED
-    }
+    fun isComplete(): Boolean = didState.state == OperationState.FINISHED || didState.state == OperationState.FAILED
 
     /**
      * Returns true if the operation requires additional action.
      */
-    fun requiresAction(): Boolean {
-        return didState.state == OperationState.ACTION
-    }
+    fun requiresAction(): Boolean = didState.state == OperationState.ACTION
 
     /**
      * Returns true if the operation is waiting/pending.
      */
-    fun isWaiting(): Boolean {
-        return didState.state == OperationState.WAIT
-    }
+    fun isWaiting(): Boolean = didState.state == OperationState.WAIT
 }
-

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitorTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

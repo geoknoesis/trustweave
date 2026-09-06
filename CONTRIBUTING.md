@@ -457,3 +457,5 @@ For detailed information on specific topics, see:
 
 
 
+
+See [SDK release validation](docs/contributing/release-validation.md) for ABI reference updates, merged coverage, signing, and dependency inventories.

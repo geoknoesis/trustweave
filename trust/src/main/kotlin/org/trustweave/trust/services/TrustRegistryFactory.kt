@@ -17,4 +17,3 @@ interface TrustRegistryFactory {
      */
     suspend fun create(providerName: String): TrustRegistry
 }
-

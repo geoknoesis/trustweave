@@ -36,6 +36,25 @@ object ModuleCapabilities {
 
     fun get(module: String): Capability? = catalog[module]
 
+    /**
+     * Explicit deployment gate. Call before constructing provider clients.
+     * Production rejects unassessed, experimental and stub modules. Opting into an
+     * experiment never permits a stub or bypasses operation/format requirements.
+     */
+    fun requireDeployment(
+        module: String,
+        operations: Set<String>,
+        formats: Set<String> = emptySet(),
+        allowExperimental: Boolean = false,
+    ) {
+        val assessed = requireNotNull(get(module)) { "No assessed capabilities for $module" }
+        require(assessed.maturity == "supported" || (allowExperimental && assessed.maturity == "experimental")) {
+            "$module (${assessed.maturity}) is not approved by the deployment maturity policy"
+        }
+        requireOperations(module, operations)
+        requireFormats(module, formats)
+    }
+
     /** Construct runtime metadata from the same assessment used to generate documentation. */
     fun metadata(
         module: String,

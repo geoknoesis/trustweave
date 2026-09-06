@@ -1,0 +1,13 @@
+public final class org/trustweave/registry/server/TrustRegistryRoutesKt {
+	public static final fun configureTrustRegistryRoutes (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;)V
+	public static synthetic fun configureTrustRegistryRoutes$default (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class org/trustweave/registry/server/TrustRegistryServer {
+	public fun <init> (Lorg/trustweave/registry/TrustRegistry;ILjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/registry/TrustRegistry;ILjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun start (Z)V
+	public static synthetic fun start$default (Lorg/trustweave/registry/server/TrustRegistryServer;ZILjava/lang/Object;)V
+	public final fun stop ()V
+}
+

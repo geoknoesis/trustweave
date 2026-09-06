@@ -48,4 +48,3 @@ interface PollableRegistrar {
      */
     suspend fun waitForCompletion(response: DidRegistrationResponse): DidRegistrationResponse
 }
-

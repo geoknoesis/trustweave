@@ -18,7 +18,7 @@ keywords:
 Complete API reference for TrustWeave's TrustWeave API.
 
 > **Version:** 0.7.0
-> **Kotlin:** 2.2.21+ | **Java:** 21+
+> **Kotlin:** 2.3.21+ | **Java:** 21+
 > See [CHANGELOG.md](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md) for version history and migration guides.
 >
 > **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
@@ -1329,6 +1329,7 @@ See [API patterns — results vs exceptions](../getting-started/api-patterns.md#
 
 **Example (credential + DID results):**
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY

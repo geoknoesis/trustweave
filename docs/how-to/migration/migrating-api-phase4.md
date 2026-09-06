@@ -204,6 +204,7 @@ wallet.store(credential)
 
 ### After (Direct Methods API)
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrow
 

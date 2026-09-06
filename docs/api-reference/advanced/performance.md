@@ -51,6 +51,7 @@ suspend fun processMultiple(trustWeave: TrustWeave) = coroutineScope {
 Batch operations when possible:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 

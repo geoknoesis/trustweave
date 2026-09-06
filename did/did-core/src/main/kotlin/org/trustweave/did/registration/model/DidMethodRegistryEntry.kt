@@ -41,34 +41,29 @@ data class DidMethodRegistryEntry(
      * This is the method identifier used in DID strings: `did:method:id`
      */
     val name: String,
-
     /**
      * Implementation status of the method.
      * Common values: "proposed", "implemented", "deprecated", "withdrawn"
      */
     val status: String? = null,
-
     /**
      * URL to the full DID method specification document.
      */
     val specification: String? = null,
-
     /**
      * Contact information for the method maintainers.
      */
     val contact: ContactInfo? = null,
-
     /**
      * List of implementations available for this DID method.
      * Each implementation typically includes a driverUrl pointing to a resolver service.
      */
     val implementations: List<MethodImplementation> = emptyList(),
-
     /**
      * Additional properties from the registry entry that aren't explicitly defined.
      * This allows the model to accept future registry fields without breaking.
      */
-    val additionalProperties: Map<String, JsonObject> = emptyMap()
+    val additionalProperties: Map<String, JsonObject> = emptyMap(),
 )
 
 /**
@@ -78,7 +73,7 @@ data class DidMethodRegistryEntry(
 data class ContactInfo(
     val name: String? = null,
     val email: String? = null,
-    val url: String? = null
+    val url: String? = null,
 )
 
 /**
@@ -93,13 +88,11 @@ data class MethodImplementation(
      * Name of the implementation (e.g., "Universal Resolver", "GoDiddy")
      */
     val name: String? = null,
-
     /**
      * URL to the driver/resolver service for this implementation.
      * This is typically a Universal Resolver endpoint.
      */
     val driverUrl: String? = null,
-
     /**
      * URL to the registrar service for this implementation.
      * This is typically a Universal Registrar endpoint.
@@ -108,39 +101,33 @@ data class MethodImplementation(
      * separate endpoints for resolution (driverUrl) and registration (registrarUrl).
      */
     val registrarUrl: String? = null,
-
     /**
      * Whether this implementation is for a test network.
      */
     val testNet: Boolean? = null,
-
     /**
      * Additional implementation-specific properties.
      */
-    val additionalProperties: Map<String, String> = emptyMap()
+    val additionalProperties: Map<String, String> = emptyMap(),
 )
 
 /**
  * Parser for DID Method Registry Entry JSON format.
  */
 object DidMethodRegistryEntryParser {
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     /**
      * Parses a DID Method Registry Entry JSON string.
      */
-    fun parse(jsonString: String): DidMethodRegistryEntry {
-        return json.decodeFromString(jsonString)
-    }
+    fun parse(jsonString: String): DidMethodRegistryEntry = json.decodeFromString(jsonString)
 
     /**
      * Parses a DID Method Registry Entry from a JsonObject.
      */
-    fun parse(jsonObject: JsonObject): DidMethodRegistryEntry {
-        return json.decodeFromJsonElement(jsonObject)
-    }
+    fun parse(jsonObject: JsonObject): DidMethodRegistryEntry = json.decodeFromJsonElement(jsonObject)
 }
-

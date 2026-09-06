@@ -1,15 +1,14 @@
 package org.trustweave.examples.financial
 
-import org.trustweave.examples.StubScenarioTest
 import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for Financial Services KYC scenario.
  *
  * Verifies that the stub scenario executes without errors.
  */
-class FinancialServicesExampleTest : StubScenarioTest() {
-
+class FinancialServicesExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
@@ -20,4 +19,3 @@ class FinancialServicesExampleTest : StubScenarioTest() {
         runScenario()
     }
 }
-

@@ -1,0 +1,1223 @@
+public final class org/trustweave/contract/ContractDraftRequest {
+	public fun <init> (Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/ContractType;
+	public final fun component2 ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun component3 ()Lorg/trustweave/contract/models/ContractParties;
+	public final fun component4 ()Lorg/trustweave/contract/models/ContractTerms;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/ContractDraftRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/ContractDraftRequest;Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/ContractDraftRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContractData ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getContractType ()Lorg/trustweave/contract/models/ContractType;
+	public final fun getEffectiveDate ()Ljava/lang/String;
+	public final fun getExecutionModel ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun getExpirationDate ()Ljava/lang/String;
+	public final fun getParties ()Lorg/trustweave/contract/models/ContractParties;
+	public final fun getTerms ()Lorg/trustweave/contract/models/ContractTerms;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/contract/ContractValidator {
+	public static final field INSTANCE Lorg/trustweave/contract/ContractValidator;
+	public final fun isExpired (Lorg/trustweave/contract/models/SmartContract;)Z
+	public final fun validateDates (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun validateDraftRequest (Lorg/trustweave/contract/ContractDraftRequest;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun validateParties (Lorg/trustweave/contract/models/ContractParties;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun validateStateTransition (Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractStatus;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun validateTerms (Lorg/trustweave/contract/models/ContractTerms;)Lorg/trustweave/core/util/ValidationResult;
+}
+
+public final class org/trustweave/contract/DefaultSmartContractService : org/trustweave/contract/SmartContractService {
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun activateContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun anchorContract-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun bindContract-yxL6bBk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createDraft-gIAlu-s (Lorg/trustweave/contract/ContractDraftRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun evaluateConditions-0E7RQCE (Lorg/trustweave/contract/models/SmartContract;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeContract-0E7RQCE (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/contract/models/ExecutionContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun issueContractCredential-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateStatus-yxL6bBk (Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/contract/SmartContractService {
+	public abstract fun activateContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun anchorContract-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun anchorContract-BWLJW6A$default (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun bindContract-yxL6bBk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun bindContract-yxL6bBk$default (Lorg/trustweave/contract/SmartContractService;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun createDraft-gIAlu-s (Lorg/trustweave/contract/ContractDraftRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun evaluateConditions-0E7RQCE (Lorg/trustweave/contract/models/SmartContract;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeContract-0E7RQCE (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/contract/models/ExecutionContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun issueContractCredential-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateStatus-yxL6bBk (Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateStatus-yxL6bBk$default (Lorg/trustweave/contract/SmartContractService;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun verifyContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/contract/SmartContractService$DefaultImpls {
+	public static synthetic fun anchorContract-BWLJW6A$default (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun bindContract-yxL6bBk$default (Lorg/trustweave/contract/SmartContractService;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun updateStatus-yxL6bBk$default (Lorg/trustweave/contract/SmartContractService;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/contract/SmartContractServiceKt {
+	public static final fun draft (Lorg/trustweave/contract/SmartContractService;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun draft (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/ContractDraftRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun evaluateConditions (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun executeContract (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun executeEvent (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;[Lkotlin/Pair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun executeParametric (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;[Lkotlin/Pair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun issueCredential (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/contract/evaluation/BaseEvaluationEngine : org/trustweave/contract/evaluation/ContractEvaluationEngine {
+	public fun <init> ()V
+	protected fun computeImplementationHash ()Ljava/lang/String;
+	public fun evaluateConditions (Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/contract/evaluation/EvaluationContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getImplementationHash ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/contract/evaluation/ContractEvaluationEngine {
+	public abstract fun evaluateCondition (Lorg/trustweave/contract/models/ContractCondition;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/contract/evaluation/EvaluationContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun evaluateConditions (Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/contract/evaluation/EvaluationContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getEngineId ()Ljava/lang/String;
+	public abstract fun getImplementationHash ()Ljava/lang/String;
+	public abstract fun getSupportedConditionTypes ()Ljava/util/Set;
+	public abstract fun getVersion ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/contract/evaluation/EngineReference {
+	public abstract fun getEngineId ()Ljava/lang/String;
+	public abstract fun getExpectedHash ()Ljava/lang/String;
+	public abstract fun getExpectedVersion ()Ljava/lang/String;
+}
+
+public final class org/trustweave/contract/evaluation/EngineReference$Manual : org/trustweave/contract/evaluation/EngineReference {
+	public static final field INSTANCE Lorg/trustweave/contract/evaluation/EngineReference$Manual;
+	public fun getEngineId ()Ljava/lang/String;
+	public fun getExpectedHash ()Ljava/lang/String;
+	public fun getExpectedVersion ()Ljava/lang/String;
+}
+
+public final class org/trustweave/contract/evaluation/EngineReference$WithEngine : org/trustweave/contract/evaluation/EngineReference {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/evaluation/EngineReference$WithEngine;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/evaluation/EngineReference$WithEngine;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/evaluation/EngineReference$WithEngine;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEngineId ()Ljava/lang/String;
+	public fun getExpectedHash ()Ljava/lang/String;
+	public fun getExpectedVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/contract/evaluation/EngineReferenceKt {
+	public static final fun toEngineReference (Lorg/trustweave/contract/models/ExecutionModel;)Lorg/trustweave/contract/evaluation/EngineReference;
+}
+
+public final class org/trustweave/contract/evaluation/EvaluationContext {
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/contract/models/ExecutionModel;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/contract/models/ExecutionModel;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/contract/models/ExecutionModel;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)Lorg/trustweave/contract/evaluation/EvaluationContext;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/evaluation/EvaluationContext;Ljava/lang/String;Lorg/trustweave/contract/models/ExecutionModel;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/contract/evaluation/EvaluationContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContractData ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getContractId ()Ljava/lang/String;
+	public final fun getExecutionModel ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun getMetadata ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/contract/evaluation/EvaluationEngines : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public abstract fun clear ()V
+	public abstract fun contains (Ljava/lang/String;)Z
+	public abstract fun get (Ljava/lang/String;)Lorg/trustweave/contract/evaluation/ContractEvaluationEngine;
+	public abstract fun getKeys ()Ljava/util/Set;
+	public abstract fun getSize ()I
+	public abstract fun getValues ()Ljava/util/Collection;
+	public abstract fun isEmpty ()Z
+	public abstract fun minusAssign (Ljava/lang/String;)V
+	public abstract fun plusAssign (Lorg/trustweave/contract/evaluation/ContractEvaluationEngine;)V
+	public abstract fun remove (Ljava/lang/String;)Z
+	public abstract fun verify (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/contract/evaluation/EvaluationEnginesExtensionsKt {
+	public static final fun evaluateWith (Lorg/trustweave/contract/models/ContractCondition;Lorg/trustweave/contract/evaluation/ContractEvaluationEngine;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/contract/evaluation/EvaluationContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun filter (Lorg/trustweave/contract/evaluation/EvaluationEngines;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+	public static final fun getOrElse (Lorg/trustweave/contract/evaluation/EvaluationEngines;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)Lorg/trustweave/contract/evaluation/ContractEvaluationEngine;
+	public static final fun map (Lorg/trustweave/contract/evaluation/EvaluationEngines;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+	public static final fun require (Lorg/trustweave/contract/evaluation/EvaluationEngines;Ljava/lang/String;)Lorg/trustweave/contract/evaluation/ContractEvaluationEngine;
+	public static final fun verifyOrThrow (Lorg/trustweave/contract/evaluation/EvaluationEngines;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun withEngineHash (Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/evaluation/EvaluationEngines;)Lorg/trustweave/contract/models/ExecutionModel;
+}
+
+public final class org/trustweave/contract/evaluation/EvaluationEnginesKt {
+	public static final fun EvaluationEngines ()Lorg/trustweave/contract/evaluation/EvaluationEngines;
+}
+
+public final class org/trustweave/contract/evaluation/engines/ParametricInsuranceEngine : org/trustweave/contract/evaluation/BaseEvaluationEngine {
+	public fun <init> ()V
+	public fun evaluateCondition (Lorg/trustweave/contract/models/ContractCondition;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/contract/evaluation/EvaluationContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getEngineId ()Ljava/lang/String;
+	public fun getSupportedConditionTypes ()Ljava/util/Set;
+	public fun getVersion ()Ljava/lang/String;
+}
+
+public final class org/trustweave/contract/models/AnchorRefData {
+	public static final field Companion Lorg/trustweave/contract/models/AnchorRefData$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/contract/models/AnchorRefData;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/AnchorRefData;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/contract/models/AnchorRefData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getExtra ()Ljava/util/Map;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toAnchorRef ()Lorg/trustweave/anchor/AnchorRef;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/AnchorRefData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/AnchorRefData$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/AnchorRefData;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/AnchorRefData$Companion {
+	public final fun fromAnchorRef (Lorg/trustweave/anchor/AnchorRef;)Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/BoundContract {
+	public static final field Companion Lorg/trustweave/contract/models/BoundContract$Companion;
+	public fun <init> (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/SmartContract;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun copy (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;)Lorg/trustweave/contract/models/BoundContract;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/BoundContract;Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;ILjava/lang/Object;)Lorg/trustweave/contract/models/BoundContract;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorRef ()Lorg/trustweave/anchor/AnchorRef;
+	public final fun getAnchorRef ()Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun getContract ()Lorg/trustweave/contract/models/SmartContract;
+	public final fun getCredentialId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/BoundContract$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/BoundContract$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/BoundContract;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/BoundContract;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/BoundContract$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ConditionEvaluation {
+	public static final field Companion Lorg/trustweave/contract/models/ConditionEvaluation$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;ZLjava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;ZLjava/lang/String;)Lorg/trustweave/contract/models/ConditionEvaluation;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ConditionEvaluation;Ljava/lang/String;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ConditionEvaluation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConditions ()Ljava/util/List;
+	public final fun getContractId ()Ljava/lang/String;
+	public final fun getOverallResult ()Z
+	public final fun getTimestamp ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ConditionEvaluation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ConditionEvaluation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ConditionEvaluation;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ConditionEvaluation;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ConditionEvaluation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ConditionResult {
+	public static final field Companion Lorg/trustweave/contract/models/ConditionResult$Companion;
+	public fun <init> (Ljava/lang/String;ZLkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ZLkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lorg/trustweave/contract/models/ConditionResult;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ConditionResult;Ljava/lang/String;ZLkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ConditionResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConditionId ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getEvaluatedValue ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getSatisfied ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ConditionResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ConditionResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ConditionResult;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ConditionResult;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ConditionResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ConditionType : java/lang/Enum {
+	public static final field COMPARISON Lorg/trustweave/contract/models/ConditionType;
+	public static final field COMPOSITE Lorg/trustweave/contract/models/ConditionType;
+	public static final field Companion Lorg/trustweave/contract/models/ConditionType$Companion;
+	public static final field RANGE Lorg/trustweave/contract/models/ConditionType;
+	public static final field TEMPORAL Lorg/trustweave/contract/models/ConditionType;
+	public static final field THRESHOLD Lorg/trustweave/contract/models/ConditionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/ConditionType;
+	public static fun values ()[Lorg/trustweave/contract/models/ConditionType;
+}
+
+public final class org/trustweave/contract/models/ConditionType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractCondition {
+	public static final field Companion Lorg/trustweave/contract/models/ContractCondition$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ConditionType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ConditionType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/ConditionType;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ConditionType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/ContractCondition;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ContractCondition;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ConditionType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/ContractCondition;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConditionType ()Lorg/trustweave/contract/models/ConditionType;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getEvaluationContext ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getExpression ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ContractCondition$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractCondition$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ContractCondition;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ContractCondition;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractCondition$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractDraftBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/contract/ContractDraftRequest;
+	public final fun contractData (Lkotlin/jvm/functions/Function1;)V
+	public final fun getContractType ()Lorg/trustweave/contract/models/ContractType;
+	public final fun getEffectiveDate ()Ljava/lang/String;
+	public final fun getExecutionModel ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun getExpirationDate ()Ljava/lang/String;
+	public final fun getParties ()Lorg/trustweave/contract/models/ContractParties;
+	public final fun getTerms ()Lorg/trustweave/contract/models/ContractTerms;
+	public final fun setContractType (Lorg/trustweave/contract/models/ContractType;)V
+	public final fun setEffectiveDate (Ljava/lang/String;)V
+	public final fun setExecutionModel (Lorg/trustweave/contract/models/ExecutionModel;)V
+	public final fun setExpirationDate (Ljava/lang/String;)V
+	public final fun setParties (Lorg/trustweave/contract/models/ContractParties;)V
+	public final fun setTerms (Lorg/trustweave/contract/models/ContractTerms;)V
+}
+
+public final class org/trustweave/contract/models/ContractDslKt {
+	public static final fun contractDraft (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/contract/ContractDraftRequest;
+	public static final fun executionContext (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/contract/models/ExecutionContext;
+}
+
+public final class org/trustweave/contract/models/ContractOutcome {
+	public static final field Companion Lorg/trustweave/contract/models/ContractOutcome$Companion;
+	public fun <init> (Lorg/trustweave/contract/models/OutcomeType;Ljava/lang/String;Lorg/trustweave/contract/models/MonetaryAmount;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Lorg/trustweave/contract/models/OutcomeType;Ljava/lang/String;Lorg/trustweave/contract/models/MonetaryAmount;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/OutcomeType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Lorg/trustweave/contract/models/OutcomeType;Ljava/lang/String;Lorg/trustweave/contract/models/MonetaryAmount;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/ContractOutcome;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ContractOutcome;Lorg/trustweave/contract/models/OutcomeType;Ljava/lang/String;Lorg/trustweave/contract/models/MonetaryAmount;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/ContractOutcome;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getMonetaryImpact ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun getObligationTriggered ()Ljava/lang/String;
+	public final fun getType ()Lorg/trustweave/contract/models/OutcomeType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ContractOutcome$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractOutcome$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ContractOutcome;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ContractOutcome;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractOutcome$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractParties {
+	public static final field Companion Lorg/trustweave/contract/models/ContractParties$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/contract/models/ContractParties;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ContractParties;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/contract/models/ContractParties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalParties ()Ljava/util/Map;
+	public final fun getCounterpartyDid ()Ljava/lang/String;
+	public final fun getPrimaryPartyDid ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ContractParties$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractParties$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ContractParties;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ContractParties;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractParties$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractStatus : java/lang/Enum {
+	public static final field ACTIVE Lorg/trustweave/contract/models/ContractStatus;
+	public static final field CANCELLED Lorg/trustweave/contract/models/ContractStatus;
+	public static final field Companion Lorg/trustweave/contract/models/ContractStatus$Companion;
+	public static final field DRAFT Lorg/trustweave/contract/models/ContractStatus;
+	public static final field EXECUTED Lorg/trustweave/contract/models/ContractStatus;
+	public static final field EXPIRED Lorg/trustweave/contract/models/ContractStatus;
+	public static final field PENDING Lorg/trustweave/contract/models/ContractStatus;
+	public static final field SUSPENDED Lorg/trustweave/contract/models/ContractStatus;
+	public static final field TERMINATED Lorg/trustweave/contract/models/ContractStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/ContractStatus;
+	public static fun values ()[Lorg/trustweave/contract/models/ContractStatus;
+}
+
+public final class org/trustweave/contract/models/ContractStatus$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractTerms {
+	public static final field Companion Lorg/trustweave/contract/models/ContractTerms$Companion;
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/DisputeResolution;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/DisputeResolution;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Lorg/trustweave/contract/models/DisputeResolution;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/DisputeResolution;)Lorg/trustweave/contract/models/ContractTerms;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ContractTerms;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/DisputeResolution;ILjava/lang/Object;)Lorg/trustweave/contract/models/ContractTerms;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConditions ()Ljava/util/List;
+	public final fun getDisputeResolution ()Lorg/trustweave/contract/models/DisputeResolution;
+	public final fun getGoverningLaw ()Ljava/lang/String;
+	public final fun getJurisdiction ()Ljava/lang/String;
+	public final fun getObligations ()Ljava/util/List;
+	public final fun getPenalties ()Ljava/util/List;
+	public final fun getRewards ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ContractTerms$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractTerms$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ContractTerms;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ContractTerms;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractTerms$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class org/trustweave/contract/models/ContractType {
+	public static final field Companion Lorg/trustweave/contract/models/ContractType$Companion;
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public static final synthetic fun write$Self (Lorg/trustweave/contract/models/ContractType;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class org/trustweave/contract/models/ContractType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$Custom : org/trustweave/contract/models/ContractType {
+	public static final field Companion Lorg/trustweave/contract/models/ContractType$Custom$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ContractType$Custom;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ContractType$Custom;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ContractType$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDomain ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ContractType$Custom$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$Custom$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ContractType$Custom;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ContractType$Custom;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$Custom$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$Financial : org/trustweave/contract/models/ContractType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$Financial;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$Insurance : org/trustweave/contract/models/ContractType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$Insurance;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$Legal : org/trustweave/contract/models/ContractType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$Legal;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$ServiceLevelAgreement : org/trustweave/contract/models/ContractType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$ServiceLevelAgreement;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ContractType$SupplyChain : org/trustweave/contract/models/ContractType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ContractType$SupplyChain;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/DisputeResolution {
+	public static final field Companion Lorg/trustweave/contract/models/DisputeResolution$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/DisputeResolution;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/DisputeResolution;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/DisputeResolution;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getJurisdiction ()Ljava/lang/String;
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getRules ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/DisputeResolution$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/DisputeResolution$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/DisputeResolution;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/DisputeResolution;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/DisputeResolution$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionContext {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionContext$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonElement;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/ExecutionContext;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionContext;Lkotlinx/serialization/json/JsonElement;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalContext ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getEventData ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getTimeContext ()Ljava/lang/String;
+	public final fun getTriggerData ()Lkotlinx/serialization/json/JsonElement;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionContext$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionContext$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionContext;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionContext;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionContext$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionContextBuilder {
+	public fun <init> ()V
+	public final fun additionalContext (Lkotlin/jvm/functions/Function1;)V
+	public final fun build ()Lorg/trustweave/contract/models/ExecutionContext;
+	public final fun event (Lkotlin/jvm/functions/Function1;)V
+	public final fun getTimeContext ()Ljava/lang/String;
+	public final fun setTimeContext (Ljava/lang/String;)V
+	public final fun trigger (Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract class org/trustweave/contract/models/ExecutionModel {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionModel$Companion;
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public static final synthetic fun write$Self (Lorg/trustweave/contract/models/ExecutionModel;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Conditional : org/trustweave/contract/models/ExecutionModel {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionModel$Conditional$Companion;
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionModel$Conditional;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionModel$Conditional;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionModel$Conditional;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConditions ()Ljava/util/List;
+	public final fun getEngineHash ()Ljava/lang/String;
+	public final fun getEngineVersion ()Ljava/lang/String;
+	public final fun getEvaluationEngine ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionModel$Conditional$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionModel$Conditional$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionModel$Conditional;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionModel$Conditional;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Conditional$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$EventDriven : org/trustweave/contract/models/ExecutionModel {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionModel$EventDriven$Companion;
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionModel$EventDriven;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionModel$EventDriven;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionModel$EventDriven;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEngineHash ()Ljava/lang/String;
+	public final fun getEngineVersion ()Ljava/lang/String;
+	public final fun getEvaluationEngine ()Ljava/lang/String;
+	public final fun getEventTypes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionModel$EventDriven$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionModel$EventDriven$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionModel$EventDriven;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionModel$EventDriven;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$EventDriven$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Manual : org/trustweave/contract/models/ExecutionModel {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionModel$Manual;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Parametric : org/trustweave/contract/models/ExecutionModel {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionModel$Parametric$Companion;
+	public fun <init> (Lorg/trustweave/contract/models/TriggerType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/contract/models/TriggerType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/TriggerType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/contract/models/TriggerType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionModel$Parametric;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionModel$Parametric;Lorg/trustweave/contract/models/TriggerType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionModel$Parametric;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEngineHash ()Ljava/lang/String;
+	public final fun getEngineVersion ()Ljava/lang/String;
+	public final fun getEvaluationEngine ()Ljava/lang/String;
+	public final fun getTriggerType ()Lorg/trustweave/contract/models/TriggerType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionModel$Parametric$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionModel$Parametric$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionModel$Parametric;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionModel$Parametric;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Parametric$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Scheduled : org/trustweave/contract/models/ExecutionModel {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionModel$Scheduled$Companion;
+	public fun <init> (Lorg/trustweave/contract/models/ScheduleDefinition;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/contract/models/ScheduleDefinition;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/ScheduleDefinition;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/contract/models/ScheduleDefinition;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionModel$Scheduled;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionModel$Scheduled;Lorg/trustweave/contract/models/ScheduleDefinition;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionModel$Scheduled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEngineHash ()Ljava/lang/String;
+	public final fun getEngineVersion ()Ljava/lang/String;
+	public final fun getEvaluationEngine ()Ljava/lang/String;
+	public final fun getSchedule ()Lorg/trustweave/contract/models/ScheduleDefinition;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionModel$Scheduled$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionModel$Scheduled$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionModel$Scheduled;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionModel$Scheduled;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModel$Scheduled$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionModelsKt {
+	public static final fun eventContext ([Lkotlin/Pair;)Lorg/trustweave/contract/models/ExecutionContext;
+	public static final fun parametricContext ([Lkotlin/Pair;)Lorg/trustweave/contract/models/ExecutionContext;
+}
+
+public final class org/trustweave/contract/models/ExecutionResult {
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionResult$Companion;
+	public fun <init> (Ljava/lang/String;ZLorg/trustweave/contract/models/ExecutionType;Ljava/util/List;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLorg/trustweave/contract/models/ExecutionType;Ljava/util/List;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Lorg/trustweave/contract/models/ExecutionType;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ZLorg/trustweave/contract/models/ExecutionType;Ljava/util/List;Ljava/util/List;Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionResult;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ExecutionResult;Ljava/lang/String;ZLorg/trustweave/contract/models/ExecutionType;Ljava/util/List;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ExecutionResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContractId ()Ljava/lang/String;
+	public final fun getEvidence ()Ljava/util/List;
+	public final fun getExecuted ()Z
+	public final fun getExecutionType ()Lorg/trustweave/contract/models/ExecutionType;
+	public final fun getOutcomes ()Ljava/util/List;
+	public final fun getTimestamp ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ExecutionResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ExecutionResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ExecutionResult;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ExecutionResult;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ExecutionType : java/lang/Enum {
+	public static final field CONDITIONAL_EVALUATION Lorg/trustweave/contract/models/ExecutionType;
+	public static final field Companion Lorg/trustweave/contract/models/ExecutionType$Companion;
+	public static final field EVENT_RESPONSE Lorg/trustweave/contract/models/ExecutionType;
+	public static final field MANUAL_ACTION Lorg/trustweave/contract/models/ExecutionType;
+	public static final field PARAMETRIC_TRIGGER Lorg/trustweave/contract/models/ExecutionType;
+	public static final field SCHEDULED_ACTION Lorg/trustweave/contract/models/ExecutionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/ExecutionType;
+	public static fun values ()[Lorg/trustweave/contract/models/ExecutionType;
+}
+
+public final class org/trustweave/contract/models/ExecutionType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/MonetaryAmount {
+	public static final field Companion Lorg/trustweave/contract/models/MonetaryAmount$Companion;
+	public fun <init> (DLjava/lang/String;)V
+	public synthetic fun <init> (DLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (DLjava/lang/String;)Lorg/trustweave/contract/models/MonetaryAmount;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/MonetaryAmount;DLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/MonetaryAmount;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()D
+	public final fun getCurrency ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/MonetaryAmount$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/MonetaryAmount$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/MonetaryAmount;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/MonetaryAmount$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Obligation {
+	public static final field Companion Lorg/trustweave/contract/models/Obligation$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ObligationType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ObligationType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/contract/models/ObligationType;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ObligationType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/Obligation;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/Obligation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ObligationType;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/Obligation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDeadline ()Ljava/lang/String;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getObligationType ()Lorg/trustweave/contract/models/ObligationType;
+	public final fun getPartyDid ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/Obligation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/Obligation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/Obligation;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/Obligation;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Obligation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ObligationType : java/lang/Enum {
+	public static final field CUSTOM Lorg/trustweave/contract/models/ObligationType;
+	public static final field Companion Lorg/trustweave/contract/models/ObligationType$Companion;
+	public static final field DELIVERY Lorg/trustweave/contract/models/ObligationType;
+	public static final field NOTIFICATION Lorg/trustweave/contract/models/ObligationType;
+	public static final field PAYMENT Lorg/trustweave/contract/models/ObligationType;
+	public static final field PERFORMANCE Lorg/trustweave/contract/models/ObligationType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/ObligationType;
+	public static fun values ()[Lorg/trustweave/contract/models/ObligationType;
+}
+
+public final class org/trustweave/contract/models/ObligationType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/OutcomeType : java/lang/Enum {
+	public static final field CUSTOM Lorg/trustweave/contract/models/OutcomeType;
+	public static final field Companion Lorg/trustweave/contract/models/OutcomeType$Companion;
+	public static final field NOTIFICATION Lorg/trustweave/contract/models/OutcomeType;
+	public static final field PAYOUT Lorg/trustweave/contract/models/OutcomeType;
+	public static final field PENALTY Lorg/trustweave/contract/models/OutcomeType;
+	public static final field STATUS_CHANGE Lorg/trustweave/contract/models/OutcomeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/OutcomeType;
+	public static fun values ()[Lorg/trustweave/contract/models/OutcomeType;
+}
+
+public final class org/trustweave/contract/models/OutcomeType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Penalty {
+	public static final field Companion Lorg/trustweave/contract/models/Penalty$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/PenaltyType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/PenaltyType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/PenaltyType;
+	public final fun component4 ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/PenaltyType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/Penalty;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/Penalty;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/PenaltyType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/Penalty;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getPenaltyType ()Lorg/trustweave/contract/models/PenaltyType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/Penalty$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/Penalty$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/Penalty;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/Penalty;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Penalty$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/PenaltyType : java/lang/Enum {
+	public static final field CUSTOM Lorg/trustweave/contract/models/PenaltyType;
+	public static final field Companion Lorg/trustweave/contract/models/PenaltyType$Companion;
+	public static final field MONETARY Lorg/trustweave/contract/models/PenaltyType;
+	public static final field SUSPENSION Lorg/trustweave/contract/models/PenaltyType;
+	public static final field TERMINATION Lorg/trustweave/contract/models/PenaltyType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/PenaltyType;
+	public static fun values ()[Lorg/trustweave/contract/models/PenaltyType;
+}
+
+public final class org/trustweave/contract/models/PenaltyType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Reward {
+	public static final field Companion Lorg/trustweave/contract/models/Reward$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/RewardType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/RewardType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/RewardType;
+	public final fun component4 ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/RewardType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/Reward;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/Reward;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/RewardType;Lorg/trustweave/contract/models/MonetaryAmount;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/Reward;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()Lorg/trustweave/contract/models/MonetaryAmount;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getRewardType ()Lorg/trustweave/contract/models/RewardType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/Reward$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/Reward$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/Reward;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/Reward;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/Reward$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/RewardType : java/lang/Enum {
+	public static final field BONUS Lorg/trustweave/contract/models/RewardType;
+	public static final field CUSTOM Lorg/trustweave/contract/models/RewardType;
+	public static final field Companion Lorg/trustweave/contract/models/RewardType$Companion;
+	public static final field DISCOUNT Lorg/trustweave/contract/models/RewardType;
+	public static final field MONETARY Lorg/trustweave/contract/models/RewardType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/contract/models/RewardType;
+	public static fun values ()[Lorg/trustweave/contract/models/RewardType;
+}
+
+public final class org/trustweave/contract/models/RewardType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ScheduleDefinition {
+	public static final field Companion Lorg/trustweave/contract/models/ScheduleDefinition$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/contract/models/ScheduleDefinition;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/ScheduleDefinition;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/ScheduleDefinition;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCronExpression ()Ljava/lang/String;
+	public final fun getInterval ()Ljava/lang/String;
+	public final fun getTimezone ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/ScheduleDefinition$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/ScheduleDefinition$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/ScheduleDefinition;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/ScheduleDefinition;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/ScheduleDefinition$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/SmartContract {
+	public static final field Companion Lorg/trustweave/contract/models/SmartContract$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;Lkotlinx/serialization/json/JsonElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun component14 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/contract/models/ContractStatus;
+	public final fun component4 ()Lorg/trustweave/contract/models/ContractType;
+	public final fun component5 ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun component6 ()Lorg/trustweave/contract/models/ContractParties;
+	public final fun component7 ()Lorg/trustweave/contract/models/ContractTerms;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/contract/models/SmartContract;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/contract/models/AnchorRefData;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lorg/trustweave/contract/models/SmartContract;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorRef ()Lorg/trustweave/contract/models/AnchorRefData;
+	public final fun getContractData ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getContractNumber ()Ljava/lang/String;
+	public final fun getContractType ()Lorg/trustweave/contract/models/ContractType;
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getCredentialId ()Ljava/lang/String;
+	public final fun getEffectiveDate ()Ljava/lang/String;
+	public final fun getExecutionModel ()Lorg/trustweave/contract/models/ExecutionModel;
+	public final fun getExpirationDate ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getParties ()Lorg/trustweave/contract/models/ContractParties;
+	public final fun getStatus ()Lorg/trustweave/contract/models/ContractStatus;
+	public final fun getTerms ()Lorg/trustweave/contract/models/ContractTerms;
+	public final fun getUpdatedAt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/SmartContract$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/SmartContract$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/SmartContract;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/SmartContract;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/SmartContract$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class org/trustweave/contract/models/TriggerType {
+	public static final field Companion Lorg/trustweave/contract/models/TriggerType$Companion;
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public static final synthetic fun write$Self (Lorg/trustweave/contract/models/TriggerType;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class org/trustweave/contract/models/TriggerType$API : org/trustweave/contract/models/TriggerType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$API;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$Custom : org/trustweave/contract/models/TriggerType {
+	public static final field Companion Lorg/trustweave/contract/models/TriggerType$Custom$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/contract/models/TriggerType$Custom;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/models/TriggerType$Custom;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/models/TriggerType$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/contract/models/TriggerType$Custom$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$Custom$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/contract/models/TriggerType$Custom;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/contract/models/TriggerType$Custom;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$Custom$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$EarthObservation : org/trustweave/contract/models/TriggerType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$EarthObservation;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$Financial : org/trustweave/contract/models/TriggerType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$Financial;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$IoT : org/trustweave/contract/models/TriggerType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$IoT;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/contract/models/TriggerType$Weather : org/trustweave/contract/models/TriggerType {
+	public static final field INSTANCE Lorg/trustweave/contract/models/TriggerType$Weather;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

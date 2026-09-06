@@ -1,12 +1,12 @@
 package org.trustweave.did.batch
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.resolver.DidResolver
-import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 
 /**
  * Batch Operations Service.
@@ -51,9 +51,9 @@ interface BatchOperationsService {
      */
     suspend fun resolveBatch(
         dids: List<Did>,
-        maxConcurrency: Int = 10
+        maxConcurrency: Int = 10,
     ): Map<Did, DidResolutionResult>
-    
+
     /**
      * Verify multiple DID documents.
      *
@@ -63,7 +63,7 @@ interface BatchOperationsService {
      */
     suspend fun verifyBatch(
         documents: List<DidDocument>,
-        maxConcurrency: Int = 10
+        maxConcurrency: Int = 10,
     ): Map<Did, Boolean>
 }
 
@@ -71,38 +71,40 @@ interface BatchOperationsService {
  * Default implementation of batch operations service.
  */
 class DefaultBatchOperationsService(
-    private val resolver: DidResolver
+    private val resolver: DidResolver,
 ) : BatchOperationsService {
-    
     override suspend fun resolveBatch(
         dids: List<Did>,
-        maxConcurrency: Int
-    ): Map<Did, DidResolutionResult> {
-        return coroutineScope {
-            dids.chunked(maxConcurrency).flatMap { chunk ->
-                chunk.map { did ->
-                    async {
-                        did to resolver.resolve(did)
-                    }
-                }.awaitAll()
-            }.toMap()
+        maxConcurrency: Int,
+    ): Map<Did, DidResolutionResult> =
+        coroutineScope {
+            dids
+                .chunked(maxConcurrency)
+                .flatMap { chunk ->
+                    chunk
+                        .map { did ->
+                            async {
+                                did to resolver.resolve(did)
+                            }
+                        }.awaitAll()
+                }.toMap()
         }
-    }
-    
+
     override suspend fun verifyBatch(
         documents: List<DidDocument>,
-        maxConcurrency: Int
-    ): Map<Did, Boolean> {
-        return coroutineScope {
-            documents.chunked(maxConcurrency).flatMap { chunk ->
-                chunk.map { document ->
-                    async {
-                        val result = resolver.resolve(document.id)
-                        document.id to (result is DidResolutionResult.Success)
-                    }
-                }.awaitAll()
-            }.toMap()
+        maxConcurrency: Int,
+    ): Map<Did, Boolean> =
+        coroutineScope {
+            documents
+                .chunked(maxConcurrency)
+                .flatMap { chunk ->
+                    chunk
+                        .map { document ->
+                            async {
+                                val result = resolver.resolve(document.id)
+                                document.id to (result is DidResolutionResult.Success)
+                            }
+                        }.awaitAll()
+                }.toMap()
         }
-    }
 }
-

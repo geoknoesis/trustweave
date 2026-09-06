@@ -1,0 +1,48 @@
+{
+  "assessment": "Round 8 targeted review of provider maturity enforcement and browser custody. SDK architecture gains 0.5 for the tested deployment gate and catalog-metadata consistency. Wallet integrity fixes close concrete storage bugs but do not earn hardware-custody credit. SaaS remains 96: no new billing, staging or release validation occurred. Scores retain prior evidence for unchanged areas; this is not a fresh exhaustive audit.",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24,
+    19.5,
+    15,
+    10
+  ],
+  "totals": {
+    "trustweave": 97.5,
+    "trustweave-saas": 96
+  },
+  "previous": {
+    "trustweave": 97,
+    "trustweave-saas": 96
+  },
+  "trustweave-saas": [
+    29,
+    24.5,
+    19,
+    14,
+    9.5
+  ],
+  "deductions": {
+    "trustweave": [
+      "Security -1: browser custody lacks hardware/user-presence signing and remains exposed to trusted-bundle compromise.",
+      "Correctness -1: issuer/disclosure profiles and hosted provider behavior remain limited or unvalidated.",
+      "Architecture -0.5: deployment maturity now has an explicit fail-closed policy, but providers still need operational promotion evidence. Domain registries and direct clients require callers to apply the public gate; strict enforcement is not global.",
+      "Experience retains prior credit for replacement/reissuance UX; corruption remains distinct from missing keys and cannot silently rotate identity.",
+      "Testing receives full local-validation credit for the full JVM suite, lint, database/HTTP contracts and production browser regressions. This does not certify optional hosted providers; those limitations remain in correctness/architecture."
+    ],
+    "trustweave-saas": [
+      "Security -1: the reviewed local SDK fingerprint changed with this patch. The immutable pin still points to the earlier commit; a new coordinated commit/pin/publication and exact-pair remote Linux/staging validation remain required.",
+      "Correctness -0.5: application/tenant/subscriber/payment-metadata contracts passed against real Accountly/Kill Bill; PSP setup, paid subscriptions, settlement and production service-account authentication remain unvalidated.",
+      "Architecture -1: release coupling and hosted recovery/alert integration remain outstanding.",
+      "Testing -1: two live-contract skips and no exact-pair remote Linux/staging evidence.",
+      "Experience -0.5: admins can inspect and page through recovery events without database/payload access; live provider redelivery still requires manual operations, and supported credential formats remain limited."
+    ]
+  }
+}

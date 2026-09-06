@@ -1,21 +1,21 @@
 package org.trustweave.credential.requests
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.subject
 import org.trustweave.credential.model.vc.SubjectBuilder
+import org.trustweave.credential.model.vc.subject
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import java.time.Duration as JavaDuration
 import kotlin.time.Duration
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import java.time.Duration as JavaDuration
 
 /**
  * Sleek builder DSL for creating IssuanceRequest.
- * 
+ *
  * **Examples:**
  * ```kotlin
  * // Simple request
@@ -27,7 +27,7 @@ import kotlinx.datetime.Clock
  *     }
  *     type("PersonCredential")
  * }
- * 
+ *
  * // With expiration
  * val request = issuanceRequest(ProofSuiteId.VC_LD) {
  *     issuer(issuerDid)
@@ -42,7 +42,7 @@ import kotlinx.datetime.Clock
  */
 fun issuanceRequest(
     format: ProofSuiteId,
-    block: IssuanceRequestBuilder.() -> Unit = {}
+    block: IssuanceRequestBuilder.() -> Unit = {},
 ): IssuanceRequest {
     val builder = IssuanceRequestBuilder(format)
     builder.block()
@@ -53,7 +53,7 @@ fun issuanceRequest(
  * Builder for IssuanceRequest.
  */
 class IssuanceRequestBuilder(
-    private val format: ProofSuiteId
+    private val format: ProofSuiteId,
 ) {
     private var issuer: Issuer? = null
     private var issuerKeyId: VerificationMethodId? = null
@@ -63,69 +63,73 @@ class IssuanceRequestBuilder(
     private var issuedAt: Instant = Clock.System.now()
     private var validFrom: Instant? = null
     private var validUntil: Instant? = null
-    
+
     /**
      * Set issuer from DID.
      */
     fun issuer(did: Did) {
         issuer = Issuer.fromDid(did)
     }
-    
+
     /**
      * Set issuer from IRI string.
      */
     fun issuer(iri: String) {
         issuer = Issuer.from(iri)
     }
-    
+
     /**
      * Set issuer from Issuer object.
      */
     fun issuer(issuer: Issuer) {
         this.issuer = issuer
     }
-    
+
     /**
      * Set issuer key ID for signing.
      */
     fun issuerKeyId(keyId: VerificationMethodId) {
         this.issuerKeyId = keyId
     }
-    
+
     /**
      * Set issuer key ID from string.
      */
     fun issuerKeyId(keyId: String) {
         this.issuerKeyId = VerificationMethodId.parse(keyId)
     }
-    
+
     /**
      * Build subject with properties.
      */
     fun subject(
         did: Did,
-        block: org.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}
+        block: org.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {},
     ) {
-        credentialSubject = org.trustweave.credential.model.vc.subject(did, block)
+        credentialSubject =
+            org.trustweave.credential.model.vc
+                .subject(did, block)
     }
-    
+
     /**
      * Build subject with IRI.
      */
     fun subject(
         iri: String,
-        block: org.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {}
+        block: org.trustweave.credential.model.vc.SubjectBuilder.() -> Unit = {},
     ) {
-        credentialSubject = org.trustweave.credential.model.vc.subject(iri, block)
+        credentialSubject =
+            org.trustweave.credential.model.vc
+                .subject(iri, block)
     }
-    
+
     /**
      * Set subject directly.
      */
     fun subject(subject: CredentialSubject) {
         this.credentialSubject = subject
     }
-    
+
     /**
      * Add credential type.
      */
@@ -135,42 +139,44 @@ class IssuanceRequestBuilder(
             types.add(credentialType)
         }
     }
-    
+
     /**
      * Add multiple credential types.
      */
     fun types(vararg types: String) {
         types.forEach { type(it) }
     }
-    
+
     /**
      * Set credential ID.
      */
     fun id(id: String) {
-        this.id = org.trustweave.credential.identifiers.CredentialId(id)
+        this.id =
+            org.trustweave.credential.identifiers
+                .CredentialId(id)
     }
-    
+
     /**
      * Set issued at time.
      */
     fun issuedAt(instant: Instant) {
         this.issuedAt = instant
     }
-    
+
     /**
      * Set valid from time.
      */
     fun validFrom(instant: Instant) {
         this.validFrom = instant
     }
-    
+
     /**
      * Set valid until time.
      */
     fun validUntil(instant: Instant) {
         this.validUntil = instant
     }
-    
+
     /**
      * Set expiration duration from now.
      */
@@ -178,23 +184,24 @@ class IssuanceRequestBuilder(
         val kotlinDuration = Duration.parse(duration.toString())
         this.validUntil = issuedAt.plus(kotlinDuration)
     }
-    
+
     /**
      * Build the IssuanceRequest.
      */
     fun build(): IssuanceRequest {
         val finalIssuer = issuer ?: throw IllegalArgumentException("Issuer is required")
         val finalSubject = credentialSubject ?: throw IllegalArgumentException("Subject is required")
-        
+
         // Ensure VerifiableCredential type is included
-        val finalTypes = if (types.isEmpty()) {
-            listOf(CredentialType.VerifiableCredential)
-        } else if (!types.any { it.value == "VerifiableCredential" }) {
-            listOf(CredentialType.VerifiableCredential) + types
-        } else {
-            types.toList()
-        }
-        
+        val finalTypes =
+            if (types.isEmpty()) {
+                listOf(CredentialType.VerifiableCredential)
+            } else if (!types.any { it.value == "VerifiableCredential" }) {
+                listOf(CredentialType.VerifiableCredential) + types
+            } else {
+                types.toList()
+            }
+
         return IssuanceRequest(
             format = format,
             issuer = finalIssuer,
@@ -204,8 +211,7 @@ class IssuanceRequestBuilder(
             id = id,
             issuedAt = issuedAt,
             validFrom = validFrom,
-            validUntil = validUntil
+            validUntil = validUntil,
         )
     }
 }
-

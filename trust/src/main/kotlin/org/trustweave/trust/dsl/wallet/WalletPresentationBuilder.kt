@@ -1,15 +1,15 @@
 package org.trustweave.trust.dsl.wallet
 
-import org.trustweave.trust.dsl.credential.SelectiveDisclosureBuilder
-import org.trustweave.trust.dsl.credential.PresentationBuilder
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.PresentationResult
-import org.trustweave.credential.CredentialService
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.trust.dsl.wallet.QueryBuilder
-import org.trustweave.wallet.Wallet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.dsl.credential.PresentationBuilder
+import org.trustweave.trust.dsl.credential.SelectiveDisclosureBuilder
+import org.trustweave.trust.dsl.wallet.QueryBuilder
+import org.trustweave.trust.types.PresentationResult
+import org.trustweave.wallet.Wallet
 
 /**
  * Wallet Presentation Builder DSL.
@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
  */
 class WalletPresentationBuilder(
     private val wallet: Wallet,
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
 ) {
     private val credentialIds = mutableListOf<String>()
     private var queryBuilder: QueryBuilder? = null
@@ -67,14 +67,14 @@ class WalletPresentationBuilder(
 
     /**
      * Set holder DID.
-     * 
+     *
      * @param did Must be a valid DID starting with "did:"
      * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun holder(did: String) {
         require(did.isNotBlank()) { "Holder DID cannot be blank" }
-        require(did.startsWith("did:")) { 
-            "Holder DID must start with 'did:'. Got: $did" 
+        require(did.startsWith("did:")) {
+            "Holder DID must start with 'did:'. Got: $did"
         }
         this.holderDid = did
     }
@@ -113,40 +113,43 @@ class WalletPresentationBuilder(
     /**
      * Build the verifiable presentation as a [PresentationResult].
      */
-    suspend fun buildResult(): PresentationResult = withContext(Dispatchers.IO) {
-        val holder = holderDid ?: return@withContext PresentationResult.Failure.InvalidRequest(
-            listOf("Holder DID is required"),
-        )
-
-        val credentials = mutableListOf<VerifiableCredential>()
-        for (credId in credentialIds) {
-            val vc = wallet.get(credId)
-                ?: return@withContext PresentationResult.Failure.InvalidRequest(
-                    listOf("Credential not found in wallet: $credId"),
+    suspend fun buildResult(): PresentationResult =
+        withContext(Dispatchers.IO) {
+            val holder =
+                holderDid ?: return@withContext PresentationResult.Failure.InvalidRequest(
+                    listOf("Holder DID is required"),
                 )
-            credentials.add(vc)
-        }
-        queryBuilder?.let { credentials.addAll(it.execute()) }
 
-        if (credentials.isEmpty()) {
-            return@withContext PresentationResult.Failure.InvalidRequest(
-                listOf("At least one credential is required"),
-            )
-        }
-
-        val presentationBuilder = PresentationBuilder(credentialService)
-        presentationBuilder.credentials(credentials)
-        presentationBuilder.holder(holder)
-        verificationMethod?.let { presentationBuilder.verificationMethod(it) }
-        challenge?.let { presentationBuilder.challenge(it) }
-        domain?.let { presentationBuilder.domain(it) }
-        if (selectiveDisclosure) {
-            presentationBuilder.selectiveDisclosure {
-                reveal(*disclosedFields.toTypedArray())
+            val credentials = mutableListOf<VerifiableCredential>()
+            for (credId in credentialIds) {
+                val vc =
+                    wallet.get(credId)
+                        ?: return@withContext PresentationResult.Failure.InvalidRequest(
+                            listOf("Credential not found in wallet: $credId"),
+                        )
+                credentials.add(vc)
             }
+            queryBuilder?.let { credentials.addAll(it.execute()) }
+
+            if (credentials.isEmpty()) {
+                return@withContext PresentationResult.Failure.InvalidRequest(
+                    listOf("At least one credential is required"),
+                )
+            }
+
+            val presentationBuilder = PresentationBuilder(credentialService)
+            presentationBuilder.credentials(credentials)
+            presentationBuilder.holder(holder)
+            verificationMethod?.let { presentationBuilder.verificationMethod(it) }
+            challenge?.let { presentationBuilder.challenge(it) }
+            domain?.let { presentationBuilder.domain(it) }
+            if (selectiveDisclosure) {
+                presentationBuilder.selectiveDisclosure {
+                    reveal(*disclosedFields.toTypedArray())
+                }
+            }
+            presentationBuilder.buildResult()
         }
-        presentationBuilder.buildResult()
-    }
 }
 
 /**
@@ -156,10 +159,11 @@ suspend fun TrustWeave.presentationFromWalletResult(
     wallet: Wallet,
     block: WalletPresentationBuilder.() -> Unit,
 ): PresentationResult {
-    val credentialService = getCredentialService()
-        ?: return PresentationResult.Failure.AdapterNotReady(
-            reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
-        )
+    val credentialService =
+        getCredentialService()
+            ?: return PresentationResult.Failure.AdapterNotReady(
+                reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
+            )
     val builder = WalletPresentationBuilder(wallet, credentialService)
     builder.block()
     return builder.buildResult()

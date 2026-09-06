@@ -1,8 +1,8 @@
 package org.trustweave.trust.types
 
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.did.model.DidDocument
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
 
 /**
  * Ergonomic extension properties for [VerificationResult].
@@ -33,16 +33,18 @@ val VerificationResult.trustRegistryValid: Boolean
     get() = this !is VerificationResult.Invalid.UntrustedIssuer
 
 val VerificationResult.delegationValid: Boolean
-    get() = allErrors.none {
-        it.contains("delegation", ignoreCase = true) ||
-            it.contains("capability", ignoreCase = true)
-    }
+    get() =
+        allErrors.none {
+            it.contains("delegation", ignoreCase = true) ||
+                it.contains("capability", ignoreCase = true)
+        }
 
 val VerificationResult.proofPurposeValid: Boolean
-    get() = allErrors.none {
-        it.contains("proof purpose", ignoreCase = true) ||
-            it.contains("proofPurpose", ignoreCase = true)
-    }
+    get() =
+        allErrors.none {
+            it.contains("proof purpose", ignoreCase = true) ||
+                it.contains("proofPurpose", ignoreCase = true)
+        }
 
 val VerificationResult.notExpired: Boolean
     get() = this !is VerificationResult.Invalid.Expired
@@ -59,7 +61,7 @@ sealed class DidResult {
      */
     data class Success(
         val did: Did,
-        val document: DidDocument
+        val document: DidDocument,
     ) : DidResult()
 
     /**
@@ -68,24 +70,24 @@ sealed class DidResult {
     sealed class Failure : DidResult() {
         data class ResolutionFailed(
             val did: Did,
-            val reason: String
+            val reason: String,
         ) : Failure()
 
         data class CreationFailed(
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
 
         data class UpdateFailed(
             val did: Did?,
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
 
         data class DeactivationFailed(
             val did: Did,
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
     }
 }

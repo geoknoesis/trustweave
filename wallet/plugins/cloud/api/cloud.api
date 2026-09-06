@@ -1,0 +1,46 @@
+public final class org/trustweave/wallet/cloud/AwsS3Wallet : org/trustweave/wallet/cloud/CloudWallet {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lsoftware/amazon/awssdk/services/s3/S3Client;)V
+}
+
+public final class org/trustweave/wallet/cloud/AzureBlobWallet : org/trustweave/wallet/cloud/CloudWallet {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/azure/storage/blob/BlobServiceClient;)V
+}
+
+public abstract class org/trustweave/wallet/cloud/CloudWallet : org/trustweave/wallet/CredentialRecordStorage, org/trustweave/wallet/CredentialRecovery, org/trustweave/wallet/CredentialStorage, org/trustweave/wallet/Wallet {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun close ()V
+	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun deleteFromStorage (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun download (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getBasePath ()Ljava/lang/String;
+	protected final fun getBucketName ()Ljava/lang/String;
+	public fun getCapabilities ()Lorg/trustweave/wallet/WalletCapabilities;
+	protected final fun getCollectionsPath ()Ljava/lang/String;
+	protected final fun getCredentialsPath ()Ljava/lang/String;
+	public final fun getHolderDid ()Ljava/lang/String;
+	protected final fun getJson ()Lkotlinx/serialization/json/Json;
+	protected final fun getMetadataPath ()Ljava/lang/String;
+	public fun getStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getTagsPath ()Ljava/lang/String;
+	public final fun getWalletDid ()Ljava/lang/String;
+	public fun getWalletId ()Ljava/lang/String;
+	public fun list (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun listKeys (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listRecords (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun recoverRecords (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun upload (Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/wallet/cloud/CloudWalletFactory : org/trustweave/wallet/services/WalletFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createInMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/wallet/cloud/GoogleCloudStorageWallet : org/trustweave/wallet/cloud/CloudWallet {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/google/cloud/storage/Storage;)V
+}
+

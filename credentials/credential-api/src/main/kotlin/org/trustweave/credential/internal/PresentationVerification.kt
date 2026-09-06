@@ -1,40 +1,42 @@
 package org.trustweave.credential.internal
 
-import org.trustweave.credential.model.vc.VerifiablePresentation
+import com.nimbusds.jwt.SignedJWT
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import org.slf4j.LoggerFactory
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.vc.CredentialProof
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.spi.proof.ProofEngine
-import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
-import com.nimbusds.jwt.SignedJWT
-import kotlinx.serialization.json.*
+import org.trustweave.did.resolver.DidResolver
 import java.util.Base64
-import java.security.PublicKey
 import kotlin.time.Duration.Companion.minutes
-import org.slf4j.LoggerFactory
 
 // Helper: extract a String field from the proof's additionalProperties (LinkedDataProof),
 // from the Key Binding JWT (SdJwtVcProof: challenge -> "nonce", domain -> "aud"),
 // or fall back to null for other proof types.
-private fun CredentialProof?.proofStringField(field: String): String? = when (this) {
-    is CredentialProof.LinkedDataProof ->
-        additionalProperties[field]?.let { (it as? JsonPrimitive)?.contentOrNull }
-    is CredentialProof.SdJwtVcProof ->
-        PresentationVerification.kbJwtBoundField(sdJwtVc, field)
-    else -> null
-}
+private fun CredentialProof?.proofStringField(field: String): String? =
+    when (this) {
+        is CredentialProof.LinkedDataProof ->
+            additionalProperties[field]?.let { (it as? JsonPrimitive)?.contentOrNull }
+        is CredentialProof.SdJwtVcProof ->
+            PresentationVerification.kbJwtBoundField(sdJwtVc, field)
+        else -> null
+    }
 
 /**
  * Presentation verification utilities.
- * 
+ *
  * Extracted from DefaultCredentialService to improve maintainability and testability.
  */
 internal object PresentationVerification {
-
     private val logger = LoggerFactory.getLogger(PresentationVerification::class.java)
 
     /**
@@ -56,14 +58,14 @@ internal object PresentationVerification {
 
     /**
      * Verify challenge if required.
-     * 
+     *
      * @param presentation The presentation to verify
      * @param options Verification options
      * @return VerificationResult.Invalid if challenge verification fails, null if valid
      */
     fun verifyChallenge(
         presentation: VerifiablePresentation,
-        options: VerificationOptions
+        options: VerificationOptions,
     ): VerificationResult.Invalid.InvalidProof? {
         if (!options.verifyChallenge) {
             return null
@@ -73,7 +75,7 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = presentation.verifiableCredential.first(),
                 reason = "verifyChallenge is enabled but no expectedChallenge was provided",
-                errors = listOf("verifyChallenge requires expectedChallenge to be set")
+                errors = listOf("verifyChallenge requires expectedChallenge to be set"),
             )
         }
 
@@ -83,26 +85,27 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = presentation.verifiableCredential.first(),
                 reason = "Challenge mismatch",
-                errors = listOf(
-                    "Expected challenge '${options.expectedChallenge}', " +
-                    "but got '$proofChallenge'"
-                )
+                errors =
+                    listOf(
+                        "Expected challenge '${options.expectedChallenge}', " +
+                            "but got '$proofChallenge'",
+                    ),
             )
         }
 
         return null
     }
-    
+
     /**
      * Verify domain if required.
-     * 
+     *
      * @param presentation The presentation to verify
      * @param options Verification options
      * @return VerificationResult.Invalid if domain verification fails, null if valid
      */
     fun verifyDomain(
         presentation: VerifiablePresentation,
-        options: VerificationOptions
+        options: VerificationOptions,
     ): VerificationResult.Invalid.InvalidProof? {
         if (!options.verifyDomain) {
             return null
@@ -112,7 +115,7 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = presentation.verifiableCredential.first(),
                 reason = "verifyDomain is enabled but no expectedDomain was provided",
-                errors = listOf("verifyDomain requires expectedDomain to be set")
+                errors = listOf("verifyDomain requires expectedDomain to be set"),
             )
         }
 
@@ -122,19 +125,20 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = presentation.verifiableCredential.first(),
                 reason = "Domain mismatch",
-                errors = listOf(
-                    "Expected domain '${options.expectedDomain}', " +
-                    "but got '$proofDomain'"
-                )
+                errors =
+                    listOf(
+                        "Expected domain '${options.expectedDomain}', " +
+                            "but got '$proofDomain'",
+                    ),
             )
         }
 
         return null
     }
-    
+
     /**
      * Verify presentation proof format is supported.
-     * 
+     *
      * @param proofFormat The proof format
      * @param engines Available proof engines
      * @param presentation The presentation (for error context)
@@ -143,21 +147,22 @@ internal object PresentationVerification {
     fun verifyProofFormatSupported(
         proofFormat: ProofSuiteId,
         engines: Map<ProofSuiteId, ProofEngine>,
-        presentation: VerifiablePresentation
+        presentation: VerifiablePresentation,
     ): VerificationResult.Invalid.UnsupportedFormat? {
         if (engines[proofFormat] == null) {
             return VerificationResult.Invalid.UnsupportedFormat(
                 credential = presentation.verifiableCredential.first(),
                 format = proofFormat,
-                errors = listOf(
-                    "Presentation proof format '${proofFormat.value}' is not supported. " +
-                    "Supported formats: ${engines.keys.map { it.value }}"
-                )
+                errors =
+                    listOf(
+                        "Presentation proof format '${proofFormat.value}' is not supported. " +
+                            "Supported formats: ${engines.keys.map { it.value }}",
+                    ),
             )
         }
         return null
     }
-    
+
     /**
      * Resolve verification method for presentation proof.
      *
@@ -177,7 +182,7 @@ internal object PresentationVerification {
         holderIri: Iri,
         verificationMethodId: String,
         didResolver: DidResolver,
-        declaredProofPurpose: String
+        declaredProofPurpose: String,
     ): VerificationMethod? {
         if (!holderIri.isDid) {
             return null
@@ -187,7 +192,8 @@ internal object PresentationVerification {
         if (declaredProofPurpose != expectedPurpose) {
             logger.warn(
                 "Presentation proof purpose '{}' rejected; expected '{}'",
-                declaredProofPurpose, expectedPurpose
+                declaredProofPurpose,
+                expectedPurpose,
             )
             return null
         }
@@ -196,7 +202,7 @@ internal object PresentationVerification {
             issuerIri = holderIri,
             verificationMethodId = verificationMethodId,
             didResolver = didResolver,
-            expectedProofPurpose = expectedPurpose
+            expectedProofPurpose = expectedPurpose,
         )
     }
 
@@ -225,7 +231,7 @@ internal object PresentationVerification {
     fun verifyPresentationSignature(
         vpDocument: JsonObject,
         proof: CredentialProof.LinkedDataProof,
-        verificationMethod: VerificationMethod
+        verificationMethod: VerificationMethod,
     ): Boolean {
         // Input validation
         if (proof.proofValue.isBlank()) {
@@ -237,23 +243,25 @@ internal object PresentationVerification {
             return false
         }
 
-        val payload = try {
-            val canonical = JsonLdUtils.canonicalizeDocument(vpDocument)
-            val proofOptionsDocument = ProofEngineUtils.buildProofOptionsDocument(
-                context = extractContexts(vpDocument),
-                proofType = proof.type,
-                created = proof.created.toString(),
-                verificationMethod = proof.verificationMethod,
-                proofPurpose = proof.proofPurpose,
-                additionalProperties = proof.additionalProperties
-            )
-            val canonicalProofOptions = JsonLdUtils.canonicalizeDocument(proofOptionsDocument)
-            ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonical)
-        } catch (e: Exception) {
-            // Fail closed: a presentation that cannot be canonicalized cannot be verified.
-            logger.warn("Presentation canonicalization failed during proof verification: {}", e.message)
-            return false
-        }
+        val payload =
+            try {
+                val canonical = JsonLdUtils.canonicalizeDocument(vpDocument)
+                val proofOptionsDocument =
+                    ProofEngineUtils.buildProofOptionsDocument(
+                        context = extractContexts(vpDocument),
+                        proofType = proof.type,
+                        created = proof.created.toString(),
+                        verificationMethod = proof.verificationMethod,
+                        proofPurpose = proof.proofPurpose,
+                        additionalProperties = proof.additionalProperties,
+                    )
+                val canonicalProofOptions = JsonLdUtils.canonicalizeDocument(proofOptionsDocument)
+                ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonical)
+            } catch (e: Exception) {
+                // Fail closed: a presentation that cannot be canonicalized cannot be verified.
+                logger.warn("Presentation canonicalization failed during proof verification: {}", e.message)
+                return false
+            }
 
         return try {
             // Extract public key from verification method
@@ -261,8 +269,9 @@ internal object PresentationVerification {
 
             // Decode signature: multibase base58-btc ('z', spec form) / base64url ('u'),
             // with legacy raw base64url accepted for backward compatibility.
-            val signatureBytes = ProofEngineUtils.decodeEd25519ProofValue(proof.proofValue)
-                ?: return false
+            val signatureBytes =
+                ProofEngineUtils.decodeEd25519ProofValue(proof.proofValue)
+                    ?: return false
 
             // Validate signature length (Ed25519 signatures are always 64 bytes)
             if (signatureBytes.size != SecurityConstants.ED25519_SIGNATURE_LENGTH_BYTES) {
@@ -309,7 +318,10 @@ internal object PresentationVerification {
      * Note: callers must verify the KB-JWT signature first ([verifySdJwtKeyBinding]);
      * this helper only reads claims.
      */
-    fun kbJwtBoundField(compactSdJwt: String, field: String): String? {
+    fun kbJwtBoundField(
+        compactSdJwt: String,
+        field: String,
+    ): String? {
         val kbJwtString = extractKbJwt(compactSdJwt) ?: return null
         return try {
             val claims = SignedJWT.parse(kbJwtString).jwtClaimsSet
@@ -369,44 +381,47 @@ internal object PresentationVerification {
         presentation: VerifiablePresentation,
         proof: CredentialProof.SdJwtVcProof,
         options: VerificationOptions,
-        didResolver: DidResolver
+        didResolver: DidResolver,
     ): VerificationResult.Invalid.InvalidProof? {
         val firstCredential = presentation.verifiableCredential.first()
         val compactSdJwt = proof.sdJwtVc
 
-        val kbJwtString = extractKbJwt(compactSdJwt)
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = firstCredential,
-                reason = "SD-JWT-VC presentation proof is missing the Key Binding JWT",
-                errors = listOf(
-                    "Presentation proof verification requires a KB-JWT appended to the compact SD-JWT"
+        val kbJwtString =
+            extractKbJwt(compactSdJwt)
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = firstCredential,
+                    reason = "SD-JWT-VC presentation proof is missing the Key Binding JWT",
+                    errors =
+                        listOf(
+                            "Presentation proof verification requires a KB-JWT appended to the compact SD-JWT",
+                        ),
                 )
-            )
 
         val holderIri = presentation.holder
         if (!holderIri.isDid) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Presentation holder '${holderIri.value}' is not a DID",
-                errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}")
+                errors = listOf("Non-DID holder IRI cannot be verified: ${holderIri.value}"),
             )
         }
 
-        val kbJwt = try {
-            SignedJWT.parse(kbJwtString)
-        } catch (e: Exception) {
-            return VerificationResult.Invalid.InvalidProof(
-                credential = firstCredential,
-                reason = "Key Binding JWT could not be parsed",
-                errors = listOf("Malformed KB-JWT: ${e.message}")
-            )
-        }
+        val kbJwt =
+            try {
+                SignedJWT.parse(kbJwtString)
+            } catch (e: Exception) {
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = firstCredential,
+                    reason = "Key Binding JWT could not be parsed",
+                    errors = listOf("Malformed KB-JWT: ${e.message}"),
+                )
+            }
 
         if (kbJwt.header.type?.toString() != "kb+jwt") {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Key Binding JWT 'typ' header must be 'kb+jwt'",
-                errors = listOf("Unexpected KB-JWT typ: ${kbJwt.header.type}")
+                errors = listOf("Unexpected KB-JWT typ: ${kbJwt.header.type}"),
             )
         }
 
@@ -414,17 +429,21 @@ internal object PresentationVerification {
         // presented credential — that credential's issuer signature was verified in the
         // per-credential pass, so this ties the KB-JWT (and any cnf claim) to verified,
         // issuer-signed data instead of an attacker-substituted token.
-        val firstCredentialJwt = (firstCredential.proof as? CredentialProof.SdJwtVcProof)
-            ?.sdJwtVc?.substringBefore("~")
+        val firstCredentialJwt =
+            (firstCredential.proof as? CredentialProof.SdJwtVcProof)
+                ?.sdJwtVc
+                ?.substringBefore("~")
         if (firstCredentialJwt == null || firstCredentialJwt != compactSdJwt.substringBefore("~")) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
-                reason = "Presentation proof SD-JWT does not match the presented credential's " +
-                    "issuer-signed JWT (possible token substitution)",
-                errors = listOf(
-                    "The issuer-signed JWT in the presentation proof must be identical to the " +
-                        "first presented credential's issuer-signed JWT"
-                )
+                reason =
+                    "Presentation proof SD-JWT does not match the presented credential's " +
+                        "issuer-signed JWT (possible token substitution)",
+                errors =
+                    listOf(
+                        "The issuer-signed JWT in the presentation proof must be identical to the " +
+                            "first presented credential's issuer-signed JWT",
+                    ),
             )
         }
 
@@ -432,21 +451,24 @@ internal object PresentationVerification {
         // Collect cnf bindings from the issuer-signed JWTs of ALL presented SD-JWT
         // credentials. These JWTs are issuer-signed and were signature-verified during the
         // per-credential verification pass, so cnf is trustworthy; the envelope holder is not.
-        val cnfBindings = presentation.verifiableCredential.mapNotNull { credential ->
-            (credential.proof as? CredentialProof.SdJwtVcProof)
-                ?.let { extractCnfBinding(it.sdJwtVc) }
-        }
+        val cnfBindings =
+            presentation.verifiableCredential.mapNotNull { credential ->
+                (credential.proof as? CredentialProof.SdJwtVcProof)
+                    ?.let { extractCnfBinding(it.sdJwtVc) }
+            }
         cnfBindings.filterIsInstance<CnfBinding.Unsupported>().firstOrNull()?.let { unsupported ->
             // cnf is present but cannot be enforced — fail closed instead of silently
             // downgrading to the weaker envelope-holder binding.
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
-                reason = "A presented credential carries a 'cnf' holder binding that cannot be " +
-                    "enforced: ${unsupported.detail}",
-                errors = listOf(
-                    "Unsupported cnf binding (only kid-style binding to a DID is supported): " +
-                        unsupported.detail
-                )
+                reason =
+                    "A presented credential carries a 'cnf' holder binding that cannot be " +
+                        "enforced: ${unsupported.detail}",
+                errors =
+                    listOf(
+                        "Unsupported cnf binding (only kid-style binding to a DID is supported): " +
+                            unsupported.detail,
+                    ),
             )
         }
         val cnfKids = cnfBindings.filterIsInstance<CnfBinding.Kid>().map { it.kid }.distinct()
@@ -454,10 +476,11 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Presented credentials carry conflicting 'cnf' holder bindings",
-                errors = listOf(
-                    "All presented SD-JWT credentials must be bound to the same holder; " +
-                        "found cnf kids: $cnfKids"
-                )
+                errors =
+                    listOf(
+                        "All presented SD-JWT credentials must be bound to the same holder; " +
+                            "found cnf kids: $cnfKids",
+                    ),
             )
         }
         val cnfKid = cnfKids.singleOrNull()
@@ -465,12 +488,14 @@ internal object PresentationVerification {
         if (cnfDid != null && holderIri.value != cnfDid) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
-                reason = "Presentation holder '${holderIri.value}' does not match the " +
-                    "issuer-signed 'cnf' holder binding '$cnfDid'",
-                errors = listOf(
-                    "Envelope holder must equal the cnf-designated DID; the holder field is " +
-                        "unsigned and cannot re-bind a cnf-bound credential"
-                )
+                reason =
+                    "Presentation holder '${holderIri.value}' does not match the " +
+                        "issuer-signed 'cnf' holder binding '$cnfDid'",
+                errors =
+                    listOf(
+                        "Envelope holder must equal the cnf-designated DID; the holder field is " +
+                            "unsigned and cannot re-bind a cnf-bound credential",
+                    ),
             )
         }
 
@@ -480,29 +505,35 @@ internal object PresentationVerification {
         // the holder field is unsigned, so binding strength is limited to "the presenter
         // controls the DID it claims to be").
         val bindingIri = cnfDid?.let { Iri(it) } ?: holderIri
-        val verificationMethod = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = bindingIri,
-            verificationMethodId = kbJwt.header.keyID,
-            didResolver = didResolver,
-            expectedProofPurpose = CredentialConstants.ProofPurposes.AUTHENTICATION
-        ) ?: return VerificationResult.Invalid.InvalidProof(
-            credential = firstCredential,
-            reason = "Could not resolve a verification method for the KB-JWT key " +
-                "'${kbJwt.header.keyID}', or the key is not authorized for 'authentication' " +
-                "on the bound holder '${bindingIri.value}'" +
-                if (cnfDid != null) " (cnf-designated)" else "",
-            errors = listOf("KB-JWT key does not belong to the bound presentation holder")
-        )
+        val verificationMethod =
+            ProofEngineUtils.resolveVerificationMethod(
+                issuerIri = bindingIri,
+                verificationMethodId = kbJwt.header.keyID,
+                didResolver = didResolver,
+                expectedProofPurpose = CredentialConstants.ProofPurposes.AUTHENTICATION,
+            ) ?: return VerificationResult.Invalid.InvalidProof(
+                credential = firstCredential,
+                reason =
+                    "Could not resolve a verification method for the KB-JWT key " +
+                        "'${kbJwt.header.keyID}', or the key is not authorized for 'authentication' " +
+                        "on the bound holder '${bindingIri.value}'" +
+                        if (cnfDid != null) " (cnf-designated)" else "",
+                errors = listOf("KB-JWT key does not belong to the bound presentation holder"),
+            )
 
         // When cnf names a specific verification method (kid with a fragment), the KB-JWT
         // must be signed by exactly that method, not merely any key of the same DID.
         if (cnfKid != null && cnfKid.contains('#') && verificationMethod.id.value != cnfKid) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
-                reason = "KB-JWT key '${verificationMethod.id.value}' is not the cnf-designated " +
-                    "verification method '$cnfKid'",
-                errors = listOf("cnf.kid designates a specific verification method; the KB-JWT " +
-                    "must be signed by that method")
+                reason =
+                    "KB-JWT key '${verificationMethod.id.value}' is not the cnf-designated " +
+                        "verification method '$cnfKid'",
+                errors =
+                    listOf(
+                        "cnf.kid designates a specific verification method; the KB-JWT " +
+                            "must be signed by that method",
+                    ),
             )
         }
 
@@ -510,7 +541,7 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Key Binding JWT signature verification failed",
-                errors = listOf("Invalid signature on KB-JWT")
+                errors = listOf("Invalid signature on KB-JWT"),
             )
         }
 
@@ -518,39 +549,46 @@ internal object PresentationVerification {
 
         // sd_hash binds the KB-JWT to exactly the presented disclosures.
         val presentedPart = compactSdJwt.substringBeforeLast("~") + "~"
-        val expectedSdHash = Base64.getUrlEncoder().withoutPadding().encodeToString(
-            java.security.MessageDigest.getInstance("SHA-256")
-                .digest(presentedPart.toByteArray(Charsets.UTF_8))
-        )
-        val sdHash = try {
-            claims.getStringClaim("sd_hash")
-        } catch (e: Exception) {
-            null
-        }
+        val expectedSdHash =
+            Base64.getUrlEncoder().withoutPadding().encodeToString(
+                java.security.MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(presentedPart.toByteArray(Charsets.UTF_8)),
+            )
+        val sdHash =
+            try {
+                claims.getStringClaim("sd_hash")
+            } catch (e: Exception) {
+                null
+            }
         if (sdHash == null || sdHash != expectedSdHash) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Key Binding JWT sd_hash does not match the presented SD-JWT",
-                errors = listOf("KB-JWT sd_hash mismatch (disclosures may have been altered)")
+                errors = listOf("KB-JWT sd_hash mismatch (disclosures may have been altered)"),
             )
         }
 
         // iat must be present and not in the future (beyond clock-skew tolerance).
-        val issuedAt = claims.issueTime
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = firstCredential,
-                reason = "Key Binding JWT is missing the 'iat' claim",
-                errors = listOf("KB-JWT iat is required")
-            )
+        val issuedAt =
+            claims.issueTime
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = firstCredential,
+                    reason = "Key Binding JWT is missing the 'iat' claim",
+                    errors = listOf("KB-JWT iat is required"),
+                )
         val iatInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(issuedAt.time)
-        val now = kotlinx.datetime.Clock.System.now()
+        val now =
+            kotlinx.datetime.Clock.System
+                .now()
         if (iatInstant > now.plus(options.clockSkewTolerance)) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Key Binding JWT 'iat' is in the future",
-                errors = listOf(
-                    "KB-JWT iat $iatInstant is later than $now plus ${options.clockSkewTolerance} skew"
-                )
+                errors =
+                    listOf(
+                        "KB-JWT iat $iatInstant is later than $now plus ${options.clockSkewTolerance} skew",
+                    ),
             )
         }
 
@@ -562,12 +600,13 @@ internal object PresentationVerification {
             return VerificationResult.Invalid.InvalidProof(
                 credential = firstCredential,
                 reason = "Key Binding JWT 'iat' is too old (max age $maxAge)",
-                errors = listOf(
-                    "KB-JWT iat $iatInstant is older than $now minus $maxAge max age " +
-                        "and ${options.clockSkewTolerance} skew; the presentation may be a replay. " +
-                        "Verifiers can tune this via VerificationOptions.additionalOptions" +
-                        "[\"$KB_JWT_MAX_AGE_OPTION\"]"
-                )
+                errors =
+                    listOf(
+                        "KB-JWT iat $iatInstant is older than $now minus $maxAge max age " +
+                            "and ${options.clockSkewTolerance} skew; the presentation may be a replay. " +
+                            "Verifiers can tune this via VerificationOptions.additionalOptions" +
+                            "[\"$KB_JWT_MAX_AGE_OPTION\"]",
+                    ),
             )
         }
 
@@ -580,10 +619,14 @@ internal object PresentationVerification {
      */
     internal sealed interface CnfBinding {
         /** kid-style binding: `{"cnf": {"kid": "<DID or DID-URL verification method>"}}`. */
-        data class Kid(val kid: String) : CnfBinding
+        data class Kid(
+            val kid: String,
+        ) : CnfBinding
 
         /** `cnf` is present but in a form this verifier cannot enforce — fail closed. */
-        data class Unsupported(val detail: String) : CnfBinding
+        data class Unsupported(
+            val detail: String,
+        ) : CnfBinding
     }
 
     /**
@@ -600,23 +643,26 @@ internal object PresentationVerification {
      * been verified.
      */
     internal fun extractCnfBinding(compactSdJwt: String): CnfBinding? {
-        val claims = try {
-            SignedJWT.parse(compactSdJwt.substringBefore("~")).jwtClaimsSet
-        } catch (e: Exception) {
-            // An unparseable issuer JWT cannot carry an enforceable cnf; the per-credential
-            // verification pass already rejects such credentials outright.
-            return null
-        }
+        val claims =
+            try {
+                SignedJWT.parse(compactSdJwt.substringBefore("~")).jwtClaimsSet
+            } catch (e: Exception) {
+                // An unparseable issuer JWT cannot carry an enforceable cnf; the per-credential
+                // verification pass already rejects such credentials outright.
+                return null
+            }
         if (claims.getClaim("cnf") == null) return null
-        val cnf = try {
-            claims.getJSONObjectClaim("cnf")
-        } catch (e: Exception) {
-            return CnfBinding.Unsupported("cnf claim is not a JSON object")
-        } ?: return CnfBinding.Unsupported("cnf claim is not a JSON object")
-        val kid = cnf["kid"] as? String
-            ?: return CnfBinding.Unsupported(
-                "cnf carries no string 'kid' member (members present: ${cnf.keys.sorted()})"
-            )
+        val cnf =
+            try {
+                claims.getJSONObjectClaim("cnf")
+            } catch (e: Exception) {
+                return CnfBinding.Unsupported("cnf claim is not a JSON object")
+            } ?: return CnfBinding.Unsupported("cnf claim is not a JSON object")
+        val kid =
+            cnf["kid"] as? String
+                ?: return CnfBinding.Unsupported(
+                    "cnf carries no string 'kid' member (members present: ${cnf.keys.sorted()})",
+                )
         if (!kid.substringBefore('#').startsWith("did:")) {
             return CnfBinding.Unsupported("cnf.kid '$kid' is not a DID or DID-URL")
         }
@@ -640,9 +686,7 @@ internal object PresentationVerification {
      * @return null when no presented credential carries `cnf` or all cnf bindings match
      *   the holder; otherwise the failure result (fail-closed for unsupported cnf forms)
      */
-    fun verifyCnfHolderBinding(
-        presentation: VerifiablePresentation
-    ): VerificationResult.Invalid.InvalidProof? {
+    fun verifyCnfHolderBinding(presentation: VerifiablePresentation): VerificationResult.Invalid.InvalidProof? {
         val firstCredential = presentation.verifiableCredential.first()
         for (credential in presentation.verifiableCredential) {
             val proof = credential.proof as? CredentialProof.SdJwtVcProof ?: continue
@@ -650,25 +694,29 @@ internal object PresentationVerification {
                 null -> {}
                 is CnfBinding.Unsupported -> return VerificationResult.Invalid.InvalidProof(
                     credential = firstCredential,
-                    reason = "A presented credential carries a 'cnf' holder binding that cannot " +
-                        "be enforced: ${binding.detail}",
-                    errors = listOf(
-                        "Unsupported cnf binding (only kid-style binding to a DID is supported): " +
-                            binding.detail
-                    )
+                    reason =
+                        "A presented credential carries a 'cnf' holder binding that cannot " +
+                            "be enforced: ${binding.detail}",
+                    errors =
+                        listOf(
+                            "Unsupported cnf binding (only kid-style binding to a DID is supported): " +
+                                binding.detail,
+                        ),
                 )
                 is CnfBinding.Kid -> {
                     val cnfDid = binding.kid.substringBefore('#')
                     if (presentation.holder.value != cnfDid) {
                         return VerificationResult.Invalid.InvalidProof(
                             credential = firstCredential,
-                            reason = "Presentation holder '${presentation.holder.value}' does not " +
-                                "match the issuer-signed 'cnf' holder binding '$cnfDid' of a " +
-                                "presented credential",
-                            errors = listOf(
-                                "cnf-bound credentials may only be presented by the cnf-designated " +
-                                    "DID, regardless of the presentation proof format"
-                            )
+                            reason =
+                                "Presentation holder '${presentation.holder.value}' does not " +
+                                    "match the issuer-signed 'cnf' holder binding '$cnfDid' of a " +
+                                    "presented credential",
+                            errors =
+                                listOf(
+                                    "cnf-bound credentials may only be presented by the cnf-designated " +
+                                        "DID, regardless of the presentation proof format",
+                                ),
                         )
                     }
                 }
@@ -688,11 +736,12 @@ internal object PresentationVerification {
      */
     internal fun kbJwtMaxAge(options: VerificationOptions): kotlin.time.Duration {
         val raw = options.additionalOptions[KB_JWT_MAX_AGE_OPTION] ?: return DEFAULT_KB_JWT_MAX_AGE
-        val configured = raw as? kotlin.time.Duration
-            ?: throw IllegalArgumentException(
-                "Verification option '$KB_JWT_MAX_AGE_OPTION' must be a kotlin.time.Duration, " +
-                    "got ${raw::class.simpleName}"
-            )
+        val configured =
+            raw as? kotlin.time.Duration
+                ?: throw IllegalArgumentException(
+                    "Verification option '$KB_JWT_MAX_AGE_OPTION' must be a kotlin.time.Duration, " +
+                        "got ${raw::class.simpleName}",
+                )
         require(configured.isPositive()) {
             "Verification option '$KB_JWT_MAX_AGE_OPTION' must be positive, got $configured"
         }
@@ -706,19 +755,19 @@ internal object PresentationVerification {
      * A prefix comparison is NOT sufficient: `did:example:abc` must not be satisfied by
      * `did:example:abcdef#key-1`.
      */
-    fun verificationMethodBelongsToHolder(verificationMethod: String, holderDid: String): Boolean =
-        verificationMethod.substringBefore('#') == holderDid
+    fun verificationMethodBelongsToHolder(
+        verificationMethod: String,
+        holderDid: String,
+    ): Boolean = verificationMethod.substringBefore('#') == holderDid
 
     /**
      * Extract the `@context` list from a presentation document, defaulting to the W3C VC
      * base context when absent.
      */
-    private fun extractContexts(vpDocument: JsonObject): List<String> {
-        return when (val context = vpDocument["@context"]) {
+    private fun extractContexts(vpDocument: JsonObject): List<String> =
+        when (val context = vpDocument["@context"]) {
             is JsonArray -> context.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
             is JsonPrimitive -> listOfNotNull(context.contentOrNull)
             else -> listOf(CredentialConstants.VcContexts.VC_1_1)
         }
-    }
 }
-

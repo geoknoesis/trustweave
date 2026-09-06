@@ -1,5 +1,6 @@
 package org.trustweave.trust.services
 
+import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.trust.TrustRegistry
@@ -7,7 +8,6 @@ import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustAnchor
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.datetime.Clock
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -28,7 +28,7 @@ internal object DefaultTrustRegistryFactory : TrustRegistryFactory {
         throw IllegalStateException(
             "TrustRegistry provider '$providerName' is not supported by the default factory. " +
                 "Use \"inMemory\" or provide a custom TrustRegistryFactory via " +
-                "Builder.factories(trustRegistryFactory = ...)."
+                "Builder.factories(trustRegistryFactory = ...).",
         )
     }
 }
@@ -46,7 +46,10 @@ internal class InMemoryTrustRegistry : TrustRegistry {
     // DID -> set of DIDs it trusts (self-trust is added on anchor registration)
     private val trustGraph = ConcurrentHashMap<String, MutableSet<String>>()
 
-    override suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean {
+    override suspend fun isTrustedIssuer(
+        issuerDid: String,
+        credentialType: String?,
+    ): Boolean {
         val anchor = trustAnchors[issuerDid] ?: return false
         if (credentialType != null) {
             anchor.credentialTypes?.let { types ->
@@ -57,7 +60,10 @@ internal class InMemoryTrustRegistry : TrustRegistry {
         return true
     }
 
-    override suspend fun addTrustAnchor(anchorDid: String, metadata: TrustAnchorMetadata): Boolean {
+    override suspend fun addTrustAnchor(
+        anchorDid: String,
+        metadata: TrustAnchorMetadata,
+    ): Boolean {
         if (trustAnchors.putIfAbsent(anchorDid, metadata) != null) {
             return false
         }
@@ -74,7 +80,10 @@ internal class InMemoryTrustRegistry : TrustRegistry {
         return removed
     }
 
-    override suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath {
+    override suspend fun findTrustPath(
+        from: VerifierIdentity,
+        to: IssuerIdentity,
+    ): TrustPath {
         val fromDid = from.did.value
         val toDid = to.did.value
 
@@ -85,7 +94,7 @@ internal class InMemoryTrustRegistry : TrustRegistry {
                 anchors = emptyList(),
                 verified = true,
                 verifiedAt = Clock.System.now(),
-                trustScore = 1.0
+                trustScore = 1.0,
             )
         }
 
@@ -93,7 +102,7 @@ internal class InMemoryTrustRegistry : TrustRegistry {
             return TrustPath.NotFound(
                 from = from,
                 to = to,
-                reason = "Neither $fromDid nor $toDid are trust anchors"
+                reason = "Neither $fromDid nor $toDid are trust anchors",
             )
         }
 
@@ -102,16 +111,17 @@ internal class InMemoryTrustRegistry : TrustRegistry {
             return TrustPath.NotFound(
                 from = from,
                 to = to,
-                reason = "No trust path found between $fromDid and $toDid"
+                reason = "No trust path found between $fromDid and $toDid",
             )
         }
 
-        val anchors = path.drop(1).dropLast(1).map { didString ->
-            TrustAnchor(
-                did = Did(didString),
-                metadata = trustAnchors[didString] ?: TrustAnchorMetadata()
-            )
-        }
+        val anchors =
+            path.drop(1).dropLast(1).map { didString ->
+                TrustAnchor(
+                    did = Did(didString),
+                    metadata = trustAnchors[didString] ?: TrustAnchorMetadata(),
+                )
+            }
 
         return TrustPath.Verified(
             from = from,
@@ -119,7 +129,7 @@ internal class InMemoryTrustRegistry : TrustRegistry {
             anchors = anchors,
             verified = true,
             verifiedAt = Clock.System.now(),
-            trustScore = calculateTrustScore(path.size)
+            trustScore = calculateTrustScore(path.size),
         )
     }
 
@@ -127,18 +137,23 @@ internal class InMemoryTrustRegistry : TrustRegistry {
         trustAnchors.entries
             .filter { (_, metadata) ->
                 credentialType == null || (metadata.credentialTypes?.contains(credentialType) ?: true)
-            }
-            .map { it.key }
+            }.map { it.key }
 
     /**
      * Adds a directed trust relationship between two DIDs (beyond anchor self-trust),
      * so multi-hop trust paths can be discovered.
      */
-    fun addTrustRelationship(fromDid: String, toDid: String) {
+    fun addTrustRelationship(
+        fromDid: String,
+        toDid: String,
+    ) {
         trustGraph.getOrPut(fromDid) { ConcurrentHashMap.newKeySet() }.add(toDid)
     }
 
-    private fun findPathBfs(start: String, end: String): List<String> {
+    private fun findPathBfs(
+        start: String,
+        end: String,
+    ): List<String> {
         if (start == end) return listOf(start)
 
         val queue = ArrayDeque<List<String>>()
@@ -161,8 +176,9 @@ internal class InMemoryTrustRegistry : TrustRegistry {
     }
 
     /** Shorter paths score higher: direct = 1.0, then decreasing by 0.2 per hop, floored at 0.1. */
-    private fun calculateTrustScore(pathLength: Int): Double = when {
-        pathLength <= 1 -> 1.0
-        else -> maxOf(0.1, 1.0 - (pathLength - 1) * 0.2)
-    }
+    private fun calculateTrustScore(pathLength: Int): Double =
+        when {
+            pathLength <= 1 -> 1.0
+            else -> maxOf(0.1, 1.0 - (pathLength - 1) * 0.2)
+        }
 }

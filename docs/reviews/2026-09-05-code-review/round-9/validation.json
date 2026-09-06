@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "area": "SDK storage and wallet modules",
+      "result": "104 tests passed; no failures or skips",
+      "scope": "File 24; database 28; cloud 24; wallet-core 23; wallet-core-mp 5. These are targeted tests, not a full SDK rerun."
+    },
+    {
+      "area": "Kotlin lint",
+      "result": "Five targeted modules passed",
+      "scope": "Existing lint baselines retained; no new baseline entries added. Formatting restricted to changed files."
+    },
+    {
+      "area": "Wallet unit tests",
+      "result": "70 passed",
+      "scope": "Credential profiles, browser custody/recovery, WebAuthn proof rules and managed EdDSA/ES256 response verification."
+    },
+    {
+      "area": "Wallet browser and build",
+      "result": "12 Chromium tests and production build/TypeScript passed",
+      "scope": "Virtual WebAuthn authenticator plus existing browser workflows. No hardware attestation is claimed."
+    },
+    {
+      "area": "Source and documentation gates",
+      "result": "Local SDK fingerprint and generated capability documentation verified; 2 fingerprint-verifier tests passed",
+      "scope": "Fingerprint 6a0b5d2d58c1b1875410dba4571019394a97114cadd63092c866f2d5e95c6ae8. A new immutable SDK/SaaS commit pair is still required."
+    },
+    {
+      "area": "Production custody",
+      "result": "Open, explicitly not promoted",
+      "scope": "Application enrollment, authorization/recovery persistence, presentation integration, actual managed service and physical hardware qualification remain."
+    }
+  ],
+  "logs": [
+    "sdk-validation.json",
+    "wallet-validation.json",
+    "../round-8/validation.json"
+  ]
+}

@@ -1,6 +1,6 @@
 # Assessed module capabilities
 
-Generated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireOperations` during startup.
+Generated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireDeployment` before constructing production clients. It checks maturity, operations and formats; `requireOperations` alone checks functionality only. No catalog entry currently meets the supported-only production policy. See [deployment profiles](provider-deployment-profiles.md).
 
 | Module | Maturity | Operations | Formats |
 |---|---|---|---|

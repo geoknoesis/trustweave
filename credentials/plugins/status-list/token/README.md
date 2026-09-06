@@ -10,7 +10,7 @@ W3C Bitstring Status List.
 
 ## Overview
 
-This module implements [`CredentialRevocationManager`](../../../credential-api/src/main/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
+This module implements [`CredentialRevocationManager`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
 on top of a JDBC datastore and produces signed status list **JWTs** with the JOSE type
 `statuslist+jwt`. Verifiers dereference the `sub` URI, validate the JWT signature, decode
 the `status_list.lst` bitstring, and look up a credential's index to determine if it has
@@ -217,7 +217,7 @@ in-memory datasource:
 ## Integration with `CredentialStatusChecker`
 
 The credential verification pipeline talks to status lists through the
-[`CredentialStatusChecker`](../../../credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
+[`CredentialStatusChecker`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
 SPI, which returns a typed `CredentialStatusCheckResult`. A thin adapter over
 `TokenStatusListManager` keeps both sides decoupled:
 
@@ -280,8 +280,8 @@ behind a router if you mint multiple credential formats.
 
 - [IETF Token Status List draft](https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/) — `draft-ietf-oauth-status-list`
 - [SD-JWT VC](https://datatracker.ietf.org/doc/draft-ietf-oauth-sd-jwt-vc/) — `draft-ietf-oauth-sd-jwt-vc`
-- [`CredentialRevocationManager`](../../../credential-api/src/main/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt) — SPI implemented by this module
-- [`CredentialStatusChecker`](../../../credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt) — verifier-side SPI
+- [`CredentialRevocationManager`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt) — SPI implemented by this module
+- [`CredentialStatusChecker`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt) — verifier-side SPI
 - [`TokenStatusListManager`](src/main/kotlin/org/trustweave/revocation/token/TokenStatusListManager.kt) — main implementation
 - [`TokenStatusListManagerFactory`](src/main/kotlin/org/trustweave/revocation/token/TokenStatusListManagerFactory.kt) — recommended entry point
 - [`TokenStatusListManagerProvider`](src/main/kotlin/org/trustweave/revocation/token/spi/TokenStatusListManagerProvider.kt) — ServiceLoader provider

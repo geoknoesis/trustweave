@@ -19,7 +19,7 @@ dependencies {
 
 **Result:** Gives you the credential issuance APIs, DID methods, KMS abstractions, and in-memory implementations used throughout this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced credential logic.
+> Tip: The runnable quick-start sample (`./gradlew :distribution:examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced credential logic.
 
 ## Prerequisites
 

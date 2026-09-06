@@ -1,0 +1,51 @@
+public abstract class org/trustweave/anchor/evm/AbstractEvmAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient, java/io/Closeable {
+	public static final field Companion Lorg/trustweave/anchor/evm/AbstractEvmAnchorClient$Companion;
+	public static final field DEFAULT_MIN_CONFIRMATIONS J
+	public static final field OPTION_MIN_CONFIRMATIONS Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/evm/EvmChainConfig;)V
+	protected fun buildExtraMetadata (Ljava/lang/String;)Ljava/util/Map;
+	protected fun canSubmitTransaction ()Z
+	public fun close ()V
+	protected final fun computeActualFee (Lorg/web3j/protocol/core/methods/response/TransactionReceipt;)Lorg/trustweave/anchor/payment/TokenAmount;
+	protected fun deriveGasLimit ([BLjava/lang/String;)Ljava/math/BigInteger;
+	protected fun generateTestTxHash ()Ljava/lang/String;
+	protected fun getBlockchainName ()Ljava/lang/String;
+	protected final fun getChain ()Lorg/trustweave/anchor/evm/EvmChainConfig;
+	protected fun getContractAddress ()Ljava/lang/String;
+	protected final fun getCredentials ()Lorg/web3j/crypto/Credentials;
+	public final fun getEip155ChainId ()J
+	protected final fun getRpcUrl ()Ljava/lang/String;
+	protected final fun getWeb3j ()Lorg/web3j/protocol/Web3j;
+	protected final fun readBlockTimestamp (Lorg/web3j/protocol/core/methods/response/TransactionReceipt;)Ljava/lang/Long;
+	protected fun readTransactionFromBlockchain (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun submitTransaction ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun submitTransactionToBlockchain ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun tryEstimateGas ([BLjava/lang/String;)Ljava/math/BigInteger;
+	protected final fun waitForReceipt (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/anchor/evm/AbstractEvmAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/evm/EvmChainConfig {
+	public fun <init> (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJ)V
+	public synthetic fun <init> (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()J
+	public final fun copy (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJ)Lorg/trustweave/anchor/evm/EvmChainConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/evm/EvmChainConfig;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJILjava/lang/Object;)Lorg/trustweave/anchor/evm/EvmChainConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlockchainName ()Ljava/lang/String;
+	public final fun getCredentialsRequired ()Z
+	public final fun getDefaultMinConfirmations ()J
+	public final fun getDefaultRpcUrl ()Ljava/lang/String;
+	public final fun getNetworkName ()Ljava/lang/String;
+	public final fun getNumericChainId ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

@@ -24,29 +24,34 @@ import kotlin.test.assertNotNull
  * and stay idempotent on double-close.
  */
 class TrustWeaveCloseTest {
-
     private class CloseableKms(
-        delegate: KeyManagementService = InMemoryKeyManagementService()
-    ) : KeyManagementService by delegate, Closeable {
+        delegate: KeyManagementService = InMemoryKeyManagementService(),
+    ) : KeyManagementService by delegate,
+        Closeable {
         val closeCount = AtomicInteger(0)
+
         override fun close() {
             closeCount.incrementAndGet()
         }
     }
 
     private class CloseableTrustRegistry(
-        delegate: TrustRegistry = InMemoryTrustRegistry()
-    ) : TrustRegistry by delegate, Closeable {
+        delegate: TrustRegistry = InMemoryTrustRegistry(),
+    ) : TrustRegistry by delegate,
+        Closeable {
         val closeCount = AtomicInteger(0)
+
         override fun close() {
             closeCount.incrementAndGet()
         }
     }
 
     private class CloseableDidMethod(
-        delegate: DidMethod
-    ) : DidMethod by delegate, Closeable {
+        delegate: DidMethod,
+    ) : DidMethod by delegate,
+        Closeable {
         val closeCount = AtomicInteger(0)
+
         override fun close() {
             closeCount.incrementAndGet()
         }
@@ -54,9 +59,11 @@ class TrustWeaveCloseTest {
 
     /** Lifecycle-bearing (not Closeable) component: close() must drive stop()+cleanup(). */
     private class LifecycleDidMethod(
-        delegate: DidMethod
-    ) : DidMethod by delegate, PluginLifecycle {
+        delegate: DidMethod,
+    ) : DidMethod by delegate,
+        PluginLifecycle {
         val calls = mutableListOf<String>()
+
         override suspend fun initialize(config: Map<String, Any?>): Boolean {
             calls.add("initialize")
             return true
@@ -80,7 +87,7 @@ class TrustWeaveCloseTest {
     private fun directConfig(
         kms: KeyManagementService,
         didRegistry: DidMethodRegistry = DidMethodRegistry(),
-        ownership: ComponentOwnership = ComponentOwnership()
+        ownership: ComponentOwnership = ComponentOwnership(),
     ) = TrustWeaveConfig(
         name = "close-test",
         kms = kms,
@@ -88,51 +95,59 @@ class TrustWeaveCloseTest {
         blockchainRegistry = BlockchainAnchorRegistry(),
         credentialConfig = TrustWeaveConfig.CredentialConfig(),
         credentialService = null,
-        ownership = ownership
+        ownership = ownership,
     )
 
     @Test
-    fun `close closes the trust registry the factory created during build`() = runBlocking<Unit> {
-        var created: CloseableTrustRegistry? = null
-        val trustWeave = TrustWeave.build {
-            keys {
-                provider("inMemory")
-                algorithm("Ed25519")
-            }
-            did {
-                method("key") { algorithm("Ed25519") }
-            }
-            trust { provider("inMemory") }
-            factories(
-                trustRegistryFactory = object : TrustRegistryFactory {
-                    override suspend fun create(providerName: String): TrustRegistry =
-                        CloseableTrustRegistry().also { created = it }
+    fun `close closes the trust registry the factory created during build`() =
+        runBlocking<Unit> {
+            var created: CloseableTrustRegistry? = null
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        provider("inMemory")
+                        algorithm("Ed25519")
+                    }
+                    did {
+                        method("key") { algorithm("Ed25519") }
+                    }
+                    trust { provider("inMemory") }
+                    factories(
+                        trustRegistryFactory =
+                            object : TrustRegistryFactory {
+                                override suspend fun create(providerName: String): TrustRegistry =
+                                    CloseableTrustRegistry().also {
+                                        created =
+                                            it
+                                    }
+                            },
+                    )
                 }
-            )
+
+            val registry = assertNotNull(created, "factory should have created the trust registry")
+            assertEquals(0, registry.closeCount.get())
+
+            trustWeave.close()
+
+            assertEquals(1, registry.closeCount.get())
         }
-
-        val registry = assertNotNull(created, "factory should have created the trust registry")
-        assertEquals(0, registry.closeCount.get())
-
-        trustWeave.close()
-
-        assertEquals(1, registry.closeCount.get())
-    }
 
     @Test
-    fun `close does not close a caller-injected KMS`() = runBlocking<Unit> {
-        val kms = CloseableKms()
-        val trustWeave = TrustWeave.build {
-            keys { custom(kms) }
-            did {
-                method("key") { algorithm("Ed25519") }
-            }
+    fun `close does not close a caller-injected KMS`() =
+        runBlocking<Unit> {
+            val kms = CloseableKms()
+            val trustWeave =
+                TrustWeave.build {
+                    keys { custom(kms) }
+                    did {
+                        method("key") { algorithm("Ed25519") }
+                    }
+                }
+
+            trustWeave.close()
+
+            assertEquals(0, kms.closeCount.get(), "caller-owned KMS must not be closed by the facade")
         }
-
-        trustWeave.close()
-
-        assertEquals(0, kms.closeCount.get(), "caller-owned KMS must not be closed by the facade")
-    }
 
     @Test
     fun `close closes a facade-owned KMS and double-close is idempotent`() {
@@ -151,16 +166,18 @@ class TrustWeaveCloseTest {
         val backingKms = InMemoryKeyManagementService()
         val ownedMethod = CloseableDidMethod(DidKeyMockMethod(backingKms))
         val didRegistry = DidMethodRegistry().apply { register(ownedMethod) }
-        val trustWeave = TrustWeave.from(
-            directConfig(
-                kms = backingKms,
-                didRegistry = didRegistry,
-                ownership = ComponentOwnership(
-                    ownsKms = false,
-                    ownedDidMethods = listOf(ownedMethod)
-                )
+        val trustWeave =
+            TrustWeave.from(
+                directConfig(
+                    kms = backingKms,
+                    didRegistry = didRegistry,
+                    ownership =
+                        ComponentOwnership(
+                            ownsKms = false,
+                            ownedDidMethods = listOf(ownedMethod),
+                        ),
+                ),
             )
-        )
 
         trustWeave.close()
 
@@ -172,16 +189,18 @@ class TrustWeaveCloseTest {
         val backingKms = InMemoryKeyManagementService()
         val ownedMethod = LifecycleDidMethod(DidKeyMockMethod(backingKms))
         val didRegistry = DidMethodRegistry().apply { register(ownedMethod) }
-        val trustWeave = TrustWeave.from(
-            directConfig(
-                kms = backingKms,
-                didRegistry = didRegistry,
-                ownership = ComponentOwnership(
-                    ownsKms = false,
-                    ownedDidMethods = listOf(ownedMethod)
-                )
+        val trustWeave =
+            TrustWeave.from(
+                directConfig(
+                    kms = backingKms,
+                    didRegistry = didRegistry,
+                    ownership =
+                        ComponentOwnership(
+                            ownsKms = false,
+                            ownedDidMethods = listOf(ownedMethod),
+                        ),
+                ),
             )
-        )
 
         trustWeave.close()
 
@@ -189,44 +208,47 @@ class TrustWeaveCloseTest {
     }
 
     @Test
-    fun `close does not close DID methods the caller registered after construction`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            keys {
-                provider("inMemory")
-                algorithm("Ed25519")
-            }
-            did {
-                method("key") { algorithm("Ed25519") }
-            }
+    fun `close does not close DID methods the caller registered after construction`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        provider("inMemory")
+                        algorithm("Ed25519")
+                    }
+                    did {
+                        method("key") { algorithm("Ed25519") }
+                    }
+                }
+            val callerMethod = CloseableDidMethod(DidKeyMockMethod(InMemoryKeyManagementService()))
+            // Caller-registered after construction: caller-owned, must not be closed.
+            trustWeave.getDidRegistry().register(callerMethod)
+
+            trustWeave.close()
+
+            assertEquals(0, callerMethod.closeCount.get())
         }
-        val callerMethod = CloseableDidMethod(DidKeyMockMethod(InMemoryKeyManagementService()))
-        // Caller-registered after construction: caller-owned, must not be closed.
-        trustWeave.getDidRegistry().register(callerMethod)
-
-        trustWeave.close()
-
-        assertEquals(0, callerMethod.closeCount.get())
-    }
 
     @Test
     fun `component close failure does not prevent closing the remaining components`() {
         val kms = CloseableKms()
-        val throwingMethod = object : DidMethod by DidKeyMockMethod(kms), Closeable {
-            override fun close() {
-                throw IllegalStateException("teardown failure")
+        val throwingMethod =
+            object : DidMethod by DidKeyMockMethod(kms), Closeable {
+                override fun close(): Unit = throw IllegalStateException("teardown failure")
             }
-        }
         val didRegistry = DidMethodRegistry().apply { register(throwingMethod) }
-        val trustWeave = TrustWeave.from(
-            directConfig(
-                kms = kms,
-                didRegistry = didRegistry,
-                ownership = ComponentOwnership(
-                    ownsKms = true,
-                    ownedDidMethods = listOf(throwingMethod)
-                )
+        val trustWeave =
+            TrustWeave.from(
+                directConfig(
+                    kms = kms,
+                    didRegistry = didRegistry,
+                    ownership =
+                        ComponentOwnership(
+                            ownsKms = true,
+                            ownedDidMethods = listOf(throwingMethod),
+                        ),
+                ),
             )
-        )
 
         trustWeave.close() // must not throw
 

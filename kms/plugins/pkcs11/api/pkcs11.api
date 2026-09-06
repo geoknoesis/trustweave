@@ -1,0 +1,65 @@
+public final class org/trustweave/kms/pkcs11/Pkcs11Config {
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;[CZ)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/String;[CZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()[C
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;ILjava/lang/String;[CZ)Lorg/trustweave/kms/pkcs11/Pkcs11Config;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/pkcs11/Pkcs11Config;Ljava/lang/String;ILjava/lang/String;[CZILjava/lang/Object;)Lorg/trustweave/kms/pkcs11/Pkcs11Config;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnableSoftDelete ()Z
+	public final fun getLibraryPath ()Ljava/lang/String;
+	public final fun getPin ()[C
+	public final fun getProviderName ()Ljava/lang/String;
+	public final fun getSlot ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/pkcs11/Pkcs11Exception : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementService : org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/kms/pkcs11/Pkcs11KeyManagementService$Companion;
+	public static final field OPTION_LABEL Ljava/lang/String;
+	public fun <init> (Lorg/trustweave/kms/pkcs11/Pkcs11Config;)V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public static final field Companion Lorg/trustweave/kms/pkcs11/Pkcs11KeyManagementServiceProvider$Companion;
+	public static final field KEY_ENABLE_SOFT_DELETE Ljava/lang/String;
+	public static final field KEY_LIBRARY_PATH Ljava/lang/String;
+	public static final field KEY_PIN Ljava/lang/String;
+	public static final field KEY_PROVIDER_NAME Ljava/lang/String;
+	public static final field KEY_SLOT Ljava/lang/String;
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementServiceProvider$Companion {
+}
+

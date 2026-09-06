@@ -23,6 +23,7 @@ import { decodeSdJwtVc } from '@/lib/sdjwt'
 import { sha256 } from '@noble/hashes/sha256'
 import { getVerifier } from '@/lib/server-keys'
 import { recordVerification } from '@/lib/verification-inbox'
+import { verifyImportedCredential } from '@/lib/credential-verification'
 
 interface VerificationCheck { step: string; passed: boolean; detail?: string }
 
@@ -112,6 +113,7 @@ async function verifySdJwtVc(
   let decoded: ReturnType<typeof decodeSdJwtVc>
   try {
     decoded = decodeSdJwtVc(sdJwtVc)
+    verifyImportedCredential([decoded.issuerJwt, ...decoded.disclosures.map(d => d.raw), ''].join('~'), 'vc+sd-jwt')
     recordCheck('Parse SD-JWT VC structure', true, `${decoded.disclosures.length} disclosure(s), kb-jwt: ${decoded.kbJwt ? 'present' : 'missing'}`)
   } catch (e) {
     recordCheck('Parse SD-JWT VC structure', false, errorMessage(e))
@@ -286,6 +288,7 @@ async function verifyVpJwt(
   for (let i = 0; i < vcJwts.length; i++) {
     const vcJwt = vcJwts[i]
     try {
+      verifyImportedCredential(vcJwt, 'vc+jwt')
       const parts = vcJwt.split('.')
       const unverified = JSON.parse(b64uDecodeString(parts[1])) as Record<string, unknown>
       const issuerDid = String(unverified.iss ?? '')
@@ -328,4 +331,3 @@ function b64uEncodeBytes(bytes: Uint8Array): string {
   for (const b of bytes) binary += String.fromCharCode(b)
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
-

@@ -1,0 +1,326 @@
+public final class org/trustweave/signatures/jades/DefaultJadesSigner : org/trustweave/signatures/jades/JadesSigner {
+	public static final field Companion Lorg/trustweave/signatures/jades/DefaultJadesSigner$Companion;
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun sign (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/jades/JadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/jades/DefaultJadesSigner$Companion {
+}
+
+public final class org/trustweave/signatures/jades/DefaultJadesVerifier : org/trustweave/signatures/jades/JadesVerifier {
+	public static final field Companion Lorg/trustweave/signatures/jades/DefaultJadesVerifier$Companion;
+	public fun <init> ()V
+	public fun verify (Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/jades/DefaultJadesVerifier$Companion {
+}
+
+public final class org/trustweave/signatures/jades/EncodedCertificate {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/jades/EncodedCertificate;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/EncodedCertificate;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/EncodedCertificate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCertB64 ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/EncodedRevocationData {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/signatures/jades/EncodedRevocationData;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/EncodedRevocationData;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/EncodedRevocationData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDataB64 ()Ljava/lang/String;
+	public final fun getProducedAt ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/EncodedTimeStampToken {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lorg/trustweave/signatures/jades/EncodedTimeStampToken;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/EncodedTimeStampToken;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/EncodedTimeStampToken;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCanonAlg ()Ljava/lang/String;
+	public final fun getTstTokensB64 ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesHeader {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;)Lorg/trustweave/signatures/jades/JadesHeader;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesHeader;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesHeader;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditional ()Ljava/util/Map;
+	public final fun getAlg ()Ljava/lang/String;
+	public final fun getCrit ()Ljava/util/List;
+	public final fun getCty ()Ljava/lang/String;
+	public final fun getKid ()Ljava/lang/String;
+	public final fun getSigT ()Ljava/lang/String;
+	public final fun getTyp ()Ljava/lang/String;
+	public final fun getX5c ()Ljava/util/List;
+	public final fun getX5tS256 ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesProfile : java/lang/Enum {
+	public static final field B_B Lorg/trustweave/signatures/jades/JadesProfile;
+	public static final field B_LT Lorg/trustweave/signatures/jades/JadesProfile;
+	public static final field B_LTA Lorg/trustweave/signatures/jades/JadesProfile;
+	public static final field B_T Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun atLeast (Lorg/trustweave/signatures/jades/JadesProfile;)Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getOrdinalLevel ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesProfile;
+	public static fun values ()[Lorg/trustweave/signatures/jades/JadesProfile;
+}
+
+public final class org/trustweave/signatures/jades/JadesSignature {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesUnsignedProperties;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesUnsignedProperties;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun compact ()Ljava/lang/String;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/signatures/jades/JadesUnsignedProperties;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesUnsignedProperties;Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesSignature;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesUnsignedProperties;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPayloadB64u ()Ljava/lang/String;
+	public final fun getProtectedHeaderB64u ()Ljava/lang/String;
+	public final fun getSerializedFlattened ()Ljava/lang/String;
+	public final fun getSignatureB64u ()Ljava/lang/String;
+	public final fun getUnsigned ()Lorg/trustweave/signatures/jades/JadesUnsignedProperties;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/jades/JadesSigner {
+	public abstract fun sign (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/jades/JadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/jades/JadesSignerException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/signatures/jades/JadesSigningRequest {
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/JadesProfile;Ljava/lang/String;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/signatures/tsa/TsaConfig;Lorg/trustweave/signatures/jades/ValidationData;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/JadesProfile;Ljava/lang/String;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/signatures/tsa/TsaConfig;Lorg/trustweave/signatures/jades/ValidationData;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun component2-sQsr11o ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun component7 ()Lorg/trustweave/signatures/tsa/TsaConfig;
+	public final fun component8 ()Lorg/trustweave/signatures/jades/ValidationData;
+	public final fun copy--vYa8V0 (Lorg/trustweave/signatures/jades/JadesProfile;Ljava/lang/String;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/signatures/tsa/TsaConfig;Lorg/trustweave/signatures/jades/ValidationData;)Lorg/trustweave/signatures/jades/JadesSigningRequest;
+	public static synthetic fun copy--vYa8V0$default (Lorg/trustweave/signatures/jades/JadesSigningRequest;Lorg/trustweave/signatures/jades/JadesProfile;Ljava/lang/String;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/signatures/tsa/TsaConfig;Lorg/trustweave/signatures/jades/ValidationData;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesSigningRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalHeaders ()Ljava/util/Map;
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getProfile ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun getSignerCertificateChain ()Ljava/util/List;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public final fun getTsaConfig ()Lorg/trustweave/signatures/tsa/TsaConfig;
+	public final fun getValidationData ()Lorg/trustweave/signatures/jades/ValidationData;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesUnsignedProperties {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/signatures/jades/JadesUnsignedProperties;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesUnsignedProperties;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesUnsignedProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArcTst ()Ljava/util/List;
+	public final fun getRVals ()Ljava/util/List;
+	public final fun getSigTst ()Ljava/util/List;
+	public final fun getXVals ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/signatures/jades/JadesValidationResult {
+}
+
+public abstract class org/trustweave/signatures/jades/JadesValidationResult$Invalid : org/trustweave/signatures/jades/JadesValidationResult {
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$BadSignature : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$BadSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$BadSignature;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$BadSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$CertificateExpired : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$CertificateExpired;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$CertificateExpired;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$CertificateExpired;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotAfter ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$Malformed : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$Malformed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$Malformed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$Malformed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$MissingTimeStamp : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$MissingTimeStamp;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$MissingTimeStamp;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$MissingTimeStamp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$TimeStampMismatch : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$TimeStampMismatch;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$TimeStampMismatch;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$TimeStampMismatch;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$UntrustedSigner : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Ljava/security/cert/X509Certificate;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun copy (Ljava/security/cert/X509Certificate;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$UntrustedSigner;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$UntrustedSigner;Ljava/security/cert/X509Certificate;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$UntrustedSigner;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Invalid$WrongProfile : org/trustweave/signatures/jades/JadesValidationResult$Invalid {
+	public fun <init> (Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/jades/JadesProfile;)V
+	public final fun component1 ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun component2 ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun copy (Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/jades/JadesProfile;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$WrongProfile;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$WrongProfile;Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/jades/JadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Invalid$WrongProfile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFound ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun getRequired ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesValidationResult$Valid : org/trustweave/signatures/jades/JadesValidationResult {
+	public fun <init> (Lorg/trustweave/signatures/jades/JadesHeader;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/jades/JadesProfile;IILkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/JadesHeader;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/jades/JadesProfile;IILkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/jades/JadesHeader;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component3 ()Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun component6 ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun component7 ()I
+	public final fun component8 ()I
+	public final fun component9 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/signatures/jades/JadesHeader;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/jades/JadesProfile;IILkotlinx/datetime/Instant;)Lorg/trustweave/signatures/jades/JadesValidationResult$Valid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/JadesValidationResult$Valid;Lorg/trustweave/signatures/jades/JadesHeader;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/jades/JadesProfile;IILkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesValidationResult$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArchivalTimeStamp ()Lkotlinx/datetime/Instant;
+	public final fun getFoundProfile ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun getHeader ()Lorg/trustweave/signatures/jades/JadesHeader;
+	public final fun getPayload ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getRValsCount ()I
+	public final fun getSignatureTimeStamp ()Lkotlinx/datetime/Instant;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public final fun getTrust ()Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public final fun getXValsCount ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/jades/JadesVerificationOptions {
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;ZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;ZJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Z
+	public final fun component5-UwyO8pc ()J
+	public final fun copy-9VgGkz4 (Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;ZJ)Lorg/trustweave/signatures/jades/JadesVerificationOptions;
+	public static synthetic fun copy-9VgGkz4$default (Lorg/trustweave/signatures/jades/JadesVerificationOptions;Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;ZJILjava/lang/Object;)Lorg/trustweave/signatures/jades/JadesVerificationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAcceptedAlgorithms ()Ljava/util/Set;
+	public final fun getAllowExpiredCertificateAtSigningTime ()Z
+	public final fun getMaxClockSkew-UwyO8pc ()J
+	public final fun getRequiredProfile ()Lorg/trustweave/signatures/jades/JadesProfile;
+	public final fun getTrustAnchorResolver ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/jades/JadesVerifier {
+	public abstract fun verify (Ljava/lang/String;Lorg/trustweave/signatures/jades/JadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/jades/ValidationData {
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/trustweave/signatures/jades/ValidationData;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/jades/ValidationData;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/jades/ValidationData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCompleteCertificateChain ()Ljava/util/List;
+	public final fun getRevocationData ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

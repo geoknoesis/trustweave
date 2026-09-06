@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Default implementation of SchemaValidatorRegistry.
- * 
+ *
  * Thread-safe registry for schema validators.
  */
 internal class DefaultSchemaValidatorRegistry : SchemaValidatorRegistry {
@@ -17,24 +17,15 @@ internal class DefaultSchemaValidatorRegistry : SchemaValidatorRegistry {
         validators[validator.schemaFormat] = validator
     }
 
-    override fun unregister(format: SchemaFormat): Boolean {
-        return validators.remove(format) != null
-    }
+    override fun unregister(format: SchemaFormat): Boolean = validators.remove(format) != null
 
-    override fun get(format: SchemaFormat): SchemaValidator? {
-        return validators[format]
-    }
+    override fun get(format: SchemaFormat): SchemaValidator? = validators[format]
 
-    override fun hasValidator(format: SchemaFormat): Boolean {
-        return validators.containsKey(format)
-    }
+    override fun hasValidator(format: SchemaFormat): Boolean = validators.containsKey(format)
 
-    override fun getRegisteredFormats(): List<SchemaFormat> {
-        return validators.keys.toList()
-    }
+    override fun getRegisteredFormats(): List<SchemaFormat> = validators.keys.toList()
 
     override fun clear() {
         validators.clear()
     }
 }
-

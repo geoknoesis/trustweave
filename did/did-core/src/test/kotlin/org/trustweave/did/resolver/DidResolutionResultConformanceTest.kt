@@ -9,7 +9,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DidResolutionResultConformanceTest {
-
     private val did = Did("did:example:123456789abcdefghi")
 
     @Test
@@ -64,15 +63,20 @@ class DidResolutionResultConformanceTest {
     fun `options error defaults to FEATURE_NOT_SUPPORTED and accepts INVALID_OPTIONS`() {
         assertEquals(
             DidErrorType.FEATURE_NOT_SUPPORTED,
-            DidResolutionResult.Failure.OptionsError(did, "versionId is not supported").error?.type
+            DidResolutionResult.Failure
+                .OptionsError(did, "versionId is not supported")
+                .error
+                ?.type,
         )
         assertEquals(
             DidErrorType.INVALID_OPTIONS,
-            DidResolutionResult.Failure.OptionsError(
-                did,
-                "mutually exclusive",
-                DidErrorType.INVALID_OPTIONS
-            ).error?.type
+            DidResolutionResult.Failure
+                .OptionsError(
+                    did,
+                    "mutually exclusive",
+                    DidErrorType.INVALID_OPTIONS,
+                ).error
+                ?.type,
         )
     }
 
@@ -85,7 +89,7 @@ class DidResolutionResultConformanceTest {
             DidResolutionResult.Failure.InvalidFormat(
                 "did:",
                 "bad",
-                resolutionMetadata = DidResolutionMetadata()
+                resolutionMetadata = DidResolutionMetadata(),
             )
         }
         assertFailsWith<IllegalArgumentException> {
@@ -101,13 +105,14 @@ class DidResolutionResultConformanceTest {
 
     @Test
     fun `every failure exposes a non-null error`() {
-        val failures: List<DidResolutionResult.Failure> = listOf(
-            DidResolutionResult.Failure.NotFound(did),
-            DidResolutionResult.Failure.InvalidFormat("did:", "bad"),
-            DidResolutionResult.Failure.MethodNotRegistered("nope"),
-            DidResolutionResult.Failure.ResolutionError(did, "boom"),
-            DidResolutionResult.Failure.OptionsError(did, "nope")
-        )
+        val failures: List<DidResolutionResult.Failure> =
+            listOf(
+                DidResolutionResult.Failure.NotFound(did),
+                DidResolutionResult.Failure.InvalidFormat("did:", "bad"),
+                DidResolutionResult.Failure.MethodNotRegistered("nope"),
+                DidResolutionResult.Failure.ResolutionError(did, "boom"),
+                DidResolutionResult.Failure.OptionsError(did, "nope"),
+            )
         failures.forEach { failure ->
             assertTrue(failure.error != null, "${failure::class.simpleName} must carry an error object")
             assertNull(failure.documentOrNull, "${failure::class.simpleName} must carry no document")

@@ -17,7 +17,7 @@ internal class DefaultKmsService : KmsService {
     override suspend fun generateKey(
         kms: KeyManagementService,
         algorithm: String,
-        options: Map<String, Any?>
+        options: Map<String, Any?>,
     ): GenerateKeyResult = kms.generateKey(algorithm, options)
 
     override fun getKeyId(keyHandle: KeyHandle): String = keyHandle.id.value

@@ -1,0 +1,337 @@
+public final class org/trustweave/registry/AccreditationStatus : java/lang/Enum {
+	public static final field ACTIVE Lorg/trustweave/registry/AccreditationStatus;
+	public static final field Companion Lorg/trustweave/registry/AccreditationStatus$Companion;
+	public static final field PENDING Lorg/trustweave/registry/AccreditationStatus;
+	public static final field REVOKED Lorg/trustweave/registry/AccreditationStatus;
+	public static final field SUSPENDED Lorg/trustweave/registry/AccreditationStatus;
+	public static final field UNKNOWN Lorg/trustweave/registry/AccreditationStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/registry/AccreditationStatus;
+	public static fun values ()[Lorg/trustweave/registry/AccreditationStatus;
+}
+
+public final class org/trustweave/registry/AccreditationStatus$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/InMemoryTrustRegistry : org/trustweave/registry/TrustRegistry {
+	public fun <init> ()V
+	public fun activateIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun activateVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAccreditationStatus (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listCredentialTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listIssuers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun registerIssuer (Lorg/trustweave/registry/IssuerRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun registerVerifier (Lorg/trustweave/registry/VerifierRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun revokeIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun revokeVerifier (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateIssuer (Ljava/lang/String;Lorg/trustweave/registry/IssuerUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateVerifier (Ljava/lang/String;Lorg/trustweave/registry/VerifierUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/registry/IssuerRecord {
+	public static final field Companion Lorg/trustweave/registry/IssuerRecord$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component8 ()Lkotlinx/datetime/Instant;
+	public final fun component9 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)Lorg/trustweave/registry/IssuerRecord;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/IssuerRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/IssuerRecord;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialTypes ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRegisteredAt ()Lkotlinx/datetime/Instant;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public final fun getStatus ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun getUpdatedAt ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/IssuerRecord$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/IssuerRecord$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/IssuerRecord;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/IssuerRecord;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/IssuerRecord$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/IssuerRegistration {
+	public static final field Companion Lorg/trustweave/registry/IssuerRegistration$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/registry/IssuerRegistration;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/IssuerRegistration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/IssuerRegistration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialTypes ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/IssuerRegistration$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/IssuerRegistration$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/IssuerRegistration;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/IssuerRegistration;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/IssuerRegistration$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/IssuerUpdate {
+	public static final field Companion Lorg/trustweave/registry/IssuerUpdate$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/registry/IssuerUpdate;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/IssuerUpdate;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/IssuerUpdate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialTypes ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/IssuerUpdate$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/IssuerUpdate$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/IssuerUpdate;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/IssuerUpdate;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/IssuerUpdate$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/RegistryFilter {
+	public static final field Companion Lorg/trustweave/registry/RegistryFilter$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/registry/RegistryFilter;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/RegistryFilter;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/registry/RegistryFilter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialType ()Ljava/lang/String;
+	public final fun getNameContains ()Ljava/lang/String;
+	public final fun getStatus ()Lorg/trustweave/registry/AccreditationStatus;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/RegistryFilter$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/RegistryFilter$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/RegistryFilter;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/RegistryFilter;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/RegistryFilter$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class org/trustweave/registry/TrustRegistry {
+	public abstract fun activateIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun activateVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAccreditationStatus (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun listCredentialTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun listIssuers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listIssuers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listVerifiers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun registerIssuer (Lorg/trustweave/registry/IssuerRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun registerVerifier (Lorg/trustweave/registry/VerifierRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun revokeIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revokeIssuer$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun revokeVerifier (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revokeVerifier$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun updateIssuer (Ljava/lang/String;Lorg/trustweave/registry/IssuerUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateVerifier (Ljava/lang/String;Lorg/trustweave/registry/VerifierUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/registry/TrustRegistry$DefaultImpls {
+	public static synthetic fun listIssuers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun listVerifiers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun revokeIssuer$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun revokeVerifier$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/registry/TrustRegistryProvider {
+	public abstract fun create (Ljava/util/Map;)Lorg/trustweave/registry/TrustRegistry;
+	public static synthetic fun create$default (Lorg/trustweave/registry/TrustRegistryProvider;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/TrustRegistry;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class org/trustweave/registry/TrustRegistryProvider$DefaultImpls {
+	public static synthetic fun create$default (Lorg/trustweave/registry/TrustRegistryProvider;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/TrustRegistry;
+}
+
+public final class org/trustweave/registry/VerifierRecord {
+	public static final field Companion Lorg/trustweave/registry/VerifierRecord$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun component6 ()Lkotlinx/datetime/Instant;
+	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component8 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)Lorg/trustweave/registry/VerifierRecord;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/VerifierRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/VerifierRecord;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRegisteredAt ()Lkotlinx/datetime/Instant;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public final fun getStatus ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun getUpdatedAt ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/VerifierRecord$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/VerifierRecord$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/VerifierRecord;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/VerifierRecord;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/VerifierRecord$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/VerifierRegistration {
+	public static final field Companion Lorg/trustweave/registry/VerifierRegistration$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/registry/VerifierRegistration;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/VerifierRegistration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/VerifierRegistration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/VerifierRegistration$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/VerifierRegistration$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/VerifierRegistration;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/VerifierRegistration;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/VerifierRegistration$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/VerifierUpdate {
+	public static final field Companion Lorg/trustweave/registry/VerifierUpdate$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/registry/VerifierUpdate;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/VerifierUpdate;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/registry/VerifierUpdate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/VerifierUpdate$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/VerifierUpdate$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/VerifierUpdate;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/VerifierUpdate;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/VerifierUpdate$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

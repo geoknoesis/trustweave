@@ -19,33 +19,27 @@ data class EnsDidConfig(
      * ENS registry contract address (required).
      */
     val ensRegistryAddress: String,
-
     /**
      * Ethereum RPC endpoint URL (required).
      */
     val rpcUrl: String,
-
     /**
      * Chain ID in CAIP-2 format (e.g., "eip155:1" for mainnet).
      */
     val chainId: String,
-
     /**
      * Private key for signing transactions (optional).
      */
     val privateKey: String? = null,
-
     /**
      * Network name (mainnet, sepolia, etc.).
      */
     val network: String? = null,
-
     /**
      * Additional configuration properties.
      */
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
-
     companion object {
         /**
          * ENS registry contract addresses.
@@ -56,41 +50,44 @@ data class EnsDidConfig(
         /**
          * Creates configuration for ENS mainnet.
          */
-        fun mainnet(rpcUrl: String, privateKey: String? = null): EnsDidConfig {
-            return EnsDidConfig(
+        fun mainnet(
+            rpcUrl: String,
+            privateKey: String? = null,
+        ): EnsDidConfig =
+            EnsDidConfig(
                 ensRegistryAddress = MAINNET_REGISTRY,
                 rpcUrl = rpcUrl,
                 chainId = "eip155:1",
                 network = "mainnet",
-                privateKey = privateKey
+                privateKey = privateKey,
             )
-        }
 
         /**
          * Creates configuration from a map (for backward compatibility).
          */
-        fun fromMap(map: Map<String, Any?>): EnsDidConfig {
-            return EnsDidConfig(
-                ensRegistryAddress = map["ensRegistryAddress"] as? String
-                    ?: throw IllegalArgumentException("ensRegistryAddress is required"),
-                rpcUrl = map["rpcUrl"] as? String
-                    ?: throw IllegalArgumentException("rpcUrl is required"),
-                chainId = map["chainId"] as? String
-                    ?: throw IllegalArgumentException("chainId is required"),
+        fun fromMap(map: Map<String, Any?>): EnsDidConfig =
+            EnsDidConfig(
+                ensRegistryAddress =
+                    map["ensRegistryAddress"] as? String
+                        ?: throw IllegalArgumentException("ensRegistryAddress is required"),
+                rpcUrl =
+                    map["rpcUrl"] as? String
+                        ?: throw IllegalArgumentException("rpcUrl is required"),
+                chainId =
+                    map["chainId"] as? String
+                        ?: throw IllegalArgumentException("chainId is required"),
                 privateKey = map["privateKey"] as? String,
                 network = map["network"] as? String,
-                additionalProperties = map.filterKeys {
-                    it !in setOf("ensRegistryAddress", "rpcUrl", "chainId", "privateKey", "network")
-                }
+                additionalProperties =
+                    map.filterKeys {
+                        it !in setOf("ensRegistryAddress", "rpcUrl", "chainId", "privateKey", "network")
+                    },
             )
-        }
 
         /**
          * Builder for EnsDidConfig.
          */
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
     }
 
     /**
@@ -129,7 +126,10 @@ data class EnsDidConfig(
             return this
         }
 
-        fun property(key: String, value: Any?): Builder {
+        fun property(
+            key: String,
+            value: Any?,
+        ): Builder {
             this.additionalProperties[key] = value
             return this
         }
@@ -145,7 +145,7 @@ data class EnsDidConfig(
                 chainId = chainId,
                 privateKey = privateKey,
                 network = network,
-                additionalProperties = additionalProperties.toMap()
+                additionalProperties = additionalProperties.toMap(),
             )
         }
     }
@@ -153,8 +153,8 @@ data class EnsDidConfig(
     /**
      * Converts to map format.
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             put("ensRegistryAddress", ensRegistryAddress)
             put("rpcUrl", rpcUrl)
             put("chainId", chainId)
@@ -162,6 +162,4 @@ data class EnsDidConfig(
             put("network", network)
             putAll(additionalProperties)
         }
-    }
 }
-

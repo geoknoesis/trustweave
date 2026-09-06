@@ -1,0 +1,121 @@
+public final class org/trustweave/core/identifiers/IdentifiersKt {
+	public static final fun toIriOrNull (Ljava/lang/String;)Lorg/trustweave/core/identifiers/Iri;
+	public static final fun toKeyIdOrNull (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public class org/trustweave/core/identifiers/Iri {
+	public static final field Companion Lorg/trustweave/core/identifiers/Iri$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFragment ()Ljava/lang/String;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public final fun getWithoutFragment ()Lorg/trustweave/core/identifiers/Iri;
+	public fun hashCode ()I
+	public final fun isDid ()Z
+	public final fun isHttpUrl ()Z
+	public final fun isUri ()Z
+	public final fun isUrn ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/core/identifiers/Iri$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/core/identifiers/IriSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/core/identifiers/IriSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/core/identifiers/Iri;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/core/identifiers/Iri;)V
+}
+
+public final class org/trustweave/core/identifiers/KeyId {
+	public static final field Companion Lorg/trustweave/core/identifiers/KeyId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lorg/trustweave/core/identifiers/KeyId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public static final fun getFragmentValue-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public static final fun isFragment-impl (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class org/trustweave/core/identifiers/KeyId$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/core/identifiers/KeyIdSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/core/identifiers/KeyIdSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize-hPeCkmE (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize-fMZQYFE (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+}
+
+public final class org/trustweave/core/serialization/InstantSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/core/serialization/InstantSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/datetime/Instant;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/datetime/Instant;)V
+}
+
+public final class org/trustweave/core/serialization/NullableInstantSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/core/serialization/NullableInstantSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/datetime/Instant;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/datetime/Instant;)V
+}
+
+public final class org/trustweave/core/serialization/SerializationModule {
+	public static final field INSTANCE Lorg/trustweave/core/serialization/SerializationModule;
+	public final fun getDefault ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public abstract class org/trustweave/core/util/ValidationResult {
+	public static final field Companion Lorg/trustweave/core/util/ValidationResult$Companion;
+	public final fun errorCode ()Ljava/lang/String;
+	public final fun errorMessage ()Ljava/lang/String;
+	public final fun isValid ()Z
+	public final fun toResult-IoAF18A (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/core/util/ValidationResult$Companion {
+	public final fun combine (Ljava/util/List;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun combine ([Lorg/trustweave/core/util/ValidationResult;)Lorg/trustweave/core/util/ValidationResult;
+}
+
+public final class org/trustweave/core/util/ValidationResult$Invalid : org/trustweave/core/util/ValidationResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)Lorg/trustweave/core/util/ValidationResult$Invalid;
+	public static synthetic fun copy$default (Lorg/trustweave/core/util/ValidationResult$Invalid;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/Object;)Lorg/trustweave/core/util/ValidationResult$Invalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getField ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/core/util/ValidationResult$Valid : org/trustweave/core/util/ValidationResult {
+	public static final field INSTANCE Lorg/trustweave/core/util/ValidationResult$Valid;
+}
+

@@ -3,20 +3,20 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-    // Kover plugin removed due to circular dependency issue with test tasks
-    // Coverage can be generated manually if needed using other tools
-    // alias(libs.plugins.kover)
+    // Kover and its task dependencies are configured centrally.
 }
 
 group = "org.trustweave"
 dependencies {
     implementation(project(":credentials:credential-api"))
+    implementation(project(":credentials:plugins:status-list:database"))
 
     implementation(project(":trust"))
     implementation(project(":distribution:all"))
     implementation(project(":anchors:anchor-core"))
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
+    implementation(project(":kms:plugins:inmemory"))
     implementation(project(":testkit"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
@@ -34,12 +34,32 @@ dependencies {
     // Test dependencies are standardized in root build.gradle.kts
 }
 
-// Configure Java toolchain for all JavaExec tasks
-val javaToolchain = javaToolchains.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(21))
+// Each scenario keeps its implementation and README together.
+kotlin.sourceSets.named("main") {
+    kotlin.srcDirs(
+        file("scenarios")
+            .listFiles()
+            .orEmpty()
+            .filter { it.isDirectory }
+            .map { it.resolve("src/main/kotlin") },
+    )
 }
 
+// Configure Java toolchain for all JavaExec tasks
+val javaToolchain =
+    javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+
 // Configure main class for running examples
+tasks.register<JavaExec>("runDocumentationQuickStart") {
+    group = "examples"
+    description = "Run the exact quick-start example embedded in the documentation"
+    mainClass.set("org.trustweave.examples.documentation.DocumentationQuickStartKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
 tasks.register<JavaExec>("runEarthObservation") {
     group = "examples"
     description = "Run Earth Observation scenario example"
@@ -192,8 +212,39 @@ tasks.register<JavaExec>("runBlockchainAnchoring") {
     javaLauncher.set(javaToolchain)
 }
 
-// Ensure test output directory exists before kover tasks run
-// This fixes an issue where kover tasks try to access directories that don't exist after clean builds
-tasks.matching { it.name.startsWith("kover") }.configureEach {
-    mustRunAfter(tasks.named("test"))
+tasks.register<JavaExec>("runCredentialLifecycle") {
+    group = "examples"
+    description = "Run local issuance, wallet storage and revocation checks"
+    mainClass.set("org.trustweave.examples.comprehensive.ComprehensiveDslExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
+tasks.register<JavaExec>("runDelegationChain") {
+    group = "examples"
+    description = "Run local multi-hop delegation and unauthorized-path checks"
+    mainClass.set("org.trustweave.examples.delegation.DelegationChainExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
+tasks.register<JavaExec>("runAcademicCredentialsDsl") {
+    group = "examples"
+    mainClass.set("org.trustweave.examples.academic.AcademicCredentialsDslExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
+tasks.register<JavaExec>("runWebOfTrust") {
+    group = "examples"
+    mainClass.set("org.trustweave.examples.trust.WebOfTrustExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
+// Compile and execute every registered local example.
+tasks.register("checkDocumentationExamples") {
+    group = "verification"
+    description = "Run implemented local documentation examples (no hosted providers)"
+    dependsOn(tasks.withType<JavaExec>())
 }

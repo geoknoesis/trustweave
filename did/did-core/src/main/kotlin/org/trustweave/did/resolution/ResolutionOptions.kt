@@ -47,12 +47,17 @@ data class ResolutionOptions(
      * directly, so treat it as an internal parse-result carrier rather than a type-enforced
      * invariant.
      */
-    @Transient private val parseError: String? = null
+    @Transient private val parseError: String? = null,
 ) {
     /** True when no option is set — the "MAY be empty" case of §4. */
     fun isEmpty(): Boolean =
-        accept == null && !expandRelativeUrls && versionId == null &&
-            versionTime == null && !noCache && additional.isEmpty() && parseError == null
+        accept == null &&
+            !expandRelativeUrls &&
+            versionId == null &&
+            versionTime == null &&
+            !noCache &&
+            additional.isEmpty() &&
+            parseError == null
 
     /**
      * Options that only a DID method can satisfy. A resolver that cannot delegate these MUST
@@ -61,21 +66,23 @@ data class ResolutionOptions(
      * `accept` and `expandRelativeUrls` are deliberately excluded: they are method-independent
      * and handled by the generic resolver.
      */
-    fun methodSpecificOptions(): Set<String> = buildSet {
-        if (versionId != null) add("versionId")
-        if (versionTime != null) add("versionTime")
-        if (noCache) add("noCache")
-    }
+    fun methodSpecificOptions(): Set<String> =
+        buildSet {
+            if (versionId != null) add("versionId")
+            if (versionTime != null) add("versionTime")
+            if (noCache) add("noCache")
+        }
 
     /** Returns an INVALID_OPTIONS error when the options are invalid (§4.4 step 4), else null. */
-    fun validate(): DidResolutionError? = when {
-        parseError != null -> DidResolutionError.invalidOptions(parseError)
-        versionId != null && versionTime != null ->
-            DidResolutionError.invalidOptions(
-                "versionId and versionTime are mutually exclusive (DID Resolution 1.0 §13.4)"
-            )
-        else -> null
-    }
+    fun validate(): DidResolutionError? =
+        when {
+            parseError != null -> DidResolutionError.invalidOptions(parseError)
+            versionId != null && versionTime != null ->
+                DidResolutionError.invalidOptions(
+                    "versionId and versionTime are mutually exclusive (DID Resolution 1.0 §13.4)",
+                )
+            else -> null
+        }
 
     companion object {
         /** The empty options structure. */
@@ -89,7 +96,11 @@ data class ResolutionOptions(
          * (case-insensitively), so a *present but unrecognised* value (e.g. `"1"`, `"yes"`) is a
          * caller error appended to [errors] rather than silently coerced to `false`.
          */
-        private fun parseStrictBoolean(name: String, raw: String?, errors: MutableList<String>): Boolean =
+        private fun parseStrictBoolean(
+            name: String,
+            raw: String?,
+            errors: MutableList<String>,
+        ): Boolean =
             when {
                 raw == null -> false
                 raw.equals("true", ignoreCase = true) -> true
@@ -107,12 +118,13 @@ data class ResolutionOptions(
          */
         fun fromQueryParameters(params: Map<String, String>): ResolutionOptions {
             val errors = mutableListOf<String>()
-            val versionTime = params["versionTime"]?.let { raw ->
-                runCatching { Instant.parse(raw) }.getOrElse {
-                    errors += "versionTime is not a valid datetime (DID Resolution 1.0 §3.1): '$raw'"
-                    null
+            val versionTime =
+                params["versionTime"]?.let { raw ->
+                    runCatching { Instant.parse(raw) }.getOrElse {
+                        errors += "versionTime is not a valid datetime (DID Resolution 1.0 §3.1): '$raw'"
+                        null
+                    }
                 }
-            }
             val expandRelativeUrls = parseStrictBoolean("expandRelativeUrls", params["expandRelativeUrls"], errors)
             val noCache = parseStrictBoolean("noCache", params["noCache"], errors)
             return ResolutionOptions(
@@ -122,7 +134,7 @@ data class ResolutionOptions(
                 versionTime = versionTime,
                 noCache = noCache,
                 additional = params.filterKeys { it !in SPEC_KEYS },
-                parseError = errors.takeIf { it.isNotEmpty() }?.joinToString("; ")
+                parseError = errors.takeIf { it.isNotEmpty() }?.joinToString("; "),
             )
         }
 
@@ -137,33 +149,37 @@ data class ResolutionOptions(
         fun fromJson(json: JsonObject): ResolutionOptions {
             val errors = mutableListOf<String>()
             val versionTimeRaw = (json["versionTime"] as? JsonPrimitive)?.contentOrNull
-            val versionTime = versionTimeRaw?.let { raw ->
-                runCatching { Instant.parse(raw) }.getOrElse {
-                    errors += "versionTime is not a valid datetime (DID Resolution 1.0 §3.1): '$raw'"
-                    null
+            val versionTime =
+                versionTimeRaw?.let { raw ->
+                    runCatching { Instant.parse(raw) }.getOrElse {
+                        errors += "versionTime is not a valid datetime (DID Resolution 1.0 §3.1): '$raw'"
+                        null
+                    }
                 }
-            }
-            val expandRelativeUrls = parseStrictBoolean(
-                "expandRelativeUrls",
-                (json["expandRelativeUrls"] as? JsonPrimitive)?.contentOrNull,
-                errors
-            )
-            val noCache = parseStrictBoolean(
-                "noCache",
-                (json["noCache"] as? JsonPrimitive)?.contentOrNull,
-                errors
-            )
+            val expandRelativeUrls =
+                parseStrictBoolean(
+                    "expandRelativeUrls",
+                    (json["expandRelativeUrls"] as? JsonPrimitive)?.contentOrNull,
+                    errors,
+                )
+            val noCache =
+                parseStrictBoolean(
+                    "noCache",
+                    (json["noCache"] as? JsonPrimitive)?.contentOrNull,
+                    errors,
+                )
             return ResolutionOptions(
                 accept = (json["accept"] as? JsonPrimitive)?.contentOrNull,
                 expandRelativeUrls = expandRelativeUrls,
                 versionId = (json["versionId"] as? JsonPrimitive)?.contentOrNull,
                 versionTime = versionTime,
                 noCache = noCache,
-                additional = json.entries
-                    .filter { it.key !in SPEC_KEYS }
-                    .mapNotNull { (k, v) -> (v as? JsonPrimitive)?.contentOrNull?.let { k to it } }
-                    .toMap(),
-                parseError = errors.takeIf { it.isNotEmpty() }?.joinToString("; ")
+                additional =
+                    json.entries
+                        .filter { it.key !in SPEC_KEYS }
+                        .mapNotNull { (k, v) -> (v as? JsonPrimitive)?.contentOrNull?.let { k to it } }
+                        .toMap(),
+                parseError = errors.takeIf { it.isNotEmpty() }?.joinToString("; "),
             )
         }
     }

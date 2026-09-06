@@ -6,7 +6,9 @@ package org.trustweave.trust.domain
  * a domain can be renamed without re-anchoring its DID.
  */
 @JvmInline
-value class DomainId(val value: String) {
+value class DomainId(
+    val value: String,
+) {
     init {
         require(value.isNotBlank()) { "DomainId must not be blank" }
     }

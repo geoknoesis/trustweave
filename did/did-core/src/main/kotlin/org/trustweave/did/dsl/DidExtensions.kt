@@ -1,10 +1,10 @@
 package org.trustweave.did.dsl
 
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.exception.DidException
+import org.trustweave.did.resolver.DidResolver
 
 /**
  * Extension functions for fluent DID operations.
@@ -15,7 +15,7 @@ import org.trustweave.did.exception.DidException
  * **Example Usage:**
  * ```kotlin
  * val resolver = RegistryBasedResolver(registry)
- * 
+ *
  * // Document or throw
  * val document = Did("did:key:...").resolveOrThrow(resolver)
  *
@@ -36,9 +36,7 @@ import org.trustweave.did.exception.DidException
  * @param resolver The DID resolver to use
  * @return DidResolutionResult (always non-null)
  */
-suspend fun Did.resolveWith(resolver: DidResolver): DidResolutionResult {
-    return resolver.resolve(this)
-}
+suspend fun Did.resolveWith(resolver: DidResolver): DidResolutionResult = resolver.resolve(this)
 
 /**
  * Resolves this DID and returns the document, or throws if not found.
@@ -53,24 +51,24 @@ suspend fun Did.resolveOrThrow(resolver: DidResolver): DidDocument {
         is DidResolutionResult.Success -> result.document
         is DidResolutionResult.Failure.NotFound -> throw DidException.DidNotFound(
             did = result.did,
-            availableMethods = emptyList()
+            availableMethods = emptyList(),
         )
         is DidResolutionResult.Failure.InvalidFormat -> throw DidException.InvalidDidFormat(
             did = result.did,
-            reason = result.reason
+            reason = result.reason,
         )
         is DidResolutionResult.Failure.MethodNotRegistered -> throw DidException.DidMethodNotRegistered(
             method = result.method,
-            availableMethods = result.availableMethods
+            availableMethods = result.availableMethods,
         )
         is DidResolutionResult.Failure.ResolutionError -> throw DidException.DidResolutionFailed(
             did = result.did,
             reason = result.reason,
-            cause = result.cause
+            cause = result.cause,
         )
         is DidResolutionResult.Failure.OptionsError -> throw DidException.DidResolutionFailed(
             did = result.did ?: this,
-            reason = result.reason
+            reason = result.reason,
         )
         // §4.4: a deactivated DID resolves to no document. resolveOrThrow's whole contract is
         // "return the document or fail", and callers of resolveOrThrow may use the document for
@@ -78,7 +76,7 @@ suspend fun Did.resolveOrThrow(resolver: DidResolver): DidDocument {
         // being treated as some other kind of missing document.
         is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
             did = result.did,
-            reason = "DID is deactivated"
+            reason = "DID is deactivated",
         )
     }
 }
@@ -96,17 +94,16 @@ suspend fun Did.resolveOrThrow(resolver: DidResolver): DidDocument {
  * @return The resolved DID document, or null if resolution failed (not found, invalid, etc.)
  * @throws DidException.DidResolutionFailed if the DID is deactivated
  */
-suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? {
-    return when (val result = resolveWith(resolver)) {
+suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? =
+    when (val result = resolveWith(resolver)) {
         is DidResolutionResult.Success -> result.document
         // §4.4: see the KDoc above — deactivation must not be indistinguishable from "absent".
         is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
             did = result.did,
-            reason = "DID is deactivated"
+            reason = "DID is deactivated",
         )
         else -> null
     }
-}
 
 /**
  * Resolves this DID and returns the document, or the default value.
@@ -122,10 +119,8 @@ suspend fun Did.resolveOrNull(resolver: DidResolver): DidDocument? {
  */
 suspend fun Did.resolveOrDefault(
     resolver: DidResolver,
-    default: DidDocument
-): DidDocument {
-    return resolveOrNull(resolver) ?: default
-}
+    default: DidDocument,
+): DidDocument = resolveOrNull(resolver) ?: default
 
 /**
  * Resolves this DID and executes the block if successful.
@@ -136,7 +131,7 @@ suspend fun Did.resolveOrDefault(
  */
 suspend inline fun Did.resolveWith(
     resolver: DidResolver,
-    block: (DidDocument) -> Unit
+    block: (DidDocument) -> Unit,
 ): DidResolutionResult {
     val result = resolveWith(resolver)
     if (result is DidResolutionResult.Success) {
@@ -144,4 +139,3 @@ suspend inline fun Did.resolveWith(
     }
     return result
 }
-

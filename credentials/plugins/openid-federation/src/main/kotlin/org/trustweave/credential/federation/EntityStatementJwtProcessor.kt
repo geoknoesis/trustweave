@@ -10,8 +10,6 @@ import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jwt.JWTParser
-import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -26,11 +24,11 @@ import okhttp3.OkHttpClient
 class EntityStatementJwtProcessor(
     @Suppress("unused") private val httpClient: OkHttpClient = OkHttpClient(),
 ) {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = false
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = false
+        }
 
     /**
      * Parses an Entity Statement from a compact serialized JWT string without
@@ -43,14 +41,9 @@ class EntityStatementJwtProcessor(
      */
     fun parse(jwt: String): EntityStatement? =
         runCatching {
-            val parsed = JWTParser.parse(jwt)
-            // payload.toBytes() decodes the base64url-encoded payload to raw JSON bytes;
-            // supports both signed JWTs and unsecured (alg=none) JWTs used in tests/drafts.
-            val payloadJson = when (parsed) {
-                is SignedJWT -> String(parsed.payload.toBytes(), Charsets.UTF_8)
-                is PlainJWT -> String(parsed.payload.toBytes(), Charsets.UTF_8)
-                else -> error("Unsupported JWT type: ${parsed::class.simpleName}")
-            }
+            val parsed = SignedJWT.parse(jwt)
+            require(parsed.header.algorithm.name in setOf("ES256", "ES384", "ES512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512"))
+            val payloadJson = String(parsed.payload.toBytes(), Charsets.UTF_8)
             json.decodeFromString(EntityStatement.serializer(), payloadJson)
         }.getOrNull()
 
@@ -64,7 +57,10 @@ class EntityStatementJwtProcessor(
      * @param jwt Compact serialized JWT to verify.
      * @param jwks The JWK Set containing the verifying public key(s).
      */
-    fun verify(jwt: String, jwks: FederationJwkSet): Boolean =
+    fun verify(
+        jwt: String,
+        jwks: FederationJwkSet,
+    ): Boolean =
         runCatching {
             val signed = SignedJWT.parse(jwt)
             val jwkSetJson = json.encodeToString(FederationJwkSet.serializer(), jwks)
@@ -99,21 +95,25 @@ class EntityStatementJwtProcessor(
         val claimsJson = json.encodeToString(EntityStatement.serializer(), statement)
         val claimsSet = JWTClaimsSet.parse(claimsJson)
 
-        val nimbusKey = com.nimbusds.jose.jwk.JWK.parse(privateKeyJwk)
+        val nimbusKey =
+            com.nimbusds.jose.jwk.JWK
+                .parse(privateKeyJwk)
 
-        val signer = when (nimbusKey) {
-            is ECKey -> ECDSASigner(nimbusKey)
-            is RSAKey -> RSASSASigner(nimbusKey)
-            else -> throw IllegalArgumentException(
-                "Unsupported key type for signing: ${nimbusKey.keyType}",
-            )
-        }
+        val signer =
+            when (nimbusKey) {
+                is ECKey -> ECDSASigner(nimbusKey)
+                is RSAKey -> RSASSASigner(nimbusKey)
+                else -> throw IllegalArgumentException(
+                    "Unsupported key type for signing: ${nimbusKey.keyType}",
+                )
+            }
 
-        val header = JWSHeader.Builder(jwsAlgorithm)
-            .apply { nimbusKey.keyID?.let { keyID(it) } }
-            .build()
+        val header =
+            JWSHeader
+                .Builder(jwsAlgorithm)
+                .apply { nimbusKey.keyID?.let { keyID(it) } }
+                .build()
 
         return SignedJWT(header, claimsSet).also { it.sign(signer) }.serialize()
     }
-
 }

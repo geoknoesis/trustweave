@@ -1,10 +1,9 @@
 package org.trustweave.trust.dsl.wallet
 
-import org.trustweave.wallet.CredentialCollection
-import org.trustweave.wallet.CredentialOrganization
-import org.trustweave.wallet.Wallet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.trustweave.wallet.CredentialOrganization
+import org.trustweave.wallet.Wallet
 
 /**
  * Wallet Organization Builder DSL.
@@ -30,7 +29,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class WalletOrganizationBuilder(
-    private val wallet: Wallet
+    private val wallet: Wallet,
 ) {
     private val collections = mutableListOf<CollectionOperation>()
     private val tags = mutableListOf<TagOperation>()
@@ -39,35 +38,50 @@ class WalletOrganizationBuilder(
     /**
      * Create a collection and configure it.
      */
-    fun collection(name: String, description: String? = null, block: CollectionBuilder.() -> Unit) {
+    fun collection(
+        name: String,
+        description: String? = null,
+        block: CollectionBuilder.() -> Unit,
+    ) {
         val builder = CollectionBuilder(name, description)
         builder.block()
-        collections.add(CollectionOperation.Create(
-            name = builder.name,
-            description = builder.description,
-            credentialIds = builder.credentialIds,
-            tags = builder.tags
-        ))
+        collections.add(
+            CollectionOperation.Create(
+                name = builder.name,
+                description = builder.description,
+                credentialIds = builder.credentialIds,
+                tags = builder.tags,
+            ),
+        )
     }
 
     /**
      * Add tags to a credential.
      */
-    fun tag(credentialId: String, vararg tags: String) {
+    fun tag(
+        credentialId: String,
+        vararg tags: String,
+    ) {
         this.tags.add(TagOperation.Add(credentialId, tags.toSet()))
     }
 
     /**
      * Remove tags from a credential.
      */
-    fun untag(credentialId: String, vararg tags: String) {
+    fun untag(
+        credentialId: String,
+        vararg tags: String,
+    ) {
         this.tags.add(TagOperation.Remove(credentialId, tags.toSet()))
     }
 
     /**
      * Add metadata to a credential.
      */
-    fun metadata(credentialId: String, block: MetadataBuilder.() -> Unit) {
+    fun metadata(
+        credentialId: String,
+        block: MetadataBuilder.() -> Unit,
+    ) {
         val builder = MetadataBuilder()
         builder.block()
         metadata.add(MetadataOperation.Add(credentialId, builder.metadata))
@@ -76,97 +90,105 @@ class WalletOrganizationBuilder(
     /**
      * Update notes for a credential.
      */
-    fun notes(credentialId: String, notes: String?) {
+    fun notes(
+        credentialId: String,
+        notes: String?,
+    ) {
         metadata.add(MetadataOperation.Notes(credentialId, notes))
     }
 
     /**
      * Execute all organization operations.
-     * 
+     *
      * This operation performs I/O-bound work (wallet operations, credential organization)
      * and is dispatched to I/O threads. It is non-blocking and can be cancelled.
      */
-    suspend fun execute(): OrganizationResult = withContext(Dispatchers.IO) {
-        val orgWallet = wallet as? CredentialOrganization
-            ?: throw IllegalStateException(
-                "Wallet does not support organization features. " +
-                "Create wallet with enableOrganization() in trustWeave.wallet { }"
-            )
+    suspend fun execute(): OrganizationResult =
+        withContext(Dispatchers.IO) {
+            val orgWallet =
+                wallet as? CredentialOrganization
+                    ?: throw IllegalStateException(
+                        "Wallet does not support organization features. " +
+                            "Create wallet with enableOrganization() in trustWeave.wallet { }",
+                    )
 
-        val createdCollections = mutableListOf<String>()
-        val errors = mutableListOf<String>()
+            val createdCollections = mutableListOf<String>()
+            val errors = mutableListOf<String>()
 
-        // Create collections and add credentials
-        for (collectionOp in collections) {
-            when (collectionOp) {
-                is CollectionOperation.Create -> {
-                    try {
-                        val collectionId = orgWallet.createCollection(
-                            collectionOp.name,
-                            collectionOp.description
-                        )
-                        createdCollections.add(collectionId)
+            // Create collections and add credentials
+            for (collectionOp in collections) {
+                when (collectionOp) {
+                    is CollectionOperation.Create -> {
+                        try {
+                            val collectionId =
+                                orgWallet.createCollection(
+                                    collectionOp.name,
+                                    collectionOp.description,
+                                )
+                            createdCollections.add(collectionId)
 
-                        // Add credentials to collection
-                        for (credId in collectionOp.credentialIds) {
-                            try {
-                                orgWallet.addToCollection(credId, collectionId)
-                            } catch (e: Exception) {
-                                errors.add("Failed to add credential $credId to collection ${collectionOp.name}: ${e.message}")
+                            // Add credentials to collection
+                            for (credId in collectionOp.credentialIds) {
+                                try {
+                                    orgWallet.addToCollection(credId, collectionId)
+                                } catch (e: Exception) {
+                                    errors.add("Failed to add credential $credId to collection ${collectionOp.name}: ${e.message}")
+                                }
                             }
-                        }
 
-                        // Apply tags
-                        for (tagOp in collectionOp.tags) {
-                            try {
-                                orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
-                            } catch (e: Exception) {
-                                errors.add("Failed to tag credential ${tagOp.credentialId}: ${e.message}")
+                            // Apply tags
+                            for (tagOp in collectionOp.tags) {
+                                try {
+                                    orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
+                                } catch (e: Exception) {
+                                    errors.add("Failed to tag credential ${tagOp.credentialId}: ${e.message}")
+                                }
                             }
+                        } catch (e: Exception) {
+                            errors.add("Failed to create collection ${collectionOp.name}: ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        errors.add("Failed to create collection ${collectionOp.name}: ${e.message}")
                     }
                 }
             }
-        }
 
-        // Apply standalone tags
-        for (tagOp in tags) {
-            try {
-                when (tagOp) {
-                    is TagOperation.Add -> orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
-                    is TagOperation.Remove -> orgWallet.untagCredential(tagOp.credentialId, tagOp.tags)
+            // Apply standalone tags
+            for (tagOp in tags) {
+                try {
+                    when (tagOp) {
+                        is TagOperation.Add -> orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
+                        is TagOperation.Remove -> orgWallet.untagCredential(tagOp.credentialId, tagOp.tags)
+                    }
+                } catch (e: Exception) {
+                    errors.add(
+                        "Failed to ${if (tagOp is TagOperation.Add) "tag" else "untag"} credential ${tagOp.credentialId}: ${e.message}",
+                    )
                 }
-            } catch (e: Exception) {
-                errors.add("Failed to ${if (tagOp is TagOperation.Add) "tag" else "untag"} credential ${tagOp.credentialId}: ${e.message}")
             }
-        }
 
-        // Apply metadata
-        for (metaOp in metadata) {
-            try {
-                when (metaOp) {
-                    is MetadataOperation.Add -> orgWallet.addMetadata(metaOp.credentialId, metaOp.metadata)
-                    is MetadataOperation.Notes -> orgWallet.updateNotes(metaOp.credentialId, metaOp.notes)
+            // Apply metadata
+            for (metaOp in metadata) {
+                try {
+                    when (metaOp) {
+                        is MetadataOperation.Add -> orgWallet.addMetadata(metaOp.credentialId, metaOp.metadata)
+                        is MetadataOperation.Notes -> orgWallet.updateNotes(metaOp.credentialId, metaOp.notes)
+                    }
+                } catch (e: Exception) {
+                    errors.add("Failed to update metadata for credential ${metaOp.credentialId}: ${e.message}")
                 }
-            } catch (e: Exception) {
-                errors.add("Failed to update metadata for credential ${metaOp.credentialId}: ${e.message}")
             }
-        }
 
-        OrganizationResult(
-            collectionsCreated = createdCollections.size,
-            errors = errors
-        )
-    }
+            OrganizationResult(
+                collectionsCreated = createdCollections.size,
+                errors = errors,
+            )
+        }
 
     /**
      * Collection builder for configuring a collection.
      */
     inner class CollectionBuilder(
         val name: String,
-        val description: String?
+        val description: String?,
     ) {
         val credentialIds = mutableListOf<String>()
         val tags = mutableListOf<TagOperation>()
@@ -181,7 +203,10 @@ class WalletOrganizationBuilder(
         /**
          * Tag credentials in this collection.
          */
-        fun tag(credentialId: String, vararg tags: String) {
+        fun tag(
+            credentialId: String,
+            vararg tags: String,
+        ) {
             this.tags.add(TagOperation.Add(credentialId, tags.toSet()))
         }
     }
@@ -208,7 +233,7 @@ class WalletOrganizationBuilder(
             val name: String,
             val description: String?,
             val credentialIds: List<String>,
-            val tags: List<TagOperation>
+            val tags: List<TagOperation>,
         ) : CollectionOperation()
     }
 
@@ -219,8 +244,15 @@ class WalletOrganizationBuilder(
         abstract val credentialId: String
         abstract val tags: Set<String>
 
-        data class Add(override val credentialId: String, override val tags: Set<String>) : TagOperation()
-        data class Remove(override val credentialId: String, override val tags: Set<String>) : TagOperation()
+        data class Add(
+            override val credentialId: String,
+            override val tags: Set<String>,
+        ) : TagOperation()
+
+        data class Remove(
+            override val credentialId: String,
+            override val tags: Set<String>,
+        ) : TagOperation()
     }
 
     /**
@@ -229,8 +261,15 @@ class WalletOrganizationBuilder(
     private sealed class MetadataOperation {
         abstract val credentialId: String
 
-        data class Add(override val credentialId: String, val metadata: Map<String, Any>) : MetadataOperation()
-        data class Notes(override val credentialId: String, val notes: String?) : MetadataOperation()
+        data class Add(
+            override val credentialId: String,
+            val metadata: Map<String, Any>,
+        ) : MetadataOperation()
+
+        data class Notes(
+            override val credentialId: String,
+            val notes: String?,
+        ) : MetadataOperation()
     }
 }
 
@@ -239,7 +278,7 @@ class WalletOrganizationBuilder(
  */
 data class OrganizationResult(
     val collectionsCreated: Int,
-    val errors: List<String>
+    val errors: List<String>,
 ) {
     val success: Boolean get() = errors.isEmpty()
 }
@@ -252,5 +291,3 @@ suspend fun Wallet.organize(block: WalletOrganizationBuilder.() -> Unit): Organi
     builder.block()
     return builder.execute()
 }
-
-

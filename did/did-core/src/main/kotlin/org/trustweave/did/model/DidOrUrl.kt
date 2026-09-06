@@ -1,12 +1,12 @@
 package org.trustweave.did.model
 
-import org.trustweave.did.identifiers.Did
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import org.trustweave.did.identifiers.Did
 import java.net.URI
 
 /**
@@ -17,22 +17,25 @@ import java.net.URI
  */
 @Serializable(with = DidOrUrlSerializer::class)
 sealed class DidOrUrl {
-
     /** A decentralized identifier. */
-    data class AsDid(val did: Did) : DidOrUrl()
+    data class AsDid(
+        val did: Did,
+    ) : DidOrUrl()
 
     /**
      * A URL per typical `alsoKnownAs` usage (absolute URI with a scheme, not a `did:` identifier).
      */
-    data class AsUrl(val url: String) : DidOrUrl()
+    data class AsUrl(
+        val url: String,
+    ) : DidOrUrl()
 
-    fun toStringValue(): String = when (this) {
-        is AsDid -> did.value
-        is AsUrl -> url
-    }
+    fun toStringValue(): String =
+        when (this) {
+            is AsDid -> did.value
+            is AsUrl -> url
+        }
 
     companion object {
-
         /**
          * Parses a string into [AsDid] if it is a valid DID, otherwise as [AsUrl] if it is a valid absolute URI.
          *
@@ -44,32 +47,35 @@ sealed class DidOrUrl {
             if (s.startsWith("did:")) {
                 return AsDid(Did(s))
             }
-            val uri = try {
-                URI(s)
-            } catch (e: Exception) {
-                throw IllegalArgumentException("Invalid alsoKnownAs URL: $raw", e)
-            }
+            val uri =
+                try {
+                    URI(s)
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Invalid alsoKnownAs URL: $raw", e)
+                }
             require(uri.isAbsolute) { "alsoKnownAs URL must be absolute: $raw" }
             require(!uri.scheme.isNullOrEmpty()) { "alsoKnownAs URL must have a scheme: $raw" }
             return AsUrl(s)
         }
 
-        fun tryParse(raw: String): DidOrUrl? = try {
-            parse(raw)
-        } catch (_: Exception) {
-            null
-        }
+        fun tryParse(raw: String): DidOrUrl? =
+            try {
+                parse(raw)
+            } catch (_: Exception) {
+                null
+            }
     }
 }
 
 object DidOrUrlSerializer : KSerializer<DidOrUrl> {
     override val descriptor = PrimitiveSerialDescriptor("DidOrUrl", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: DidOrUrl) {
+    override fun serialize(
+        encoder: Encoder,
+        value: DidOrUrl,
+    ) {
         encoder.encodeString(value.toStringValue())
     }
 
-    override fun deserialize(decoder: Decoder): DidOrUrl {
-        return DidOrUrl.parse(decoder.decodeString())
-    }
+    override fun deserialize(decoder: Decoder): DidOrUrl = DidOrUrl.parse(decoder.decodeString())
 }

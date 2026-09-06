@@ -1,13 +1,12 @@
 package org.trustweave.anchor.zksync
 
-import org.trustweave.anchor.evm.EvmGas
 import org.junit.jupiter.api.Test
+import org.trustweave.anchor.evm.EvmGas
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ZkSyncBlockchainAnchorClientTest {
-
     @Test
     fun `chain IDs`() {
         assertEquals("eip155:324", ZkSyncBlockchainAnchorClient.MAINNET)
@@ -26,7 +25,7 @@ class ZkSyncBlockchainAnchorClientTest {
         // estimate + 20% margin
         assertEquals(
             EvmGas.withMargin(estimated, ZkSyncBlockchainAnchorClient.ESTIMATE_GAS_MARGIN_PERCENT),
-            gasLimit
+            gasLimit,
         )
         assertEquals(BigInteger.valueOf(360_000), gasLimit)
     }

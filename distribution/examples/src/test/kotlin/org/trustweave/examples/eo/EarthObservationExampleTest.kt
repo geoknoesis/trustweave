@@ -1,5 +1,14 @@
 package org.trustweave.examples.eo
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.Test
 import org.trustweave.anchor.DefaultBlockchainAnchorRegistry
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
@@ -7,11 +16,9 @@ import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.integrity.IntegrityVerifier
 import org.trustweave.testkit.integrity.TestDataBuilders
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Unit tests for Earth Observation scenario.
@@ -25,386 +32,430 @@ import kotlin.test.*
  * - Integrity verification
  */
 class EarthObservationExampleTest {
-
     @Test
-    fun `test DID creation for data provider`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
+    fun `test DID creation for data provider`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
 
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
 
-        assertNotNull(issuerDid)
-        assertTrue(issuerDid.value.startsWith("did:key:"))
-        assertTrue(issuerDoc.verificationMethod.isNotEmpty())
-    }
-
-    @Test
-    fun `test artifact creation`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
-
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
-
-        // Create metadata artifact
-        val (metadataArtifact, metadataDigest) = TestDataBuilders.createMetadataArtifact(
-            id = "metadata-1",
-            title = "Sentinel-2 L2A Dataset",
-            description = "Test dataset"
-        )
-
-        assertNotNull(metadataArtifact)
-        assertNotNull(metadataDigest)
-        assertTrue(metadataDigest.startsWith("z"))
-
-        // Create provenance artifact
-        val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
-            id = "provenance-1",
-            activity = "EO Data Collection",
-            agent = issuerDid
-        )
-
-        assertNotNull(provenanceArtifact)
-        assertNotNull(provenanceDigest)
-
-        // Create quality artifact
-        val (qualityArtifact, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
-            id = "quality-1",
-            qualityScore = 0.95,
-            metrics = mapOf(
-                "completeness" to 0.98,
-                "accuracy" to 0.92
-            )
-        )
-
-        assertNotNull(qualityArtifact)
-        assertNotNull(qualityDigest)
-    }
-
-    @Test
-    fun `test linkset creation`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
-
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
-
-        // Create artifacts
-        val (_, metadataDigest) = TestDataBuilders.createMetadataArtifact(
-            id = "metadata-1",
-            title = "Test Dataset",
-            description = "Test"
-        )
-
-        val (_, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
-            id = "provenance-1",
-            activity = "Collection",
-            agent = issuerDid
-        )
-
-        val (_, qualityDigest) = TestDataBuilders.createQualityReportArtifact(
-            id = "quality-1",
-            qualityScore = 0.95,
-            metrics = emptyMap()
-        )
-
-        // Create linkset
-        val links = listOf(
-            TestDataBuilders.buildLink(
-                href = "metadata-1",
-                digestMultibase = metadataDigest,
-                type = "Metadata"
-            ),
-            TestDataBuilders.buildLink(
-                href = "provenance-1",
-                digestMultibase = provenanceDigest,
-                type = "Provenance"
-            ),
-            TestDataBuilders.buildLink(
-                href = "quality-1",
-                digestMultibase = qualityDigest,
-                type = "QualityReport"
-            )
-        )
-
-        val linksetWithoutDigest = buildJsonObject {
-            put("@context", "https://www.w3.org/ns/json-ld#")
-            put("links", Json.encodeToJsonElement(links))
+            assertNotNull(issuerDid)
+            assertTrue(issuerDid.value.startsWith("did:key:"))
+            assertTrue(issuerDoc.verificationMethod.isNotEmpty())
         }
-        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
-        val linkset = TestDataBuilders.buildLinkset(
-            digestMultibase = linksetDigest,
-            links = links,
-            linksetId = "linkset-1"
-        )
-
-        assertNotNull(linkset)
-        val linksElement = linkset["links"]
-        assertNotNull(linksElement)
-        val linksArray = linksElement.jsonArray
-        assertEquals(3, linksArray.size)
-    }
 
     @Test
-    fun `test blockchain anchoring`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
-        val chainId = "algorand:testnet"
-        val anchorClient = InMemoryBlockchainAnchorClient(chainId)
+    fun `test artifact creation`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
 
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
 
-        // Create linkset
-        val (_, metadataDigest) = TestDataBuilders.createMetadataArtifact(
-            id = "metadata-1",
-            title = "Test Dataset",
-            description = "Test"
-        )
+            // Create metadata artifact
+            val (metadataArtifact, metadataDigest) =
+                TestDataBuilders.createMetadataArtifact(
+                    id = "metadata-1",
+                    title = "Sentinel-2 L2A Dataset",
+                    description = "Test dataset",
+                )
 
-        val links = listOf(
-            TestDataBuilders.buildLink(
-                href = "metadata-1",
-                digestMultibase = metadataDigest,
-                type = "Metadata"
-            )
-        )
+            assertNotNull(metadataArtifact)
+            assertNotNull(metadataDigest)
+            assertTrue(metadataDigest.startsWith("z"))
 
-        val linksetWithoutDigest = buildJsonObject {
-            put("@context", "https://www.w3.org/ns/json-ld#")
-            put("links", Json.encodeToJsonElement(links))
+            // Create provenance artifact
+            val (provenanceArtifact, provenanceDigest) =
+                TestDataBuilders.createProvenanceArtifact(
+                    id = "provenance-1",
+                    activity = "EO Data Collection",
+                    agent = issuerDid,
+                )
+
+            assertNotNull(provenanceArtifact)
+            assertNotNull(provenanceDigest)
+
+            // Create quality artifact
+            val (qualityArtifact, qualityDigest) =
+                TestDataBuilders.createQualityReportArtifact(
+                    id = "quality-1",
+                    qualityScore = 0.95,
+                    metrics =
+                        mapOf(
+                            "completeness" to 0.98,
+                            "accuracy" to 0.92,
+                        ),
+                )
+
+            assertNotNull(qualityArtifact)
+            assertNotNull(qualityDigest)
         }
-        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
-        val linkset = TestDataBuilders.buildLinkset(
-            digestMultibase = linksetDigest,
-            links = links,
-            linksetId = "linkset-1"
-        )
-
-        // Create credential referencing linkset
-        val vcSubject = buildJsonObject {
-            put("linkset", linkset)
-        }
-        val credential = TestDataBuilders.buildVc(
-            issuerDid = issuerDid,
-            subject = vcSubject,
-            digestMultibase = ""
-        )
-
-        // Anchor credential digest to blockchain
-        val anchorResult = anchorClient.writePayload(
-            payload = credential,
-            mediaType = "application/json"
-        )
-
-        assertNotNull(anchorResult)
-        assertNotNull(anchorResult.ref.txHash)
-        assertEquals(chainId, anchorResult.ref.chainId)
-    }
 
     @Test
-    fun `test integrity verification`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
-        val chainId = "algorand:testnet"
-        val anchorClient = InMemoryBlockchainAnchorClient(chainId)
-        val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
+    fun `test linkset creation`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
 
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
 
-        // Create artifacts
-        val (metadataArtifact, metadataDigest) = TestDataBuilders.createMetadataArtifact(
-            id = "metadata-1",
-            title = "Test Dataset",
-            description = "Test"
-        )
+            // Create artifacts
+            val (_, metadataDigest) =
+                TestDataBuilders.createMetadataArtifact(
+                    id = "metadata-1",
+                    title = "Test Dataset",
+                    description = "Test",
+                )
 
-        val (provenanceArtifact, provenanceDigest) = TestDataBuilders.createProvenanceArtifact(
-            id = "provenance-1",
-            activity = "Collection",
-            agent = issuerDid
-        )
+            val (_, provenanceDigest) =
+                TestDataBuilders.createProvenanceArtifact(
+                    id = "provenance-1",
+                    activity = "Collection",
+                    agent = issuerDid,
+                )
 
-        // Create linkset
-        val links = listOf(
-            TestDataBuilders.buildLink(
-                href = "metadata-1",
-                digestMultibase = metadataDigest,
-                type = "Metadata"
-            ),
-            TestDataBuilders.buildLink(
-                href = "provenance-1",
-                digestMultibase = provenanceDigest,
-                type = "Provenance"
-            )
-        )
+            val (_, qualityDigest) =
+                TestDataBuilders.createQualityReportArtifact(
+                    id = "quality-1",
+                    qualityScore = 0.95,
+                    metrics = emptyMap(),
+                )
 
-        // Build linkset first to get the final structure (including id field)
-        val linksetTemp = TestDataBuilders.buildLinkset(
-            digestMultibase = "", // Temporary empty digest
-            links = links,
-            linksetId = "linkset-1"
-        )
-        // Compute digest from linkset without digestMultibase (matching verifier logic)
-        val linksetWithoutDigest = buildJsonObject {
-            linksetTemp.entries.forEach { (key, value) ->
-                if (key != "digestMultibase") {
-                    put(key, value)
+            // Create linkset
+            val links =
+                listOf(
+                    TestDataBuilders.buildLink(
+                        href = "metadata-1",
+                        digestMultibase = metadataDigest,
+                        type = "Metadata",
+                    ),
+                    TestDataBuilders.buildLink(
+                        href = "provenance-1",
+                        digestMultibase = provenanceDigest,
+                        type = "Provenance",
+                    ),
+                    TestDataBuilders.buildLink(
+                        href = "quality-1",
+                        digestMultibase = qualityDigest,
+                        type = "QualityReport",
+                    ),
+                )
+
+            val linksetWithoutDigest =
+                buildJsonObject {
+                    put("@context", "https://www.w3.org/ns/json-ld#")
+                    put("links", Json.encodeToJsonElement(links))
                 }
-            }
+            val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+            val linkset =
+                TestDataBuilders.buildLinkset(
+                    digestMultibase = linksetDigest,
+                    links = links,
+                    linksetId = "linkset-1",
+                )
+
+            assertNotNull(linkset)
+            val linksElement = linkset["links"]
+            assertNotNull(linksElement)
+            val linksArray = linksElement.jsonArray
+            assertEquals(3, linksArray.size)
         }
-        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
-        // Build final linkset with computed digest
-        val linkset = TestDataBuilders.buildLinkset(
-            digestMultibase = linksetDigest,
-            links = links,
-            linksetId = "linkset-1"
-        )
-
-        // Create credential
-        val vcSubject = buildJsonObject {
-            put("linkset", linkset)
-        }
-        val credential = TestDataBuilders.buildVc(
-            issuerDid = issuerDid,
-            subject = vcSubject,
-            digestMultibase = ""
-        )
-
-        // Add linkset digest reference at top level BEFORE computing digest
-        // Use "linksetDigest" as a top-level string field (not nested object)
-        val credentialWithLinksetRef = buildJsonObject {
-            credential.entries.forEach { (key, value) ->
-                put(key, value)
-            }
-            // Add linkset digest reference at top level for verification
-            put("linksetDigest", linksetDigest)
-        }
-
-        // Compute VC digest (without metadata fields) - linkset reference is included
-        val vcWithoutMetadata = buildJsonObject {
-            credentialWithLinksetRef.entries.forEach { (key, value) ->
-                if (key != "digestMultibase" && key != "evidence" && key != "credentialStatus") {
-                    put(key, value)
-                }
-            }
-        }
-        val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata as JsonElement)
-
-        // Add VC digest to credential
-        val credentialWithDigest = buildJsonObject {
-            credentialWithLinksetRef.entries.forEach { (key, value) ->
-                put(key, value)
-            }
-            // Add VC digest
-            put("digestMultibase", vcDigest)
-        }
-
-        // Anchor to blockchain - anchor a digest payload (like in working tests)
-        val digestPayload = buildJsonObject {
-            put("vcDigest", vcDigest)
-            put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
-            put("issuer", JsonPrimitive(issuerDid.value))
-        }
-        val anchorResult = anchorClient.writePayload(
-            payload = digestPayload,
-            mediaType = "application/json"
-        )
-
-        // Verify integrity
-        val verificationResult = IntegrityVerifier.verifyIntegrityChain(
-            vc = credentialWithDigest,
-            linkset = linkset,
-            artifacts = mapOf(
-                "metadata-1" to metadataArtifact,
-                "provenance-1" to provenanceArtifact
-            ),
-            anchorRef = anchorResult.ref,
-            registry = blockchainRegistry
-        )
-
-        // Check individual verification steps
-        val vcStep = verificationResult.steps.find { it.name == "VC Digest" }
-        assertNotNull(vcStep, "VC Digest step should exist")
-        assertTrue(vcStep?.valid == true, "VC Digest verification failed: ${vcStep?.error}")
-
-        val linksetStep = verificationResult.steps.find { it.name == "Linkset Digest" }
-        assertNotNull(linksetStep, "Linkset Digest step should exist")
-        assertTrue(linksetStep?.valid == true, "Linkset Digest verification failed: ${linksetStep?.error}")
-
-        val artifactSteps = verificationResult.steps.filter { it.name.contains("Artifact") }
-        assertTrue(artifactSteps.isNotEmpty(), "Should have artifact verification steps")
-        artifactSteps.forEach { step ->
-            assertTrue(step.valid, "Artifact verification failed for ${step.name}: ${step.error}")
-        }
-
-        assertTrue(verificationResult.valid, "All verification steps should pass")
-    }
 
     @Test
-    fun `test reading anchored payload`() = runBlocking<Unit> {
-        // Setup
-        val kms = InMemoryKeyManagementService()
-        val didMethod = DidKeyMockMethod(kms)
-        val chainId = "algorand:testnet"
-        val anchorClient = InMemoryBlockchainAnchorClient(chainId)
+    fun `test blockchain anchoring`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
+            val chainId = "algorand:testnet"
+            val anchorClient = InMemoryBlockchainAnchorClient(chainId)
 
-        val issuerDoc = didMethod.createDid()
-        val issuerDid = issuerDoc.id
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
 
-        // Create linkset
-        val (_, metadataDigest) = TestDataBuilders.createMetadataArtifact(
-            id = "metadata-1",
-            title = "Test Dataset",
-            description = "Test"
-        )
+            // Create linkset
+            val (_, metadataDigest) =
+                TestDataBuilders.createMetadataArtifact(
+                    id = "metadata-1",
+                    title = "Test Dataset",
+                    description = "Test",
+                )
 
-        val links = listOf(
-            TestDataBuilders.buildLink(
-                href = "metadata-1",
-                digestMultibase = metadataDigest,
-                type = "Metadata"
-            )
-        )
+            val links =
+                listOf(
+                    TestDataBuilders.buildLink(
+                        href = "metadata-1",
+                        digestMultibase = metadataDigest,
+                        type = "Metadata",
+                    ),
+                )
 
-        val linksetWithoutDigest = buildJsonObject {
-            put("@context", "https://www.w3.org/ns/json-ld#")
-            put("links", Json.encodeToJsonElement(links))
+            val linksetWithoutDigest =
+                buildJsonObject {
+                    put("@context", "https://www.w3.org/ns/json-ld#")
+                    put("links", Json.encodeToJsonElement(links))
+                }
+            val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+            val linkset =
+                TestDataBuilders.buildLinkset(
+                    digestMultibase = linksetDigest,
+                    links = links,
+                    linksetId = "linkset-1",
+                )
+
+            // Create credential referencing linkset
+            val vcSubject =
+                buildJsonObject {
+                    put("linkset", linkset)
+                }
+            val credential =
+                TestDataBuilders.buildVc(
+                    issuerDid = issuerDid,
+                    subject = vcSubject,
+                    digestMultibase = "",
+                )
+
+            // Anchor credential digest to blockchain
+            val anchorResult =
+                anchorClient.writePayload(
+                    payload = credential,
+                    mediaType = "application/json",
+                )
+
+            assertNotNull(anchorResult)
+            assertNotNull(anchorResult.ref.txHash)
+            assertEquals(chainId, anchorResult.ref.chainId)
         }
-        val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
-        val linkset = TestDataBuilders.buildLinkset(
-            digestMultibase = linksetDigest,
-            links = links
-        )
 
-        // Create credential
-        val vcSubject = buildJsonObject {
-            put("linkset", linkset)
+    @Test
+    fun `test integrity verification`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
+            val chainId = "algorand:testnet"
+            val anchorClient = InMemoryBlockchainAnchorClient(chainId)
+            val blockchainRegistry = DefaultBlockchainAnchorRegistry().apply { register(chainId, anchorClient) }
+
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
+
+            // Create artifacts
+            val (metadataArtifact, metadataDigest) =
+                TestDataBuilders.createMetadataArtifact(
+                    id = "metadata-1",
+                    title = "Test Dataset",
+                    description = "Test",
+                )
+
+            val (provenanceArtifact, provenanceDigest) =
+                TestDataBuilders.createProvenanceArtifact(
+                    id = "provenance-1",
+                    activity = "Collection",
+                    agent = issuerDid,
+                )
+
+            // Create linkset
+            val links =
+                listOf(
+                    TestDataBuilders.buildLink(
+                        href = "metadata-1",
+                        digestMultibase = metadataDigest,
+                        type = "Metadata",
+                    ),
+                    TestDataBuilders.buildLink(
+                        href = "provenance-1",
+                        digestMultibase = provenanceDigest,
+                        type = "Provenance",
+                    ),
+                )
+
+            // Build linkset first to get the final structure (including id field)
+            val linksetTemp =
+                TestDataBuilders.buildLinkset(
+                    digestMultibase = "", // Temporary empty digest
+                    links = links,
+                    linksetId = "linkset-1",
+                )
+            // Compute digest from linkset without digestMultibase (matching verifier logic)
+            val linksetWithoutDigest =
+                buildJsonObject {
+                    linksetTemp.entries.forEach { (key, value) ->
+                        if (key != "digestMultibase") {
+                            put(key, value)
+                        }
+                    }
+                }
+            val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+            // Build final linkset with computed digest
+            val linkset =
+                TestDataBuilders.buildLinkset(
+                    digestMultibase = linksetDigest,
+                    links = links,
+                    linksetId = "linkset-1",
+                )
+
+            // Create credential
+            val vcSubject =
+                buildJsonObject {
+                    put("linkset", linkset)
+                }
+            val credential =
+                TestDataBuilders.buildVc(
+                    issuerDid = issuerDid,
+                    subject = vcSubject,
+                    digestMultibase = "",
+                )
+
+            // Add linkset digest reference at top level BEFORE computing digest
+            // Use "linksetDigest" as a top-level string field (not nested object)
+            val credentialWithLinksetRef =
+                buildJsonObject {
+                    credential.entries.forEach { (key, value) ->
+                        put(key, value)
+                    }
+                    // Add linkset digest reference at top level for verification
+                    put("linksetDigest", linksetDigest)
+                }
+
+            // Compute VC digest (without metadata fields) - linkset reference is included
+            val vcWithoutMetadata =
+                buildJsonObject {
+                    credentialWithLinksetRef.entries.forEach { (key, value) ->
+                        if (key != "digestMultibase" && key != "evidence" && key != "credentialStatus") {
+                            put(key, value)
+                        }
+                    }
+                }
+            val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata as JsonElement)
+
+            // Add VC digest to credential
+            val credentialWithDigest =
+                buildJsonObject {
+                    credentialWithLinksetRef.entries.forEach { (key, value) ->
+                        put(key, value)
+                    }
+                    // Add VC digest
+                    put("digestMultibase", vcDigest)
+                }
+
+            // Anchor to blockchain - anchor a digest payload (like in working tests)
+            val digestPayload =
+                buildJsonObject {
+                    put("vcDigest", vcDigest)
+                    put("digestMultibase", vcDigest) // Also include as digestMultibase for verifier
+                    put("issuer", JsonPrimitive(issuerDid.value))
+                }
+            val anchorResult =
+                anchorClient.writePayload(
+                    payload = digestPayload,
+                    mediaType = "application/json",
+                )
+
+            // Verify integrity
+            val verificationResult =
+                IntegrityVerifier.verifyIntegrityChain(
+                    vc = credentialWithDigest,
+                    linkset = linkset,
+                    artifacts =
+                        mapOf(
+                            "metadata-1" to metadataArtifact,
+                            "provenance-1" to provenanceArtifact,
+                        ),
+                    anchorRef = anchorResult.ref,
+                    registry = blockchainRegistry,
+                )
+
+            // Check individual verification steps
+            val vcStep = verificationResult.steps.find { it.name == "VC Digest" }
+            assertNotNull(vcStep, "VC Digest step should exist")
+            assertTrue(vcStep?.valid == true, "VC Digest verification failed: ${vcStep?.error}")
+
+            val linksetStep = verificationResult.steps.find { it.name == "Linkset Digest" }
+            assertNotNull(linksetStep, "Linkset Digest step should exist")
+            assertTrue(linksetStep?.valid == true, "Linkset Digest verification failed: ${linksetStep?.error}")
+
+            val artifactSteps = verificationResult.steps.filter { it.name.contains("Artifact") }
+            assertTrue(artifactSteps.isNotEmpty(), "Should have artifact verification steps")
+            artifactSteps.forEach { step ->
+                assertTrue(step.valid, "Artifact verification failed for ${step.name}: ${step.error}")
+            }
+
+            assertTrue(verificationResult.valid, "All verification steps should pass")
         }
-        val credential = TestDataBuilders.buildVc(
-            issuerDid = issuerDid,
-            subject = vcSubject,
-            digestMultibase = ""
-        )
 
-        // Anchor to blockchain
-        val anchorResult = anchorClient.writePayload(
-            payload = credential,
-            mediaType = "application/json"
-        )
+    @Test
+    fun `test reading anchored payload`() =
+        runBlocking<Unit> {
+            // Setup
+            val kms = InMemoryKeyManagementService()
+            val didMethod = DidKeyMockMethod(kms)
+            val chainId = "algorand:testnet"
+            val anchorClient = InMemoryBlockchainAnchorClient(chainId)
 
-        // Read back from blockchain
-        val readResult = anchorClient.readPayload(anchorResult.ref)
+            val issuerDoc = didMethod.createDid()
+            val issuerDid = issuerDoc.id
 
-        assertNotNull(readResult)
-        assertEquals(anchorResult.ref.txHash, readResult.ref.txHash)
-        assertEquals(chainId, readResult.ref.chainId)
-    }
+            // Create linkset
+            val (_, metadataDigest) =
+                TestDataBuilders.createMetadataArtifact(
+                    id = "metadata-1",
+                    title = "Test Dataset",
+                    description = "Test",
+                )
+
+            val links =
+                listOf(
+                    TestDataBuilders.buildLink(
+                        href = "metadata-1",
+                        digestMultibase = metadataDigest,
+                        type = "Metadata",
+                    ),
+                )
+
+            val linksetWithoutDigest =
+                buildJsonObject {
+                    put("@context", "https://www.w3.org/ns/json-ld#")
+                    put("links", Json.encodeToJsonElement(links))
+                }
+            val linksetDigest = DigestUtils.sha256DigestMultibase(linksetWithoutDigest as JsonElement)
+            val linkset =
+                TestDataBuilders.buildLinkset(
+                    digestMultibase = linksetDigest,
+                    links = links,
+                )
+
+            // Create credential
+            val vcSubject =
+                buildJsonObject {
+                    put("linkset", linkset)
+                }
+            val credential =
+                TestDataBuilders.buildVc(
+                    issuerDid = issuerDid,
+                    subject = vcSubject,
+                    digestMultibase = "",
+                )
+
+            // Anchor to blockchain
+            val anchorResult =
+                anchorClient.writePayload(
+                    payload = credential,
+                    mediaType = "application/json",
+                )
+
+            // Read back from blockchain
+            val readResult = anchorClient.readPayload(anchorResult.ref)
+
+            assertNotNull(readResult)
+            assertEquals(anchorResult.ref.txHash, readResult.ref.txHash)
+            assertEquals(chainId, readResult.ref.chainId)
+        }
 }

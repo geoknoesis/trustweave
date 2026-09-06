@@ -7,10 +7,9 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class XmlDateTimeTest {
-
     @Serializable
     private data class Holder(
-        @Serializable(with = XmlDateTimeSerializer::class) val at: Instant
+        @Serializable(with = XmlDateTimeSerializer::class) val at: Instant,
     )
 
     @Test

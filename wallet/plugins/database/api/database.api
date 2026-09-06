@@ -1,0 +1,45 @@
+public final class org/trustweave/wallet/database/DatabaseWallet : org/trustweave/wallet/CredentialOrganization, org/trustweave/wallet/CredentialRecordStorage, org/trustweave/wallet/CredentialStorage, org/trustweave/wallet/PagedCredentialStorage, org/trustweave/wallet/Wallet {
+	public static final field Companion Lorg/trustweave/wallet/database/DatabaseWallet$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljavax/sql/DataSource;ZLorg/trustweave/wallet/WalletStatusResolver;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljavax/sql/DataSource;ZLorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun addMetadata (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun addToCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun createCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun findByTag (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAllTags (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/wallet/WalletCapabilities;
+	public fun getCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCredentialsInCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getHolderDid ()Ljava/lang/String;
+	public fun getMetadata (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTags (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getWalletDid ()Ljava/lang/String;
+	public fun getWalletId ()Ljava/lang/String;
+	public fun list (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listCollections (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listRecords (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun pageRecords (ILjava/lang/String;Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun removeFromCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tagCredential (Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun untagCredential (Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateNotes (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/wallet/database/DatabaseWallet$Companion {
+	public final fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljavax/sql/DataSource;ZLorg/trustweave/wallet/WalletStatusResolver;)Lorg/trustweave/wallet/database/DatabaseWallet;
+	public static synthetic fun create$default (Lorg/trustweave/wallet/database/DatabaseWallet$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljavax/sql/DataSource;ZLorg/trustweave/wallet/WalletStatusResolver;ILjava/lang/Object;)Lorg/trustweave/wallet/database/DatabaseWallet;
+}
+
+public final class org/trustweave/wallet/database/DatabaseWalletFactory : org/trustweave/wallet/services/WalletFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createInMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

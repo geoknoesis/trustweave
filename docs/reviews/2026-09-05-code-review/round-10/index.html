@@ -1,0 +1,845 @@
+<title>Independent Baseline Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F6F8F9;
+    --surface: #FFFFFF;
+    --surface-sunk: #EFF3F4;
+    --ink: #15202A;
+    --ink-muted: #586775;
+    --ink-faint: #8595A2;
+    --rule: #DCE4E7;
+    --rule-strong: #C3CFD4;
+    --accent: #1C5F6B;
+    --accent-soft: #E3EFF1;
+    --high: #A33A2A;
+    --high-soft: #F7E7E3;
+    --med: #9A6A16;
+    --med-soft: #F8EFDD;
+    --ok: #37714A;
+    --ok-soft: #E4F0E8;
+    --shadow: 0 1px 2px rgba(21, 32, 42, .05), 0 8px 24px -16px rgba(21, 32, 42, .25);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F151A;
+      --surface: #151D24;
+      --surface-sunk: #1B242C;
+      --ink: #E3EAEF;
+      --ink-muted: #93A3AF;
+      --ink-faint: #6C7C88;
+      --rule: #27333C;
+      --rule-strong: #38474F;
+      --accent: #62B4C0;
+      --accent-soft: #16323A;
+      --high: #E1866F;
+      --high-soft: #38201B;
+      --med: #DCAC57;
+      --med-soft: #33280F;
+      --ok: #77B98C;
+      --ok-soft: #17301F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F151A;
+    --surface: #151D24;
+    --surface-sunk: #1B242C;
+    --ink: #E3EAEF;
+    --ink-muted: #93A3AF;
+    --ink-faint: #6C7C88;
+    --rule: #27333C;
+    --rule-strong: #38474F;
+    --accent: #62B4C0;
+    --accent-soft: #16323A;
+    --high: #E1866F;
+    --high-soft: #38201B;
+    --med: #DCAC57;
+    --med-soft: #33280F;
+    --ok: #77B98C;
+    --ok-soft: #17301F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+  }
+
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  code {
+    font-size: .85em;
+    background: var(--surface-sunk);
+    border-radius: 3px;
+    padding: .1em .35em;
+    word-break: break-word;
+  }
+
+  h1, h2, h3 {
+    font-family: Newsreader, Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: 2.7rem; letter-spacing: -.015em; }
+  h2 { font-size: 1.75rem; letter-spacing: -.01em; }
+  h3 { font-size: 1.16rem; font-weight: 600; }
+
+  p { margin: 0; max-width: 68ch; }
+
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 16px; }
+
+  .masthead .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-size: .82rem;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+  }
+
+  .masthead .meta b { font-weight: 600; color: var(--ink); }
+
+  .lede { font-size: 1.12rem; color: var(--ink-muted); max-width: 66ch; }
+
+  /* ---------- section scaffolding ---------- */
+
+  section { display: flex; flex-direction: column; gap: 22px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 7px; }
+
+  /* ---------- verdict ---------- */
+
+  .verdict {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  .repo-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 24px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .repo-card .name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .88rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .repo-card .figure {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .repo-card .figure .n {
+    font-family: Newsreader, Georgia, serif;
+    font-size: 3.4rem;
+    line-height: .95;
+    font-weight: 500;
+    letter-spacing: -.02em;
+  }
+
+  .repo-card .figure .d { font-size: 1rem; color: var(--ink-faint); }
+
+  .repo-card .verdict-line { font-size: .95rem; color: var(--ink-muted); }
+
+  .repo-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 14px;
+    font-size: .87rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+
+  .repo-card dt { color: var(--ink-muted); }
+
+  .repo-card dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", monospace;
+    font-size: .84rem;
+  }
+
+  /* ---------- findings ---------- */
+
+  .findings { display: flex; flex-direction: column; gap: 14px; }
+
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--stripe, var(--rule-strong));
+    border-radius: 0 5px 5px 0;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .finding.sev-high { --stripe: var(--high); }
+  .finding.sev-med { --stripe: var(--med); }
+  .finding.sev-low { --stripe: var(--rule-strong); }
+
+  .finding-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .fid {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    letter-spacing: .02em;
+  }
+
+  .pill {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .2em .6em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .pill.high { background: var(--high-soft); color: var(--high); }
+  .pill.med { background: var(--med-soft); color: var(--med); }
+  .pill.low { background: var(--surface-sunk); color: var(--ink-muted); }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+
+  .finding h3 { flex: 1 1 320px; }
+
+  .finding p { font-size: .95rem; }
+
+  .evidence {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .78rem;
+    color: var(--ink-muted);
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: 9px 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.55;
+  }
+
+  .fix {
+    font-size: .92rem;
+    border-top: 1px dashed var(--rule);
+    padding-top: 9px;
+    color: var(--ink-muted);
+  }
+
+  .fix b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- tables ---------- */
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    min-width: 480px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    border-bottom-color: var(--rule-strong);
+  }
+
+  td.num {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-right: 0;
+  }
+
+  tr.total td {
+    border-bottom: none;
+    border-top: 2px solid var(--rule-strong);
+    font-weight: 600;
+    padding-top: 11px;
+  }
+
+  /* ---------- closed list ---------- */
+
+  .closed {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .closed-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--rule);
+    font-size: .93rem;
+  }
+
+  .closed-row:last-child { border-bottom: none; }
+
+  .closed-row .tick { color: var(--ok); font-weight: 700; line-height: 1.6; }
+
+  .closed-row .body { display: flex; flex-direction: column; gap: 3px; }
+
+  .closed-row .where {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .76rem;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- priority ---------- */
+
+  ol.priority {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: p;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  ol.priority li {
+    counter-increment: p;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    font-size: .96rem;
+  }
+
+  ol.priority li::before {
+    content: counter(p);
+    font-family: Newsreader, Georgia, serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    text-align: right;
+    line-height: 1;
+  }
+
+  ol.priority b { font-weight: 600; }
+
+  /* ---------- callout ---------- */
+
+  .note {
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 18px 22px;
+    font-size: .95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .note .eyebrow { color: var(--accent); }
+
+  .note p { max-width: 72ch; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+    font-size: .86rem;
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  a { color: var(--accent); }
+
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 620px) {
+    h1 { font-size: 2.1rem; }
+    .wrap { padding: 36px 18px 64px; gap: 40px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Code review &middot; Round 10 &middot; Independent baseline</div>
+    <h1>Two repositories, measured from scratch</h1>
+    <p class="lede">A fresh pass over the TrustWeave SDK and the TrustWeave SaaS, scored without reference to the nine remediation rounds that came before it. Four previously-reported HIGH findings verified closed; three new authorization gaps found in the Verifiable Intent chain verifier.</p>
+    <div class="meta">
+      <span><b>2026-09-05</b></span>
+      <span>SDK <b>231,134</b> LOC main / <b>87,152</b> test / 106 modules</span>
+      <span>SaaS <b>22,189</b> LOC main / <b>12,998</b> test / 187 frontend sources</span>
+      <span>Method: <b>static analysis</b>, no build executed</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <div class="repo-card">
+        <div class="name">trustweave</div>
+        <div class="figure"><span class="n">7.0</span><span class="d">/ 10</span></div>
+        <p class="verdict-line">Cryptographic core is disciplined and fails closed. The weak edge is the newest plugin &mdash; Verifiable Intent &mdash; plus release engineering for a 106-module published SDK.</p>
+        <dl>
+          <dt>Security</dt><dd>7.5</dd>
+          <dt>Correctness</dt><dd>8.0</dd>
+          <dt>Architecture</dt><dd>7.0</dd>
+          <dt>Testing</dt><dd>6.5</dd>
+          <dt>Supply chain &amp; CI</dt><dd>6.0</dd>
+        </dl>
+      </div>
+      <div class="repo-card">
+        <div class="name">trustweave-saas</div>
+        <div class="figure"><span class="n">6.9</span><span class="d">/ 10</span></div>
+        <p class="verdict-line">Tenant isolation and authorization are consistently right where I traced them. Schema ownership is split against itself, and the backend has no static analysis at all.</p>
+        <dl>
+          <dt>Security</dt><dd>8.0</dd>
+          <dt>Correctness</dt><dd>7.0</dd>
+          <dt>Architecture</dt><dd>7.0</dd>
+          <dt>Testing</dt><dd>7.0</dd>
+          <dt>Supply chain &amp; CI</dt><dd>5.0</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="eyebrow">On the gap with round 9</div>
+      <p>Round 9 scored these 98 and 96. That number answers a different question: it measures how completely each round's own findings were remediated, and it is accurate for that. This one measures the codebase against what a security-critical identity SDK needs before a 1.0 &mdash; including things no prior round had opened, like the constraint-enforcement asymmetry below and the absence of API-surface control. Both readings can be true at once.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">TrustWeave SDK</div>
+      <h2>Findings</h2>
+      <p>Eleven findings. The two HIGH items are in <code>credentials/plugins/verifiable-intent</code>, the plugin that carries payment authorization.</p>
+    </div>
+
+    <div class="findings">
+
+      <article class="finding sev-high">
+        <div class="finding-head">
+          <span class="pill high">High</span>
+          <h3>L3 checkout fulfilments are never constraint-checked</h3>
+          <span class="fid">TW-R10-01</span>
+        </div>
+        <p><code>ConstraintChecker.check</code> has exactly one call site in the whole repository, and it sits inside the <code>if (l3Payment != null)</code> branch. When an agent presents only an L3 checkout, <code>verifyL3</code> runs its signature, <code>sd_hash</code>, pair-identity and temporal checks &mdash; and then no constraint from the L2 checkout mandate is evaluated at all. That includes <code>mandate.checkout.line_items</code>, the constraint that bounds <em>what the agent may buy</em>.</p>
+        <p>The chain verifier only checks that a <code>line_items</code> constraint is <em>present</em> (<code>open_checkout_contains_line_items</code>), never that the fulfilment satisfies it. This also routes around ConstraintChecker's deliberate fail-closed handling: that class refuses an open mandate whose <code>line_items</code> it cannot evaluate, and the checkout path never asks it. Structurally this is the same shape as the omit-payment-mandate bypass closed earlier &mdash; an L3 accepted with its authority unbounded.</p>
+        <div class="evidence">ChainVerifier.kt:236   only ConstraintChecker.check call site, inside `if (l3Payment != null)`
+ChainVerifier.kt:279   `if (l3Checkout != null) { verifyL3(...); l3CheckoutResolved = l3Checkout.resolve() }`
+ConstraintChecker.kt:71  line_items → fails closed for open mandates, if it is ever reached</div>
+        <div class="fix"><b>Fix:</b> lift the constraint block into a helper taking (mandate, fulfilment, requiredVct) and call it from both L3 branches. The checkout side should fail closed on unevaluable <code>line_items</code> exactly as the payment side does today.</div>
+      </article>
+
+      <article class="finding sev-high">
+        <div class="finding-head">
+          <span class="pill high">High</span>
+          <h3>Replay protection is opt-in and silently skipped</h3>
+          <span class="fid">TW-R10-02</span>
+        </div>
+        <p><code>verifyChain</code> takes <code>expectedL2Aud</code> and <code>expectedL2Nonce</code> defaulted to <code>null</code>. A verifier that omits them gets <code>valid = true</code> with a note in <code>checksSkipped</code> &mdash; a field nothing forces the caller to read. A captured presentation replays against a different verifier.</p>
+        <p>The contrast inside the same signature makes the case: <code>now</code> carries a comment explaining that it defaults to the host clock precisely so a caller who omits it cannot accidentally pin verification to a time of the presenter's choosing. Audience and nonce were not given the same treatment, and they are the two parameters a presentation verifier most needs.</p>
+        <div class="evidence">ChainVerifier.kt:55-56    expectedL2Aud: String? = null, expectedL2Nonce: String? = null
+ChainVerifier.kt:83,466   audNonce() records "skipped" and returns null → chain still valid
+VerifiableIntent.kt:38-39  same defaults on the public facade</div>
+        <div class="fix"><b>Fix:</b> make both required for presentation verification, or add <code>requireReplayProtection: Boolean = true</code> that fails the chain when either expected value is absent. Leave an explicit opt-out for the offline/audit case.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>A missing <code>exp</code> means never expires</h3>
+          <span class="fid">TW-R10-03</span>
+        </div>
+        <p><code>expired()</code> and <code>future()</code> both return <code>null</code> &mdash; pass &mdash; when the claim is absent. An L1, L2 or L3 with no <code>exp</code> clears every temporal check. The one-hour L3 lifetime cap is likewise conditional on both <code>iat</code> and <code>exp</code> being present, so omitting <code>exp</code> removes the cap rather than tripping it.</p>
+        <div class="evidence">ChainVerifier.kt  expired(): `val v = (exp as? JsonPrimitive)?.longOrNull ?: return null`
+ChainVerifier.kt  `if (iat != null &amp;&amp; exp != null &amp;&amp; exp - iat &gt; MAX_L3_LIFETIME_SECONDS)`</div>
+        <div class="fix"><b>Fix:</b> require <code>exp</code> and <code>iat</code> on L3 at minimum, and treat their absence at L1/L2 as a policy decision the caller states rather than a silent pass.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>Payment-instrument cross-check passes when the L2 side is absent</h3>
+          <span class="fid">TW-R10-04</span>
+        </div>
+        <p><code>paymentInstrumentCrossCheck</code> returns <code>null</code> (pass) when the L2 payment mandate carries no <code>payment_instrument</code>. The L3 side is required to have one by <code>paymentRequiredFields</code>; the L2 open mandate is not. So an open mandate that never named an instrument authorizes an L3 that names any instrument, and the check reports nothing.</p>
+        <div class="evidence">ChainVerifier.kt  `val l2Pi = (l2Payment?.get("payment_instrument") as? JsonObject) ?: return null`</div>
+        <div class="fix"><b>Fix:</b> require <code>payment_instrument</code> on the open payment mandate, or record the skip in <code>checksSkipped</code> so it is at least visible to the caller.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>7,354 lines of production code with no tests</h3>
+          <span class="fid">TW-R10-05</span>
+        </div>
+        <p>Twenty-one modules have a <code>src/main</code> and no test source set at all. Nine are DID method plugins the SDK advertises as supported methods. The repository has 3,975 tests overall, so this is not thin testing &mdash; it is a cliff at the plugin edge.</p>
+        <div class="evidence">932  credentials/plugins/status-list/database    501  did/plugins/plc
+768  did/plugins/sol                             478  did/registrar-server-ktor
+725  did/plugins/ion                             430  did/plugins/ens
+548  did/plugins/cheqd                           309  credentials/plugins/anchor
+541  did/plugins/polygon                         277  wallet/wallet-services
+514  credentials/plugins/chapi                   182  credentials/plugins/status-list/server
+511  did/registrar-server-spring                 161  anchors/plugins/starknet
++ btcr, tezos, threebox, venafi, salesforce, servicenow</div>
+        <div class="fix"><b>Fix:</b> the DID plugins share a resolution/creation contract &mdash; one parameterised conformance suite in <code>testkit</code> would cover nine of these at once, the way <code>InMemoryKmsContractConformanceTest</code> already does for KMS.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>No API-surface control on 106 published modules</h3>
+          <span class="fid">TW-R10-06</span>
+        </div>
+        <p>Neither <code>explicitApi()</code> nor the binary-compatibility validator is applied anywhere in the build (the only matches in the tree are inside <code>node_modules</code>). Every declaration is public by default, and nothing mechanically catches an ABI break before it ships to consumers. For a library at 0.7.0 that has already had to write release notes for three signature-format changes, this is the gap that keeps producing them.</p>
+        <div class="evidence">build.gradle.kts  freeCompilerArgs = ["-Xjsr305=strict"] only; no explicitApi, no apiValidation
+grep explicitApi|binary-compatibility-validator → matches only under reference-wallet/expo/node_modules</div>
+        <div class="fix"><b>Fix:</b> apply <code>binary-compatibility-validator</code> and commit <code>.api</code> dumps &mdash; that alone turns an ABI break into a failed PR. Then adopt <code>explicitApi()</code> module by module, starting with the five <code>-core</code> modules.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>108 exceptions swallowed without a log line</h3>
+          <span class="fid">TW-R10-07</span>
+        </div>
+        <p>Of 536 broad <code>catch (e: Exception|Throwable)</code> blocks in main source, 35 have an empty body and 73 return a bare <code>null</code>/<code>false</code> with nothing recorded. I traced the ones in the verification path &mdash; <code>PresentationVerification.kt</code>, <code>SdJwtProofEngine.kt</code>, <code>ProofEngineUtils.kt</code> &mdash; and they are all genuinely fail-closed, so this is not a correctness finding. It is an operability one: a verification that failed because a JWT would not parse is indistinguishable, from the outside, from one that failed because a signature was wrong.</p>
+        <div class="evidence">PresentationVerification.kt:284,321,527,605   SdJwtProofEngine.kt:463,643,744
+ProofEngineUtils.kt:506,677                   BlockchainAnchor.kt:145
+AbstractEvmAnchorClient.kt:258,362,408,491,498  ProviderChain.kt:63</div>
+        <div class="fix"><b>Fix:</b> a debug-level log at each swallow point, carrying the exception. Worth doing before the anchor plugins go to production, where these are network failures being reported as clean negatives.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>Coverage measured on 3 of 106 modules</h3>
+          <span class="fid">TW-R10-08</span>
+        </div>
+        <p>Kover is applied in <code>credentials/credential-api</code> and <code>kms/kms-core</code> only, and CI runs no coverage task and enforces no threshold. There is no repo-wide number, which is how TW-R10-05 stayed invisible.</p>
+        <div class="fix"><b>Fix:</b> apply Kover in the root <code>subprojects {}</code> block next to ktlint and add a merged report to CI. A threshold can come later; the number is the useful part now.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>32,692 lint violations permanently baselined</h3>
+          <span class="fid">TW-R10-09</span>
+        </div>
+        <p>Across 123 <code>config/ktlint/baseline.xml</code> files. The gate on new code works and is the right call &mdash; but a baseline this size is indefinite debt, and it grows every time a module is legitimately re-baselined.</p>
+        <div class="fix"><b>Fix:</b> a scheduled <code>ktlintFormat</code> sweep, one domain per release, shrinking the baseline on a known cadence rather than never.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>No signing, SBOM, or provenance on published artifacts</h3>
+          <span class="fid">TW-R10-10</span>
+        </div>
+        <p>The build publishes to Maven with no GPG signature, no CycloneDX SBOM, and no build attestation. Dependabot is configured for both Gradle and Actions (good), but there is no CodeQL or other SAST, and CI is a single OS on a single JDK. For a library whose value proposition is verifiable trust, artifact provenance is close to table stakes.</p>
+        <div class="fix"><b>Fix:</b> GPG signing is required for Maven Central anyway &mdash; do it now. Add <code>cyclonedx-gradle-plugin</code> and GitHub artifact attestation to the release workflow.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>Test dependencies invert the module layering</h3>
+          <span class="fid">TW-R10-11</span>
+        </div>
+        <p><code>credentials/credential-api</code> declares a <code>testImplementation</code> on <code>:trust</code>, the facade that sits above it, and <code>did/did-core</code> does the same on <code>:did:registrar</code>. Production layering is clean and acyclic; the test configurations quietly are not, which constrains how these modules can be split or published independently.</p>
+        <div class="evidence">credentials/credential-api/build.gradle.kts:42  testImplementation(project(":trust"))
+did/did-core/build.gradle.kts:23               testImplementation(project(":did:registrar"))</div>
+        <div class="fix"><b>Fix:</b> move those tests up into <code>:trust</code>, or push the shared fixtures down into <code>:testkit</code> where the rest of the doubles already live.</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">TrustWeave SaaS</div>
+      <h2>Findings</h2>
+      <p>Six findings. Nothing I traced was an authorization defect &mdash; the pressure here is on schema ownership and on the tooling that is present in the library repo and absent in this one.</p>
+    </div>
+
+    <div class="findings">
+
+      <article class="finding sev-high">
+        <div class="finding-head">
+          <span class="pill high">High</span>
+          <h3>The default profile lets Hibernate own the schema, with Flyway switched off</h3>
+          <span class="fid">SA-R10-01</span>
+        </div>
+        <p><code>application.yml</code> sets <code>ddl-auto: update</code> and <code>flyway.enabled: false</code>. The 29 hand-written migrations are therefore never applied on the default path &mdash; Hibernate derives the schema from the entities instead. Everything that exists only in SQL is silently absent there: the check constraints in <code>V9__data_integrity_constraints.sql</code>, the index in <code>V24__webhook_recovery_monitor_index.sql</code>, the seed rows in <code>V4__Add_blockchain_network_seed_data.sql</code>.</p>
+        <p>The team knows: the staging profile carries a comment saying "the default profile's <code>update</code> has been hiding gaps that only a fresh database reveals." Both deployment profiles correctly use <code>validate</code> + Flyway. What is missing is a CI job that boots against a clean Postgres under those settings, so the drift is still only discovered at deploy time.</p>
+        <div class="evidence">application.yml:16     ddl-auto: update
+application.yml:24     flyway.enabled: false
+application-staging.yml / application-fly.yml   ddl-auto: validate, flyway.enabled: true
+.github/workflows/ci.yml   runs :server:test only — no fresh-DB migration boot</div>
+        <div class="fix"><b>Fix:</b> add a CI job that starts a clean Postgres, runs the app with <code>SPRING_PROFILES_ACTIVE=staging</code>, and fails on a <code>validate</code> mismatch. Then flip the default profile to <code>validate</code> + Flyway so dev and prod agree by construction.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>No static analysis on 22k lines of backend Kotlin</h3>
+          <span class="fid">SA-R10-02</span>
+        </div>
+        <p>No ktlint, no detekt, no spotless anywhere in the SaaS build. The library repo enforces ktlint on all 106 modules and gates PRs on it; this repo, which handles tenancy, billing and key custody, has none. The frontend is better served &mdash; CI runs lint, tests and a production build.</p>
+        <div class="fix"><b>Fix:</b> apply ktlint with a generated baseline, mirroring the library's setup, and add <code>ktlintCheck</code> to the backend CI job. detekt would add real value here given the amount of authorization logic.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>No dependency update or audit path</h3>
+          <span class="fid">SA-R10-03</span>
+        </div>
+        <p>No <code>.github/dependabot.yml</code> in this repo, and no <code>npm audit</code> step in CI, on a Spring Boot service with 16 frontend runtime dependencies and a Keycloak/Stripe/Kill Bill surface. The library repo has Dependabot for both Gradle and Actions.</p>
+        <div class="fix"><b>Fix:</b> copy the library's <code>dependabot.yml</code> and add npm and Docker ecosystems; add <code>npm audit --audit-level=high</code> to the frontend job.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>Tenant isolation holds by convention, not by construction</h3>
+          <span class="fid">SA-R10-04</span>
+        </div>
+        <p>The security config is properly fail-closed &mdash; <code>anyRequest().denyAll()</code> &mdash; but <code>/api/**</code> resolves only to <code>.authenticated()</code>. Every one of the 44 controllers must therefore remember to call <code>tenantContext.require*</code> itself. The ones I traced do it correctly, including a post-fetch ownership re-check, and the three dev-only controllers are properly <code>@Profile("dev")</code>. The discipline is real; nothing enforces it.</p>
+        <div class="evidence">KeycloakSecurityConfig.kt   .requestMatchers("/api/**").authenticated()
+OrganizationController.kt:39   tenantContext.requireOrganizationAccess(id)   ✓
+CredentialOfferController.kt:110-114   requireTrustSpaceAccess + offer.organizationId == orgId   ✓
+DevController / InMemoryTestnetController / DemoWalletVerifierController → @Profile("dev")  ✓</div>
+        <div class="fix"><b>Fix:</b> an ArchUnit-style test asserting every <code>@RestController</code> outside an explicit public allowlist references <code>TenantContext</code>. Cheap, and it converts the convention into a gate.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>Eleven unused repository methods, several tenant-unscoped</h3>
+          <span class="fid">SA-R10-05</span>
+        </div>
+        <p>Of 63 derived query methods, 11 have no caller outside the repository layer. Four take no organization or trust-space parameter, so a future caller could pick one up without noticing it returns cross-tenant rows. <code>findByIdAndOrganizationId</code> being among the unused ones is the telling detail &mdash; the scoped variant exists and is not the one in use.</p>
+        <div class="evidence">unscoped + unused: findByTransactionHash, findByVerificationMethodId,
+                   findByStatus, findByBlockchainNetworkId
+also unused: findByIdAndOrganizationId, findByGroupId, findBySubjectIdAndStatus,
+             findByStatusOrderByCreatedAtAsc, 3× countByTrustSpaceId…</div>
+        <div class="fix"><b>Fix:</b> delete them. They can be re-derived in one line when something needs them, and the scoped signature will be the obvious one to write.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>Default datasource falls back to <code>postgres/postgres</code> over plaintext</h3>
+          <span class="fid">SA-R10-06</span>
+        </div>
+        <p><code>jdbc:postgresql://127.0.0.1:5432/trustweave_saas?sslmode=disable</code> with <code>postgres</code>/<code>postgres</code> as the default credentials. Appropriate for local development, and both deployment profiles override it &mdash; but it is the same default profile that already carries SA-R10-01, so a deployment that forgets to set a profile fails open twice.</p>
+        <div class="fix"><b>Fix:</b> drop the credential defaults so an unset <code>DATABASE_PASSWORD</code> fails at startup rather than reaching for <code>postgres</code>.</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Regression check</div>
+      <h2>Verified closed</h2>
+      <p>Previously-reported findings I re-checked in the source rather than taking on report. All hold.</p>
+    </div>
+
+    <div class="closed">
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>PKCE is now mandatory for the OID4VCI authorization-code flow, with a helper and an actionable error message.</span>
+          <span class="where">Oidc4VciService.kt:220 &middot; Pkce.kt</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>did:web resolution is guarded against SSRF via the shared private-network guard.</span>
+          <span class="where">AbstractWebDidMethod.kt:124 &middot; common/net/PrivateNetworkGuard.kt</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>The Verifiable Intent omit-payment-mandate bypass fails closed, with the reasoning recorded in a comment at the check.</span>
+          <span class="where">ChainVerifier.kt &middot; "L3 payment presented without its authorizing L2 payment mandate"</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>The JUnit silent-skip trap stayed fixed: 1,241 of 1,265 expression-body test functions use <code>runBlocking&lt;Unit&gt;</code>. The 24 exceptions are <code>@BeforeEach</code> fixtures, private helpers, one commented-out test, and vendored node_modules &mdash; none are live <code>@Test</code> methods.</span>
+          <span class="where">repo-wide, 3,975 @Test methods</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>No hardcoded credentials and no TLS verification bypass in either repository. Every password/secret/apiKey string literal match is inside a KDoc usage example.</span>
+          <span class="where">both repos, main source</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>The SaaS public verification endpoint reads revocation from the published status list rather than the local mirror column, so an independent verifier reaches the same decision. Rate-limited, and the mirror is consulted only for the <em>reason</em>.</span>
+          <span class="where">PublicVerificationController.kt:60-90</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span>The SaaS CI pins the reviewed library revision and verifies its source hash before building &mdash; a genuinely good supply-chain control that the library repo does not itself have an equivalent of.</span>
+          <span class="where">.github/workflows/ci.yml &middot; .trustweave-revision, .trustweave-source-sha256</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Scoring</div>
+      <h2>How the numbers were reached</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th class="num">SDK</th>
+            <th class="num">SaaS</th>
+            <th>What moved it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Security</td>
+            <td class="num">7.5</td>
+            <td class="num">8.0</td>
+            <td>SDK: strong crypto hygiene and fail-closed verification, less two HIGH authorization gaps in the VI plugin. SaaS: fail-closed routing, consistent tenant scoping, profile-gated dev surface.</td>
+          </tr>
+          <tr>
+            <td>Correctness</td>
+            <td class="num">8.0</td>
+            <td class="num">7.0</td>
+            <td>SDK: fail-closed by default throughout; deducted for silent temporal passes and unlogged swallows. SaaS: careful reasoning in the code, deducted for split schema authority.</td>
+          </tr>
+          <tr>
+            <td>Architecture</td>
+            <td class="num">7.0</td>
+            <td class="num">7.0</td>
+            <td>SDK: clean acyclic domain layering and a real SPI plugin system; no API-surface control, inverted test deps. SaaS: conventional Spring layering, isolation by convention.</td>
+          </tr>
+          <tr>
+            <td>Testing</td>
+            <td class="num">6.5</td>
+            <td class="num">7.0</td>
+            <td>SDK: 3,975 tests with genuinely adversarial cases, against 21 modules with none and coverage measured on 3 of 106. SaaS: 541 backend tests, 63 frontend test files; no migration-boot test.</td>
+          </tr>
+          <tr>
+            <td>Supply chain &amp; CI</td>
+            <td class="num">6.0</td>
+            <td class="num">5.0</td>
+            <td>SDK: ktlint gated and Dependabot on, but no signing, SBOM, SAST or coverage gate. SaaS: no static analysis, no Dependabot, no audit &mdash; offset by the library source-pinning.</td>
+          </tr>
+          <tr class="total">
+            <td>Overall</td>
+            <td class="num">7.0</td>
+            <td class="num">6.9</td>
+            <td>Equal weight across the five dimensions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Sequence</div>
+      <h2>What I would do first</h2>
+    </div>
+    <ol class="priority">
+      <li><b>TW-R10-01</b> &mdash; run the constraint check on the L3 checkout side. It is a contained change in one file and it closes an unbounded-authority path in the payment plugin.</li>
+      <li><b>TW-R10-02</b> &mdash; make audience and nonce required, or gate them behind a flag that defaults to on. Same file, and it is the difference between a replayable presentation and one that is not.</li>
+      <li><b>SA-R10-01</b> &mdash; add the fresh-database migration boot to CI. This is the one that turns a class of deploy-time surprises into PR-time failures.</li>
+      <li><b>TW-R10-06</b> &mdash; apply the binary-compatibility validator and commit the <code>.api</code> dumps before 1.0, while the surface is still cheap to change.</li>
+      <li><b>SA-R10-02</b> and <b>TW-R10-05</b> &mdash; ktlint on the SaaS backend, and one shared DID-method conformance suite covering nine untested plugins at once.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p><b>Method.</b> Static analysis of both working trees at <code>a41d482a</code> (SDK) and <code>f31dfeb</code> (SaaS), plus targeted reading of the verification, authorization and configuration paths. Findings TW-R10-01 through 04 come from reading <code>ChainVerifier.kt</code> and <code>ConstraintChecker.kt</code> in full and confirming call sites across the repository.</p>
+    <p><b>Limits.</b> No Gradle build or test run was executed, so nothing here is confirmed against a compiler or a passing suite &mdash; the counts are from source, and the reachability claims are from call-site analysis rather than execution. Both trees carry uncommitted modifications; the review reflects the working tree, not <code>HEAD</code>. Tenant isolation was traced through a sample of controllers, not all 44. No runtime, deployment, or live-provider behaviour was assessed.</p>
+  </footer>
+
+</div>

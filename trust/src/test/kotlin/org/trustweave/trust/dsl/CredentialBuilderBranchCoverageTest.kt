@@ -1,49 +1,58 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.SchemaFormat
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.trust.dsl.credential.credential
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Test
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.Test
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.trust.dsl.credential.credential
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
-import kotlin.test.*
 
 /**
  * Comprehensive branch coverage tests for CredentialBuilder DSL.
  * Tests all conditional branches, error paths, and edge cases.
  */
 class CredentialBuilderBranchCoverageTest {
-
     // ========== Type Branches ==========
 
     @Test
     fun `test branch VerifiableCredential auto-added when types empty`() {
-        val credential = credential {
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No types specified
             }
-            issued(Clock.System.now())
-            // No types specified
-        }
 
         assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
     }
 
     @Test
     fun `test branch VerifiableCredential auto-added when not in types`() {
-        val credential = credential {
-            type("DegreeCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("DegreeCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
         assertTrue(credential.type.any { it.value == "DegreeCredential" })
@@ -51,14 +60,15 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch VerifiableCredential not duplicated when already present`() {
-        val credential = credential {
-            type("VerifiableCredential", "DegreeCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("VerifiableCredential", "DegreeCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertEquals(2, credential.type.size)
         assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
@@ -67,14 +77,15 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch multiple types provided`() {
-        val credential = credential {
-            type("DegreeCredential", "BachelorDegreeCredential", "EducationCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("DegreeCredential", "BachelorDegreeCredential", "EducationCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertTrue(credential.type.contains(CredentialType.VerifiableCredential))
         assertTrue(credential.type.any { it.value == "DegreeCredential" })
@@ -98,14 +109,15 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch subject with ID only`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertNotNull(credential.credentialSubject)
         assertEquals("did:key:subject", credential.credentialSubject.id?.value)
@@ -113,36 +125,48 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch subject with properties`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "name" to "John Doe"
-                "email" to "john@example.com"
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "name" to "John Doe"
+                    "email" to "john@example.com"
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertNotNull(credential.credentialSubject)
-        assertEquals("John Doe", credential.credentialSubject.claims["name"]?.jsonPrimitive?.content)
-        assertEquals("john@example.com", credential.credentialSubject.claims["email"]?.jsonPrimitive?.content)
+        assertEquals(
+            "John Doe",
+            credential.credentialSubject.claims["name"]
+                ?.jsonPrimitive
+                ?.content,
+        )
+        assertEquals(
+            "john@example.com",
+            credential.credentialSubject.claims["email"]
+                ?.jsonPrimitive
+                ?.content,
+        )
     }
 
     @Test
     fun `test branch subject with nested objects`() {
-        val credential = credential {
-            type("DegreeCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "degree" {
-                    "type" to "BachelorDegree"
-                    "name" to "Bachelor of Science"
+        val credential =
+            credential {
+                type("DegreeCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "degree" {
+                        "type" to "BachelorDegree"
+                        "name" to "Bachelor of Science"
+                    }
                 }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertNotNull(credential.credentialSubject)
         val degree = credential.credentialSubject.claims["degree"]?.jsonObject
@@ -156,36 +180,38 @@ class CredentialBuilderBranchCoverageTest {
     fun `test branch issuance date defaults to now`() {
         // Issuance date is optional and defaults to Clock.System.now()
         val before = Clock.System.now()
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                // Missing issued() - should default to now
             }
-            // Missing issued() - should default to now
-        }
         val after = Clock.System.now()
-        
+
         // Verify issuance date was set to a time between before and after
         val issuanceDate = credential.issuanceDate
         assertNotNull(issuanceDate) { "Issuance date should be set when neither issued() nor validFrom() is called" }
         assertTrue(
             issuanceDate!! >= before && issuanceDate <= after,
-            "Issuance date should be set to a time between before and after"
+            "Issuance date should be set to a time between before and after",
         )
     }
 
     @Test
     fun `test branch issuance date provided`() {
         val now = Clock.System.now()
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(now)
             }
-            issued(now)
-        }
 
         assertEquals(now, credential.issuanceDate)
     }
@@ -208,14 +234,15 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch issuer provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertEquals("did:key:issuer", credential.issuer.id.value)
     }
@@ -224,15 +251,16 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch expiration not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No expiration
             }
-            issued(Clock.System.now())
-            // No expiration
-        }
 
         assertNull(credential.expirationDate)
     }
@@ -240,30 +268,32 @@ class CredentialBuilderBranchCoverageTest {
     @Test
     fun `test branch expiration with Instant`() {
         val expiration = Clock.System.now().plus(kotlin.time.Duration.parse("P365D"))
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                expires(expiration)
             }
-            issued(Clock.System.now())
-            expires(expiration)
-        }
 
         assertEquals(expiration, credential.expirationDate)
     }
 
     @Test
     fun `test branch expiration with duration`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                expires(365.days)
             }
-            issued(Clock.System.now())
-            expires(365.days)
-        }
 
         assertNotNull(credential.expirationDate)
     }
@@ -272,30 +302,32 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch ID not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No ID
             }
-            issued(Clock.System.now())
-            // No ID
-        }
 
         assertNull(credential.id)
     }
 
     @Test
     fun `test branch ID provided`() {
-        val credential = credential {
-            id("https://example.edu/credentials/123")
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                id("https://example.edu/credentials/123")
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertEquals("https://example.edu/credentials/123", credential.id?.value)
     }
@@ -304,30 +336,32 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No schema
             }
-            issued(Clock.System.now())
-            // No schema
-        }
 
         assertNull(credential.credentialSchema)
     }
 
     @Test
     fun `test branch schema with default type and format`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                schema("https://example.com/schemas/person.json")
             }
-            issued(Clock.System.now())
-            schema("https://example.com/schemas/person.json")
-        }
 
         assertNotNull(credential.credentialSchema)
         assertEquals("https://example.com/schemas/person.json", credential.credentialSchema?.id?.value)
@@ -337,18 +371,19 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch schema with custom type and format`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                schema(
+                    schemaId = "https://example.com/schemas/person.json",
+                    type = "JsonSchemaValidator2020",
+                )
             }
-            issued(Clock.System.now())
-            schema(
-                schemaId = "https://example.com/schemas/person.json",
-                type = "JsonSchemaValidator2020"
-            )
-        }
 
         assertNotNull(credential.credentialSchema)
         assertEquals("JsonSchemaValidator2020", credential.credentialSchema?.type)
@@ -359,36 +394,38 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch status not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No status
             }
-            issued(Clock.System.now())
-            // No status
-        }
 
         assertNull(credential.credentialStatus)
     }
 
     @Test
     fun `test branch status with all fields`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                status {
+                    id("https://example.com/status/123")
+                    type("StatusList2021Entry")
+                    statusPurpose("revocation")
+                    statusListIndex("123")
+                    statusListCredential("https://example.com/status-list")
+                }
             }
-            issued(Clock.System.now())
-            status {
-                id("https://example.com/status/123")
-                type("StatusList2021Entry")
-                statusPurpose("revocation")
-                statusListIndex("123")
-                statusListCredential("https://example.com/status-list")
-            }
-        }
 
         assertNotNull(credential.credentialStatus)
         assertEquals("https://example.com/status/123", credential.credentialStatus?.id?.value)
@@ -417,34 +454,36 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch evidence not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No evidence
             }
-            issued(Clock.System.now())
-            // No evidence
-        }
 
         assertNull(credential.evidence)
     }
 
     @Test
     fun `test branch single evidence`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                evidence {
+                    id("https://example.com/evidence/1")
+                    type("DocumentVerification")
+                    verifier("did:key:verifier")
+                }
             }
-            issued(Clock.System.now())
-            evidence {
-                id("https://example.com/evidence/1")
-                type("DocumentVerification")
-                verifier("did:key:verifier")
-            }
-        }
 
         assertNotNull(credential.evidence)
         assertEquals(1, credential.evidence?.size)
@@ -452,22 +491,23 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch multiple evidence`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                evidence {
+                    id("https://example.com/evidence/1")
+                    type("DocumentVerification")
+                }
+                evidence {
+                    id("https://example.com/evidence/2")
+                    type("IdentityVerification")
+                }
             }
-            issued(Clock.System.now())
-            evidence {
-                id("https://example.com/evidence/1")
-                type("DocumentVerification")
-            }
-            evidence {
-                id("https://example.com/evidence/2")
-                type("IdentityVerification")
-            }
-        }
 
         assertNotNull(credential.evidence)
         assertEquals(2, credential.evidence?.size)
@@ -475,58 +515,66 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch evidence with default type when not specified`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                evidence {
+                    id("https://example.com/evidence/1")
+                    // No type - should default to "Evidence"
+                }
             }
-            issued(Clock.System.now())
-            evidence {
-                id("https://example.com/evidence/1")
-                // No type - should default to "Evidence"
-            }
-        }
 
         assertNotNull(credential.evidence)
         assertEquals(1, credential.evidence?.size)
-        assertTrue(credential.evidence?.first()?.type?.contains("Evidence") == true)
+        assertTrue(
+            credential.evidence
+                ?.first()
+                ?.type
+                ?.contains("Evidence") == true,
+        )
     }
 
     // ========== Terms of Use Branches ==========
 
     @Test
     fun `test branch terms of use not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No terms of use
             }
-            issued(Clock.System.now())
-            // No terms of use
-        }
 
         assertNull(credential.termsOfUse)
     }
 
     @Test
     fun `test branch terms of use with all fields`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-            termsOfUse {
-                id("https://example.com/terms")
-                type("IssuerPolicy")
-                terms {
-                    "payment" to "required"
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                termsOfUse {
+                    id("https://example.com/terms")
+                    type("IssuerPolicy")
+                    terms {
+                        "payment" to "required"
+                    }
                 }
             }
-        }
 
         assertNotNull(credential.termsOfUse)
         assertEquals("https://example.com/terms", credential.termsOfUse?.firstOrNull()?.id)
@@ -534,18 +582,19 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch terms of use with empty terms`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                termsOfUse {
+                    id("https://example.com/terms")
+                    // No terms block - should create empty object
+                }
             }
-            issued(Clock.System.now())
-            termsOfUse {
-                id("https://example.com/terms")
-                // No terms block - should create empty object
-            }
-        }
 
         assertNotNull(credential.termsOfUse)
         assertNotNull(credential.termsOfUse?.firstOrNull()?.id)
@@ -555,33 +604,35 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch refresh service not provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                // No refresh service
             }
-            issued(Clock.System.now())
-            // No refresh service
-        }
 
         assertNull(credential.refreshService)
     }
 
     @Test
     fun `test branch refresh service provided`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                }
+                issued(Clock.System.now())
+                refreshService(
+                    id = "https://example.com/refresh",
+                    type = "CredentialRefreshService2020",
+                )
             }
-            issued(Clock.System.now())
-            refreshService(
-                id = "https://example.com/refresh",
-                type = "CredentialRefreshService2020"
-            )
-        }
 
         assertNotNull(credential.refreshService)
         assertEquals("https://example.com/refresh", credential.refreshService?.id?.value)
@@ -592,68 +643,79 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch subject property with String value`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "name" to "John Doe"
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "name" to "John Doe"
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
-        val subjectObj = buildJsonObject {
-            put("id", credential.credentialSubject.id?.value)
-            credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
-        }
+        val subjectObj =
+            buildJsonObject {
+                put("id", credential.credentialSubject.id?.value)
+                credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+            }
         assertEquals("John Doe", subjectObj["name"]?.jsonPrimitive?.content)
     }
 
     @Test
     fun `test branch subject property with Number value`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "age" to 30
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "age" to 30
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
-        val subjectObj = buildJsonObject {
-            put("id", credential.credentialSubject.id?.value)
-            credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
-        }
+        val subjectObj =
+            buildJsonObject {
+                put("id", credential.credentialSubject.id?.value)
+                credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
+            }
         assertEquals(30, subjectObj["age"]?.jsonPrimitive?.int)
     }
 
     @Test
     fun `test branch subject property with Boolean value`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "verified" to true
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "verified" to true
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
-        assertEquals(true, credential.credentialSubject.claims["verified"]?.jsonPrimitive?.boolean)
+        assertEquals(
+            true,
+            credential.credentialSubject.claims["verified"]
+                ?.jsonPrimitive
+                ?.boolean,
+        )
     }
 
     @Test
     fun `test branch subject property with null value`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "optionalField" to null
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "optionalField" to null
+                }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         // Null values are stored as JsonNull
         val optionalField = credential.credentialSubject.claims["optionalField"]
@@ -662,17 +724,18 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch subject property with JsonElement value`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "custom" to {
-                    "key" to "value"
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "custom" to {
+                        "key" to "value"
+                    }
                 }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         assertNotNull(credential.credentialSubject.claims["custom"]?.jsonObject)
     }
@@ -681,20 +744,21 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch nested object with multiple properties`() {
-        val credential = credential {
-            type("DegreeCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "degree" {
-                    "type" to "BachelorDegree"
-                    "name" to "Bachelor of Science"
-                    "university" to "Example University"
-                    "gpa" to 3.8
+        val credential =
+            credential {
+                type("DegreeCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "degree" {
+                        "type" to "BachelorDegree"
+                        "name" to "Bachelor of Science"
+                        "university" to "Example University"
+                        "gpa" to 3.8
+                    }
                 }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         val degree = credential.credentialSubject.claims["degree"]?.jsonObject
         assertNotNull(degree)
@@ -705,20 +769,21 @@ class CredentialBuilderBranchCoverageTest {
 
     @Test
     fun `test branch deeply nested objects`() {
-        val credential = credential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-                "address" {
-                    "street" {
-                        "number" to 123
-                        "name" to "Main St"
+        val credential =
+            credential {
+                type("PersonCredential")
+                issuer("did:key:issuer")
+                subject {
+                    id("did:key:subject")
+                    "address" {
+                        "street" {
+                            "number" to 123
+                            "name" to "Main St"
+                        }
                     }
                 }
+                issued(Clock.System.now())
             }
-            issued(Clock.System.now())
-        }
 
         val address = credential.credentialSubject.claims["address"]?.jsonObject
         assertNotNull(address)
@@ -727,5 +792,3 @@ class CredentialBuilderBranchCoverageTest {
         assertEquals(123, street!!["number"]?.jsonPrimitive?.int)
     }
 }
-
-

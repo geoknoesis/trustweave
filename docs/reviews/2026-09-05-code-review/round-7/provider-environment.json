@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-09-05T22:02:23.668696+00:00",
+  "accountlyUrl": "http://127.0.0.1:19393",
+  "scope": "Locally deployed Accountly and real Kill Bill; owner JWT obtained from local Keycloak. Production service-account token acquisition and external PSP calls were not validated.",
+  "containers": [
+    {
+      "name": "accountly-local-api-1",
+      "image": "accountly-local-api:dev",
+      "imageId": "sha256:1ab362d851fbe27f9fd427c6e2ea81364c66897f34b25868518b67172d1947f0"
+    },
+    {
+      "name": "accountly-local-killbill-1",
+      "image": "killbill/killbill:0.24.16",
+      "imageId": "sha256:09af1c6c636316980776dd2cadc6d1b9acae158c235f025afec561e7ed6f0f32"
+    }
+  ],
+  "cleanup": "Contract requires application removal, including the temporary subscriber, and confirms it is absent from the application list. Kill Bill may retain closed account and dedicated tenant audit metadata.",
+  "initialAttempt": "Subscriber provisioning exceeded the 20-second request deadline on a shared tenant. Cleanup completed. The final dedicated-tenant run passed; no latency SLA is inferred."
+}

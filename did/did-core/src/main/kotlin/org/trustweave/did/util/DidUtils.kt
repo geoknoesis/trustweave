@@ -57,9 +57,7 @@ fun normalizeKeyId(keyId: String): String {
  * @param did The DID string to validate
  * @return true if the DID format is valid, false otherwise
  */
-fun validateDid(did: String): Boolean {
-    return DidValidator.validateFormat(did).isValid()
-}
+fun validateDid(did: String): Boolean = DidValidator.validateFormat(did).isValid()
 
 /**
  * Safely parses a DID string, returning null if invalid.
@@ -73,13 +71,12 @@ fun validateDid(did: String): Boolean {
  * @param didString The DID string to parse
  * @return Did instance if valid, null otherwise
  */
-fun parseDidOrNull(didString: String): Did? {
-    return try {
+fun parseDidOrNull(didString: String): Did? =
+    try {
         Did(didString)
     } catch (e: IllegalArgumentException) {
         null
     }
-}
 
 /**
  * Extracts all verification method IDs from a DID document.
@@ -97,19 +94,19 @@ fun parseDidOrNull(didString: String): Did? {
  */
 fun extractAllVerificationMethodIds(document: DidDocument): Set<VerificationMethodId> {
     val vmIds = mutableSetOf<VerificationMethodId>()
-    
+
     // Add embedded verification methods
     document.verificationMethod.forEach { vm ->
         vmIds.add(vm.id)
     }
-    
+
     // Add referenced verification methods
     vmIds.addAll(document.authentication)
     vmIds.addAll(document.assertionMethod)
     vmIds.addAll(document.keyAgreement)
     vmIds.addAll(document.capabilityInvocation)
     vmIds.addAll(document.capabilityDelegation)
-    
+
     return vmIds
 }
 
@@ -127,10 +124,8 @@ fun extractAllVerificationMethodIds(document: DidDocument): Set<VerificationMeth
  */
 fun findVerificationMethod(
     document: DidDocument,
-    vmId: VerificationMethodId
-): VerificationMethod? {
-    return document.verificationMethod.firstOrNull { it.id == vmId }
-}
+    vmId: VerificationMethodId,
+): VerificationMethod? = document.verificationMethod.firstOrNull { it.id == vmId }
 
 /**
  * Checks if a DID document has a specific verification method.
@@ -148,10 +143,8 @@ fun findVerificationMethod(
  */
 fun hasVerificationMethod(
     document: DidDocument,
-    vmId: VerificationMethodId
-): Boolean {
-    return document.verificationMethod.any { it.id == vmId }
-}
+    vmId: VerificationMethodId,
+): Boolean = document.verificationMethod.any { it.id == vmId }
 
 /**
  * Gets all service endpoints of a specific type from a DID document.
@@ -167,10 +160,8 @@ fun hasVerificationMethod(
  */
 fun getServicesByType(
     document: DidDocument,
-    serviceType: String
-): List<org.trustweave.did.model.DidService> {
-    return document.service.filter { serviceType in it.type }
-}
+    serviceType: String,
+): List<org.trustweave.did.model.DidService> = document.service.filter { serviceType in it.type }
 
 /**
  * Checks if a DID document has services of a specific type.
@@ -188,8 +179,5 @@ fun getServicesByType(
  */
 fun hasServiceType(
     document: DidDocument,
-    serviceType: String
-): Boolean {
-    return document.service.any { serviceType in it.type }
-}
-
+    serviceType: String,
+): Boolean = document.service.any { serviceType in it.type }

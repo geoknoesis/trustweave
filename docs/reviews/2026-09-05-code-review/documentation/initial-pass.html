@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustWeave documentation review ? 5 September 2026</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;color:#183044;background:#f3f6f9;margin:0}main{max-width:1000px;margin:auto;padding:48px 24px}h1,h2{line-height:1.2}h1{font-size:2.5rem}h2{margin-top:2.2em}a{color:#0659a7}section,.notice{background:white;border:1px solid #d6e1ea;border-radius:12px;padding:24px;margin:20px 0}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #d6e1ea;vertical-align:top}code{overflow-wrap:anywhere;font-size:.88em}.muted{color:#536879}.notice{border-left:5px solid #ba7900}li{margin:8px 0}@media(max-width:600px){main{padding:24px 16px}h1{font-size:2rem}th,td{padding:8px}}</style></head>
+<body><main><p class="muted">Documentation review ? 5 September 2026 ? Local working tree</p>
+<h1>Clearer guidance, checked quick starts, repaired examples</h1>
+<p>The review corrected source/documentation mismatches in the SDK, reference wallets and SaaS setup guide. Implemented local examples now run successfully. This is a documentation validation report, not a new production-readiness score.</p>
+<div class="notice"><strong>Coverage boundary:</strong> 326 Markdown files contain 2,390 inventoried Kotlin blocks, including 206 historical blocks. Three quick-start blocks are synchronized exactly with one executed source example. The other fragments have not all been compiled independently. Nine scenario tasks are placeholders, now explicitly documented. Passing the checks does not certify every snippet or a hosted provider.</div>
+<section><h2>Corrections made</h2><table><thead><tr><th>Area</th><th>Result</th></tr></thead><tbody>
+<tr><td>First-run experience</td><td>One source-backed example now creates real DIDs, issues and verifies a credential, registers its JSON-LD vocabulary locally and closes services. Its imports and output were checked by execution.</td></tr>
+<tr><td>Versions and commands</td><td>Current SDK instructions use Kotlin 2.3.21, JDK 21 and the Gradle 9.5.0 wrapper. Example task paths and missing extension imports were corrected. Current source version is distinguished from artifact availability.</td></tr>
+<tr><td>Navigation and contracts</td><td>Broken relative links were repaired. Guidance now distinguishes result-returning operations from throwing APIs, signature validity from issuer trust, and wallet deployment policy from general provider readiness.</td></tr>
+<tr><td>Wallet custody and recovery</td><td>README now describes IndexedDB non-extractable keys, public localStorage data, credential-only backups and replacement/reissuance after key loss. Passkey and managed custody adapters are experimental and not wired into the wallet UI; native device validation is not claimed.</td></tr>
+<tr><td>SaaS startup</td><td>README reflects Kotlin 2.3.10, local PostgreSQL 15 and selectable billing. The PowerShell helper starts infrastructure; backend and frontend startup requirements are explicit.</td></tr>
+<tr><td>Runnable example failures</td><td>Fixed missing wallet factories, invalid wallet-query casts, a JVM main return type, missing claim contexts and unused KMS configuration. DID demos now use the intended KMS for P-256. Repaired Base and Arbitrum service-provider registration names exposed by Indy discovery.</td></tr>
+<tr><td>Misleading demonstrations</td><td>Replaced the anchoring placeholder with asserted in-memory write/read round trips. Marked unfinished schema, revocation and delegation steps as skipped; clarified local simulations and unverified institutional design goals.</td></tr>
+<tr><td>Regression protection</td><td>Added a documentation checker with six tests, exact source synchronization, maintained relative-link checks and fence/API checks. CI runs the 11 implemented local examples and generated capability-documentation drift checks.</td></tr>
+</tbody></table></section>
+<section><h2>Validation evidence</h2><table><thead><tr><th>Check</th><th>Outcome</th></tr></thead><tbody>
+<tr><td><code>python scripts/check-documentation.py</code></td><td>Passed: 326 files, 3 synchronized examples, zero reported errors. <a href="inventory.json">Full block inventory</a>.</td></tr>
+<tr><td><code>python -m unittest discover -s scripts -p test_check_documentation.py</code></td><td>6 tests passed: source drift, matching source, missing links, fenced examples, unclosed fences and historical/API scope.</td></tr>
+<tr><td><code>:distribution:examples:checkDocumentationExamples</code></td><td>11 implemented local demos passed: documentation quick start, original quick start, Earth Observation, Academic, Professional, Spatial Web, National Education, Indy, did:key, did:jwk and local anchoring.</td></tr>
+<tr><td>Generated capability docs and PowerShell snippet guard</td><td>Both passed; four legacy snippet rules checked.</td></tr>
+<tr><td>Formatting</td><td>Gradle script lint and whitespace diff checks passed. Full examples-module lint failed on extensive source formatting, wildcard and unused-import findings. No blanket lint-clean claim is made.</td></tr>
+<tr><td>SDK/SaaS source alignment</td><td>Reviewed local fingerprint recorded and verified; two fingerprint-checker tests passed. This does not create an immutable coordinated release commit.</td></tr>
+</tbody></table><p class="muted">Local logs: <code>docs-examples-passed.log</code> (successful execution and Gradle-script lint), <code>docs-final-validation.log</code> (full module lint findings). Console-label-only clarifications followed the successful execution; no runtime logic changed afterward.</p></section>
+<section><h2>What remains unverified</h2><ul>
+<li>All remaining narrative snippets need source extraction, fixtures and compilation before they can be guaranteed copy-paste correct. The inventory identifies their locations; 153 blocks contain a main function, which alone does not establish completeness.</li>
+<li>Placeholder scenario programs do not implement their guides. Professional schema validation and some comprehensive/delegation steps remain unfinished and explicitly labeled.</li>
+<li>External URL availability and Markdown anchor targets are outside the local-link checker. Historical designs and prior reviews are preserved rather than rewritten as current API documentation.</li>
+<li>Hosted Accountly/provider execution, physical passkey/HSM recovery and native device behavior were not validated in this documentation pass.</li>
+<li>Full examples-module lint remains open. Passing demo processes is execution coverage, not exhaustive assertion coverage of each workflow.</li>
+</ul></section>
+<h2>Start here</h2><p><a href="../../../getting-started/quick-start.md">Checked quick start</a> ? <a href="../../../../distribution/examples/README.md">Example coverage and commands</a> ? <a href="../../../../reference-wallet/README.md">Wallet setup and custody limits</a> ? <a href="../round-9/index.html">Previous code review</a></p>
+</main></body></html>

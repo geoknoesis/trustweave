@@ -39,7 +39,7 @@ interface DidDocumentStorage {
      * The storage backend type identifier.
      */
     val backend: StorageBackend
-    
+
     /**
      * Stores a DID document.
      *
@@ -50,9 +50,9 @@ interface DidDocumentStorage {
     suspend fun store(
         did: Did,
         document: DidDocument,
-        metadata: DidDocumentMetadata? = null
+        metadata: DidDocumentMetadata? = null,
     )
-    
+
     /**
      * Retrieves a DID document by DID.
      *
@@ -60,7 +60,7 @@ interface DidDocumentStorage {
      * @return The DID document and metadata, or null if not found
      */
     suspend fun get(did: Did): Pair<DidDocument, DidDocumentMetadata>?
-    
+
     /**
      * Updates an existing DID document.
      *
@@ -73,9 +73,9 @@ interface DidDocumentStorage {
      */
     suspend fun update(
         did: Did,
-        updater: (DidDocument) -> DidDocument
+        updater: (DidDocument) -> DidDocument,
     ): DidDocument
-    
+
     /**
      * Marks a DID document as deactivated.
      *
@@ -84,9 +84,9 @@ interface DidDocumentStorage {
      */
     suspend fun deactivate(
         did: Did,
-        deactivatedDocument: DidDocument
+        deactivatedDocument: DidDocument,
     )
-    
+
     /**
      * Checks if a DID document exists.
      *
@@ -94,7 +94,7 @@ interface DidDocumentStorage {
      * @return true if document exists
      */
     suspend fun exists(did: Did): Boolean
-    
+
     /**
      * Deletes a DID document (for cleanup).
      *
@@ -116,6 +116,5 @@ enum class StorageBackend {
     S3,
     IPFS,
     BLOCKCHAIN,
-    HYBRID
+    HYBRID,
 }
-

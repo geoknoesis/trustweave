@@ -1,28 +1,28 @@
 package org.trustweave.trust.dsl
 
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.trustweave.core.exception.ConfigException
-import org.trustweave.did.model.DidDocument
-import org.trustweave.kms.KeyHandle
+import org.trustweave.credential.model.ProofType
 import org.trustweave.kms.results.SignResult
-import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.dsl.trustWeave
-import org.trustweave.credential.model.ProofType
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive branch coverage tests for TrustWeaveConfig DSL.
  * Tests all conditional branches, error paths, and edge cases.
  */
 class TrustWeaveConfigBranchCoverageTest {
-
     @BeforeEach
     fun setUp() {
         // Each test creates a fresh TrustWeave configuration; no global cleanup required.
@@ -31,664 +31,775 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== KMS Resolution Branches ==========
 
     @Test
-    fun `test branch custom KMS takes precedence over provider`() = runBlocking<Unit> {
-        val customKms = InMemoryKeyManagementService()
+    fun `test branch custom KMS takes precedence over provider`() =
+        runBlocking<Unit> {
+            val customKms = InMemoryKeyManagementService()
 
-        val trustWeaveConfig = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                provider("waltid") // This should be ignored
-                custom(customKms)
-                signer { data, keyId ->
-                    when (val result = customKms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        provider("waltid") // This should be ignored
+                        custom(customKms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    customKms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {}
                     }
                 }
-            }
-            did {
-                method("key") {}
-            }
+
+            assertSame(customKms, trustWeaveConfig.configuration.kms)
         }
 
-        assertSame(customKms, trustWeaveConfig.configuration.kms)
-    }
-
     @Test
-    fun `test branch KMS provider resolution with inMemory`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-                algorithm("Ed25519")
-            }
-            did {
-                method("key") {}
-            }
-        }
-
-        assertNotNull(trustWeaveConfig.configuration.kms)
-    }
-
-    @Test
-    fun `test branch KMS provider resolution with SPI provider`() = runBlocking<Unit> {
-        // This tests the SPI resolution path (may fail if provider not available)
-        try {
-            val trustWeaveConfig = TrustWeave.build {
-                // KMS and DID methods auto-discovered via SPI
-                keys {
-                    provider("waltid")
-                    algorithm("Ed25519")
+    fun `test branch KMS provider resolution with inMemory`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                        algorithm("Ed25519")
+                    }
+                    did {
+                        method("key") {}
+                    }
                 }
-                did {
-                    method("key") {}
-                }
-            }
+
             assertNotNull(trustWeaveConfig.configuration.kms)
-        } catch (e: ConfigException.UnsupportedValue) {
-            // Provider not available - expected in test environment
-            assertTrue(e.message.contains("not found"))
-        }
-    }
-
-    @Test
-    fun `test branch KMS default algorithm when not specified`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-                // No algorithm specified - should default to Ed25519
-            }
-            did {
-                method("key") {}
-            }
         }
 
-        assertNotNull(trustWeaveConfig.configuration.kms)
-    }
+    @Test
+    fun `test branch KMS provider resolution with SPI provider`() =
+        runBlocking<Unit> {
+            // This tests the SPI resolution path (may fail if provider not available)
+            try {
+                val trustWeaveConfig =
+                    TrustWeave.build {
+                        // KMS and DID methods auto-discovered via SPI
+                        keys {
+                            provider("waltid")
+                            algorithm("Ed25519")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                    }
+                assertNotNull(trustWeaveConfig.configuration.kms)
+            } catch (e: ConfigException.UnsupportedValue) {
+                // Provider not available - expected in test environment
+                assertTrue(e.message.contains("not found"))
+            }
+        }
 
     @Test
-    fun `test branch KMS error when provider not found`() = runBlocking<Unit> {
-        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
-            trustWeave {
-                keys {
-                    provider("nonexistent-provider")
+    fun `test branch KMS default algorithm when not specified`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                        // No algorithm specified - should default to Ed25519
+                    }
+                    did {
+                        method("key") {}
+                    }
                 }
-                did {
-                    method("key") {}
-                }
-            }
+
+            assertNotNull(trustWeaveConfig.configuration.kms)
         }
-        assertEquals("keys.provider", exception.field)
-        assertEquals("nonexistent-provider", exception.value)
-        // The original lookup failure must be preserved as the cause.
-        assertNotNull(exception.cause)
-    }
 
     @Test
-    fun `test branch no KMS configured falls back to the in-memory provider`() = runBlocking<Unit> {
-        // TrustWeaveFactory resolves `state.kmsProvider ?: "inMemory"`, so omitting keys { }
-        // is valid and yields the in-memory KMS rather than an error.
-        val config = trustWeave {
-            // No keys configured
-            did {
-                method("key") {}
-            }
+    fun `test branch KMS error when provider not found`() =
+        runBlocking<Unit> {
+            val exception =
+                assertFailsWith<ConfigException.UnsupportedValue> {
+                    trustWeave {
+                        keys {
+                            provider("nonexistent-provider")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                    }
+                }
+            assertEquals("keys.provider", exception.field)
+            assertEquals("nonexistent-provider", exception.value)
+            // The original lookup failure must be preserved as the cause.
+            assertNotNull(exception.cause)
         }
 
-        assertNotNull(config.kms, "A config built without keys { } must still expose a KMS")
-    }
+    @Test
+    fun `test branch no KMS configured falls back to the in-memory provider`() =
+        runBlocking<Unit> {
+            // TrustWeaveFactory resolves `state.kmsProvider ?: "inMemory"`, so omitting keys { }
+            // is valid and yields the in-memory KMS rather than an error.
+            val config =
+                trustWeave {
+                    // No keys configured
+                    did {
+                        method("key") {}
+                    }
+                }
+
+            assertNotNull(config.kms, "A config built without keys { } must still expose a KMS")
+        }
 
     // ========== DID Method Resolution Branches ==========
 
     @Test
-    fun `test branch DID method resolution with testkit key method`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeaveConfig = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test branch DID method resolution with testkit key method`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {
+                            algorithm("Ed25519")
+                        }
                     }
                 }
-            }
-            did {
-                method("key") {
-                    algorithm("Ed25519")
-                }
-            }
-        }
 
-        assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
-    }
+            assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
+        }
 
     @Test
-    fun `test branch DID method resolution with SPI provider waltid`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        try {
-            val trustWeaveConfig = TrustWeave.build {
-                // DID methods auto-discovered via SPI
-                keys {
-                    custom(kms)
-                    signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test branch DID method resolution with SPI provider waltid`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            try {
+                val trustWeaveConfig =
+                    TrustWeave.build {
+                        // DID methods auto-discovered via SPI
+                        keys {
+                            custom(kms)
+                            signer { data, keyId ->
+                                when (
+                                    val result =
+                                        kms.sign(
+                                            org.trustweave.core.identifiers
+                                                .KeyId(keyId),
+                                            data,
+                                        )
+                                ) {
+                                    is SignResult.Success -> result.signature
+                                    else -> throw IllegalStateException("Signing failed: $result")
+                                }
+                            }
+                        }
+                        did {
+                            method("waltid") {
+                                algorithm("Ed25519")
+                            }
+                        }
                     }
-                }
-                }
-                did {
-                    method("waltid") {
-                        algorithm("Ed25519")
-                    }
-                }
+                // If build succeeds, method should be registered
+                assertTrue(
+                    trustWeaveConfig.configuration.didMethods.containsKey("waltid") ||
+                        trustWeaveConfig.configuration.didMethods.isEmpty(),
+                )
+            } catch (e: IllegalStateException) {
+                // Provider not available - expected
+                assertTrue(
+                    e.message?.contains("not found") == true ||
+                        e.message?.contains("not available") == true ||
+                        e.message?.contains("DID method") == true,
+                )
             }
-            // If build succeeds, method should be registered
-            assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("waltid") || 
-                      trustWeaveConfig.configuration.didMethods.isEmpty())
-        } catch (e: IllegalStateException) {
-            // Provider not available - expected
-            assertTrue(e.message?.contains("not found") == true || 
-                      e.message?.contains("not available") == true ||
-                      e.message?.contains("DID method") == true)
         }
-    }
 
     @Test
-    fun `test branch DID method resolution with SPI provider godiddy`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        try {
-            val trustWeaveConfig = TrustWeave.build {
-                // DID methods auto-discovered via SPI
-                keys {
-                    custom(kms)
-                    signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test branch DID method resolution with SPI provider godiddy`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            try {
+                val trustWeaveConfig =
+                    TrustWeave.build {
+                        // DID methods auto-discovered via SPI
+                        keys {
+                            custom(kms)
+                            signer { data, keyId ->
+                                when (
+                                    val result =
+                                        kms.sign(
+                                            org.trustweave.core.identifiers
+                                                .KeyId(keyId),
+                                            data,
+                                        )
+                                ) {
+                                    is SignResult.Success -> result.signature
+                                    else -> throw IllegalStateException("Signing failed: $result")
+                                }
+                            }
+                        }
+                        did {
+                            method("godiddy") {
+                                algorithm("Ed25519")
+                            }
+                        }
                     }
-                }
-                }
-                did {
-                    method("godiddy") {
-                        algorithm("Ed25519")
-                    }
-                }
+                // If build succeeds, method should be registered
+                assertTrue(
+                    trustWeaveConfig.configuration.didMethods.containsKey("godiddy") ||
+                        trustWeaveConfig.configuration.didMethods.isEmpty(),
+                )
+            } catch (e: IllegalStateException) {
+                // Provider not available - expected
+                assertTrue(
+                    e.message?.contains("not found") == true ||
+                        e.message?.contains("not available") == true ||
+                        e.message?.contains("DID method") == true,
+                )
             }
-            // If build succeeds, method should be registered
-            assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("godiddy") || 
-                      trustWeaveConfig.configuration.didMethods.isEmpty())
-        } catch (e: IllegalStateException) {
-            // Provider not available - expected
-            assertTrue(e.message?.contains("not found") == true || 
-                      e.message?.contains("not available") == true ||
-                      e.message?.contains("DID method") == true)
         }
-    }
 
     @Test
-    fun `test branch DID method error when method not found`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        assertFailsWith<IllegalStateException> {
-            trustWeave {
-                // DID methods auto-discovered via SPI
-                keys {
-                    custom(kms)
-                    signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test branch DID method error when method not found`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            assertFailsWith<IllegalStateException> {
+                trustWeave {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
                     }
-                }
-                }
-                did {
-                    method("nonexistent") {}
+                    did {
+                        method("nonexistent") {}
+                    }
                 }
             }
         }
-    }
 
     @Test
-    fun `test branch multiple DID methods registration`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeaveConfig = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test branch multiple DID methods registration`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {}
+                        method("key") {
+                            // Duplicate - should overwrite
+                            algorithm("Ed25519")
+                        }
                     }
                 }
-            }
-            did {
-                method("key") {}
-                method("key") { // Duplicate - should overwrite
-                    algorithm("Ed25519")
-                }
-            }
-        }
 
-        assertEquals(1, trustWeaveConfig.configuration.didMethods.size)
-        assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
-    }
+            assertEquals(1, trustWeaveConfig.configuration.didMethods.size)
+            assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
+        }
 
     // ========== Anchor Client Resolution Branches ==========
 
     @Test
-    fun `test branch anchor client resolution with inMemory`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS, DID methods, and Anchor clients auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch anchor client resolution with inMemory`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
                 }
+
+            assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
+        }
+
+    @Test
+    fun `test branch anchor client resolution with inMemory and contract`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory("contract-123")
+                        }
+                    }
+                }
+
+            assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
+        }
+
+    @Test
+    fun `test branch anchor client resolution with SPI provider`() =
+        runBlocking<Unit> {
+            try {
+                val trustWeaveConfig =
+                    TrustWeave.build {
+                        // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                        keys {
+                            provider("inMemory")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                        anchor {
+                            chain("algorand:testnet") {
+                                provider("algorand")
+                                options {
+                                    "algodUrl" to "https://testnet-api.algonode.cloud"
+                                }
+                            }
+                        }
+                    }
+                assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
+            } catch (e: IllegalStateException) {
+                // Provider not available - expected
+                assertTrue(e.message?.contains("not found") == true || e.message?.contains("factory is required") == true)
             }
         }
 
-        assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
-    }
-
     @Test
-    fun `test branch anchor client resolution with inMemory and contract`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS, DID methods, and Anchor clients auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory("contract-123")
-                }
-            }
-        }
-
-        assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
-    }
-
-    @Test
-    fun `test branch anchor client resolution with SPI provider`() = runBlocking<Unit> {
-        try {
-            val trustWeaveConfig = TrustWeave.build {
-                // KMS, DID methods, and Anchor clients auto-discovered via SPI
-                keys {
-                    provider("inMemory")
-                }
-                did {
-                    method("key") {}
-                }
-                anchor {
-                    chain("algorand:testnet") {
-                        provider("algorand")
-                        options {
-                            "algodUrl" to "https://testnet-api.algonode.cloud"
+    fun `test branch anchor client error when provider not found`() =
+        runBlocking<Unit> {
+            assertFailsWith<IllegalStateException> {
+                trustWeave {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            provider("nonexistent")
                         }
                     }
                 }
             }
+        }
+
+    @Test
+    fun `test branch anchor client error when provider not specified`() =
+        runBlocking<Unit> {
+            assertFailsWith<IllegalStateException> {
+                trustWeave {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            // No provider specified
+                        }
+                    }
+                }
+            }
+        }
+
+    @Test
+    fun `test branch multiple anchor chains`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                        chain("polygon:testnet") {
+                            inMemory()
+                        }
+                    }
+                }
+
+            assertEquals(2, trustWeaveConfig.configuration.anchorClients.size)
             assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
-        } catch (e: IllegalStateException) {
-            // Provider not available - expected
-            assertTrue(e.message?.contains("not found") == true || e.message?.contains("factory is required") == true)
+            assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("polygon:testnet"))
         }
-    }
-
-    @Test
-    fun `test branch anchor client error when provider not found`() = runBlocking<Unit> {
-        assertFailsWith<IllegalStateException> {
-            trustWeave {
-                // KMS and DID methods auto-discovered via SPI
-                keys {
-                    provider("inMemory")
-                }
-                did {
-                    method("key") {}
-                }
-                anchor {
-                    chain("algorand:testnet") {
-                        provider("nonexistent")
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `test branch anchor client error when provider not specified`() = runBlocking<Unit> {
-        assertFailsWith<IllegalStateException> {
-            trustWeave {
-                // KMS and DID methods auto-discovered via SPI
-                keys {
-                    provider("inMemory")
-                }
-                did {
-                    method("key") {}
-                }
-                anchor {
-                    chain("algorand:testnet") {
-                        // No provider specified
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `test branch multiple anchor chains`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS, DID methods, and Anchor clients auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
-                }
-                chain("polygon:testnet") {
-                    inMemory()
-                }
-            }
-        }
-
-        assertEquals(2, trustWeaveConfig.configuration.anchorClients.size)
-        assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
-        assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("polygon:testnet"))
-    }
 
     // ========== Credential Config Branches ==========
 
     @Test
-    fun `test branch credential config with defaults`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-        }
-
-        assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
-        assertFalse(trustWeaveConfig.configuration.credentialConfig.autoAnchor)
-        assertNull(trustWeaveConfig.configuration.credentialConfig.defaultChain)
-    }
-
-    @Test
-    fun `test branch credential config with custom values`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS, DID methods, and Anchor clients auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch credential config with defaults`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
                 }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020) // Use supported proof type
-                autoAnchor(true)
-                defaultChain("algorand:testnet")
-            }
-        }
 
-        assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
-        assertTrue(trustWeaveConfig.configuration.credentialConfig.autoAnchor)
-        assertEquals("algorand:testnet", trustWeaveConfig.configuration.credentialConfig.defaultChain)
-    }
+            assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
+            assertFalse(trustWeaveConfig.configuration.credentialConfig.autoAnchor)
+            assertNull(trustWeaveConfig.configuration.credentialConfig.defaultChain)
+        }
 
     @Test
-    fun `test branch credential config partial override`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                // autoAnchor and defaultChain use defaults
-            }
+    fun `test branch credential config with custom values`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020) // Use supported proof type
+                        autoAnchor(true)
+                        defaultChain("algorand:testnet")
+                    }
+                }
+
+            assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
+            assertTrue(trustWeaveConfig.configuration.credentialConfig.autoAnchor)
+            assertEquals("algorand:testnet", trustWeaveConfig.configuration.credentialConfig.defaultChain)
         }
 
-        assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
-        assertFalse(trustWeaveConfig.configuration.credentialConfig.autoAnchor) // Default
-        assertNull(trustWeaveConfig.configuration.credentialConfig.defaultChain) // Default
-    }
+    @Test
+    fun `test branch credential config partial override`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        // autoAnchor and defaultChain use defaults
+                    }
+                }
+
+            assertEquals(ProofType.Ed25519Signature2020, trustWeaveConfig.configuration.credentialConfig.defaultProofType)
+            assertFalse(trustWeaveConfig.configuration.credentialConfig.autoAnchor) // Default
+            assertNull(trustWeaveConfig.configuration.credentialConfig.defaultChain) // Default
+        }
 
     // ========== Named TrustWeave instance branches ==========
 
     @Test
-    fun `test branch named TrustWeave instance`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build("production") {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-        }
+    fun `test branch named TrustWeave instance`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build("production") {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                }
 
-        assertEquals("production", trustWeave.configuration.name)
-    }
+            assertEquals("production", trustWeave.configuration.name)
+        }
 
     @Test
-    fun `test branch default named TrustWeave instance`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-        }
+    fun `test branch default named TrustWeave instance`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                }
 
-        assertEquals("default", trustWeaveConfig.configuration.name)
-    }
+            assertEquals("default", trustWeaveConfig.configuration.name)
+        }
 
     // ========== Proof Generator Resolution Branches ==========
 
     @Test
-    fun `test branch proof generator creation with KMS`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-        }
+    fun `test branch proof generator creation with KMS`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                }
 
-        assertNotNull(trustWeaveConfig.configuration.credentialService)
-    }
+            assertNotNull(trustWeaveConfig.configuration.credentialService)
+        }
 
     @Test
-    fun `test branch proof generator uses signer function when provided`() = runBlocking<Unit> {
-        var signerCalled = false
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-                signer { data, keyId ->
-                    signerCalled = true
-                    ByteArray(64) // Mock signature
+    fun `test branch proof generator uses signer function when provided`() =
+        runBlocking<Unit> {
+            var signerCalled = false
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                        signer { data, keyId ->
+                            signerCalled = true
+                            ByteArray(64) // Mock signature
+                        }
+                    }
+                    did {
+                        method("key") {}
+                    }
                 }
-            }
-            did {
-                method("key") {}
-            }
-        }
 
-        assertNotNull(trustWeaveConfig.configuration.credentialService)
-        // Signer function is stored but not called during build
-    }
+            assertNotNull(trustWeaveConfig.configuration.credentialService)
+            // Signer function is stored but not called during build
+        }
 
     // ========== Error Handling Branches ==========
 
     @Test
-    fun `test branch error when KMS class not found`() = runBlocking<Unit> {
-        // This tests the ClassNotFoundException path in resolveKms
-        // We can't easily simulate this without mocking, but the branch exists
-        assertNotNull(trustWeave {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-        })
-    }
-
-    @Test
-    fun `test branch handles DID registry registration`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS and DID methods auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
+    fun `test branch error when KMS class not found`() =
+        runBlocking<Unit> {
+            // This tests the ClassNotFoundException path in resolveKms
+            // We can't easily simulate this without mocking, but the branch exists
+            assertNotNull(
+                trustWeave {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                },
+            )
         }
 
-        assertNotNull(trustWeaveConfig)
-        assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
-    }
+    @Test
+    fun `test branch handles DID registry registration`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS and DID methods auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                }
+
+            assertNotNull(trustWeaveConfig)
+            assertTrue(trustWeaveConfig.configuration.didMethods.containsKey("key"))
+        }
 
     // ========== Revocation Provider Branches ==========
 
     @Test
-    fun `test branch revocation provider inMemory is honored`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            revocation { provider("inMemory") }
-        }
+    fun `test branch revocation provider inMemory is honored`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    revocation { provider("inMemory") }
+                }
 
-        assertNotNull(trustWeaveConfig.configuration.revocationManager)
-    }
+            assertNotNull(trustWeaveConfig.configuration.revocationManager)
+        }
 
     @Test
-    fun `test branch revocation provider default alias is honored`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            revocation("default")
-        }
+    fun `test branch revocation provider default alias is honored`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    revocation("default")
+                }
 
-        assertNotNull(trustWeaveConfig.configuration.revocationManager)
-    }
+            assertNotNull(trustWeaveConfig.configuration.revocationManager)
+        }
 
     @Test
-    fun `test branch unknown revocation provider fails instead of being silently ignored`() = runBlocking<Unit> {
-        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
-            TrustWeave.build {
-                keys {
-                    provider("inMemory")
+    fun `test branch unknown revocation provider fails instead of being silently ignored`() =
+        runBlocking<Unit> {
+            val exception =
+                assertFailsWith<ConfigException.UnsupportedValue> {
+                    TrustWeave.build {
+                        keys {
+                            provider("inMemory")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                        revocation("redis")
+                    }
                 }
-                did {
-                    method("key") {}
-                }
-                revocation("redis")
-            }
-        }
 
-        assertEquals("revocation.provider", exception.field)
-        assertEquals("redis", exception.value)
-        assertTrue(exception.message.contains("not yet supported"))
-    }
+            assertEquals("revocation.provider", exception.field)
+            assertEquals("redis", exception.value)
+            assertTrue(exception.message.contains("not yet supported"))
+        }
 
     // ========== Schema Config Branches ==========
 
     @Test
-    fun `test branch schemas with default JSON_SCHEMA format is accepted`() = runBlocking<Unit> {
-        val trustWeaveConfig = TrustWeave.build {
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.JSON_SCHEMA)
-        }
+    fun `test branch schemas with default JSON_SCHEMA format is accepted`() =
+        runBlocking<Unit> {
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.JSON_SCHEMA)
+                }
 
-        assertNotNull(trustWeaveConfig)
-    }
+            assertNotNull(trustWeaveConfig)
+        }
 
     @Test
-    fun `test branch schemas with non-default format fails instead of being silently ignored`() = runBlocking<Unit> {
-        val exception = assertFailsWith<ConfigException.UnsupportedValue> {
-            TrustWeave.build {
-                keys {
-                    provider("inMemory")
+    fun `test branch schemas with non-default format fails instead of being silently ignored`() =
+        runBlocking<Unit> {
+            val exception =
+                assertFailsWith<ConfigException.UnsupportedValue> {
+                    TrustWeave.build {
+                        keys {
+                            provider("inMemory")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                        schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.SHACL)
+                    }
                 }
-                did {
-                    method("key") {}
-                }
-                schemas(defaultFormat = org.trustweave.credential.model.SchemaFormat.SHACL)
-            }
-        }
 
-        assertEquals("schemas.defaultFormat", exception.field)
-        assertEquals("SHACL", exception.value)
-        assertTrue(exception.message.contains("not yet supported"))
-    }
+            assertEquals("schemas.defaultFormat", exception.field)
+            assertEquals("SHACL", exception.value)
+            assertTrue(exception.message.contains("not yet supported"))
+        }
 
     @Test
-    fun `test branch error when blockchain registry not available`() = runBlocking<Unit> {
-        // This tests the exception handling when BlockchainRegistry is not available
-        val trustWeaveConfig = TrustWeave.build {
-            // KMS, DID methods, and Anchor clients auto-discovered via SPI
-            keys {
-                provider("inMemory")
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch error when blockchain registry not available`() =
+        runBlocking<Unit> {
+            // This tests the exception handling when BlockchainRegistry is not available
+            val trustWeaveConfig =
+                TrustWeave.build {
+                    // KMS, DID methods, and Anchor clients auto-discovered via SPI
+                    keys {
+                        provider("inMemory")
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
                 }
-            }
-        }
 
-        assertNotNull(trustWeaveConfig)
-        assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
-    }
+            assertNotNull(trustWeaveConfig)
+            assertTrue(trustWeaveConfig.configuration.anchorClients.containsKey("algorand:testnet"))
+        }
 }
-
-

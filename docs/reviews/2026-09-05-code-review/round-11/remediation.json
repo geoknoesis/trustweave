@@ -1,0 +1,56 @@
+{
+  "scope": "Three new round-11 SaaS findings and adjacent group-administration bypasses. Original review and scores preserved.",
+  "findings": [
+    {
+      "id": "SA-R11-01",
+      "status": "implemented_unit_tests_passed_integration_blocked",
+      "changes": [
+        "platform-admin protects operations and metrics in normal/dev filters and controller method security",
+        "TenantAdministration requires admin and organization-level access; tenant user lists/search are local scoped queries",
+        "Role and group reads/mutations check current tenant, targets and role ownership before IdP writes",
+        "Generated immutable tenant realm role names prevent display-name escalation; legacy unnamespaced mutations fail closed; composite/client role assignments rejected",
+        "Group membership and invitations check effective realm roles, client grants and parent groups",
+        "UI gates operator recovery separately and recognizes role assignments by realm name"
+      ]
+    },
+    {
+      "id": "SA-R11-02",
+      "status": "fixed_tests_passed",
+      "changes": [
+        "Default Keycloak URL and administrator username/password require explicit environment values; convenience defaults limited to dev; isolated local test profile supplies test credentials"
+      ]
+    },
+    {
+      "id": "SA-R11-03",
+      "status": "fixed",
+      "changes": [
+        "Corrected three actual question-mark loading messages",
+        "Six cited Loading ? occurrences were JavaScript conditional operators rather than displayed strings"
+      ]
+    }
+  ],
+  "validation": {
+    "backend": {
+      "unit_tests": 37,
+      "failures": 0,
+      "skipped": 0,
+      "gradle_result": "BUILD SUCCESSFUL",
+      "integration": "Compiled but unverified: Docker API stalled during PostgreSQL container startup; the stalled test worker was stopped after more than five minutes. A separate docker ps request also stalled.",
+      "global_coverage": "Excluded only for targeted test invocation; configured gate unchanged."
+    },
+    "frontend_tests": {
+      "passed": 6
+    },
+    "frontend_build": "passed; initial JS 454760 / 500000 bytes",
+    "typescript": "passed",
+    "frontend_lint": "passed",
+    "sdk_fingerprint": "verified unchanged"
+  },
+  "remaining": [
+    "Eleven carried-forward engineering-hygiene findings are not addressed in this pass",
+    "Autonomous L3 checkout line-item matching remains unsupported and fails closed",
+    "Review deployed realm grants and composites; explicitly provision platform-admin and refresh tokens",
+    "Prior full-backend instability and global coverage have not been cleared by this targeted pass"
+  ],
+  "scoring": "No new overall scores assigned. Original independent round-11 scores (trustweave 7.6, trustweave-saas 7.0) remain the review baseline, not a score for this unreviewed working tree."
+}

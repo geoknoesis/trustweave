@@ -9,8 +9,5 @@ object TemplateServices {
     /**
      * Create a default template service instance.
      */
-    fun default(): TemplateService {
-        return DefaultTemplateService()
-    }
+    fun default(): TemplateService = DefaultTemplateService()
 }
-

@@ -1,5 +1,8 @@
 package org.trustweave.wallet.services
 
+/** Explicit provider assessment policy; LEGACY preserves existing application behavior. */
+enum class WalletDeploymentPolicy { LEGACY, EXPERIMENTAL, SUPPORTED_ONLY }
+
 /**
  * Strongly-typed configuration used when creating wallets through [WalletFactory].
  *
@@ -12,7 +15,8 @@ data class WalletCreationOptions(
     val encryptionKey: String? = null,
     val enableOrganization: Boolean = false,
     val enablePresentation: Boolean = false,
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
+    val deploymentPolicy: WalletDeploymentPolicy = WalletDeploymentPolicy.LEGACY,
 ) {
     /**
      * Log-safe representation. [encryptionKey] and every value in
@@ -28,6 +32,7 @@ data class WalletCreationOptions(
             "encryptionKey=${if (encryptionKey == null) "null" else "***"}, " +
             "enableOrganization=$enableOrganization, " +
             "enablePresentation=$enablePresentation, " +
+            "deploymentPolicy=$deploymentPolicy, " +
             "additionalProperties={$redactedProperties})"
     }
 }
@@ -36,6 +41,7 @@ data class WalletCreationOptions(
  * Fluent builder used by DSLs to configure [WalletCreationOptions].
  */
 class WalletCreationOptionsBuilder {
+    var deploymentPolicy: WalletDeploymentPolicy = WalletDeploymentPolicy.LEGACY
     var label: String? = null
     var storagePath: String? = null
     var encryptionKey: String? = null
@@ -44,18 +50,23 @@ class WalletCreationOptionsBuilder {
 
     private val customProperties = mutableMapOf<String, Any?>()
 
-    fun property(key: String, value: Any?) {
+    fun property(
+        key: String,
+        value: Any?,
+    ) {
         customProperties[key] = value
     }
 
-    fun build(): WalletCreationOptions = WalletCreationOptions(
-        label = label,
-        storagePath = storagePath,
-        encryptionKey = encryptionKey,
-        enableOrganization = enableOrganization,
-        enablePresentation = enablePresentation,
-        additionalProperties = customProperties.toMap()
-    )
+    fun build(): WalletCreationOptions =
+        WalletCreationOptions(
+            label = label,
+            storagePath = storagePath,
+            encryptionKey = encryptionKey,
+            enableOrganization = enableOrganization,
+            enablePresentation = enablePresentation,
+            deploymentPolicy = deploymentPolicy,
+            additionalProperties = customProperties.toMap(),
+        )
 }
 
 fun walletCreationOptions(block: WalletCreationOptionsBuilder.() -> Unit): WalletCreationOptions {

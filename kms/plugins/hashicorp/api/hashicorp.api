@@ -1,0 +1,97 @@
+public final class org/trustweave/hashicorpkms/AlgorithmMapping {
+	public static final field INSTANCE Lorg/trustweave/hashicorpkms/AlgorithmMapping;
+	public final fun fromVaultKeyType (Ljava/lang/String;)Lorg/trustweave/kms/Algorithm;
+	public final fun publicKeyPemToJwk (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;)Ljava/util/Map;
+	public final fun resolveKeyName (Ljava/lang/String;Lorg/trustweave/hashicorpkms/VaultKmsConfig;)Ljava/lang/String;
+	public final fun toVaultHashAlgorithm (Lorg/trustweave/kms/Algorithm;)Ljava/lang/String;
+	public final fun toVaultKeyType (Lorg/trustweave/kms/Algorithm;)Ljava/lang/String;
+}
+
+public final class org/trustweave/hashicorpkms/HashiCorpKmsOptionKeys {
+	public static final field ALLOW_PLAINTEXT_BACKUP Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/hashicorpkms/HashiCorpKmsOptionKeys;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKeyManagementService : java/lang/AutoCloseable, org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/hashicorpkms/VaultKeyManagementService$Companion;
+	public fun <init> (Lorg/trustweave/hashicorpkms/VaultKmsConfig;Lcom/bettercloud/vault/Vault;)V
+	public synthetic fun <init> (Lorg/trustweave/hashicorpkms/VaultKmsConfig;Lcom/bettercloud/vault/Vault;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/hashicorpkms/VaultKmsClientFactory {
+	public static final field INSTANCE Lorg/trustweave/hashicorpkms/VaultKmsClientFactory;
+	public final fun createClient (Lorg/trustweave/hashicorpkms/VaultKmsConfig;)Lcom/bettercloud/vault/Vault;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKmsConfig {
+	public static final field Companion Lorg/trustweave/hashicorpkms/VaultKmsConfig$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()I
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Lorg/trustweave/hashicorpkms/VaultKmsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/hashicorpkms/VaultKmsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/lang/Object;)Lorg/trustweave/hashicorpkms/VaultKmsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getAppRolePath ()Ljava/lang/String;
+	public final fun getEngineVersion ()I
+	public final fun getNamespace ()Ljava/lang/String;
+	public final fun getRoleId ()Ljava/lang/String;
+	public final fun getSecretId ()Ljava/lang/String;
+	public final fun getToken ()Ljava/lang/String;
+	public final fun getTransitPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKmsConfig$Builder {
+	public fun <init> ()V
+	public final fun address (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun appRolePath (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun build ()Lorg/trustweave/hashicorpkms/VaultKmsConfig;
+	public final fun engineVersion (I)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun namespace (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun roleId (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun secretId (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun token (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun transitPath (Ljava/lang/String;)Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+}
+
+public final class org/trustweave/hashicorpkms/VaultKmsConfig$Companion {
+	public final fun builder ()Lorg/trustweave/hashicorpkms/VaultKmsConfig$Builder;
+	public final fun fromEnvironment ()Lorg/trustweave/hashicorpkms/VaultKmsConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/hashicorpkms/VaultKmsConfig;
+}
+

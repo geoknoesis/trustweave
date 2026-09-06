@@ -1,0 +1,43 @@
+public final class org/trustweave/anchor/ethereum/EthereumBlockchainAnchorClient : org/trustweave/anchor/evm/AbstractEvmAnchorClient {
+	public static final field Companion Lorg/trustweave/anchor/ethereum/EthereumBlockchainAnchorClient$Companion;
+	public static final field MAINNET Ljava/lang/String;
+	public static final field SEPOLIA Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun estimate (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/anchor/ethereum/EthereumBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/ethereum/EthereumBlockchainAnchorClientProvider : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/anchor/ethereum/EthereumIntegration {
+	public static final field INSTANCE Lorg/trustweave/anchor/ethereum/EthereumIntegration;
+	public final fun discoverAndRegister (Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/anchor/ethereum/EthereumIntegration;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+	public final fun setup (Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+	public static synthetic fun setup$default (Lorg/trustweave/anchor/ethereum/EthereumIntegration;Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+}
+
+public final class org/trustweave/anchor/ethereum/EthereumIntegrationResult {
+	public fun <init> (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)V
+	public final fun component1 ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/anchor/ethereum/EthereumIntegrationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegisteredChains ()Ljava/util/List;
+	public final fun getRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

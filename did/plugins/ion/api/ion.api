@@ -1,0 +1,66 @@
+public final class org/trustweave/iondid/IonDidConfig {
+	public static final field BITCOIN_MAINNET Ljava/lang/String;
+	public static final field BITCOIN_REGTEST Ljava/lang/String;
+	public static final field BITCOIN_TESTNET Ljava/lang/String;
+	public static final field Companion Lorg/trustweave/iondid/IonDidConfig$Companion;
+	public static final field ION_MAINNET_NODE Ljava/lang/String;
+	public static final field ION_TESTNET_NODE Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/util/Map;)Lorg/trustweave/iondid/IonDidConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/iondid/IonDidConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/util/Map;ILjava/lang/Object;)Lorg/trustweave/iondid/IonDidConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getBatchSize ()I
+	public final fun getBitcoinNetwork ()Ljava/lang/String;
+	public final fun getBitcoinRpcUrl ()Ljava/lang/String;
+	public final fun getIonNodeUrl ()Ljava/lang/String;
+	public final fun getTimeoutSeconds ()I
+	public fun hashCode ()I
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/iondid/IonDidConfig$Builder {
+	public fun <init> ()V
+	public final fun batchSize (I)Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun bitcoinNetwork (Ljava/lang/String;)Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun bitcoinRpcUrl (Ljava/lang/String;)Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun build ()Lorg/trustweave/iondid/IonDidConfig;
+	public final fun ionNodeUrl (Ljava/lang/String;)Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun timeoutSeconds (I)Lorg/trustweave/iondid/IonDidConfig$Builder;
+}
+
+public final class org/trustweave/iondid/IonDidConfig$Companion {
+	public final fun builder ()Lorg/trustweave/iondid/IonDidConfig$Builder;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/iondid/IonDidConfig;
+	public final fun mainnet (Ljava/lang/String;)Lorg/trustweave/iondid/IonDidConfig;
+	public static synthetic fun mainnet$default (Lorg/trustweave/iondid/IonDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/iondid/IonDidConfig;
+	public final fun testnet (Ljava/lang/String;)Lorg/trustweave/iondid/IonDidConfig;
+	public static synthetic fun testnet$default (Lorg/trustweave/iondid/IonDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/iondid/IonDidConfig;
+}
+
+public final class org/trustweave/iondid/IonDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/iondid/IonDidConfig;Lokhttp3/OkHttpClient;Lorg/trustweave/did/sidetree/SidetreeKeyStore;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/iondid/IonDidConfig;Lokhttp3/OkHttpClient;Lorg/trustweave/did/sidetree/SidetreeKeyStore;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun recoverDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/iondid/spi/IonDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

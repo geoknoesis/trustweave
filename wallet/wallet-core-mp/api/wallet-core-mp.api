@@ -1,0 +1,134 @@
+public final class org/trustweave/wallet/WalletCapabilities {
+	public fun <init> ()V
+	public fun <init> (ZZZZZZZZZZZZ)V
+	public synthetic fun <init> (ZZZZZZZZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component10 ()Z
+	public final fun component11 ()Z
+	public final fun component12 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun component9 ()Z
+	public final fun copy (ZZZZZZZZZZZZ)Lorg/trustweave/wallet/WalletCapabilities;
+	public static synthetic fun copy$default (Lorg/trustweave/wallet/WalletCapabilities;ZZZZZZZZZZZZILjava/lang/Object;)Lorg/trustweave/wallet/WalletCapabilities;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArchive ()Z
+	public final fun getCollections ()Z
+	public final fun getCreatePresentation ()Z
+	public final fun getCredentialIssuance ()Z
+	public final fun getCredentialQuery ()Z
+	public final fun getCredentialStorage ()Z
+	public final fun getDidManagement ()Z
+	public final fun getKeyManagement ()Z
+	public final fun getMetadata ()Z
+	public final fun getRefresh ()Z
+	public final fun getSelectiveDisclosure ()Z
+	public final fun getTags ()Z
+	public fun hashCode ()I
+	public final fun supports (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/wallet/WalletType {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/wallet/WalletType$Cloud : org/trustweave/wallet/WalletType {
+	public static final field INSTANCE Lorg/trustweave/wallet/WalletType$Cloud;
+}
+
+public final class org/trustweave/wallet/WalletType$Custom : org/trustweave/wallet/WalletType {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/wallet/WalletType$Custom;
+	public static synthetic fun copy$default (Lorg/trustweave/wallet/WalletType$Custom;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/wallet/WalletType$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/wallet/WalletType$Database : org/trustweave/wallet/WalletType {
+	public static final field INSTANCE Lorg/trustweave/wallet/WalletType$Database;
+}
+
+public final class org/trustweave/wallet/WalletType$File : org/trustweave/wallet/WalletType {
+	public static final field INSTANCE Lorg/trustweave/wallet/WalletType$File;
+}
+
+public final class org/trustweave/wallet/WalletType$InMemory : org/trustweave/wallet/WalletType {
+	public static final field INSTANCE Lorg/trustweave/wallet/WalletType$InMemory;
+}
+
+public final class org/trustweave/wallet/WalletTypes {
+	public static final field INSTANCE Lorg/trustweave/wallet/WalletTypes;
+	public final fun fromString (Ljava/lang/String;)Lorg/trustweave/wallet/WalletType;
+	public final fun getCloud ()Lorg/trustweave/wallet/WalletType$Cloud;
+	public final fun getDatabase ()Lorg/trustweave/wallet/WalletType$Database;
+	public final fun getFile ()Lorg/trustweave/wallet/WalletType$File;
+	public final fun getInMemory ()Lorg/trustweave/wallet/WalletType$InMemory;
+}
+
+public final class org/trustweave/wallet/services/WalletCreationOptions {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZLjava/util/Map;Lorg/trustweave/wallet/services/WalletDeploymentPolicy;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZLjava/util/Map;Lorg/trustweave/wallet/services/WalletDeploymentPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/Map;
+	public final fun component7 ()Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZLjava/util/Map;Lorg/trustweave/wallet/services/WalletDeploymentPolicy;)Lorg/trustweave/wallet/services/WalletCreationOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/wallet/services/WalletCreationOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZLjava/util/Map;Lorg/trustweave/wallet/services/WalletDeploymentPolicy;ILjava/lang/Object;)Lorg/trustweave/wallet/services/WalletCreationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getDeploymentPolicy ()Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public final fun getEnableOrganization ()Z
+	public final fun getEnablePresentation ()Z
+	public final fun getEncryptionKey ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getStoragePath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/wallet/services/WalletCreationOptionsBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/wallet/services/WalletCreationOptions;
+	public final fun getDeploymentPolicy ()Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public final fun getEnableOrganization ()Z
+	public final fun getEnablePresentation ()Z
+	public final fun getEncryptionKey ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getStoragePath ()Ljava/lang/String;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun setDeploymentPolicy (Lorg/trustweave/wallet/services/WalletDeploymentPolicy;)V
+	public final fun setEnableOrganization (Z)V
+	public final fun setEnablePresentation (Z)V
+	public final fun setEncryptionKey (Ljava/lang/String;)V
+	public final fun setLabel (Ljava/lang/String;)V
+	public final fun setStoragePath (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/wallet/services/WalletCreationOptionsKt {
+	public static final fun walletCreationOptions (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/wallet/services/WalletCreationOptions;
+}
+
+public final class org/trustweave/wallet/services/WalletDeploymentPolicy : java/lang/Enum {
+	public static final field EXPERIMENTAL Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public static final field LEGACY Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public static final field SUPPORTED_ONLY Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+	public static fun values ()[Lorg/trustweave/wallet/services/WalletDeploymentPolicy;
+}
+

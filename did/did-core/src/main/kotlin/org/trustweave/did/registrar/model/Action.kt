@@ -30,13 +30,11 @@ data class Action(
      * - Method-specific action types
      */
     val type: String,
-
     /**
      * URL to redirect to or endpoint to call.
      * Used for `redirect` and some `sign` action types.
      */
     val url: String? = null,
-
     /**
      * Additional data required for the action.
      *
@@ -46,11 +44,9 @@ data class Action(
      * - For `wait`: May contain polling endpoint, timeout, etc.
      */
     val data: Map<String, JsonElement>? = null,
-
     /**
      * Description or instructions for the action.
      * Human-readable text explaining what needs to be done.
      */
-    val description: String? = null
+    val description: String? = null,
 )
-

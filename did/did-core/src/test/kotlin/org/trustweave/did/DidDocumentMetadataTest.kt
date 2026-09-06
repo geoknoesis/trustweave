@@ -1,34 +1,33 @@
 package org.trustweave.did
 
+import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
-import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Tests for DidDocumentMetadata with Instant fields.
  */
 class DidDocumentMetadataTest {
-
     @Test
     fun `test DidDocumentMetadata with all fields`() {
         val now = Clock.System.now()
-        val metadata = DidDocumentMetadata(
-            created = now,
-            updated = now.plus(kotlin.time.Duration.parse("PT1H")),
-            versionId = "v1",
-            nextUpdate = now.plus(kotlin.time.Duration.parse("P1D")),
-            canonicalId = Did("did:key:canonical"),
-            equivalentId = listOf(Did("did:key:equivalent1"), Did("did:key:equivalent2"))
-        )
+        val metadata =
+            DidDocumentMetadata(
+                created = now,
+                updated = now.plus(kotlin.time.Duration.parse("PT1H")),
+                versionId = "v1",
+                nextUpdate = now.plus(kotlin.time.Duration.parse("P1D")),
+                canonicalId = Did("did:key:canonical"),
+                equivalentId = listOf(Did("did:key:equivalent1"), Did("did:key:equivalent2")),
+            )
 
         assertNotNull(metadata.created)
         assertNotNull(metadata.updated)
@@ -68,10 +67,11 @@ class DidDocumentMetadataTest {
     @Test
     fun `test DidDocumentMetadata with Instant serialization`() {
         val now = Clock.System.now()
-        val metadata = DidDocumentMetadata(
-            created = now,
-            updated = now
-        )
+        val metadata =
+            DidDocumentMetadata(
+                created = now,
+                updated = now,
+            )
 
         // Verify Instant fields are preserved
         assertEquals(now, metadata.created)
@@ -81,18 +81,21 @@ class DidDocumentMetadataTest {
     @Test
     fun `test DidResolutionResult with DidDocumentMetadata`() {
         val doc = DidDocument(id = Did("did:key:test"))
-        val metadata = DidDocumentMetadata(
-            created = Clock.System.now(),
-            versionId = "v1"
-        )
-
-        val result = DidResolutionResult.Success(
-            document = doc,
-            documentMetadata = metadata,
-            resolutionMetadata = DidResolutionMetadata(
-                properties = mapOf("provider" to "test")
+        val metadata =
+            DidDocumentMetadata(
+                created = Clock.System.now(),
+                versionId = "v1",
             )
-        )
+
+        val result =
+            DidResolutionResult.Success(
+                document = doc,
+                documentMetadata = metadata,
+                resolutionMetadata =
+                    DidResolutionMetadata(
+                        properties = mapOf("provider" to "test"),
+                    ),
+            )
 
         assertNotNull(result.document)
         assertNotNull(result.documentMetadata)
@@ -100,4 +103,3 @@ class DidDocumentMetadataTest {
         assertEquals("test", result.resolutionMetadata.properties["provider"])
     }
 }
-

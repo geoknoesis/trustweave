@@ -4,36 +4,51 @@
 
 A **neutral, reusable trust and identity core** library for Kotlin, designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
-## Quick Start (30 Seconds) ⚡
+## Quick Start (local demo) ⚡
 
+<!-- example-source: distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt -->
 ```kotlin
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.results.VerificationResult
+package org.trustweave.examples.documentation
+
 import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.jsonld.JsonLdContexts
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
+import org.trustweave.trust.types.getOrThrowDid
 
-fun main() = runBlocking {
-    val trustWeave = TrustWeave.quickStart()  // In-memory, did:key, ready to go
-
-    val issuerDid = trustWeave.createDid().getOrThrowDid()
-
-    val credential = trustWeave.issue {
-        credential {
-            type("PersonCredential")
-            issuer(issuerDid)
-            subject("did:key:subject") { "name" to "Alice" }
+/** Local example: the vocabulary is registered in-process; no remote context fetch. */
+fun main() =
+    runBlocking {
+        val contextUrl = "https://example.org/contexts/person/v1"
+        JsonLdContexts.register(
+            contextUrl,
+            """{"@context":{"PersonCredential":"https://example.org/vocab#PersonCredential","name":"https://schema.org/name"}}""",
+        )
+        val trustWeave = TrustWeave.quickStart()
+        try {
+            val issuer = trustWeave.createDid().getOrThrowDid()
+            val holder = trustWeave.createDid().getOrThrowDid()
+            val credential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuer)
+                            subject(holder.value) { "name" to "Alice" }
+                        }
+                        signedBy(issuer)
+                        additionalOption(JsonLdContexts.CONTEXTS_PROOF_OPTION, listOf(contextUrl))
+                    }.getOrThrow()
+            check(trustWeave.verify(credential) is VerificationResult.Valid) {
+                "The issued credential did not verify"
+            }
+            println("Credential verified")
+        } finally {
+            trustWeave.close()
         }
-        signedBy(issuerDid)  // Key ID auto-extracted
-    }.getOrThrow()
-
-    val verification = trustWeave.verify(credential)  // Simple overload
-
-    when (verification) {
-        is VerificationResult.Valid -> println("Credential valid: ✓")
-        is VerificationResult.Invalid -> println("Credential invalid: ${verification.errors.joinToString()}")
     }
-}
 ```
 
 ## Installation
@@ -74,7 +89,7 @@ Full documentation is available in the [`docs/`](docs/) directory:
 
 - **[Documentation Index](docs/README.md)** - Complete documentation index
 - **[Core Concepts](docs/core-concepts/README.md)** - Introduction to DIDs, VCs, Wallets, and more
-- **[Use Case Scenarios](docs/scenarios/README.md)** - 25+ real-world scenarios with runnable code
+- **[Use Case Scenarios](docs/scenarios/README.md)** - scenario guides and companion example sources
 - **[API Reference](docs/api-reference/)** - Detailed API documentation
 - **[Getting Started](docs/getting-started/)** - Installation and quick start guides
 

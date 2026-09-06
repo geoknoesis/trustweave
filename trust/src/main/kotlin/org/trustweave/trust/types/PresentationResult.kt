@@ -12,7 +12,9 @@ sealed class PresentationResult {
     /**
      * Presentation was created successfully.
      */
-    data class Success(val presentation: VerifiablePresentation) : PresentationResult()
+    data class Success(
+        val presentation: VerifiablePresentation,
+    ) : PresentationResult()
 
     /**
      * Presentation could not be created.
@@ -29,9 +31,10 @@ sealed class PresentationResult {
             override val warnings: List<String> = emptyList(),
         ) : Failure() {
             constructor(reason: String? = null) : this(
-                errors = listOf(
-                    reason ?: "Credential service is not available. Configure it in TrustWeave.build { ... }",
-                ),
+                errors =
+                    listOf(
+                        reason ?: "Credential service is not available. Configure it in TrustWeave.build { ... }",
+                    ),
             )
         }
 
@@ -62,8 +65,9 @@ sealed class PresentationResult {
         get() = (this as? Success)?.presentation
 
     val allErrors: List<String>
-        get() = when (this) {
-            is Success -> emptyList()
-            is Failure -> errors
-        }
+        get() =
+            when (this) {
+                is Success -> emptyList()
+                is Failure -> errors
+            }
 }

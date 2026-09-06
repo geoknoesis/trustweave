@@ -133,7 +133,7 @@ account for code signing.
 
 | Concern              | Web (Next.js) | Android (Compose)        | iOS (SwiftUI)         | **Expo (RN)**           |
 | -------------------- | ------------- | ------------------------ | --------------------- | ----------------------- |
-| Holder key           | localStorage  | Keystore (API 33+) or ES | Keychain (seed)       | expo-secure-store (seed)|
+| Holder key           | IndexedDB CryptoKeys | Keystore (API 33+) or ES | Keychain (seed)       | expo-secure-store (seed)|
 | Single codebase      | n/a           | Android only             | iOS only              | iOS + Android (+ web)   |
 | Dev install friction | low           | medium (AGP + SDK)       | high (Xcode, Mac)     | **lowest** (Expo Go)    |
 | Native UI feel       | n/a           | yes (Compose)            | yes (SwiftUI)         | RN approximation        |
@@ -144,4 +144,4 @@ Pick the right one for the audience.
 
 ## License
 
-Apache 2.0.
+See the repository [LICENSE](../../LICENSE) and [commercial license terms](../../LICENSE-COMMERCIAL.md).

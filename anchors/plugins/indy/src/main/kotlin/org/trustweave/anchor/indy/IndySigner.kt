@@ -13,17 +13,17 @@ import org.bouncycastle.crypto.signers.Ed25519Signer
  * produces Base58-encoded 64-byte signatures matching what indy-vdr emits.
  */
 internal class IndySigner private constructor(
-    private val privateKey: Ed25519PrivateKeyParameters
+    private val privateKey: Ed25519PrivateKeyParameters,
 ) {
-
     /**
      * Sign [payload] and return the 64-byte signature encoded as Base58.
      */
     fun signBase58(payload: ByteArray): String {
-        val signer = Ed25519Signer().apply {
-            init(true, privateKey)
-            update(payload, 0, payload.size)
-        }
+        val signer =
+            Ed25519Signer().apply {
+                init(true, privateKey)
+                update(payload, 0, payload.size)
+            }
         val sig = signer.generateSignature()
         return Base58.encode(sig)
     }

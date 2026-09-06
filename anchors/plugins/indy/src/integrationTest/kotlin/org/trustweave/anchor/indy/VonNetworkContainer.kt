@@ -21,16 +21,16 @@ import java.time.Duration
  * Image is ~1.5 GB so this container is lazy-pulled on first use.
  */
 class VonNetworkContainer : GenericContainer<VonNetworkContainer>(IMAGE) {
-
     init {
         withExposedPorts(BROWSER_PORT)
         for (p in POOL_PORTS) withExposedPorts(p)
         withCommand("./scripts/start_webserver.sh")
         waitingFor(
-            Wait.forHttp("/genesis")
+            Wait
+                .forHttp("/genesis")
                 .forPort(BROWSER_PORT)
                 .forStatusCodeMatching { it in 200..299 }
-                .withStartupTimeout(Duration.ofMinutes(5))
+                .withStartupTimeout(Duration.ofMinutes(5)),
         )
         withStartupAttempts(1)
     }

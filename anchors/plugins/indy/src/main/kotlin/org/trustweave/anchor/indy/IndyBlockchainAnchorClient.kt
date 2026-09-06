@@ -48,9 +48,8 @@ import java.nio.charset.StandardCharsets
 class IndyBlockchainAnchorClient(
     chainId: String,
     options: Map<String, Any?> = emptyMap(),
-    httpClient: HttpClient? = null
+    httpClient: HttpClient? = null,
 ) : AbstractBlockchainAnchorClient(chainId, options) {
-
     constructor(chainId: String, options: IndyOptions) : this(chainId, options.toMap(), null)
 
     companion object {
@@ -93,7 +92,7 @@ class IndyBlockchainAnchorClient(
             else -> throw BlockchainException.ConfigurationFailed(
                 chainId = chainId,
                 configKey = "poolEndpoint",
-                reason = "Unknown Indy pool: $chainId. Provide 'poolEndpoint' in options."
+                reason = "Unknown Indy pool: $chainId. Provide 'poolEndpoint' in options.",
             )
         }
 
@@ -102,152 +101,161 @@ class IndyBlockchainAnchorClient(
 
         val seedB58 = (options["signingKeySeed"] as? String)?.takeIf { it.isNotBlank() }
         val signingKeyB58 = (options["signingKey"] as? String)?.takeIf { it.isNotBlank() }
-        signer = try {
-            when {
-                seedB58 != null -> IndySigner.fromBase58Seed(seedB58)
-                signingKeyB58 != null -> IndySigner.fromBase58SigningKey(signingKeyB58)
-                else -> null
-            }
-        } catch (e: Exception) {
-            // Present-but-invalid signing material is a configuration error and
-            // must fail closed, consistently with the other anchor plugins.
-            throw BlockchainException.ConfigurationFailed(
-                chainId = chainId,
-                configKey = if (seedB58 != null) "signingKeySeed" else "signingKey",
-                reason = "Invalid Indy signing key material (expected base58): ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        }
-
-        val (client, owned) = when {
-            httpClient != null -> httpClient to null
-            else -> {
-                val created = HttpClient(CIO) {
-                    install(HttpTimeout) {
-                        requestTimeoutMillis = IndyVdrProxyTransport.DEFAULT_TIMEOUT_MILLIS
-                        connectTimeoutMillis = 10_000
-                        socketTimeoutMillis = IndyVdrProxyTransport.DEFAULT_TIMEOUT_MILLIS
-                    }
+        signer =
+            try {
+                when {
+                    seedB58 != null -> IndySigner.fromBase58Seed(seedB58)
+                    signingKeyB58 != null -> IndySigner.fromBase58SigningKey(signingKeyB58)
+                    else -> null
                 }
-                created to created
+            } catch (e: Exception) {
+                // Present-but-invalid signing material is a configuration error and
+                // must fail closed, consistently with the other anchor plugins.
+                throw BlockchainException.ConfigurationFailed(
+                    chainId = chainId,
+                    configKey = if (seedB58 != null) "signingKeySeed" else "signingKey",
+                    reason = "Invalid Indy signing key material (expected base58): ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
             }
-        }
+
+        val (client, owned) =
+            when {
+                httpClient != null -> httpClient to null
+                else -> {
+                    val created =
+                        HttpClient(CIO) {
+                            install(HttpTimeout) {
+                                requestTimeoutMillis = IndyVdrProxyTransport.DEFAULT_TIMEOUT_MILLIS
+                                connectTimeoutMillis = 10_000
+                                socketTimeoutMillis = IndyVdrProxyTransport.DEFAULT_TIMEOUT_MILLIS
+                            }
+                        }
+                    created to created
+                }
+            }
         ownedHttpClient = owned
         transport = IndyVdrProxyTransport(poolEndpoint, client)
     }
 
-    override protected fun canSubmitTransaction(): Boolean {
-        return submitterDid != null && signer != null
-    }
+    protected override fun canSubmitTransaction(): Boolean = submitterDid != null && signer != null
 
-    override protected suspend fun submitTransactionToBlockchain(
-        payloadBytes: ByteArray
-    ): String = withContext(Dispatchers.IO) {
-        val submitter = submitterDid
-            ?: throw BlockchainException.ConfigurationFailed(
-                chainId = chainId,
-                configKey = "did",
-                reason = "Submitter DID is required to write ATTRIB transactions"
-            )
-        val keypair = signer
-            ?: throw BlockchainException.ConfigurationFailed(
-                chainId = chainId,
-                configKey = "signingKeySeed",
-                reason = "Signing key seed is required to write ATTRIB transactions"
-            )
-        val dest = targetDid ?: submitter
+    protected override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String =
+        withContext(Dispatchers.IO) {
+            val submitter =
+                submitterDid
+                    ?: throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        configKey = "did",
+                        reason = "Submitter DID is required to write ATTRIB transactions",
+                    )
+            val keypair =
+                signer
+                    ?: throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        configKey = "signingKeySeed",
+                        reason = "Signing key seed is required to write ATTRIB transactions",
+                    )
+            val dest = targetDid ?: submitter
 
-        val rawObject = buildRawObject(payloadBytes)
-        val unsigned = IndyRequestCodec.buildAttribRequest(
-            submitterDid = submitter,
-            targetDid = dest,
-            rawPayload = rawObject
-        )
-        val signingPayload = IndyRequestCodec.signingPayload(unsigned)
-        val signatureBase58 = keypair.signBase58(signingPayload)
-        val signed = IndyRequestCodec.attachSignature(unsigned, signatureBase58)
+            val rawObject = buildRawObject(payloadBytes)
+            val unsigned =
+                IndyRequestCodec.buildAttribRequest(
+                    submitterDid = submitter,
+                    targetDid = dest,
+                    rawPayload = rawObject,
+                )
+            val signingPayload = IndyRequestCodec.signingPayload(unsigned)
+            val signatureBase58 = keypair.signBase58(signingPayload)
+            val signed = IndyRequestCodec.attachSignature(unsigned, signatureBase58)
 
-        val reply = try {
-            transport.submit(signed)
-        } catch (e: BlockchainException) {
-            throw e
-        } catch (t: Throwable) {
-            throw BlockchainException.ConnectionFailed(
-                chainId = chainId,
-                endpoint = poolEndpoint,
-                reason = "Failed to submit ATTRIB to Indy pool: ${t.message}",
-                cause = t
-            )
-        }
-
-        IndyRequestCodec.parseWriteReply(reply)
-    }
-
-    override protected suspend fun readTransactionFromBlockchain(
-        txHash: String
-    ): AnchorResult = withContext(Dispatchers.IO) {
-        val submitter = submitterDid
-            ?: throw TrustWeaveException.NotFound(
-                resource = "Anchor $txHash on $chainId (no submitter DID configured for reads)"
-            )
-        val dest = targetDid ?: submitter
-
-        val getRequest = IndyRequestCodec.buildGetAttribRequest(
-            submitterDid = submitter,
-            targetDid = dest
-        )
-        val reply = try {
-            transport.submit(getRequest)
-        } catch (e: BlockchainException) {
-            throw e
-        } catch (t: Throwable) {
-            throw BlockchainException.ConnectionFailed(
-                chainId = chainId,
-                endpoint = poolEndpoint,
-                reason = "Failed to query GET_ATTRIB from Indy pool: ${t.message}",
-                cause = t
-            )
-        }
-
-        val parsed = IndyRequestCodec.parseGetAttribResponse(reply)
-        val raw = parsed.raw
-            ?: throw TrustWeaveException.NotFound(
-                resource = "Anchor $txHash on $chainId (ATTRIB has no raw payload)"
-            )
-
-        val payload = decodePayloadFromRaw(raw)
-        val mediaType = (raw[IndyAttribFields.MEDIA_TYPE] as? JsonPrimitive)
-            ?.contentOrNull ?: "application/json"
-
-        AnchorResult(
-            ref = buildAnchorRef(
-                txHash = txHash,
-                contract = null,
-                extra = buildExtraMetadata(mediaType) + buildMap {
-                    parsed.seqNo?.let { put("seqNo", it.toString()) }
-                    parsed.txnTime?.let { put("txnTime", it.toString()) }
+            val reply =
+                try {
+                    transport.submit(signed)
+                } catch (e: BlockchainException) {
+                    throw e
+                } catch (t: Throwable) {
+                    throw BlockchainException.ConnectionFailed(
+                        chainId = chainId,
+                        endpoint = poolEndpoint,
+                        reason = "Failed to submit ATTRIB to Indy pool: ${t.message}",
+                        cause = t,
+                    )
                 }
-            ),
-            payload = payload,
-            mediaType = mediaType,
-            timestamp = parsed.txnTime
-        )
-    }
 
-    override protected fun buildExtraMetadata(mediaType: String): Map<String, String> {
+            IndyRequestCodec.parseWriteReply(reply)
+        }
+
+    protected override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
+        withContext(Dispatchers.IO) {
+            val submitter =
+                submitterDid
+                    ?: throw TrustWeaveException.NotFound(
+                        resource = "Anchor $txHash on $chainId (no submitter DID configured for reads)",
+                    )
+            val dest = targetDid ?: submitter
+
+            val getRequest =
+                IndyRequestCodec.buildGetAttribRequest(
+                    submitterDid = submitter,
+                    targetDid = dest,
+                )
+            val reply =
+                try {
+                    transport.submit(getRequest)
+                } catch (e: BlockchainException) {
+                    throw e
+                } catch (t: Throwable) {
+                    throw BlockchainException.ConnectionFailed(
+                        chainId = chainId,
+                        endpoint = poolEndpoint,
+                        reason = "Failed to query GET_ATTRIB from Indy pool: ${t.message}",
+                        cause = t,
+                    )
+                }
+
+            val parsed = IndyRequestCodec.parseGetAttribResponse(reply)
+            val raw =
+                parsed.raw
+                    ?: throw TrustWeaveException.NotFound(
+                        resource = "Anchor $txHash on $chainId (ATTRIB has no raw payload)",
+                    )
+
+            val payload = decodePayloadFromRaw(raw)
+            val mediaType =
+                (raw[IndyAttribFields.MEDIA_TYPE] as? JsonPrimitive)
+                    ?.contentOrNull ?: "application/json"
+
+            AnchorResult(
+                ref =
+                    buildAnchorRef(
+                        txHash = txHash,
+                        contract = null,
+                        extra =
+                            buildExtraMetadata(mediaType) +
+                                buildMap {
+                                    parsed.seqNo?.let { put("seqNo", it.toString()) }
+                                    parsed.txnTime?.let { put("txnTime", it.toString()) }
+                                },
+                    ),
+                payload = payload,
+                mediaType = mediaType,
+                timestamp = parsed.txnTime,
+            )
+        }
+
+    protected override fun buildExtraMetadata(mediaType: String): Map<String, String> {
         val parts = chainId.split(":")
         return mapOf(
             "network" to if (parts.size >= 2) parts[1] else "unknown",
             "pool" to if (parts.size >= 3) parts[2] else "unknown",
-            "mediaType" to mediaType
+            "mediaType" to mediaType,
         )
     }
 
-    override protected fun generateTestTxHash(): String {
-        return "indy_test_${uniqueTestHashSuffix()}"
-    }
+    protected override fun generateTestTxHash(): String = "indy_test_${uniqueTestHashSuffix()}"
 
-    override protected fun getBlockchainName(): String = "Indy"
+    protected override fun getBlockchainName(): String = "Indy"
 
     /**
      * Build the JSON object stored under `operation.raw`. For payloads under
@@ -262,11 +270,12 @@ class IndyBlockchainAnchorClient(
             put(IndyAttribFields.DIGEST, JsonPrimitive(digestHex))
             put(IndyAttribFields.MEDIA_TYPE, JsonPrimitive("application/json"))
             if (payloadBytes.size <= MAX_INLINE_PAYLOAD_BYTES) {
-                val parsed = try {
-                    inlineJson.parseToJsonElement(payloadString)
-                } catch (t: Throwable) {
-                    JsonPrimitive(payloadString)
-                }
+                val parsed =
+                    try {
+                        inlineJson.parseToJsonElement(payloadString)
+                    } catch (t: Throwable) {
+                        JsonPrimitive(payloadString)
+                    }
                 put(IndyAttribFields.PAYLOAD, parsed)
             }
         }
@@ -282,10 +291,11 @@ class IndyBlockchainAnchorClient(
         }
     }
 
-    private val inlineJson = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
+    private val inlineJson =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
 
     /** Close the owned HTTP client, if any. Safe to call multiple times. */
     fun close() {

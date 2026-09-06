@@ -1,17 +1,15 @@
 package org.trustweave.trust.dsl.did
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidCreationOptionsBuilder
 import org.trustweave.did.KeyAlgorithm
-import org.trustweave.did.DidMethod
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.context.DidDslContext
 import org.trustweave.trust.types.DidCreationResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 
 /**
  * DID Builder DSL.
@@ -32,39 +30,40 @@ class DidBuilder(
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
      */
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private var method: String? = null
     private val optionsBuilder = DidCreationOptionsBuilder()
 
     /**
      * Set DID method (e.g., "key", "web", "ion").
-     * 
+     *
      * @param name Must be a non-blank string containing only alphanumeric characters and hyphens
      * @throws IllegalArgumentException if name is blank or contains invalid characters
      */
     fun method(name: String) {
         require(name.isNotBlank()) { "DID method name cannot be blank" }
-        require(name.matches(Regex("^[a-z0-9-]+$"))) { 
-            "DID method name must contain only lowercase letters, numbers, and hyphens. Got: $name" 
+        require(name.matches(Regex("^[a-z0-9-]+$"))) {
+            "DID method name must contain only lowercase letters, numbers, and hyphens. Got: $name"
         }
         this.method = name
     }
 
     /**
      * Set key algorithm by string name (e.g., "Ed25519", "secp256k1").
-     * 
+     *
      * For type safety, prefer using algorithm(value: DidCreationOptions.KeyAlgorithm).
      */
     fun algorithm(name: String) {
-        val keyAlgorithm = KeyAlgorithm.fromName(name)
-            ?: throw IllegalArgumentException("Unsupported key algorithm: $name")
+        val keyAlgorithm =
+            KeyAlgorithm.fromName(name)
+                ?: throw IllegalArgumentException("Unsupported key algorithm: $name")
         optionsBuilder.algorithm = keyAlgorithm
     }
 
     /**
      * Set key algorithm using type-safe enum.
-     * 
+     *
      * This is the preferred method for compile-time type safety.
      */
     fun algorithm(value: KeyAlgorithm) {
@@ -74,71 +73,78 @@ class DidBuilder(
     /**
      * Add custom option for DID creation.
      */
-    fun option(key: String, value: Any?) {
+    fun option(
+        key: String,
+        value: Any?,
+    ) {
         optionsBuilder.property(key, value)
     }
 
     /**
      * Build and create the DID.
-     * 
+     *
      * This operation performs I/O-bound work (key generation, DID document creation)
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      *
      * @return Sealed result type with success or detailed failure information
      */
-    suspend fun build(): DidCreationResult = withContext(ioDispatcher) {
-        // Use explicit method, or config's default, or first registered method
-        val methodName = method 
-            ?: didContext.configuration.defaultDidMethod
-            ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
-                reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }"
-            )
+    suspend fun build(): DidCreationResult =
+        withContext(ioDispatcher) {
+            // Use explicit method, or config's default, or first registered method
+            val methodName =
+                method
+                    ?: didContext.configuration.defaultDidMethod
+                    ?: return@withContext DidCreationResult.Failure.InvalidConfiguration(
+                        reason = "DID method is required. Use method(\"key\") or configure a default in did { method(\"key\") { ... } }",
+                    )
 
-        val didMethod = didContext.getDidMethod(methodName)
-            ?: run {
-                // Get available methods from registry
-                val availableMethods = try {
-                    didContext.getDidRegistry().getAllMethodNames()
-                } catch (e: Exception) {
-                    emptyList()
+            val didMethod =
+                didContext.getDidMethod(methodName)
+                    ?: run {
+                        // Get available methods from registry
+                        val availableMethods =
+                            try {
+                                didContext.getDidRegistry().getAllMethodNames()
+                            } catch (e: Exception) {
+                                emptyList()
+                            }
+                        return@withContext DidCreationResult.Failure.MethodNotRegistered(
+                            method = methodName,
+                            availableMethods = availableMethods,
+                        )
+                    }
+
+            try {
+                val document = didMethod.createDid(optionsBuilder.build())
+                DidCreationResult.Success(
+                    did = Did(document.id.value),
+                    document = document,
+                )
+            } catch (e: TrustWeaveException) {
+                when (e) {
+                    is DidException.DidMethodNotRegistered -> {
+                        DidCreationResult.Failure.MethodNotRegistered(
+                            method = methodName,
+                            availableMethods = e.availableMethods,
+                        )
+                    }
+                    else -> {
+                        DidCreationResult.Failure.Other(
+                            reason = e.message ?: "DID creation failed",
+                            cause = e,
+                        )
+                    }
                 }
-                return@withContext DidCreationResult.Failure.MethodNotRegistered(
-                    method = methodName,
-                    availableMethods = availableMethods
+            } catch (e: IllegalArgumentException) {
+                DidCreationResult.Failure.InvalidConfiguration(
+                    reason = e.message ?: "Invalid configuration",
+                    details = emptyMap(),
+                )
+            } catch (e: Exception) {
+                DidCreationResult.Failure.Other(
+                    reason = e.message ?: "Unknown error during DID creation",
+                    cause = e,
                 )
             }
-
-        try {
-            val document = didMethod.createDid(optionsBuilder.build())
-            DidCreationResult.Success(
-                did = Did(document.id.value),
-                document = document
-            )
-        } catch (e: TrustWeaveException) {
-            when (e) {
-                is DidException.DidMethodNotRegistered -> {
-                    DidCreationResult.Failure.MethodNotRegistered(
-                        method = methodName,
-                        availableMethods = e.availableMethods
-                    )
-                }
-                else -> {
-                    DidCreationResult.Failure.Other(
-                        reason = e.message ?: "DID creation failed",
-                        cause = e
-                    )
-                }
-            }
-        } catch (e: IllegalArgumentException) {
-            DidCreationResult.Failure.InvalidConfiguration(
-                reason = e.message ?: "Invalid configuration",
-                details = emptyMap()
-            )
-        } catch (e: Exception) {
-            DidCreationResult.Failure.Other(
-                reason = e.message ?: "Unknown error during DID creation",
-                cause = e
-            )
         }
-    }
 }

@@ -1,0 +1,7 @@
+public final class org/trustweave/integrations/venafi/VenafiIntegration {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun issueCredentialWithCertificate (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

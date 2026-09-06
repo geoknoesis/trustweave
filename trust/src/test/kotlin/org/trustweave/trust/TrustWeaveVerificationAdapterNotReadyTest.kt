@@ -20,7 +20,6 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class TrustWeaveVerificationAdapterNotReadyTest {
-
     @Test
     fun `verify credential overload returns AdapterNotReady with same credential when service missing`() =
         runBlocking {
@@ -39,26 +38,29 @@ class TrustWeaveVerificationAdapterNotReadyTest {
             val trustWeave = trustWeaveWithoutCredentialService()
             val vc = sampleCredential(idSuffix = "dsl-verify")
 
-            val result = trustWeave.verify {
-                credential(vc)
-            }
+            val result =
+                trustWeave.verify {
+                    credential(vc)
+                }
             val notReady = assertIs<VerificationResult.Invalid.AdapterNotReady>(result)
             assertNotEquals(vc.issuer.id.value, notReady.credential.issuer.id.value)
             assertTrue(
-                notReady.credential.issuer.id.value.contains("trustweave-configuration-placeholder"),
+                notReady.credential.issuer.id.value
+                    .contains("trustweave-configuration-placeholder"),
             )
             assertTrue(notReady.errors.isNotEmpty())
         }
 
     private fun trustWeaveWithoutCredentialService(): TrustWeave {
-        val config = TrustWeaveConfig(
-            name = "no-credential-service",
-            kms = InMemoryKeyManagementService(),
-            didRegistry = DidMethodRegistry(),
-            blockchainRegistry = BlockchainAnchorRegistry(),
-            credentialConfig = TrustWeaveConfig.CredentialConfig(),
-            credentialService = null,
-        )
+        val config =
+            TrustWeaveConfig(
+                name = "no-credential-service",
+                kms = InMemoryKeyManagementService(),
+                didRegistry = DidMethodRegistry(),
+                blockchainRegistry = BlockchainAnchorRegistry(),
+                credentialConfig = TrustWeaveConfig.CredentialConfig(),
+                credentialService = null,
+            )
         return TrustWeave(config)
     }
 

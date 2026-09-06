@@ -1,0 +1,29 @@
+public final class org/trustweave/registry/database/DatabaseTrustRegistry : org/trustweave/registry/TrustRegistry {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun activateIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun activateVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAccreditationStatus (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listCredentialTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listIssuers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun registerIssuer (Lorg/trustweave/registry/IssuerRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun registerVerifier (Lorg/trustweave/registry/VerifierRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun revokeIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun revokeVerifier (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateIssuer (Ljava/lang/String;Lorg/trustweave/registry/IssuerUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateVerifier (Ljava/lang/String;Lorg/trustweave/registry/VerifierUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/registry/database/DatabaseTrustRegistryFactory {
+	public static final field INSTANCE Lorg/trustweave/registry/database/DatabaseTrustRegistryFactory;
+	public final fun create (Ljavax/sql/DataSource;)Lorg/trustweave/registry/database/DatabaseTrustRegistry;
+}
+
+public final class org/trustweave/registry/database/DatabaseTrustRegistryProvider : org/trustweave/registry/TrustRegistryProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/registry/TrustRegistry;
+	public fun getName ()Ljava/lang/String;
+}
+

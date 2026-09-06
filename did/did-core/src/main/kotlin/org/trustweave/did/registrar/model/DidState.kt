@@ -1,8 +1,8 @@
 package org.trustweave.did.registrar.model
 
-import org.trustweave.did.model.DidDocument
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import org.trustweave.did.model.DidDocument
 
 /**
  * Represents the current state of a DID operation according to DID Registration specification.
@@ -27,13 +27,11 @@ data class DidState(
      * - `wait`: Operation is pending and awaiting further input or processing
      */
     val state: OperationState,
-
     /**
      * The DID resulting from the operation.
      * Present when the DID has been created or when referencing an existing DID.
      */
     val did: String? = null,
-
     /**
      * Contains sensitive information like controller keys.
      *
@@ -46,14 +44,12 @@ data class DidState(
      * - Method-specific secret fields
      */
     val secret: Secret? = null,
-
     /**
      * The DID Document resulting from the operation.
      * Present when the operation successfully creates, updates, or resolves a DID Document.
      */
     @Contextual
     val didDocument: DidDocument? = null,
-
     /**
      * Additional steps required to complete the operation.
      *
@@ -64,14 +60,13 @@ data class DidState(
      * - `data`: Additional data required for the action
      */
     val action: Action? = null,
-
     /**
      * Error reason or message when the operation has failed.
      *
      * Present when `state` is `FAILED`.
      * Contains a human-readable description of why the operation failed.
      */
-    val reason: String? = null
+    val reason: String? = null,
 )
 
 /**
@@ -98,6 +93,5 @@ enum class OperationState {
     /**
      * Operation is pending and awaiting further input or processing.
      */
-    WAIT
+    WAIT,
 }
-

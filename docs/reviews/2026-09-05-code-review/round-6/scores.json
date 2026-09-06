@@ -1,0 +1,48 @@
+{
+  "assessment": "Round 6 targeted review of credential restoration and the platform recovery inventory. The same weighted rubric is retained. Half-point UX credit in each repository reflects partial closure of the recovery deduction; it is a judgment, not measured precision or a guarantee. Key-loss recovery, live billing/provider operations and exact-pair release/staging remain open.",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24,
+    19,
+    15,
+    9.5
+  ],
+  "totals": {
+    "trustweave": 96.5,
+    "trustweave-saas": 95.5
+  },
+  "previous": {
+    "trustweave": 96,
+    "trustweave-saas": 95
+  },
+  "trustweave-saas": [
+    29,
+    24,
+    19,
+    14,
+    9.5
+  ],
+  "deductions": {
+    "trustweave": [
+      "Security -1: browser custody lacks hardware/user-presence signing and remains exposed to trusted-bundle compromise.",
+      "Correctness -1: issuer/disclosure profiles and hosted provider behavior remain limited or unvalidated.",
+      "Architecture -1: provider maturity and legacy storage boundaries remain uneven.",
+      "Experience -0.5: same-identity credential export/restore is now verified; lost device keys still require issuer-assisted reissuance, and physical mobile coverage remains outstanding.",
+      "Testing receives full local-validation credit for the full JVM suite, lint, database/HTTP contracts and production browser regressions. This does not certify optional hosted providers; those limitations remain in correctness/architecture."
+    ],
+    "trustweave-saas": [
+      "Security -1: SDK pin is repaired locally, but publication, exact-pair remote Linux CI and staging failure-boundary evidence remain outstanding.",
+      "Correctness -1: live Accountly/PSP and supported legacy invoice behavior remain incomplete.",
+      "Architecture -1: release coupling and hosted recovery/alert integration remain outstanding.",
+      "Testing -1: two live-contract skips and no exact-pair remote Linux/staging evidence.",
+      "Experience -0.5: admins can inspect and page through recovery events without database/payload access; live provider redelivery still requires manual operations, and supported credential formats remain limited."
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "assessment": "Round 7 follow-up focused on Accountly, as requested, and device-bound key-loss recovery. A real deployed Accountly/Kill Bill contract passed locally. The wallet now guides replacement and issuer reissuance while refusing old-holder presentation. Half-point gains reflect the completed recovery UX and additional provider-contract evidence; they do not imply private-key reconstruction, hosted staging or payment settlement validation.",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24,
+    19,
+    15,
+    10
+  ],
+  "totals": {
+    "trustweave": 97,
+    "trustweave-saas": 96
+  },
+  "previous": {
+    "trustweave": 96.5,
+    "trustweave-saas": 95.5
+  },
+  "trustweave-saas": [
+    29,
+    24.5,
+    19,
+    14,
+    9.5
+  ],
+  "deductions": {
+    "trustweave": [
+      "Security -1: browser custody lacks hardware/user-presence signing and remains exposed to trusted-bundle compromise.",
+      "Correctness -1: issuer/disclosure profiles and hosted provider behavior remain limited or unvalidated.",
+      "Architecture -1: provider maturity and legacy storage boundaries remain uneven.",
+      "Experience: the remaining half-point is restored for the verified, explicit replacement-identity/reissuance flow. Lost key reconstruction and hardware signing remain security/product-profile limits, not claimed capabilities.",
+      "Testing receives full local-validation credit for the full JVM suite, lint, database/HTTP contracts and production browser regressions. This does not certify optional hosted providers; those limitations remain in correctness/architecture."
+    ],
+    "trustweave-saas": [
+      "Security -1: SDK pin is repaired locally, but publication, exact-pair remote Linux CI and staging failure-boundary evidence remain outstanding.",
+      "Correctness -0.5: application/tenant/subscriber/payment-metadata contracts passed against real Accountly/Kill Bill; PSP setup, paid subscriptions, settlement and production service-account authentication remain unvalidated.",
+      "Architecture -1: release coupling and hosted recovery/alert integration remain outstanding.",
+      "Testing -1: two live-contract skips and no exact-pair remote Linux/staging evidence.",
+      "Experience -0.5: admins can inspect and page through recovery events without database/payload access; live provider redelivery still requires manual operations, and supported credential formats remain limited."
+    ]
+  }
+}

@@ -1,198 +1,207 @@
 package org.trustweave.trust
 
+import kotlinx.coroutines.runBlocking
 import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.trust.InMemoryTrustRegistry
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Tests for Trust Registry operations.
  */
 class TrustRegistryTest {
+    @Test
+    fun `test add trust anchor`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            val added =
+                registry.addTrustAnchor(
+                    anchorDid = "did:key:university",
+                    metadata =
+                        TrustAnchorMetadata(
+                            credentialTypes = listOf("EducationCredential"),
+                            description = "Trusted university",
+                        ),
+                )
+
+            assertTrue(added)
+            assertTrue(registry.isTrustedIssuer("did:key:university", "EducationCredential"))
+        }
 
     @Test
-    fun `test add trust anchor`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test add duplicate trust anchor returns false`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        val added = registry.addTrustAnchor(
-            anchorDid = "did:key:university",
-            metadata = TrustAnchorMetadata(
-                credentialTypes = listOf("EducationCredential"),
-                description = "Trusted university"
+            registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
+            val addedAgain = registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
+
+            assertFalse(addedAgain)
+        }
+
+    @Test
+    fun `test remove trust anchor`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
+            assertTrue(registry.isTrustedIssuer("did:key:university", null))
+
+            val removed = registry.removeTrustAnchor("did:key:university")
+            assertTrue(removed)
+            assertFalse(registry.isTrustedIssuer("did:key:university", null))
+        }
+
+    @Test
+    fun `test isTrustedIssuer with credential type filter`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            registry.addTrustAnchor(
+                anchorDid = "did:key:university",
+                metadata =
+                    TrustAnchorMetadata(
+                        credentialTypes = listOf("EducationCredential", "DegreeCredential"),
+                    ),
             )
-        )
 
-        assertTrue(added)
-        assertTrue(registry.isTrustedIssuer("did:key:university", "EducationCredential"))
-    }
-
-    @Test
-    fun `test add duplicate trust anchor returns false`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
-        val addedAgain = registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
-
-        assertFalse(addedAgain)
-    }
+            assertTrue(registry.isTrustedIssuer("did:key:university", "EducationCredential"))
+            assertTrue(registry.isTrustedIssuer("did:key:university", "DegreeCredential"))
+            assertFalse(registry.isTrustedIssuer("did:key:university", "EmploymentCredential"))
+        }
 
     @Test
-    fun `test remove trust anchor`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test isTrustedIssuer with null credential type`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        registry.addTrustAnchor("did:key:university", TrustAnchorMetadata())
-        assertTrue(registry.isTrustedIssuer("did:key:university", null))
-
-        val removed = registry.removeTrustAnchor("did:key:university")
-        assertTrue(removed)
-        assertFalse(registry.isTrustedIssuer("did:key:university", null))
-    }
-
-    @Test
-    fun `test isTrustedIssuer with credential type filter`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor(
-            anchorDid = "did:key:university",
-            metadata = TrustAnchorMetadata(
-                credentialTypes = listOf("EducationCredential", "DegreeCredential")
+            registry.addTrustAnchor(
+                anchorDid = "did:key:university",
+                metadata =
+                    TrustAnchorMetadata(
+                        credentialTypes = listOf("EducationCredential"),
+                    ),
             )
-        )
 
-        assertTrue(registry.isTrustedIssuer("did:key:university", "EducationCredential"))
-        assertTrue(registry.isTrustedIssuer("did:key:university", "DegreeCredential"))
-        assertFalse(registry.isTrustedIssuer("did:key:university", "EmploymentCredential"))
-    }
+            // null credential type should check if anchor exists
+            assertTrue(registry.isTrustedIssuer("did:key:university", null))
+        }
 
     @Test
-    fun `test isTrustedIssuer with null credential type`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test findTrustPath direct trust`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        registry.addTrustAnchor(
-            anchorDid = "did:key:university",
-            metadata = TrustAnchorMetadata(
-                credentialTypes = listOf("EducationCredential")
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
+
+            val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor1")))
+
+            assertTrue(path is TrustPath.Verified)
+            val verified = path as TrustPath.Verified
+            // When from == to, fullPath is [from.did, to.did] = 2 elements (both are the same DID)
+            assertEquals(2, verified.fullPath.size)
+            assertEquals("did:key:anchor1", verified.fullPath[0].value)
+            assertEquals("did:key:anchor1", verified.fullPath[1].value)
+        }
+
+    @Test
+    fun `test findTrustPath between anchors`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
+            registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
+
+            val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
+
+            assertTrue(path is TrustPath.Verified)
+            val verified = path as TrustPath.Verified
+            assertTrue(verified.fullPath.size >= 2)
+            assertTrue(verified.trustScore > 0.0)
+        }
+
+    @Test
+    fun `test findTrustPath no path returns NotFound`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            // anchor2 not added, so no path
+
+            val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
+
+            assertTrue(path is TrustPath.NotFound)
+        }
+
+    @Test
+    fun `test getTrustedIssuers with credential type filter`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
+
+            registry.addTrustAnchor(
+                anchorDid = "did:key:university",
+                metadata = TrustAnchorMetadata(credentialTypes = listOf("EducationCredential")),
             )
-        )
+            registry.addTrustAnchor(
+                anchorDid = "did:key:company",
+                metadata = TrustAnchorMetadata(credentialTypes = listOf("EmploymentCredential")),
+            )
 
-        // null credential type should check if anchor exists
-        assertTrue(registry.isTrustedIssuer("did:key:university", null))
-    }
+            val educationIssuers = registry.getTrustedIssuers("EducationCredential")
+            assertEquals(1, educationIssuers.size)
+            assertTrue(educationIssuers.contains("did:key:university"))
 
-    @Test
-    fun `test findTrustPath direct trust`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
-
-        val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor1")))
-
-        assertTrue(path is TrustPath.Verified)
-        val verified = path as TrustPath.Verified
-        // When from == to, fullPath is [from.did, to.did] = 2 elements (both are the same DID)
-        assertEquals(2, verified.fullPath.size)
-        assertEquals("did:key:anchor1", verified.fullPath[0].value)
-        assertEquals("did:key:anchor1", verified.fullPath[1].value)
-    }
+            val employmentIssuers = registry.getTrustedIssuers("EmploymentCredential")
+            assertEquals(1, employmentIssuers.size)
+            assertTrue(employmentIssuers.contains("did:key:company"))
+        }
 
     @Test
-    fun `test findTrustPath between anchors`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test getTrustedIssuers with null credential type`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
-        registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
 
-        val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
-
-        assertTrue(path is TrustPath.Verified)
-        val verified = path as TrustPath.Verified
-        assertTrue(verified.fullPath.size >= 2)
-        assertTrue(verified.trustScore > 0.0)
-    }
+            val allIssuers: List<String> = registry.getTrustedIssuers(null as String?)
+            assertEquals(2, allIssuers.size)
+        }
 
     @Test
-    fun `test findTrustPath no path returns NotFound`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test trust score calculation`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        // anchor2 not added, so no path
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
+            registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
 
-        val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
+            val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
 
-        assertTrue(path is TrustPath.NotFound)
-    }
-
-    @Test
-    fun `test getTrustedIssuers with credential type filter`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor(
-            anchorDid = "did:key:university",
-            metadata = TrustAnchorMetadata(credentialTypes = listOf("EducationCredential"))
-        )
-        registry.addTrustAnchor(
-            anchorDid = "did:key:company",
-            metadata = TrustAnchorMetadata(credentialTypes = listOf("EmploymentCredential"))
-        )
-
-        val educationIssuers = registry.getTrustedIssuers("EducationCredential")
-        assertEquals(1, educationIssuers.size)
-        assertTrue(educationIssuers.contains("did:key:university"))
-
-        val employmentIssuers = registry.getTrustedIssuers("EmploymentCredential")
-        assertEquals(1, employmentIssuers.size)
-        assertTrue(employmentIssuers.contains("did:key:company"))
-    }
+            assertTrue(path is TrustPath.Verified)
+            val verified = path as TrustPath.Verified
+            assertTrue(verified.trustScore in 0.0..1.0)
+            assertTrue(verified.trustScore > 0.0)
+        }
 
     @Test
-    fun `test getTrustedIssuers with null credential type`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
+    fun `test clear trust registry`() =
+        runBlocking<Unit> {
+            val registry = InMemoryTrustRegistry()
 
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
+            registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
+            assertTrue(registry.isTrustedIssuer("did:key:anchor1", null))
 
-        val allIssuers: List<String> = registry.getTrustedIssuers(null as String?)
-        assertEquals(2, allIssuers.size)
-    }
-
-    @Test
-    fun `test trust score calculation`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        registry.addTrustAnchor("did:key:anchor2", TrustAnchorMetadata())
-        registry.addTrustRelationship("did:key:anchor1", "did:key:anchor2")
-
-        val path = registry.findTrustPath(VerifierIdentity(Did("did:key:anchor1")), IssuerIdentity(Did("did:key:anchor2")))
-
-        assertTrue(path is TrustPath.Verified)
-        val verified = path as TrustPath.Verified
-        assertTrue(verified.trustScore in 0.0..1.0)
-        assertTrue(verified.trustScore > 0.0)
-    }
-
-    @Test
-    fun `test clear trust registry`() = runBlocking<Unit> {
-        val registry = InMemoryTrustRegistry()
-
-        registry.addTrustAnchor("did:key:anchor1", TrustAnchorMetadata())
-        assertTrue(registry.isTrustedIssuer("did:key:anchor1", null))
-
-        registry.clear()
-        assertFalse(registry.isTrustedIssuer("did:key:anchor1", null))
-    }
+            registry.clear()
+            assertFalse(registry.isTrustedIssuer("did:key:anchor1", null))
+        }
 }
-
-

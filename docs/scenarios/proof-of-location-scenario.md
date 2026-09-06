@@ -6,6 +6,9 @@ nav_order: 31
 
 # Proof of Location Scenario
 
+> **Runnable companion:** [proof-of-location example](../../distribution/examples/scenarios/proof-of-location/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+
+
 This guide demonstrates how to implement proof of location credentials using TrustWeave, inspired by decentralized geospatial web concepts. You'll learn how to create location-based verifiable credentials, anchor them to blockchains for tamper-proof verification, and build a system for geospatial data integrity.
 
 ## What You'll Build
@@ -124,7 +127,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Basic understanding of geospatial concepts (coordinates, bounding boxes)

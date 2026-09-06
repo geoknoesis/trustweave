@@ -1,12 +1,12 @@
 package org.trustweave.trust.dsl.wallet
 
-import org.trustweave.trust.context.WalletDslContext
-import org.trustweave.wallet.Wallet
-import org.trustweave.wallet.services.WalletCreationOptionsBuilder
-import org.trustweave.wallet.exception.WalletException
-import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.context.WalletDslContext
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.exception.WalletException
+import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 
 /**
  * Wallet Builder DSL.
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class WalletBuilder(
-    private val walletContext: WalletDslContext
+    private val walletContext: WalletDslContext,
 ) {
     private var walletId: String? = null
     private var holderDid: String? = null
@@ -41,18 +41,18 @@ class WalletBuilder(
 
     /**
      * Set holder DID.
-     * 
+     *
      * @param did Must be a valid DID starting with "did:"
      * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun holder(did: String) {
         require(did.isNotBlank()) { "Holder DID cannot be blank" }
-        require(did.startsWith("did:")) { 
-            "Holder DID must start with 'did:'. Got: $did" 
+        require(did.startsWith("did:")) {
+            "Holder DID must start with 'did:'. Got: $did"
         }
         this.holderDid = did
     }
-    
+
     /**
      * Set wallet holder DID.
      */
@@ -62,14 +62,14 @@ class WalletBuilder(
 
     /**
      * Set wallet DID.
-     * 
+     *
      * @param did Must be a valid DID starting with "did:"
      * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun walletDid(did: String) {
         require(did.isNotBlank()) { "Wallet DID cannot be blank" }
-        require(did.startsWith("did:")) { 
-            "Wallet DID must start with 'did:'. Got: $did" 
+        require(did.startsWith("did:")) {
+            "Wallet DID must start with 'did:'. Got: $did"
         }
         this.walletDid = did
     }
@@ -98,7 +98,10 @@ class WalletBuilder(
     /**
      * Add custom option for wallet creation.
      */
-    fun option(key: String, value: Any?) {
+    fun option(
+        key: String,
+        value: Any?,
+    ) {
         optionsBuilder.property(key, value)
     }
 
@@ -119,24 +122,28 @@ class WalletBuilder(
     /**
      * Build the wallet.
      */
-    suspend fun build(): Wallet = withContext(Dispatchers.IO) {
-        val walletIdStr = walletId ?: java.util.UUID.randomUUID().toString()
-        val walletDidStr = walletDid ?: "did:key:test-wallet-$walletIdStr"
+    suspend fun build(): Wallet =
+        withContext(Dispatchers.IO) {
+            val walletIdStr =
+                walletId ?: java.util.UUID
+                    .randomUUID()
+                    .toString()
+            val walletDidStr = walletDid ?: "did:key:test-wallet-$walletIdStr"
 
-        // Add organization and presentation flags to options if needed
-        val finalOptions = optionsBuilder.build()
+            // Add organization and presentation flags to options if needed
+            val finalOptions = optionsBuilder.build()
 
-        // Use WalletFactory from provider
-        val walletFactory = walletContext.getWalletFactory()
-            ?: throw WalletException.WalletFactoryNotConfigured()
+            // Use WalletFactory from provider
+            val walletFactory =
+                walletContext.getWalletFactory()
+                    ?: throw WalletException.WalletFactoryNotConfigured()
 
-        return@withContext walletFactory.create(
-            providerName = provider,
-            walletId = walletIdStr,
-            walletDid = walletDidStr,
-            holderDid = holderDid,
-            options = finalOptions
-        )
-    }
+            return@withContext walletFactory.create(
+                providerName = provider,
+                walletId = walletIdStr,
+                walletDid = walletDidStr,
+                holderDid = holderDid,
+                options = finalOptions,
+            )
+        }
 }
-

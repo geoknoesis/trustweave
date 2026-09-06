@@ -1,0 +1,82 @@
+[
+  {
+    "id": "PR2-B1",
+    "status": "Local lint corrected; hosted CI open",
+    "details": "Formatted the affected modules and replaced exposed wildcard imports without changing the lint baseline. A green hosted run of this revision is still required."
+  },
+  {
+    "id": "PR2-B2",
+    "status": "Fixed; targeted tests passed",
+    "details": "Corrected Optimism and ZkSync SPI names. Both modules now exercise real ServiceLoader iteration. All 10 anchor registrations resolve to source classes."
+  },
+  {
+    "id": "PR2-B3",
+    "status": "Fixed; targeted tests passed",
+    "details": "Verify leaf self-signature and superior endorsements in the correct direction, reject unsigned statements, validate issuer links and validity intervals, and require independently configured anchor keys. A genuine HTTP chain resolves successfully. The exchange provider now uses the guarded default client."
+  },
+  {
+    "id": "PR2-B4",
+    "status": "Fixed; targeted tests passed",
+    "details": "Derive all record directories from the normalized absolute wallet path. Regression covers relative and non-normalized paths, listing, recovery and statistics."
+  },
+  {
+    "id": "PR2-B5",
+    "status": "Fixed with explicit product restrictions",
+    "details": "Require separate audience and nonce expectations for every presented L3. Reject negative or quoted amounts and missing constraint currency. Open budget/recurrence constraints fail closed because external enforcement is unavailable. Checkout remains unsupported."
+  },
+  {
+    "id": "PR2-B6",
+    "status": "Open",
+    "details": "No commit, push, tag, published release or attestation was produced. The intentional federation/VI ABI changes are documented and snapshots updated, but hosted release evidence is still absent."
+  },
+  {
+    "id": "PR2-N3",
+    "status": "Code corrected; limited validation",
+    "details": "Public status-list failures use a generic message and cancellation propagates. Existing route tests pass; fault-injection coverage has not been added."
+  },
+  {
+    "id": "PR2-N5",
+    "status": "Partially addressed",
+    "details": "Federation traversal now has a shared 64-edge budget and cycle guard, with cancellation propagation. Sibling protocol session-store issues remain open."
+  },
+  {
+    "id": "PR2-N9",
+    "status": "Partially addressed",
+    "details": "Documentation workflow actions are pinned to the same SHAs as CI and receive read-only contents permission. Restoring the module-name gate remains open."
+  },
+  {
+    "id": "PR2-N1",
+    "status": "Open; not remediated in this pass",
+    "details": "revoked filter throws mid-iteration"
+  },
+  {
+    "id": "PR2-N2",
+    "status": "Open; not remediated in this pass",
+    "details": "Cloud listing aborts on concurrent delete; statistics paths are O(N)"
+  },
+  {
+    "id": "PR2-N4",
+    "status": "Open; not remediated in this pass",
+    "details": "Transport gate applied inconsistently across anchors and KMS clients"
+  },
+  {
+    "id": "PR2-N6",
+    "status": "Open; not remediated in this pass",
+    "details": "Observability unchanged"
+  },
+  {
+    "id": "PR2-N7",
+    "status": "Open; not remediated in this pass",
+    "details": "26 modules with main code and no test source"
+  },
+  {
+    "id": "PR2-N8",
+    "status": "Open; not remediated in this pass",
+    "details": "Reference wallet flows broken by this diff (demo scope)"
+  },
+  {
+    "id": "PR2-N10",
+    "status": "Open; not remediated in this pass",
+    "details": "Deployment policy has a bypass and cannot admit any wallet"
+  }
+]

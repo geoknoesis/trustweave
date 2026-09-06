@@ -47,7 +47,7 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 2. **Editing:** Update or add Markdown files. Keep line length under ~120 characters and follow the snippet narration rules above.
 3. **Verification:**
    - `./gradlew build` — ensures Kotlin samples and fixtures still compile.
-   - `./gradlew :TrustWeave-examples:runQuickStartSample` — required whenever you touch quick-start instructions or referenced code.
+   - `./gradlew :distribution:examples:runQuickStartSample` — required whenever you touch quick-start instructions or referenced code.
 4. **Preview:** Render Markdown locally (VS Code markdown preview, GitBook CLI, or equivalent) to check formatting.
 5. **Pull request:** Describe the change, list affected pages, mention related issues, and attach screenshots for visual updates.
 
@@ -56,7 +56,7 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 - Use idiomatic Kotlin (coroutines, `Result`, extension DSLs).
 - Prefer concise examples that compile. Include imports when not obvious.
 - When referencing build files, show `build.gradle.kts` snippets.
-- Tie examples back to runnable projects where possible (e.g., link to `TrustWeave-examples:runQuickStartSample`).
+- Tie examples back to runnable projects where possible (e.g., link to `distribution:examples:runQuickStartSample`).
 - Annotate each snippet with **What it does / Result / Design significance** so readers understand the intent immediately.
 
 ## Diagrams and Media
@@ -73,7 +73,7 @@ If you want to create custom plugins for TrustWeave (DID methods, blockchain cli
 **Goal:** ensure documentation edits do not break runnable samples or navigation.
 
 - `./gradlew build` — ensures Kotlin samples (including docs/quick-start) compile.
-- `./gradlew :TrustWeave-examples:runQuickStartSample` — validates the end-to-end quick-start flow.
+- `./gradlew :distribution:examples:runQuickStartSample` — validates the end-to-end quick-start flow.
 - Manual link review for new or renamed pages (link checker automation is planned).
 
 If you have questions, open an issue or reach out on the project discussion board. Thanks again for helping us keep TrustWeave's documentation top-tier.

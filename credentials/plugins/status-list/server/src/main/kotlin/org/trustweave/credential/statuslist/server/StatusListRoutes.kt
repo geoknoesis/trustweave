@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
@@ -12,11 +13,12 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.revocation.bitstring.BitstringStatusListManager
 import org.trustweave.revocation.token.TokenStatusListManager
 
-private val json = Json {
-    serializersModule = SerializationModule.default
-    ignoreUnknownKeys = true
-    prettyPrint = true
-}
+private val json =
+    Json {
+        serializersModule = SerializationModule.default
+        ignoreUnknownKeys = true
+        prettyPrint = true
+    }
 
 /**
  * Configures status-list serving routes.
@@ -35,11 +37,12 @@ fun Routing.configureStatusListRoutes(
      * Content-Type: application/vc+ld+json
      */
     get("/status-lists/{id}") {
-        val id = call.parameters["id"]
-            ?: return@get call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse("MISSING_ID", "Missing status list ID"),
-            )
+        val id =
+            call.parameters["id"]
+                ?: return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    ErrorResponse("MISSING_ID", "Missing status list ID"),
+                )
 
         if (bitstringManager == null) {
             call.respond(
@@ -58,10 +61,12 @@ fun Routing.configureStatusListRoutes(
                 HttpStatusCode.NotFound,
                 ErrorResponse("NOT_FOUND", "Status list not found: $id"),
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse("INTERNAL_ERROR", e.message ?: "Unexpected error"),
+                ErrorResponse("INTERNAL_ERROR", "Unable to retrieve status list"),
             )
         }
     }
@@ -73,11 +78,12 @@ fun Routing.configureStatusListRoutes(
      * Content-Type: application/statuslist+jwt
      */
     get("/token-status-lists/{id}") {
-        val id = call.parameters["id"]
-            ?: return@get call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse("MISSING_ID", "Missing status list ID"),
-            )
+        val id =
+            call.parameters["id"]
+                ?: return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    ErrorResponse("MISSING_ID", "Missing status list ID"),
+                )
 
         if (tokenManager == null) {
             call.respond(
@@ -95,14 +101,19 @@ fun Routing.configureStatusListRoutes(
                 HttpStatusCode.NotFound,
                 ErrorResponse("NOT_FOUND", "Token status list not found: $id"),
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse("INTERNAL_ERROR", e.message ?: "Unexpected error"),
+                ErrorResponse("INTERNAL_ERROR", "Unable to retrieve status list"),
             )
         }
     }
 }
 
 @Serializable
-private data class ErrorResponse(val error: String, val message: String)
+private data class ErrorResponse(
+    val error: String,
+    val message: String,
+)

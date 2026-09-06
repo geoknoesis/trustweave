@@ -1,21 +1,19 @@
 package org.trustweave.credential.revocation.internal
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.StatusListId
-import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.StatusPurpose
-import org.trustweave.credential.revocation.RevocationStatus
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.revocation.StatusListMetadata
 import org.trustweave.credential.revocation.StatusListStatistics
 import org.trustweave.credential.revocation.StatusUpdate
-import java.util.Base64
 import java.util.BitSet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * In-memory credential revocation manager implementation.
@@ -33,8 +31,10 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     // Per-status-list index mapping: statusListId -> (credentialId -> index)
     private val credentialToIndex = ConcurrentHashMap<StatusListId, ConcurrentHashMap<String, Int>>()
+
     // Per-status-list reverse mapping: statusListId -> (index -> credentialId)
     private val indexToCredential = ConcurrentHashMap<StatusListId, ConcurrentHashMap<Int, String>>()
+
     // Per-status-list next available index
     private val nextIndex = ConcurrentHashMap<StatusListId, Int>()
 
@@ -45,20 +45,21 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         issuerDid: String,
         purpose: StatusPurpose,
         size: Int,
-        customId: String?
+        customId: String?,
     ): StatusListId {
         val id = StatusListId(customId ?: UUID.randomUUID().toString())
         val bitSet = BitSet(size)
         val now = Clock.System.now()
 
-        val metadata = StatusListMetadata(
-            id = id,
-            issuerDid = issuerDid,
-            purpose = purpose,
-            size = size,
-            createdAt = now,
-            lastUpdated = now
-        )
+        val metadata =
+            StatusListMetadata(
+                id = id,
+                issuerDid = issuerDid,
+                purpose = purpose,
+                size = size,
+                createdAt = now,
+                lastUpdated = now,
+            )
 
         statusLists[id] = metadata
         if (purpose == StatusPurpose.REVOCATION) {
@@ -76,7 +77,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun revokeCredential(
         credentialId: String,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): Boolean {
         val metadata = statusLists[statusListId] ?: return false
 
@@ -98,7 +99,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun suspendCredential(
         credentialId: String,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): Boolean {
         val metadata = statusLists[statusListId] ?: return false
 
@@ -120,7 +121,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun unrevokeCredential(
         credentialId: String,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): Boolean {
         val metadata = statusLists[statusListId] ?: return false
 
@@ -139,7 +140,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun unsuspendCredential(
         credentialId: String,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): Boolean {
         val metadata = statusLists[statusListId] ?: return false
 
@@ -156,17 +157,17 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         return true
     }
 
-    override suspend fun checkRevocationStatus(
-        credential: VerifiableCredential
-    ): RevocationStatus {
-        val credentialStatus = credential.credentialStatus ?: return RevocationStatus(
-            revoked = false,
-            suspended = false
-        )
+    override suspend fun checkRevocationStatus(credential: VerifiableCredential): RevocationStatus {
+        val credentialStatus =
+            credential.credentialStatus ?: return RevocationStatus(
+                revoked = false,
+                suspended = false,
+            )
 
         val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
-        val index = credentialStatus.statusListIndex?.toIntOrNull()
-            ?: credential.id?.value?.let { getCredentialIndex(it, statusListId) }
+        val index =
+            credentialStatus.statusListIndex?.toIntOrNull()
+                ?: credential.id?.value?.let { getCredentialIndex(it, statusListId) }
 
         return if (index != null) {
             checkStatusByIndex(statusListId, index)
@@ -174,21 +175,22 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             RevocationStatus(
                 revoked = false,
                 suspended = false,
-                statusListId = statusListId
+                statusListId = statusListId,
             )
         }
     }
 
     override suspend fun checkStatusByIndex(
         statusListId: StatusListId,
-        index: Int
+        index: Int,
     ): RevocationStatus {
-        val metadata = statusLists[statusListId] ?: return RevocationStatus(
-            revoked = false,
-            suspended = false,
-            statusListId = statusListId,
-            index = index
-        )
+        val metadata =
+            statusLists[statusListId] ?: return RevocationStatus(
+                revoked = false,
+                suspended = false,
+                statusListId = statusListId,
+                index = index,
+            )
 
         val isRevoked = revocationData[statusListId]?.get(index) == true
         val isSuspended = suspensionData[statusListId]?.get(index) == true
@@ -197,35 +199,34 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             revoked = isRevoked && metadata.purpose == StatusPurpose.REVOCATION,
             suspended = isSuspended && metadata.purpose == StatusPurpose.SUSPENSION,
             statusListId = statusListId,
-            index = index
+            index = index,
         )
     }
 
     override suspend fun checkStatusByCredentialId(
         credentialId: String,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): RevocationStatus {
-        val index = getCredentialIndex(credentialId, statusListId)
-            ?: return RevocationStatus(
-                revoked = false,
-                suspended = false,
-                statusListId = statusListId
-            )
+        val index =
+            getCredentialIndex(credentialId, statusListId)
+                ?: return RevocationStatus(
+                    revoked = false,
+                    suspended = false,
+                    statusListId = statusListId,
+                )
 
         return checkStatusByIndex(statusListId, index)
     }
 
     override suspend fun getCredentialIndex(
         credentialId: String,
-        statusListId: StatusListId
-    ): Int? {
-        return credentialToIndex[statusListId]?.get(credentialId)
-    }
+        statusListId: StatusListId,
+    ): Int? = credentialToIndex[statusListId]?.get(credentialId)
 
     override suspend fun assignCredentialIndex(
         credentialId: String,
         statusListId: StatusListId,
-        index: Int?
+        index: Int?,
     ): Int {
         val indices = credentialToIndex.getOrPut(statusListId) { ConcurrentHashMap() }
         val reverseIndices = indexToCredential.getOrPut(statusListId) { ConcurrentHashMap() }
@@ -235,7 +236,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             if (index != null) {
                 if (reverseIndices.containsKey(index)) {
                     throw IllegalArgumentException(
-                        "Index $index is already assigned in status list ${statusListId.value}"
+                        "Index $index is already assigned in status list ${statusListId.value}",
                     )
                 }
                 indices[credentialId] = index
@@ -257,7 +258,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun revokeCredentials(
         credentialIds: List<String>,
-        statusListId: StatusListId
+        statusListId: StatusListId,
     ): Map<String, Boolean> {
         val metadata = statusLists[statusListId] ?: return credentialIds.associateWith { false }
 
@@ -268,13 +269,14 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         val bitSet = revocationData[statusListId] ?: return credentialIds.associateWith { false }
         val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
 
-        val results = mutex.withLock {
-            credentialIds.associateWith { credentialId ->
-                val index = getOrAssignIndex(credentialId, statusListId)
-                bitSet.set(index, true)
-                true
+        val results =
+            mutex.withLock {
+                credentialIds.associateWith { credentialId ->
+                    val index = getOrAssignIndex(credentialId, statusListId)
+                    bitSet.set(index, true)
+                    true
+                }
             }
-        }
 
         updateMetadata(statusListId)
         return results
@@ -282,10 +284,11 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun updateStatusListBatch(
         statusListId: StatusListId,
-        updates: List<StatusUpdate>
+        updates: List<StatusUpdate>,
     ) {
-        val metadata = statusLists[statusListId]
-            ?: throw IllegalArgumentException("Status list not found: ${statusListId.value}")
+        val metadata =
+            statusLists[statusListId]
+                ?: throw IllegalArgumentException("Status list not found: ${statusListId.value}")
 
         val revocationBitSet = revocationData[statusListId]
         val suspensionBitSet = suspensionData[statusListId]
@@ -308,29 +311,30 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         updateMetadata(statusListId)
     }
 
-    override suspend fun getStatusListStatistics(
-        statusListId: StatusListId
-    ): StatusListStatistics? {
+    override suspend fun getStatusListStatistics(statusListId: StatusListId): StatusListStatistics? {
         val metadata = statusLists[statusListId] ?: return null
 
-        val bitSet = when (metadata.purpose) {
-            StatusPurpose.REVOCATION -> revocationData[statusListId]
-            StatusPurpose.SUSPENSION -> suspensionData[statusListId]
-        } ?: return null
+        val bitSet =
+            when (metadata.purpose) {
+                StatusPurpose.REVOCATION -> revocationData[statusListId]
+                StatusPurpose.SUSPENSION -> suspensionData[statusListId]
+            } ?: return null
 
         val indices = credentialToIndex[statusListId] ?: emptyMap()
         val usedIndices = indices.size
         val totalCapacity = metadata.size
-        val revokedCount = if (metadata.purpose == StatusPurpose.REVOCATION) {
-            bitSet.cardinality()
-        } else {
-            0
-        }
-        val suspendedCount = if (metadata.purpose == StatusPurpose.SUSPENSION) {
-            bitSet.cardinality()
-        } else {
-            0
-        }
+        val revokedCount =
+            if (metadata.purpose == StatusPurpose.REVOCATION) {
+                bitSet.cardinality()
+            } else {
+                0
+            }
+        val suspendedCount =
+            if (metadata.purpose == StatusPurpose.SUSPENSION) {
+                bitSet.cardinality()
+            } else {
+                0
+            }
         val availableIndices = totalCapacity - usedIndices
 
         return StatusListStatistics(
@@ -342,21 +346,18 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             revokedCount = revokedCount,
             suspendedCount = suspendedCount,
             availableIndices = availableIndices,
-            lastUpdated = metadata.lastUpdated
+            lastUpdated = metadata.lastUpdated,
         )
     }
 
-    override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? {
-        return statusLists[statusListId]
-    }
+    override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? = statusLists[statusListId]
 
-    override suspend fun listStatusLists(issuerDid: String?): List<StatusListMetadata> {
-        return if (issuerDid != null) {
+    override suspend fun listStatusLists(issuerDid: String?): List<StatusListMetadata> =
+        if (issuerDid != null) {
             statusLists.values.filter { it.issuerDid == issuerDid }
         } else {
             statusLists.values.toList()
         }
-    }
 
     override suspend fun deleteStatusList(statusListId: StatusListId): Boolean {
         val removed = statusLists.remove(statusListId) != null
@@ -372,15 +373,17 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
 
     override suspend fun expandStatusList(
         statusListId: StatusListId,
-        additionalSize: Int
+        additionalSize: Int,
     ) {
-        val metadata = statusLists[statusListId]
-            ?: throw IllegalArgumentException("Status list not found: ${statusListId.value}")
+        val metadata =
+            statusLists[statusListId]
+                ?: throw IllegalArgumentException("Status list not found: ${statusListId.value}")
 
-        val currentBitSet = when (metadata.purpose) {
-            StatusPurpose.REVOCATION -> revocationData[statusListId]
-            StatusPurpose.SUSPENSION -> suspensionData[statusListId]
-        } ?: throw IllegalArgumentException("Status list data not found: ${statusListId.value}")
+        val currentBitSet =
+            when (metadata.purpose) {
+                StatusPurpose.REVOCATION -> revocationData[statusListId]
+                StatusPurpose.SUSPENSION -> suspensionData[statusListId]
+            } ?: throw IllegalArgumentException("Status list data not found: ${statusListId.value}")
 
         val newSize = metadata.size + additionalSize
         val newBitSet = BitSet(newSize)
@@ -400,13 +403,17 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
 
         // Update metadata
-        statusLists[statusListId] = metadata.copy(
-            size = newSize,
-            lastUpdated = Clock.System.now()
-        )
+        statusLists[statusListId] =
+            metadata.copy(
+                size = newSize,
+                lastUpdated = Clock.System.now(),
+            )
     }
 
-    private fun getOrAssignIndex(credentialId: String, statusListId: StatusListId): Int {
+    private fun getOrAssignIndex(
+        credentialId: String,
+        statusListId: StatusListId,
+    ): Int {
         val indices = credentialToIndex.getOrPut(statusListId) { ConcurrentHashMap() }
         val reverseIndices = indexToCredential.getOrPut(statusListId) { ConcurrentHashMap() }
 
@@ -427,4 +434,3 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         statusLists[statusListId] = metadata.copy(lastUpdated = Clock.System.now())
     }
 }
-

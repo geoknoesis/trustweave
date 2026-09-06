@@ -14,7 +14,7 @@ import okhttp3.Request
  * a verifiable path of trust from a leaf entity to a known trust anchor:
  *
  * ```
- * [leaf Entity Configuration, intermediate Subordinate Statement?, ..., trust anchor Subordinate Statement]
+ * [leaf Entity Configuration, intermediate Subordinate Statement?, ..., trust anchor Subordinate Statement, anchor Entity Configuration]
  * ```
  *
  * ### Resolution algorithm
@@ -32,7 +32,7 @@ import okhttp3.Request
  * ### Verification
  * Call [verifyChain] on a resolved chain before trusting it. Verification checks
  * expiry of all statements (with [clockSkewSeconds] tolerance) and validates that
- * each statement's `jwks` field matches the key used to sign the next statement.
+ * each statement's signature is verified with its superior's endorsed keys and the anchor is pinned.
  */
 class TrustChainResolver(
     /**
@@ -47,7 +47,15 @@ class TrustChainResolver(
     private val clockSkewSeconds: Long = 30L,
     /** Cap on a single fetched statement; a compromised authority must not exhaust memory. */
     private val maxResponseBytes: Int = DEFAULT_MAX_RESPONSE_BYTES,
+    /** Public trust-anchor keys provisioned independently of the presented chain. */
+    private val trustedAnchorKeys: Map<String, FederationJwkSet> = emptyMap(),
 ) {
+    init {
+        require(maxChainLength in 1..100)
+        require(clockSkewSeconds in 0..300)
+        require(maxResponseBytes in 1..(16 * 1024 * 1024))
+    }
+
     private val jwtProcessor = EntityStatementJwtProcessor(httpClient)
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -93,6 +101,8 @@ class TrustChainResolver(
             trustedAnchorIds = trustedAnchorIds,
             depth = 0,
             accumulatedStatements = emptyList(),
+            visited = mutableSetOf(),
+            remainingEdges = intArrayOf(64),
         )
 
     /**
@@ -110,43 +120,39 @@ class TrustChainResolver(
      * Performs the following checks:
      * 1. The chain is non-empty.
      * 2. No statement has expired (using [clockSkewSeconds] tolerance).
-     * 3. Each statement's `jwks` contains the key that signed the next statement in the chain.
-     *    (The final statement is the trust anchor's self-signed Entity Configuration or
-     *    Subordinate Statement, whose verification key must be pre-configured externally.)
+     * 3. Verify the leaf self-signature, subordinate signatures against superior-endorsed keys,
+     *    issuer/subject links, and the final anchor configuration against configured anchor keys.
      * 4. Constraint propagation: `max_path_length` from any intermediate is not exceeded.
      *
      * @param chain The trust chain to verify.
      * @return `true` if all checks pass, `false` otherwise.
      */
     fun verifyChain(chain: TrustChain): Boolean {
-        if (chain.statements.isEmpty()) return false
-
-        val nowSeconds = System.currentTimeMillis() / 1000L
-        val parsedStatements = chain.statements.mapNotNull { jwtProcessor.parse(it) }
-
-        if (parsedStatements.size != chain.statements.size) return false
-
-        // Check expiry on every statement
-        val allValid =
-            parsedStatements.all { stmt ->
-                stmt.exp + clockSkewSeconds >= nowSeconds
+        if (chain.statements.isEmpty() || chain.statements.size > maxChainLength + 2) return false
+        val anchorKeys = trustedAnchorKeys[chain.trustAnchorId] ?: return false
+        val parsed = chain.statements.map { jwtProcessor.parse(it) ?: return false }
+        val now = System.currentTimeMillis() / 1000L
+        if (parsed.any {
+                it.iat < 0 || it.iat > now + clockSkewSeconds || it.exp <= it.iat || it.exp <= now - clockSkewSeconds
             }
-        if (!allValid) return false
-
-        // Verify that each statement's subject key set covers the key used to
-        // sign the next statement in the chain.
-        for (i in 0 until chain.statements.size - 1) {
-            val current = parsedStatements[i]
-            val nextJwt = chain.statements[i + 1]
-            // The next JWT must be verifiable with the keys declared in the current statement's jwks.
-            if (!jwtProcessor.verify(nextJwt, current.jwks)) return false
+        ) {
+            return false
         }
-
-        // Validate max_path_length constraints
-        val intermediateCount = chain.statements.size - 2 // leaf + trust anchor not counted
-        val maxPathLength = parsedStatements.mapNotNull { it.constraints?.maxPathLength }.minOrNull()
-        if (maxPathLength != null && intermediateCount > maxPathLength) return false
-
+        val leaf = parsed.first()
+        val anchor = parsed.last()
+        if (leaf.iss != chain.leafEntityId || leaf.sub != leaf.iss) return false
+        if (anchor.iss != chain.trustAnchorId || anchor.sub != anchor.iss) return false
+        if (!jwtProcessor.verify(chain.statements.first(), leaf.jwks)) return false
+        if (!jwtProcessor.verify(chain.statements.last(), anchorKeys)) return false
+        for (i in 0 until parsed.lastIndex) {
+            if (parsed[i].iss != parsed[i + 1].sub) return false
+            if (!jwtProcessor.verify(chain.statements[i], parsed[i + 1].jwks)) return false
+        }
+        // At index j, j-1 intermediate entities are subordinate to the statement's subject.
+        for ((index, statement) in parsed.withIndex()) {
+            val limit = statement.constraints?.maxPathLength ?: continue
+            if (limit < 0 || maxOf(0, minOf(index - 1, parsed.size - 3)) > limit) return false
+        }
         return true
     }
 
@@ -159,8 +165,10 @@ class TrustChainResolver(
         trustedAnchorIds: Set<String>,
         depth: Int,
         accumulatedStatements: List<String>,
+        visited: MutableSet<String>,
+        remainingEdges: IntArray,
     ): TrustChainResolutionResult {
-        if (depth > maxChainLength) {
+        if (depth > maxChainLength || !visited.add(entityId)) {
             return TrustChainResolutionResult.Failure(
                 reason = "Exceeded maximum chain length of $maxChainLength",
                 entityId = entityId,
@@ -169,6 +177,7 @@ class TrustChainResolver(
 
         val leafJwt =
             runCatching { fetchEntityConfiguration(entityId) }.getOrElse { ex ->
+                if (ex is kotlinx.coroutines.CancellationException) throw ex
                 return TrustChainResolutionResult.Failure(
                     reason = "Could not fetch entity configuration for $entityId: ${ex.message}",
                     entityId = entityId,
@@ -182,6 +191,9 @@ class TrustChainResolver(
                     entityId = entityId,
                 )
 
+        if (leafStatement.iss != entityId || leafStatement.sub != entityId || !jwtProcessor.verify(leafJwt, leafStatement.jwks)) {
+            return TrustChainResolutionResult.Failure("Invalid entity configuration", entityId)
+        }
         val hints = leafStatement.authorityHints
         if (hints.isNullOrEmpty()) {
             return TrustChainResolutionResult.Failure(
@@ -190,35 +202,33 @@ class TrustChainResolver(
             )
         }
 
-        val currentStatements = accumulatedStatements + leafJwt
-
+        val currentStatements = if (accumulatedStatements.isEmpty()) listOf(leafJwt) else accumulatedStatements
         for (hint in hints) {
+            if (remainingEdges[0]-- <= 0) break
+            val subordinateJwt =
+                runCatching {
+                    fetchSubordinateStatement(authorityId = hint, subjectId = entityId)
+                }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }.getOrNull() ?: continue
             if (hint in trustedAnchorIds) {
-                // Attempt to fetch the Subordinate Statement from this trust anchor
-                val subordinateJwt =
+                if (hint !in trustedAnchorKeys) continue
+                val anchorJwt =
                     runCatching {
-                        fetchSubordinateStatement(authorityId = hint, subjectId = entityId)
-                    }.getOrNull() ?: continue
-
+                        fetchEntityConfiguration(
+                            hint,
+                        )
+                    }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }.getOrNull()
+                        ?: continue
                 val chain =
                     TrustChain(
-                        statements = currentStatements + subordinateJwt,
+                        statements = currentStatements + subordinateJwt + anchorJwt,
                         trustAnchorId = hint,
-                        leafEntityId = entityId,
+                        leafEntityId = checkNotNull(jwtProcessor.parse(currentStatements.first())).sub,
                     )
-                return TrustChainResolutionResult.Success(
-                    chain = chain,
-                    verifiedAt = System.currentTimeMillis() / 1000L,
-                )
+                if (verifyChain(chain)) {
+                    return TrustChainResolutionResult.Success(chain, System.currentTimeMillis() / 1000L)
+                }
             } else {
-                // Recurse: try to find a trusted anchor above this hint
-                val result =
-                    resolveInternal(
-                        entityId = hint,
-                        trustedAnchorIds = trustedAnchorIds,
-                        depth = depth + 1,
-                        accumulatedStatements = currentStatements,
-                    )
+                val result = resolveInternal(hint, trustedAnchorIds, depth + 1, currentStatements + subordinateJwt, visited, remainingEdges)
                 if (result is TrustChainResolutionResult.Success) return result
             }
         }

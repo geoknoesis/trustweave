@@ -20,91 +20,96 @@ import kotlin.test.assertTrue
  * exception subtype is discarded.
  */
 class RegistryBasedResolverTest {
-
-    private fun throwingMethod(methodName: String, exception: DidException): DidMethod =
+    private fun throwingMethod(
+        methodName: String,
+        exception: DidException,
+    ): DidMethod =
         object : DidMethod {
             override val method: String = methodName
-            override suspend fun createDid(options: DidCreationOptions): DidDocument {
-                throw UnsupportedOperationException()
-            }
-            override suspend fun resolveDid(did: Did): DidResolutionResult {
-                throw exception
-            }
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument {
-                throw UnsupportedOperationException()
-            }
-            override suspend fun deactivateDid(did: Did): Boolean {
-                throw UnsupportedOperationException()
-            }
+
+            override suspend fun createDid(options: DidCreationOptions): DidDocument = throw UnsupportedOperationException()
+
+            override suspend fun resolveDid(did: Did): DidResolutionResult = throw exception
+
+            override suspend fun updateDid(
+                did: Did,
+                updater: (DidDocument) -> DidDocument,
+            ): DidDocument = throw UnsupportedOperationException()
+
+            override suspend fun deactivateDid(did: Did): Boolean = throw UnsupportedOperationException()
         }
 
     @Test
-    fun `DidException DidNotFound surfaces NOT_FOUND`() = runBlocking<Unit> {
-        val did = Did("did:test:missing")
-        val registry = DidMethodRegistry()
-        registry.register(throwingMethod("test", DidException.DidNotFound(did = did)))
+    fun `DidException DidNotFound surfaces NOT_FOUND`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:missing")
+            val registry = DidMethodRegistry()
+            registry.register(throwingMethod("test", DidException.DidNotFound(did = did)))
 
-        val result = RegistryBasedResolver(registry).resolve(did)
+            val result = RegistryBasedResolver(registry).resolve(did)
 
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
-        assertEquals(404, metadata.error?.httpStatus)
-    }
-
-    @Test
-    fun `DidException InvalidDidFormat surfaces INVALID_DID`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val registry = DidMethodRegistry()
-        registry.register(
-            throwingMethod(
-                "test",
-                DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier")
-            )
-        )
-
-        val result = RegistryBasedResolver(registry).resolve(did)
-
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
-        assertEquals(400, metadata.error?.httpStatus)
-    }
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+            assertEquals(404, metadata.error?.httpStatus)
+        }
 
     @Test
-    fun `unmapped DidException subtype falls back to INTERNAL_ERROR`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val registry = DidMethodRegistry()
-        registry.register(
-            throwingMethod(
-                "test",
-                DidException.DidResolutionFailed(did = did, reason = "driver crashed")
+    fun `DidException InvalidDidFormat surfaces INVALID_DID`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val registry = DidMethodRegistry()
+            registry.register(
+                throwingMethod(
+                    "test",
+                    DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier"),
+                ),
             )
-        )
 
-        val result = RegistryBasedResolver(registry).resolve(did)
+            val result = RegistryBasedResolver(registry).resolve(did)
 
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.INTERNAL_ERROR, metadata.error?.type)
-        assertEquals(500, metadata.error?.httpStatus)
-    }
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
+            assertEquals(400, metadata.error?.httpStatus)
+        }
 
     @Test
-    fun `DidException DidMethodNotRegistered surfaces METHOD_NOT_SUPPORTED`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val registry = DidMethodRegistry()
-        registry.register(
-            throwingMethod(
-                "test",
-                DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
+    fun `unmapped DidException subtype falls back to INTERNAL_ERROR`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val registry = DidMethodRegistry()
+            registry.register(
+                throwingMethod(
+                    "test",
+                    DidException.DidResolutionFailed(did = did, reason = "driver crashed"),
+                ),
             )
-        )
 
-        val result = RegistryBasedResolver(registry).resolve(did)
+            val result = RegistryBasedResolver(registry).resolve(did)
 
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
-    }
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.INTERNAL_ERROR, metadata.error?.type)
+            assertEquals(500, metadata.error?.httpStatus)
+        }
+
+    @Test
+    fun `DidException DidMethodNotRegistered surfaces METHOD_NOT_SUPPORTED`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val registry = DidMethodRegistry()
+            registry.register(
+                throwingMethod(
+                    "test",
+                    DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key")),
+                ),
+            )
+
+            val result = RegistryBasedResolver(registry).resolve(did)
+
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+        }
 }

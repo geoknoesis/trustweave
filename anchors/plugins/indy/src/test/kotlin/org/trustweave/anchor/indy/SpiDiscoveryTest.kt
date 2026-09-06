@@ -1,7 +1,7 @@
 package org.trustweave.anchor.indy
 
-import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import org.junit.jupiter.api.Test
+import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 import java.util.ServiceLoader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -10,7 +10,6 @@ import kotlin.test.assertNotNull
  * Tests for SPI (Service Provider Interface) discovery of Indy adapter.
  */
 class SpiDiscoveryTest {
-
     @Test
     fun `SPI should discover Indy provider`() {
         try {
@@ -26,8 +25,8 @@ class SpiDiscoveryTest {
             // This is acceptable in test environments where Indy dependencies may not be available
             println("SPI discovery failed (may be due to missing runtime dependencies): ${e.message}")
             // Skip test rather than fail - SPI works when dependencies are available
-            org.junit.jupiter.api.Assumptions.assumeTrue(false, "SPI discovery requires full runtime dependencies")
+            org.junit.jupiter.api.Assumptions
+                .assumeTrue(false, "SPI discovery requires full runtime dependencies")
         }
     }
 }
-

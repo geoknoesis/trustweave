@@ -1,0 +1,747 @@
+{
+  "scope": "Included Gradle projects. src/main and src/test counts exclude multiplatform source sets and do not measure behavioral coverage.",
+  "modules": [
+    {
+      "module": "common",
+      "main_kotlin_files": 22,
+      "test_kotlin_files": 24,
+      "abi_files": 1,
+      "lint_baseline_entries": 1163
+    },
+    {
+      "module": "common-mp",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 53
+    },
+    {
+      "module": "trust",
+      "main_kotlin_files": 66,
+      "test_kotlin_files": 43,
+      "abi_files": 1,
+      "lint_baseline_entries": 3214
+    },
+    {
+      "module": "testkit",
+      "main_kotlin_files": 37,
+      "test_kotlin_files": 20,
+      "abi_files": 1,
+      "lint_baseline_entries": 2094
+    },
+    {
+      "module": "contract",
+      "main_kotlin_files": 14,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 619
+    },
+    {
+      "module": "did:did-core",
+      "main_kotlin_files": 63,
+      "test_kotlin_files": 49,
+      "abi_files": 1,
+      "lint_baseline_entries": 2992
+    },
+    {
+      "module": "did:did-identifiers-mp",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 34
+    },
+    {
+      "module": "did:registrar",
+      "main_kotlin_files": 13,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 612
+    },
+    {
+      "module": "did:registrar-server-ktor",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 67
+    },
+    {
+      "module": "did:registrar-server-spring",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 77
+    },
+    {
+      "module": "did:plugins:base",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 6,
+      "abi_files": 1,
+      "lint_baseline_entries": 66
+    },
+    {
+      "module": "did:plugins:sidetree-core",
+      "main_kotlin_files": 9,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 186
+    },
+    {
+      "module": "did:plugins:key",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 69
+    },
+    {
+      "module": "did:plugins:web",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 37
+    },
+    {
+      "module": "did:plugins:ethr",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 72
+    },
+    {
+      "module": "did:plugins:ion",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 118
+    },
+    {
+      "module": "did:plugins:polygon",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 84
+    },
+    {
+      "module": "did:plugins:sol",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 152
+    },
+    {
+      "module": "did:plugins:peer",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 210
+    },
+    {
+      "module": "did:plugins:ens",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 75
+    },
+    {
+      "module": "did:plugins:plc",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 84
+    },
+    {
+      "module": "did:plugins:cheqd",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 85
+    },
+    {
+      "module": "did:plugins:jwk",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 47
+    },
+    {
+      "module": "did:plugins:godiddy",
+      "main_kotlin_files": 12,
+      "test_kotlin_files": 15,
+      "abi_files": 1,
+      "lint_baseline_entries": 725
+    },
+    {
+      "module": "did:plugins:threebox",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 19
+    },
+    {
+      "module": "did:plugins:btcr",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 19
+    },
+    {
+      "module": "did:plugins:tezos",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 19
+    },
+    {
+      "module": "did:plugins:orb",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 163
+    },
+    {
+      "module": "did:plugins:ebsi",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 80
+    },
+    {
+      "module": "wallet:wallet-core",
+      "main_kotlin_files": 12,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 216
+    },
+    {
+      "module": "wallet:wallet-services",
+      "main_kotlin_files": 1,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 40
+    },
+    {
+      "module": "wallet:plugins:database",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 260
+    },
+    {
+      "module": "wallet:plugins:file",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 84
+    },
+    {
+      "module": "wallet:plugins:cloud",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 7,
+      "abi_files": 1,
+      "lint_baseline_entries": 170
+    },
+    {
+      "module": "kms:kms-core",
+      "main_kotlin_files": 23,
+      "test_kotlin_files": 22,
+      "abi_files": 1,
+      "lint_baseline_entries": 1779
+    },
+    {
+      "module": "kms:plugins:aws",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 269
+    },
+    {
+      "module": "kms:plugins:azure",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 240
+    },
+    {
+      "module": "kms:plugins:google",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 252
+    },
+    {
+      "module": "kms:plugins:hashicorp",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 204
+    },
+    {
+      "module": "kms:plugins:ibm",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 298
+    },
+    {
+      "module": "kms:plugins:thales",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 122
+    },
+    {
+      "module": "kms:plugins:cyberark",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 120
+    },
+    {
+      "module": "kms:plugins:fortanix",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 110
+    },
+    {
+      "module": "kms:plugins:thales-luna",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 22
+    },
+    {
+      "module": "kms:plugins:utimaco",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 22
+    },
+    {
+      "module": "kms:plugins:cloudhsm",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 70
+    },
+    {
+      "module": "kms:plugins:entrust",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 22
+    },
+    {
+      "module": "kms:plugins:inmemory",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 272
+    },
+    {
+      "module": "kms:plugins:waltid",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 6,
+      "abi_files": 1,
+      "lint_baseline_entries": 330
+    },
+    {
+      "module": "kms:plugins:pkcs11",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 106
+    },
+    {
+      "module": "kms:plugins:venafi",
+      "main_kotlin_files": 1,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 8
+    },
+    {
+      "module": "anchors:anchor-core",
+      "main_kotlin_files": 18,
+      "test_kotlin_files": 12,
+      "abi_files": 1,
+      "lint_baseline_entries": 828
+    },
+    {
+      "module": "anchors:plugins:evm-base",
+      "main_kotlin_files": 1,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 30
+    },
+    {
+      "module": "anchors:plugins:algorand",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 6,
+      "abi_files": 1,
+      "lint_baseline_entries": 130
+    },
+    {
+      "module": "anchors:plugins:polygon",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 69
+    },
+    {
+      "module": "anchors:plugins:ethereum",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 45
+    },
+    {
+      "module": "anchors:plugins:base",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 35
+    },
+    {
+      "module": "anchors:plugins:arbitrum",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 45
+    },
+    {
+      "module": "anchors:plugins:optimism",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 29
+    },
+    {
+      "module": "anchors:plugins:zksync",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 27
+    },
+    {
+      "module": "anchors:plugins:bitcoin",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 14
+    },
+    {
+      "module": "anchors:plugins:starknet",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 32
+    },
+    {
+      "module": "anchors:plugins:cardano",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 97
+    },
+    {
+      "module": "anchors:plugins:ganache",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 72
+    },
+    {
+      "module": "anchors:plugins:indy",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 7,
+      "abi_files": 1,
+      "lint_baseline_entries": 271
+    },
+    {
+      "module": "credentials:credential-api",
+      "main_kotlin_files": 64,
+      "test_kotlin_files": 39,
+      "abi_files": 1,
+      "lint_baseline_entries": 5080
+    },
+    {
+      "module": "credentials:plugins:status-list:database",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 175
+    },
+    {
+      "module": "credentials:plugins:anchor",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 62
+    },
+    {
+      "module": "credentials:plugins:platforms:servicenow",
+      "main_kotlin_files": 1,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 11
+    },
+    {
+      "module": "credentials:plugins:platforms:salesforce",
+      "main_kotlin_files": 1,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 11
+    },
+    {
+      "module": "credentials:plugins:platforms:entra",
+      "main_kotlin_files": 9,
+      "test_kotlin_files": 6,
+      "abi_files": 1,
+      "lint_baseline_entries": 157
+    },
+    {
+      "module": "credentials:plugins:oidc4vci",
+      "main_kotlin_files": 8,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 30
+    },
+    {
+      "module": "credentials:plugins:oidc4vp",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 141
+    },
+    {
+      "module": "credentials:plugins:didcomm",
+      "main_kotlin_files": 48,
+      "test_kotlin_files": 9,
+      "abi_files": 1,
+      "lint_baseline_entries": 1402
+    },
+    {
+      "module": "credentials:plugins:chapi",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 152
+    },
+    {
+      "module": "credentials:plugins:status-list:bitstring",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 506
+    },
+    {
+      "module": "credentials:plugins:status-list:token",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 259
+    },
+    {
+      "module": "credentials:plugins:status-list:publishing",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 57
+    },
+    {
+      "module": "credentials:plugins:status-list:server",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 16
+    },
+    {
+      "module": "credentials:plugins:presentation-exchange",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 210
+    },
+    {
+      "module": "credentials:plugins:siop",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 134
+    },
+    {
+      "module": "credentials:plugins:openid-federation",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 112
+    },
+    {
+      "module": "credentials:plugins:mdl",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 352
+    },
+    {
+      "module": "credentials:plugins:verifiable-intent",
+      "main_kotlin_files": 18,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 201
+    },
+    {
+      "module": "credentials:plugins:eudiw",
+      "main_kotlin_files": 8,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 99
+    },
+    {
+      "module": "credentials:plugins:jades",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 87
+    },
+    {
+      "module": "credentials:plugins:avp-micro",
+      "main_kotlin_files": 7,
+      "test_kotlin_files": 12,
+      "abi_files": 1,
+      "lint_baseline_entries": 194
+    },
+    {
+      "module": "credentials:avp-authorization-server",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 114
+    },
+    {
+      "module": "credentials:oidc4vci-server",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 232
+    },
+    {
+      "module": "credentials:vc-api-server",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 12
+    },
+    {
+      "module": "signatures:tsa-core",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 62
+    },
+    {
+      "module": "signatures:trust-lists",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 199
+    },
+    {
+      "module": "signatures:jades",
+      "main_kotlin_files": 6,
+      "test_kotlin_files": 5,
+      "abi_files": 1,
+      "lint_baseline_entries": 172
+    },
+    {
+      "module": "signatures:cades",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 4,
+      "abi_files": 1,
+      "lint_baseline_entries": 170
+    },
+    {
+      "module": "signatures:xades",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 98
+    },
+    {
+      "module": "signatures:pades",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 15
+    },
+    {
+      "module": "signatures:etsi-validation",
+      "main_kotlin_files": 5,
+      "test_kotlin_files": 3,
+      "abi_files": 1,
+      "lint_baseline_entries": 108
+    },
+    {
+      "module": "trust-registry:trust-registry-core",
+      "main_kotlin_files": 4,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 56
+    },
+    {
+      "module": "trust-registry:plugins:database",
+      "main_kotlin_files": 3,
+      "test_kotlin_files": 2,
+      "abi_files": 1,
+      "lint_baseline_entries": 140
+    },
+    {
+      "module": "trust-registry:trust-registry-server",
+      "main_kotlin_files": 2,
+      "test_kotlin_files": 1,
+      "abi_files": 1,
+      "lint_baseline_entries": 69
+    },
+    {
+      "module": "distribution:all",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 1
+    },
+    {
+      "module": "distribution:bom",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 0,
+      "lint_baseline_entries": 1
+    },
+    {
+      "module": "distribution:examples",
+      "main_kotlin_files": 18,
+      "test_kotlin_files": 15,
+      "abi_files": 1,
+      "lint_baseline_entries": 770
+    },
+    {
+      "module": "distribution:conformance",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 142
+    },
+    {
+      "module": "wallet:wallet-core-mp",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 25
+    },
+    {
+      "module": "credentials:credential-models-mp",
+      "main_kotlin_files": 0,
+      "test_kotlin_files": 0,
+      "abi_files": 1,
+      "lint_baseline_entries": 883
+    }
+  ]
+}

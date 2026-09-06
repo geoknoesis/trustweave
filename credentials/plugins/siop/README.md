@@ -4,7 +4,7 @@ Self-Issued OpenID Provider v2 (SIOPv2) implementation for TrustWeave, providing
 
 ## Overview
 
-This module implements the [`CredentialExchangeProtocol`](../../credential-api/src/main/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt) SPI for SIOPv2, the OpenID specification that lets a wallet act as its own OpenID Provider. Instead of a centralized IdP, the wallet self-issues an `id_token` whose `iss` and `sub` are the holder's DID and which is signed by a key the wallet controls. Verifiers can also request Verifiable Presentations (`vp_token`) alongside or instead of the `id_token` using OpenID for Verifiable Presentations (OID4VP) constructs such as `presentation_definition` and `presentation_submission`.
+This module implements the [`CredentialExchangeProtocol`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt) SPI for SIOPv2, the OpenID specification that lets a wallet act as its own OpenID Provider. Instead of a centralized IdP, the wallet self-issues an `id_token` whose `iss` and `sub` are the holder's DID and which is signed by a key the wallet controls. Verifiers can also request Verifiable Presentations (`vp_token`) alongside or instead of the `id_token` using OpenID for Verifiable Presentations (OID4VP) constructs such as `presentation_definition` and `presentation_submission`.
 
 The module ships:
 
@@ -172,4 +172,4 @@ Note that the JWT signer in `SiopV2Service` currently hard-codes `alg=EdDSA` in 
 - [Self-Issued OpenID Provider v2 (SIOPv2)](https://openid.net/specs/openid-connect-self-issued-v2-1_0.html)
 - [OpenID for Verifiable Presentations (OID4VP)](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html)
 - [Presentation Exchange 2.0](https://identity.foundation/presentation-exchange/spec/v2.0.0/)
-- TrustWeave [`CredentialExchangeProtocol` SPI](../../credential-api/src/main/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt)
+- TrustWeave [`CredentialExchangeProtocol` SPI](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt)

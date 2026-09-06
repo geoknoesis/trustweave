@@ -17,19 +17,20 @@ import org.trustweave.trust.dsl.credential.IssuanceBuilder
  */
 const val TEST_CLAIMS_CONTEXT_URL = "https://trustweave.example/contexts/test-claims/v1"
 
-private val testClaimsContextRegistered: Boolean = run {
-    JsonLdContexts.register(
-        TEST_CLAIMS_CONTEXT_URL,
-        """
-        {
-          "@context": {
-            "@vocab": "https://trustweave.example/vocab/test-claims#"
-          }
-        }
-        """.trimIndent()
-    )
-    true
-}
+private val testClaimsContextRegistered: Boolean =
+    run {
+        JsonLdContexts.register(
+            TEST_CLAIMS_CONTEXT_URL,
+            """
+            {
+              "@context": {
+                "@vocab": "https://trustweave.example/vocab/test-claims#"
+              }
+            }
+            """.trimIndent(),
+        )
+        true
+    }
 
 /**
  * Declare the test claim vocabulary on the issued credential's `@context`, so ad-hoc test

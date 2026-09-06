@@ -39,7 +39,6 @@ import kotlin.test.assertTrue
  * drift can hide behind fixture normalization.
  */
 class CanonicalizationKnownAnswerTest {
-
     companion object {
         private const val VECTOR_DIR = "/interop/w3c-vc-di-eddsa"
 
@@ -66,7 +65,7 @@ class CanonicalizationKnownAnswerTest {
             // document (see interop/README.md) so offline canonicalization can resolve it.
             JsonLdContextLoader.registerContext(
                 "https://www.w3.org/ns/credentials/examples/v2",
-                resourceText("/interop/contexts/credentials-examples-v2.jsonld")
+                resourceText("/interop/contexts/credentials-examples-v2.jsonld"),
             )
         }
 
@@ -76,14 +75,13 @@ class CanonicalizationKnownAnswerTest {
             }.use { it.readBytes().toString(Charsets.UTF_8) }
 
         /** CRLF→LF only; see class KDoc. */
-        private fun fixtureNQuads(name: String): String =
-            resourceText("$VECTOR_DIR/$name").replace("\r\n", "\n")
+        private fun fixtureNQuads(name: String): String = resourceText("$VECTOR_DIR/$name").replace("\r\n", "\n")
 
-        private fun fixtureJson(name: String): JsonObject =
-            Json.parseToJsonElement(resourceText("$VECTOR_DIR/$name")).jsonObject
+        private fun fixtureJson(name: String): JsonObject = Json.parseToJsonElement(resourceText("$VECTOR_DIR/$name")).jsonObject
 
         private fun sha256Hex(data: String): String =
-            MessageDigest.getInstance("SHA-256")
+            MessageDigest
+                .getInstance("SHA-256")
                 .digest(data.toByteArray(Charsets.UTF_8))
                 .joinToString("") { "%02x".format(it) }
     }
@@ -99,12 +97,12 @@ class CanonicalizationKnownAnswerTest {
         assertEquals(
             fixtureNQuads("canonical-credential.nq"),
             canonical,
-            "Canonical N-Quads must be byte-identical to the W3C vc-di-eddsa vector"
+            "Canonical N-Quads must be byte-identical to the W3C vc-di-eddsa vector",
         )
         assertEquals(
             EXPECTED_DOCUMENT_HASH_HEX,
             sha256Hex(canonical),
-            "SHA-256 of canonical document must match the hash printed in the spec"
+            "SHA-256 of canonical document must match the hash printed in the spec",
         )
     }
 
@@ -132,7 +130,7 @@ class CanonicalizationKnownAnswerTest {
         assertEquals(
             fixtureNQuads("canonical-proof-options.nq"),
             canonical,
-            "Canonical proof-options N-Quads must be byte-identical to the W3C vector"
+            "Canonical proof-options N-Quads must be byte-identical to the W3C vector",
         )
         assertEquals(EXPECTED_PROOF_OPTIONS_HASH_HEX, sha256Hex(canonical))
     }
@@ -146,13 +144,14 @@ class CanonicalizationKnownAnswerTest {
         val signed = fixtureJson("signed-credential.json")
         val proof = signed["proof"]!!.jsonObject
 
-        val reconstructed = ProofEngineUtils.buildProofOptionsDocument(
-            context = signed["@context"]!!.jsonArray.map { it.jsonPrimitive.content },
-            proofType = proof["type"]!!.jsonPrimitive.content,
-            created = proof["created"]!!.jsonPrimitive.content,
-            verificationMethod = proof["verificationMethod"]!!.jsonPrimitive.content,
-            proofPurpose = proof["proofPurpose"]!!.jsonPrimitive.content
-        )
+        val reconstructed =
+            ProofEngineUtils.buildProofOptionsDocument(
+                context = signed["@context"]!!.jsonArray.map { it.jsonPrimitive.content },
+                proofType = proof["type"]!!.jsonPrimitive.content,
+                created = proof["created"]!!.jsonPrimitive.content,
+                verificationMethod = proof["verificationMethod"]!!.jsonPrimitive.content,
+                proofPurpose = proof["proofPurpose"]!!.jsonPrimitive.content,
+            )
         val canonical = JsonLdUtils.canonicalizeDocument(reconstructed)
 
         assertEquals(fixtureNQuads("canonical-proof-options.nq"), canonical)
@@ -168,21 +167,22 @@ class CanonicalizationKnownAnswerTest {
         val proof = signed["proof"]!!.jsonObject
 
         val canonicalDocument = JsonLdUtils.canonicalizeDocument(withoutProof)
-        val canonicalProofOptions = JsonLdUtils.canonicalizeDocument(
-            ProofEngineUtils.buildProofOptionsDocument(
-                context = signed["@context"]!!.jsonArray.map { it.jsonPrimitive.content },
-                proofType = proof["type"]!!.jsonPrimitive.content,
-                created = proof["created"]!!.jsonPrimitive.content,
-                verificationMethod = proof["verificationMethod"]!!.jsonPrimitive.content,
-                proofPurpose = proof["proofPurpose"]!!.jsonPrimitive.content
+        val canonicalProofOptions =
+            JsonLdUtils.canonicalizeDocument(
+                ProofEngineUtils.buildProofOptionsDocument(
+                    context = signed["@context"]!!.jsonArray.map { it.jsonPrimitive.content },
+                    proofType = proof["type"]!!.jsonPrimitive.content,
+                    created = proof["created"]!!.jsonPrimitive.content,
+                    verificationMethod = proof["verificationMethod"]!!.jsonPrimitive.content,
+                    proofPurpose = proof["proofPurpose"]!!.jsonPrimitive.content,
+                ),
             )
-        )
 
         val payload = ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonicalDocument)
         assertEquals(
             EXPECTED_PROOF_OPTIONS_HASH_HEX + EXPECTED_DOCUMENT_HASH_HEX,
             payload.joinToString("") { "%02x".format(it) },
-            "Signing payload must be SHA-256(proof options) || SHA-256(document), matching Example 47"
+            "Signing payload must be SHA-256(proof options) || SHA-256(document), matching Example 47",
         )
 
         // The spec's proofValue is multibase base58-btc ('z' prefix) of the raw signature.
@@ -194,17 +194,18 @@ class CanonicalizationKnownAnswerTest {
         // Verify the spec's signature over OUR canonicalized payload through the module's
         // real Ed25519 verification adapter and key extraction (publicKeyMultibase).
         val did = Did(SPEC_DID)
-        val verificationMethod = VerificationMethod(
-            id = VerificationMethodId.parse("$SPEC_DID#$SPEC_PUBLIC_KEY_MULTIBASE", did),
-            type = "Ed25519VerificationKey2020",
-            controller = did,
-            publicKeyMultibase = SPEC_PUBLIC_KEY_MULTIBASE
-        )
+        val verificationMethod =
+            VerificationMethod(
+                id = VerificationMethodId.parse("$SPEC_DID#$SPEC_PUBLIC_KEY_MULTIBASE", did),
+                type = "Ed25519VerificationKey2020",
+                controller = did,
+                publicKeyMultibase = SPEC_PUBLIC_KEY_MULTIBASE,
+            )
         val adapter = DefaultEd25519SignatureVerificationAdapter()
         assertTrue(
             adapter.verify(payload, signature, verificationMethod, "Ed25519Signature2020"),
             "The W3C-published signature must verify over our canonicalized payload — " +
-                "if this fails, our canonicalization or payload composition deviates from the spec"
+                "if this fails, our canonicalization or payload composition deviates from the spec",
         )
 
         // Tamper guard: a flipped payload byte must not verify.

@@ -1,2 +1,1 @@
-org.trustweave.chain.base.BaseBlockchainAnchorClientProvider
-
+org.trustweave.anchor.base.BaseBlockchainAnchorClientProvider

@@ -1,0 +1,85 @@
+{
+  "round": 10,
+  "kind": "independent-baseline",
+  "assessment": "An independent pass over both repositories, scored against what a security-critical identity SDK needs before 1.0 rather than against the prior rounds' own findings lists. Four previously-reported HIGH findings were re-checked in source and hold. Three new authorization gaps were found in the Verifiable Intent chain verifier, the newest and least-reviewed plugin: L3 checkout fulfilments are never constraint-checked, replay protection is opt-in, and an absent exp claim passes every temporal check. On the SaaS side the standing weakness is schema ownership (the default profile runs Hibernate ddl-auto:update with Flyway disabled) and the total absence of backend static analysis. Scores here are lower than round 9's 98/96 because they answer a different question: round 9 measured remediation completeness against its own findings, which it did accurately.",
+  "rubric": {
+    "security": 10,
+    "correctness": 10,
+    "architecture": 10,
+    "testing": 10,
+    "supply_chain_and_ci": 10
+  },
+  "trustweave": {
+    "security": 7.5,
+    "correctness": 8.0,
+    "architecture": 7.0,
+    "testing": 6.5,
+    "supply_chain_and_ci": 6.0,
+    "overall": 7.0
+  },
+  "trustweave-saas": {
+    "security": 8.0,
+    "correctness": 7.0,
+    "architecture": 7.0,
+    "testing": 7.0,
+    "supply_chain_and_ci": 5.0,
+    "overall": 6.9
+  },
+  "metrics": {
+    "trustweave": {
+      "main_loc": 231134,
+      "test_loc": 87152,
+      "main_files": 1935,
+      "test_files": 481,
+      "modules": 106,
+      "tests": 3975,
+      "modules_with_no_tests": 21,
+      "untested_main_loc": 7354,
+      "modules_with_kover": 3,
+      "ktlint_baselined_violations": 32692,
+      "ktlint_baseline_files": 123,
+      "broad_catches_main": 536,
+      "swallowed_no_log": 108,
+      "non_null_assertions_main": 109
+    },
+    "trustweave-saas": {
+      "main_loc": 22189,
+      "test_loc": 12998,
+      "backend_tests": 541,
+      "frontend_sources": 187,
+      "frontend_test_files": 63,
+      "rest_controllers": 44,
+      "flyway_migrations": 29,
+      "repository_methods": 63,
+      "unused_repository_methods": 11,
+      "broad_catches_main": 39,
+      "swallowed_no_log": 4
+    }
+  },
+  "deductions": {
+    "trustweave": [
+      "Security -2.5: TW-R10-01 (L3 checkout constraints never enforced) and TW-R10-02 (replay protection opt-in) are unbounded-authority paths in the payment plugin; TW-R10-03/04 are secondary fail-open defaults in the same file.",
+      "Correctness -2.0: fail-closed behaviour is the norm and the verification paths I traced are correct, but an absent exp silently passes and 108 swallowed exceptions carry no log line.",
+      "Architecture -3.0: clean acyclic domain layering and a real SPI plugin system, less no explicitApi/binary-compatibility validation across 106 published modules and two test-dependency inversions.",
+      "Testing -3.5: 3,975 tests with genuinely adversarial cases, against 21 modules (7,354 LOC) with no tests at all and coverage measured on 3 of 106 modules.",
+      "Supply chain -4.0: ktlint gated on new code and Dependabot configured, but no artifact signing, SBOM, provenance, SAST, or coverage gate; single OS and JDK in CI."
+    ],
+    "trustweave-saas": [
+      "Security -2.0: fail-closed routing, consistently applied tenant scoping and profile-gated dev controllers; deducted because /api/** resolves only to .authenticated() so isolation rests on per-controller convention, and four unscoped repository methods sit unused.",
+      "Correctness -3.0: the default profile runs ddl-auto:update with flyway.enabled:false, so 29 migrations are not applied on the default path and SQL-only constraints, indexes and seed data are absent there.",
+      "Architecture -3.0: conventional and clean Spring layering; schema authority is split between Hibernate and Flyway by profile, and tenant isolation is not structurally enforced.",
+      "Testing -3.0: 541 backend tests and 63 frontend test files against 187 sources; no CI job boots a fresh database under validate+Flyway, which is what would catch the drift above.",
+      "Supply chain -5.0: no ktlint, detekt or spotless on 22k LOC of backend Kotlin, no Dependabot, no npm audit. Partly offset by the library revision pin and source-hash check in CI, which is a genuinely good control."
+    ]
+  },
+  "verified_closed": [
+    "OID4VCI PKCE is mandatory for the authorization_code flow (Oidc4VciService.kt:220)",
+    "did:web SSRF guard applied (AbstractWebDidMethod.kt:124)",
+    "Verifiable Intent omit-payment-mandate bypass fails closed (ChainVerifier.kt)",
+    "JUnit silent-skip trap stayed fixed: 1241/1265 expression-body tests use runBlocking<Unit>",
+    "No hardcoded credentials or TLS verification bypass in either repository",
+    "SaaS public verification reads revocation from the published status list, not the local mirror",
+    "SaaS CI pins the reviewed library revision and verifies its source hash"
+  ],
+  "method": "Static analysis of both working trees (trustweave a41d482a, trustweave-saas f31dfeb) plus targeted reading of verification, authorization and configuration paths. No Gradle build or test run was executed. Both trees carry uncommitted modifications; this reflects the working tree, not HEAD."
+}

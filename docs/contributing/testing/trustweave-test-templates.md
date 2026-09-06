@@ -119,6 +119,7 @@ fun `test complete in-memory workflow template`() = runBlocking {
 **Use Case:** Testing revocation functionality
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.trust.dsl.credential.RevocationProviders.IN_MEMORY

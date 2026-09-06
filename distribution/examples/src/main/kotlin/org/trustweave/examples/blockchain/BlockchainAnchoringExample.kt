@@ -1,101 +1,34 @@
 package org.trustweave.examples.blockchain
 
-import org.trustweave.trust.TrustWeave
-import org.trustweave.anchor.*
-import org.trustweave.anchor.ethereum.EthereumBlockchainAnchorClient
-import org.trustweave.anchor.base.BaseBlockchainAnchorClient
-import org.trustweave.anchor.arbitrum.ArbitrumBlockchainAnchorClient
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.core.util.DigestUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.JsonObject
+import org.trustweave.core.util.DigestUtils
+import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 
 /**
- * Blockchain Anchoring Example - Ethereum, Base, and Arbitrum
- *
- * This example demonstrates blockchain anchoring on multiple EVM-compatible chains:
- * 1. Ethereum mainnet (highest security, higher fees)
- * 2. Base (Coinbase L2, lower fees, fast confirmations)
- * 3. Arbitrum (largest L2 by TVL, lower fees)
- *
- * Run: `./gradlew :TrustWeave-examples:runBlockchainAnchoring`
+ * Local anchoring contract demonstration. No RPC connection or blockchain transaction occurs.
+ * Run: `./gradlew :distribution:examples:runBlockchainAnchoring`
  */
-fun main() = runBlocking {
-    println("=".repeat(70))
-    println("Blockchain Anchoring Example - Ethereum, Base, and Arbitrum")
-    println("=".repeat(70))
-    println()
-
-    // Example credential data
-    val credentialData = buildJsonObject {
-        put("id", "vc-12345")
-        put("issuer", "did:key:z6Mk...")
-        put("credentialSubject", buildJsonObject {
-            put("id", "did:key:z6Mk...")
-            put("name", "Alice")
-        })
-    }
-
-    val digest = DigestUtils.sha256DigestMultibase(credentialData)
-    println("Credential digest: $digest")
-    println()
-
-    // Use in-memory client for testing (replace with real clients for production)
-    val testChainId = "ethereum:test"
-
-    println("Step 1: Setting up TrustWeave with blockchain anchoring...")
-    val trustweave = TrustWeave.build {
-        anchor {
-            chain("ethereum:mainnet") {
-                inMemory()
+fun main() =
+    runBlocking {
+        val document =
+            buildJsonObject {
+                put("id", "example-document")
+                put("description", "Local anchoring demonstration")
             }
-            chain("base:mainnet") {
-                inMemory()
+        val payload =
+            buildJsonObject {
+                put("digest", DigestUtils.sha256DigestMultibase(document))
             }
-            chain("arbitrum:mainnet") {
-                inMemory()
-            }
+        for (chainId in listOf("ethereum:local-demo", "base:local-demo", "arbitrum:local-demo")) {
+            val client = InMemoryBlockchainAnchorClient(chainId)
+            val written = client.writePayload(payload)
+            val restored = client.readPayload(written.ref)
+            check(restored.payload == payload) { "Anchor payload did not round-trip for $chainId" }
+            check(restored.ref == written.ref) { "Anchor reference changed for $chainId" }
+            println("Verified in-memory write/read on $chainId: ${written.ref.txHash}")
+            client.clear()
         }
+        println("Local demonstration complete; this does not validate hosted blockchain providers.")
     }
-
-    // Step 2: Anchor to Ethereum mainnet
-    println("\nStep 2: Anchoring to Ethereum mainnet...")
-    val ethereumPayload = buildJsonObject {
-        put("digest", digest)
-        put("chain", "ethereum")
-        put("timestamp", System.currentTimeMillis())
-    }
-
-    // Note: This example needs to be updated to use the new TrustWeave anchoring API
-    // For now, commenting out the actual anchoring calls as the API has changed
-    println("Note: Anchoring API has changed. Please update this example to use the new TrustWeave anchoring API.")
-    // val ethereumResult = trustweave.anchor(...)
-    // Note: Anchoring API has changed - this example needs to be updated
-    println("Ethereum anchoring would be performed here")
-
-    // Step 3: Anchor to Base
-    println("\nStep 3: Anchoring to Base (Coinbase L2)...")
-    println("Base anchoring would be performed here")
-
-    // Step 4: Anchor to Arbitrum
-    println("\nStep 4: Anchoring to Arbitrum (Largest L2 by TVL)...")
-    println("Arbitrum anchoring would be performed here")
-
-    // Step 5: Read back anchored data
-    println("\nStep 5: Reading back anchored data...")
-    println("Reading anchored data would be performed here")
-
-    println("\n" + "=".repeat(70))
-    println("Blockchain Anchoring Example Complete!")
-    println("=".repeat(70))
-    println("\nNote: This example uses in-memory clients for testing.")
-    println("For production, configure real RPC URLs and private keys:")
-    println("- Ethereum: https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY")
-    println("- Base: https://mainnet.base.org")
-    println("- Arbitrum: https://arb1.arbitrum.io/rpc")
-}
-

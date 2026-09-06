@@ -35,12 +35,13 @@ data class RetryConfig(
     val initialDelayMs: Long = 100,
     val maxDelayMs: Long = 2000,
     val retryableStatusCodes: Set<Int> = setOf(500, 502, 503, 504),
-    val retryableExceptions: Set<Class<out Throwable>> = setOf(
-        java.net.ConnectException::class.java,
-        java.net.SocketTimeoutException::class.java,
-        java.io.IOException::class.java
-    ),
-    val nonRetryableExceptions: List<KClass<out Throwable>> = listOf()
+    val retryableExceptions: Set<Class<out Throwable>> =
+        setOf(
+            java.net.ConnectException::class.java,
+            java.net.SocketTimeoutException::class.java,
+            java.io.IOException::class.java,
+        ),
+    val nonRetryableExceptions: List<KClass<out Throwable>> = listOf(),
 ) {
     init {
         require(maxRetries >= 0) { "maxRetries must be non-negative" }
@@ -69,8 +70,8 @@ data class RetryConfig(
             try {
                 return block()
             } catch (e: Throwable) {
-                if (e is CancellationException) throw e  // Never retry cancellation
-                if (e is Error) throw e  // Never retry JVM errors (OutOfMemoryError, StackOverflowError, etc.)
+                if (e is CancellationException) throw e // Never retry cancellation
+                if (e is Error) throw e // Never retry JVM errors (OutOfMemoryError, StackOverflowError, etc.)
                 if (e is InterruptedException) {
                     Thread.currentThread().interrupt()
                     throw e
@@ -97,10 +98,11 @@ data class RetryConfig(
                 }
 
                 // Exponential backoff with jitter
-                val delayMs = minOf(
-                    (initialDelayMs * 2.0.pow(attempt.toDouble())).toLong(),
-                    maxDelayMs
-                )
+                val delayMs =
+                    minOf(
+                        (initialDelayMs * 2.0.pow(attempt.toDouble())).toLong(),
+                        maxDelayMs,
+                    )
 
                 // Add small random jitter (0–20% of delayMs) to avoid thundering herd.
                 // Compute as Double before truncating to avoid zero-jitter when delayMs < 10.
@@ -130,11 +132,11 @@ data class RetryConfig(
         /**
          * Aggressive retry configuration for unreliable networks.
          */
-        fun aggressive(): RetryConfig = RetryConfig(
-            maxRetries = 5,
-            initialDelayMs = 200,
-            maxDelayMs = 5000
-        )
+        fun aggressive(): RetryConfig =
+            RetryConfig(
+                maxRetries = 5,
+                initialDelayMs = 200,
+                maxDelayMs = 5000,
+            )
     }
 }
-

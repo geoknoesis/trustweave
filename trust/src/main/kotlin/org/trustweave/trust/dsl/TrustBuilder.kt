@@ -1,16 +1,13 @@
 package org.trustweave.trust.dsl
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.trust.TrustRegistry
-import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import org.trustweave.trust.types.IssuerIdentity
-import org.trustweave.did.identifiers.Did
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Trust Registry DSL.
@@ -37,12 +34,15 @@ import kotlinx.datetime.Clock
  * ```
  */
 class TrustBuilder(
-    private val registry: TrustRegistry
+    private val registry: TrustRegistry,
 ) {
     /**
      * Add a trust anchor with metadata.
      */
-    suspend fun addAnchor(did: String, block: TrustAnchorMetadataBuilder.() -> Unit = {}): Boolean {
+    suspend fun addAnchor(
+        did: String,
+        block: TrustAnchorMetadataBuilder.() -> Unit = {},
+    ): Boolean {
         val builder = TrustAnchorMetadataBuilder()
         builder.block()
         return registry.addTrustAnchor(did, builder.build())
@@ -51,16 +51,15 @@ class TrustBuilder(
     /**
      * Remove a trust anchor.
      */
-    suspend fun removeAnchor(did: String): Boolean {
-        return registry.removeTrustAnchor(did)
-    }
+    suspend fun removeAnchor(did: String): Boolean = registry.removeTrustAnchor(did)
 
     /**
      * Check if an issuer is trusted.
      */
-    suspend fun isTrusted(issuerDid: String, credentialType: String? = null): Boolean {
-        return registry.isTrustedIssuer(issuerDid, credentialType)
-    }
+    suspend fun isTrusted(
+        issuerDid: String,
+        credentialType: String? = null,
+    ): Boolean = registry.isTrustedIssuer(issuerDid, credentialType)
 
     /**
      * Find a trust path between two identities (first-class type).
@@ -84,20 +83,19 @@ class TrustBuilder(
      * @param to The issuer identity
      * @return TrustPath.Verified if a path exists, TrustPath.NotFound otherwise
      */
-    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath {
-        return registry.findTrustPath(from, to)
-    }
+    suspend fun findTrustPath(
+        from: VerifierIdentity,
+        to: IssuerIdentity,
+    ): TrustPath = registry.findTrustPath(from, to)
 
     /**
      * Get all trusted issuers for a credential type.
      */
-    suspend fun getTrustedIssuers(credentialType: String? = null): List<String> {
-        return registry.getTrustedIssuers(credentialType)
-    }
+    suspend fun getTrustedIssuers(credentialType: String? = null): List<String> = registry.getTrustedIssuers(credentialType)
 
     /**
      * Add trust anchor using infix syntax with explicit DID.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.trust {
@@ -107,8 +105,11 @@ class TrustBuilder(
      * }
      * ```
      */
-    suspend fun addAnchor(did: Did, config: TrustAnchorConfig): Boolean {
-        return addAnchor(did.value) {
+    suspend fun addAnchor(
+        did: Did,
+        config: TrustAnchorConfig,
+    ): Boolean =
+        addAnchor(did.value) {
             config.metadataBuilder.credentialTypes?.let { types ->
                 credentialTypes(types)
             }
@@ -119,13 +120,12 @@ class TrustBuilder(
                 addedAt(instant)
             }
         }
-    }
 
     /**
      * Resolve trust path using infix syntax.
-     * 
+     *
      * This is the recommended way to use the `trustsPath` infix operator.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.trust {
@@ -137,9 +137,7 @@ class TrustBuilder(
      * }
      * ```
      */
-    suspend fun resolve(pathFinder: TrustPathFinder): TrustPath {
-        return pathFinder.resolve(this)
-    }
+    suspend fun resolve(pathFinder: TrustPathFinder): TrustPath = pathFinder.resolve(this)
 }
 
 /**
@@ -181,11 +179,10 @@ class TrustAnchorMetadataBuilder {
     /**
      * Build trust anchor metadata.
      */
-    internal fun build(): TrustAnchorMetadata {
-        return TrustAnchorMetadata(
+    internal fun build(): TrustAnchorMetadata =
+        TrustAnchorMetadata(
             credentialTypes = credentialTypes,
             description = description,
-            addedAt = addedAt
+            addedAt = addedAt,
         )
-    }
 }

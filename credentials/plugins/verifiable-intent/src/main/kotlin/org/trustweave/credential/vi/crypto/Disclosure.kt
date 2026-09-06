@@ -31,14 +31,15 @@ internal object Disclosures {
     private val json = Json { ignoreUnknownKeys = true }
 
     /** Decodes a base64url disclosure into [Disclosure], or null if malformed. */
-    fun parse(b64: String): Disclosure? = runCatching {
-        val arr: JsonArray = json.parseToJsonElement(String(B64.decode(b64), Charsets.UTF_8)).jsonArray
-        when (arr.size) {
-            3 -> Disclosure(b64, arr[0].jsonPrimitive.content, arr[1].jsonPrimitive.content, arr[2])
-            2 -> Disclosure(b64, arr[0].jsonPrimitive.content, null, arr[1])
-            else -> null
-        }
-    }.getOrNull()
+    fun parse(b64: String): Disclosure? =
+        runCatching {
+            val arr: JsonArray = json.parseToJsonElement(String(B64.decode(b64), Charsets.UTF_8)).jsonArray
+            when (arr.size) {
+                3 -> Disclosure(b64, arr[0].jsonPrimitive.content, arr[1].jsonPrimitive.content, arr[2])
+                2 -> Disclosure(b64, arr[0].jsonPrimitive.content, null, arr[1])
+                else -> null
+            }
+        }.getOrNull()
 
     /**
      * SHA-256 of the **ASCII base64url string** (not the decoded bytes), base64url-encoded — the
@@ -53,13 +54,32 @@ internal object Disclosures {
     private fun salt(): String = B64.encode(ByteArray(16).also { random.nextBytes(it) })
 
     /** A freshly created disclosure with its base64url form and digest. */
-    data class Made(val b64: String, val hash: String)
+    data class Made(
+        val b64: String,
+        val hash: String,
+    )
 
     /** Object-property disclosure `[salt, name, value]` — referenced from `_sd`. */
-    fun makeClaim(name: String, value: JsonElement): Made = make(buildJsonArray { add(salt()); add(name); add(value) })
+    fun makeClaim(
+        name: String,
+        value: JsonElement,
+    ): Made =
+        make(
+            buildJsonArray {
+                add(salt())
+                add(name)
+                add(value)
+            },
+        )
 
     /** Array-element disclosure `[salt, value]` — referenced from `delegate_payload` / allowlists. */
-    fun makeArrayElement(value: JsonElement): Made = make(buildJsonArray { add(salt()); add(value) })
+    fun makeArrayElement(value: JsonElement): Made =
+        make(
+            buildJsonArray {
+                add(salt())
+                add(value)
+            },
+        )
 
     private fun make(arr: JsonArray): Made {
         val b64 = B64.encode(arr.toString().toByteArray(Charsets.UTF_8))

@@ -28,24 +28,21 @@ data class Secret(
      * - Key ID or reference
      */
     val keys: List<KeyMaterial>? = null,
-
     /**
      * Recovery key for DID recovery operations.
      * Format depends on the DID method.
      */
     val recoveryKey: String? = null,
-
     /**
      * Update key for DID update operations.
      * Format depends on the DID method.
      */
     val updateKey: String? = null,
-
     /**
      * Method-specific secret fields.
      * Allows DID methods to include additional secret material.
      */
-    val methodSpecificSecrets: Map<String, String>? = null
+    val methodSpecificSecrets: Map<String, String>? = null,
 )
 
 /**
@@ -57,27 +54,22 @@ data class KeyMaterial(
      * Key identifier or reference.
      */
     val id: String? = null,
-
     /**
      * Key type (e.g., "Ed25519", "secp256k1").
      */
     val type: String? = null,
-
     /**
      * Private key in JWK format (JSON Web Key).
      * Contains the private key material in a standardized format.
      */
     val privateKeyJwk: JsonObject? = null,
-
     /**
      * Private key in method-specific format.
      * Used when JWK format is not applicable.
      */
     val privateKeyMultibase: String? = null,
-
     /**
      * Additional key-specific properties.
      */
-    val additionalProperties: Map<String, String>? = null
+    val additionalProperties: Map<String, String>? = null,
 )
-

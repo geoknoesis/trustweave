@@ -1,0 +1,24 @@
+public final class org/trustweave/wallet/file/FileWallet : org/trustweave/wallet/CredentialRecordStorage, org/trustweave/wallet/CredentialRecovery, org/trustweave/wallet/CredentialStorage, org/trustweave/wallet/Wallet {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/wallet/WalletCapabilities;
+	public final fun getHolderDid ()Ljava/lang/String;
+	public fun getStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getWalletDid ()Ljava/lang/String;
+	public fun getWalletId ()Ljava/lang/String;
+	public fun list (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listRecords (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun recoverRecords (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/wallet/file/FileWalletFactory : org/trustweave/wallet/services/WalletFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createInMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "TW-R10-01",
+    "repo": "trustweave",
+    "severity": "high",
+    "status": "open",
+    "title": "L3 checkout fulfilments are never constraint-checked",
+    "detail": "ConstraintChecker.check has exactly one call site in the repository and it sits inside the `if (l3Payment != null)` branch. When an agent presents only an L3 checkout, verifyL3 runs signature, sd_hash, pair-identity and temporal checks, and then no constraint from the L2 checkout mandate is evaluated at all -- including mandate.checkout.line_items, the constraint that bounds what the agent may buy. The verifier only checks that a line_items constraint is present (open_checkout_contains_line_items), never that the fulfilment satisfies it. This also routes around ConstraintChecker's deliberate fail-closed handling of unimplemented line-item matching, which refuses an open mandate it cannot evaluate but is never reached on the checkout path.",
+    "evidence": "ChainVerifier.kt:236 is the only ConstraintChecker.check call site, inside the payment branch. ChainVerifier.kt:248 `if (l3Checkout != null)` calls verifyL3 and resolves claims with no constraint evaluation. ConstraintChecker.kt:71 fails closed on line_items for open mandates when it is reached.",
+    "files": [
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt",
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt"
+    ],
+    "recommendation": "Lift the constraint block into a helper taking (mandate, fulfilment, requiredVct) and call it from both L3 branches. The checkout side should fail closed on unevaluable line_items exactly as the payment side does.",
+    "note": "Structurally the same shape as the omit-payment-mandate bypass closed in an earlier round: an L3 accepted with its authority unbounded."
+  },
+  {
+    "id": "TW-R10-02",
+    "repo": "trustweave",
+    "severity": "high",
+    "status": "open",
+    "title": "Replay protection is opt-in and silently skipped",
+    "detail": "verifyChain takes expectedL2Aud and expectedL2Nonce defaulted to null. A verifier that omits them gets valid=true with a note in checksSkipped, a field nothing forces the caller to read. A captured presentation replays against a different verifier. The same signature shows the intended pattern: `now` carries a comment explaining it defaults to the host clock precisely so an omitting caller cannot pin verification to a presenter-chosen time. Audience and nonce were not given that treatment.",
+    "evidence": "ChainVerifier.kt:55-56 defaults both to null. ChainVerifier.kt:83 calls audNonce, defined at :466, which records a skip and returns null so the chain remains valid. VerifiableIntent.kt:38-39 carries the same defaults on the public facade.",
+    "files": [
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt",
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/VerifiableIntent.kt"
+    ],
+    "recommendation": "Make both required for presentation verification, or add requireReplayProtection: Boolean = true that fails the chain when either expected value is absent, with an explicit opt-out for the offline/audit case."
+  },
+  {
+    "id": "TW-R10-03",
+    "repo": "trustweave",
+    "severity": "medium",
+    "status": "open",
+    "title": "A missing exp claim means never expires",
+    "detail": "expired() and future() both return null (pass) when the claim is absent, so an L1, L2 or L3 with no exp clears every temporal check. The one-hour L3 lifetime cap is likewise conditional on both iat and exp being present, so omitting exp removes the cap rather than tripping it.",
+    "evidence": "ChainVerifier.kt expired(): `val v = (exp as? JsonPrimitive)?.longOrNull ?: return null`. Lifetime cap guarded by `if (iat != null && exp != null && exp - iat > MAX_L3_LIFETIME_SECONDS)`.",
+    "files": [
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt"
+    ],
+    "recommendation": "Require exp and iat on L3 at minimum; treat their absence at L1/L2 as a policy decision the caller states rather than a silent pass."
+  },
+  {
+    "id": "TW-R10-04",
+    "repo": "trustweave",
+    "severity": "medium",
+    "status": "open",
+    "title": "Payment-instrument cross-check passes when the L2 side is absent",
+    "detail": "paymentInstrumentCrossCheck returns null (pass) when the L2 payment mandate carries no payment_instrument. The L3 side is required to have one by paymentRequiredFields; the L2 open mandate is not. An open mandate that never named an instrument therefore authorizes an L3 naming any instrument, and the check reports nothing.",
+    "evidence": "ChainVerifier.kt: `val l2Pi = (l2Payment?.get(\"payment_instrument\") as? JsonObject) ?: return null`",
+    "files": [
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt"
+    ],
+    "recommendation": "Require payment_instrument on the open payment mandate, or at minimum record the skip in checksSkipped so it is visible to the caller."
+  },
+  {
+    "id": "TW-R10-05",
+    "repo": "trustweave",
+    "severity": "medium",
+    "status": "open",
+    "title": "7,354 lines of production code with no tests",
+    "detail": "Twenty-one modules have a src/main and no test source set at all. Nine are DID method plugins the SDK advertises as supported. With 3,975 tests repo-wide this is not thin testing, it is a cliff at the plugin edge.",
+    "evidence": "status-list/database 932, did/plugins/sol 768, did/plugins/ion 725, did/plugins/cheqd 548, did/plugins/polygon 541, credentials/plugins/chapi 514, did/registrar-server-spring 511, did/plugins/plc 501, did/registrar-server-ktor 478, did/plugins/ens 430, credentials/plugins/anchor 309, wallet/wallet-services 277, status-list/server 182, anchors/plugins/starknet 161, plus btcr, tezos, threebox, venafi, salesforce, servicenow.",
+    "files": [],
+    "recommendation": "The DID plugins share a resolution/creation contract; one parameterised conformance suite in testkit would cover nine at once, mirroring InMemoryKmsContractConformanceTest for KMS."
+  },
+  {
+    "id": "TW-R10-06",
+    "repo": "trustweave",
+    "severity": "medium",
+    "status": "open",
+    "title": "No API-surface control on 106 published modules",
+    "detail": "Neither explicitApi() nor the binary-compatibility validator is applied anywhere in the build; the only tree matches are inside reference-wallet/expo/node_modules. Every declaration is public by default and nothing mechanically catches an ABI break before it reaches consumers. For a library at 0.7.0 that has already needed release notes for three signature-format changes, this is the gap producing them.",
+    "evidence": "build.gradle.kts sets only -Xjsr305=strict; no explicitApi, no apiValidation, no committed .api dumps.",
+    "files": ["build.gradle.kts"],
+    "recommendation": "Apply binary-compatibility-validator and commit .api dumps, which turns an ABI break into a failed PR. Then adopt explicitApi() module by module starting with the five -core modules."
+  },
+  {
+    "id": "TW-R10-07",
+    "repo": "trustweave",
+    "severity": "medium",
+    "status": "open",
+    "title": "108 exceptions swallowed without a log line",
+    "detail": "Of 536 broad catch (e: Exception|Throwable) blocks in main source, 35 have an empty body and 73 return a bare null/false with nothing recorded. The instances traced in the verification path are genuinely fail-closed, so this is an operability finding rather than a correctness one: a verification that failed because a JWT would not parse is indistinguishable from one that failed on a bad signature.",
+    "evidence": "PresentationVerification.kt:284,321,527,605; SdJwtProofEngine.kt:463,643,744; ProofEngineUtils.kt:506,677; BlockchainAnchor.kt:145; AbstractEvmAnchorClient.kt:258,362,408,491,498; ProviderChain.kt:63.",
+    "files": [
+      "credentials/credential-api/src/main/kotlin/org/trustweave/credential/internal/PresentationVerification.kt",
+      "credentials/credential-api/src/main/kotlin/org/trustweave/credential/proof/internal/engines/SdJwtProofEngine.kt",
+      "anchors/plugins/evm-base/src/main/kotlin/org/trustweave/anchor/evm/AbstractEvmAnchorClient.kt"
+    ],
+    "recommendation": "Add a debug-level log carrying the exception at each swallow point. Worth doing before the anchor plugins go to production, where these are network failures reported as clean negatives."
+  },
+  {
+    "id": "TW-R10-08",
+    "repo": "trustweave",
+    "severity": "low",
+    "status": "open",
+    "title": "Coverage measured on 3 of 106 modules",
+    "detail": "Kover is applied in credentials/credential-api and kms/kms-core only. CI runs no coverage task and enforces no threshold, so there is no repo-wide number, which is how TW-R10-05 stayed invisible.",
+    "evidence": "grep kover across build.gradle.kts files: 3 modules. .github/workflows/ci.yml runs ktlintCheck and build only.",
+    "files": [".github/workflows/ci.yml"],
+    "recommendation": "Apply Kover in the root subprojects {} block next to ktlint and add a merged report to CI. A threshold can come later; the number is the useful part now."
+  },
+  {
+    "id": "TW-R10-09",
+    "repo": "trustweave",
+    "severity": "low",
+    "status": "open",
+    "title": "32,692 lint violations permanently baselined",
+    "detail": "Across 123 config/ktlint/baseline.xml files. The gate on new code works and is the right call, but a baseline this size is indefinite debt that grows each time a module is legitimately re-baselined.",
+    "evidence": "123 baseline files, 32,692 total <error> entries.",
+    "files": [],
+    "recommendation": "Schedule a ktlintFormat sweep, one domain per release, shrinking the baseline on a known cadence."
+  },
+  {
+    "id": "TW-R10-10",
+    "repo": "trustweave",
+    "severity": "low",
+    "status": "open",
+    "title": "No signing, SBOM, or provenance on published artifacts",
+    "detail": "The build publishes to Maven with no GPG signature, no CycloneDX SBOM and no build attestation. Dependabot is configured for Gradle and Actions, but there is no CodeQL or other SAST and CI is a single OS on a single JDK. For a library whose value proposition is verifiable trust, artifact provenance is close to table stakes.",
+    "evidence": "No signing/cyclonedx/sigstore/cosign references in any build script or workflow.",
+    "files": ["build.gradle.kts", ".github/workflows/ci.yml"],
+    "recommendation": "GPG signing is required for Maven Central regardless. Add cyclonedx-gradle-plugin and GitHub artifact attestation to the release workflow."
+  },
+  {
+    "id": "TW-R10-11",
+    "repo": "trustweave",
+    "severity": "low",
+    "status": "open",
+    "title": "Test dependencies invert the module layering",
+    "detail": "credentials/credential-api declares a testImplementation on :trust, the facade above it, and did/did-core does the same on :did:registrar. Production layering is clean and acyclic; the test configurations are not, which constrains how these modules can be split or published independently.",
+    "evidence": "credentials/credential-api/build.gradle.kts:42, did/did-core/build.gradle.kts:23.",
+    "files": [
+      "credentials/credential-api/build.gradle.kts",
+      "did/did-core/build.gradle.kts"
+    ],
+    "recommendation": "Move those tests up into :trust, or push the shared fixtures down into :testkit where the rest of the doubles live."
+  },
+  {
+    "id": "SA-R10-01",
+    "repo": "trustweave-saas",
+    "severity": "high",
+    "status": "open",
+    "title": "The default profile lets Hibernate own the schema, with Flyway switched off",
+    "detail": "application.yml sets ddl-auto: update and flyway.enabled: false, so the 29 hand-written migrations are never applied on the default path and Hibernate derives the schema from the entities instead. Everything defined only in SQL is silently absent there: the check constraints in V9__data_integrity_constraints.sql, the index in V24__webhook_recovery_monitor_index.sql, the seed rows in V4__Add_blockchain_network_seed_data.sql. Both deployment profiles correctly use validate + Flyway, and the staging profile carries a comment naming this exact problem. What is missing is a CI job that boots against a clean Postgres under those settings, so drift is still only discovered at deploy time.",
+    "evidence": "application.yml:16 ddl-auto: update; application.yml:24 flyway.enabled: false. application-staging.yml and application-fly.yml use ddl-auto: validate with flyway.enabled: true. .github/workflows/ci.yml runs :server:test only.",
+    "files": [
+      "server/src/main/resources/application.yml",
+      ".github/workflows/ci.yml"
+    ],
+    "recommendation": "Add a CI job that starts a clean Postgres, runs the app with SPRING_PROFILES_ACTIVE=staging and fails on a validate mismatch. Then flip the default profile to validate + Flyway so dev and prod agree by construction."
+  },
+  {
+    "id": "SA-R10-02",
+    "repo": "trustweave-saas",
+    "severity": "medium",
+    "status": "open",
+    "title": "No static analysis on 22k lines of backend Kotlin",
+    "detail": "No ktlint, detekt or spotless anywhere in the SaaS build. The library repo enforces ktlint on all 106 modules and gates PRs on it; this repo, which handles tenancy, billing and key custody, has none. The frontend is better served, with CI running lint, tests and a production build.",
+    "evidence": "No ktlint/detekt/spotless references in build.gradle.kts or server/build.gradle.kts.",
+    "files": ["build.gradle.kts", "server/build.gradle.kts"],
+    "recommendation": "Apply ktlint with a generated baseline mirroring the library setup and add ktlintCheck to the backend CI job. detekt would add real value given the amount of authorization logic."
+  },
+  {
+    "id": "SA-R10-03",
+    "repo": "trustweave-saas",
+    "severity": "medium",
+    "status": "open",
+    "title": "No dependency update or audit path",
+    "detail": "No .github/dependabot.yml in this repo and no npm audit step in CI, on a Spring Boot service with 16 frontend runtime dependencies and a Keycloak/Stripe/Kill Bill surface. The library repo has Dependabot for both Gradle and Actions.",
+    "evidence": ".github/ contains only workflows/. No audit step in .github/workflows/ci.yml or package.json scripts.",
+    "files": [".github/workflows/ci.yml"],
+    "recommendation": "Copy the library's dependabot.yml and add npm and Docker ecosystems; add npm audit --audit-level=high to the frontend job."
+  },
+  {
+    "id": "SA-R10-04",
+    "repo": "trustweave-saas",
+    "severity": "medium",
+    "status": "open",
+    "title": "Tenant isolation holds by convention, not by construction",
+    "detail": "The security config is properly fail-closed with anyRequest().denyAll(), but /api/** resolves only to .authenticated(), so each of the 44 controllers must remember to call tenantContext.require* itself. The controllers traced do it correctly, including a post-fetch ownership re-check, and the three dev-only controllers are properly @Profile(\"dev\"). The discipline is real; nothing enforces it.",
+    "evidence": "KeycloakSecurityConfig.kt:89 .requestMatchers(\"/api/**\").authenticated(). OrganizationController.kt:39 requireOrganizationAccess. CredentialOfferController.kt:110-113 requireTrustSpaceAccess plus organizationId equality check. DevController, InMemoryTestnetController and DemoWalletVerifierController are all @Profile(\"dev\").",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/KeycloakSecurityConfig.kt"
+    ],
+    "recommendation": "Add an ArchUnit-style test asserting every @RestController outside an explicit public allowlist references TenantContext. Cheap, and it converts the convention into a gate."
+  },
+  {
+    "id": "SA-R10-05",
+    "repo": "trustweave-saas",
+    "severity": "low",
+    "status": "open",
+    "title": "Eleven unused repository methods, several tenant-unscoped",
+    "detail": "Of 63 derived query methods, 11 have no caller outside the repository layer. Four take no organization or trust-space parameter, so a future caller could pick one up without noticing it returns cross-tenant rows. findByIdAndOrganizationId being among the unused ones is the telling detail: the scoped variant exists and is not the one in use.",
+    "evidence": "Unscoped and unused: findByTransactionHash, findByVerificationMethodId, findByStatus, findByBlockchainNetworkId. Also unused: findByIdAndOrganizationId, findByGroupId, findBySubjectIdAndStatus, findByStatusOrderByCreatedAtAsc, and three countByTrustSpaceId variants.",
+    "files": ["server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/repository/"],
+    "recommendation": "Delete them. They can be re-derived in one line when needed, and the scoped signature will be the obvious one to write."
+  },
+  {
+    "id": "SA-R10-06",
+    "repo": "trustweave-saas",
+    "severity": "low",
+    "status": "open",
+    "title": "Default datasource falls back to postgres/postgres over plaintext",
+    "detail": "jdbc:postgresql://127.0.0.1:5432/trustweave_saas?sslmode=disable with postgres/postgres as default credentials. Appropriate for local development and overridden by both deployment profiles, but it is the same default profile that carries SA-R10-01, so a deployment that forgets to set a profile fails open twice.",
+    "evidence": "server/src/main/resources/application.yml datasource block.",
+    "files": ["server/src/main/resources/application.yml"],
+    "recommendation": "Drop the credential defaults so an unset DATABASE_PASSWORD fails at startup rather than reaching for postgres."
+  }
+]

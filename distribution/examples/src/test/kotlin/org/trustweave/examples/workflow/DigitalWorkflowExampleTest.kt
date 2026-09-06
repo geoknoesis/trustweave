@@ -1,14 +1,12 @@
 package org.trustweave.examples.workflow
 
-import org.trustweave.examples.StubScenarioTest
-import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for Digital Workflow Provenance scenario.
  */
-class DigitalWorkflowExampleTest : StubScenarioTest() {
+class DigitalWorkflowExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
 }
-

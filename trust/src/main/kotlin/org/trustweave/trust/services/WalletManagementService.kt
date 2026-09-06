@@ -1,11 +1,11 @@
 package org.trustweave.trust.services
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.trustweave.trust.context.WalletDslContext
 import org.trustweave.trust.dsl.wallet.WalletBuilder
 import org.trustweave.trust.types.WalletCreationResult
 import org.trustweave.wallet.exception.WalletException
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 
 /**
  * Domain service for wallet management operations.
@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
  */
 class WalletManagementService(
     private val walletContext: WalletDslContext,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) {
     /**
      * Create a wallet using the configured TrustWeave instance.
@@ -35,14 +35,14 @@ class WalletManagementService(
             } catch (e: WalletException.InvalidHolderDid) {
                 WalletCreationResult.Failure.InvalidHolderDid(
                     holderDid = e.holderDid,
-                    reason = e.reason
+                    reason = e.reason,
                 )
             } catch (e: WalletException.WalletCreationFailed) {
                 WalletCreationResult.Failure.Other(reason = e.reason, cause = e)
             } catch (e: Throwable) {
                 WalletCreationResult.Failure.Other(
                     reason = e.message ?: "Wallet creation failed",
-                    cause = e
+                    cause = e,
                 )
             }
         }

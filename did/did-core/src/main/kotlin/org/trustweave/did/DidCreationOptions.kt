@@ -28,21 +28,19 @@ import org.trustweave.did.model.DidDocument
 data class DidCreationOptions(
     val algorithm: KeyAlgorithm = KeyAlgorithm.ED25519,
     val purposes: List<KeyPurpose> = listOf(KeyPurpose.AUTHENTICATION),
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
-
     /**
      * Converts to Map format for backward compatibility with existing DID methods.
      *
      * @return Map representation of options
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             put("algorithm", algorithm.algorithmName)
             put("purposes", purposes.map { it.purposeName })
             putAll(additionalProperties)
         }
-    }
 
     companion object {
         /**
@@ -57,26 +55,28 @@ data class DidCreationOptions(
             val algorithmName = map["algorithm"] as? String ?: "Ed25519"
             val algorithm = KeyAlgorithm.fromName(algorithmName) ?: KeyAlgorithm.ED25519
 
-            val purposeNames = when (val purposes = map["purposes"]) {
-                is List<*> -> purposes.filterIsInstance<String>()
-                is String -> listOf(purposes)
-                else -> emptyList()
-            }
+            val purposeNames =
+                when (val purposes = map["purposes"]) {
+                    is List<*> -> purposes.filterIsInstance<String>()
+                    is String -> listOf(purposes)
+                    else -> emptyList()
+                }
 
-            val purposes = purposeNames.mapNotNull { KeyPurpose.fromName(it) }
-                .ifEmpty { listOf(KeyPurpose.AUTHENTICATION) }
+            val purposes =
+                purposeNames
+                    .mapNotNull { KeyPurpose.fromName(it) }
+                    .ifEmpty { listOf(KeyPurpose.AUTHENTICATION) }
 
             val additionalProperties = map.filterKeys { it !in setOf("algorithm", "purposes") }
 
             return DidCreationOptions(
                 algorithm = algorithm,
                 purposes = purposes,
-                additionalProperties = additionalProperties
+                additionalProperties = additionalProperties,
             )
         }
     }
 }
-
 
 /**
  * Extension function to convert DidCreationOptions to Map for backward compatibility.
@@ -105,9 +105,7 @@ fun didCreationOptions(block: DidCreationOptionsBuilder.() -> Unit): DidCreation
 /**
  * Convenience extension for creating a DID using a builder DSL.
  */
-suspend fun DidMethod.createDid(
-    configure: DidCreationOptionsBuilder.() -> Unit
-): DidDocument = createDid(didCreationOptions(configure))
+suspend fun DidMethod.createDid(configure: DidCreationOptionsBuilder.() -> Unit): DidDocument = createDid(didCreationOptions(configure))
 
 /**
  * Builder for DidCreationOptions.
@@ -181,19 +179,20 @@ class DidCreationOptionsBuilder {
     /**
      * Adds a custom property.
      */
-    fun property(key: String, value: Any?) {
+    fun property(
+        key: String,
+        value: Any?,
+    ) {
         properties[key] = value
     }
 
     /**
      * Builds the options.
      */
-    fun build(): DidCreationOptions {
-        return DidCreationOptions(
+    fun build(): DidCreationOptions =
+        DidCreationOptions(
             algorithm = algorithm,
             purposes = if (purposes.isEmpty()) listOf(KeyPurpose.AUTHENTICATION) else purposes,
-            additionalProperties = properties
+            additionalProperties = properties,
         )
-    }
 }
-

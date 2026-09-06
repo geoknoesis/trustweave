@@ -1,0 +1,715 @@
+<title>Round Eleven Findings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F6F8F9;
+    --surface: #FFFFFF;
+    --surface-sunk: #EFF3F4;
+    --ink: #15202A;
+    --ink-muted: #586775;
+    --ink-faint: #8595A2;
+    --rule: #DCE4E7;
+    --rule-strong: #C3CFD4;
+    --accent: #1C5F6B;
+    --accent-soft: #E3EFF1;
+    --high: #A33A2A;
+    --high-soft: #F7E7E3;
+    --med: #9A6A16;
+    --med-soft: #F8EFDD;
+    --ok: #37714A;
+    --ok-soft: #E4F0E8;
+    --shadow: 0 1px 2px rgba(21, 32, 42, .05), 0 8px 24px -16px rgba(21, 32, 42, .25);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F151A;
+      --surface: #151D24;
+      --surface-sunk: #1B242C;
+      --ink: #E3EAEF;
+      --ink-muted: #93A3AF;
+      --ink-faint: #6C7C88;
+      --rule: #27333C;
+      --rule-strong: #38474F;
+      --accent: #62B4C0;
+      --accent-soft: #16323A;
+      --high: #E1866F;
+      --high-soft: #38201B;
+      --med: #DCAC57;
+      --med-soft: #33280F;
+      --ok: #77B98C;
+      --ok-soft: #17301F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F151A;
+    --surface: #151D24;
+    --surface-sunk: #1B242C;
+    --ink: #E3EAEF;
+    --ink-muted: #93A3AF;
+    --ink-faint: #6C7C88;
+    --rule: #27333C;
+    --rule-strong: #38474F;
+    --accent: #62B4C0;
+    --accent-soft: #16323A;
+    --high: #E1866F;
+    --high-soft: #38201B;
+    --med: #DCAC57;
+    --med-soft: #33280F;
+    --ok: #77B98C;
+    --ok-soft: #17301F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+  }
+
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  code {
+    font-size: .85em;
+    background: var(--surface-sunk);
+    border-radius: 3px;
+    padding: .1em .35em;
+    word-break: break-word;
+  }
+
+  h1, h2, h3 {
+    font-family: Newsreader, Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: 2.7rem; letter-spacing: -.015em; }
+  h2 { font-size: 1.75rem; letter-spacing: -.01em; }
+  h3 { font-size: 1.16rem; font-weight: 600; }
+
+  p { margin: 0; max-width: 68ch; }
+
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 16px; }
+
+  .masthead .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-size: .82rem;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+  }
+
+  .masthead .meta b { font-weight: 600; color: var(--ink); }
+
+  .lede { font-size: 1.12rem; color: var(--ink-muted); max-width: 66ch; }
+
+  section { display: flex; flex-direction: column; gap: 22px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 7px; }
+
+  .verdict {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  .repo-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 24px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .repo-card .name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .88rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .repo-card .figure {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+    flex-wrap: wrap;
+  }
+
+  .repo-card .figure .n {
+    font-family: Newsreader, Georgia, serif;
+    font-size: 3.4rem;
+    line-height: .95;
+    font-weight: 500;
+    letter-spacing: -.02em;
+  }
+
+  .repo-card .figure .d { font-size: 1rem; color: var(--ink-faint); }
+
+  .delta {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .8rem;
+    font-weight: 500;
+    padding: .18em .5em;
+    border-radius: 3px;
+  }
+
+  .delta.up { background: var(--ok-soft); color: var(--ok); }
+  .delta.flat { background: var(--surface-sunk); color: var(--ink-muted); }
+
+  .repo-card .verdict-line { font-size: .95rem; color: var(--ink-muted); }
+
+  .repo-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 14px;
+    font-size: .87rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+
+  .repo-card dt { color: var(--ink-muted); }
+
+  .repo-card dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", monospace;
+    font-size: .84rem;
+  }
+
+  .findings { display: flex; flex-direction: column; gap: 14px; }
+
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--stripe, var(--rule-strong));
+    border-radius: 0 5px 5px 0;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .finding.sev-high { --stripe: var(--high); }
+  .finding.sev-med { --stripe: var(--med); }
+  .finding.sev-low { --stripe: var(--rule-strong); }
+
+  .finding-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .fid {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    letter-spacing: .02em;
+  }
+
+  .pill {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .2em .6em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .pill.high { background: var(--high-soft); color: var(--high); }
+  .pill.med { background: var(--med-soft); color: var(--med); }
+  .pill.low { background: var(--surface-sunk); color: var(--ink-muted); }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+
+  .finding h3 { flex: 1 1 320px; }
+
+  .finding p { font-size: .95rem; }
+
+  .evidence {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .78rem;
+    color: var(--ink-muted);
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: 9px 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.55;
+  }
+
+  .fix {
+    font-size: .92rem;
+    border-top: 1px dashed var(--rule);
+    padding-top: 9px;
+    color: var(--ink-muted);
+  }
+
+  .fix b { color: var(--ink); font-weight: 600; }
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    min-width: 520px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    border-bottom-color: var(--rule-strong);
+  }
+
+  td.num {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-right: 0;
+    white-space: nowrap;
+  }
+
+  td.id { font-family: "JetBrains Mono", monospace; font-size: .8rem; white-space: nowrap; }
+
+  tr.total td {
+    border-bottom: none;
+    border-top: 2px solid var(--rule-strong);
+    font-weight: 600;
+    padding-top: 11px;
+  }
+
+  .up-txt { color: var(--ok); }
+
+  .closed {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .closed-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--rule);
+    font-size: .93rem;
+  }
+
+  .closed-row:last-child { border-bottom: none; }
+
+  .closed-row .tick { color: var(--ok); font-weight: 700; line-height: 1.6; }
+
+  .closed-row .body { display: flex; flex-direction: column; gap: 3px; }
+
+  .closed-row .where {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .76rem;
+    color: var(--ink-faint);
+  }
+
+  ol.priority {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: p;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  ol.priority li {
+    counter-increment: p;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    font-size: .96rem;
+  }
+
+  ol.priority li::before {
+    content: counter(p);
+    font-family: Newsreader, Georgia, serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    text-align: right;
+    line-height: 1;
+  }
+
+  ol.priority b { font-weight: 600; }
+
+  .note {
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 18px 22px;
+    font-size: .95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .note .eyebrow { color: var(--accent); }
+
+  .note p { max-width: 72ch; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+    font-size: .86rem;
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  a { color: var(--accent); }
+
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 620px) {
+    h1 { font-size: 2.1rem; }
+    .wrap { padding: 36px 18px 64px; gap: 40px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Code review &middot; Round 11 &middot; Remediation check and fresh pass</div>
+    <h1>The fixes landed. One tier is missing.</h1>
+    <p class="lede">Every round-10 finding that was targeted is closed, several more thoroughly than asked. The fresh pass over what changed found a cross-tenant problem that predates both rounds: the SaaS has one flat <code>admin</code> role doing the work of two, and role administration never consults the tenant scoping the data model already carries.</p>
+    <div class="meta">
+      <span><b>2026-09-05</b></span>
+      <span>Closed <b>6 of 6</b> targeted</span>
+      <span>Carried forward <b>11</b></span>
+      <span>New <b>3</b></span>
+      <span>Method: <b>static analysis</b>, no build executed</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <div class="repo-card">
+        <div class="name">trustweave</div>
+        <div class="figure"><span class="n">7.6</span><span class="d">/ 10</span><span class="delta up">&plus;0.6</span></div>
+        <p class="verdict-line">All four Verifiable Intent findings closed, with tests, and stricter than requested. What remains is engineering hygiene &mdash; untested plugins, no API-surface control, no artifact provenance &mdash; none of it touched this round.</p>
+        <dl>
+          <dt>Security</dt><dd>9.0</dd>
+          <dt>Correctness</dt><dd>8.5</dd>
+          <dt>Architecture</dt><dd>7.5</dd>
+          <dt>Testing</dt><dd>7.0</dd>
+          <dt>Supply chain &amp; CI</dt><dd>6.0</dd>
+        </dl>
+      </div>
+      <div class="repo-card">
+        <div class="name">trustweave-saas</div>
+        <div class="figure"><span class="n">7.0</span><span class="d">/ 10</span><span class="delta flat">&plus;0.1</span></div>
+        <p class="verdict-line">Real gains in correctness and testing &mdash; the migration fix caught three tables that would have failed a first production deploy. Offset by a HIGH finding neither round had opened, which the new operations endpoint made visible.</p>
+        <dl>
+          <dt>Security</dt><dd>6.5</dd>
+          <dt>Correctness</dt><dd>8.5</dd>
+          <dt>Architecture</dt><dd>6.5</dd>
+          <dt>Testing</dt><dd>8.0</dd>
+          <dt>Supply chain &amp; CI</dt><dd>5.5</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="eyebrow">Why the SaaS score barely moved</div>
+      <p>Correctness and testing both rose by a point and a half. Security fell by the same amount, because SA-R11-01 is worse than anything round 10 raised on this repo. It is not a regression &mdash; the code has been this way throughout &mdash; but the new <code>/api/operations/**</code> endpoint gave a cross-tenant reader one more thing to read, and reviewing that endpoint is what surfaced the role model behind it.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">New this round</div>
+      <h2>Findings</h2>
+    </div>
+
+    <div class="findings">
+
+      <article class="finding sev-high">
+        <div class="finding-head">
+          <span class="pill high">High</span>
+          <h3>One flat <code>admin</code> role serves two tiers, and role administration ignores tenancy</h3>
+          <span class="fid">SA-R11-01</span>
+        </div>
+        <p>Authorities come from Keycloak realm roles &mdash; <code>KeycloakRealmRoleConverter</code> maps <code>realm_access.roles</code> to <code>ROLE_*</code>, and both Spring's <code>hasRole("admin")</code> and <code>TenantContext.requireRole("admin")</code> read that one claim. There is no platform-administrator concept anywhere in the codebase; a search for one returns nothing.</p>
+        <p>That single role is required for ordinary tenant work: <code>UserController</code> calls <code>requireRole("admin")</code> to let a customer manage their own organization's users. It also gates operations that are realm-wide. So the administrator of any customer organization can:</p>
+        <p><b>Grant any realm role to any user in the realm.</b> <code>RoleService.assignRoleToUser</code> is a bare passthrough to Keycloak. It never checks that the target Keycloak user belongs to the caller's organization, and never checks that <code>roleName</code> corresponds to a <code>Role</code> row the caller's organization owns &mdash; including granting <code>admin</code> itself. <code>createRole</code> carefully stamps the caller's <code>organizationId</code> on the database row, with a comment saying the org is never trusted from the body, but the Keycloak role it creates is realm-global and the assign/remove paths never read that column back.</p>
+        <p><b>Read every tenant's users and roles.</b> <code>getAllUsers()</code> is <code>userRepository.findAll()</code>. <code>getAllRoles()</code> is <code>roleRepository.findAll()</code>. <code>GET /api/roles/keycloak</code> lists every realm role. <code>searchUsers(query)</code> searches the whole Keycloak realm and then <em>writes</em> local <code>User</code> rows for whoever it finds, so a cross-tenant read has a cross-tenant write as a side effect.</p>
+        <p><b>Read platform operations.</b> <code>/api/operations/**</code> and <code>/actuator/metrics/**</code> both resolve to the same role. The new recovery panel's own error copy says &ldquo;Check your platform administrator access&rdquo; &mdash; naming a tier the authorization model does not have.</p>
+        <div class="evidence">KeycloakJwtAuthenticationConverter.kt   realm_access.roles → ROLE_*, one flat set
+TenantContext.kt:42-51                  hasRole/requireRole read the same claim
+RoleService.kt:86-93                    assignRoleToUser / removeRoleFromUser → straight to Keycloak
+RoleService.kt:23-25                    getAllRoles() = roleRepository.findAll()
+UserService.kt:29-31                    getAllUsers() = userRepository.findAll()
+UserService.kt:80-85                    searchUsers() = realm-wide search, then syncs rows locally
+UserController.kt:33,40,72,109,116      requireRole("admin") for tenant-level work
+KeycloakSecurityConfig.kt:81,88         /actuator/metrics/**, /api/operations/** on the same role
+grep platform-admin|superadmin|global-admin → 0 hits</div>
+        <div class="fix"><b>Fix:</b> split the tier. Introduce a distinct realm role for platform operators and move <code>/api/operations/**</code> and <code>/actuator/metrics/**</code> onto it. Then scope role administration: <code>assignRoleToUser</code> should reject a target user outside the caller's organization and a <code>roleName</code> whose <code>Role.organizationId</code> is not the caller's, and <code>getAllRoles</code>/<code>getAllUsers</code> should filter by the caller's organization. The <code>Role.organizationId</code> column already exists &mdash; nothing reads it on the paths that matter.</div>
+      </article>
+
+      <article class="finding sev-med">
+        <div class="finding-head">
+          <span class="pill med">Medium</span>
+          <h3>The Keycloak admin credential kept the default the database credential just lost</h3>
+          <span class="fid">SA-R11-02</span>
+        </div>
+        <p>SA-R10-06 removed <code>postgres</code>/<code>postgres</code> from the default profile so an unset <code>DATABASE_PASSWORD</code> fails at startup. Six lines further down the same file, the identity provider still carries <code>admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}</code> alongside a matching username default and a localhost server URL. Both deployment profiles correctly declare it with no fallback.</p>
+        <p>This is the higher-value credential of the two, and it compounds SA-R11-01: the Keycloak realm administrator can mint users and grant realm roles directly, which is the same capability that finding is about reaching indirectly.</p>
+        <div class="evidence">application.yml:41   admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+application.yml:42   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+application.yml:37   server-url:     ${KEYCLOAK_SERVER_URL:http://localhost:8090}
+application-fly.yml:22 / application-staging.yml:35   no default  ✓</div>
+        <div class="fix"><b>Fix:</b> drop the <code>:admin</code> fallbacks the same way the datasource ones went, and move the localhost convenience values into <code>application-dev.yml</code> where the database URL now lives.</div>
+      </article>
+
+      <article class="finding sev-low">
+        <div class="finding-head">
+          <span class="pill low">Low</span>
+          <h3>Ellipses became question marks in nine shipped UI strings</h3>
+          <span class="fid">SA-R11-03</span>
+        </div>
+        <p>A lossy character conversion replaced <code>&hellip;</code> with a literal ASCII <code>?</code> in user-facing text across the console. The bytes are plain <code>0x3F</code>, not mojibake, so this survives any encoding fix and has to be corrected in the source. Loading states now read as questions.</p>
+        <div class="evidence">App.tsx:46                     "Loading page?"
+WebhookRecoveryPanel.tsx:15    "Loading recovery events?"
+CheckCredential.tsx:209        "Checking final status?"
+UserAssignmentsModal.tsx:76,106, AnchorToBlockchainModal.tsx:73,
+Explain.tsx:72, Blockchains.tsx:50, StarterKits.tsx:169   "Loading ?"</div>
+        <div class="fix"><b>Fix:</b> replace with a literal <code>&hellip;</code> or drop the punctuation. Worth checking whatever wrote these files &mdash; the same substitution shows up in <code>round-9/findings.json</code>, where an en dash became <code>1?128</code>.</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Remediation</div>
+      <h2>Verified closed</h2>
+      <p>Each re-read in the current source. Two went further than the recommendation.</p>
+    </div>
+
+    <div class="closed">
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>TW-R10-01</b> &mdash; constraint enforcement is now a shared <code>checkConstraints</code> helper called from both L3 branches with <code>isOpenMandate = true</code>. It also hardened beyond the ask: a missing or non-array <code>constraints</code> claim, and any malformed entry, now fail closed rather than resolving to an empty list.</span>
+          <span class="where">ChainVerifier.kt:245, 264, 286</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>TW-R10-02</b> &mdash; <code>requireReplayProtection: Boolean = true</code> rejects the chain at entry when either expected audience or nonce is absent, and records the opt-out in <code>checksSkipped</code> when a caller deliberately disables it.</span>
+          <span class="where">ChainVerifier.kt:58, 64-67</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>TW-R10-03</b> &mdash; a new <code>temporalShape</code> check requires <code>iat</code> and <code>exp</code> to be non-negative integers and rejects <code>exp &le; iat</code>. It also catches string-encoded numerics, which I had not raised. L3 always requires both: the audit escape hatch is hardcoded off there and can only relax L1/L2.</span>
+          <span class="where">ChainVerifier.kt:68-73, 305-323, 380</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>TW-R10-04</b> &mdash; the cross-check now fails when the L2 mandate carries no authorized <code>payment_instrument</code>, instead of returning a pass.</span>
+          <span class="where">ChainVerifier.kt:440</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>SA-R10-01</b> &mdash; the default profile now runs <code>ddl-auto: validate</code> with Flyway enabled, and the dev conveniences moved to <code>application-dev.yml</code>. The stronger half is the new test: it runs the whole migration set against an empty PostgreSQL in its own container and derives the expected table set by reading <code>@Table</code> annotations off the source tree, so an entity added without a migration fails without anyone maintaining a list. It has already caught three tables that had no <code>CREATE</code> anywhere and a later <code>ALTER TABLE</code> against one of them &mdash; invisible in development, fatal on first deploy.</span>
+          <span class="where">application.yml:16,24 &middot; application-dev.yml &middot; FlywayMigrationTest.kt</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>SA-R10-06</b> &mdash; the datasource credential defaults are gone from the default profile, so an unset <code>DATABASE_PASSWORD</code> now fails at startup. Partially: the Keycloak admin credential in the same file kept its default (SA-R11-02).</span>
+          <span class="where">application.yml:6-8</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>Not requested</b> &mdash; the SDK source verification in CI now pins the reviewed revision explicitly (<code>--revision</code>) rather than checking the hash alone, tightening a control that was already the best supply-chain practice in either repository.</span>
+          <span class="where">.github/workflows/ci.yml:96-101</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>Consequence, correctly accepted</b> &mdash; because <code>ConstraintChecker</code> fails closed on <code>line_items</code> for open mandates, enforcing checkout constraints means an autonomous L3 checkout cannot currently verify at all. That is the right trade, and it is pinned by two tests rather than left to be discovered. Worth tracking as a product limitation: the autonomous checkout path stays non-functional until line-item matching lands.</span>
+          <span class="where">ChainVerifierKnownAnswerTest.kt:60-77 &middot; IssuanceRoundTripTest.kt:390-391</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Unchanged</div>
+      <h2>Carried forward</h2>
+      <p>Eleven engineering-hygiene findings from round 10, each re-measured rather than assumed. The remediation was surgical; none of these were in scope.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Finding</th><th class="num">Re-measured</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="id">TW-R10-05</td><td>Modules with production code and no tests</td><td class="num">21 modules</td></tr>
+          <tr><td class="id">TW-R10-06</td><td>No <code>explicitApi</code>, no binary-compatibility validator</td><td class="num">still absent</td></tr>
+          <tr><td class="id">TW-R10-07</td><td>Exceptions swallowed with no log line</td><td class="num">108</td></tr>
+          <tr><td class="id">TW-R10-08</td><td>Modules with coverage measurement</td><td class="num">3 of 106</td></tr>
+          <tr><td class="id">TW-R10-09</td><td>Baselined ktlint violations</td><td class="num">32,692</td></tr>
+          <tr><td class="id">TW-R10-10</td><td>No artifact signing, SBOM, or provenance</td><td class="num">still absent</td></tr>
+          <tr><td class="id">TW-R10-11</td><td>Test dependencies invert module layering</td><td class="num">2 modules</td></tr>
+          <tr><td class="id">SA-R10-02</td><td>No ktlint, detekt, or spotless on the backend</td><td class="num">still absent</td></tr>
+          <tr><td class="id">SA-R10-03</td><td>No Dependabot, no <code>npm audit</code> in CI</td><td class="num">still absent</td></tr>
+          <tr><td class="id">SA-R10-04</td><td>Tenant isolation by convention, not construction</td><td class="num">see SA-R11-01</td></tr>
+          <tr><td class="id">SA-R10-05</td><td>Unused repository methods, several unscoped</td><td class="num">11 of 63</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>SA-R10-04 deserves a note: round 10 said isolation held by convention and nothing enforced it. SA-R11-01 is what that looks like when the convention is not followed. The suggested ArchUnit-style gate would not have caught it either &mdash; <code>RoleController</code> does reference <code>TenantContext</code>; it just does not use it on the paths that matter.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Scoring</div>
+      <h2>Movement since round 10</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th class="num">SDK</th>
+            <th class="num">&Delta;</th>
+            <th class="num">SaaS</th>
+            <th class="num">&Delta;</th>
+            <th>What moved it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Security</td>
+            <td class="num">9.0</td><td class="num up-txt">+1.5</td>
+            <td class="num">6.5</td><td class="num">&minus;1.5</td>
+            <td>SDK: both HIGH findings closed and the fixes go further than asked. SaaS: SA-R11-01 is a cross-tenant privilege and data-exposure path.</td>
+          </tr>
+          <tr>
+            <td>Correctness</td>
+            <td class="num">8.5</td><td class="num up-txt">+0.5</td>
+            <td class="num">8.5</td><td class="num up-txt">+1.5</td>
+            <td>SDK: temporal handling now rejects what it used to pass. SaaS: one schema authority, and the migration set proven to build from empty.</td>
+          </tr>
+          <tr>
+            <td>Architecture</td>
+            <td class="num">7.5</td><td class="num up-txt">+0.5</td>
+            <td class="num">6.5</td><td class="num">&minus;0.5</td>
+            <td>SDK: the shared constraint helper removed the asymmetry rather than patching it. SaaS: one role serving two tiers is a modelling gap, not a missing check.</td>
+          </tr>
+          <tr>
+            <td>Testing</td>
+            <td class="num">7.0</td><td class="num up-txt">+0.5</td>
+            <td class="num">8.0</td><td class="num up-txt">+1.0</td>
+            <td>SDK: substantial new adversarial VI cases; 21 modules still have none. SaaS: the migration test derives its own guard from source, which is the durable kind.</td>
+          </tr>
+          <tr>
+            <td>Supply chain &amp; CI</td>
+            <td class="num">6.0</td><td class="num">&mdash;</td>
+            <td class="num">5.5</td><td class="num up-txt">+0.5</td>
+            <td>SDK: unchanged. SaaS: explicit revision pinning; still no static analysis, Dependabot, or audit.</td>
+          </tr>
+          <tr class="total">
+            <td>Overall</td>
+            <td class="num">7.6</td><td class="num up-txt">+0.6</td>
+            <td class="num">7.0</td><td class="num up-txt">+0.1</td>
+            <td>Equal weight across the five dimensions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Sequence</div>
+      <h2>What I would do first</h2>
+    </div>
+    <ol class="priority">
+      <li><b>SA-R11-01, part one</b> &mdash; scope <code>assignRoleToUser</code> and <code>removeRoleFromUser</code> to the caller's organization, for both the target user and the role. This is the privilege-escalation half and it is a few lines against a column that already exists.</li>
+      <li><b>SA-R11-01, part two</b> &mdash; filter <code>getAllUsers</code>, <code>getAllRoles</code> and <code>searchUsers</code> by organization. <code>searchUsers</code> first: it is the one that writes.</li>
+      <li><b>SA-R11-01, part three</b> &mdash; add a platform-operator role and move <code>/api/operations/**</code> and <code>/actuator/metrics/**</code> onto it, so the recovery panel's copy becomes true.</li>
+      <li><b>SA-R10-02</b> &mdash; ktlint on the SaaS backend. The library has had it on 106 modules throughout; this repo holds the tenancy logic and has none.</li>
+      <li><b>TW-R10-06</b> &mdash; the binary-compatibility validator and committed <code>.api</code> dumps, still the cheapest thing to do before 1.0 freezes the surface.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p><b>Method.</b> Static analysis of both working trees, comparing against the round-10 baseline (<code>a41d482a</code> / <code>f31dfeb</code>) and reading every changed security-relevant file in full: <code>ChainVerifier.kt</code>, <code>ConstraintChecker.kt</code>, the VI test suites, the SaaS profile configuration, <code>FlywayMigrationTest.kt</code>, and the new webhook-recovery controller, client and panel. SA-R11-01 was traced from the new operations endpoint back through <code>KeycloakSecurityConfig</code>, the JWT authority converter, <code>TenantContext</code>, <code>RoleService</code> and <code>UserService</code> to their repository calls.</p>
+    <p><b>Limits.</b> No Gradle build or test run was executed, so the remediation is confirmed by reading the code and its tests, not by watching them pass. Both trees carry uncommitted modifications; this reflects the working tree, not <code>HEAD</code>. SA-R11-01 is established from the authorization code path; it was not confirmed against a running Keycloak, so the exact realm-role assignment a customer administrator receives in a deployed environment should be checked before sizing the exposure. Round 10's carried-forward findings were re-measured by the same static means, not re-derived.</p>
+  </footer>
+
+</div>

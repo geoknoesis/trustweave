@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "area": "Wallet unit tests",
+      "result": "37 passed",
+      "scope": "Four new lost-key regressions plus earlier custody, restore and import tests."
+    },
+    {
+      "area": "Production wallet",
+      "result": "Build/TypeScript passed; 11 Chromium tests passed",
+      "scope": "New lost-key UI flow, preserved records and replacement identity; prior camera/CSP/import/export tests remain green."
+    },
+    {
+      "area": "Deployed Accountly contract",
+      "result": "1 deployed test passed; 13 tests passed in its combined run",
+      "scope": "Local Accountly and real Kill Bill; two new applications across initial failed attempt and final run were cleaned up. No payment requests. See provider-environment.json."
+    },
+    {
+      "area": "Accountly regression suite",
+      "result": "94 reported: 91 passed, 3 opt-in skipped; no failures/errors",
+      "scope": "The deployed test skipped here was separately run successfully. The original PSP-stand-in pair remains skipped. These counts overlap the combined run; do not add them."
+    },
+    {
+      "area": "Prior evidence",
+      "result": "SDK broad JVM/lint and SaaS frontend evidence retained",
+      "scope": "No new full-server coverage gate, full SDK suite or SaaS frontend rerun. Targeted backend runs exclude the whole-server coverage threshold."
+    },
+    {
+      "area": "Deployment limitations",
+      "result": "Explicit shared-tenant migration may be required",
+      "scope": "Do not bypass Accountly migration refusal. Hosted staging, service credentials, paid-tier catalog/PSP operation and production key custody remain open."
+    }
+  ],
+  "logs": [
+    "accountly-validation.json",
+    "accountly-regressions.json",
+    "provider-environment.json",
+    "../round-6/backend-validation.json",
+    "../round-4/sdk-tests.json"
+  ]
+}

@@ -1,0 +1,206 @@
+<title>TrustWeave Readiness Reassessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F6F8F9; --surface: #FFFFFF; --surface-sunk: #EFF3F4;
+    --ink: #15202A; --ink-muted: #586775; --ink-faint: #8595A2;
+    --rule: #DCE4E7; --rule-strong: #C3CFD4;
+    --accent: #1C5F6B; --accent-soft: #E3EFF1;
+    --high: #A33A2A; --high-soft: #F7E7E3;
+    --med: #9A6A16; --med-soft: #F8EFDD;
+    --ok: #37714A; --ok-soft: #E4F0E8;
+    --shadow: 0 1px 2px rgba(21,32,42,.05), 0 8px 24px -16px rgba(21,32,42,.25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F151A; --surface: #151D24; --surface-sunk: #1B242C;
+      --ink: #E3EAEF; --ink-muted: #93A3AF; --ink-faint: #6C7C88;
+      --rule: #27333C; --rule-strong: #38474F;
+      --accent: #62B4C0; --accent-soft: #16323A;
+      --high: #E1866F; --high-soft: #38201B;
+      --med: #DCAC57; --med-soft: #33280F;
+      --ok: #77B98C; --ok-soft: #17301F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F151A; --surface: #151D24; --surface-sunk: #1B242C;
+    --ink: #E3EAEF; --ink-muted: #93A3AF; --ink-faint: #6C7C88;
+    --rule: #27333C; --rule-strong: #38474F;
+    --accent: #62B4C0; --accent-soft: #16323A;
+    --high: #E1866F; --high-soft: #38201B;
+    --med: #DCAC57; --med-soft: #33280F;
+    --ok: #77B98C; --ok-soft: #17301F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif; font-size: 16.5px; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 56px 28px 96px; display: flex; flex-direction: column; gap: 52px; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  code { font-size: .85em; background: var(--surface-sunk); border-radius: 3px; padding: .1em .35em; word-break: break-word; }
+  h1, h2, h3 { font-family: Newsreader, Georgia, "Times New Roman", serif; font-weight: 500; text-wrap: balance; margin: 0; line-height: 1.2; }
+  h1 { font-size: 2.7rem; letter-spacing: -.015em; }
+  h2 { font-size: 1.75rem; letter-spacing: -.01em; }
+  h3 { font-size: 1.16rem; font-weight: 600; }
+  p { margin: 0; max-width: 68ch; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+  .masthead { display: flex; flex-direction: column; gap: 16px; }
+  .masthead .meta { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--ink-muted); font-size: .95rem; }
+  .verdict { display: grid; grid-template-columns: auto 1fr; gap: 0 28px; align-items: start; background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--med); border-radius: 6px; padding: 22px 26px; box-shadow: var(--shadow); }
+  .verdict .score { font-family: Newsreader, Georgia, serif; font-size: 3.4rem; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .verdict .score small { font-size: 1.1rem; color: var(--ink-muted); margin-left: 4px; }
+  .verdict .delta { font-size: .9rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  .verdict p { max-width: none; }
+  .verdict .lede { font-size: 1.15rem; font-family: Newsreader, Georgia, serif; }
+  section { display: flex; flex-direction: column; gap: 18px; }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .97rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; border-bottom: 1px solid var(--rule-strong); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  th.num { text-align: right; }
+  td.why { color: var(--ink-muted); font-size: .92rem; min-width: 34ch; }
+  tr.total td { font-weight: 600; border-top: 2px solid var(--rule-strong); border-bottom: none; }
+  .down { color: var(--high); } .up { color: var(--ok); } .flat { color: var(--ink-faint); }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .fact { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .fact .k { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+  .fact .v { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .95rem; }
+  .fact .v.bad { color: var(--high); } .fact .v.good { color: var(--ok); }
+  .fact .n { font-size: .86rem; color: var(--ink-muted); }
+  ol.findings, ul.plain { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .finding { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 20px; display: grid; grid-template-columns: 5.2rem 1fr; gap: 6px 18px; }
+  .finding .id { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .82rem; color: var(--ink-muted); padding-top: .2em; }
+  .finding h3 { grid-column: 2; }
+  .finding p { grid-column: 2; max-width: none; color: var(--ink-muted); font-size: .95rem; }
+  .finding .where { grid-column: 2; font-size: .82rem; }
+  .chip { display: inline-block; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; border-radius: 3px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+  .chip.confirmed { background: var(--ok-soft); color: var(--ok); }
+  .chip.plausible { background: var(--med-soft); color: var(--med); }
+  .blocker { border-left: 4px solid var(--high); }
+  .needed { border-left: 4px solid var(--med); }
+  ul.plain li { padding-left: 1.2em; position: relative; }
+  ul.plain li::before { content: ""; position: absolute; left: 0; top: .72em; width: .5em; height: .5em; border-radius: 50%; background: var(--ok); }
+  ol.seq { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } .verdict { grid-template-columns: 1fr; } .finding { grid-template-columns: 1fr; } .finding h3, .finding p, .finding .where { grid-column: 1; } }
+  .footnote { color: var(--ink-muted); font-size: .92rem; }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Production readiness · trustweave · 2026-09-06</div>
+    <h1>TrustWeave Readiness Reassessment</h1>
+    <div class="meta">
+      <span>Working tree at <span class="mono">a41d482a</span>, 5 commits ahead of origin</span>
+      <span>Rubric identical to the 2026-09-05 assessment</span>
+      <span>SaaS excluded</span>
+    </div>
+    <div class="verdict">
+      <div>
+        <div class="score">6.6<small>/ 10</small></div>
+        <div class="delta">was 6.9 on 2026-09-05</div>
+      </div>
+      <div>
+        <p class="lede">Not releasable as it stands. The GA core is close, but the pipeline that would prove it has been red for two weeks and five verified defects sit in shipped code.</p>
+        <p style="margin-top:10px">The drop is not a regression in the code that the previous round scored. That round ran nothing. This one ran the build, lint, ABI check and the full test suite, and read the CI history. The suite is green. The lint gate is not, and it runs first, so no CI evidence exists for anything added since August 23.</p>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Scores by category</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Category</th><th class="num">09-05</th><th class="num">09-06</th><th class="num">Δ</th><th>Why it moved</th></tr></thead>
+        <tbody>
+          <tr><td>Security and access control</td><td class="num">8.5</td><td class="num">7.5</td><td class="num down">−1.0</td><td class="why">Federation chain verified backwards with unsigned statements accepted; Verifiable Intent L3 tokens never checked for audience or nonce; round-13 findings 01 and 02 still open. Transport gating and signing enforcement credited.</td></tr>
+          <tr><td>Observability and diagnosability</td><td class="num">5.0</td><td class="num">5.0</td><td class="num flat">0</td><td class="why">35 of 777 main-source files use a logger; 648 broad catches; 6 empty catches. Nothing changed.</td></tr>
+          <tr><td>Reliability and scale</td><td class="num">7.5</td><td class="num">6.5</td><td class="num down">−1.0</td><td class="why">This diff adds a FileWallet listing failure for relative paths, a filter that throws mid-iteration, cloud listings that abort on a concurrent delete, and an O(N) statistics path. Three sibling protocols still keep unbounded session maps.</td></tr>
+          <tr><td>Configuration and data</td><td class="num">7.5</td><td class="num">7.0</td><td class="num down">−0.5</td><td class="why">Stale ServiceLoader entries for optimism and zksync break anchor discovery; the new deployment policy is enforced by three factories and bypassed by the fourth.</td></tr>
+          <tr><td>Deployment and release</td><td class="num">5.5</td><td class="num">6.0</td><td class="num up">+0.5</td><td class="why">ABI validation, Kover, SBOM, mandatory signing and provenance attestation now exist and the ABI check passes locally. Capped: CI red since 08-23, 218 local lint violations, ABI dumps untracked, no release ever published.</td></tr>
+          <tr><td>Testing and documentation</td><td class="num">7.5</td><td class="num">7.5</td><td class="num flat">0</td><td class="why">Suite executed and green (3790 tests, 87 modules). 26 modules still have no tests; the federation verifier has no positive-path test; the checkout chain test was deleted rather than fixed.</td></tr>
+          <tr class="total"><td>Overall</td><td class="num">6.9</td><td class="num">6.6</td><td class="num down">−0.3</td><td class="why"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What was actually run</h2>
+    <div class="facts">
+      <div class="fact"><div class="k">Gradle test</div><div class="v good">3790 passed · 0 failed</div><div class="n">443 suites, 87 modules, 15 skipped, 6 m 46 s</div></div>
+      <div class="fact"><div class="k">checkKotlinAbi</div><div class="v good">passed</div><div class="n">105 ABI dumps, all untracked</div></div>
+      <div class="fact"><div class="k">ktlintCheck</div><div class="v bad">218 violations</div><div class="n">13 files; CI runs this step first</div></div>
+      <div class="fact"><div class="k">CI on main</div><div class="v bad">red since 08-23</div><div class="n">run 33264669629 fails at lint</div></div>
+      <div class="fact"><div class="k">Reference wallet</div><div class="v good">70 / 70 · tsc clean</div><div class="n">vitest, Node WebCrypto</div></div>
+      <div class="fact"><div class="k">Releases</div><div class="v bad">none</div><div class="n">tag v0.7.0, no artifact or attestation</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Blockers</h2>
+    <p>Each of these was re-verified in the source after the scanning agents reported it. Fix all six before tagging.</p>
+    <ol class="findings">
+      <li class="finding blocker"><span class="id">B1</span><h3>CI gate has been red for two weeks<span class="chip confirmed">confirmed</span></h3><p>Every ci.yml run on main since 2026-08-23 fails at the lint step, before build or test. The working tree adds 218 more violations in 13 files. The ABI, coverage and SBOM steps added in this diff have never executed anywhere but this laptop.</p><div class="where mono">.github/workflows/ci.yml:56 · trust/dsl/TrustWeaveFactory.kt · anchors/plugins/indy · did/plugins/peer</div></li>
+      <li class="finding blocker"><span class="id">B2</span><h3>Two anchor plugins register classes that do not exist<span class="chip confirmed">confirmed</span></h3><p>The optimism and zksync service files still name <code>org.trustweave.chain.*</code> classes; the code lives under <code>org.trustweave.anchor.*</code>. ServiceLoader throws while iterating, so any classpath containing either jar loses discovery of every provider after the broken entry. Arbitrum and base were fixed in this diff; these two were missed.</p><div class="where mono">anchors/plugins/optimism/src/main/resources/META-INF/services/… · anchors/plugins/zksync/…</div></li>
+      <li class="finding blocker"><span class="id">B3</span><h3>Federation trust chains are verified backwards<span class="chip confirmed">confirmed</span></h3><p>verifyChain checks statement i+1 with statement i's keys, the reverse of OpenID Federation section 10.2, and never checks the leaf's signature at all. The parser also accepts alg=none. The only chain tests cover empty, expired and unparseable inputs, so a real chain has never been shown to pass. A real chain fails; an attacker's unsigned leaf listing the anchor key passes.</p><div class="where mono">credentials/plugins/openid-federation/…/TrustChainResolver.kt:142 · EntityStatementJwtProcessor.kt:51</div></li>
+      <li class="finding blocker"><span class="id">B4</span><h3>FileWallet cannot list with a relative storage path<span class="chip confirmed">confirmed</span></h3><p>readRecord compares an absolute, normalised path against the raw Files.list entry. Path equality is textual, so any relative or dotted storagePath makes every list, query and statistics call throw after store succeeded. Tests only use @TempDir. Introduced by this diff.</p><div class="where mono">wallet/plugins/file/…/FileWallet.kt:403 · FileWalletFactory.kt:69</div></li>
+      <li class="finding blocker"><span class="id">B5</span><h3>Verifiable Intent payment tokens are replayable and budgets are reported as checked<span class="chip confirmed">confirmed</span></h3><p>Audience and nonce are checked for L2 only; verifyL3 has no expected values, while the Python reference checks expected_l3_payment_aud and nonce. Budget, recurrence and reference constraints are still appended to <code>checked</code> (TW-R13-01), and a negative amount under a max-only range still passes (TW-R13-02).</p><div class="where mono">credentials/plugins/verifiable-intent/…/ChainVerifier.kt:96,360 · ConstraintChecker.kt:89,115</div></li>
+      <li class="finding blocker"><span class="id">B6</span><h3>The release controls cannot see this tree<span class="chip confirmed">confirmed</span></h3><p>444 changed paths and the 105 ABI dumps are uncommitted and five commits are unpushed. With explicit-path staging the dumps are easy to leave behind, and checkKotlinAbi then fails on every module. No release, signed artifact or attestation has ever been produced for v0.7.0.</p><div class="where mono">.github/workflows/release-evidence.yml:24 · */api/*.api</div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Needed, not blocking</h2>
+    <ol class="findings">
+      <li class="finding needed"><span class="id">N1</span><h3>The revoked filter throws instead of filtering<span class="chip confirmed">confirmed</span></h3><p>list(CredentialFilter(revoked = false)) raises IllegalStateException on the first credential that carries a status entry, and no factory accepts a WalletStatusResolver to make it answerable.</p><div class="where mono">wallet/wallet-core/…/StoredCredentialRecord.kt:40</div></li>
+      <li class="finding needed"><span class="id">N2</span><h3>Cloud and database listing paths abort or scale linearly<span class="chip plausible">plausible</span></h3><p>A concurrent delete or one corrupt object fails the whole cloud listing; statistics download every object; DatabaseWallet.getStatistics now materialises every row with no LIMIT.</p><div class="where mono">wallet/plugins/cloud/…/CloudWallet.kt:140 · DatabaseWallet.kt:1283</div></li>
+      <li class="finding needed"><span class="id">N3</span><h3>Status-list server leaks exception text<span class="chip confirmed">confirmed</span></h3><p>Both public routes return e.message under INTERNAL_ERROR and catch CancellationException. Unchanged since round 13.</p><div class="where mono">credentials/plugins/status-list/server/…/StatusListRoutes.kt:66,104</div></li>
+      <li class="finding needed"><span class="id">N4</span><h3>The plaintext-to-public-host gate covers two of six client families<span class="chip plausible">plausible</span></h3><p>Algorand, Cardano and the Indy proxy still send tokens over http:// to any host. Hostnames with underscores are refused as unparseable. Bitcoin throws a raw IllegalArgumentException where EVM wraps it.</p><div class="where mono">common/…/TransportSecurity.kt:34 · AlgorandBlockchainAnchorClient.kt:110 · IndyVdrProxyTransport.kt:45</div></li>
+      <li class="finding needed"><span class="id">N5</span><h3>Session state is unbounded in three protocols and hard-fails in a fourth<span class="chip confirmed">confirmed</span></h3><p>oidc4vp, SIOP and CHAPI keep plain maps with no expiry. The new oidc4vci store throws an unchecked exception at 1000 offers. The federation resolver bounds depth but not breadth or cycles.</p><div class="where mono">credentials/plugins/oidc4vp/…/SessionStore.kt:22 · SiopV2Service.kt:100 · ExpiringExchangeStore.kt:40</div></li>
+      <li class="finding needed"><span class="id">N6</span><h3>Observability is where it was<span class="chip confirmed">confirmed</span></h3><p>35 of 777 main-source files log anything. 648 broad catches, 6 empty. No correlation-id or metrics guidance.</p></li>
+      <li class="finding needed"><span class="id">N7</span><h3>26 modules ship main code with no tests<span class="chip confirmed">confirmed</span></h3><p>cheqd, ens, ion, plc, polygon, sol, venafi, salesforce, servicenow, chapi, anchor, status-list database, both registrar servers, wallet-services, starknet and nine example scenarios. The ABI gate now freezes APIs nothing exercises.</p></li>
+      <li class="finding needed"><span class="id">N8</span><h3>Reference wallet flows regressed (demo scope)<span class="chip plausible">plausible</span></h3><p>The claim-key extension is written but no verifier reads it; consent defaults to sharing nothing, so the airspace gate denies valid holders; the recovery export cannot be restored; reset fails in the environment that shows the recovery screen; passkey enrollment rejects synced authenticators after creating them. Weighted lightly because the README disclaims production custody.</p><div class="where mono">reference-wallet/lib/wallet.ts:186,245,359 · app/present/page.tsx:53 · lib/custody/passkey.ts:94</div></li>
+      <li class="finding needed"><span class="id">N9</span><h3>Docs workflow unpinned and weakened<span class="chip confirmed">confirmed</span></h3><p>docs-check.yml still uses mutable action tags while the other two workflows are SHA-pinned; the module-name gate was removed; the workflow now runs all 24 example mains on any Kotlin change.</p><div class="where mono">.github/workflows/docs-check.yml:37</div></li>
+      <li class="finding needed"><span class="id">N10</span><h3>Deployment policy has a bypass and admits nothing<span class="chip plausible">plausible</span></h3><p>TestkitWalletFactory ignores it; SUPPORTED_ONLY can construct no wallet because every catalogued plugin is experimental; PluginRegistry rejects the roughly 98 uncatalogued modules.</p><div class="where mono">testkit/…/TestkitWalletFactory.kt:17 · common/…/PluginRegistry.kt:221</div></li>
+    </ol>
+  </section>
+
+  <div class="two">
+    <section>
+      <h2>Already production grade</h2>
+      <ul class="plain">
+        <li>Full suite green when run: 3790 tests, 0 failures; ABI check passes.</li>
+        <li>Binary-compatibility validation on every Kotlin module with a documented update procedure.</li>
+        <li>Remote publication refuses to run without a signing key; per-module CycloneDX SBOM attached.</li>
+        <li>Provenance attestation workflow; ci.yml and release-evidence.yml pinned to commit SHAs.</li>
+        <li>Plaintext to public hosts refused for EVM and Bitcoin, failing closed on DNS failure.</li>
+        <li>In-memory KMS refused outside dev/test; wallet deployment policy tested for three plugins.</li>
+        <li>Bounded, expiring oidc4vci stores; PKCE; SSRF guards; bounded response bodies.</li>
+        <li>module-maturity.md tiers every module; release-validation.md documents ABI, SBOM and signing.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Recommended sequence</h2>
+      <ol class="seq">
+        <li>ktlintFormat, hand-fix the residue, get one green CI run on main so the new gates execute for the first time.</li>
+        <li>Fix the two service files; add a ServiceLoader smoke test over distribution:all.</li>
+        <li>Rewrite verifyChain in spec order, reject unsigned statements, add a positive-path test with real keys.</li>
+        <li>Normalise walletDir in FileWallet; add a relative-path test.</li>
+        <li>Port the L3 audience and nonce checks; split checked into enforced and acknowledged; reject negative and string amounts.</li>
+        <li>Commit the ABI dumps with the code, push, tag, run release-evidence once and verify the attestation.</li>
+        <li>Then N1 to N5 in order; N6 to N10 as hygiene.</li>
+      </ol>
+    </section>
+  </div>
+
+  <section>
+    <h2>Method and limits</h2>
+    <p>Ran assemble, ktlintCheck, checkKotlinAbi and the full test task locally with three workers, plus tsc and vitest for the reference wallet. Fourteen review agents scanned the diff from complementary angles; every blocker and the load-bearing needed items were re-verified by reading the source, and B5 was checked against the Python reference implementation. Round-13 findings were re-checked in the tree.</p>
+    <p class="footnote">Nothing was deployed or load-tested and no fix was applied. Items marked plausible rest on agent evidence not independently reproduced. Reference-wallet defects are weighted as demo scope. SaaS is out of scope. Machine-readable scores and findings sit beside this file as scores.json and findings.json.</p>
+  </section>
+</div>

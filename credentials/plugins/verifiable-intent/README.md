@@ -27,7 +27,7 @@ adds the VI-specific pieces the existing `SdJwtProofEngine` does not have:
 - **SD-JWT array-element disclosures** (`{"...": digest}`) — load-bearing for `delegate_payload`.
 - **Cross-layer `sd_hash`** — L3 binds the *routed L2 presentation*, not its own credential.
 - **Embedded-JWK key resolution** — L1.cnf→L2, L2.mandate.cnf→L3, L3 carries no `cnf` (no DID).
-- **The mandate/constraint model** and a stateful-aware enforcement engine.
+- **The mandate/constraint model** and an enforcement engine with explicit unsupported-state rejection.
 
 ## Layout
 
@@ -48,10 +48,24 @@ val result = VerifiableIntent.verifyChain(
     issuerJwk = issuerPublicJwk,
     l3Payment = l3aCompact,
     l2RoutedForPayment = routedL2ForNetwork,
-    now = Clock.System.now().epochSeconds,
+    expectedL2Aud = trustedExpectedAudience, // verifier configuration, not token claims
+    expectedL3PaymentAud = trustedNetworkAudience,
+    expectedL3PaymentNonce = issuedPaymentNonce,
+    expectedL2Nonce = issuedNonce, // this request's server-issued challenge
 )
 if (result.valid) { /* constraints satisfied, chain intact */ }
 ```
+
+Audience and nonce expectations are mandatory by default. Maintain a server-side nonce store and
+atomically consume a matching nonce before authorizing an action; this library checks equality,
+not single use. `requireReplayProtection = false` is only for offline audits and records a skip.
+All layers require numeric `iat` and `exp`, with `exp > iat`. The explicit
+`allowMissingTemporalClaims = true` audit policy permits absent L1/L2 timestamps only; L3 always
+requires both and a lifetime of at most one hour.
+
+Checkout fulfilments currently fail closed because line-item matching is not implemented. Passing
+a payment-side verification does not authorize a checkout. This is a deliberate limitation, not
+full VI conformance.
 
 ## Issue (KMS-backed)
 
@@ -64,14 +78,15 @@ val l3a = ViAgent.createLayer3Payment(finalPayment, l2.baseJwt, listOf(l2.paymen
 
 ## Test status
 
-Two independent angles, both green:
+Two complementary test suites:
 
-- **`ChainVerifierKnownAnswerTest`** — cross-stack interop: verifies tokens minted by the **reference
+- **`ChainVerifierKnownAnswerTest`** — cross-stack fixture: checks tokens minted by the **reference
   Python implementation** (fixture `src/test/resources/vi_autonomous_fixture.json`, self-verified
-  valid before commit). Proves byte-for-byte agreement on the novel mechanisms.
+  valid before commit). Its recurrence constraint now fails closed because external enforcement
+  cannot be established; this is not a positive full-conformance test.
 - **`IssuanceRoundTripTest`** — mints L1/L2/L3 through the **real in-memory KMS + `KmsEs256Signer`**,
-  then verifies. Covers autonomous (L3a+L3b + cross-reference, `card_id`, constraint enforcement) and
-  immediate modes, plus a negative over-budget case.
+  then verifies. Covers autonomous payment and immediate modes, per-transaction amount rejection,
+  checkout constraint rejection, missing L3 timestamps and unauthorized payment instruments.
 
 Run: `./gradlew :credentials:plugins:verifiable-intent:test`
 
@@ -80,14 +95,18 @@ Run: `./gradlew :credentials:plugins:verifiable-intent:test`
 Autonomous + immediate verification; L1/L2/L3 signatures (ES256); cross-layer `sd_hash`; embedded-JWK
 resolution + `kid` match; L2 reference binding; L3 pair-identity binding; L3a↔L3b cross-reference;
 `card_id` cross-check; mandate-smuggling (duplicate-ref) detection; temporal checks incl. L3
-`exp − iat ≤ 1h`; payment required-fields + L2↔L3 `payment_instrument` cross-check; 8-type constraint
-enforcement with PERMISSIVE/STRICT + open-mandate strictness; full issuance for all layers.
+`exp − iat ≤ 1h`; payment required-fields + L2↔L3 `payment_instrument` cross-check; parsing of eight constraint types
+with PERMISSIVE/STRICT and open-mandate policies. Enforcement is limited as described below;
+parsing a constraint does not mean the verifier can enforce it. Issuance covers all layers.
 
 ## Deliberate scope boundaries (TODO)
 
 - **Multi-pair L2** (one mandate authorizing several distinct purchases) — needs a list-based L3 API.
-- **`line_items` deep matching** (acceptable-id + quantity caps) — currently acknowledged as checked.
+- **`line_items` deep matching** (acceptable-id + quantity caps) — not implemented; checkout fulfilments are rejected instead of accepted without evaluation.
 - Return TrustWeave's core `Result<T>` instead of the local `ChainVerificationResult`.
 - Wire as a discoverable plugin (`PluginMetadata`/SPI) once the integration surface is decided.
 
 > Status: draft, tracking VI spec v0.1. Not a conformance-certified implementation.
+
+Budget, recurrence and agent-recurrence constraints fail closed for open mandates.
+Checkout verification also remains unsupported pending line-item matching.

@@ -1,7 +1,7 @@
 package org.trustweave.credential.internal.transform
 
-import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.json.JsonObject
+import org.trustweave.credential.model.vc.VerifiableCredential
 
 /**
  * Result of a credential transformation.
@@ -12,13 +12,19 @@ import kotlinx.serialization.json.JsonObject
  */
 sealed interface TransformResult {
     /** Result of a transformation to compact JWT form. */
-    data class Jwt(val value: String) : TransformResult
+    data class Jwt(
+        val value: String,
+    ) : TransformResult
 
     /** Result of a transformation to W3C JSON-LD form. */
-    data class JsonLd(val value: JsonObject) : TransformResult
+    data class JsonLd(
+        val value: JsonObject,
+    ) : TransformResult
 
     /** Result of a transformation to CBOR binary form. */
-    data class Cbor(val value: ByteArray) : TransformResult {
+    data class Cbor(
+        val value: ByteArray,
+    ) : TransformResult {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Cbor) return false
@@ -66,7 +72,7 @@ sealed interface TransformResult {
  */
 class CredentialTransformationBuilder(
     private val credential: VerifiableCredential,
-    private val transformer: CredentialTransformer = CredentialTransformer()
+    private val transformer: CredentialTransformer = CredentialTransformer(),
 ) {
     private var result: TransformResult? = null
 
@@ -128,9 +134,7 @@ class CredentialTransformationBuilder(
  * @return The typed result of the transformation.
  * @throws IllegalStateException if the block does not perform a transformation.
  */
-suspend fun VerifiableCredential.transform(
-    block: suspend CredentialTransformationBuilder.() -> Unit
-): TransformResult {
+suspend fun VerifiableCredential.transform(block: suspend CredentialTransformationBuilder.() -> Unit): TransformResult {
     val builder = CredentialTransformationBuilder(this)
     builder.block()
     return builder.getResult()

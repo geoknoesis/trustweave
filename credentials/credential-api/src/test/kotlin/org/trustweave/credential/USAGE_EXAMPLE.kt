@@ -1,11 +1,11 @@
 /**
  * Canonical "Hello World" Credential Issuance and Verification Flow
- * 
+ *
  * This example demonstrates the core TrustWeave credential API usage pattern:
  * 1. Create a CredentialService with auto-discovery
  * 2. Issue a credential
  * 3. Verify a credential
- * 
+ *
  * This is the recommended entry point for new TrustWeave users.
  */
 
@@ -13,31 +13,29 @@
 
 package org.trustweave.credential
 
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.credential.identifiers.*
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * Example: Complete credential issuance and verification flow.
- * 
+ *
  * This demonstrates the canonical usage pattern:
- * 
+ *
  * ```kotlin
  * // 1. Create service (all proof suites built-in)
  * val service = credentialService(didResolver)
- * 
+ *
  * // 2. Issue a credential
  * val credential = service.issue(
  *     IssuanceRequest(
@@ -49,7 +47,7 @@ import kotlinx.datetime.Clock
  *         issuedAt = Instant.now()
  *     )
  * )
- * 
+ *
  * // 3. Verify the credential
  * val result = service.verify(credential)
  * when (result) {
@@ -65,53 +63,62 @@ import kotlinx.datetime.Clock
 suspend fun exampleBasicCredentialFlow(
     didResolver: DidResolver,
     issuerDid: Did,
-    subjectDid: Did
+    subjectDid: Did,
 ) {
     // Step 1: Create service with all built-in proof suites
     // All proof suites (VC-LD, VC-JWT, SD-JWT-VC) are always available
     val service = credentialService(didResolver)
-    
+
     // Step 2: Issue a credential
-    val issuanceResult: IssuanceResult = service.issue(
-        IssuanceRequest(
-            format = ProofSuiteId.VC_LD,
-            issuer = Issuer.fromDid(issuerDid),
-            credentialSubject = CredentialSubject.fromDid(
-                did = subjectDid,
-                claims = mapOf(
-                    "email" to JsonPrimitive("alice@example.com"),
-                    "degree" to JsonPrimitive("Bachelor of Science"),
-                    "major" to JsonPrimitive("Computer Science")
-                )
+    val issuanceResult: IssuanceResult =
+        service.issue(
+            IssuanceRequest(
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.fromDid(issuerDid),
+                credentialSubject =
+                    CredentialSubject.fromDid(
+                        did = subjectDid,
+                        claims =
+                            mapOf(
+                                "email" to JsonPrimitive("alice@example.com"),
+                                "degree" to JsonPrimitive("Bachelor of Science"),
+                                "major" to JsonPrimitive("Computer Science"),
+                            ),
+                    ),
+                type =
+                    listOf(
+                        CredentialType.VerifiableCredential,
+                        CredentialType.Education,
+                    ),
+                issuedAt = Clock.System.now(),
+                validUntil = Clock.System.now().plus(kotlin.time.Duration.parse("PT${86400 * 365}S")), // 1 year
             ),
-            type = listOf(
-                CredentialType.VerifiableCredential,
-                CredentialType.Education
-            ),
-            issuedAt = Clock.System.now(),
-            validUntil = Clock.System.now().plus(kotlin.time.Duration.parse("PT${86400 * 365}S")) // 1 year
         )
-    )
-    
+
     // Handle issuance result
-    val credential: VerifiableCredential = when (issuanceResult) {
-        is IssuanceResult.Success -> issuanceResult.credential
-        is IssuanceResult.Failure -> throw IllegalStateException("Failed to issue credential: ${issuanceResult.allErrors.joinToString()}")
-    }
-    
+    val credential: VerifiableCredential =
+        when (issuanceResult) {
+            is IssuanceResult.Success -> issuanceResult.credential
+            is IssuanceResult.Failure -> throw IllegalStateException(
+                "Failed to issue credential: ${issuanceResult.allErrors.joinToString()}",
+            )
+        }
+
     println("Issued credential: ${credential.id}")
-    
+
     // Step 3: Verify the credential
-    val result: VerificationResult = service.verify(
-        credential = credential,
-        trustPolicy = null,
-        options = VerificationOptions(
-            checkRevocation = true,
-            checkExpiration = true,
-            resolveIssuerDid = true
+    val result: VerificationResult =
+        service.verify(
+            credential = credential,
+            trustPolicy = null,
+            options =
+                VerificationOptions(
+                    checkRevocation = true,
+                    checkExpiration = true,
+                    resolveIssuerDid = true,
+                ),
         )
-    )
-    
+
     // Step 4: Handle verification result (exhaustive when expression)
     when (result) {
         is VerificationResult.Valid -> {
@@ -120,7 +127,7 @@ suspend fun exampleBasicCredentialFlow(
             println("  Subject: ${result.subjectDid}")
             println("  Issued: ${result.issuedAt}")
             println("  Expires: ${result.expiresAt}")
-            
+
             if (result.warnings.isNotEmpty()) {
                 println("  Warnings: ${result.warnings}")
             }
@@ -178,23 +185,22 @@ suspend fun exampleBasicCredentialFlow(
 /**
  * Example: Check service capabilities before using.
  */
-suspend fun exampleCapabilityCheck(
-    service: CredentialService
-) {
+suspend fun exampleCapabilityCheck(service: CredentialService) {
     // Check if a proof suite is supported
     if (service.supports(ProofSuiteId.VC_LD)) {
         println("VC-LD proof suite is supported")
     }
-    
+
     // Check proof suite capabilities
-    val supportsSelectiveDisclosure = service.supportsCapability(ProofSuiteId.SD_JWT_VC) {
-        selectiveDisclosure
-    }
-    
+    val supportsSelectiveDisclosure =
+        service.supportsCapability(ProofSuiteId.SD_JWT_VC) {
+            selectiveDisclosure
+        }
+
     if (supportsSelectiveDisclosure) {
         println("SD-JWT-VC supports selective disclosure")
     }
-    
+
     // List all supported proof suites
     val supportedFormats = service.supportedFormats()
     println("Supported proof suites: ${supportedFormats.map { it.value }}")
@@ -205,21 +211,21 @@ suspend fun exampleCapabilityCheck(
  */
 suspend fun exampleBatchVerification(
     service: CredentialService,
-    credentials: List<VerifiableCredential>
+    credentials: List<VerifiableCredential>,
 ) {
     // Verify multiple credentials in parallel
-    val results: List<VerificationResult> = service.verify(
-        credentials = credentials,
-        trustPolicy = null,
-        options = VerificationOptions()
-    )
-    
+    val results: List<VerificationResult> =
+        service.verify(
+            credentials = credentials,
+            trustPolicy = null,
+            options = VerificationOptions(),
+        )
+
     // Count valid vs invalid
     val validCount = results.count { it.isValid }
     val invalidCount = results.size - validCount
-    
+
     println("Verified ${credentials.size} credentials:")
     println("  Valid: $validCount")
     println("  Invalid: $invalidCount")
 }
-

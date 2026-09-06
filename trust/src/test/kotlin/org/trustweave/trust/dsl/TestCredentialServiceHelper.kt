@@ -15,19 +15,28 @@ fun createTestCredentialService(
     didResolver: DidResolver? = null,
 ): CredentialService {
     val actualKms = kms ?: InMemoryKeyManagementService()
-    val actualDidResolver = didResolver ?: DidResolver { did ->
-        org.trustweave.did.resolver.DidResolutionResult.Success(
-            document = org.trustweave.did.model.DidDocument(
-                id = did,
-                verificationMethod = emptyList(),
-                authentication = emptyList(),
-                assertionMethod = emptyList(),
-            ),
-        )
-    }
+    val actualDidResolver =
+        didResolver ?: DidResolver { did ->
+            org.trustweave.did.resolver.DidResolutionResult.Success(
+                document =
+                    org.trustweave.did.model.DidDocument(
+                        id = did,
+                        verificationMethod = emptyList(),
+                        authentication = emptyList(),
+                        assertionMethod = emptyList(),
+                    ),
+            )
+        }
 
     val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-        when (val result = actualKms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+        when (
+            val result =
+                actualKms.sign(
+                    org.trustweave.core.identifiers
+                        .KeyId(keyId),
+                    data,
+                )
+        ) {
             is SignResult.Success -> result.signature
             else -> throw IllegalStateException("Signing failed: $result")
         }

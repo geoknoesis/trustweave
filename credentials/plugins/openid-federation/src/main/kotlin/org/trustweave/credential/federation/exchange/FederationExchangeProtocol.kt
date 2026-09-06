@@ -12,8 +12,8 @@ import org.trustweave.credential.exchange.model.ExchangeMessageEnvelope
 import org.trustweave.credential.exchange.model.ExchangeMessageType
 import org.trustweave.credential.exchange.request.ExchangeRequest
 import org.trustweave.credential.exchange.request.ProofExchangeRequest
-import org.trustweave.credential.federation.TrustChainResolver
 import org.trustweave.credential.federation.TrustChainResolutionResult
+import org.trustweave.credential.federation.TrustChainResolver
 import org.trustweave.credential.identifiers.ExchangeProtocolName
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
@@ -31,27 +31,25 @@ class FederationExchangeProtocol(
     private val resolver: TrustChainResolver,
     private val trustedAnchorIds: Set<String>,
 ) : CredentialExchangeProtocol {
-
     override val protocolName = ExchangeProtocolName("openid-federation")
 
-    override val capabilities = ExchangeProtocolCapabilities(
-        supportedOperations = setOf(
-            ExchangeOperation.REQUEST_PROOF,
-            ExchangeOperation.PRESENT_PROOF,
-        ),
-        supportsAsync = false,
-        supportsSelectiveDisclosure = false,
-    )
+    override val capabilities =
+        ExchangeProtocolCapabilities(
+            supportedOperations =
+                setOf(
+                    ExchangeOperation.REQUEST_PROOF,
+                    ExchangeOperation.PRESENT_PROOF,
+                ),
+            supportsAsync = false,
+            supportsSelectiveDisclosure = false,
+        )
 
-    override suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope =
-        unsupported("OFFER_CREDENTIAL")
+    override suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope = unsupported("OFFER_CREDENTIAL")
 
-    override suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope =
-        unsupported("REQUEST_CREDENTIAL")
+    override suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope = unsupported("REQUEST_CREDENTIAL")
 
-    override suspend fun issue(
-        request: ExchangeRequest.Issue,
-    ): Pair<VerifiableCredential, ExchangeMessageEnvelope> = unsupported("ISSUE_CREDENTIAL")
+    override suspend fun issue(request: ExchangeRequest.Issue): Pair<VerifiableCredential, ExchangeMessageEnvelope> =
+        unsupported("ISSUE_CREDENTIAL")
 
     /**
      * Builds a federation-aware proof request.
@@ -59,16 +57,16 @@ class FederationExchangeProtocol(
      * The returned envelope carries the set of trusted anchor entity identifiers
      * so the holder knows which federations are accepted.
      */
-    override suspend fun requestProof(
-        request: ProofExchangeRequest.Request,
-    ): ExchangeMessageEnvelope {
-        val anchorsArray = buildJsonArray {
-            trustedAnchorIds.forEach { add(JsonPrimitive(it)) }
-        }
-        val requestData = buildJsonObject {
-            put("trustedAnchors", anchorsArray)
-            put("verifierDid", request.verifierDid.value)
-        }
+    override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope {
+        val anchorsArray =
+            buildJsonArray {
+                trustedAnchorIds.forEach { add(JsonPrimitive(it)) }
+            }
+        val requestData =
+            buildJsonObject {
+                put("trustedAnchors", anchorsArray)
+                put("verifierDid", request.verifierDid.value)
+            }
         return ExchangeMessageEnvelope(
             protocolName = protocolName,
             messageType = ExchangeMessageType.ProofRequest,
@@ -83,9 +81,7 @@ class FederationExchangeProtocol(
      * Returns the VP unchanged if all trust chains are valid; throws if any
      * issuer cannot be verified.
      */
-    override suspend fun presentProof(
-        request: ProofExchangeRequest.Presentation,
-    ): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
+    override suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
         val vp = request.presentation
         val issuers = vp.verifiableCredential.map { it.issuer.id.value }.distinct()
 
@@ -97,11 +93,12 @@ class FederationExchangeProtocol(
                 throw TrustWeaveException.InvalidOperation(
                     code = "FEDERATION_TRUST_CHAIN_FAILED",
                     message = "Trust chain resolution failed for issuer $issuerEntityId: ${result.reason}",
-                    context = mapOf(
-                        "issuerEntityId" to issuerEntityId,
-                        "reason" to result.reason,
-                        "trustedAnchors" to trustedAnchorIds.joinToString(),
-                    ),
+                    context =
+                        mapOf(
+                            "issuerEntityId" to issuerEntityId,
+                            "reason" to result.reason,
+                            "trustedAnchors" to trustedAnchorIds.joinToString(),
+                        ),
                 )
             }
             if (result is TrustChainResolutionResult.Success && !resolver.verifyChain(result.chain)) {
@@ -113,18 +110,23 @@ class FederationExchangeProtocol(
             }
         }
 
-        val responseData = buildJsonObject {
-            put("status", "verified")
-            put("verifiedIssuers", buildJsonArray {
-                issuers.forEach { add(JsonPrimitive(it)) }
-            })
-        }
+        val responseData =
+            buildJsonObject {
+                put("status", "verified")
+                put(
+                    "verifiedIssuers",
+                    buildJsonArray {
+                        issuers.forEach { add(JsonPrimitive(it)) }
+                    },
+                )
+            }
 
-        val envelope = ExchangeMessageEnvelope(
-            protocolName = protocolName,
-            messageType = ExchangeMessageType.ProofPresentation,
-            messageData = responseData,
-        )
+        val envelope =
+            ExchangeMessageEnvelope(
+                protocolName = protocolName,
+                messageType = ExchangeMessageType.ProofPresentation,
+                messageData = responseData,
+            )
         return Pair(vp, envelope)
     }
 
@@ -133,10 +135,11 @@ class FederationExchangeProtocol(
         throw TrustWeaveException.InvalidOperation(
             code = "OPERATION_NOT_SUPPORTED",
             message = "Operation $operation not supported by protocol ${protocolName.value}",
-            context = mapOf(
-                "protocolName" to protocolName.value,
-                "operation" to operation,
-                "supportedOperations" to capabilities.supportedOperations.map { it.name },
-            ),
+            context =
+                mapOf(
+                    "protocolName" to protocolName.value,
+                    "operation" to operation,
+                    "supportedOperations" to capabilities.supportedOperations.map { it.name },
+                ),
         )
 }

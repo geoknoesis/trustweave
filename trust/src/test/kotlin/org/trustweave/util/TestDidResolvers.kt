@@ -1,8 +1,8 @@
 package org.trustweave.util
 
-import org.trustweave.did.resolver.DidResolver
-import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 
 fun booleanDidResolver(predicate: (String) -> Boolean): DidResolver =
     DidResolver { did ->

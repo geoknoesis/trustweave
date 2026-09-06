@@ -1,10 +1,11 @@
 package org.trustweave.wallet.database
 
-import org.trustweave.wallet.services.WalletFactory
-import org.trustweave.wallet.services.WalletCreationOptions
-import org.trustweave.wallet.Wallet
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptions
+import org.trustweave.wallet.services.WalletFactory
+import org.trustweave.wallet.services.validateDeployment
 import java.util.UUID
 
 /**
@@ -39,25 +40,27 @@ import java.util.UUID
  * ```
  */
 class DatabaseWalletFactory : WalletFactory {
-
     override suspend fun create(
         providerName: String,
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: WalletCreationOptions
+        options: WalletCreationOptions,
     ): Wallet {
+        options.validateDeployment("wallet:plugins:database")
         if (providerName.lowercase() != "database") {
             throw IllegalArgumentException("Provider name must be 'database'")
         }
 
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
-        val finalHolderDid = holderDid
-            ?: throw IllegalArgumentException("holderDid is required for DatabaseWallet")
+        val finalHolderDid =
+            holderDid
+                ?: throw IllegalArgumentException("holderDid is required for DatabaseWallet")
 
-        val connectionString = options.storagePath
-            ?: throw IllegalArgumentException("storagePath (JDBC connection string) is required")
+        val connectionString =
+            options.storagePath
+                ?: throw IllegalArgumentException("storagePath (JDBC connection string) is required")
 
         val username = options.additionalProperties["username"] as? String
         val password = options.additionalProperties["password"] as? String
@@ -72,7 +75,7 @@ class DatabaseWalletFactory : WalletFactory {
                 walletDid = finalWalletDid,
                 holderDid = finalHolderDid,
                 dataSource = dataSource,
-                ownsDataSource = true
+                ownsDataSource = true,
             )
         } catch (e: Throwable) {
             // The wallet was never handed to the caller — close the pool here or it leaks.
@@ -84,7 +87,7 @@ class DatabaseWalletFactory : WalletFactory {
     private fun createDataSource(
         connectionString: String,
         username: String?,
-        password: String?
+        password: String?,
     ): HikariDataSource {
         val config = HikariConfig()
         config.jdbcUrl = connectionString
@@ -99,4 +102,3 @@ class DatabaseWalletFactory : WalletFactory {
         return HikariDataSource(config)
     }
 }
-

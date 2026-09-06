@@ -1,13 +1,13 @@
 package org.trustweave.trust
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 
 /**
  * Trust registry for managing trust anchors and discovering trust paths.
@@ -47,14 +47,15 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @param credentialType The credential type (null means check for any type)
      * @return true if the issuer is trusted, false otherwise
      */
-    suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean
-    
+    suspend fun isTrustedIssuer(
+        issuerDid: String,
+        credentialType: String?,
+    ): Boolean
+
     /**
      * Implementation of CredentialTrustPolicy - checks if issuer is trusted (any credential type).
      */
-    override suspend fun isTrusted(issuer: Did): Boolean {
-        return isTrustedIssuer(issuer.value, null)
-    }
+    override suspend fun isTrusted(issuer: Did): Boolean = isTrustedIssuer(issuer.value, null)
 
     /**
      * Checks if an issuer is trusted for a specific credential type (type-safe overload).
@@ -63,9 +64,10 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @param credentialType The credential type (null means check for any type)
      * @return true if the issuer is trusted, false otherwise
      */
-    suspend fun isTrustedIssuer(issuer: IssuerIdentity, credentialType: CredentialType?): Boolean {
-        return isTrustedIssuer(issuer.did.value, credentialType?.value)
-    }
+    suspend fun isTrustedIssuer(
+        issuer: IssuerIdentity,
+        credentialType: CredentialType?,
+    ): Boolean = isTrustedIssuer(issuer.did.value, credentialType?.value)
 
     /**
      * Adds a trust anchor to the registry.
@@ -74,7 +76,10 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @param metadata Metadata about the trust anchor
      * @return true if the anchor was added successfully, false if it already exists
      */
-    suspend fun addTrustAnchor(anchorDid: String, metadata: TrustAnchorMetadata): Boolean
+    suspend fun addTrustAnchor(
+        anchorDid: String,
+        metadata: TrustAnchorMetadata,
+    ): Boolean
 
     /**
      * Removes a trust anchor from the registry.
@@ -93,7 +98,10 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @param to The target identity (typically the issuer)
      * @return TrustPath.Verified if a path exists, TrustPath.NotFound otherwise
      */
-    suspend fun findTrustPath(from: VerifierIdentity, to: IssuerIdentity): TrustPath
+    suspend fun findTrustPath(
+        from: VerifierIdentity,
+        to: IssuerIdentity,
+    ): TrustPath
 
     /**
      * Gets all trusted issuers for a specific credential type.
@@ -112,11 +120,10 @@ interface TrustRegistry : CredentialTrustPolicy {
      * @param credentialType The credential type (null means all types)
      * @return List of trusted issuer DIDs (as Did objects)
      */
-    suspend fun getTrustedIssuers(credentialType: CredentialType?): List<Did> {
-        return getTrustedIssuers(credentialType?.value).map { didString ->
+    suspend fun getTrustedIssuers(credentialType: CredentialType?): List<Did> =
+        getTrustedIssuers(credentialType?.value).map { didString ->
             Did(didString)
         }
-    }
 }
 
 /**
@@ -129,7 +136,7 @@ interface TrustRegistry : CredentialTrustPolicy {
 data class TrustAnchorMetadata(
     val credentialTypes: List<String>? = null,
     val description: String? = null,
-    val addedAt: Instant = Clock.System.now()
+    val addedAt: Instant = Clock.System.now(),
 )
 
 /**
@@ -142,11 +149,9 @@ data class TrustAnchorMetadata(
 internal data class TrustPathResult(
     val path: List<String>,
     val trustScore: Double,
-    val valid: Boolean = true
+    val valid: Boolean = true,
 ) {
     init {
         require(trustScore in 0.0..1.0) { "Trust score must be between 0.0 and 1.0" }
     }
 }
-
-

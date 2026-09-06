@@ -1,19 +1,19 @@
 package org.trustweave.did.spi
 
+import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
-import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
-import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 /**
  * Comprehensive tests for DidMethodProvider SPI.
  */
 class DidMethodProviderTest {
-
     @Test
     fun `test DidMethodProvider create method`() {
         val provider = createMockProvider()
@@ -52,7 +52,10 @@ class DidMethodProviderTest {
             override val name = "mock"
             override val supportedMethods = listOf("test", "mock")
 
-            override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+            override fun create(
+                methodName: String,
+                options: DidCreationOptions,
+            ): DidMethod? {
                 if (!supportedMethods.contains(methodName)) {
                     return null
                 }
@@ -60,15 +63,20 @@ class DidMethodProviderTest {
                 return object : DidMethod {
                     override val method = methodName
 
-                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(
-                        id = Did("did:$methodName:123")
-                    )
+                    override suspend fun createDid(options: DidCreationOptions) =
+                        DidDocument(
+                            id = Did("did:$methodName:123"),
+                        )
 
-                    override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
-                        document = DidDocument(id = did)
-                    )
+                    override suspend fun resolveDid(did: Did) =
+                        DidResolutionResult.Success(
+                            document = DidDocument(id = did),
+                        )
 
-                    override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
 
                     override suspend fun deactivateDid(did: Did) = true
                 }
@@ -76,4 +84,3 @@ class DidMethodProviderTest {
         }
     }
 }
-

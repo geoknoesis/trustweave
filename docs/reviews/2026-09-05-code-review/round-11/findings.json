@@ -1,0 +1,57 @@
+[
+  {
+    "id": "SA-R11-01",
+    "repo": "trustweave-saas",
+    "severity": "high",
+    "status": "open",
+    "title": "One flat admin role serves two tiers, and role administration ignores tenancy",
+    "detail": "Authorities come from Keycloak realm roles: KeycloakRealmRoleConverter maps realm_access.roles to ROLE_*, and both Spring's hasRole(\"admin\") and TenantContext.requireRole(\"admin\") read that one claim. No platform-administrator concept exists anywhere in the codebase. That single role is required for ordinary tenant work -- UserController calls requireRole(\"admin\") so a customer can manage their own organization's users -- and it also gates realm-wide operations. The administrator of any customer organization can therefore: (1) grant any realm role to any user in the realm, because RoleService.assignRoleToUser is a bare passthrough to Keycloak that checks neither that the target user belongs to the caller's organization nor that roleName maps to a Role row the caller owns, including granting admin itself; (2) read every tenant's users and roles, because getAllUsers() is userRepository.findAll(), getAllRoles() is roleRepository.findAll(), and GET /api/roles/keycloak lists every realm role; (3) trigger a cross-tenant write, because searchUsers(query) searches the whole Keycloak realm and then syncs local User rows for whoever it finds; (4) read platform operations, because /api/operations/** and /actuator/metrics/** resolve to the same role. RoleService.createRole carefully stamps the caller's organizationId on the database row, with a comment saying the org is never trusted from the body, but the Keycloak role it creates is realm-global and the assign/remove paths never read that column back. The new webhook recovery panel's error copy says 'Check your platform administrator access', naming a tier the authorization model does not have.",
+    "evidence": "KeycloakJwtAuthenticationConverter.kt maps realm_access.roles to a single flat ROLE_* set. TenantContext.kt:42-51 hasRole/requireRole read the same claim. RoleService.kt:86-93 assignRoleToUser/removeRoleFromUser pass straight to Keycloak. RoleService.kt:23-25 getAllRoles() = roleRepository.findAll(). UserService.kt:29-31 getAllUsers() = userRepository.findAll(). UserService.kt:80-85 searchUsers() searches the realm then syncs rows locally. UserController.kt:33,40,72,109,116 requireRole(\"admin\") for tenant-level work. KeycloakSecurityConfig.kt:81,88 /actuator/metrics/** and /api/operations/** on the same role. Grep for platform-admin / superadmin / global-admin returns zero hits.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/RoleService.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserService.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/TenantContext.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/KeycloakSecurityConfig.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/controller/RoleController.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/controller/UserController.kt"
+    ],
+    "recommendation": "Split the tier: add a distinct realm role for platform operators and move /api/operations/** and /actuator/metrics/** onto it. Then scope role administration -- assignRoleToUser should reject a target user outside the caller's organization and a roleName whose Role.organizationId is not the caller's, and getAllRoles/getAllUsers/searchUsers should filter by organization. The Role.organizationId column already exists; nothing reads it on the paths that matter.",
+    "note": "Not a regression. The code has been this way throughout; reviewing the new /api/operations/** endpoint is what surfaced the role model behind it. RoleController does carry a class-level @PreAuthorize(\"hasRole('admin')\") and @EnableMethodSecurity is present, so this is not an unauthenticated escalation -- the gap is that 'admin' is the wrong granularity.",
+    "verification_gap": "Traced through the authorization code path only; not confirmed against a running Keycloak. Check which realm role a customer administrator actually receives in a deployed environment before sizing the exposure."
+  },
+  {
+    "id": "SA-R11-02",
+    "repo": "trustweave-saas",
+    "severity": "medium",
+    "status": "open",
+    "title": "The Keycloak admin credential kept the default the database credential just lost",
+    "detail": "SA-R10-06 removed the postgres/postgres fallbacks from the default profile so an unset DATABASE_PASSWORD fails at startup. Six lines further down the same file the identity provider still carries admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}, alongside a matching username default and a localhost server URL. Both deployment profiles correctly declare it with no fallback. This is the higher-value credential of the two and it compounds SA-R11-01: a Keycloak realm administrator can mint users and grant realm roles directly, which is the capability that finding reaches indirectly.",
+    "evidence": "application.yml:41 admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}; application.yml:42 admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}; application.yml:37 server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8090}. application-fly.yml:22 and application-staging.yml:35 declare it with no default.",
+    "files": ["server/src/main/resources/application.yml"],
+    "recommendation": "Drop the :admin fallbacks the same way the datasource ones went, and move the localhost convenience values into application-dev.yml where the database URL now lives."
+  },
+  {
+    "id": "SA-R11-03",
+    "repo": "trustweave-saas",
+    "severity": "low",
+    "status": "open",
+    "title": "Ellipses became question marks in nine shipped UI strings",
+    "detail": "A lossy character conversion replaced the ellipsis character with a literal ASCII question mark in user-facing text across the console. The bytes are plain 0x3F, not mojibake, so this survives any encoding fix and must be corrected in the source. Loading states now read as questions.",
+    "evidence": "App.tsx:46 'Loading page?'; WebhookRecoveryPanel.tsx:15 'Loading recovery events?'; CheckCredential.tsx:209 'Checking final status?'; 'Loading ?' in UserAssignmentsModal.tsx:76,106, AnchorToBlockchainModal.tsx:73, Explain.tsx:72, Blockchains.tsx:50, StarterKits.tsx:169.",
+    "files": ["frontend/src/"],
+    "recommendation": "Replace with a literal ellipsis or drop the punctuation. Worth checking whatever wrote these files -- the same substitution appears in docs/reviews/2026-09-05-code-review/round-9/findings.json, where an en dash became '1?128'."
+  },
+  {
+    "id": "VI-CHECKOUT-LIMITATION",
+    "repo": "trustweave",
+    "severity": "info",
+    "status": "accepted",
+    "title": "Autonomous L3 checkout cannot verify until line-item matching lands",
+    "detail": "Because ConstraintChecker fails closed on line_items for open mandates, the TW-R10-01 fix means an autonomous L3 checkout fulfilment now always fails verification. This is the correct security trade and the team pinned it with tests rather than leaving it to be discovered, but it should be tracked as a product limitation: the autonomous checkout path is non-functional until acceptable-id and quantity-cap matching are implemented.",
+    "evidence": "ChainVerifierKnownAnswerTest.kt:60-77 'merchant side rejects unevaluable checkout constraints' asserts valid=false with 'line-item matching is not implemented'. IssuanceRoundTripTest.kt:390-391 runAutonomous(includeCheckout = true) asserts valid=false. ConstraintChecker.kt:71-84 carries the TODO.",
+    "files": [
+      "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt"
+    ],
+    "recommendation": "Port acceptable-id and quantity-cap matching, then move line_items from the fail-closed branch back to `checked`."
+  }
+]

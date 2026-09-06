@@ -6,6 +6,9 @@ nav_order: 4
 
 # Financial Services & KYC/AML Scenario
 
+> **Runnable companion:** [financial-services example](../../distribution/examples/scenarios/financial-services/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+
+
 This guide demonstrates how to build a financial services identity verification system using TrustWeave that enables reusable KYC credentials, compliance verification, cross-institution sharing, and regulatory anchoring.
 
 ## What You'll Build
@@ -166,7 +169,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Familiarity with KYC/AML concepts (helpful but not required)

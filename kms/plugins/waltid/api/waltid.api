@@ -1,0 +1,90 @@
+public final class org/trustweave/waltid/WaltIdIntegration {
+	public static final field INSTANCE Lorg/trustweave/waltid/WaltIdIntegration;
+	public final fun discoverAndRegister (Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/waltid/WaltIdIntegration;Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+	public final fun setup (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+	public static synthetic fun setup$default (Lorg/trustweave/waltid/WaltIdIntegration;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+}
+
+public final class org/trustweave/waltid/WaltIdIntegrationResult {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;)V
+	public final fun component1 ()Lorg/trustweave/kms/KeyManagementService;
+	public final fun component2 ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/waltid/WaltIdIntegrationResult;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/waltid/WaltIdIntegrationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public final fun getRegisteredDidMethods ()Ljava/util/List;
+	public final fun getRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/waltid/WaltIdKeyManagementService : org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/waltid/WaltIdKeyManagementService$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/waltid/WaltIdKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/waltid/WaltIdKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public abstract class org/trustweave/waltid/did/WaltIdDidMethodBase : org/trustweave/did/DidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;)V
+	protected final fun convertWaltIdDocument (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/model/DidDocument;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	protected final fun getDocuments ()Ljava/util/concurrent/ConcurrentHashMap;
+	protected final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/waltid/did/WaltIdDidMethodProvider : org/trustweave/did/spi/DidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getPriority ()I
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedMethods ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/waltid/did/WaltIdKeyMethod : org/trustweave/waltid/did/WaltIdDidMethodBase {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getMethod ()Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/waltid/did/WaltIdWebMethod : org/trustweave/waltid/did/WaltIdDidMethodBase {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getMethod ()Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

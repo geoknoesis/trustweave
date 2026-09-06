@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap
  * conformant verifiers.
  */
 internal object JsonLdContextLoader {
-
     /**
      * System property that re-enables remote JSON-LD context fetching when set to `true`.
      * Disabled by default for security.
@@ -41,20 +40,22 @@ internal object JsonLdContextLoader {
 
     private const val RESOURCE_BASE = "/org/trustweave/credential/contexts"
 
-    private val bundledContextResources: Map<String, String> = mapOf(
-        CredentialConstants.VcContexts.VC_1_1 to "$RESOURCE_BASE/credentials-v1.jsonld",
-        CredentialConstants.VcContexts.VC_2_0 to "$RESOURCE_BASE/credentials-v2.jsonld",
-        CredentialConstants.SecuritySuites.ED25519_2020_V1 to "$RESOURCE_BASE/ed25519-2020-v1.jsonld",
-        CredentialConstants.SecuritySuites.JSON_WEB_SIGNATURE_2020_V1 to "$RESOURCE_BASE/jws-2020-v1.jsonld",
-        CredentialConstants.SecuritySuites.DATA_INTEGRITY_V2 to "$RESOURCE_BASE/data-integrity-v2.jsonld"
-    )
+    private val bundledContextResources: Map<String, String> =
+        mapOf(
+            CredentialConstants.VcContexts.VC_1_1 to "$RESOURCE_BASE/credentials-v1.jsonld",
+            CredentialConstants.VcContexts.VC_2_0 to "$RESOURCE_BASE/credentials-v2.jsonld",
+            CredentialConstants.SecuritySuites.ED25519_2020_V1 to "$RESOURCE_BASE/ed25519-2020-v1.jsonld",
+            CredentialConstants.SecuritySuites.JSON_WEB_SIGNATURE_2020_V1 to "$RESOURCE_BASE/jws-2020-v1.jsonld",
+            CredentialConstants.SecuritySuites.DATA_INTEGRITY_V2 to "$RESOURCE_BASE/data-integrity-v2.jsonld",
+        )
 
     private val bundledContexts: Map<String, Document> by lazy {
         bundledContextResources.mapValues { (url, resourcePath) ->
-            val stream = JsonLdContextLoader::class.java.getResourceAsStream(resourcePath)
-                ?: throw IllegalStateException(
-                    "Bundled JSON-LD context resource not found on classpath: $resourcePath (for $url)"
-                )
+            val stream =
+                JsonLdContextLoader::class.java.getResourceAsStream(resourcePath)
+                    ?: throw IllegalStateException(
+                        "Bundled JSON-LD context resource not found on classpath: $resourcePath (for $url)",
+                    )
             stream.use { input ->
                 JsonDocument.of(input).also { it.documentUrl = URI.create(url) }
             }
@@ -72,10 +73,14 @@ internal object JsonLdContextLoader {
      * @param url The context URL exactly as it appears in `@context`
      * @param contextJson The full JSON context document as a string
      */
-    fun registerContext(url: String, contextJson: String) {
-        registeredContexts[url] = JsonDocument.of(StringReader(contextJson)).also {
-            it.documentUrl = URI.create(url)
-        }
+    fun registerContext(
+        url: String,
+        contextJson: String,
+    ) {
+        registeredContexts[url] =
+            JsonDocument.of(StringReader(contextJson)).also {
+                it.documentUrl = URI.create(url)
+            }
     }
 
     /**
@@ -88,7 +93,10 @@ internal object JsonLdContextLoader {
         System.getProperty(ALLOW_REMOTE_CONTEXTS_PROPERTY)?.equals("true", ignoreCase = true) == true
 
     private object OfflineFirstDocumentLoader : DocumentLoader {
-        override fun loadDocument(url: URI, options: DocumentLoaderOptions): Document {
+        override fun loadDocument(
+            url: URI,
+            options: DocumentLoaderOptions,
+        ): Document {
             val key = url.toString()
             JsonLdContextLoader.bundledContexts[key]?.let { return it }
             JsonLdContextLoader.registeredContexts[key]?.let { return it }
@@ -98,7 +106,7 @@ internal object JsonLdContextLoader {
                     "Remote JSON-LD context loading is disabled for security. Context '$url' is not " +
                         "bundled and has not been registered. Register it via " +
                         "JsonLdContexts.register(url, json) or set the system property " +
-                        "-D${JsonLdContextLoader.ALLOW_REMOTE_CONTEXTS_PROPERTY}=true to allow remote fetching."
+                        "-D${JsonLdContextLoader.ALLOW_REMOTE_CONTEXTS_PROPERTY}=true to allow remote fetching.",
                 )
             }
             // Explicitly enabled remote loading: delegate to titanium's default scheme

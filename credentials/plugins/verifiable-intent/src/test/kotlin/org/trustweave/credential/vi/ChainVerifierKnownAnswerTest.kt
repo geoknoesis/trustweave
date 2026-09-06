@@ -1,15 +1,14 @@
 package org.trustweave.credential.vi
 
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain as stringShouldContain
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import org.junit.jupiter.api.Test
+import io.kotest.matchers.string.shouldContain as stringShouldContain
 
 /**
  * Known-answer cross-stack interop test for [VerifiableIntent.verifyChain].
@@ -21,12 +20,15 @@ import org.junit.jupiter.api.Test
  * ES256 — byte-for-byte against an independent stack.
  */
 class ChainVerifierKnownAnswerTest {
-
-    private val fixture: JsonObject = run {
-        val text = javaClass.getResourceAsStream("/vi_autonomous_fixture.json")!!
-            .bufferedReader().use { it.readText() }
-        Json.parseToJsonElement(text).jsonObject
-    }
+    private val fixture: JsonObject =
+        run {
+            val text =
+                javaClass
+                    .getResourceAsStream("/vi_autonomous_fixture.json")!!
+                    .bufferedReader()
+                    .use { it.readText() }
+            Json.parseToJsonElement(text).jsonObject
+        }
     private val tokens = fixture["tokens"]!!.jsonObject
     private val issuerJwk = fixture["issuer_public_jwk"]!!.jsonObject
     private val now = fixture["now"]!!.jsonPrimitive.long
@@ -34,35 +36,44 @@ class ChainVerifierKnownAnswerTest {
     private fun tok(key: String): String = tokens[key]!!.jsonPrimitive.content
 
     @Test
-    fun `network side - L1 to L2 to L3a payment chain verifies and constraints are satisfied`() {
-        val result = VerifiableIntent.verifyChain(
-            l1 = tok("l1"),
-            l2 = tok("l2_full"),
-            issuerJwk = issuerJwk,
-            l3Payment = tok("l3a_payment"),
-            l2RoutedForPayment = tok("l2_routed_for_network"),
-            now = now,
-        )
+    fun `network fixture rejects recurrence requiring external enforcement`() {
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_full"),
+                issuerJwk = issuerJwk,
+                expectedL2Aud = "https://agent.verifiable-intent.example",
+                expectedL2Nonce = "11111111-1111-4111-8111-111111111111",
+                l3Payment = tok("l3a_payment"),
+                expectedL3PaymentAud = "https://www.mastercard.com",
+                expectedL3PaymentNonce = "22222222-2222-4222-8222-222222222222",
+                l2RoutedForPayment = tok("l2_routed_for_network"),
+                now = now,
+            )
 
-        result.errors.shouldBeEmpty()
-        result.valid shouldBe true
+        result.valid shouldBe false
+        result.errors.joinToString() stringShouldContain "recurrence requires external enforcement"
         result.checksPerformed shouldContain "l2_reference_binding"
-        result.checksPerformed shouldContain "constraints_satisfied"
     }
 
     @Test
-    fun `merchant side - L1 to L2 to L3b checkout chain verifies`() {
-        val result = VerifiableIntent.verifyChain(
-            l1 = tok("l1"),
-            l2 = tok("l2_role_checkout_only"),
-            issuerJwk = issuerJwk,
-            l3Checkout = tok("l3b_checkout"),
-            l2RoutedForCheckout = tok("l2_routed_for_merchant"),
-            now = now,
-        )
+    fun `merchant side rejects unevaluable checkout constraints`() {
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_role_checkout_only"),
+                issuerJwk = issuerJwk,
+                expectedL2Aud = "https://agent.verifiable-intent.example",
+                expectedL2Nonce = "11111111-1111-4111-8111-111111111111",
+                l3Checkout = tok("l3b_checkout"),
+                expectedL3CheckoutAud = "https://tennis-warehouse.com",
+                expectedL3CheckoutNonce = "22222222-2222-4222-8222-222222222222",
+                l2RoutedForCheckout = tok("l2_routed_for_merchant"),
+                now = now,
+            )
 
-        result.errors.shouldBeEmpty()
-        result.valid shouldBe true
+        result.valid shouldBe false
+        result.errors.joinToString() stringShouldContain "line-item matching is not implemented"
         result.checksPerformed shouldContain "open_checkout_contains_line_items"
     }
 
@@ -70,14 +81,19 @@ class ChainVerifierKnownAnswerTest {
     fun `wrong L2 routing breaks the L3 cross-layer sd_hash binding`() {
         // Feed the merchant's routed presentation where the network's is expected: the L3a sd_hash
         // no longer matches, so the chain MUST fail closed.
-        val result = VerifiableIntent.verifyChain(
-            l1 = tok("l1"),
-            l2 = tok("l2_full"),
-            issuerJwk = issuerJwk,
-            l3Payment = tok("l3a_payment"),
-            l2RoutedForPayment = tok("l2_routed_for_merchant"),
-            now = now,
-        )
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_full"),
+                issuerJwk = issuerJwk,
+                expectedL2Aud = "https://agent.verifiable-intent.example",
+                expectedL2Nonce = "11111111-1111-4111-8111-111111111111",
+                l3Payment = tok("l3a_payment"),
+                expectedL3PaymentAud = "https://www.mastercard.com",
+                expectedL3PaymentNonce = "22222222-2222-4222-8222-222222222222",
+                l2RoutedForPayment = tok("l2_routed_for_merchant"),
+                now = now,
+            )
 
         result.valid shouldBe false
         result.errors.joinToString() stringShouldContain "sd_hash"
@@ -85,16 +101,98 @@ class ChainVerifierKnownAnswerTest {
 
     @Test
     fun `expired clock fails closed`() {
-        val result = VerifiableIntent.verifyChain(
-            l1 = tok("l1"),
-            l2 = tok("l2_full"),
-            issuerJwk = issuerJwk,
-            l3Payment = tok("l3a_payment"),
-            l2RoutedForPayment = tok("l2_routed_for_network"),
-            now = now + 100_000, // past L1's 24h exp + skew
-        )
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_full"),
+                issuerJwk = issuerJwk,
+                expectedL2Aud = "https://agent.verifiable-intent.example",
+                expectedL2Nonce = "11111111-1111-4111-8111-111111111111",
+                l3Payment = tok("l3a_payment"),
+                expectedL3PaymentAud = "https://www.mastercard.com",
+                expectedL3PaymentNonce = "22222222-2222-4222-8222-222222222222",
+                l2RoutedForPayment = tok("l2_routed_for_network"),
+                now = now + 100_000, // past L1's 24h exp + skew
+            )
 
         result.valid shouldBe false
         result.errors.joinToString() stringShouldContain "expired"
+    }
+
+    @Test
+    fun `missing replay expectations fail closed by default`() {
+        for ((aud, nonce) in listOf(
+            null to null,
+            "https://agent.verifiable-intent.example" to null,
+            null to "11111111-1111-4111-8111-111111111111",
+        )) {
+            val result =
+                VerifiableIntent.verifyChain(
+                    l1 = tok("l1"),
+                    l2 = tok("l2_full"),
+                    issuerJwk = issuerJwk,
+                    now = now,
+                    expectedL2Aud = aud,
+                    expectedL2Nonce = nonce,
+                )
+            result.valid shouldBe false
+            result.errors.joinToString() stringShouldContain "audience and nonce are required"
+        }
+    }
+
+    @Test
+    fun `wrong nonce is rejected even with authentic signed credentials`() {
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_full"),
+                issuerJwk = issuerJwk,
+                now = now,
+                expectedL2Aud = "https://agent.verifiable-intent.example",
+                expectedL2Nonce = "another-request",
+            )
+        result.valid shouldBe false
+        result.errors.joinToString() stringShouldContain "nonce mismatch"
+    }
+
+    @Test
+    fun `each L3 requires its own matching audience and nonce`() {
+        for (payment in listOf(true, false)) {
+            val audience = if (payment) "https://www.mastercard.com" else "https://tennis-warehouse.com"
+            val nonce = "22222222-2222-4222-8222-222222222222"
+            for ((aud, challenge) in listOf(null to nonce, audience to null, "wrong" to nonce, audience to "wrong")) {
+                val result =
+                    VerifiableIntent.verifyChain(
+                        l1 = tok("l1"),
+                        l2 = tok("l2_full"),
+                        issuerJwk = issuerJwk,
+                        now = now,
+                        expectedL2Aud = "https://agent.verifiable-intent.example",
+                        expectedL2Nonce = "11111111-1111-4111-8111-111111111111",
+                        l3Payment = if (payment) tok("l3a_payment") else null,
+                        l3Checkout = if (payment) null else tok("l3b_checkout"),
+                        expectedL3PaymentAud = aud,
+                        expectedL3PaymentNonce = challenge,
+                        expectedL3CheckoutAud = aud,
+                        expectedL3CheckoutNonce = challenge,
+                    )
+                result.valid shouldBe false
+                result.errors.joinToString() stringShouldContain if (payment) "l3_payment" else "l3_checkout"
+            }
+        }
+    }
+
+    @Test
+    fun `offline audit opt out is explicit in the result`() {
+        val result =
+            VerifiableIntent.verifyChain(
+                l1 = tok("l1"),
+                l2 = tok("l2_full"),
+                issuerJwk = issuerJwk,
+                now = now,
+                requireReplayProtection = false,
+            )
+        result.valid shouldBe true
+        result.checksSkipped shouldContain "replay_protection_not_required (explicit offline audit policy)"
     }
 }

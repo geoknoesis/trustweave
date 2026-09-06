@@ -1,124 +1,59 @@
-# TrustWeave Examples
+# TrustWeave examples
 
-This module contains runnable examples demonstrating various use cases for TrustWeave.
+Start with the [scenario folder](scenarios/README.md): each small example has Kotlin source,
+a purpose, commands, expected output and explicit limits in its README.
+The larger SDK demonstrations remain under `src/main/kotlin`, with a README beside each.
 
-## Available Examples
+## Build and verify
 
-### Quick Start
-- **File**: `org.trustweave.examples.quickstart.QuickStartSample`
-- **Description**: Minimal end-to-end credential issuance sample for newcomers
-- **Run**: `./gradlew :distribution:examples:runQuickStartSample`
+Use JDK 21 and the repository Gradle wrapper. From the repository root:
 
-### DID Methods
-- **did:key** — `org.trustweave.examples.did_key.KeyDidExample` — `./gradlew :distribution:examples:runKeyDid`
-- **did:jwk** — `org.trustweave.examples.did_jwk.JwkDidExample` — `./gradlew :distribution:examples:runJwkDid`
-
-### Earth Observation
-- **File**: `org.trustweave.examples.eo.EarthObservationExample`
-- **Description**: Demonstrates EO data integrity workflow with artifacts, linksets, VCs, and blockchain anchoring
-- **Run**: `./gradlew :distribution:examples:runEarthObservation`
-
-### Academic Credentials
-- **File**: `org.trustweave.examples.academic.AcademicCredentialsExample`
-- **Description**: Shows how universities issue degree credentials and students manage them in wallets
-- **Run**: `./gradlew :distribution:examples:runAcademicCredentials`
-
-### Professional Identity
-- **File**: `org.trustweave.examples.professional.ProfessionalIdentityExample`
-- **Description**: Demonstrates professional credential wallet with education, work experience, and certifications
-- **Run**: `./gradlew :distribution:examples:runProfessionalIdentity`
-
-### Indy Integration
-- **File**: `org.trustweave.examples.indy.IndyIntegrationExample`
-- **Description**: End-to-end scenario using Hyperledger Indy for blockchain anchoring. Demonstrates DID creation, credential issuance, verification, wallet storage, and anchoring to Indy (BCovrin Testnet)
-- **Run**: `./gradlew :distribution:examples:runIndyIntegration`
-
-### Blockchain Anchoring
-- **File**: `org.trustweave.examples.blockchain.BlockchainAnchoringExample`
-- **Description**: Anchors data to EVM chains (Ethereum, Base, Arbitrum) via the anchor plugins
-- **Run**: `./gradlew :distribution:examples:runBlockchainAnchoring`
-
-### Additional Scenarios
-
-| Scenario | Class | Gradle task |
-|---|---|---|
-| Proof of Location | `org.trustweave.examples.location.ProofOfLocationExample` | `runProofOfLocation` |
-| Spatial Web Authorization | `org.trustweave.examples.spatial.SpatialWebExample` | `runSpatialWeb` |
-| Digital Workflow Provenance | `org.trustweave.examples.workflow.DigitalWorkflowExample` | `runDigitalWorkflow` |
-| News Industry | `org.trustweave.examples.news.NewsIndustryExample` | `runNewsIndustry` |
-| Data Catalog (DCAT) | `org.trustweave.examples.dcat.DataCatalogExample` | `runDataCatalog` |
-| Healthcare Medical Records | `org.trustweave.examples.healthcare.HealthcareExample` | `runHealthcare` |
-| Government Digital Identity | `org.trustweave.examples.government.GovernmentIdentityExample` | `runGovernment` |
-| Supply Chain Traceability | `org.trustweave.examples.supplychain.SupplyChainExample` | `runSupplyChain` |
-| Financial Services KYC | `org.trustweave.examples.financial.FinancialServicesExample` | `runFinancialServices` |
-| IoT Device Identity | `org.trustweave.examples.iot.IoTDeviceExample` | `runIoT` |
-| National Education Credentials | `org.trustweave.examples.national.NationalEducationExample` | `runNationalEducation` |
-| Web of Trust | `org.trustweave.examples.trust.WebOfTrustExample` | _(see source; no dedicated task)_ |
-| Delegation Chain | `org.trustweave.examples.delegation.DelegationChainExample` | _(see source; no dedicated task)_ |
-| Comprehensive DSL | `org.trustweave.examples.comprehensive.ComprehensiveDslExample` | _(see source; no dedicated task)_ |
-
-> **TODO**: A couple of source files (`trust/WebOfTrustExample.kt`, `delegation/DelegationChainExample.kt`, `comprehensive/ComprehensiveDslExample.kt`, `academic/AcademicCredentialsDslExample.kt`) do not yet have dedicated Gradle `JavaExec` tasks in `distribution/examples/build.gradle.kts`. Run them directly from your IDE or add a `tasks.register<JavaExec>` entry if you need a CLI invocation.
-
-## Running Examples
-
-Each example is registered as a Gradle `JavaExec` task in `distribution/examples/build.gradle.kts`:
-
-```bash
-# Examples
-./gradlew :distribution:examples:runQuickStartSample
-./gradlew :distribution:examples:runEarthObservation
-./gradlew :distribution:examples:runAcademicCredentials
-./gradlew :distribution:examples:runProfessionalIdentity
-./gradlew :distribution:examples:runIndyIntegration
-./gradlew :distribution:examples:runBlockchainAnchoring
-./gradlew :distribution:examples:runKeyDid
-./gradlew :distribution:examples:runJwkDid
-```
-
-## Building Examples
-
-To compile all examples:
-
-```bash
+```sh
 ./gradlew :distribution:examples:compileKotlin
+./gradlew :distribution:examples:checkDocumentationExamples :distribution:examples:test :distribution:examples:ktlintCheck
 ```
 
-## Source Code Location
+On Windows replace `./gradlew` with `.\gradlew.bat`. All 24 entry points are included in the
+aggregate execution check. These local demonstrations need no hosted accounts or secrets.
+The nine small domain scenarios assert issuance, JSON round-trip, valid signature and rejection
+of a modified claim. Lifecycle and delegation demos also exercise negative outcomes.
+Other examples have differing assertion coverage; successful execution is not an exhaustive audit.
 
-All example source code lives under:
+## Examples catalog
 
-```
-distribution/examples/src/main/kotlin/org/trustweave/examples/
-```
+| Task | Source and purpose |
+| --- | --- |
+| `runDocumentationQuickStart` | [DocumentationQuickStart](src/main/kotlin/org/trustweave/examples/documentation/README.md) |
+| `runEarthObservation` | [EarthObservationExample](src/main/kotlin/org/trustweave/examples/eo/README.md) |
+| `runAcademicCredentials` | [AcademicCredentialsExample](src/main/kotlin/org/trustweave/examples/academic/README.md) |
+| `runProfessionalIdentity` | [ProfessionalIdentityExample](src/main/kotlin/org/trustweave/examples/professional/README.md) |
+| `runProofOfLocation` | [ProofOfLocationExample](scenarios/proof-of-location/README.md) |
+| `runSpatialWeb` | [SpatialWebExample](src/main/kotlin/org/trustweave/examples/spatial/README.md) |
+| `runDigitalWorkflow` | [DigitalWorkflowExample](scenarios/digital-workflow/README.md) |
+| `runNewsIndustry` | [NewsIndustryExample](scenarios/news-industry/README.md) |
+| `runDataCatalog` | [DataCatalogExample](scenarios/data-catalog/README.md) |
+| `runHealthcare` | [HealthcareExample](scenarios/healthcare/README.md) |
+| `runGovernment` | [GovernmentIdentityExample](scenarios/government/README.md) |
+| `runSupplyChain` | [SupplyChainExample](scenarios/supply-chain/README.md) |
+| `runFinancialServices` | [FinancialServicesExample](scenarios/financial-services/README.md) |
+| `runIoT` | [IoTDeviceExample](scenarios/iot-device/README.md) |
+| `runNationalEducation` | [NationalEducationExample](src/main/kotlin/org/trustweave/examples/national/README.md) |
+| `runQuickStartSample` | [QuickStartSample](src/main/kotlin/org/trustweave/examples/quickstart/README.md) |
+| `runIndyIntegration` | [IndyIntegrationExample](src/main/kotlin/org/trustweave/examples/indy/README.md) |
+| `runKeyDid` | [KeyDidExample](src/main/kotlin/org/trustweave/examples/did-key/README.md) |
+| `runJwkDid` | [JwkDidExample](src/main/kotlin/org/trustweave/examples/did-jwk/README.md) |
+| `runBlockchainAnchoring` | [BlockchainAnchoringExample](src/main/kotlin/org/trustweave/examples/blockchain/README.md) |
+| `runCredentialLifecycle` | [ComprehensiveDslExample](src/main/kotlin/org/trustweave/examples/comprehensive/README.md) |
+| `runDelegationChain` | [DelegationChainExample](src/main/kotlin/org/trustweave/examples/delegation/README.md) |
+| `runAcademicCredentialsDsl` | [AcademicCredentialsDslExample](src/main/kotlin/org/trustweave/examples/academic/README.md) |
+| `runWebOfTrust` | [WebOfTrustExample](src/main/kotlin/org/trustweave/examples/trust/README.md) |
 
-Each example is organized in its own package:
-- `quickstart/` - Quick Start sample
-- `did-key/` - did:key example (package `org.trustweave.examples.did_key`)
-- `did-jwk/` - did:jwk example (package `org.trustweave.examples.did_jwk`)
-- `eo/` - Earth Observation examples
-- `academic/` - Academic Credentials examples
-- `professional/` - Professional Identity examples
-- `location/` - Proof of Location examples
-- `spatial/` - Spatial Web Authorization examples
-- `workflow/` - Digital Workflow Provenance examples
-- `news/` - News Industry examples
-- `dcat/` - Data Catalog DCAT examples
-- `healthcare/` - Healthcare Medical Records examples
-- `government/` - Government Digital Identity examples
-- `supplychain/` - Supply Chain Traceability examples
-- `financial/` - Financial Services KYC examples
-- `iot/` - IoT Device Identity examples
-- `national/` - National Education Credentials examples
-- `indy/` - Indy Integration examples
-- `blockchain/` - EVM blockchain anchoring examples
-- `trust/` - Web of Trust examples
-- `delegation/` - Delegation chain examples
-- `comprehensive/` - Comprehensive DSL example
+## Relationship to the guides
 
-## Documentation
+The main quick-start code blocks are checked against their executable source. Longer scenario
+guides contain explanatory fragments and broader architecture proposals; they are not all
+standalone applications. Prefer the source and README linked above for commands you can run.
 
-For detailed explanations of each scenario, see the documentation in `docs/getting-started/` and `docs/scenarios/`:
-- [Earth Observation Scenario](../../docs/getting-started/earth-observation-scenario.md)
-- [Academic Credentials Scenario](../../docs/getting-started/academic-credentials-scenario.md)
-- [Professional Identity Scenario](../../docs/getting-started/professional-identity-scenario.md)
-- And more under [`docs/scenarios/`](../../docs/scenarios/).
+All credentials, authorities and domain claims are illustrative. A valid signature establishes
+integrity and possession of an issuer key, not truth or trust in the issuer. Provider/network,
+hardware custody, external schema standards and production operations require separate validation.

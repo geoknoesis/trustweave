@@ -1,14 +1,13 @@
 package org.trustweave.examples.spatial
 
 import kotlinx.serialization.Serializable
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.did.identifiers.Did
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.did.identifiers.Did
 
 @Serializable
 data class BoundingBox(
@@ -43,12 +42,13 @@ fun demoSfBayAirspaceDomain(authorityDid: Did): SpatialDomain =
         domainId = "demo-sf-airspace",
         domainDid = authorityDid.value,
         authorityDid = authorityDid.value,
-        boundary = BoundingBox(
-            minLat = 37.5,
-            maxLat = 38.0,
-            minLon = -122.6,
-            maxLon = -122.2,
-        ),
+        boundary =
+            BoundingBox(
+                minLat = 37.5,
+                maxLat = 38.0,
+                minLon = -122.6,
+                maxLon = -122.2,
+            ),
         allowedActivities = listOf("data-collection", "monitoring", "inspection"),
         description = "San Francisco Bay Area controlled airspace (demo)",
     )
@@ -74,17 +74,16 @@ fun checkDomainAuthorization(
 
     val (lat, lon) = currentLocation
     val box = domain.boundary
-    val inBoundary = lat >= box.minLat &&
-        lat <= box.maxLat &&
-        lon >= box.minLon &&
-        lon <= box.maxLon
+    val inBoundary =
+        lat >= box.minLat &&
+            lat <= box.maxLat &&
+            lon >= box.minLon &&
+            lon <= box.maxLon
     if (!inBoundary) return false
 
     return true
 }
 
-private fun JsonObject.stringClaim(key: String): String? =
-    get(key)?.jsonPrimitive?.contentOrNull
+private fun JsonObject.stringClaim(key: String): String? = get(key)?.jsonPrimitive?.contentOrNull
 
-private fun JsonElement?.stringClaim(key: String): String? =
-    (this as? JsonObject)?.stringClaim(key)
+private fun JsonElement?.stringClaim(key: String): String? = (this as? JsonObject)?.stringClaim(key)

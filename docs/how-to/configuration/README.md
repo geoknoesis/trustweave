@@ -19,6 +19,7 @@ How to configure TrustWeave for development, tests, and production. For what you
 All **`build`** / **`quickStart`** examples assume a **`suspend`** context or **`runBlocking { ... }`**.
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 

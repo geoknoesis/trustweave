@@ -37,6 +37,7 @@ Complete workflow showing all three parties in a credential ecosystem. This exam
 ```kotlin
 package com.example.patterns.workflow
 
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
@@ -157,6 +158,7 @@ Process multiple DIDs or credentials efficiently using coroutines.
 ```kotlin
 package com.example.patterns.batch
 
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrowDid
@@ -250,6 +252,7 @@ Handle errors gracefully with fallback strategies.
 ```kotlin
 package com.example.patterns.recovery
 
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.identifiers.Did
@@ -320,6 +323,7 @@ Manage credentials through their entire lifecycle: issuance, storage, presentati
 ```kotlin
 package com.example.patterns.lifecycle
 
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.wallet.presentationFromWalletResult
@@ -523,6 +527,7 @@ Organize credentials efficiently using collections, tags, and metadata.
 ```kotlin
 package com.example.patterns.organization
 
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.WalletCreationResult

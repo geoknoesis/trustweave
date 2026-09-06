@@ -1,0 +1,780 @@
+<title>Production Readiness Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F6F8F9;
+    --surface: #FFFFFF;
+    --surface-sunk: #EFF3F4;
+    --ink: #15202A;
+    --ink-muted: #586775;
+    --ink-faint: #8595A2;
+    --rule: #DCE4E7;
+    --rule-strong: #C3CFD4;
+    --accent: #1C5F6B;
+    --accent-soft: #E3EFF1;
+    --high: #A33A2A;
+    --high-soft: #F7E7E3;
+    --med: #9A6A16;
+    --med-soft: #F8EFDD;
+    --ok: #37714A;
+    --ok-soft: #E4F0E8;
+    --shadow: 0 1px 2px rgba(21, 32, 42, .05), 0 8px 24px -16px rgba(21, 32, 42, .25);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F151A;
+      --surface: #151D24;
+      --surface-sunk: #1B242C;
+      --ink: #E3EAEF;
+      --ink-muted: #93A3AF;
+      --ink-faint: #6C7C88;
+      --rule: #27333C;
+      --rule-strong: #38474F;
+      --accent: #62B4C0;
+      --accent-soft: #16323A;
+      --high: #E1866F;
+      --high-soft: #38201B;
+      --med: #DCAC57;
+      --med-soft: #33280F;
+      --ok: #77B98C;
+      --ok-soft: #17301F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F151A;
+    --surface: #151D24;
+    --surface-sunk: #1B242C;
+    --ink: #E3EAEF;
+    --ink-muted: #93A3AF;
+    --ink-faint: #6C7C88;
+    --rule: #27333C;
+    --rule-strong: #38474F;
+    --accent: #62B4C0;
+    --accent-soft: #16323A;
+    --high: #E1866F;
+    --high-soft: #38201B;
+    --med: #DCAC57;
+    --med-soft: #33280F;
+    --ok: #77B98C;
+    --ok-soft: #17301F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 52px;
+  }
+
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  code {
+    font-size: .85em;
+    background: var(--surface-sunk);
+    border-radius: 3px;
+    padding: .1em .35em;
+    word-break: break-word;
+  }
+
+  h1, h2, h3 {
+    font-family: Newsreader, Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: 2.7rem; letter-spacing: -.015em; }
+  h2 { font-size: 1.75rem; letter-spacing: -.01em; }
+  h3 { font-size: 1.16rem; font-weight: 600; }
+
+  p { margin: 0; max-width: 68ch; }
+
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 16px; }
+
+  .masthead .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-size: .82rem;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+  }
+
+  .masthead .meta b { font-weight: 600; color: var(--ink); }
+
+  .lede { font-size: 1.12rem; color: var(--ink-muted); max-width: 66ch; }
+
+  section { display: flex; flex-direction: column; gap: 22px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 7px; }
+
+  /* ---------- verdict ---------- */
+
+  .verdict {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+  }
+
+  .repo-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 24px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .repo-card .name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .88rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .repo-card .figure {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+    flex-wrap: wrap;
+  }
+
+  .repo-card .figure .n {
+    font-family: Newsreader, Georgia, serif;
+    font-size: 3.4rem;
+    line-height: .95;
+    font-weight: 500;
+    letter-spacing: -.02em;
+  }
+
+  .repo-card .figure .d { font-size: 1rem; color: var(--ink-faint); }
+
+  .gate {
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .25em .65em;
+    border-radius: 3px;
+  }
+
+  .gate.no { background: var(--high-soft); color: var(--high); }
+  .gate.cond { background: var(--med-soft); color: var(--med); }
+
+  .repo-card .verdict-line { font-size: .95rem; color: var(--ink-muted); }
+
+  .repo-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 14px;
+    font-size: .87rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+
+  .repo-card dt { color: var(--ink-muted); }
+
+  .repo-card dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", monospace;
+    font-size: .84rem;
+  }
+
+  .repo-card dd.weak { color: var(--high); }
+
+  /* ---------- findings ---------- */
+
+  .findings { display: flex; flex-direction: column; gap: 14px; }
+
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--stripe, var(--rule-strong));
+    border-radius: 0 5px 5px 0;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .finding.blocker { --stripe: var(--high); }
+  .finding.needed { --stripe: var(--med); }
+  .finding.later { --stripe: var(--rule-strong); }
+
+  .finding-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .fid {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    letter-spacing: .02em;
+  }
+
+  .pill {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .2em .6em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .pill.blocker { background: var(--high-soft); color: var(--high); }
+  .pill.needed { background: var(--med-soft); color: var(--med); }
+  .pill.later { background: var(--surface-sunk); color: var(--ink-muted); }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+
+  .finding h3 { flex: 1 1 300px; }
+
+  .finding p { font-size: .95rem; }
+
+  .evidence {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .78rem;
+    color: var(--ink-muted);
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: 9px 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.55;
+  }
+
+  .fix {
+    font-size: .92rem;
+    border-top: 1px dashed var(--rule);
+    padding-top: 9px;
+    color: var(--ink-muted);
+  }
+
+  .fix b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- tables ---------- */
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    min-width: 540px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    border-bottom-color: var(--rule-strong);
+  }
+
+  td.num {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-right: 0;
+    white-space: nowrap;
+  }
+
+  td.num.weak { color: var(--high); }
+
+  tr.total td {
+    border-bottom: none;
+    border-top: 2px solid var(--rule-strong);
+    font-weight: 600;
+    padding-top: 11px;
+  }
+
+  /* ---------- strengths ---------- */
+
+  .closed {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .closed-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--rule);
+    font-size: .93rem;
+  }
+
+  .closed-row:last-child { border-bottom: none; }
+
+  .closed-row .tick { color: var(--ok); font-weight: 700; line-height: 1.6; }
+
+  .closed-row .body { display: flex; flex-direction: column; gap: 3px; }
+
+  .closed-row .where {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .76rem;
+    color: var(--ink-faint);
+  }
+
+  ol.priority {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: p;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  ol.priority li {
+    counter-increment: p;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    font-size: .96rem;
+  }
+
+  ol.priority li::before {
+    content: counter(p);
+    font-family: Newsreader, Georgia, serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    text-align: right;
+    line-height: 1;
+  }
+
+  ol.priority b { font-weight: 600; }
+
+  .note {
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 18px 22px;
+    font-size: .95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .note .eyebrow { color: var(--accent); }
+
+  .note p { max-width: 72ch; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+    font-size: .86rem;
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  a { color: var(--accent); }
+
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 620px) {
+    h1 { font-size: 2.1rem; }
+    .wrap { padding: 36px 18px 64px; gap: 40px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Production readiness &middot; Whole codebase &middot; 2026-09-05</div>
+    <h1>The code is nearly ready. The operations are not.</h1>
+    <p class="lede">A different question from rounds 10 and 11, and a different rubric: not whether the code is well written, but whether this can be deployed, operated, diagnosed and recovered. On that measure the library's GA core holds up and the SaaS does not &mdash; and almost nothing standing in the way is a code-quality problem.</p>
+    <div class="meta">
+      <span><b>Library</b> 231k LOC / 106 modules</span>
+      <span><b>SaaS</b> 22k LOC backend / 187 frontend sources</span>
+      <span>Blockers <b>6</b></span>
+      <span>Method: <b>static analysis</b>, nothing deployed or load-tested</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <div class="repo-card">
+        <div class="name">trustweave</div>
+        <div class="figure"><span class="n">6.9</span><span class="d">/ 10</span><span class="gate cond">Ready, with scope limits</span></div>
+        <p class="verdict-line">The eight GA modules are safe to depend on. The other ninety-odd are not, and the project says so plainly in its own maturity matrix &mdash; which is the single best readiness artifact in either repository. What blocks a 1.0 is release engineering, not correctness.</p>
+        <dl>
+          <dt>Security &amp; access control</dt><dd>8.5</dd>
+          <dt>Observability &amp; diagnosability</dt><dd class="weak">5.0</dd>
+          <dt>Reliability &amp; correctness</dt><dd>7.5</dd>
+          <dt>Configuration &amp; data</dt><dd>7.5</dd>
+          <dt>Release engineering</dt><dd class="weak">5.5</dd>
+          <dt>Testing &amp; documentation</dt><dd>7.5</dd>
+        </dl>
+      </div>
+      <div class="repo-card">
+        <div class="name">trustweave-saas</div>
+        <div class="figure"><span class="n">5.2</span><span class="d">/ 10</span><span class="gate no">Not ready</span></div>
+        <p class="verdict-line">Authorization and data integrity are in good shape after two rounds of fixes. But there is no infrastructure definition, no metrics pipeline, no request tracing, and the documented deployment path ships default credentials. You could not diagnose an incident on this service today.</p>
+        <dl>
+          <dt>Security &amp; access control</dt><dd>8.0</dd>
+          <dt>Observability &amp; diagnosability</dt><dd class="weak">3.5</dd>
+          <dt>Reliability &amp; scale</dt><dd class="weak">4.5</dd>
+          <dt>Configuration &amp; data</dt><dd>6.0</dd>
+          <dt>Deployment &amp; release</dt><dd class="weak">3.0</dd>
+          <dt>Testing &amp; documentation</dt><dd>6.0</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="eyebrow">These numbers are not a regression</div>
+      <p>Round 11 scored 7.6 and 7.0 on code quality. This assessment asks whether the system can be run in production, which weighs dimensions that a code review barely touches &mdash; and where a codebase can be excellent and still unready. Nothing got worse; in fact SA-R11-01 and SA-R11-02 were both closed well since round 11, and I confirmed both. The library moved less because a library's readiness rests on API stability and diagnosability, and neither has changed.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Must fix before production</div>
+      <h2>Blockers</h2>
+      <p>Six. Five belong to the SaaS, and none of them is about the correctness of the code.</p>
+    </div>
+
+    <div class="findings">
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>There is no way to see what the service is doing</h3>
+          <span class="fid">PR-01 &middot; SaaS</span>
+        </div>
+        <p>The observability stack is a single dependency, <code>spring-boot-starter-actuator</code>, and three exposed endpoints. There is no metrics registry, so <code>/actuator/metrics</code> has nothing scraping it. There is no tracing library. There are no correlation identifiers anywhere &mdash; a search for <code>MDC</code>, <code>traceId</code>, <code>correlationId</code> and <code>requestId</code> across the whole backend returns nothing, so the 123 log statements cannot be tied to a request, a tenant, or each other. There is no logging configuration file, so output is Spring's default console pattern rather than structured JSON.</p>
+        <p>There are also no custom health indicators. Health is the framework default, which checks the database and nothing else &mdash; not Keycloak, not Accountly, not Kill Bill, not the KMS provider, not the blockchain anchors. Every one of those can fail while the load balancer still sees a healthy instance.</p>
+        <div class="evidence">server/build.gradle.kts    actuator only — no micrometer-registry-prometheus, no OpenTelemetry
+application.yml:79-86      exposure: health, info, metrics; no probes group configured
+grep MDC|traceId|correlationId|requestId  →  0 hits
+grep HealthIndicator                       →  0 implementations
+server/src/main/resources/  no logback-spring.xml or log4j2.xml
+OncePerRequestFilter        only DevAuthFilter, which is @Profile("dev")</div>
+        <div class="fix"><b>Fix:</b> add <code>micrometer-registry-prometheus</code> and expose the scrape endpoint on the platform-admin path. Add a <code>OncePerRequestFilter</code> that puts a request id and the resolved organization id into the MDC, and a <code>logback-spring.xml</code> that emits JSON including both. Add health indicators for Keycloak and the billing provider, and enable the liveness/readiness probe groups so orchestration can tell starting from broken.</div>
+      </article>
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>No infrastructure definition, and the documented deploy ships default credentials</h3>
+          <span class="fid">PR-02 &middot; SaaS</span>
+        </div>
+        <p>There is no infrastructure-as-code of any kind &mdash; no Terraform, no CDK, no Kubernetes manifests, no CloudFormation. The only deployment artifact is <code>docker-compose.yml</code>, and <code>DEPLOYMENT.md</code> presents it as the recommended path. That file hardcodes <code>POSTGRES_PASSWORD: postgres</code>, <code>KEYCLOAK_ADMIN_PASSWORD: admin</code>, <code>DATABASE_PASSWORD: postgres</code> and an empty <code>KEYCLOAK_CLIENT_SECRET</code>.</p>
+        <p>This is the same class of defect that SA-R10-06 and SA-R11-02 fixed inside <code>application.yml</code>. Those fixes made the application refuse to start without real credentials; the deployment file then supplies the weak ones from outside, which puts the default back.</p>
+        <div class="fix"><b>Fix:</b> treat <code>docker-compose.yml</code> as a local development file, say so in <code>DEPLOYMENT.md</code>, and source every credential from <code>.env</code> with no fallback. Then write the real target as code. Per the AWS staging design, that means a managed Postgres, a secret manager, and Vault on Fargate for the Ed25519 KMS &mdash; none of which exists yet in any committed form.</div>
+      </article>
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>The service is built against SNAPSHOT dependencies</h3>
+          <span class="fid">PR-03 &middot; SaaS</span>
+        </div>
+        <p>Eight dependencies resolve to <code>com.geoknoesis.trustweave:*:1.0.0-SNAPSHOT</code>, including <code>trustweave-all</code>, the KMS providers and the status-list implementations. A SNAPSHOT is mutable by definition: the same build, run twice, can produce different binaries. That removes reproducibility, auditability and the ability to roll back to a known artifact &mdash; which for a service whose product is verifiable trust is a particularly awkward place to be. The coordinate also names a version, <code>1.0.0</code>, that the library has never released; the library is at <code>0.7.0</code>.</p>
+        <p>The mitigation in place is genuinely clever and worth keeping: CI pins the library by git revision and verifies a source hash before building. But that guarantees the <em>inputs</em> were reviewed, not that the resolved artifact is immutable or reproducible from a coordinate.</p>
+        <div class="evidence">server/build.gradle.kts   8 × com.geoknoesis.trustweave:*:1.0.0-SNAPSHOT
+trustweave/build.gradle.kts:22   version = "0.7.0"
+.github/workflows/ci.yml  verify-sdk-source.py --revision  (pins inputs, not artifacts)</div>
+        <div class="fix"><b>Fix:</b> cut a real library release and depend on the fixed version. This is the same work as TW-R10-06 &mdash; once the API surface is validated and frozen, the SaaS gets a version it can pin, and the source-hash check becomes a second line of defence rather than the only one.</div>
+      </article>
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>Nothing survives running more than one instance</h3>
+          <span class="fid">PR-04 &middot; SaaS</span>
+        </div>
+        <p>Two mechanisms assume a single process. The rate limiter is an in-process <code>HashMap</code> behind a single <code>@Synchronized</code> lock, so the effective limit multiplies by instance count &mdash; and it is the only control protecting the public verification and claim endpoints. Five of the six <code>@Scheduled</code> jobs have no coordination at all; only the OID4VP verification path takes a database work lease.</p>
+        <p>The usage-outbox drain is the one to look at first. It selects <code>PENDING</code> and <code>FAILED</code> rows with a plain derived query &mdash; no <code>SKIP LOCKED</code>, no pessimistic lock, no claim before the HTTP call &mdash; so two instances would post the same usage events concurrently. Each event does carry an idempotency key, so billing correctness rests on Accountly honouring it rather than on anything local. That is a reasonable belt, but there is no braces.</p>
+        <div class="evidence">RateLimiter.kt:9-21        private val windows = HashMap&lt;String, Window&gt;(), @Synchronized, per-JVM
+UsageReporter.kt:30,39     @Scheduled 15s → findByStatusInAndAttemptsLessThan… (no claim)
+VerificationSession.kt:155 releaseWork() — the one job that is coordinated
+fly.toml                   min_machines_running = 1, auto_start_machines = true</div>
+        <div class="fix"><b>Fix:</b> add <code>SKIP LOCKED</code> and a claimed status to the outbox drain &mdash; that is the highest-consequence one and a small change. Introduce ShedLock (it only needs the database you already have) for the remaining scheduled jobs, and move the rate limiter behind a shared store before scaling past one machine.</div>
+      </article>
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>The integration suite cannot currently be run</h3>
+          <span class="fid">PR-05 &middot; SaaS</span>
+        </div>
+        <p>The round-11 remediation pass reports that Docker stalled during PostgreSQL container startup and the test worker was killed after five minutes, leaving the integration tests compiled but unverified &mdash; and notes that prior full-backend instability has not been cleared. That matters more than usual here, because the strongest recent addition, <code>FlywayMigrationTest</code>, is a Testcontainers test. The check that proves the schema builds from empty is exactly the check that currently cannot run.</p>
+        <p>To the team's credit this was reported plainly rather than papered over, and the remediation explicitly declined to self-score because of it. But a green pipeline you cannot reproduce locally is not a signal you can deploy on.</p>
+        <div class="fix"><b>Fix:</b> get the Docker environment stable and run the full backend suite end to end before any deploy. Until that happens, treat the migration and boot coverage as unverified regardless of what CI reports.</div>
+      </article>
+
+      <article class="finding blocker">
+        <div class="finding-head">
+          <span class="pill blocker">Blocker</span>
+          <h3>No published artifact can be verified by whoever consumes it</h3>
+          <span class="fid">PR-06 &middot; Library</span>
+        </div>
+        <p>The library publishes to Maven with no GPG signature, no SBOM and no build attestation, and CI runs no SAST. Carried forward unchanged from round 10, but it reads differently under a readiness rubric: this is a security library whose entire proposition is that recipients can verify provenance, distributed by a channel that offers its own recipients none. Signing is required for Maven Central regardless, so it has to happen before any real release anyway.</p>
+        <div class="fix"><b>Fix:</b> GPG signing and <code>cyclonedx-gradle-plugin</code> in the release workflow, plus GitHub artifact attestation. Pairs naturally with PR-03, since both are prerequisites for cutting the version the SaaS needs to pin.</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Should fix before scale</div>
+      <h2>Needed, not blocking</h2>
+    </div>
+
+    <div class="findings">
+
+      <article class="finding needed">
+        <div class="finding-head">
+          <span class="pill needed">Needed</span>
+          <h3>No resilience around any external dependency</h3>
+          <span class="fid">PR-07 &middot; SaaS</span>
+        </div>
+        <p>No retry, no backoff, no circuit breaker anywhere in the backend. Timeouts exist and are sensible where they are set &mdash; Keycloak at 5s connect and 10s read, Accountly at 20s, OID4VP admission at 3s &mdash; but they are the whole strategy. A transient Keycloak blip fails a user request outright, and a slow billing provider consumes request threads until its timeout.</p>
+        <div class="fix"><b>Fix:</b> Resilience4j on the Keycloak admin client and the Accountly client first &mdash; those are on the synchronous request path. The webhook and outbox paths already retry through their own attempt counters.</div>
+      </article>
+
+      <article class="finding needed">
+        <div class="finding-head">
+          <span class="pill needed">Needed</span>
+          <h3><code>fly.toml</code> is stale, non-functional, and carries a password</h3>
+          <span class="fid">PR-08 &middot; SaaS</span>
+        </div>
+        <p>It would not deploy if used. It routes to <code>internal_port = 8080</code> while the application binds 8081 and both the Dockerfile and its health check use 8081. Its <code>DATABASE_URL</code> is a <code>postgres://</code> URL, which the JDBC datasource cannot consume. Its Keycloak host is the placeholder <code>keycloak.example.com</code>. And it puts <code>trustweave:trustweave</code> in a committed file as plain environment rather than a Fly secret. Since the deployment direction is AWS, this file is legacy &mdash; but it currently reads as a supported target.</p>
+        <div class="evidence">fly.toml:10   DATABASE_URL = "postgres://trustweave:trustweave@postgres:5432/trustweave_saas"
+fly.toml:12   KEYCLOAK_SERVER_URL = "https://keycloak.example.com"
+fly.toml:17   internal_port = 8080
+application.yml:77   port: ${SERVER_PORT:8081}     Dockerfile: EXPOSE 8081, healthcheck :8081</div>
+        <div class="fix"><b>Fix:</b> delete it, or fix all four and mark it supported. A broken deployment file is worse than none, because someone will eventually try it.</div>
+      </article>
+
+      <article class="finding needed">
+        <div class="finding-head">
+          <span class="pill needed">Needed</span>
+          <h3>Diagnosability of the library depends on exceptions it discards</h3>
+          <span class="fid">PR-09 &middot; Library</span>
+        </div>
+        <p>108 swallowed exceptions with no log line, against only 37 files using a logging framework across 231,000 lines. The verification paths are fail-closed and correct, so this is not a security finding &mdash; but under a readiness rubric it is the library's weakest dimension. An integrator whose anchoring silently returns false has no way to learn whether the chain rejected the transaction or the RPC endpoint was unreachable.</p>
+        <div class="fix"><b>Fix:</b> a debug-level log carrying the exception at each swallow point, starting with the anchor plugins where these are network failures presented as clean negatives.</div>
+      </article>
+
+      <article class="finding needed">
+        <div class="finding-head">
+          <span class="pill needed">Needed</span>
+          <h3>Retention covers two tables; PII is not encrypted at rest by the application</h3>
+          <span class="fid">PR-10 &middot; SaaS</span>
+        </div>
+        <p>Scheduled purges exist for verification history (90 days, bounded batches, validated range) and expired OID4VCI access tokens. Nothing ages out <code>audit_logs</code>, <code>issued_credentials</code>, <code>failed_webhook_events</code> or <code>blockchain_transactions</code>. Subject records &mdash; names, emails, wallet identities &mdash; are stored as plain columns; there is no <code>AttributeConverter</code> doing column-level encryption, so confidentiality rests entirely on the database's own at-rest encryption, which no committed infrastructure asserts. No backup or restore procedure is documented anywhere.</p>
+        <div class="fix"><b>Fix:</b> a documented backup and restore drill is the cheapest and most valuable of these. Then retention policies for the remaining tables, and a decision recorded either way on column-level encryption for subject PII.</div>
+      </article>
+
+      <article class="finding needed">
+        <div class="finding-head">
+          <span class="pill needed">Needed</span>
+          <h3>No static analysis, dependency updates, or audit on the SaaS</h3>
+          <span class="fid">PR-11 &middot; SaaS</span>
+        </div>
+        <p>Carried forward from round 10 and re-confirmed. No ktlint, detekt or spotless on 22k lines of backend Kotlin holding the tenancy and billing logic; no Dependabot; no <code>npm audit</code> in CI. The library repository has ktlint gated on all 106 modules and Dependabot for two ecosystems, so the tooling gap is between the repositories rather than unfamiliar to the team.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Credit where due</div>
+      <h2>What is already production-grade</h2>
+      <p>Assessed the same way as the gaps, and unusually strong for a codebase at this stage.</p>
+    </div>
+
+    <div class="closed">
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>The module maturity matrix</b> is the best readiness artifact in either repository. It states outright that publishing a JAR does not imply production suitability, tiers every module across three levels, and lists per-module test counts &mdash; labelling two registrar servers &ldquo;Experimental &mdash; untested; verify in your environment&rdquo; rather than quietly shipping them. Eight modules are GA, twelve Experimental. Very few projects are this honest about their own surface.</span>
+          <span class="where">docs/api-reference/module-maturity.md</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>Ephemeral key material cannot reach production by accident.</b> <code>KmsProviderConfig</code> classifies in-memory providers as ephemeral and refuses them outside dev, test and local, so an unconfigured deployment fails rather than silently holding issuer private keys in heap.</span>
+          <span class="where">KmsProviderConfig.kt:46-55</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>Schema ownership is settled and proven.</b> All profiles now run <code>ddl-auto: validate</code> with Flyway authoritative, and <code>FlywayMigrationTest</code> builds the schema from an empty database while deriving its expected table set from <code>@Table</code> annotations, so a new entity without a migration fails on its own. Subject to PR-05, since it needs Docker to run.</span>
+          <span class="where">application.yml:16,24 &middot; FlywayMigrationTest.kt</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>SA-R11-01 and SA-R11-02 are properly closed</b>, and I verified both. A <code>platform-admin</code> realm role now gates operations and metrics in both filter chains and on the controller. <code>TenantAdministration</code> is a single chokepoint requiring <code>admin</code> plus organization access, through which every user and group lookup is tenant-scoped &mdash; so a foreign Keycloak user id resolves to a 404 rather than a grant. That is a structural fix, not a patch.</span>
+          <span class="where">TenantAdministration.kt &middot; RoleService.kt:94-105 &middot; KeycloakSecurityConfig.kt:81,88</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>The supply-chain control between the repositories</b> &mdash; pinning the library by revision and verifying a source hash before the build &mdash; is stronger than what most teams do, and the round-11 pass tightened it further with an explicit <code>--revision</code>. PR-03 is about immutable artifacts, not about this check, which should stay.</span>
+          <span class="where">.github/workflows/ci.yml &middot; .trustweave-revision, .trustweave-source-sha256</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>Idempotency and bounded work are handled thoughtfully</b> where they were considered: a processed-webhook-event table, idempotency keys on usage events, 57 uses of pagination, batch-bounded purges, a database work lease on the OID4VP path, and a container running as a non-root user.</span>
+          <span class="where">ProcessedWebhookEvent &middot; UsageOutbox &middot; VerificationSession.kt:155 &middot; Dockerfile</span>
+        </span>
+      </div>
+      <div class="closed-row">
+        <span class="tick">&check;</span>
+        <span class="body">
+          <span><b>The reference wallets say what they are.</b> &ldquo;These examples demonstrate selected flows; they are not production custody products.&rdquo; Stated in the README rather than left for an integrator to infer.</span>
+          <span class="where">reference-wallet/README.md:5</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Scoring</div>
+      <h2>How the numbers were reached</h2>
+      <p>Six dimensions, equally weighted, scored for operability rather than code quality.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th class="num">Library</th>
+            <th class="num">SaaS</th>
+            <th>Basis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Security &amp; access control</td>
+            <td class="num">8.5</td><td class="num">8.0</td>
+            <td>Both strong after three rounds. Library deducted for artifact provenance; SaaS for the credentials that deployment files put back.</td>
+          </tr>
+          <tr>
+            <td>Observability &amp; diagnosability</td>
+            <td class="num weak">5.0</td><td class="num weak">3.5</td>
+            <td>SaaS: no metrics pipeline, no tracing, no correlation ids, no custom health checks. Library: 108 silent exception swallows and thin logging.</td>
+          </tr>
+          <tr>
+            <td>Reliability &amp; scale</td>
+            <td class="num">7.5</td><td class="num weak">4.5</td>
+            <td>Library fails closed consistently. SaaS has single-instance rate limiting, five uncoordinated scheduled jobs, and no retry or circuit breaking.</td>
+          </tr>
+          <tr>
+            <td>Configuration &amp; data</td>
+            <td class="num">7.5</td><td class="num">6.0</td>
+            <td>SaaS: schema ownership settled and proven; partial retention, no application-level PII encryption, no backup procedure.</td>
+          </tr>
+          <tr>
+            <td>Deployment &amp; release</td>
+            <td class="num weak">5.5</td><td class="num weak">3.0</td>
+            <td>Library: no API-surface control, signing, SBOM or provenance. SaaS: no IaC, SNAPSHOT dependencies, a broken legacy deploy file.</td>
+          </tr>
+          <tr>
+            <td>Testing &amp; documentation</td>
+            <td class="num">7.5</td><td class="num">6.0</td>
+            <td>Library: 3,975 tests and an exemplary maturity matrix, against 21 untested modules. SaaS: good tests that currently cannot be run.</td>
+          </tr>
+          <tr class="total">
+            <td>Overall</td>
+            <td class="num">6.9</td><td class="num">5.2</td>
+            <td>Library ready within its stated GA scope; SaaS not ready.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Sequence</div>
+      <h2>The path to ready</h2>
+      <p>Ordered by what unblocks the most, not by severity.</p>
+    </div>
+    <ol class="priority">
+      <li><b>Restore the Docker environment</b> (PR-05). Everything below needs a suite you can actually run, and the migration test is the one that proves the schema.</li>
+      <li><b>Instrument the service</b> (PR-01). A Prometheus registry, an MDC filter carrying request and organization ids, JSON logging, and health indicators for Keycloak and billing. This is the difference between operating the service and guessing at it, and it is roughly a day of work.</li>
+      <li><b>Write the infrastructure down</b> (PR-02). The AWS staging design already exists on paper; committing it as code also gives you the secret manager that retires the default credentials, and the managed Postgres that makes the backup question answerable.</li>
+      <li><b>Cut a real library release</b> (PR-03 with PR-06 and TW-R10-06). Validate and freeze the API surface, sign the artifacts, publish an SBOM, then pin the SaaS to a fixed version. One piece of work closes three findings across both repositories.</li>
+      <li><b>Make the outbox drain safe</b> (PR-04). <code>SKIP LOCKED</code> and a claimed status, before anything scales past a single machine. Then ShedLock for the other jobs and a shared rate limiter.</li>
+      <li><b>Then the hygiene backlog</b> &mdash; ktlint and Dependabot on the SaaS, retries around Keycloak and Accountly, retention for the remaining tables, and the eleven findings carried forward since round 10.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p><b>Correction from round 11.</b> SA-R11-03 claimed nine corrupted UI strings; the remediation pass found only three were displayed text and the rest were JSX ternaries (<code>isLoading ? (</code>) my pattern had matched. I verified that and it is right &mdash; <code>Explain.tsx:72</code> even carries a correct ellipsis. The finding was a third of the size I reported.</p>
+    <p><b>Method.</b> Static analysis of both working trees, re-verifying the round-11 remediation in source before assessing readiness across six operational dimensions: build and dependency configuration, deployment and container definitions, Spring profiles, the observability and health surface, scheduled and concurrent work, data lifecycle, and the projects' own maturity documentation.</p>
+    <p><b>Limits.</b> Nothing was deployed, started, load-tested or profiled, and no build or test run was executed &mdash; the readiness judgement is drawn from configuration and code, not from observed behaviour. Both trees carry uncommitted modifications; this reflects the working tree, not <code>HEAD</code>. PR-05 rests on the round-11 remediation report's account of the Docker failure rather than my own reproduction. Capacity figures (512 MB, one shared vCPU) are noted as unvalidated rather than scored, since no load profile exists to judge them against.</p>
+  </footer>
+
+</div>

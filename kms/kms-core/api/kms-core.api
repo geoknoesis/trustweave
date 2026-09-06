@@ -1,0 +1,780 @@
+public abstract class org/trustweave/kms/Algorithm {
+	public static final field Companion Lorg/trustweave/kms/Algorithm$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurveName ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSecurityLevel ()Lorg/trustweave/kms/Algorithm$SecurityLevel;
+	public fun hashCode ()I
+	public final fun isCompatibleWith (Lorg/trustweave/kms/Algorithm;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/Algorithm$BLS12_381 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$BLS12_381;
+}
+
+public final class org/trustweave/kms/Algorithm$Companion {
+	public final fun parse (Ljava/lang/String;)Lorg/trustweave/kms/Algorithm;
+}
+
+public final class org/trustweave/kms/Algorithm$Custom : org/trustweave/kms/Algorithm {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/kms/Algorithm$Custom;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/Algorithm$Custom;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/Algorithm$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/Algorithm$Ed25519 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$Ed25519;
+}
+
+public final class org/trustweave/kms/Algorithm$P256 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$P256;
+}
+
+public final class org/trustweave/kms/Algorithm$P384 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$P384;
+}
+
+public final class org/trustweave/kms/Algorithm$P521 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$P521;
+}
+
+public final class org/trustweave/kms/Algorithm$RSA : org/trustweave/kms/Algorithm {
+	public static final field Companion Lorg/trustweave/kms/Algorithm$RSA$Companion;
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/trustweave/kms/Algorithm$RSA;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/Algorithm$RSA;IILjava/lang/Object;)Lorg/trustweave/kms/Algorithm$RSA;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeySize ()I
+	public final fun getRsaKeySize ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/Algorithm$RSA$Companion {
+	public final fun getRSA_2048 ()Lorg/trustweave/kms/Algorithm$RSA;
+	public final fun getRSA_3072 ()Lorg/trustweave/kms/Algorithm$RSA;
+	public final fun getRSA_4096 ()Lorg/trustweave/kms/Algorithm$RSA;
+}
+
+public final class org/trustweave/kms/Algorithm$Secp256k1 : org/trustweave/kms/Algorithm {
+	public static final field INSTANCE Lorg/trustweave/kms/Algorithm$Secp256k1;
+}
+
+public final class org/trustweave/kms/Algorithm$SecurityLevel : java/lang/Enum {
+	public static final field HIGH Lorg/trustweave/kms/Algorithm$SecurityLevel;
+	public static final field LEGACY Lorg/trustweave/kms/Algorithm$SecurityLevel;
+	public static final field STANDARD Lorg/trustweave/kms/Algorithm$SecurityLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/kms/Algorithm$SecurityLevel;
+	public static fun values ()[Lorg/trustweave/kms/Algorithm$SecurityLevel;
+}
+
+public final class org/trustweave/kms/AlgorithmDiscovery {
+	public static final field INSTANCE Lorg/trustweave/kms/AlgorithmDiscovery;
+	public final fun createProviderFor (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public static synthetic fun createProviderFor$default (Lorg/trustweave/kms/AlgorithmDiscovery;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/kms/KeyManagementService;
+	public final fun discoverProviders ()Ljava/util/Map;
+	public final fun findBestProviderFor (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun findBestProviderFor$default (Lorg/trustweave/kms/AlgorithmDiscovery;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+	public final fun findProvidersFor (Ljava/lang/String;)Ljava/util/List;
+	public final fun findProvidersFor (Lorg/trustweave/kms/Algorithm;)Ljava/util/List;
+}
+
+public final class org/trustweave/kms/JwkKeyTypes {
+	public static final field EC Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/kms/JwkKeyTypes;
+	public static final field OCT Ljava/lang/String;
+	public static final field OKP Ljava/lang/String;
+	public static final field RSA Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/JwkKeys {
+	public static final field ALG Ljava/lang/String;
+	public static final field CRV Ljava/lang/String;
+	public static final field D Ljava/lang/String;
+	public static final field E Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/kms/JwkKeys;
+	public static final field KEY_OPS Ljava/lang/String;
+	public static final field KID Ljava/lang/String;
+	public static final field KTY Ljava/lang/String;
+	public static final field N Ljava/lang/String;
+	public static final field USE Ljava/lang/String;
+	public static final field X Ljava/lang/String;
+	public static final field Y Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/KeyHandle {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy-9aKg9HM (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/kms/KeyHandle;
+	public static synthetic fun copy-9aKg9HM$default (Lorg/trustweave/kms/KeyHandle;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/KeyHandle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Ljava/lang/String;
+	public final fun getId-sQsr11o ()Ljava/lang/String;
+	public final fun getPublicKeyJwk ()Ljava/util/Map;
+	public final fun getPublicKeyMultibase ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/kms/KeyManagementService {
+	public abstract fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun sign-9aKg9HM$default (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/kms/KeyManagementService$DefaultImpls {
+	public static fun generateKey (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun sign-9aKg9HM (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun sign-9aKg9HM$default (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun supportsAlgorithm (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun supportsAlgorithm (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/kms/KeyManagementServices {
+	public static final field INSTANCE Lorg/trustweave/kms/KeyManagementServices;
+	public final fun availableProviders ()Ljava/util/List;
+	public final fun clearCache ()V
+	public final fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public final fun create (Ljava/lang/String;Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public static synthetic fun create$default (Lorg/trustweave/kms/KeyManagementServices;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/kms/KeyManagementService;
+	public final fun getCacheSize ()I
+	public final fun getProvider (Ljava/lang/String;)Lorg/trustweave/kms/spi/KeyManagementServiceProvider;
+	public final fun isShutdown ()Z
+	public final fun resetShutdownForTesting ()V
+	public final fun shutdown ()V
+}
+
+public final class org/trustweave/kms/KeySpec {
+	public static final field Companion Lorg/trustweave/kms/KeySpec$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/kms/Algorithm;
+	public final fun copy-HAyBRPs (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;)Lorg/trustweave/kms/KeySpec;
+	public static synthetic fun copy-HAyBRPs$default (Lorg/trustweave/kms/KeySpec;Ljava/lang/String;Lorg/trustweave/kms/Algorithm;ILjava/lang/Object;)Lorg/trustweave/kms/KeySpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public final fun getId-sQsr11o ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun requireSupports (Lorg/trustweave/kms/Algorithm;)V
+	public final fun supports (Lorg/trustweave/kms/Algorithm;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/KeySpec$Companion {
+	public final fun fromKeyHandle (Lorg/trustweave/kms/KeyHandle;)Lorg/trustweave/kms/KeySpec;
+}
+
+public final class org/trustweave/kms/KmsCreationOptions {
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/Integer;Ljava/util/Map;)V
+	public synthetic fun <init> (ZLjava/lang/Integer;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (ZLjava/lang/Integer;Ljava/util/Map;)Lorg/trustweave/kms/KmsCreationOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/KmsCreationOptions;ZLjava/lang/Integer;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/kms/KmsCreationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getEnabled ()Z
+	public final fun getPriority ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/KmsCreationOptionsBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/kms/KmsCreationOptions;
+	public final fun getEnabled ()Z
+	public final fun getPriority ()Ljava/lang/Integer;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun setEnabled (Z)V
+	public final fun setPriority (Ljava/lang/Integer;)V
+}
+
+public final class org/trustweave/kms/KmsCreationOptionsKt {
+	public static final fun kmsCreationOptions (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/KmsCreationOptions;
+}
+
+public final class org/trustweave/kms/KmsOptionKeys {
+	public static final field DESCRIPTION Ljava/lang/String;
+	public static final field EXPORTABLE Ljava/lang/String;
+	public static final field EXTRACTABLE Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/kms/KmsOptionKeys;
+	public static final field KEY_ID Ljava/lang/String;
+	public static final field KEY_NAME Ljava/lang/String;
+	public static final field NAME Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/UnsupportedAlgorithmException : java/lang/IllegalArgumentException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class org/trustweave/kms/exception/KmsException : org/trustweave/core/exception/TrustWeaveException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getCode ()Ljava/lang/String;
+	public fun getContext ()Ljava/util/Map;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/exception/KmsException$KeyDeletionFailed : org/trustweave/kms/exception/KmsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/exception/KmsException$KeyDeletionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/exception/KmsException$KeyDeletionFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/exception/KmsException$KeyDeletionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getKeyId ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/exception/KmsException$KeyGenerationFailed : org/trustweave/kms/exception/KmsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/exception/KmsException$KeyGenerationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/exception/KmsException$KeyGenerationFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/exception/KmsException$KeyGenerationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Ljava/lang/String;
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/exception/KmsException$KeyNotFound : org/trustweave/kms/exception/KmsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/kms/exception/KmsException$KeyNotFound;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/exception/KmsException$KeyNotFound;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/exception/KmsException$KeyNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId ()Ljava/lang/String;
+	public final fun getKeyType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/exception/KmsException$SigningFailed : org/trustweave/kms/exception/KmsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/exception/KmsException$SigningFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/exception/KmsException$SigningFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/exception/KmsException$SigningFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getKeyId ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/internal/ConfigCacheKey {
+	public static final field INSTANCE Lorg/trustweave/kms/internal/ConfigCacheKey;
+	public final fun create (Ljava/lang/String;Ljava/util/Map;)Ljava/lang/String;
+	public final fun create (Ljava/lang/String;Lorg/trustweave/kms/KmsCreationOptions;)Ljava/lang/String;
+}
+
+public abstract class org/trustweave/kms/results/DeleteKeyResult {
+	public final fun getWasDeleted ()Z
+	public final fun isFailure ()Z
+	public final fun isSuccess ()Z
+}
+
+public final class org/trustweave/kms/results/DeleteKeyResult$Deleted : org/trustweave/kms/results/DeleteKeyResult {
+	public static final field INSTANCE Lorg/trustweave/kms/results/DeleteKeyResult$Deleted;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/kms/results/DeleteKeyResult$Failure : org/trustweave/kms/results/DeleteKeyResult {
+}
+
+public final class org/trustweave/kms/results/DeleteKeyResult$Failure$Error : org/trustweave/kms/results/DeleteKeyResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy-WGRya78 (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/results/DeleteKeyResult$Failure$Error;
+	public static synthetic fun copy-WGRya78$default (Lorg/trustweave/kms/results/DeleteKeyResult$Failure$Error;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/results/DeleteKeyResult$Failure$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/DeleteKeyResult$NotFound : org/trustweave/kms/results/DeleteKeyResult {
+	public static final field INSTANCE Lorg/trustweave/kms/results/DeleteKeyResult$NotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/DeleteKeyResultKt {
+	public static final fun fold (Lorg/trustweave/kms/results/DeleteKeyResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun getOrThrow (Lorg/trustweave/kms/results/DeleteKeyResult;)Z
+	public static final fun onFailure (Lorg/trustweave/kms/results/DeleteKeyResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/DeleteKeyResult;
+	public static final fun onSuccess (Lorg/trustweave/kms/results/DeleteKeyResult;Lkotlin/jvm/functions/Function0;)Lorg/trustweave/kms/results/DeleteKeyResult;
+}
+
+public abstract class org/trustweave/kms/results/GenerateKeyResult {
+	public final fun getKeyHandleOrNull ()Lorg/trustweave/kms/KeyHandle;
+	public final fun isFailure ()Z
+	public final fun isSuccess ()Z
+}
+
+public abstract class org/trustweave/kms/results/GenerateKeyResult$Failure : org/trustweave/kms/results/GenerateKeyResult {
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResult$Failure$DuplicateKeyId : org/trustweave/kms/results/GenerateKeyResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun copy-7wh19Yk (Ljava/lang/String;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$DuplicateKeyId;
+	public static synthetic fun copy-7wh19Yk$default (Lorg/trustweave/kms/results/GenerateKeyResult$Failure$DuplicateKeyId;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$DuplicateKeyId;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResult$Failure$Error : org/trustweave/kms/results/GenerateKeyResult$Failure {
+	public fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/kms/Algorithm;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$Error;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/GenerateKeyResult$Failure$Error;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResult$Failure$InvalidOptions : org/trustweave/kms/results/GenerateKeyResult$Failure {
+	public fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/kms/Algorithm;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$InvalidOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/GenerateKeyResult$Failure$InvalidOptions;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$InvalidOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getInvalidOptions ()Ljava/util/Map;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResult$Failure$UnsupportedAlgorithm : org/trustweave/kms/results/GenerateKeyResult$Failure {
+	public fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/util/Set;)V
+	public fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/util/Set;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/Algorithm;Ljava/util/Set;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/kms/Algorithm;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/kms/Algorithm;Ljava/util/Set;Ljava/lang/String;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$UnsupportedAlgorithm;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/GenerateKeyResult$Failure$UnsupportedAlgorithm;Lorg/trustweave/kms/Algorithm;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure$UnsupportedAlgorithm;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResult$Success : org/trustweave/kms/results/GenerateKeyResult {
+	public fun <init> (Lorg/trustweave/kms/KeyHandle;)V
+	public final fun component1 ()Lorg/trustweave/kms/KeyHandle;
+	public final fun copy (Lorg/trustweave/kms/KeyHandle;)Lorg/trustweave/kms/results/GenerateKeyResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/GenerateKeyResult$Success;Lorg/trustweave/kms/KeyHandle;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyHandle ()Lorg/trustweave/kms/KeyHandle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GenerateKeyResultKt {
+	public static final fun fold (Lorg/trustweave/kms/results/GenerateKeyResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun getOrThrow (Lorg/trustweave/kms/results/GenerateKeyResult;)Lorg/trustweave/kms/KeyHandle;
+	public static final fun onFailure (Lorg/trustweave/kms/results/GenerateKeyResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/GenerateKeyResult;
+	public static final fun onSuccess (Lorg/trustweave/kms/results/GenerateKeyResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/GenerateKeyResult;
+}
+
+public abstract class org/trustweave/kms/results/GetPublicKeyResult {
+	public final fun getKeyHandleOrNull ()Lorg/trustweave/kms/KeyHandle;
+	public final fun isFailure ()Z
+	public final fun isSuccess ()Z
+}
+
+public abstract class org/trustweave/kms/results/GetPublicKeyResult$Failure : org/trustweave/kms/results/GetPublicKeyResult {
+}
+
+public final class org/trustweave/kms/results/GetPublicKeyResult$Failure$Error : org/trustweave/kms/results/GetPublicKeyResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy-WGRya78 (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$Error;
+	public static synthetic fun copy-WGRya78$default (Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$Error;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GetPublicKeyResult$Failure$KeyNotFound : org/trustweave/kms/results/GetPublicKeyResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy-HAyBRPs (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$KeyNotFound;
+	public static synthetic fun copy-HAyBRPs$default (Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$KeyNotFound;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/results/GetPublicKeyResult$Failure$KeyNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GetPublicKeyResult$Success : org/trustweave/kms/results/GetPublicKeyResult {
+	public fun <init> (Lorg/trustweave/kms/KeyHandle;)V
+	public final fun component1 ()Lorg/trustweave/kms/KeyHandle;
+	public final fun copy (Lorg/trustweave/kms/KeyHandle;)Lorg/trustweave/kms/results/GetPublicKeyResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/GetPublicKeyResult$Success;Lorg/trustweave/kms/KeyHandle;ILjava/lang/Object;)Lorg/trustweave/kms/results/GetPublicKeyResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyHandle ()Lorg/trustweave/kms/KeyHandle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/GetPublicKeyResultKt {
+	public static final fun fold (Lorg/trustweave/kms/results/GetPublicKeyResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun getOrThrow (Lorg/trustweave/kms/results/GetPublicKeyResult;)Lorg/trustweave/kms/KeyHandle;
+	public static final fun onFailure (Lorg/trustweave/kms/results/GetPublicKeyResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/GetPublicKeyResult;
+	public static final fun onSuccess (Lorg/trustweave/kms/results/GetPublicKeyResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/GetPublicKeyResult;
+}
+
+public abstract class org/trustweave/kms/results/SignResult {
+	public final fun getSignatureOrNull ()[B
+	public final fun isFailure ()Z
+	public final fun isSuccess ()Z
+}
+
+public abstract class org/trustweave/kms/results/SignResult$Failure : org/trustweave/kms/results/SignResult {
+}
+
+public final class org/trustweave/kms/results/SignResult$Failure$Error : org/trustweave/kms/results/SignResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy-WGRya78 (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/kms/results/SignResult$Failure$Error;
+	public static synthetic fun copy-WGRya78$default (Lorg/trustweave/kms/results/SignResult$Failure$Error;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/kms/results/SignResult$Failure$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/SignResult$Failure$KeyNotFound : org/trustweave/kms/results/SignResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy-HAyBRPs (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/kms/results/SignResult$Failure$KeyNotFound;
+	public static synthetic fun copy-HAyBRPs$default (Lorg/trustweave/kms/results/SignResult$Failure$KeyNotFound;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/results/SignResult$Failure$KeyNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/SignResult$Failure$UnsupportedAlgorithm : org/trustweave/kms/results/SignResult$Failure {
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-sQsr11o ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/kms/Algorithm;
+	public final fun component3 ()Lorg/trustweave/kms/Algorithm;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy-9aKg9HM (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;)Lorg/trustweave/kms/results/SignResult$Failure$UnsupportedAlgorithm;
+	public static synthetic fun copy-9aKg9HM$default (Lorg/trustweave/kms/results/SignResult$Failure$UnsupportedAlgorithm;Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/results/SignResult$Failure$UnsupportedAlgorithm;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getRequestedAlgorithm ()Lorg/trustweave/kms/Algorithm;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/SignResult$Success : org/trustweave/kms/results/SignResult {
+	public fun <init> ([B)V
+	public final fun component1 ()[B
+	public final fun copy ([B)Lorg/trustweave/kms/results/SignResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/results/SignResult$Success;[BILjava/lang/Object;)Lorg/trustweave/kms/results/SignResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignature ()[B
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/results/SignResultKt {
+	public static final fun fold (Lorg/trustweave/kms/results/SignResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun getOrThrow (Lorg/trustweave/kms/results/SignResult;)[B
+	public static final fun onFailure (Lorg/trustweave/kms/results/SignResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/SignResult;
+	public static final fun onSuccess (Lorg/trustweave/kms/results/SignResult;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/results/SignResult;
+}
+
+public abstract interface class org/trustweave/kms/services/KmsService {
+	public abstract fun generateKey (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/services/KmsService;Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getKeyId (Lorg/trustweave/kms/KeyHandle;)Ljava/lang/String;
+	public abstract fun getPublicKeyJwk (Lorg/trustweave/kms/KeyHandle;)Ljava/util/Map;
+}
+
+public final class org/trustweave/kms/services/KmsService$DefaultImpls {
+	public static synthetic fun generateKey$default (Lorg/trustweave/kms/services/KmsService;Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public abstract fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public static synthetic fun create$default (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/kms/KeyManagementService;
+	public abstract fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public abstract fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/kms/spi/KeyManagementServiceProvider$DefaultImpls {
+	public static fun create (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public static synthetic fun create$default (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/kms/KeyManagementService;
+	public static fun getRequiredEnvironmentVariables (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;)Ljava/util/List;
+	public static fun hasRequiredEnvironmentVariables (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;)Z
+	public static fun supportsAlgorithm (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;Ljava/lang/String;)Z
+	public static fun supportsAlgorithm (Lorg/trustweave/kms/spi/KeyManagementServiceProvider;Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/kms/util/CacheEntry {
+	public static final field Companion Lorg/trustweave/kms/util/CacheEntry$Companion;
+	public fun <init> (Ljava/lang/Object;JLjava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/Object;JLjava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/Object;JLjava/lang/Long;)Lorg/trustweave/kms/util/CacheEntry;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/util/CacheEntry;Ljava/lang/Object;JLjava/lang/Long;ILjava/lang/Object;)Lorg/trustweave/kms/util/CacheEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRemainingTtlMillis ()Ljava/lang/Long;
+	public final fun getTimestampMillis ()J
+	public final fun getTtlMillis ()Ljava/lang/Long;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public final fun isExpired ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/util/CacheEntry$Companion {
+	public final fun permanent (Ljava/lang/Object;)Lorg/trustweave/kms/util/CacheEntry;
+	public final fun withTtlMinutes (Ljava/lang/Object;J)Lorg/trustweave/kms/util/CacheEntry;
+	public final fun withTtlSeconds (Ljava/lang/Object;J)Lorg/trustweave/kms/util/CacheEntry;
+}
+
+public final class org/trustweave/kms/util/EcdsaSignatureCodec {
+	public static final field INSTANCE Lorg/trustweave/kms/util/EcdsaSignatureCodec;
+	public final fun derToP1363 ([BI)[B
+	public final fun derToP1363 ([BLorg/trustweave/kms/Algorithm;)[B
+	public final fun fieldSizeBytes (Lorg/trustweave/kms/Algorithm;)Ljava/lang/Integer;
+	public final fun isDer ([B)Z
+	public final fun normalize ([BLorg/trustweave/kms/Algorithm;)[B
+	public final fun normalizeSecp256k1LowS ([B)[B
+	public final fun p1363SizeBytes (Lorg/trustweave/kms/Algorithm;)Ljava/lang/Integer;
+	public final fun p1363ToDer ([B)[B
+}
+
+public final class org/trustweave/kms/util/KmsErrorHandler {
+	public static final field INSTANCE Lorg/trustweave/kms/util/KmsErrorHandler;
+	public final fun createErrorContext-Tkb-7BI (Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;
+	public static synthetic fun createErrorContext-Tkb-7BI$default (Lorg/trustweave/kms/util/KmsErrorHandler;Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
+	public final fun handleGenericError (Lorg/slf4j/Logger;Ljava/util/Map;Ljava/lang/String;Ljava/lang/Exception;)Ljava/lang/Object;
+	public final fun handleGenericException-WEwQcOc (Lorg/slf4j/Logger;Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Exception;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure;
+	public static synthetic fun handleGenericException-WEwQcOc$default (Lorg/trustweave/kms/util/KmsErrorHandler;Lorg/slf4j/Logger;Ljava/lang/String;Lorg/trustweave/kms/Algorithm;Ljava/lang/String;Ljava/lang/Exception;ILjava/lang/Object;)Lorg/trustweave/kms/results/GenerateKeyResult$Failure;
+}
+
+public final class org/trustweave/kms/util/KmsInputValidator {
+	public static final field INSTANCE Lorg/trustweave/kms/util/KmsInputValidator;
+	public final fun validateKeyId (Ljava/lang/String;)Ljava/lang/String;
+	public final fun validateKeyIdWithResult (Ljava/lang/String;)Lkotlin/Pair;
+	public final fun validateSignData ([B)Ljava/lang/String;
+	public final fun validateSignDataWithResult ([B)Lkotlin/Pair;
+}
+
+public final class org/trustweave/kms/util/KmsLogging {
+	public static final field INSTANCE Lorg/trustweave/kms/util/KmsLogging;
+	public final fun logError (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static synthetic fun logError$default (Lorg/trustweave/kms/util/KmsLogging;Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
+	public final fun logKeyDeleted (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun logKeyDeleted$default (Lorg/trustweave/kms/util/KmsLogging;Lorg/slf4j/Logger;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun logKeyGenerated (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun logKeyGenerated$default (Lorg/trustweave/kms/util/KmsLogging;Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun logKeyNotFound (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public static synthetic fun logKeyNotFound$default (Lorg/trustweave/kms/util/KmsLogging;Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun logSigningSuccess (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;II)V
+	public final fun logWarning (Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun logWarning$default (Lorg/trustweave/kms/util/KmsLogging;Lorg/slf4j/Logger;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class org/trustweave/kms/util/Secp256k1AuditOutcome {
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/util/Secp256k1AuditVerdict;Ljava/lang/String;[B)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/kms/util/Secp256k1AuditVerdict;Ljava/lang/String;[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()[B
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/kms/util/Secp256k1AuditVerdict;Ljava/lang/String;[B)Lorg/trustweave/kms/util/Secp256k1AuditOutcome;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/util/Secp256k1AuditOutcome;Ljava/lang/String;Lorg/trustweave/kms/util/Secp256k1AuditVerdict;Ljava/lang/String;[BILjava/lang/Object;)Lorg/trustweave/kms/util/Secp256k1AuditOutcome;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetail ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getRepairedSignature ()[B
+	public final fun getVerdict ()Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/util/Secp256k1AuditRecord {
+	public fun <init> (Ljava/lang/String;[B[B[B)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()[B
+	public final fun component3 ()[B
+	public final fun component4 ()[B
+	public final fun copy (Ljava/lang/String;[B[B[B)Lorg/trustweave/kms/util/Secp256k1AuditRecord;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/util/Secp256k1AuditRecord;Ljava/lang/String;[B[B[BILjava/lang/Object;)Lorg/trustweave/kms/util/Secp256k1AuditRecord;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMessageDigest ()[B
+	public final fun getPublicKey ()[B
+	public final fun getSignature ()[B
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/util/Secp256k1AuditSummary {
+	public fun <init> (IIIILjava/util/List;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (IIIILjava/util/List;)Lorg/trustweave/kms/util/Secp256k1AuditSummary;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/util/Secp256k1AuditSummary;IIIILjava/util/List;ILjava/lang/Object;)Lorg/trustweave/kms/util/Secp256k1AuditSummary;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCorruptedByPaddingDefect ()I
+	public final fun getInvalidOther ()I
+	public final fun getOutcomes ()Ljava/util/List;
+	public final fun getTotal ()I
+	public final fun getVerified ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/util/Secp256k1AuditVerdict : java/lang/Enum {
+	public static final field CORRUPTED_BY_PADDING_DEFECT Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public static final field INVALID_OTHER Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public static final field VALID Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public static fun values ()[Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+}
+
+public final class org/trustweave/kms/util/Secp256k1Curve {
+	public static final field INSTANCE Lorg/trustweave/kms/util/Secp256k1Curve;
+	public final fun add (Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;)Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public final fun decodePoint ([B)Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public final fun getG ()Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public final fun getORDER ()Ljava/math/BigInteger;
+	public final fun getP ()Ljava/math/BigInteger;
+	public final fun isOnCurve (Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;)Z
+	public final fun multiply (Ljava/math/BigInteger;Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;)Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public final fun verifySignature (Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;Ljava/math/BigInteger;Ljava/math/BigInteger;Ljava/math/BigInteger;)Z
+}
+
+public final class org/trustweave/kms/util/Secp256k1Curve$AffinePoint {
+	public fun <init> (Ljava/math/BigInteger;Ljava/math/BigInteger;)V
+	public final fun component1 ()Ljava/math/BigInteger;
+	public final fun component2 ()Ljava/math/BigInteger;
+	public final fun copy (Ljava/math/BigInteger;Ljava/math/BigInteger;)Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;Ljava/math/BigInteger;Ljava/math/BigInteger;ILjava/lang/Object;)Lorg/trustweave/kms/util/Secp256k1Curve$AffinePoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()Ljava/math/BigInteger;
+	public final fun getY ()Ljava/math/BigInteger;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/util/Secp256k1SignatureAudit {
+	public static final field INSTANCE Lorg/trustweave/kms/util/Secp256k1SignatureAudit;
+	public final fun auditBatch (Ljava/util/List;)Lorg/trustweave/kms/util/Secp256k1AuditSummary;
+	public final fun canBeVictimOfPaddingDefect ([B)Z
+	public final fun classify ([B[B[B)Lorg/trustweave/kms/util/Secp256k1AuditVerdict;
+	public final fun repair ([B[B[B)[B
+}
+

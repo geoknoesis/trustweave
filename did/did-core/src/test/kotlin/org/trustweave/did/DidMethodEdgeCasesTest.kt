@@ -1,28 +1,30 @@
 package org.trustweave.did
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolutionMetadata
-import org.trustweave.did.resolver.DidResolutionError
-import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.registry.DidMethodRegistry
-import kotlinx.coroutines.runBlocking
-import org.trustweave.did.DidCreationOptions
-import org.trustweave.did.didCreationOptions
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlin.test.*
-import kotlinx.datetime.Instant
+import org.trustweave.did.resolver.DidErrorType
+import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive edge case tests for DidMethod interface and DidRegistry.
  */
 class DidMethodEdgeCasesTest {
-
     private lateinit var registry: DidMethodRegistry
 
     @BeforeEach
@@ -31,109 +33,127 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidMethod createDid with empty options`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
+    fun `test DidMethod createDid with empty options`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
 
-        val doc = method.createDid()
+            val doc = method.createDid()
 
-        assertNotNull(doc)
-        assertTrue(doc.id.value.startsWith("did:test:"))
-    }
-
-    @Test
-    fun `test DidMethod createDid with options`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-
-        val doc = method.createDid(
-            didCreationOptions {
-                algorithm = KeyAlgorithm.ED25519
-                property("keyId", "key-123")
-            }
-        )
-
-        assertNotNull(doc)
-    }
+            assertNotNull(doc)
+            assertTrue(doc.id.value.startsWith("did:test:"))
+        }
 
     @Test
-    fun `test DidMethod resolveDid with valid DID`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
+    fun `test DidMethod createDid with options`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
 
-        val result = method.resolveDid(Did("did:test:123"))
+            val doc =
+                method.createDid(
+                    didCreationOptions {
+                        algorithm = KeyAlgorithm.ED25519
+                        property("keyId", "key-123")
+                    },
+                )
 
-        assertNotNull(result)
-        assertTrue(result is DidResolutionResult.Success)
-        assertNotNull(result.document)
-        assertEquals("did:test:123", result.document.id.value)
-    }
+            assertNotNull(doc)
+        }
 
     @Test
-    fun `test DidMethod resolveDid with invalid DID format`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
+    fun `test DidMethod resolveDid with valid DID`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
 
-        // Should handle gracefully or throw
-        try {
-            val result = method.resolveDid(Did("invalid-did"))
+            val result = method.resolveDid(Did("did:test:123"))
+
             assertNotNull(result)
-        } catch (_: IllegalArgumentException) {
-            // expected path - Did constructor validates format
-        }
-    }
-
-    @Test
-    fun `test DidMethod updateDid`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-        val originalDoc = DidDocument(id = Did("did:test:123"))
-
-        val updated = method.updateDid(Did("did:test:123")) { doc ->
-            doc.copy(alsoKnownAs = listOf(org.trustweave.did.model.DidOrUrl.AsDid(Did("did:web:example.com"))))
+            assertTrue(result is DidResolutionResult.Success)
+            assertNotNull(result.document)
+            assertEquals("did:test:123", result.document.id.value)
         }
 
-        assertNotNull(updated)
-        assertEquals(1, updated.alsoKnownAs.size)
-    }
-
     @Test
-    fun `test DidMethod updateDid with complex updater`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-        val did = Did("did:test:123")
-        val vm = VerificationMethod(
-            id = VerificationMethodId.parse("did:test:123#key-1"),
-            type = "Ed25519VerificationKey2020",
-            controller = did
-        )
+    fun `test DidMethod resolveDid with invalid DID format`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
 
-        val updated = method.updateDid(Did("did:test:123")) { doc ->
-            doc.copy(
-                verificationMethod = listOf(vm),
-                authentication = listOf(VerificationMethodId.parse("did:test:123#key-1"))
-            )
+            // Should handle gracefully or throw
+            try {
+                val result = method.resolveDid(Did("invalid-did"))
+                assertNotNull(result)
+            } catch (_: IllegalArgumentException) {
+                // expected path - Did constructor validates format
+            }
         }
 
-        assertEquals(1, updated.verificationMethod.size)
-        assertEquals(1, updated.authentication.size)
-    }
-
     @Test
-    fun `test DidMethod deactivateDid`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
+    fun `test DidMethod updateDid`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+            val originalDoc = DidDocument(id = Did("did:test:123"))
 
-        val result = method.deactivateDid(Did("did:test:123"))
+            val updated =
+                method.updateDid(Did("did:test:123")) { doc ->
+                    doc.copy(
+                        alsoKnownAs =
+                            listOf(
+                                org.trustweave.did.model.DidOrUrl
+                                    .AsDid(Did("did:web:example.com")),
+                            ),
+                    )
+                }
 
-        assertTrue(result)
-    }
-
-    @Test
-    fun `test DidMethod deactivateDid with nonexistent DID`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-
-        // May return false or throw
-        try {
-            val result = method.deactivateDid(Did("did:test:nonexistent"))
-            assertNotNull(result) // Boolean value
-        } catch (e: Exception) {
-            assertTrue(true) // Exception is acceptable
+            assertNotNull(updated)
+            assertEquals(1, updated.alsoKnownAs.size)
         }
-    }
+
+    @Test
+    fun `test DidMethod updateDid with complex updater`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+            val did = Did("did:test:123")
+            val vm =
+                VerificationMethod(
+                    id = VerificationMethodId.parse("did:test:123#key-1"),
+                    type = "Ed25519VerificationKey2020",
+                    controller = did,
+                )
+
+            val updated =
+                method.updateDid(Did("did:test:123")) { doc ->
+                    doc.copy(
+                        verificationMethod = listOf(vm),
+                        authentication = listOf(VerificationMethodId.parse("did:test:123#key-1")),
+                    )
+                }
+
+            assertEquals(1, updated.verificationMethod.size)
+            assertEquals(1, updated.authentication.size)
+        }
+
+    @Test
+    fun `test DidMethod deactivateDid`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+
+            val result = method.deactivateDid(Did("did:test:123"))
+
+            assertTrue(result)
+        }
+
+    @Test
+    fun `test DidMethod deactivateDid with nonexistent DID`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+
+            // May return false or throw
+            try {
+                val result = method.deactivateDid(Did("did:test:nonexistent"))
+                assertNotNull(result) // Boolean value
+            } catch (e: Exception) {
+                assertTrue(true) // Exception is acceptable
+            }
+        }
 
     @Test
     fun `test DidRegistry register multiple methods`() {
@@ -159,66 +179,83 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with metadata`() = runBlocking<Unit> {
-        val method = object : DidMethod {
-            override val method = "test"
+    fun `test DidRegistry resolve with metadata`() =
+        runBlocking<Unit> {
+            val method =
+                object : DidMethod {
+                    override val method = "test"
 
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
 
-            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
-                document = DidDocument(id = did),
-                documentMetadata = DidDocumentMetadata(
-                    created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
-                    updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z")
-                ),
-                resolutionMetadata = DidResolutionMetadata(
-                    duration = 100L,
-                    properties = mapOf("cached" to "false")
-                )
-            )
+                    override suspend fun resolveDid(did: Did) =
+                        DidResolutionResult.Success(
+                            document = DidDocument(id = did),
+                            documentMetadata =
+                                DidDocumentMetadata(
+                                    created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                                    updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z"),
+                                ),
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    duration = 100L,
+                                    properties = mapOf("cached" to "false"),
+                                ),
+                        )
 
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: Did) = true
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
+
+                    override suspend fun deactivateDid(did: Did) = true
+                }
+
+            registry.register(method)
+
+            val result = registry.resolve("did:test:123")
+
+            assertTrue(result is DidResolutionResult.Success)
+            assertNotNull(result.document)
+            assertNotNull(result.documentMetadata.created)
+            assertNotNull(result.documentMetadata.updated)
+            assertEquals(100L, result.resolutionMetadata.duration)
+            assertEquals("false", result.resolutionMetadata.properties["cached"])
         }
-
-        registry.register(method)
-
-        val result = registry.resolve("did:test:123")
-
-        assertTrue(result is DidResolutionResult.Success)
-        assertNotNull(result.document)
-        assertNotNull(result.documentMetadata.created)
-        assertNotNull(result.documentMetadata.updated)
-        assertEquals(100L, result.resolutionMetadata.duration)
-        assertEquals("false", result.resolutionMetadata.properties["cached"])
-    }
 
     @Test
-    fun `test DidRegistry resolve with null document`() = runBlocking<Unit> {
-        val method = object : DidMethod {
-            override val method = "test"
+    fun `test DidRegistry resolve with null document`() =
+        runBlocking<Unit> {
+            val method =
+                object : DidMethod {
+                    override val method = "test"
 
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
 
-            override suspend fun resolveDid(did: Did) = DidResolutionResult.Failure.NotFound(
-                did = did,
-                reason = "notFound",
-                resolutionMetadata = DidResolutionMetadata(
-                    error = DidResolutionError.notFound("notFound")
-                )
-            )
+                    override suspend fun resolveDid(did: Did) =
+                        DidResolutionResult.Failure.NotFound(
+                            did = did,
+                            reason = "notFound",
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    error = DidResolutionError.notFound("notFound"),
+                                ),
+                        )
 
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: Did) = true
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
+
+                    override suspend fun deactivateDid(did: Did) = true
+                }
+
+            registry.register(method)
+
+            val result = registry.resolve("did:test:nonexistent")
+
+            assertTrue(result is DidResolutionResult.Failure.NotFound)
+            assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
         }
-
-        registry.register(method)
-
-        val result = registry.resolve("did:test:nonexistent")
-
-        assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals(DidErrorType.NOT_FOUND, result.resolutionMetadata.error?.type)
-    }
 
     // ─── DidMethodRegistry.resolve(String) runs the full §4.4 algorithm (finding I2) ───
     //
@@ -228,54 +265,83 @@ class DidMethodEdgeCasesTest {
     // previously only reachable via the Did-typed resolve(did) entry point — apply here too.
 
     @Test
-    fun `test DidRegistry resolve string overload converts deactivated Success to Deactivated`() = runBlocking<Unit> {
-        val method = object : DidMethod {
-            override val method = "test"
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
-            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
-                document = DidDocument(id = did),
-                documentMetadata = DidDocumentMetadata(deactivated = true)
-            )
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: Did) = true
+    fun `test DidRegistry resolve string overload converts deactivated Success to Deactivated`() =
+        runBlocking<Unit> {
+            val method =
+                object : DidMethod {
+                    override val method = "test"
+
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+
+                    override suspend fun resolveDid(did: Did) =
+                        DidResolutionResult.Success(
+                            document = DidDocument(id = did),
+                            documentMetadata = DidDocumentMetadata(deactivated = true),
+                        )
+
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
+
+                    override suspend fun deactivateDid(did: Did) = true
+                }
+            registry.register(method)
+
+            val result = registry.resolve("did:test:revoked")
+
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
         }
-        registry.register(method)
-
-        val result = registry.resolve("did:test:revoked")
-
-        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
-    }
 
     @Test
-    fun `test DidRegistry resolve string overload rejects a mismatched document id`() = runBlocking<Unit> {
-        val method = object : DidMethod {
-            override val method = "test"
-            override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
-            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
-                document = DidDocument(id = Did("did:test:someone-else"))
-            )
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-            override suspend fun deactivateDid(did: Did) = true
+    fun `test DidRegistry resolve string overload rejects a mismatched document id`() =
+        runBlocking<Unit> {
+            val method =
+                object : DidMethod {
+                    override val method = "test"
+
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+
+                    override suspend fun resolveDid(did: Did) =
+                        DidResolutionResult.Success(
+                            document = DidDocument(id = Did("did:test:someone-else")),
+                        )
+
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
+
+                    override suspend fun deactivateDid(did: Did) = true
+                }
+            registry.register(method)
+
+            val result = registry.resolve("did:test:requested")
+
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected ResolutionError, got $result")
+            assertEquals(DidErrorType.INVALID_DID_DOCUMENT, result.resolutionMetadata.error?.type)
         }
-        registry.register(method)
-
-        val result = registry.resolve("did:test:requested")
-
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected ResolutionError, got $result")
-        assertEquals(DidErrorType.INVALID_DID_DOCUMENT, result.resolutionMetadata.error?.type)
-    }
 
     @Test
     fun `test DidRegistry resolve string overload converts a thrown DidException instead of propagating it`() =
         runBlocking {
-            val method = object : DidMethod {
-                override val method = "test"
-                override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
-                override suspend fun resolveDid(did: Did): DidResolutionResult =
-                    throw org.trustweave.did.exception.DidException.DidNotFound(did = did)
-                override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument) = DidDocument(id = did)
-                override suspend fun deactivateDid(did: Did) = true
-            }
+            val method =
+                object : DidMethod {
+                    override val method = "test"
+
+                    override suspend fun createDid(options: DidCreationOptions) = DidDocument(id = Did("did:test:123"))
+
+                    override suspend fun resolveDid(did: Did): DidResolutionResult =
+                        throw org.trustweave.did.exception.DidException
+                            .DidNotFound(did = did)
+
+                    override suspend fun updateDid(
+                        did: Did,
+                        updater: (DidDocument) -> DidDocument,
+                    ) = DidDocument(id = did)
+
+                    override suspend fun deactivateDid(did: Did) = true
+                }
             registry.register(method)
 
             val result = registry.resolve("did:test:throws")
@@ -299,27 +365,29 @@ class DidMethodEdgeCasesTest {
     }
 
     @Test
-    fun `test DidRegistry resolve with DID containing special characters`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-        registry.register(method)
+    fun `test DidRegistry resolve with DID containing special characters`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+            registry.register(method)
 
-        val result = registry.resolve("did:test:abc-123_xyz")
+            val result = registry.resolve("did:test:abc-123_xyz")
 
-        assertNotNull(result)
-        assertTrue(result is DidResolutionResult.Success)
-        assertNotNull(result.document)
-    }
+            assertNotNull(result)
+            assertTrue(result is DidResolutionResult.Success)
+            assertNotNull(result.document)
+        }
 
     @Test
-    fun `test DidRegistry resolve with very long DID`() = runBlocking<Unit> {
-        val method = createMockDidMethod("test")
-        registry.register(method)
+    fun `test DidRegistry resolve with very long DID`() =
+        runBlocking<Unit> {
+            val method = createMockDidMethod("test")
+            registry.register(method)
 
-        val longId = "a".repeat(1000)
-        val result = registry.resolve("did:test:$longId")
+            val longId = "a".repeat(1000)
+            val result = registry.resolve("did:test:$longId")
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     private fun createMockDidMethod(methodName: String): DidMethod {
         return object : DidMethod {
@@ -330,11 +398,15 @@ class DidMethodEdgeCasesTest {
                 return DidDocument(id = Did("did:$methodName:$keyId"))
             }
 
-            override suspend fun resolveDid(did: Did) = DidResolutionResult.Success(
-                document = DidDocument(id = did)
-            )
+            override suspend fun resolveDid(did: Did) =
+                DidResolutionResult.Success(
+                    document = DidDocument(id = did),
+                )
 
-            override suspend fun updateDid(did: Did, updater: (DidDocument) -> DidDocument): DidDocument {
+            override suspend fun updateDid(
+                did: Did,
+                updater: (DidDocument) -> DidDocument,
+            ): DidDocument {
                 val current = DidDocument(id = did)
                 return updater(current)
             }
@@ -343,5 +415,3 @@ class DidMethodEdgeCasesTest {
         }
     }
 }
-
-

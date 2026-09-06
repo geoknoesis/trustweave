@@ -36,7 +36,7 @@ data class VerificationMethod(
     val type: String,
     val controller: Did,
     val publicKeyJwk: Map<String, @Contextual Any?>? = null,
-    val publicKeyMultibase: String? = null
+    val publicKeyMultibase: String? = null,
 )
 
 /**
@@ -52,9 +52,9 @@ data class VerificationMethod(
  */
 @Serializable
 data class DidService(
-    val id: String,  // Service IDs are often relative URIs, so keeping as String
-    val type: List<String>,  // DID 1.1: string or set of strings
-    val serviceEndpoint: ServiceEndpoint  // URL, object, or array (see [ServiceEndpoint])
+    val id: String, // Service IDs are often relative URIs, so keeping as String
+    val type: List<String>, // DID 1.1: string or set of strings
+    val serviceEndpoint: ServiceEndpoint, // URL, object, or array (see [ServiceEndpoint])
 )
 
 /**
@@ -84,7 +84,7 @@ data class DidDocument(
     val keyAgreement: List<VerificationMethodId> = emptyList(),
     val capabilityInvocation: List<VerificationMethodId> = emptyList(),
     val capabilityDelegation: List<VerificationMethodId> = emptyList(),
-    val service: List<DidService> = emptyList()
+    val service: List<DidService> = emptyList(),
 )
 
 /**
@@ -110,21 +110,21 @@ data class DidDocumentMetadata(
     val nextVersionId: String? = null,
     val canonicalId: Did? = null,
     val equivalentId: List<Did> = emptyList(),
-    val proof: List<JsonObject> = emptyList()
+    val proof: List<JsonObject> = emptyList(),
 ) {
     /** Serializes to the §4.3 JSON structure, omitting absent members. */
-    fun toJson(): JsonObject = buildJsonObject {
-        created?.let { put("created", it.toXmlDateTime()) }
-        updated?.let { put("updated", it.toXmlDateTime()) }
-        if (deactivated) put("deactivated", true)
-        versionId?.let { put("versionId", it) }
-        nextUpdate?.let { put("nextUpdate", it.toXmlDateTime()) }
-        nextVersionId?.let { put("nextVersionId", it) }
-        canonicalId?.let { put("canonicalId", it.value) }
-        if (equivalentId.isNotEmpty()) {
-            put("equivalentId", JsonArray(equivalentId.map { JsonPrimitive(it.value) }))
+    fun toJson(): JsonObject =
+        buildJsonObject {
+            created?.let { put("created", it.toXmlDateTime()) }
+            updated?.let { put("updated", it.toXmlDateTime()) }
+            if (deactivated) put("deactivated", true)
+            versionId?.let { put("versionId", it) }
+            nextUpdate?.let { put("nextUpdate", it.toXmlDateTime()) }
+            nextVersionId?.let { put("nextVersionId", it) }
+            canonicalId?.let { put("canonicalId", it.value) }
+            if (equivalentId.isNotEmpty()) {
+                put("equivalentId", JsonArray(equivalentId.map { JsonPrimitive(it.value) }))
+            }
+            if (proof.isNotEmpty()) put("proof", JsonArray(proof))
         }
-        if (proof.isNotEmpty()) put("proof", JsonArray(proof))
-    }
 }
-

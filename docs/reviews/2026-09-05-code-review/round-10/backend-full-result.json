@@ -1,0 +1,46 @@
+{
+  "tests": 536,
+  "passed": 530,
+  "failures": 3,
+  "skipped": 3,
+  "build": "failed",
+  "coverage": "not validated; test failure prevented coverage tasks",
+  "details": [
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest",
+      "test": "deployed provider supports application provisioning and payment metadata()",
+      "status": "skipped",
+      "message": null
+    },
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest",
+      "test": "the cardholder-data interceptor blocks a PAN before it reaches Accountly()",
+      "status": "skipped",
+      "message": null
+    },
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest",
+      "test": "the whole payment surface round-trips through the real client()",
+      "status": "skipped",
+      "message": null
+    },
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest",
+      "test": "non cooperative provider keeps its cross instance session reservation after timeout()",
+      "status": "failed",
+      "message": "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>"
+    },
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest",
+      "test": "two instances share tenant capacity and release reservations after completion()",
+      "status": "failed",
+      "message": "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>"
+    },
+    {
+      "class": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest",
+      "test": "a presentation without holder binding is rejected()",
+      "status": "failed",
+      "message": "org.springframework.web.server.ResponseStatusException: 503 SERVICE_UNAVAILABLE \"Verification admission is unavailable. Retry shortly.\""
+    }
+  ]
+}

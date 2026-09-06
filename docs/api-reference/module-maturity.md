@@ -22,6 +22,10 @@ TrustWeave is a multi-module repository. **Publishing a JAR to Maven Central doe
 | **Supported with provider** | Core APIs are stable; you must use a mature KMS/DID/anchor **implementation** you trust. |
 | **Experimental** | APIs may change; may contain `TODO` or stub behavior—verify in your environment before production. |
 
+API support labels do not certify production deployment or wallet custody. See
+[provider deployment and custody profiles](provider-deployment-profiles.md) for
+the assessed policy and its enforcement boundaries.
+
 ## Core platform (typical SDK dependencies)
 
 | Module / area | Maturity |

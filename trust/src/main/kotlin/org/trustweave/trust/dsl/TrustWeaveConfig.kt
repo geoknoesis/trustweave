@@ -1,14 +1,16 @@
 package org.trustweave.trust.dsl
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.contract.SmartContractService
 import org.trustweave.core.exception.ConfigException
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.SchemaFormat
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.schema.SchemaRegistry
-import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyManagementService
@@ -25,12 +27,9 @@ import org.trustweave.trust.dsl.builders.DomainConfig
 import org.trustweave.trust.dsl.builders.DomainConfigBuilder
 import org.trustweave.trust.dsl.builders.KeysBuilder
 import org.trustweave.trust.dsl.builders.RevocationConfigBuilder
-import org.trustweave.contract.SmartContractService
 import org.trustweave.trust.dsl.builders.TrustConfigBuilder
 import org.trustweave.trust.services.TrustRegistryFactory
 import org.trustweave.wallet.services.WalletFactory
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 
 /**
  * Unified TrustWeave Configuration.
@@ -92,32 +91,36 @@ class TrustWeaveConfig internal constructor(
     internal fun copy(
         credentialService: CredentialService? = this.credentialService,
         revocationManager: CredentialRevocationManager? = this.revocationManager,
-    ): TrustWeaveConfig = TrustWeaveConfig(
-        name = name,
-        kms = kms,
-        didRegistry = didRegistry,
-        blockchainRegistry = blockchainRegistry,
-        credentialConfig = credentialConfig,
-        credentialService = credentialService,
-        didResolver = didResolver,
-        revocationManager = revocationManager,
-        trustRegistry = trustRegistry,
-        walletFactory = walletFactory,
-        kmsService = kmsService,
-        defaultDidMethod = defaultDidMethod,
-        ioDispatcher = ioDispatcher,
-        smartContractService = smartContractService,
-        schemaRegistry = schemaRegistry,
-        trustedDomainManager = trustedDomainManager,
-        // A component swapped in via copy() was created by the caller, so the facade
-        // must no longer treat it as owned (it would otherwise close it).
-        ownership = ownership.copy(
-            ownsCredentialService = ownership.ownsCredentialService &&
-                credentialService === this.credentialService,
-            ownsRevocationManager = ownership.ownsRevocationManager &&
-                revocationManager === this.revocationManager,
-        ),
-    )
+    ): TrustWeaveConfig =
+        TrustWeaveConfig(
+            name = name,
+            kms = kms,
+            didRegistry = didRegistry,
+            blockchainRegistry = blockchainRegistry,
+            credentialConfig = credentialConfig,
+            credentialService = credentialService,
+            didResolver = didResolver,
+            revocationManager = revocationManager,
+            trustRegistry = trustRegistry,
+            walletFactory = walletFactory,
+            kmsService = kmsService,
+            defaultDidMethod = defaultDidMethod,
+            ioDispatcher = ioDispatcher,
+            smartContractService = smartContractService,
+            schemaRegistry = schemaRegistry,
+            trustedDomainManager = trustedDomainManager,
+            // A component swapped in via copy() was created by the caller, so the facade
+            // must no longer treat it as owned (it would otherwise close it).
+            ownership =
+                ownership.copy(
+                    ownsCredentialService =
+                        ownership.ownsCredentialService &&
+                            credentialService === this.credentialService,
+                    ownsRevocationManager =
+                        ownership.ownsRevocationManager &&
+                            revocationManager === this.revocationManager,
+                ),
+        )
 
     /**
      * All registered DID methods, keyed by method name.
@@ -137,7 +140,7 @@ class TrustWeaveConfig internal constructor(
     data class CredentialConfig(
         val defaultProofType: ProofType = ProofType.Ed25519Signature2020,
         val autoAnchor: Boolean = false,
-        val defaultChain: String? = null
+        val defaultChain: String? = null,
     )
 
     /**
@@ -175,7 +178,9 @@ class TrustWeaveConfig internal constructor(
      * Collects DSL configuration and delegates to [TrustWeaveFactory] for construction.
      */
     @TrustWeaveDsl
-    class Builder(private val name: String = "default") {
+    class Builder(
+        private val name: String = "default",
+    ) {
         private val didRegistry = DidMethodRegistry()
         private val blockchainRegistry = BlockchainAnchorRegistry()
         private var kms: KeyManagementService? = null
@@ -205,7 +210,7 @@ class TrustWeaveConfig internal constructor(
         fun factories(
             statusListRegistryFactory: StatusListRegistryFactory? = null,
             trustRegistryFactory: TrustRegistryFactory? = null,
-            walletFactory: WalletFactory? = null
+            walletFactory: WalletFactory? = null,
         ) {
             if (statusListRegistryFactory != null) this.statusListRegistryFactory = statusListRegistryFactory
             if (trustRegistryFactory != null) this.trustRegistryFactory = trustRegistryFactory
@@ -270,20 +275,21 @@ class TrustWeaveConfig internal constructor(
          */
         fun schemas(
             autoValidate: Boolean = false,
-            defaultFormat: SchemaFormat = SchemaFormat.JSON_SCHEMA
+            defaultFormat: SchemaFormat = SchemaFormat.JSON_SCHEMA,
         ) {
             if (autoValidate) {
                 throw UnsupportedOperationException(
                     "Automatic schema validation (autoValidate=true) is not yet implemented. " +
-                    "Register schemas manually using trustWeave.registerSchema { ... } instead."
+                        "Register schemas manually using trustWeave.registerSchema { ... } instead.",
                 )
             }
             if (defaultFormat != SchemaFormat.JSON_SCHEMA) {
                 throw ConfigException.UnsupportedValue(
                     field = "schemas.defaultFormat",
                     value = defaultFormat.name,
-                    reason = "Configurable default schema formats are not yet supported; " +
-                        "only SchemaFormat.JSON_SCHEMA is available."
+                    reason =
+                        "Configurable default schema formats are not yet supported; " +
+                            "only SchemaFormat.JSON_SCHEMA is available.",
                 )
             }
         }
@@ -311,34 +317,34 @@ class TrustWeaveConfig internal constructor(
             domainConfig = DomainConfigBuilder().apply(block).build()
         }
 
-        suspend fun build(): TrustWeaveConfig = TrustWeaveFactory.build(
-            BuilderState(
-                name = name,
-                kms = kms,
-                kmsProvider = kmsProvider,
-                kmsAlgorithm = kmsAlgorithm,
-                kmsSigner = kmsSigner,
-                didRegistry = didRegistry,
-                blockchainRegistry = blockchainRegistry,
-                didMethodConfigs = didMethodConfigs.toMap(),
-                defaultDidMethod = defaultDidMethod,
-                anchorConfigs = anchorConfigs.toMap(),
-                defaultProofType = defaultProofType,
-                autoAnchor = autoAnchor,
-                defaultChain = defaultChain,
-                revocationProvider = revocationProvider,
-                trustProvider = trustProvider,
-                credentialService = credentialService,
-                statusListRegistryFactory = statusListRegistryFactory,
-                trustRegistryFactory = trustRegistryFactory,
-                walletFactory = walletFactory,
-                ioDispatcher = ioDispatcher,
-                smartContractService = smartContractService,
-                domainConfig = domainConfig,
+        suspend fun build(): TrustWeaveConfig =
+            TrustWeaveFactory.build(
+                BuilderState(
+                    name = name,
+                    kms = kms,
+                    kmsProvider = kmsProvider,
+                    kmsAlgorithm = kmsAlgorithm,
+                    kmsSigner = kmsSigner,
+                    didRegistry = didRegistry,
+                    blockchainRegistry = blockchainRegistry,
+                    didMethodConfigs = didMethodConfigs.toMap(),
+                    defaultDidMethod = defaultDidMethod,
+                    anchorConfigs = anchorConfigs.toMap(),
+                    defaultProofType = defaultProofType,
+                    autoAnchor = autoAnchor,
+                    defaultChain = defaultChain,
+                    revocationProvider = revocationProvider,
+                    trustProvider = trustProvider,
+                    credentialService = credentialService,
+                    statusListRegistryFactory = statusListRegistryFactory,
+                    trustRegistryFactory = trustRegistryFactory,
+                    walletFactory = walletFactory,
+                    ioDispatcher = ioDispatcher,
+                    smartContractService = smartContractService,
+                    domainConfig = domainConfig,
+                ),
             )
-        )
     }
-
 }
 
 /**
@@ -374,7 +380,7 @@ internal data class ComponentOwnership(
  */
 suspend fun trustWeave(
     name: String = "default",
-    block: TrustWeaveConfig.Builder.() -> Unit
+    block: TrustWeaveConfig.Builder.() -> Unit,
 ): TrustWeaveConfig {
     val builder = TrustWeaveConfig.Builder(name)
     builder.block()

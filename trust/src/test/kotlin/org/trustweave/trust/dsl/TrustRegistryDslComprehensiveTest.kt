@@ -1,321 +1,369 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.trust.types.getOrThrowDid
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.extractKeyId
-import org.trustweave.credential.credentialService
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.results.SignResult
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.services.TestkitTrustRegistryFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.trust.types.*
-import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.types.TrustPath
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.datetime.Clock
 
 /**
  * Comprehensive tests for Trust Registry DSL integration.
  */
 class TrustRegistryDslComprehensiveTest {
+    @Test
+    fun `test trust registry configuration in TrustWeave`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    factories(
+                        trustRegistryFactory = TestkitTrustRegistryFactory(),
+                    )
+                    // KMS and DID methods auto-discovered via SPI
+                    keys { provider("inMemory") }
+                    did { method(DidMethods.KEY) {} }
+                    trust { provider("inMemory") }
+                }
+
+            val registry = trustWeave.configuration.trustRegistry
+            assertNotNull(registry)
+        }
 
     @Test
-    fun `test trust registry configuration in TrustWeave`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            // KMS and DID methods auto-discovered via SPI
-            keys { provider("inMemory") }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
-        }
+    fun `test add multiple trust anchors with different credential types`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    factories(
+                        trustRegistryFactory = TestkitTrustRegistryFactory(),
+                    )
+                    // KMS and DID methods auto-discovered via SPI
+                    keys { provider("inMemory") }
+                    did { method(DidMethods.KEY) {} }
+                    trust { provider("inMemory") }
+                }
 
-        val registry = trustWeave.configuration.trustRegistry
-        assertNotNull(registry)
-    }
+            val universityDid =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val companyDid =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            trustWeave.trust {
+                addAnchor(universityDid.value) {
+                    credentialTypes("EducationCredential", "DegreeCredential")
+                }
+
+                addAnchor(companyDid.value) {
+                    credentialTypes("EmploymentCredential")
+                }
+
+                assertTrue(isTrusted(universityDid.value, "EducationCredential"))
+                assertTrue(isTrusted(universityDid.value, "DegreeCredential"))
+                assertFalse(isTrusted(universityDid.value, "EmploymentCredential"))
+
+                assertTrue(isTrusted(companyDid.value, "EmploymentCredential"))
+                assertFalse(isTrusted(companyDid.value, "EducationCredential"))
+            }
+        }
 
     @Test
-    fun `test add multiple trust anchors with different credential types`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            // KMS and DID methods auto-discovered via SPI
-            keys { provider("inMemory") }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
-        }
+    fun `test trust path discovery with multiple anchors`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    factories(
+                        trustRegistryFactory = TestkitTrustRegistryFactory(),
+                    )
+                    // KMS and DID methods auto-discovered via SPI
+                    keys { provider("inMemory") }
+                    did { method(DidMethods.KEY) {} }
+                    trust { provider("inMemory") }
+                }
 
-        val universityDid = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            val anchor1 =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
 
-        val companyDid = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            val anchor2 =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
 
-        trustWeave.trust {
-            addAnchor(universityDid.value) {
-                credentialTypes("EducationCredential", "DegreeCredential")
+            val anchor3 =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            trustWeave.trust {
+                addAnchor(anchor1.value) {}
+                addAnchor(anchor2.value) {}
+                addAnchor(anchor3.value) {}
+
+                val registry = trustWeave.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
+                registry?.addTrustRelationship(anchor1.value, anchor2.value)
+                registry?.addTrustRelationship(anchor2.value, anchor3.value)
+
+                val path =
+                    findTrustPath(
+                        org.trustweave.did.identifiers
+                            .Did(anchor1.value),
+                        org.trustweave.did.identifiers
+                            .Did(anchor3.value),
+                    )
+                assertTrue(path is org.trustweave.trust.types.TrustPath.Verified)
+                val verified = path as org.trustweave.trust.types.TrustPath.Verified
+                assertTrue(verified.fullPath.size >= 2)
+                assertTrue(verified.trustScore > 0.0)
+                assertTrue(verified.trustScore <= 1.0)
             }
-
-            addAnchor(companyDid.value) {
-                credentialTypes("EmploymentCredential")
-            }
-
-            assertTrue(isTrusted(universityDid.value, "EducationCredential"))
-            assertTrue(isTrusted(universityDid.value, "DegreeCredential"))
-            assertFalse(isTrusted(universityDid.value, "EmploymentCredential"))
-
-            assertTrue(isTrusted(companyDid.value, "EmploymentCredential"))
-            assertFalse(isTrusted(companyDid.value, "EducationCredential"))
         }
-    }
 
     @Test
-    fun `test trust path discovery with multiple anchors`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            // KMS and DID methods auto-discovered via SPI
-            keys { provider("inMemory") }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
+    fun `test get trusted issuers with filtering`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    factories(
+                        trustRegistryFactory = TestkitTrustRegistryFactory(),
+                    )
+                    // KMS and DID methods auto-discovered via SPI
+                    keys { provider("inMemory") }
+                    did { method(DidMethods.KEY) {} }
+                    trust { provider("inMemory") }
+                }
+
+            val eduIssuer1 =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val eduIssuer2 =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val empIssuer =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            trustWeave.trust {
+                addAnchor(eduIssuer1.value) {
+                    credentialTypes("EducationCredential")
+                }
+
+                addAnchor(eduIssuer2.value) {
+                    credentialTypes("EducationCredential")
+                }
+
+                addAnchor(empIssuer.value) {
+                    credentialTypes("EmploymentCredential")
+                }
+
+                val educationIssuers = getTrustedIssuers("EducationCredential")
+                assertEquals(2, educationIssuers.size)
+                assertTrue(educationIssuers.contains(eduIssuer1.value))
+                assertTrue(educationIssuers.contains(eduIssuer2.value))
+
+                val employmentIssuers = getTrustedIssuers("EmploymentCredential")
+                assertEquals(1, employmentIssuers.size)
+                assertTrue(employmentIssuers.contains(empIssuer.value))
+
+                val allIssuers = getTrustedIssuers(null)
+                assertEquals(3, allIssuers.size)
+            }
         }
-
-        val anchor1 = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val anchor2 = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val anchor3 = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        trustWeave.trust {
-            addAnchor(anchor1.value) {}
-            addAnchor(anchor2.value) {}
-            addAnchor(anchor3.value) {}
-
-            val registry = trustWeave.configuration.trustRegistry as? org.trustweave.testkit.trust.InMemoryTrustRegistry
-            registry?.addTrustRelationship(anchor1.value, anchor2.value)
-            registry?.addTrustRelationship(anchor2.value, anchor3.value)
-
-            val path = findTrustPath(
-                org.trustweave.did.identifiers.Did(anchor1.value),
-                org.trustweave.did.identifiers.Did(anchor3.value)
-            )
-            assertTrue(path is org.trustweave.trust.types.TrustPath.Verified)
-            val verified = path as org.trustweave.trust.types.TrustPath.Verified
-            assertTrue(verified.fullPath.size >= 2)
-            assertTrue(verified.trustScore > 0.0)
-            assertTrue(verified.trustScore <= 1.0)
-        }
-    }
 
     @Test
-    fun `test get trusted issuers with filtering`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            // KMS and DID methods auto-discovered via SPI
-            keys { provider("inMemory") }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
-        }
+    fun `test remove trust anchor via DSL`() =
+        runBlocking<Unit> {
+            val trustWeave =
+                TrustWeave.build {
+                    factories(
+                        trustRegistryFactory = TestkitTrustRegistryFactory(),
+                    )
+                    // KMS and DID methods auto-discovered via SPI
+                    keys { provider("inMemory") }
+                    did { method(DidMethods.KEY) {} }
+                    trust { provider("inMemory") }
+                }
 
-        val eduIssuer1 = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            val issuerDid =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
 
-        val eduIssuer2 = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            trustWeave.trust {
+                addAnchor(issuerDid.value) {
+                    credentialTypes("TestCredential")
+                }
 
-        val empIssuer = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+                assertTrue(isTrusted(issuerDid.value, "TestCredential"))
 
-        trustWeave.trust {
-            addAnchor(eduIssuer1.value) {
-                credentialTypes("EducationCredential")
+                val removed = removeAnchor(issuerDid.value)
+                assertTrue(removed)
+
+                assertFalse(isTrusted(issuerDid.value, "TestCredential"))
             }
-
-            addAnchor(eduIssuer2.value) {
-                credentialTypes("EducationCredential")
-            }
-
-            addAnchor(empIssuer.value) {
-                credentialTypes("EmploymentCredential")
-            }
-
-            val educationIssuers = getTrustedIssuers("EducationCredential")
-            assertEquals(2, educationIssuers.size)
-            assertTrue(educationIssuers.contains(eduIssuer1.value))
-            assertTrue(educationIssuers.contains(eduIssuer2.value))
-
-            val employmentIssuers = getTrustedIssuers("EmploymentCredential")
-            assertEquals(1, employmentIssuers.size)
-            assertTrue(employmentIssuers.contains(empIssuer.value))
-
-            val allIssuers = getTrustedIssuers(null)
-            assertEquals(3, allIssuers.size)
         }
-    }
-
-    @Test
-    fun `test remove trust anchor via DSL`() = runBlocking<Unit> {
-        val trustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            // KMS and DID methods auto-discovered via SPI
-            keys { provider("inMemory") }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
-        }
-
-        val issuerDid = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        trustWeave.trust {
-            addAnchor(issuerDid.value) {
-                credentialTypes("TestCredential")
-            }
-
-            assertTrue(isTrusted(issuerDid.value, "TestCredential"))
-
-            val removed = removeAnchor(issuerDid.value)
-            assertTrue(removed)
-
-            assertFalse(isTrusted(issuerDid.value, "TestCredential"))
-        }
-    }
 
     // Helper function to create TrustWeave with CredentialService
-    private suspend fun createTrustWeaveWithCredentialService(
-        kms: InMemoryKeyManagementService
-    ): TrustWeave {
+    private suspend fun createTrustWeaveWithCredentialService(kms: InMemoryKeyManagementService): TrustWeave {
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+            when (
+                val result =
+                    kms.sign(
+                        org.trustweave.core.identifiers
+                            .KeyId(keyId),
+                        data,
+                    )
+            ) {
                 is SignResult.Success -> result.signature
                 else -> throw IllegalStateException("Signing failed: $result")
             }
         }
-        
+
         // Build TrustWeave (auto-creates registry, resolver, and CredentialService)
-        val finalTrustWeave = TrustWeave.build {
-            factories(
-                trustRegistryFactory = TestkitTrustRegistryFactory()
-            )
-            keys {
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+        val finalTrustWeave =
+            TrustWeave.build {
+                factories(
+                    trustRegistryFactory = TestkitTrustRegistryFactory(),
+                )
+                keys {
+                    custom(kms)
+                    signer { data, keyId ->
+                        when (
+                            val result =
+                                kms.sign(
+                                    org.trustweave.core.identifiers
+                                        .KeyId(keyId),
+                                    data,
+                                )
+                        ) {
+                            is SignResult.Success -> result.signature
+                            else -> throw IllegalStateException("Signing failed: $result")
+                        }
                     }
                 }
+                did { method(DidMethods.KEY) {} }
+                trust { provider("inMemory") }
+                // CredentialService is auto-created with custom signer from keys{} block
             }
-            did { method(DidMethods.KEY) {} }
-            trust { provider("inMemory") }
-            // CredentialService is auto-created with custom signer from keys{} block
-        }
-        
+
         return finalTrustWeave
     }
 
     @Test
-    fun `test trust registry with credential verification integration`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        
-        val trustWeave = createTrustWeaveWithCredentialService(kms)
+    fun `test trust registry with credential verification integration`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
 
-        val issuerDid = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            val trustWeave = createTrustWeaveWithCredentialService(kms)
 
-        val holderDid = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
+            val issuerDid =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
 
-        trustWeave.trust {
-            addAnchor(issuerDid.value) {
-                credentialTypes("TestCredential")
-            }
-        }
+            val holderDid =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
 
-        // Extract key ID from the DID document created during createDid()
-        // This ensures the signing key matches what's in the DID document
-        val issuerDidResolution = trustWeave.configuration.didRegistry.resolve(issuerDid.value)
-            ?: throw IllegalStateException("Failed to resolve issuer DID")
-        val issuerDidDoc = when (issuerDidResolution) {
-            is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
-            else -> throw IllegalStateException("Failed to resolve issuer DID")
-        }
-
-        val verificationMethod = issuerDidDoc.verificationMethod.firstOrNull()
-            ?: throw IllegalStateException("No verification method found in issuer DID document")
-
-        // Extract key ID from verification method ID using type-safe approach
-        val keyId = verificationMethod.extractKeyId()
-            ?: throw IllegalStateException("Failed to extract key ID from verification method")
-
-        // Issue credential using the key ID from the DID document
-        // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
-        val credential = trustWeave.issue {
-            credential {
-                id("https://example.com/credential-1")
-                type("TestCredential")
-                issuer(issuerDid.value)
-                subject {
-                    id(holderDid.value)
-                    "test" to "value"
+            trustWeave.trust {
+                addAnchor(issuerDid.value) {
+                    credentialTypes("TestCredential")
                 }
-                issued(Clock.System.now())
             }
-            signedBy(issuerDid = issuerDid, keyId = keyId)
-            withTestClaimContexts() // Define ad-hoc test claims in the credential @context
-        }.getOrThrow()
 
-        val result = trustWeave.verify {
-            credential(credential)
-            // Note: checkTrustRegistry() and checkTrust() not available in VerificationBuilder
-            // Trust checking is handled by the orchestration layer
+            // Extract key ID from the DID document created during createDid()
+            // This ensures the signing key matches what's in the DID document
+            val issuerDidResolution =
+                trustWeave.configuration.didRegistry.resolve(issuerDid.value)
+                    ?: throw IllegalStateException("Failed to resolve issuer DID")
+            val issuerDidDoc =
+                when (issuerDidResolution) {
+                    is org.trustweave.did.resolver.DidResolutionResult.Success -> issuerDidResolution.document
+                    else -> throw IllegalStateException("Failed to resolve issuer DID")
+                }
+
+            val verificationMethod =
+                issuerDidDoc.verificationMethod.firstOrNull()
+                    ?: throw IllegalStateException("No verification method found in issuer DID document")
+
+            // Extract key ID from verification method ID using type-safe approach
+            val keyId =
+                verificationMethod.extractKeyId()
+                    ?: throw IllegalStateException("Failed to extract key ID from verification method")
+
+            // Issue credential using the key ID from the DID document
+            // The IssuanceDsl will construct verificationMethodId as "$issuerDid#$keyId" which matches the DID document
+            val credential =
+                trustWeave
+                    .issue {
+                        credential {
+                            id("https://example.com/credential-1")
+                            type("TestCredential")
+                            issuer(issuerDid.value)
+                            subject {
+                                id(holderDid.value)
+                                "test" to "value"
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDid, keyId = keyId)
+                        withTestClaimContexts() // Define ad-hoc test claims in the credential @context
+                    }.getOrThrow()
+
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    // Note: checkTrustRegistry() and checkTrust() not available in VerificationBuilder
+                    // Trust checking is handled by the orchestration layer
+                }
+
+            assertTrue(result.isValid, "Credential should be valid. Errors: ${result.allErrors}, Warnings: ${result.allWarnings}")
         }
-
-        assertTrue(result.isValid, "Credential should be valid. Errors: ${result.allErrors}, Warnings: ${result.allWarnings}")
-    }
 }
-
-

@@ -19,23 +19,24 @@ import kotlin.test.assertTrue
  * refactor cannot silently drift away from the on-the-wire contract.
  */
 class IndyRequestCodecTest {
-
     private val submitter = "V4SGRU86Z58d6TV7PBUe6f"
     private val target = "V4SGRU86Z58d6TV7PBUe6f"
 
     @Test
     fun `buildAttribRequest produces canonical ATTRIB envelope`() {
-        val raw = buildJsonObject {
-            put(IndyAttribFields.DIGEST, JsonPrimitive("abc123"))
-            put(IndyAttribFields.MEDIA_TYPE, JsonPrimitive("application/json"))
-        }
+        val raw =
+            buildJsonObject {
+                put(IndyAttribFields.DIGEST, JsonPrimitive("abc123"))
+                put(IndyAttribFields.MEDIA_TYPE, JsonPrimitive("application/json"))
+            }
 
-        val req = IndyRequestCodec.buildAttribRequest(
-            submitterDid = submitter,
-            targetDid = target,
-            rawPayload = raw,
-            reqId = 1700000000000_001L
-        )
+        val req =
+            IndyRequestCodec.buildAttribRequest(
+                submitterDid = submitter,
+                targetDid = target,
+                rawPayload = raw,
+                reqId = 1700000000000_001L,
+            )
 
         assertEquals(submitter, req["identifier"]!!.jsonPrimitive.content)
         assertEquals("1700000000000001", req["reqId"]!!.jsonPrimitive.content)
@@ -53,12 +54,13 @@ class IndyRequestCodecTest {
 
     @Test
     fun `buildGetAttribRequest produces canonical GET_ATTRIB envelope`() {
-        val req = IndyRequestCodec.buildGetAttribRequest(
-            submitterDid = submitter,
-            targetDid = target,
-            attributeName = IndyAttribFields.ATTRIB_NAME,
-            reqId = 1700000000000_002L
-        )
+        val req =
+            IndyRequestCodec.buildGetAttribRequest(
+                submitterDid = submitter,
+                targetDid = target,
+                attributeName = IndyAttribFields.ATTRIB_NAME,
+                reqId = 1700000000000_002L,
+            )
 
         assertEquals(submitter, req["identifier"]!!.jsonPrimitive.content)
         val op = req["operation"]!!.jsonObject
@@ -70,22 +72,30 @@ class IndyRequestCodecTest {
 
     @Test
     fun `signingPayload is deterministic and sorts keys lexicographically`() {
-        val req1 = buildJsonObject {
-            put("identifier", JsonPrimitive("ABC"))
-            put("operation", buildJsonObject {
-                put("type", JsonPrimitive("100"))
-                put("dest", JsonPrimitive("ABC"))
-            })
-            put("reqId", JsonPrimitive(42L))
-        }
-        val req2 = buildJsonObject {
-            put("reqId", JsonPrimitive(42L))
-            put("operation", buildJsonObject {
-                put("dest", JsonPrimitive("ABC"))
-                put("type", JsonPrimitive("100"))
-            })
-            put("identifier", JsonPrimitive("ABC"))
-        }
+        val req1 =
+            buildJsonObject {
+                put("identifier", JsonPrimitive("ABC"))
+                put(
+                    "operation",
+                    buildJsonObject {
+                        put("type", JsonPrimitive("100"))
+                        put("dest", JsonPrimitive("ABC"))
+                    },
+                )
+                put("reqId", JsonPrimitive(42L))
+            }
+        val req2 =
+            buildJsonObject {
+                put("reqId", JsonPrimitive(42L))
+                put(
+                    "operation",
+                    buildJsonObject {
+                        put("dest", JsonPrimitive("ABC"))
+                        put("type", JsonPrimitive("100"))
+                    },
+                )
+                put("identifier", JsonPrimitive("ABC"))
+            }
 
         val s1 = IndyRequestCodec.signingPayload(req1).toString(Charsets.UTF_8)
         val s2 = IndyRequestCodec.signingPayload(req2).toString(Charsets.UTF_8)
@@ -96,12 +106,13 @@ class IndyRequestCodecTest {
 
     @Test
     fun `attachSignature adds signature field without mutating the original`() {
-        val unsigned = IndyRequestCodec.buildAttribRequest(
-            submitterDid = submitter,
-            targetDid = target,
-            rawPayload = buildJsonObject { put("k", JsonPrimitive("v")) },
-            reqId = 7
-        )
+        val unsigned =
+            IndyRequestCodec.buildAttribRequest(
+                submitterDid = submitter,
+                targetDid = target,
+                rawPayload = buildJsonObject { put("k", JsonPrimitive("v")) },
+                reqId = 7,
+            )
         val signed = IndyRequestCodec.attachSignature(unsigned, "deadbeef")
 
         assertEquals("deadbeef", signed["signature"]!!.jsonPrimitive.content)
@@ -110,20 +121,22 @@ class IndyRequestCodecTest {
 
     @Test
     fun `parseGetAttribResponse extracts raw object`() {
-        val reply = IndyRequestCodec.json.parseToJsonElement(
-            """
-            {
-              "op": "REPLY",
-              "result": {
-                "type": "104",
-                "dest": "$target",
-                "data": "{\"digest\":\"abc\",\"mediaType\":\"application/json\"}",
-                "seqNo": 17,
-                "txnTime": 1700000000
-              }
-            }
-            """.trimIndent()
-        ).jsonObject
+        val reply =
+            IndyRequestCodec.json
+                .parseToJsonElement(
+                    """
+                    {
+                      "op": "REPLY",
+                      "result": {
+                        "type": "104",
+                        "dest": "$target",
+                        "data": "{\"digest\":\"abc\",\"mediaType\":\"application/json\"}",
+                        "seqNo": 17,
+                        "txnTime": 1700000000
+                      }
+                    }
+                    """.trimIndent(),
+                ).jsonObject
 
         val parsed = IndyRequestCodec.parseGetAttribResponse(reply)
         assertEquals("abc", parsed.raw!![IndyAttribFields.DIGEST]!!.jsonPrimitive.content)
@@ -134,34 +147,42 @@ class IndyRequestCodecTest {
 
     @Test
     fun `parseGetAttribResponse handles missing attribute`() {
-        val reply = IndyRequestCodec.json.parseToJsonElement(
-            """{ "op": "REPLY", "result": { "data": null, "seqNo": 0 } }"""
-        ).jsonObject
+        val reply =
+            IndyRequestCodec.json
+                .parseToJsonElement(
+                    """{ "op": "REPLY", "result": { "data": null, "seqNo": 0 } }""",
+                ).jsonObject
         val parsed = IndyRequestCodec.parseGetAttribResponse(reply)
         assertNull(parsed.raw)
     }
 
     @Test
     fun `parseWriteReply prefers seqNo over txnId`() {
-        val reply = IndyRequestCodec.json.parseToJsonElement(
-            """{ "op": "REPLY", "result": { "seqNo": 99, "txnId": "abcd" } }"""
-        ).jsonObject
+        val reply =
+            IndyRequestCodec.json
+                .parseToJsonElement(
+                    """{ "op": "REPLY", "result": { "seqNo": 99, "txnId": "abcd" } }""",
+                ).jsonObject
         assertEquals("99", IndyRequestCodec.parseWriteReply(reply))
     }
 
     @Test
     fun `parseWriteReply falls back to txnMetadata seqNo`() {
-        val reply = IndyRequestCodec.json.parseToJsonElement(
-            """{ "op": "REPLY", "result": { "txnMetadata": { "seqNo": 123 } } }"""
-        ).jsonObject
+        val reply =
+            IndyRequestCodec.json
+                .parseToJsonElement(
+                    """{ "op": "REPLY", "result": { "txnMetadata": { "seqNo": 123 } } }""",
+                ).jsonObject
         assertEquals("123", IndyRequestCodec.parseWriteReply(reply))
     }
 
     @Test
     fun `parseWriteReply throws when no identifier present`() {
-        val reply = IndyRequestCodec.json.parseToJsonElement(
-            """{ "op": "REPLY", "result": { "unknown": true } }"""
-        ).jsonObject
+        val reply =
+            IndyRequestCodec.json
+                .parseToJsonElement(
+                    """{ "op": "REPLY", "result": { "unknown": true } }""",
+                ).jsonObject
         assertFailsWith<IllegalArgumentException> { IndyRequestCodec.parseWriteReply(reply) }
     }
 

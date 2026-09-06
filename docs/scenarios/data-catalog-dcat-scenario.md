@@ -6,6 +6,9 @@ nav_order: 33
 
 # Data Catalog & DCAT Scenario
 
+> **Runnable companion:** [data-catalog example](../../distribution/examples/scenarios/data-catalog/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+
+
 This guide demonstrates how to build a verifiable data catalog system using TrustWeave and DCAT (Data Catalog Vocabulary) for government agencies or enterprises. You'll learn how to create verifiable dataset descriptions, enable dataset discovery, track data lineage, and ensure data catalog integrity.
 
 ## What You'll Build
@@ -158,7 +161,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Familiarity with DCAT vocabulary (helpful but not required)

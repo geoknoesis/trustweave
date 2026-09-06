@@ -21,13 +21,13 @@ internal class SidetreeClient(
     httpClient: OkHttpClient,
     config: IonDidConfig,
 ) {
-
     private val builder = SidetreeOperationBuilder(SidetreeMethodSpec.ION)
-    private val transport = SidetreeHttpClient(
-        httpClient = httpClient,
-        baseUrl = config.ionNodeUrl,
-        methodSpec = SidetreeMethodSpec.ION,
-    )
+    private val transport =
+        SidetreeHttpClient(
+            httpClient = httpClient,
+            baseUrl = config.ionNodeUrl,
+            methodSpec = SidetreeMethodSpec.ION,
+        )
 
     suspend fun buildCreateOperation(publicKeyJwk: Map<String, Any?>): SidetreeOperationBuilder.CreateOperationResult =
         builder.buildCreateOperation(publicKeyJwk)
@@ -45,13 +45,14 @@ internal class SidetreeClient(
         previousRecoveryKeyPair: SidetreeP256KeyPair,
         nextUpdatePublicJwk: Map<String, Any?>,
         nextRecoveryPublicJwk: Map<String, Any?>,
-    ): JsonObject = builder.buildRecoverOperation(
-        did,
-        newDocument,
-        previousRecoveryKeyPair,
-        nextUpdatePublicJwk,
-        nextRecoveryPublicJwk,
-    )
+    ): JsonObject =
+        builder.buildRecoverOperation(
+            did,
+            newDocument,
+            previousRecoveryKeyPair,
+            nextUpdatePublicJwk,
+            nextRecoveryPublicJwk,
+        )
 
     suspend fun buildDeactivateOperation(
         did: String,
@@ -60,9 +61,7 @@ internal class SidetreeClient(
 
     fun generateP256KeyPair(): SidetreeP256KeyPair = SidetreeP256KeyPair.generate()
 
-    suspend fun submitOperation(operation: JsonObject): SidetreeHttpClient.OperationResponse =
-        transport.submitOperation(operation)
+    suspend fun submitOperation(operation: JsonObject): SidetreeHttpClient.OperationResponse = transport.submitOperation(operation)
 
-    suspend fun resolveDid(did: String): SidetreeHttpClient.ResolutionResponse =
-        transport.resolveDid(did)
+    suspend fun resolveDid(did: String): SidetreeHttpClient.ResolutionResponse = transport.resolveDid(did)
 }

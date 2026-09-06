@@ -158,6 +158,7 @@ internal interface PluginRegistry {
  */
 internal class DefaultPluginRegistry(
     private val requiredCapabilities: Map<String, Set<String>> = emptyMap(),
+    private val requireSupportedProviders: Boolean = false,
 ) : PluginRegistry {
     private val logger = LoggerFactory.getLogger(DefaultPluginRegistry::class.java)
 
@@ -204,8 +205,14 @@ internal class DefaultPluginRegistry(
 
             val module = metadata.moduleId ?: metadata.id
             val assessed = ModuleCapabilities.get(module)
+            if (requireSupportedProviders) {
+                ModuleCapabilities.requireDeployment(module, metadata.capabilities.features)
+            }
             if (assessed != null) {
                 require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
+                require(metadata.maturity == PluginMaturity.valueOf(assessed.maturity.uppercase())) {
+                    "Plugin ${metadata.id} advertises maturity outside the assessed catalog"
+                }
                 require(assessed.operations.containsAll(metadata.capabilities.features)) {
                     "Plugin ${metadata.id} advertises operations outside the assessed catalog"
                 }

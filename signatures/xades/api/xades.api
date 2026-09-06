@@ -1,0 +1,159 @@
+public final class org/trustweave/signatures/xades/DefaultXadesSigner : org/trustweave/signatures/xades/XadesSigner {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Ljava/security/PrivateKey;)V
+	public fun sign (Lorg/trustweave/signatures/xades/XadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/xades/DefaultXadesVerifier : org/trustweave/signatures/xades/XadesVerifier {
+	public fun <init> ()V
+	public fun verify (Lorg/w3c/dom/Document;Lorg/trustweave/signatures/xades/XadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/xades/XadesProfile : java/lang/Enum {
+	public static final field B_B Lorg/trustweave/signatures/xades/XadesProfile;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/xades/XadesProfile;
+	public static fun values ()[Lorg/trustweave/signatures/xades/XadesProfile;
+}
+
+public final class org/trustweave/signatures/xades/XadesSignature {
+	public fun <init> (Lorg/w3c/dom/Document;Lorg/trustweave/signatures/xades/XadesProfile;)V
+	public final fun component1 ()Lorg/w3c/dom/Document;
+	public final fun component2 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun copy (Lorg/w3c/dom/Document;Lorg/trustweave/signatures/xades/XadesProfile;)Lorg/trustweave/signatures/xades/XadesSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesSignature;Lorg/w3c/dom/Document;Lorg/trustweave/signatures/xades/XadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Lorg/w3c/dom/Document;
+	public final fun getProfile ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/xades/XadesSigner {
+	public abstract fun sign (Lorg/trustweave/signatures/xades/XadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/xades/XadesSignerException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/signatures/xades/XadesSigningRequest {
+	public synthetic fun <init> (Lorg/trustweave/signatures/xades/XadesProfile;Ljava/lang/String;Lorg/w3c/dom/Document;Ljava/util/List;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/xades/XadesProfile;Ljava/lang/String;Lorg/w3c/dom/Document;Ljava/util/List;Lkotlinx/datetime/Instant;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun component2-sQsr11o ()Ljava/lang/String;
+	public final fun component3 ()Lorg/w3c/dom/Document;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun copy-Mi9n8ek (Lorg/trustweave/signatures/xades/XadesProfile;Ljava/lang/String;Lorg/w3c/dom/Document;Ljava/util/List;Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/xades/XadesSigningRequest;
+	public static synthetic fun copy-Mi9n8ek$default (Lorg/trustweave/signatures/xades/XadesSigningRequest;Lorg/trustweave/signatures/xades/XadesProfile;Ljava/lang/String;Lorg/w3c/dom/Document;Ljava/util/List;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesSigningRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Lorg/w3c/dom/Document;
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getProfile ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun getSignerCertificateChain ()Ljava/util/List;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/signatures/xades/XadesValidationResult {
+}
+
+public abstract class org/trustweave/signatures/xades/XadesValidationResult$Invalid : org/trustweave/signatures/xades/XadesValidationResult {
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$BadSignature : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$BadSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$BadSignature;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$BadSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateExpired : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateExpired;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateExpired;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateExpired;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotAfter ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$Malformed : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$Malformed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$Malformed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$Malformed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$UntrustedSigner : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Ljava/security/cert/X509Certificate;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun copy (Ljava/security/cert/X509Certificate;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$UntrustedSigner;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$UntrustedSigner;Ljava/security/cert/X509Certificate;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$UntrustedSigner;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$WrongProfile : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/xades/XadesProfile;)V
+	public final fun component1 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun component2 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun copy (Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/xades/XadesProfile;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$WrongProfile;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$WrongProfile;Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/xades/XadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$WrongProfile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFound ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun getRequired ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesValidationResult$Valid : org/trustweave/signatures/xades/XadesValidationResult {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/xades/XadesProfile;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun copy (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/xades/XadesProfile;)Lorg/trustweave/signatures/xades/XadesValidationResult$Valid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Valid;Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/xades/XadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProfile ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun getSignerCert ()Ljava/security/cert/X509Certificate;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public final fun getTrust ()Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/xades/XadesVerificationOptions {
+	public fun <init> (Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Z)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
+	public final fun component3 ()Z
+	public final fun copy (Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Z)Lorg/trustweave/signatures/xades/XadesVerificationOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesVerificationOptions;Lorg/trustweave/signatures/xades/XadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;ZILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesVerificationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowExpiredCertificateAtSigningTime ()Z
+	public final fun getRequiredProfile ()Lorg/trustweave/signatures/xades/XadesProfile;
+	public final fun getTrustAnchorResolver ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/xades/XadesVerifier {
+	public abstract fun verify (Lorg/w3c/dom/Document;Lorg/trustweave/signatures/xades/XadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

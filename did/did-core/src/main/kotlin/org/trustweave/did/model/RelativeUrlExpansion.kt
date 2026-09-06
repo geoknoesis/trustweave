@@ -16,9 +16,10 @@ package org.trustweave.did.model
 fun DidDocument.expandRelativeDidUrls(): DidDocument {
     if (service.none { it.id.isRelativeDidUrl() }) return this
     return copy(
-        service = service.map { svc ->
-            if (svc.id.isRelativeDidUrl()) svc.copy(id = expandAgainst(id.value, svc.id)) else svc
-        }
+        service =
+            service.map { svc ->
+                if (svc.id.isRelativeDidUrl()) svc.copy(id = expandAgainst(id.value, svc.id)) else svc
+            },
     )
 }
 
@@ -33,9 +34,13 @@ private fun String.isRelativeDidUrl(): Boolean {
     return !(scheme[0].isLetter() && scheme.all { it.isLetterOrDigit() || it == '+' || it == '-' || it == '.' })
 }
 
-private fun expandAgainst(baseDid: String, relative: String): String = when {
-    relative.startsWith("#") -> baseDid + relative
-    relative.startsWith("/") -> baseDid + relative
-    relative.startsWith("?") -> baseDid + relative
-    else -> "$baseDid/$relative"
-}
+private fun expandAgainst(
+    baseDid: String,
+    relative: String,
+): String =
+    when {
+        relative.startsWith("#") -> baseDid + relative
+        relative.startsWith("/") -> baseDid + relative
+        relative.startsWith("?") -> baseDid + relative
+        else -> "$baseDid/$relative"
+    }

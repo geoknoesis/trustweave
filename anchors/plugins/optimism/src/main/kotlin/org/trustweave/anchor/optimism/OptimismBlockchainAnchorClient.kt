@@ -29,9 +29,8 @@ import org.trustweave.anchor.evm.EvmChainConfig
  */
 class OptimismBlockchainAnchorClient(
     chainId: String,
-    options: Map<String, Any?> = emptyMap()
+    options: Map<String, Any?> = emptyMap(),
 ) : AbstractEvmAnchorClient(chainId, options, resolveChain(chainId)) {
-
     /**
      * Resolves the registry contract recorded on anchor refs.
      *
@@ -41,11 +40,10 @@ class OptimismBlockchainAnchorClient(
      * working: the legacy `contract` key is honored first, falling back to the
      * base behavior (`contractAddress`) when absent.
      */
-    override fun getContractAddress(): String? =
-        options["contract"] as? String ?: super.getContractAddress()
+    override fun getContractAddress(): String? = options["contract"] as? String ?: super.getContractAddress()
 
     companion object {
-        const val MAINNET = "eip155:10"  // Optimism mainnet
+        const val MAINNET = "eip155:10" // Optimism mainnet
         const val SEPOLIA = "eip155:11155420" // Optimism Sepolia testnet
 
         // Network RPC endpoints
@@ -61,18 +59,20 @@ class OptimismBlockchainAnchorClient(
                 "Unsupported Optimism chain ID: $chainId. Use 'eip155:10' (mainnet) or 'eip155:11155420' (Sepolia testnet)"
             }
             return when (chainId) {
-                MAINNET -> EvmChainConfig(
-                    numericChainId = 10L,
-                    defaultRpcUrl = MAINNET_RPC_URL,
-                    blockchainName = "Optimism",
-                    networkName = "optimism-mainnet"
-                )
-                else -> EvmChainConfig(
-                    numericChainId = 11155420L,
-                    defaultRpcUrl = SEPOLIA_RPC_URL,
-                    blockchainName = "Optimism",
-                    networkName = "optimism-sepolia"
-                )
+                MAINNET ->
+                    EvmChainConfig(
+                        numericChainId = 10L,
+                        defaultRpcUrl = MAINNET_RPC_URL,
+                        blockchainName = "Optimism",
+                        networkName = "optimism-mainnet",
+                    )
+                else ->
+                    EvmChainConfig(
+                        numericChainId = 11155420L,
+                        defaultRpcUrl = SEPOLIA_RPC_URL,
+                        blockchainName = "Optimism",
+                        networkName = "optimism-sepolia",
+                    )
             }
         }
     }

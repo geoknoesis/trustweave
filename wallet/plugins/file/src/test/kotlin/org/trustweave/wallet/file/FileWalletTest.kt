@@ -24,6 +24,40 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FileWalletTest {
+    @Test
+    fun `relative and non-normalized storage paths support listing and recovery`() =
+        runBlocking<Unit> {
+            val cwd = Path.of("").toAbsolutePath()
+            val paths = listOf(cwd.relativize(tempDir.resolve("relative")), tempDir.resolve("unused/../normalized"))
+            for (path in paths) {
+                val wallet = wallet(path)
+                val handle = wallet.store(credential())
+                assertEquals(1, wallet.list().size)
+                assertEquals(handle, wallet.listRecords().single().storageId)
+                assertEquals(1, wallet.recoverRecords().records.size)
+                wallet.getStatistics()
+            }
+        }
+
+    @Test
+    fun `factory typed encryption survives reopen without plaintext leakage`() =
+        runBlocking {
+            val options =
+                org.trustweave.wallet.services.WalletCreationOptions(
+                    storagePath = tempDir.toString(),
+                    encryptionKey = validKey,
+                    deploymentPolicy = org.trustweave.wallet.services.WalletDeploymentPolicy.EXPERIMENTAL,
+                )
+            val factory = FileWalletFactory()
+            val created = factory.create("file", walletId = "encrypted", holderDid = subjectDid, options = options) as FileWallet
+            val record = credential()
+            val id = created.store(record)
+            val content = String(Files.readAllBytes(credentialFiles(tempDir.resolve("encrypted")).single()), Charsets.ISO_8859_1)
+            assertFalse(content.contains(issuerDid))
+            val reopened = factory.create("file", walletId = "encrypted", holderDid = subjectDid, options = options) as FileWallet
+            assertEquals(record.id, reopened.get(id)?.id)
+        }
+
     @TempDir
     lateinit var tempDir: Path
 

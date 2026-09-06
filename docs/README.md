@@ -14,7 +14,7 @@ title: TrustWeave
 
 [![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
 [![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-orange.svg)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-orange.svg)](https://kotlinlang.org)
 
 [Quick Start](#zap-quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
 
@@ -24,7 +24,7 @@ title: TrustWeave
 
 ## 🚀 What is TrustWeave?
 
-TrustWeave is a **production-ready Kotlin library** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), TrustWeave provides the building blocks you need to implement World Wide Web Consortium (W3C)-compliant verifiable credentials, Decentralized Identifiers (DIDs), and blockchain anchoring—all with a type-safe Application Programming Interface (API).
+TrustWeave is a **Kotlin library with provider-specific maturity** for building decentralized identity and trust systems. Built by [Geoknoesis LLC](https://www.geoknoesis.com), TrustWeave provides the building blocks you need to implement World Wide Web Consortium (W3C)-compliant verifiable credentials, Decentralized Identifiers (DIDs), and blockchain anchoring—all with a type-safe Application Programming Interface (API).
 
 ### ✨ Why TrustWeave?
 
@@ -42,39 +42,49 @@ TrustWeave is a **production-ready Kotlin library** for building decentralized i
 
 Get started with TrustWeave in **30 seconds**:
 
+<!-- example-source: distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt -->
 ```kotlin
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.results.getOrThrow
-import org.trustweave.credential.results.VerificationResult
+package org.trustweave.examples.documentation
+
 import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.jsonld.JsonLdContexts
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
+import org.trustweave.trust.types.getOrThrowDid
 
-fun main() = runBlocking {
-    val trustWeave = TrustWeave.quickStart()
-
-    val issuerDid = trustWeave.createDid { method("key"); algorithm("Ed25519") }.getOrThrowDid()
-    println("Created DID: ${issuerDid.value}")
-
-    val credential = trustWeave.issue {
-        credential {
-            type("VerifiableCredential", "PersonCredential")
-            issuer(issuerDid)
-            subject {
-                id("did:example:alice")
-                "name" to "Alice"
-                "email" to "alice@example.com"
+/** Local example: the vocabulary is registered in-process; no remote context fetch. */
+fun main() =
+    runBlocking {
+        val contextUrl = "https://example.org/contexts/person/v1"
+        JsonLdContexts.register(
+            contextUrl,
+            """{"@context":{"PersonCredential":"https://example.org/vocab#PersonCredential","name":"https://schema.org/name"}}""",
+        )
+        val trustWeave = TrustWeave.quickStart()
+        try {
+            val issuer = trustWeave.createDid().getOrThrowDid()
+            val holder = trustWeave.createDid().getOrThrowDid()
+            val credential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuer)
+                            subject(holder.value) { "name" to "Alice" }
+                        }
+                        signedBy(issuer)
+                        additionalOption(JsonLdContexts.CONTEXTS_PROOF_OPTION, listOf(contextUrl))
+                    }.getOrThrow()
+            check(trustWeave.verify(credential) is VerificationResult.Valid) {
+                "The issued credential did not verify"
             }
+            println("Credential verified")
+        } finally {
+            trustWeave.close()
         }
-        signedBy(issuerDid)
-    }.getOrThrow()
-
-    val verification = trustWeave.verify(credential)
-    when (verification) {
-        is VerificationResult.Valid -> println("Credential valid: ✓")
-        is VerificationResult.Invalid -> println("Invalid: ${verification.allErrors.joinToString()}")
     }
-}
 ```
 
 **Installation:**
@@ -93,7 +103,7 @@ dependencies {
 
 - W3C Compliant
 
-Full support for World Wide Web Consortium (W3C) Verifiable Credentials 1.1 and Decentralized Identifier (DID) Core 1.0 specifications
+Implements credential and DID interfaces with support that varies by proof format and provider. Check the assessed capability matrix before choosing a deployment.
 
 - Decentralized Identifiers
 
@@ -119,7 +129,7 @@ Pluggable key management supporting multiple algorithms and backends
 
 ## 🌟 Real-World Use Cases
 
-TrustWeave powers trust and identity systems across multiple domains. Explore **25+ complete scenarios** with runnable code examples:
+TrustWeave powers trust and identity systems across multiple domains. Explore **scenario guides** with companion examples:
 
 ### 🔐 Cybersecurity & Access Control
 

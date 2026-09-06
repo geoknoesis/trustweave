@@ -12,18 +12,20 @@ import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 class OptimismIntegration : BlockchainAnchorClientProvider {
     override val name: String = "optimism"
 
-    override val supportedChains: List<String> = listOf(
-        OptimismBlockchainAnchorClient.MAINNET,
-        OptimismBlockchainAnchorClient.SEPOLIA
-    )
+    override val supportedChains: List<String> =
+        listOf(
+            OptimismBlockchainAnchorClient.MAINNET,
+            OptimismBlockchainAnchorClient.SEPOLIA,
+        )
 
-    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
-        return if (supportedChains.contains(chainId)) {
+    override fun create(
+        chainId: String,
+        options: Map<String, Any?>,
+    ): BlockchainAnchorClient? =
+        if (supportedChains.contains(chainId)) {
             PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             OptimismBlockchainAnchorClient(chainId, options)
         } else {
             null
         }
-    }
 }
-

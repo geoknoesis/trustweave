@@ -119,7 +119,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 
@@ -158,6 +158,7 @@ Here's the full Earth Observation data integrity workflow using the TrustWeave f
 ```kotlin
 package com.example.earth.observation
 
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.*
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -351,7 +352,7 @@ Earth Observation Data Integrity Scenario - Complete End-to-End Example
 
 **Alternative:** Run the example from the TrustWeave examples module:
 ```bash
-./gradlew :TrustWeave-examples:runEarthObservation
+./gradlew :distribution:examples:runEarthObservation
 ```
 
 ## Step 5: Using Real Blockchain (Algorand)

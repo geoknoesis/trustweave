@@ -12,7 +12,7 @@ This plugin gives TrustWeave a federation-based alternative (or complement) to t
 - Trust is rooted in a small set of trust anchors instead of an enumerated registry.
 - The same machinery (entity statements + chains) carries metadata, policy, and trust marks.
 
-The plugin focuses on the verifier/relying-party side. It can fetch and verify trust chains, and it ships a [`CredentialExchangeProtocol`](../../credential-api/src/main/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt) implementation that enforces federation trust during proof presentation.
+The plugin focuses on the verifier/relying-party side. It can fetch and verify trust chains, and it ships a [`CredentialExchangeProtocol`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt) implementation that enforces federation trust during proof presentation.
 
 ## Key concepts
 
@@ -190,5 +190,5 @@ val protocol = FederationExchangeProtocol(
 ## References
 
 - [OpenID Federation 1.0 specification](https://openid.net/specs/openid-federation-1_0.html)
-- TrustWeave credential exchange SPI: [`CredentialExchangeProtocol`](../../credential-api/src/main/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt), [`CredentialExchangeProtocolProvider`](../../credential-api/src/main/kotlin/org/trustweave/credential/spi/exchange/CredentialExchangeProtocolProvider.kt)
+- TrustWeave credential exchange SPI: [`CredentialExchangeProtocol`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/exchange/CredentialExchangeProtocol.kt), [`CredentialExchangeProtocolProvider`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/exchange/CredentialExchangeProtocolProvider.kt)
 - Nimbus JOSE + JWT: <https://connect2id.com/products/nimbus-jose-jwt>

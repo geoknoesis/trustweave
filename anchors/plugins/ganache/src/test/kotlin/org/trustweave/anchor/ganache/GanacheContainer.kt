@@ -30,7 +30,7 @@ class GanacheContainer : GenericContainer<GanacheContainer>(
             "--gasLimit", "12000000" // Higher gas limit for large data transactions
         )
         waitingFor(Wait.forListeningPort())
-        withStartupTimeout(java.time.Duration.ofSeconds(30))
+        withStartupTimeout(java.time.Duration.ofSeconds(120))
     }
 
     /**

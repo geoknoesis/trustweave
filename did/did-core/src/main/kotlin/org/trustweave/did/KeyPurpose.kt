@@ -13,7 +13,9 @@ package org.trustweave.did
  * )
  * ```
  */
-enum class KeyPurpose(val purposeName: String) {
+enum class KeyPurpose(
+    val purposeName: String,
+) {
     /** For authentication (proving control of DID) */
     AUTHENTICATION("authentication"),
 
@@ -32,7 +34,8 @@ enum class KeyPurpose(val purposeName: String) {
     CAPABILITY_INVOCATION("capabilityInvocation"),
 
     /** For delegating capabilities */
-    CAPABILITY_DELEGATION("capabilityDelegation");
+    CAPABILITY_DELEGATION("capabilityDelegation"),
+    ;
 
     companion object {
         /**
@@ -41,11 +44,9 @@ enum class KeyPurpose(val purposeName: String) {
          * @param name Purpose name
          * @return KeyPurpose or null if not found
          */
-        fun fromName(name: String): KeyPurpose? {
-            return values().firstOrNull {
+        fun fromName(name: String): KeyPurpose? =
+            values().firstOrNull {
                 it.purposeName.equals(name, ignoreCase = true)
             }
-        }
     }
 }
-

@@ -1,0 +1,42 @@
+{
+  "date": "2026-09-06",
+  "regression_modules": {
+    "anchors/plugins/indy": {
+      "tests": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "did/plugins/btcr": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "did/plugins/tezos": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "did/plugins/threebox": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "credentials/plugins/verifiable-intent": {
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "diagnostic_probes": {
+    "tests": 4,
+    "failures": 4,
+    "errors": 0,
+    "meaning": "Expected rejection assertions failed because invalid inputs were accepted. Separate from ordinary regression results."
+  },
+  "full_suite": "Previous coverage run incomplete: no terminal build result in preserved log."
+}

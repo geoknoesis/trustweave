@@ -1,6 +1,6 @@
 import { withWalletLock } from './wallet-lock'
 import { verifyImportedCredential } from './credential-verification'
-import { importHolderKeys, loadHolderKeys, signHolderJws, clearHolderKeys } from './key-store'
+import { MissingHolderKeysError, importHolderKeys, loadHolderKeys, signHolderJws, clearHolderKeys } from './key-store'
 /**
  * Wallet facade — the holder-side API surface for the reference wallet.
  *
@@ -32,6 +32,7 @@ import {
 import {
   loadHolder,
   saveHolder,
+  saveCredentials,
   loadCredentials,
   upsertCredential,
   deleteCredential as deleteCredFromStorage,
@@ -39,7 +40,7 @@ import {
   type HolderIdentity,
   type StoredCredential,
 } from './storage'
-import { credentialBusinessKey } from './credential-dedup'
+import { credentialDedupKey, credentialBusinessKey } from './credential-dedup'
 import { assertCredentialBoundToHolder, isCredentialBoundToHolder } from './holder-binding'
 import { randomUuid } from './uuid'
 
@@ -91,6 +92,30 @@ async function loadOrCreateHolder(): Promise<HolderIdentity> {
   await importHolderKeys(holder.did, keyPair.privateKey)
   saveHolder(holder)
   return holder
+}
+
+/** Only an absent key qualifies; storage errors and malformed metadata must not rotate identity. */
+export async function canReplaceLostKey(): Promise<boolean> {
+  const holder = loadHolder()
+  if (!holder || (holder as HolderIdentity & { privateKey?: string }).privateKey) return false
+  if (publicKeyToDidKey(b64uDecode(holder.publicKey)) !== holder.did) return false
+  loadCredentials()
+  try { await loadHolderKeys(holder.did); return false }
+  catch (error) { if (error instanceof MissingHolderKeysError) return true; throw error }
+}
+
+export async function replaceLostKey(): Promise<WalletState> {
+  return withWalletLock(async () => {
+    if (!await canReplaceLostKey()) throw new Error('Replacement is available only when this wallet key is missing.')
+    const credentials = loadCredentials()
+    const pair = generateEd25519KeyPair()
+    const holder: HolderIdentity = { did: publicKeyToDidKey(pair.publicKey), publicKey: b64uEncode(pair.publicKey), createdAt: new Date().toISOString() }
+    // Persist keys first, then atomically replace one metadata entry. Never delete old credentials.
+    // If the metadata write fails, the old identity/data remain; an unused key may remain in IndexedDB.
+    await importHolderKeys(holder.did, pair.privateKey)
+    saveHolder(holder)
+    return { holder, credentials }
+  })
 }
 
 function pruneCredentialsNotBoundToHolder(holderDid: string): void {
@@ -154,6 +179,46 @@ export async function store(
 }
 
 /** Drop older copies of the same credential issued to a previous wallet identity. */
+/** Restore verified credentials only; identity and non-extractable keys are never replaced. */
+export async function restoreCredentials(backup: string): Promise<{ added: number; skipped: number }> {
+  if (new TextEncoder().encode(backup).byteLength > 5 * 1024 * 1024) throw new Error('Backup exceeds the 5 MB limit')
+  const data = JSON.parse(backup)
+  if (!data || data.version !== '2' || typeof data.credentials !== 'string' || typeof data.holder?.did !== 'string') {
+    throw new Error('Unsupported backup. Use a version 2 credential export from this wallet.')
+  }
+  const records: unknown = JSON.parse(data.credentials)
+  if (!Array.isArray(records) || records.length > 500) throw new Error('A backup must contain at most 500 credentials')
+  return withWalletLock(async () => {
+    const holder = loadHolder()
+    if (!holder || holder.did !== data.holder.did) throw new Error('This backup belongs to a different wallet identity. Ask the issuer to reissue credentials to this wallet.')
+    await loadHolderKeys(holder.did)
+    const existing = loadCredentials()
+    const seen = new Set(existing.map(credentialDedupKey))
+    const additions: StoredCredential[] = []
+    let skipped = 0
+    for (const record of records) {
+      if (!record || typeof record.credential !== 'string' || !['vc+jwt', 'vc+sd-jwt'].includes(record.format)) throw new Error('Invalid credential in backup. Nothing was restored.')
+      // Never trust labels, holder fields or disclosure hints from the backup envelope.
+      verifyImportedCredential(record.credential, record.format)
+      const meta = record.format === 'vc+sd-jwt' ? extractSdJwtMeta(record.credential) : extractVcJwtMeta(record.credential)
+      const credential: StoredCredential = {
+        id: randomUuid(), format: record.format, credential: record.credential,
+        receivedAt: new Date().toISOString(), issuerDid: meta.issuerDid,
+        subjectDid: meta.subjectDid, type: meta.types, preview: meta.preview,
+        selectivelyDisclosable: record.format === 'vc+sd-jwt' ? decodeSdJwtVc(record.credential).disclosures.map(d => d.name) : [],
+      }
+      if (!isCredentialBoundToHolder(credential, holder.did)) throw new Error("Credential was not issued to this wallet. Nothing was restored.")
+      const key = credentialDedupKey(credential)
+      if (seen.has(key)) { skipped++; continue }
+      seen.add(key)
+      additions.push(credential)
+    }
+    // One storage write, after every signature and holder check; existing records win duplicates.
+    if (additions.length) saveCredentials([...existing, ...additions])
+    return { added: additions.length, skipped }
+  })
+}
+
 function pruneStaleCredentialsForBusinessIdentity(latest: StoredCredential): void {
   const businessKey = credentialBusinessKey(latest)
   for (const existing of loadCredentials()) {

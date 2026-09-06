@@ -1,0 +1,163 @@
+[
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "1"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "2"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookVerifierTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementServiceTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.PlanFeatureFormatterTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

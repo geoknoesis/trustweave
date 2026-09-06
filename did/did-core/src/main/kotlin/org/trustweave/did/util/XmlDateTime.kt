@@ -24,7 +24,10 @@ object XmlDateTimeSerializer : KSerializer<Instant> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("XmlDateTime", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: Instant) {
+    override fun serialize(
+        encoder: Encoder,
+        value: Instant,
+    ) {
         encoder.encodeString(value.toXmlDateTime())
     }
 

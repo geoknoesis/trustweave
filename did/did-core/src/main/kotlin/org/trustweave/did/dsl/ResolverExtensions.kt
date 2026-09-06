@@ -1,10 +1,10 @@
 package org.trustweave.did.dsl
 
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.exception.DidException
+import org.trustweave.did.resolver.DidResolver
 
 /**
  * Extension functions for [DidResolver] to improve ergonomics.
@@ -19,29 +19,29 @@ import org.trustweave.did.exception.DidException
  * @return The resolved DID document
  * @throws DidException.DidNotFound if the DID cannot be resolved
  */
-suspend fun DidResolver.resolveOrThrow(did: Did): DidDocument {
-    return when (val result = resolve(did)) {
+suspend fun DidResolver.resolveOrThrow(did: Did): DidDocument =
+    when (val result = resolve(did)) {
         is DidResolutionResult.Success -> result.document
         is DidResolutionResult.Failure.NotFound -> throw DidException.DidNotFound(
             did = did,
-            availableMethods = emptyList()
+            availableMethods = emptyList(),
         )
         is DidResolutionResult.Failure.InvalidFormat -> throw DidException.InvalidDidFormat(
             did = result.did,
-            reason = result.reason
+            reason = result.reason,
         )
         is DidResolutionResult.Failure.MethodNotRegistered -> throw DidException.DidMethodNotRegistered(
             method = result.method,
-            availableMethods = result.availableMethods
+            availableMethods = result.availableMethods,
         )
         is DidResolutionResult.Failure.ResolutionError -> throw DidException.DidResolutionFailed(
             did = result.did,
             reason = result.reason,
-            cause = result.cause
+            cause = result.cause,
         )
         is DidResolutionResult.Failure.OptionsError -> throw DidException.DidResolutionFailed(
             did = result.did ?: did,
-            reason = result.reason
+            reason = result.reason,
         )
         // §4.4: a deactivated DID resolves to no document. resolveOrThrow's whole contract is
         // "return the document or fail", and callers of resolveOrThrow may use the document for
@@ -49,10 +49,9 @@ suspend fun DidResolver.resolveOrThrow(did: Did): DidDocument {
         // being treated as some other kind of missing document.
         is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
             did = result.did,
-            reason = "DID is deactivated"
+            reason = "DID is deactivated",
         )
     }
-}
 
 /**
  * Resolves a DID and returns the document, or null if it could not be resolved.
@@ -67,15 +66,13 @@ suspend fun DidResolver.resolveOrThrow(did: Did): DidDocument {
  * @return The resolved DID document, or null if resolution failed (not found, invalid, etc.)
  * @throws DidException.DidResolutionFailed if the DID is deactivated
  */
-suspend fun DidResolver.resolveOrNull(did: Did): DidDocument? {
-    return when (val result = resolve(did)) {
+suspend fun DidResolver.resolveOrNull(did: Did): DidDocument? =
+    when (val result = resolve(did)) {
         is DidResolutionResult.Success -> result.document
         // §4.4: see the KDoc above — deactivation must not be indistinguishable from "absent".
         is DidResolutionResult.Deactivated -> throw DidException.DidResolutionFailed(
             did = result.did,
-            reason = "DID is deactivated"
+            reason = "DID is deactivated",
         )
         else -> null
     }
-}
-

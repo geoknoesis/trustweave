@@ -134,6 +134,7 @@ val trustWeave = TrustWeave.build {
 Manage plugin initialization and cleanup:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.DidMethods.KEY

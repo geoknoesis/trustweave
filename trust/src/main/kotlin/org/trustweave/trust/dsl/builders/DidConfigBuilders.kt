@@ -19,7 +19,10 @@ class DidConfigBuilder {
         defaultMethod = methodName
     }
 
-    fun method(name: String, block: DidMethodConfigBuilder.() -> Unit) {
+    fun method(
+        name: String,
+        block: DidMethodConfigBuilder.() -> Unit,
+    ) {
         methods[name] = DidMethodConfigBuilder().apply(block).build()
         if (defaultMethod == null) {
             defaultMethod = name
@@ -33,19 +36,20 @@ class DidConfigBuilder {
 data class DidMethodConfig(
     val algorithm: KeyAlgorithm? = null,
     val domain: String? = null,
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
     fun toOptions(kms: KeyManagementService): DidCreationOptions {
         val resolvedAlgorithm = algorithm ?: KeyAlgorithm.ED25519
-        val props = buildMap<String, Any?> {
-            putAll(additionalProperties)
-            put("kms", kms)
-            domain?.let { put("domain", it) }
-        }
+        val props =
+            buildMap<String, Any?> {
+                putAll(additionalProperties)
+                put("kms", kms)
+                domain?.let { put("domain", it) }
+            }
         return DidCreationOptions(
             algorithm = resolvedAlgorithm,
             purposes = listOf(KeyPurpose.AUTHENTICATION),
-            additionalProperties = props
+            additionalProperties = props,
         )
     }
 }
@@ -71,7 +75,10 @@ class DidMethodConfigBuilder {
         domain = name
     }
 
-    fun option(key: String, value: Any?) {
+    fun option(
+        key: String,
+        value: Any?,
+    ) {
         options[key] = value
     }
 

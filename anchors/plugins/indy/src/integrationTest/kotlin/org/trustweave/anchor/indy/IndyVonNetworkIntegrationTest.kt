@@ -14,13 +14,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.security.MessageDigest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.DockerClientFactory
+import java.security.MessageDigest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -38,7 +38,6 @@ import kotlin.test.assertNotNull
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IndyVonNetworkIntegrationTest {
-
     private val container = VonNetworkContainer()
     private lateinit var httpClient: HttpClient
 
@@ -56,34 +55,40 @@ class IndyVonNetworkIntegrationTest {
     }
 
     @Test
-    fun `anchor digest round trip via ATTRIB and GET_ATTRIB`() = runBlocking {
-        val nym = registerNym()
-        val client = IndyBlockchainAnchorClient(
-            chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
-            options = mapOf(
-                "poolEndpoint" to container.browserUrl(),
-                "did" to nym.did,
-                "signingKeySeed" to nym.seedBase58
-            ),
-            httpClient = httpClient
-        )
+    fun `anchor digest round trip via ATTRIB and GET_ATTRIB`() =
+        runBlocking {
+            val nym = registerNym()
+            val client =
+                IndyBlockchainAnchorClient(
+                    chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
+                    options =
+                        mapOf(
+                            "poolEndpoint" to container.browserUrl(),
+                            "did" to nym.did,
+                            "signingKeySeed" to nym.seedBase58,
+                        ),
+                    httpClient = httpClient,
+                )
 
-        val digestHex = MessageDigest.getInstance("SHA-256")
-            .digest("hello".toByteArray())
-            .joinToString(separator = "") { "%02x".format(it) }
-        val payload = buildJsonObject {
-            put("vcId", JsonPrimitive("urn:uuid:integration-test"))
-            put("digest", JsonPrimitive(digestHex))
+            val digestHex =
+                MessageDigest
+                    .getInstance("SHA-256")
+                    .digest("hello".toByteArray())
+                    .joinToString(separator = "") { "%02x".format(it) }
+            val payload =
+                buildJsonObject {
+                    put("vcId", JsonPrimitive("urn:uuid:integration-test"))
+                    put("digest", JsonPrimitive(digestHex))
+                }
+
+            val written = client.writePayload(payload)
+            assertNotNull(written.ref.txHash)
+
+            val read = client.readPayload(written.ref)
+            val readObj = read.payload.jsonObject
+            assertEquals(payload["vcId"]!!.jsonPrimitive.content, readObj["vcId"]!!.jsonPrimitive.content)
+            assertEquals(payload["digest"]!!.jsonPrimitive.content, readObj["digest"]!!.jsonPrimitive.content)
         }
-
-        val written = client.writePayload(payload)
-        assertNotNull(written.ref.txHash)
-
-        val read = client.readPayload(written.ref)
-        val readObj = read.payload.jsonObject
-        assertEquals(payload["vcId"]!!.jsonPrimitive.content, readObj["vcId"]!!.jsonPrimitive.content)
-        assertEquals(payload["digest"]!!.jsonPrimitive.content, readObj["digest"]!!.jsonPrimitive.content)
-    }
 
     /**
      * Calls von-network's self-serve `/register` endpoint to bootstrap a Steward DID
@@ -91,19 +96,21 @@ class IndyVonNetworkIntegrationTest {
      */
     private suspend fun registerNym(): RegisteredNym {
         val seed = "0".repeat(32) // deterministic test seed
-        val response = httpClient.post("${container.browserUrl()}/register") {
-            contentType(ContentType.Application.Json)
-            setBody(
-                buildJsonObject {
-                    put("seed", JsonPrimitive(seed))
-                    put("role", JsonPrimitive("ENDORSER"))
-                }.toString()
-            )
-        }
+        val response =
+            httpClient.post("${container.browserUrl()}/register") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    buildJsonObject {
+                        put("seed", JsonPrimitive(seed))
+                        put("role", JsonPrimitive("ENDORSER"))
+                    }.toString(),
+                )
+            }
         val body = response.bodyAsText()
         val parsed = Json.parseToJsonElement(body).jsonObject
-        val did = parsed["did"]?.jsonPrimitive?.content
-            ?: error("von-network /register did not return a DID: $body")
+        val did =
+            parsed["did"]?.jsonPrimitive?.content
+                ?: error("von-network /register did not return a DID: $body")
         // The Indy ledger expects a raw 32-byte seed. We re-use the same string the
         // /register call consumed; the client encodes it to Base58 before signing.
         val seedBytes = seed.toByteArray()
@@ -135,5 +142,8 @@ class IndyVonNetworkIntegrationTest {
         return out.reverse().toString()
     }
 
-    private data class RegisteredNym(val did: String, val seedBase58: String)
+    private data class RegisteredNym(
+        val did: String,
+        val seedBase58: String,
+    )
 }

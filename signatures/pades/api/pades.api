@@ -1,0 +1,122 @@
+public final class org/trustweave/signatures/pades/NotImplementedPadesSigner : org/trustweave/signatures/pades/PadesSigner {
+	public fun <init> ()V
+	public fun sign (Lorg/trustweave/signatures/pades/PadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/pades/NotImplementedPadesVerifier : org/trustweave/signatures/pades/PadesVerifier {
+	public fun <init> ()V
+	public fun verify ([BLorg/trustweave/signatures/pades/PadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/pades/PadesProfile : java/lang/Enum {
+	public static final field B_B Lorg/trustweave/signatures/pades/PadesProfile;
+	public static final field B_T Lorg/trustweave/signatures/pades/PadesProfile;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/pades/PadesProfile;
+	public static fun values ()[Lorg/trustweave/signatures/pades/PadesProfile;
+}
+
+public final class org/trustweave/signatures/pades/PadesSignature {
+	public fun <init> ([BLorg/trustweave/signatures/pades/PadesProfile;)V
+	public final fun component1 ()[B
+	public final fun component2 ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun copy ([BLorg/trustweave/signatures/pades/PadesProfile;)Lorg/trustweave/signatures/pades/PadesSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/pades/PadesSignature;[BLorg/trustweave/signatures/pades/PadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProfile ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun getSignedPdfBytes ()[B
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/pades/PadesSigner {
+	public abstract fun sign (Lorg/trustweave/signatures/pades/PadesSigningRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/pades/PadesSigningRequest {
+	public synthetic fun <init> (Lorg/trustweave/signatures/pades/PadesProfile;Ljava/lang/String;[BLjava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/pades/PadesProfile;Ljava/lang/String;[BLjava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun component2-sQsr11o ()Ljava/lang/String;
+	public final fun component3 ()[B
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun copy--vYa8V0 (Lorg/trustweave/signatures/pades/PadesProfile;Ljava/lang/String;[BLjava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/signatures/pades/PadesSigningRequest;
+	public static synthetic fun copy--vYa8V0$default (Lorg/trustweave/signatures/pades/PadesSigningRequest;Lorg/trustweave/signatures/pades/PadesProfile;Ljava/lang/String;[BLjava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesSigningRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId-sQsr11o ()Ljava/lang/String;
+	public final fun getPdfBytes ()[B
+	public final fun getProfile ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun getSignatureLocation ()Ljava/lang/String;
+	public final fun getSignatureReason ()Ljava/lang/String;
+	public final fun getSignerCertificateChain ()Ljava/util/List;
+	public final fun getSignerName ()Ljava/lang/String;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/signatures/pades/PadesValidationResult {
+}
+
+public abstract class org/trustweave/signatures/pades/PadesValidationResult$Invalid : org/trustweave/signatures/pades/PadesValidationResult {
+}
+
+public final class org/trustweave/signatures/pades/PadesValidationResult$Invalid$BadSignature : org/trustweave/signatures/pades/PadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$BadSignature;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$BadSignature;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$BadSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/pades/PadesValidationResult$Invalid$Malformed : org/trustweave/signatures/pades/PadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$Malformed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$Malformed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesValidationResult$Invalid$Malformed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/pades/PadesValidationResult$Valid : org/trustweave/signatures/pades/PadesValidationResult {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/pades/PadesProfile;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun component3 ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun copy (Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/pades/PadesProfile;)Lorg/trustweave/signatures/pades/PadesValidationResult$Valid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/pades/PadesValidationResult$Valid;Ljava/security/cert/X509Certificate;Lkotlinx/datetime/Instant;Lorg/trustweave/signatures/pades/PadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesValidationResult$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProfile ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun getSignerCert ()Ljava/security/cert/X509Certificate;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/pades/PadesVerificationOptions {
+	public fun <init> (Lorg/trustweave/signatures/pades/PadesProfile;Z)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/pades/PadesProfile;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public final fun component2 ()Z
+	public final fun copy (Lorg/trustweave/signatures/pades/PadesProfile;Z)Lorg/trustweave/signatures/pades/PadesVerificationOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/pades/PadesVerificationOptions;Lorg/trustweave/signatures/pades/PadesProfile;ZILjava/lang/Object;)Lorg/trustweave/signatures/pades/PadesVerificationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowExpiredCertificateAtSigningTime ()Z
+	public final fun getRequiredProfile ()Lorg/trustweave/signatures/pades/PadesProfile;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/pades/PadesVerifier {
+	public abstract fun verify ([BLorg/trustweave/signatures/pades/PadesVerificationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

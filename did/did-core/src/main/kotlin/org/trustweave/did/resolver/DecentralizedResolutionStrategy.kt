@@ -1,9 +1,8 @@
 package org.trustweave.did.resolver
 
+import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolution.ResolutionOptions
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
@@ -40,9 +39,8 @@ class DecentralizedResolutionStrategy(
     private val localResolver: DidResolver,
     private val universalResolver: DidResolver,
     private val methodSpecificResolvers: Map<String, DidResolver> = emptyMap(),
-    private val maxCacheAge: Duration = 1.hours
+    private val maxCacheAge: Duration = 1.hours,
 ) : DidResolver {
-    
     override suspend fun resolve(did: Did): DidResolutionResult = resolve(did, ResolutionOptions.EMPTY)
 
     /**
@@ -53,24 +51,30 @@ class DecentralizedResolutionStrategy(
      * receives (e.g. reporting `FEATURE_NOT_SUPPORTED` for a `versionId` it cannot honour); this
      * strategy does not interpret options itself beyond forwarding them.
      */
-    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+    override suspend fun resolve(
+        did: Did,
+        options: ResolutionOptions,
+    ): DidResolutionResult {
         // 1. Try local storage first (fastest, but may be stale). A `Deactivated` verdict (§4.4)
         // is a terminal, authoritative answer — deactivation cannot be undone (W3C DID Core
         // §7.3), so it can never be "stale" in the sense that matters here — and short-circuits
         // unconditionally, without the freshness check that gates `Success`.
-        localResolver.resolve(did, options).takeIf { result ->
-            result is DidResolutionResult.Deactivated ||
-                (result is DidResolutionResult.Success && isFresh(result))
-        }?.let { result ->
-            return result
-        }
+        localResolver
+            .resolve(did, options)
+            .takeIf { result ->
+                result is DidResolutionResult.Deactivated ||
+                    (result is DidResolutionResult.Success && isFresh(result))
+            }?.let { result ->
+                return result
+            }
 
         // 2. Try method-specific resolver (most authoritative). A `Deactivated` verdict here is
         // just as authoritative as `Success` — both are terminal answers from the method's own
         // resolver — so both stop the fallback chain rather than falling through to the
         // (less-authoritative) universal resolver, which could resurrect a revoked DID's
         // document.
-        methodSpecificResolvers[did.method]?.resolve(did, options)
+        methodSpecificResolvers[did.method]
+            ?.resolve(did, options)
             ?.takeIf { it is DidResolutionResult.Success || it is DidResolutionResult.Deactivated }
             ?.let { result ->
                 return result
@@ -110,23 +114,23 @@ class DecentralizedResolutionStrategy(
  * ```
  */
 class ResolutionFallbackStrategy(
-    private val resolvers: List<DidResolver>
+    private val resolvers: List<DidResolver>,
 ) : DidResolver {
-    
-    override suspend fun resolve(did: Did): DidResolutionResult =
-        resolveWith(did) { resolver -> resolver.resolve(did) }
+    override suspend fun resolve(did: Did): DidResolutionResult = resolveWith(did) { resolver -> resolver.resolve(did) }
 
     /**
      * Resolves with DID Resolution 1.0 §4.1 options, forwarded unchanged to every resolver this
      * strategy tries in turn — same try-until-success/deactivated precedence as the
      * single-argument [resolve].
      */
-    override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult =
-        resolveWith(did) { resolver -> resolver.resolve(did, options) }
+    override suspend fun resolve(
+        did: Did,
+        options: ResolutionOptions,
+    ): DidResolutionResult = resolveWith(did) { resolver -> resolver.resolve(did, options) }
 
     private suspend fun resolveWith(
         did: Did,
-        resolveOne: suspend (DidResolver) -> DidResolutionResult
+        resolveOne: suspend (DidResolver) -> DidResolutionResult,
     ): DidResolutionResult {
         val errors = mutableListOf<String>()
 
@@ -150,7 +154,7 @@ class ResolutionFallbackStrategy(
                                 is DidResolutionResult.Failure.ResolutionError -> "Resolution error: ${it.reason}"
                                 is DidResolutionResult.Failure.OptionsError -> "Options error: ${it.reason}"
                             }
-                        } ?: "Unknown error"
+                        } ?: "Unknown error",
                     )
                 }
             } catch (e: Exception) {
@@ -162,11 +166,11 @@ class ResolutionFallbackStrategy(
         return DidResolutionResult.Failure.ResolutionError(
             did = did,
             reason = "All resolution attempts failed: ${errors.joinToString(", ")}",
-            resolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.internalError("All resolution attempts failed"),
-                properties = mapOf("attemptedResolvers" to resolvers.size.toString())
-            )
+            resolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.internalError("All resolution attempts failed"),
+                    properties = mapOf("attemptedResolvers" to resolvers.size.toString()),
+                ),
         )
     }
 }
-

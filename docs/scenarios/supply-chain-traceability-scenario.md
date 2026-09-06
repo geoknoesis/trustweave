@@ -6,6 +6,9 @@ nav_order: 10
 
 # Supply Chain & Traceability Scenario
 
+> **Runnable companion:** [supply-chain example](../../distribution/examples/scenarios/supply-chain/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+
+
 This guide demonstrates how to build a supply chain traceability system using TrustWeave that enables multi-party credentials, provenance tracking, product authenticity verification, and immutable chain of custody records.
 
 ## What You'll Build
@@ -161,7 +164,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Familiarity with supply chain concepts (helpful but not required)

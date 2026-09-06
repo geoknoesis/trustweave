@@ -7,7 +7,6 @@ import kotlin.test.*
  * Tests for DidValidator (DID 1.1 §3.1 ABNF).
  */
 class DidValidatorTest {
-
     @Test
     fun validSimpleDid() {
         assertTrue(DidValidator.validateFormat("did:key:z6Mkf").isValid())

@@ -22,7 +22,6 @@ import org.trustweave.credential.vi.model.Vct
  * pair-identity binding holds). Header `kid` must equal the L2 mandate's `cnf.jwk.kid`.
  */
 public object ViAgent {
-
     @Suppress("LongParameterList")
     public suspend fun createLayer3Payment(
         finalPayment: JsonObject,
@@ -66,22 +65,24 @@ public object ViAgent {
     ): IssuedL3 {
         val made = Disclosures.makeArrayElement(finalMandate)
         val routedL2 = selectivePresentation(l2BaseJwt, routedL2Disclosures)
-        val payload = buildJsonObject {
-            put("nonce", nonce)
-            put("aud", aud)
-            put("iat", iat)
-            put("sd_hash", sha256B64Url(routedL2.toByteArray(Charsets.US_ASCII)))
-            put("delegate_payload", JsonArray(listOf(buildJsonObject { put("...", made.hash) })))
-            put("_sd_alg", Vct.SD_ALG)
-            put("_sd", JsonArray(listOf(JsonPrimitive(made.hash))))
-            iss?.let { put("iss", it) }
-            exp?.let { put("exp", it) }
-        }
-        val header = buildJsonObject {
-            put("alg", Vct.ALG)
-            put("typ", Vct.Typ.L3)
-            put("kid", agentKid)
-        }
+        val payload =
+            buildJsonObject {
+                put("nonce", nonce)
+                put("aud", aud)
+                put("iat", iat)
+                put("sd_hash", sha256B64Url(routedL2.toByteArray(Charsets.US_ASCII)))
+                put("delegate_payload", JsonArray(listOf(buildJsonObject { put("...", made.hash) })))
+                put("_sd_alg", Vct.SD_ALG)
+                put("_sd", JsonArray(listOf(JsonPrimitive(made.hash))))
+                iss?.let { put("iss", it) }
+                exp?.let { put("exp", it) }
+            }
+        val header =
+            buildJsonObject {
+                put("alg", Vct.ALG)
+                put("typ", Vct.Typ.L3)
+                put("kid", agentKid)
+            }
         val jwt = Jws.sign(header, payload, signer)
         return IssuedL3(serializeSdJwt(jwt, listOf(made.b64)), routedL2)
     }

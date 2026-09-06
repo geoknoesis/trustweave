@@ -156,6 +156,7 @@ val credential = credential {
 Issue credentials with automatic proof generation:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.results.IssuanceResult
@@ -205,6 +206,7 @@ fun main() = runBlocking {
 
 **Example:**
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.results.IssuanceResult

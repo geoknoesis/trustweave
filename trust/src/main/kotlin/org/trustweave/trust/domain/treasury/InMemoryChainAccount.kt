@@ -22,11 +22,9 @@ class InMemoryChainAccount(
     private val anchorClient: BlockchainAnchorClient,
     private val kms: KeyManagementService,
 ) : ChainAccount {
-
     override suspend fun balance(): TokenAmount = TokenAmount.unknown(chainId)
 
-    override suspend fun estimateFee(op: OperationDescriptor): TokenAmount =
-        anchorClient.estimate(op)
+    override suspend fun estimateFee(op: OperationDescriptor): TokenAmount = anchorClient.estimate(op)
 
     override suspend fun sign(tx: UnsignedTx): SignedTx {
         require(tx.chainId == chainId) {

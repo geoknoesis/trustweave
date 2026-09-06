@@ -1,19 +1,18 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.did.model.DidDocument
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.did.DidMethod
-import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyAlgorithm
-import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.trust.context.DidDslContext
-import org.trustweave.kms.services.KmsService
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
+import org.trustweave.kms.services.KmsService
+import org.trustweave.trust.context.DidDslContext
 
 /**
  * Key Rotation Builder DSL.
@@ -41,7 +40,7 @@ class KeyRotationBuilder(
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
      */
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private var did: String? = null
     private var method: String? = null
@@ -72,7 +71,7 @@ class KeyRotationBuilder(
 
     /**
      * Set key algorithm for new key by string name.
-     * 
+     *
      * For type safety, prefer using algorithm(value: DidCreationOptions.KeyAlgorithm).
      */
     fun algorithm(algorithm: String) {
@@ -82,7 +81,7 @@ class KeyRotationBuilder(
 
     /**
      * Set key algorithm using type-safe enum.
-     * 
+     *
      * This is the preferred method for compile-time type safety.
      */
     fun algorithm(value: KeyAlgorithm) {
@@ -99,60 +98,72 @@ class KeyRotationBuilder(
 
     /**
      * Rotate the key.
-     * 
+     *
      * This operation performs I/O-bound work (key generation, DID document updates)
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      *
      * @return Updated DID document
      */
-    suspend fun rotate(): DidDocument = withContext(ioDispatcher) {
-        val targetDid = did ?: throw IllegalStateException(
-            "DID is required. Use did(\"did:key:...\")"
-        )
+    suspend fun rotate(): DidDocument =
+        withContext(ioDispatcher) {
+            val targetDid =
+                did ?: throw IllegalStateException(
+                    "DID is required. Use did(\"did:key:...\")",
+                )
 
-        // Detect method from DID if not provided
-        val methodName = method ?: run {
-            if (targetDid.startsWith("did:")) {
-                val parts = targetDid.substring(4).split(":", limit = 2)
-                if (parts.isNotEmpty()) parts[0] else null
-            } else null
-        } ?: throw IllegalStateException(
-            "Could not determine DID method. Use method(\"key\") or provide a valid DID"
-        )
+            // Detect method from DID if not provided
+            val methodName =
+                method ?: run {
+                    if (targetDid.startsWith("did:")) {
+                        val parts = targetDid.substring(4).split(":", limit = 2)
+                        if (parts.isNotEmpty()) parts[0] else null
+                    } else {
+                        null
+                    }
+                } ?: throw IllegalStateException(
+                    "Could not determine DID method. Use method(\"key\") or provide a valid DID",
+                )
 
-        // Get DID method from provider
-        val didMethod = didContext.getDidMethod(methodName) as? DidMethod
-            ?: throw IllegalStateException(
-                "DID method '$methodName' is not configured. " +
-                "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }"
-            )
+            // Get DID method from provider
+            val didMethod =
+                didContext.getDidMethod(methodName) as? DidMethod
+                    ?: throw IllegalStateException(
+                        "DID method '$methodName' is not configured. " +
+                            "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }",
+                    )
 
-        // Generate new key using KMS
-        val newKeyHandle = when (val result = kmsService.generateKey(kms, algorithm, emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            is GenerateKeyResult.Failure.UnsupportedAlgorithm ->
-                throw IllegalArgumentException("Algorithm not supported: ${result.algorithm}")
-            is GenerateKeyResult.Failure.InvalidOptions ->
-                throw IllegalArgumentException("Invalid key generation options: ${result.reason}")
-            is GenerateKeyResult.Failure.DuplicateKeyId ->
-                throw IllegalArgumentException("Key with ID '${result.keyId.value}' already exists")
-            is GenerateKeyResult.Failure.Error ->
-                throw IllegalStateException("Failed to generate key: ${result.reason}", result.cause)
+            // Generate new key using KMS
+            val newKeyHandle =
+                when (val result = kmsService.generateKey(kms, algorithm, emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    is GenerateKeyResult.Failure.UnsupportedAlgorithm ->
+                        throw IllegalArgumentException("Algorithm not supported: ${result.algorithm}")
+                    is GenerateKeyResult.Failure.InvalidOptions ->
+                        throw IllegalArgumentException("Invalid key generation options: ${result.reason}")
+                    is GenerateKeyResult.Failure.DuplicateKeyId ->
+                        throw IllegalArgumentException("Key with ID '${result.keyId.value}' already exists")
+                    is GenerateKeyResult.Failure.Error ->
+                        throw IllegalStateException("Failed to generate key: ${result.reason}", result.cause)
+                }
+            val publicKeyJwk = kmsService.getPublicKeyJwk(newKeyHandle)
+            val keyId = kmsService.getKeyId(newKeyHandle)
+
+            // Update DID document using DidMethod directly
+            val targetDidObj = Did(targetDid)
+            val updatedDoc =
+                didMethod.updateDid(targetDidObj) { currentDoc ->
+                    updateDocumentForKeyRotation(
+                        currentDoc,
+                        targetDid,
+                        keyId,
+                        algorithm,
+                        publicKeyJwk,
+                        oldKeyIds,
+                    )
+                }
+
+            updatedDoc
         }
-        val publicKeyJwk = kmsService.getPublicKeyJwk(newKeyHandle)
-        val keyId = kmsService.getKeyId(newKeyHandle)
-
-        // Update DID document using DidMethod directly
-        val targetDidObj = Did(targetDid)
-        val updatedDoc = didMethod.updateDid(targetDidObj) { currentDoc ->
-            updateDocumentForKeyRotation(
-                currentDoc, targetDid, keyId, algorithm,
-                publicKeyJwk, oldKeyIds
-            )
-        }
-
-        updatedDoc
-    }
 
     /**
      * Update document for key rotation using direct types.
@@ -163,46 +174,50 @@ class KeyRotationBuilder(
         keyId: String,
         algorithm: String,
         publicKeyJwk: Map<String, Any?>?,
-        oldKeyIds: List<String>
+        oldKeyIds: List<String>,
     ): DidDocument {
         val targetDidObj = Did(targetDid)
-        
+
         // Filter out old keys
-        val filteredVm = currentDoc.verificationMethod.filter { vm ->
-            !oldKeyIds.any { oldId -> vm.id.value.contains(oldId) }
-        }
+        val filteredVm =
+            currentDoc.verificationMethod.filter { vm ->
+                !oldKeyIds.any { oldId -> vm.id.value.contains(oldId) }
+            }
 
-        val filteredAuth = currentDoc.authentication.filter { auth ->
-            !oldKeyIds.any { oldId -> auth.value.contains(oldId) }
-        }
+        val filteredAuth =
+            currentDoc.authentication.filter { auth ->
+                !oldKeyIds.any { oldId -> auth.value.contains(oldId) }
+            }
 
-        val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
-            !oldKeyIds.any { oldId -> assertion.value.contains(oldId) }
-        }
+        val filteredAssertion =
+            currentDoc.assertionMethod.filter { assertion ->
+                !oldKeyIds.any { oldId -> assertion.value.contains(oldId) }
+            }
 
         // Create new verification method
         val newVmIdString = "$targetDid#$keyId"
         val newVmId = VerificationMethodId.parse(newVmIdString, targetDidObj)
-        val vmType = when (algorithm.uppercase()) {
-            "ED25519" -> "Ed25519VerificationKey2020"
-            "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
-            else -> "JsonWebKey2020"
-        }
+        val vmType =
+            when (algorithm.uppercase()) {
+                "ED25519" -> "Ed25519VerificationKey2020"
+                "SECP256K1" -> "EcdsaSecp256k1VerificationKey2019"
+                else -> "JsonWebKey2020"
+            }
 
-        val newVm = VerificationMethod(
-            id = newVmId,
-            type = vmType,
-            controller = targetDidObj,
-            publicKeyJwk = publicKeyJwk,
-            publicKeyMultibase = null
-        )
+        val newVm =
+            VerificationMethod(
+                id = newVmId,
+                type = vmType,
+                controller = targetDidObj,
+                publicKeyJwk = publicKeyJwk,
+                publicKeyMultibase = null,
+            )
 
         // Create updated document using copy
         return currentDoc.copy(
             verificationMethod = filteredVm + newVm,
             authentication = filteredAuth + newVmId,
-            assertionMethod = filteredAssertion + newVmId
+            assertionMethod = filteredAssertion + newVmId,
         )
     }
 }
-

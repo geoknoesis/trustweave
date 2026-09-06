@@ -10,7 +10,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class DidResolutionErrorTest {
-
     @Test
     fun `error type constants use the spec URI prefix`() {
         assertEquals("https://www.w3.org/ns/did#INVALID_DID", DidErrorType.INVALID_DID)
@@ -18,7 +17,7 @@ class DidResolutionErrorTest {
         assertEquals("https://www.w3.org/ns/did#NOT_FOUND", DidErrorType.NOT_FOUND)
         assertEquals(
             "https://www.w3.org/ns/did#REPRESENTATION_NOT_SUPPORTED",
-            DidErrorType.REPRESENTATION_NOT_SUPPORTED
+            DidErrorType.REPRESENTATION_NOT_SUPPORTED,
         )
         assertEquals("https://www.w3.org/ns/did#INVALID_DID_URL", DidErrorType.INVALID_DID_URL)
         assertEquals("https://www.w3.org/ns/did#METHOD_NOT_SUPPORTED", DidErrorType.METHOD_NOT_SUPPORTED)
@@ -59,7 +58,7 @@ class DidResolutionErrorTest {
     fun `an already absolute error URI passes through unchanged`() {
         assertEquals(
             "https://example.com/errors/custom",
-            DidErrorType.fromLegacyCode("https://example.com/errors/custom")
+            DidErrorType.fromLegacyCode("https://example.com/errors/custom"),
         )
     }
 
@@ -86,11 +85,12 @@ class DidResolutionErrorTest {
 
     @Test
     fun `fromJson parses an RFC 9457 object`() {
-        val json = buildJsonObject {
-            put("type", DidErrorType.INVALID_OPTIONS)
-            put("title", "Invalid options")
-            put("detail", "versionId and versionTime are mutually exclusive")
-        }
+        val json =
+            buildJsonObject {
+                put("type", DidErrorType.INVALID_OPTIONS)
+                put("title", "Invalid options")
+                put("detail", "versionId and versionTime are mutually exclusive")
+            }
         val error = DidResolutionError.fromJson(json)
         assertEquals(DidErrorType.INVALID_OPTIONS, error?.type)
         assertEquals("versionId and versionTime are mutually exclusive", error?.detail)
@@ -111,19 +111,21 @@ class DidResolutionErrorTest {
 
     @Test
     fun `fromJson returns null for a non-primitive type instead of throwing`() {
-        val json = buildJsonObject {
-            put("type", buildJsonObject { put("nested", "object") })
-        }
+        val json =
+            buildJsonObject {
+                put("type", buildJsonObject { put("nested", "object") })
+            }
         assertNull(DidResolutionError.fromJson(json))
     }
 
     @Test
     fun `fromJson omits title and detail when they are non-primitive but type is valid`() {
-        val json = buildJsonObject {
-            put("type", DidErrorType.NOT_FOUND)
-            put("title", buildJsonObject { put("nested", "object") })
-            put("detail", buildJsonObject { put("nested", "object") })
-        }
+        val json =
+            buildJsonObject {
+                put("type", DidErrorType.NOT_FOUND)
+                put("title", buildJsonObject { put("nested", "object") })
+                put("detail", buildJsonObject { put("nested", "object") })
+            }
         val error = DidResolutionError.fromJson(json)
         assertEquals(DidErrorType.NOT_FOUND, error?.type)
         assertEquals(DidErrorType.title(DidErrorType.NOT_FOUND), error?.title)

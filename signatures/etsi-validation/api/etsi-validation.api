@@ -1,0 +1,125 @@
+public final class org/trustweave/signatures/etsi/validation/DefaultEtsiSignatureValidator : org/trustweave/signatures/etsi/validation/EtsiSignatureValidator {
+	public static final field Companion Lorg/trustweave/signatures/etsi/validation/DefaultEtsiSignatureValidator$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/signatures/jades/DefaultJadesVerifier;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/jades/DefaultJadesVerifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun validate (Ljava/lang/String;Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/etsi/validation/DefaultEtsiSignatureValidator$Companion {
+}
+
+public final class org/trustweave/signatures/etsi/validation/EtsiSignaturePolicy {
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun component3 ()Z
+	public final fun component4-UwyO8pc ()J
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/Set;
+	public final fun copy-gwCluXo (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
+	public static synthetic fun copy-gwCluXo$default (Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAcceptedDigestAlgorithms ()Ljava/util/Set;
+	public final fun getAcceptedSignatureAlgorithms ()Ljava/util/Set;
+	public final fun getAllowedTrustStatusUris ()Ljava/util/Set;
+	public final fun getMaxClockSkew-UwyO8pc ()J
+	public final fun getRequireSigningTime ()Z
+	public final fun getRequireTimeStamp ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/etsi/validation/EtsiSignatureValidator {
+	public abstract fun validate (Ljava/lang/String;Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/etsi/validation/EtsiValidationReport {
+	public fun <init> (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFinalVerdict ()Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public final fun getSignerSubject ()Ljava/lang/String;
+	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public final fun getSteps ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict : java/lang/Enum {
+	public static final field INDETERMINATE Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public static final field TOTAL_FAILED Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public static final field TOTAL_PASSED Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+	public static fun values ()[Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
+}
+
+public final class org/trustweave/signatures/etsi/validation/EtsiValidationStep : java/lang/Enum {
+	public static final field CRYPTO_CONSTRAINTS Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field FINAL_VERDICT Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field FORMAT_CHECK Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field IDENTIFIER_CHECK Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field LONG_TERM_VALIDATION Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field REVOCATION Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field SIGNATURE_ACCEPTANCE Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field SIGNATURE_POLICY Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field SIGNING_TIME_VALIDITY Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field TIME_STAMP_TOKEN Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static final field X509_CERT_PATH Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+	public static fun values ()[Lorg/trustweave/signatures/etsi/validation/EtsiValidationStep;
+}
+
+public abstract class org/trustweave/signatures/etsi/validation/StepOutcome {
+}
+
+public final class org/trustweave/signatures/etsi/validation/StepOutcome$Failed : org/trustweave/signatures/etsi/validation/StepOutcome {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Failed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/StepOutcome$Failed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/etsi/validation/StepOutcome$Inconclusive : org/trustweave/signatures/etsi/validation/StepOutcome {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Inconclusive;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/StepOutcome$Inconclusive;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Inconclusive;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/etsi/validation/StepOutcome$NotApplicable : org/trustweave/signatures/etsi/validation/StepOutcome {
+	public static final field INSTANCE Lorg/trustweave/signatures/etsi/validation/StepOutcome$NotApplicable;
+}
+
+public final class org/trustweave/signatures/etsi/validation/StepOutcome$Passed : org/trustweave/signatures/etsi/validation/StepOutcome {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Passed;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/StepOutcome$Passed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/StepOutcome$Passed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotes ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

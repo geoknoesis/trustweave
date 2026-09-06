@@ -26,16 +26,13 @@ data class RegistrarError(
      * - `internalError`: Internal server error
      */
     val code: String,
-
     /**
      * Human-readable error message.
      */
     val message: String,
-
     /**
      * Additional error details.
      * Can contain method-specific error information.
      */
-    val details: Map<String, String>? = null
+    val details: Map<String, String>? = null,
 )
-

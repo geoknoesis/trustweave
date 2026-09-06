@@ -14,38 +14,41 @@ import org.slf4j.LoggerFactory
 class LoggingDomainEventSink(
     private val logger: Logger = LoggerFactory.getLogger(LoggingDomainEventSink::class.java),
 ) : DomainEventSink {
-
     override suspend fun emit(event: DomainEvent) {
         when (event) {
-            is DomainEvent.OnChainSpendReserved -> logger.info(
-                "on-chain spend reserved domain={} chain={} correlationId={} estimate={}",
-                event.domainId.value,
-                event.chainId,
-                event.correlationId,
-                event.estimate.amount,
-            )
-            is DomainEvent.OnChainSpendSettled -> logger.info(
-                "on-chain spend settled domain={} chain={} correlationId={} actualFee={} txHash={} payer={}",
-                event.domainId.value,
-                event.chainId,
-                event.correlationId,
-                event.actualFee.amount,
-                event.txHash,
-                event.payerAddress,
-            )
-            is DomainEvent.OnChainSpendCancelled -> logger.info(
-                "on-chain spend cancelled domain={} chain={} correlationId={}",
-                event.domainId.value,
-                event.chainId,
-                event.correlationId,
-            )
-            is DomainEvent.OnChainSpendFailed -> logger.warn(
-                "on-chain spend failed domain={} chain={} correlationId={} reason={}",
-                event.domainId.value,
-                event.chainId,
-                event.correlationId,
-                event.reason,
-            )
+            is DomainEvent.OnChainSpendReserved ->
+                logger.info(
+                    "on-chain spend reserved domain={} chain={} correlationId={} estimate={}",
+                    event.domainId.value,
+                    event.chainId,
+                    event.correlationId,
+                    event.estimate.amount,
+                )
+            is DomainEvent.OnChainSpendSettled ->
+                logger.info(
+                    "on-chain spend settled domain={} chain={} correlationId={} actualFee={} txHash={} payer={}",
+                    event.domainId.value,
+                    event.chainId,
+                    event.correlationId,
+                    event.actualFee.amount,
+                    event.txHash,
+                    event.payerAddress,
+                )
+            is DomainEvent.OnChainSpendCancelled ->
+                logger.info(
+                    "on-chain spend cancelled domain={} chain={} correlationId={}",
+                    event.domainId.value,
+                    event.chainId,
+                    event.correlationId,
+                )
+            is DomainEvent.OnChainSpendFailed ->
+                logger.warn(
+                    "on-chain spend failed domain={} chain={} correlationId={} reason={}",
+                    event.domainId.value,
+                    event.chainId,
+                    event.correlationId,
+                    event.reason,
+                )
         }
     }
 }

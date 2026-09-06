@@ -115,7 +115,7 @@ The following are generally considered out of scope:
 - **Security Testing**: Include security considerations in tests
 - **Documentation**: Document security-relevant features and limitations
 
-For detailed security guidance, see [Security Documentation](docs/security/README.md).
+For detailed security guidance, see [Security Documentation](docs/getting-started/production-integration-checklist.md).
 
 ## Security Updates
 
@@ -156,7 +156,7 @@ We ask that security researchers:
 
 ## Additional Resources
 
-- [Security Documentation](docs/security/README.md) - Detailed security guidance
+- [Security Documentation](docs/getting-started/production-integration-checklist.md) - Detailed security guidance
 - [Contributing Guide](CONTRIBUTING.md) - General contribution guidelines
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
 - [W3C Security Considerations](https://www.w3.org/TR/vc-data-model/#security-considerations) - W3C VC security guidance

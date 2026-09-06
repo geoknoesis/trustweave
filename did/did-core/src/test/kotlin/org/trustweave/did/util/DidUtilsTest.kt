@@ -13,7 +13,6 @@ import kotlin.test.*
  * Tests for DidUtils utility functions.
  */
 class DidUtilsTest {
-
     @Test
     fun `test normalizeKeyId with full DID URL`() {
         val result = normalizeKeyId("did:key:z6Mk...#key-1")
@@ -79,17 +78,29 @@ class DidUtilsTest {
     @Test
     fun `test extractAllVerificationMethodIds`() {
         val did = Did("did:test:123")
-        val vmId1 = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-1"))
-        val vmId2 = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-2"))
-        
-        val document = DidDocument(
-            id = did,
-            verificationMethod = listOf(
-                VerificationMethod(vmId1, "Ed25519VerificationKey2020", did)
-            ),
-            authentication = listOf(vmId1, vmId2),
-            assertionMethod = listOf(vmId2)
-        )
+        val vmId1 =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-1"),
+            )
+        val vmId2 =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-2"),
+            )
+
+        val document =
+            DidDocument(
+                id = did,
+                verificationMethod =
+                    listOf(
+                        VerificationMethod(vmId1, "Ed25519VerificationKey2020", did),
+                    ),
+                authentication = listOf(vmId1, vmId2),
+                assertionMethod = listOf(vmId2),
+            )
 
         val allVmIds = extractAllVerificationMethodIds(document)
         assertEquals(2, allVmIds.size)
@@ -100,18 +111,25 @@ class DidUtilsTest {
     @Test
     fun `test findVerificationMethod`() {
         val did = Did("did:test:123")
-        val vmId = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-1"))
-        
-        val vm = VerificationMethod(
-            id = vmId,
-            type = "Ed25519VerificationKey2020",
-            controller = did
-        )
-        
-        val document = DidDocument(
-            id = did,
-            verificationMethod = listOf(vm)
-        )
+        val vmId =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-1"),
+            )
+
+        val vm =
+            VerificationMethod(
+                id = vmId,
+                type = "Ed25519VerificationKey2020",
+                controller = did,
+            )
+
+        val document =
+            DidDocument(
+                id = did,
+                verificationMethod = listOf(vm),
+            )
 
         val found = findVerificationMethod(document, vmId)
         assertNotNull(found)
@@ -121,8 +139,13 @@ class DidUtilsTest {
     @Test
     fun `test findVerificationMethod not found`() {
         val did = Did("did:test:123")
-        val vmId = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-1"))
-        
+        val vmId =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-1"),
+            )
+
         val document = DidDocument(id = did)
 
         val found = findVerificationMethod(document, vmId)
@@ -132,14 +155,21 @@ class DidUtilsTest {
     @Test
     fun `test hasVerificationMethod`() {
         val did = Did("did:test:123")
-        val vmId = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-1"))
-        
-        val document = DidDocument(
-            id = did,
-            verificationMethod = listOf(
-                VerificationMethod(vmId, "Ed25519VerificationKey2020", did)
+        val vmId =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-1"),
             )
-        )
+
+        val document =
+            DidDocument(
+                id = did,
+                verificationMethod =
+                    listOf(
+                        VerificationMethod(vmId, "Ed25519VerificationKey2020", did),
+                    ),
+            )
 
         assertTrue(hasVerificationMethod(document, vmId))
     }
@@ -147,8 +177,13 @@ class DidUtilsTest {
     @Test
     fun `test hasVerificationMethod false`() {
         val did = Did("did:test:123")
-        val vmId = VerificationMethodId(did, org.trustweave.core.identifiers.KeyId("#key-1"))
-        
+        val vmId =
+            VerificationMethodId(
+                did,
+                org.trustweave.core.identifiers
+                    .KeyId("#key-1"),
+            )
+
         val document = DidDocument(id = did)
 
         assertFalse(hasVerificationMethod(document, vmId))
@@ -158,13 +193,23 @@ class DidUtilsTest {
     fun `test getServicesByType`() {
         val did = Did("did:test:123")
         val service1 = DidService("service-1", listOf("LinkedDomains"), ServiceEndpoint.Url("https://example.com"))
-        val service2 = DidService("service-2", listOf("DIDCommMessaging"), ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://messaging.com")))
+        val service2 =
+            DidService(
+                "service-2",
+                listOf("DIDCommMessaging"),
+                ServiceEndpoint.ObjectEndpoint(
+                    mapOf(
+                        "uri" to "https://messaging.com",
+                    ),
+                ),
+            )
         val service3 = DidService("service-3", listOf("LinkedDomains"), ServiceEndpoint.Url("https://another.com"))
-        
-        val document = DidDocument(
-            id = did,
-            service = listOf(service1, service2, service3)
-        )
+
+        val document =
+            DidDocument(
+                id = did,
+                service = listOf(service1, service2, service3),
+            )
 
         val linkedDomains = getServicesByType(document, "LinkedDomains")
         assertEquals(2, linkedDomains.size)
@@ -184,12 +229,14 @@ class DidUtilsTest {
     @Test
     fun `test hasServiceType`() {
         val did = Did("did:test:123")
-        val document = DidDocument(
-            id = did,
-            service = listOf(
-                DidService("service-1", listOf("LinkedDomains"), ServiceEndpoint.Url("https://example.com"))
+        val document =
+            DidDocument(
+                id = did,
+                service =
+                    listOf(
+                        DidService("service-1", listOf("LinkedDomains"), ServiceEndpoint.Url("https://example.com")),
+                    ),
             )
-        )
 
         assertTrue(hasServiceType(document, "LinkedDomains"))
         assertFalse(hasServiceType(document, "DIDCommMessaging"))
@@ -203,4 +250,3 @@ class DidUtilsTest {
         assertFalse(hasServiceType(document, "LinkedDomains"))
     }
 }
-

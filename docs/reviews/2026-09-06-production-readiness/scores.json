@@ -1,0 +1,86 @@
+{
+  "assessment_type": "production-readiness",
+  "date": "2026-09-06",
+  "repository": "trustweave",
+  "scope": "Uncommitted working tree on main at a41d482a (5 commits ahead of origin/main 2d8f8989); trustweave-saas excluded",
+  "rubric": "Same six equally weighted categories as the 2026-09-05 assessment, so the numbers are comparable. Engineering judgement, not certification.",
+  "previous": {
+    "date": "2026-09-05",
+    "security_and_access_control": 8.5,
+    "observability_and_diagnosability": 5.0,
+    "reliability_and_scale": 7.5,
+    "configuration_and_data": 7.5,
+    "deployment_and_release": 5.5,
+    "testing_and_documentation": 7.5,
+    "overall": 6.9,
+    "note": "That round executed no build or test run."
+  },
+  "current": {
+    "verdict": "Not releasable as it stands; the GA core is close, gated by a red CI pipeline and five verified defects",
+    "security_and_access_control": 7.5,
+    "observability_and_diagnosability": 5.0,
+    "reliability_and_scale": 6.5,
+    "configuration_and_data": 7.0,
+    "deployment_and_release": 6.0,
+    "testing_and_documentation": 7.5,
+    "overall": 6.6
+  },
+  "why_it_moved": {
+    "security_and_access_control": "-1.0: two verified verification-logic defects in shipped protocol plugins (OpenID Federation chain key direction reversed and alg=none accepted; Verifiable Intent L3 tokens never checked for aud/nonce) plus round-13 findings 01 and 02 still open. Transport gating, signing enforcement and SHA-pinned actions are credited.",
+    "observability_and_diagnosability": "unchanged: 35 of 777 main-source files use a logger, 648 broad catches, 6 empty catches, no correlation or metrics guidance.",
+    "reliability_and_scale": "-1.0: this diff introduces a FileWallet listing failure for relative paths, a filter that throws mid-iteration, cloud listings that abort on a concurrent delete, and an O(N) statistics path; unbounded session stores remain in three sibling protocols.",
+    "configuration_and_data": "-0.5: stale ServiceLoader entries for optimism and zksync break anchor discovery for any classpath that includes them; the new deployment policy is enforced in three factories and bypassed by the fourth.",
+    "deployment_and_release": "+0.5: ABI validation, Kover, CycloneDX SBOM, mandatory signing and a provenance workflow now exist and the ABI check passes locally. Capped because CI on main has been red since 2026-08-23 (lint step fails before build), ktlintCheck fails locally with 218 violations in 13 files, the 105 ABI dump files are untracked, and no release has ever been published.",
+    "testing_and_documentation": "unchanged: the full suite was executed this time and is green (3790 tests, 0 failures, 15 skipped, 87 modules; wallet 70/70), but 26 modules with main code have no tests, the federation verifier has no positive-path test, and the checkout chain test was deleted rather than fixed."
+  },
+  "evidence": {
+    "gradle_assemble_ktlint": "assemble OK; ktlintCheck FAILED: 218 violations across 13 files (trust 90, PeerDidMethodTest 67, indy 34, credential-api build script 8, btcr/tezos/threebox tests 4 each, did-core/ens/ion/polygon build scripts)",
+    "gradle_checkKotlinAbi": "PASSED (exit 0)",
+    "gradle_test": "BUILD SUCCESSFUL in 6m46s; JUnit XML: 443 suites, 87 modules, 3790 tests, 0 failures, 0 errors, 15 skipped",
+    "reference_wallet": "tsc --noEmit clean; vitest 5 files, 70 tests, 0 failures",
+    "ci_main": "ci.yml on main: failure on 2026-08-23 (x2), 2026-08-29 (x2) and dependabot 2026-09-02; latest main run 33264669629 fails at 'Lint with ktlint' (:did:plugins:ens:ktlintKotlinScriptCheck), so build, test, ABI, coverage and SBOM steps never execute",
+    "releases": "git tag v0.7.0 exists; gh release list is empty; no signed artifact or attestation has been produced",
+    "working_tree": "269 modified, 10 deleted, 165 untracked paths (105 are api/ ABI dumps); 5 commits unpushed"
+  },
+  "blockers": [
+    "B1 CI gate red since 2026-08-23: lint fails before build; 218 local ktlint violations in 13 files; none of the new ABI/coverage/SBOM steps has ever run in CI",
+    "B2 optimism and zksync META-INF/services still name org.trustweave.chain.* classes that no longer exist; ServiceLoader iteration throws for every classpath that contains either jar",
+    "B3 OpenID Federation verifyChain verifies statement i+1 with statement i's jwks (reverse of spec section 10.2), never signature-checks the leaf, and parse() accepts alg=none PlainJWT",
+    "B4 FileWallet.readRecord compares an absolute normalized path against Files.list output, so list/query/getStatistics throw for any relative or non-normalized storagePath (introduced by this diff)",
+    "B5 Verifiable Intent: L3 payment/checkout tokens are never checked for aud/nonce (reference implementation does); budget/recurrence counted as checked (TW-R13-01); negative or string-typed amounts pass (TW-R13-02)",
+    "B6 444 changed paths and 105 untracked ABI dumps are uncommitted with 5 commits unpushed; the release-evidence workflow cannot validate what is not in Git"
+  ],
+  "needed_not_blocking": [
+    "N1 CredentialFilter(revoked=...) now throws IllegalStateException from inside list()/query() on the first status-bearing credential; no factory accepts a WalletStatusResolver",
+    "N2 CloudWallet listing aborts on a concurrent delete or one corrupt object; statistics do N downloads; DatabaseWallet.getStatistics materialises every row with no LIMIT",
+    "N3 Status-list server returns e.message on public endpoints and swallows CancellationException (TW-R13-03)",
+    "N4 Plaintext-to-public-host gate covers EVM and Bitcoin only; Algorand, Cardano and Indy still send tokens over http://; hostnames with underscores are rejected; Bitcoin throws raw IllegalArgumentException where EVM wraps",
+    "N5 oidc4vp, SIOP and CHAPI session maps are unbounded; oidc4vci offer store hard-fails with an unchecked exception at 1000 offers; federation resolver follows every authority_hint with no breadth budget or cycle guard",
+    "N6 Observability unchanged: 35/777 files log; 648 broad catches; 6 empty catches",
+    "N7 26 modules with main code and no test source (cheqd, ens, ion, plc, polygon, sol, venafi, salesforce, servicenow, chapi, anchor, status-list database, both registrar servers, wallet-services, starknet, 9 example scenarios)",
+    "N8 Reference wallet (demo scope): claim-key extension written but never read by any verifier; consent defaults to no claims so the airspace gate denies valid holders; recovery export cannot be restored; reset fails in the environment that shows the recovery screen; passkey enrollment rejects synced authenticators after creating them",
+    "N9 docs-check.yml still uses mutable action tags; the module-name doc gate was removed; ScenarioExecutionTest wraps a cold quickStart in a 30 s timeout",
+    "N10 Deployment policy: TestkitWalletFactory ignores it, SUPPORTED_ONLY can construct no wallet because every catalogued plugin is experimental, and PluginRegistry rejects the ~98 uncatalogued modules with 'No assessed capabilities'"
+  ],
+  "production_grade_already": [
+    "Full test suite green when run: 3790 tests across 87 modules, 0 failures; wallet 70/70; ABI check passes",
+    "Binary-compatibility validation on every Kotlin module with a documented updateKotlinAbi procedure and CI gate",
+    "Remote Maven publication refuses to run without TRUSTWEAVE_SIGNING_KEY; per-module CycloneDX SBOM attached with the cyclonedx classifier",
+    "Release-evidence workflow with GitHub build-provenance attestation; ci.yml and release-evidence.yml pinned to action commit SHAs",
+    "TransportSecurity refuses plaintext to public hosts for EVM and Bitcoin, failing closed on DNS failure",
+    "KmsProviderConfig refuses in-memory key providers outside dev/test/local; wallet deployment policy exists and is tested for three plugins",
+    "Bounded, expiring exchange stores in oidc4vci; PKCE; SSRF guards on did:web and federation fetches; bounded response bodies",
+    "docs/api-reference/module-maturity.md tiers every module and states that publishing a JAR is not a production claim; release-validation.md documents ABI, SBOM and signing"
+  ],
+  "recommended_sequence": [
+    "Run ./gradlew ktlintFormat, fix the residue by hand, and get one green CI run on main so the ABI, coverage and SBOM steps execute for the first time (B1)",
+    "Fix the two service files and add a ServiceLoader smoke test over distribution:all (B2)",
+    "Rewrite TrustChainResolver.verifyChain in spec order, reject unsigned statements, and add a positive-path test with real keys (B3)",
+    "Normalise walletDir in FileWallet (or compare by file name) and add a relative-path test (B4)",
+    "Port expected_l3_*_aud/nonce from the reference implementation; split checked into locally-enforced vs acknowledged; reject negative and string amounts (B5)",
+    "Commit the ABI dumps with the code, push, tag, and run release-evidence once to obtain a verified attestation (B6)",
+    "Then N1-N5 in that order; N6-N10 as hygiene"
+  ],
+  "method": "Ran assemble, ktlintCheck, checkKotlinAbi and the full test task locally (--max-workers=3), plus tsc and vitest for the reference wallet. Fourteen review agents scanned the diff from complementary angles; every blocker and the load-bearing needed items were re-verified by reading the source, and B5 was checked against the Python reference implementation. Round-13 findings were re-checked in the tree.",
+  "limits": "Nothing was deployed or load-tested; no fix was applied. Findings marked PLAUSIBLE in findings.json rest on agent evidence not independently reproduced. Reference-wallet defects are scored lightly because the README states it is not a production custody product. SaaS excluded."
+}

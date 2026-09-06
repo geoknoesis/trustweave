@@ -10,7 +10,7 @@ sealed class WalletCreationResult {
      * Wallet creation succeeded.
      */
     data class Success(
-        val wallet: Wallet
+        val wallet: Wallet,
     ) : WalletCreationResult()
 
     /**
@@ -22,14 +22,14 @@ sealed class WalletCreationResult {
          */
         data class InvalidHolderDid(
             val holderDid: String,
-            val reason: String
+            val reason: String,
         ) : Failure()
 
         /**
          * Wallet factory not configured.
          */
         data class FactoryNotConfigured(
-            val reason: String
+            val reason: String,
         ) : Failure()
 
         /**
@@ -37,7 +37,7 @@ sealed class WalletCreationResult {
          */
         data class StorageFailed(
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
 
         /**
@@ -45,8 +45,7 @@ sealed class WalletCreationResult {
          */
         data class Other(
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
     }
 }
-

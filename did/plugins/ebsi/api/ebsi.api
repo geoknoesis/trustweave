@@ -1,0 +1,76 @@
+public final class org/trustweave/ebsidid/EbsiDidConfig {
+	public static final field CONFORMANCE_URL Ljava/lang/String;
+	public static final field Companion Lorg/trustweave/ebsidid/EbsiDidConfig$Companion;
+	public static final field PILOT_URL Ljava/lang/String;
+	public static final field PRODUCTION_URL Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/ebsidid/EbsiNetwork;Ljava/lang/String;J)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/ebsidid/EbsiNetwork;Ljava/lang/String;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/ebsidid/EbsiNetwork;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/ebsidid/EbsiNetwork;Ljava/lang/String;J)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/ebsidid/EbsiDidConfig;Ljava/lang/String;Lorg/trustweave/ebsidid/EbsiNetwork;Ljava/lang/String;JILjava/lang/Object;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiBaseUrl ()Ljava/lang/String;
+	public final fun getBearerToken ()Ljava/lang/String;
+	public final fun getNetwork ()Lorg/trustweave/ebsidid/EbsiNetwork;
+	public final fun getTimeoutSeconds ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/ebsidid/EbsiDidConfig$Companion {
+	public final fun conformance (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public static synthetic fun conformance$default (Lorg/trustweave/ebsidid/EbsiDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public final fun pilot (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public static synthetic fun pilot$default (Lorg/trustweave/ebsidid/EbsiDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public final fun production (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+	public static synthetic fun production$default (Lorg/trustweave/ebsidid/EbsiDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/ebsidid/EbsiDidConfig;
+}
+
+public final class org/trustweave/ebsidid/EbsiDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public static final field Companion Lorg/trustweave/ebsidid/EbsiDidMethod$Companion;
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/ebsidid/EbsiDidConfig;Lokhttp3/OkHttpClient;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/ebsidid/EbsiDidConfig;Lokhttp3/OkHttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/ebsidid/EbsiDidMethod$Companion {
+}
+
+public final class org/trustweave/ebsidid/EbsiException : org/trustweave/core/exception/TrustWeaveException {
+	public static final field Companion Lorg/trustweave/ebsidid/EbsiException$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCode ()Ljava/lang/String;
+	public final fun getHttpStatus ()Ljava/lang/Integer;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/trustweave/ebsidid/EbsiException$Companion {
+	public final fun authRequired (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiException;
+	public final fun httpError (ILjava/lang/String;)Lorg/trustweave/ebsidid/EbsiException;
+	public final fun notFound (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiException;
+}
+
+public final class org/trustweave/ebsidid/EbsiNetwork : java/lang/Enum {
+	public static final field CONFORMANCE Lorg/trustweave/ebsidid/EbsiNetwork;
+	public static final field PILOT Lorg/trustweave/ebsidid/EbsiNetwork;
+	public static final field PRODUCTION Lorg/trustweave/ebsidid/EbsiNetwork;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/ebsidid/EbsiNetwork;
+	public static fun values ()[Lorg/trustweave/ebsidid/EbsiNetwork;
+}
+
+public final class org/trustweave/ebsidid/spi/EbsiDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

@@ -12,18 +12,20 @@ import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
 class ZkSyncIntegration : BlockchainAnchorClientProvider {
     override val name: String = "zksync"
 
-    override val supportedChains: List<String> = listOf(
-        ZkSyncBlockchainAnchorClient.MAINNET,
-        ZkSyncBlockchainAnchorClient.SEPOLIA
-    )
+    override val supportedChains: List<String> =
+        listOf(
+            ZkSyncBlockchainAnchorClient.MAINNET,
+            ZkSyncBlockchainAnchorClient.SEPOLIA,
+        )
 
-    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
-        return if (supportedChains.contains(chainId)) {
+    override fun create(
+        chainId: String,
+        options: Map<String, Any?>,
+    ): BlockchainAnchorClient? =
+        if (supportedChains.contains(chainId)) {
             PaymentDeprecation.warnIfRawCreds(chainId, options, this)
             ZkSyncBlockchainAnchorClient(chainId, options)
         } else {
             null
         }
-    }
 }
-

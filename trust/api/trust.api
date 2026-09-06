@@ -1,0 +1,1932 @@
+public final class org/trustweave/trust/TrustAnchorMetadata {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/trust/TrustAnchorMetadata;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/TrustAnchorMetadata;Ljava/util/List;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/trust/TrustAnchorMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddedAt ()Lkotlinx/datetime/Instant;
+	public final fun getCredentialTypes ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/trust/TrustPolicy {
+}
+
+public final class org/trustweave/trust/TrustPolicy$NoTrustRequired : org/trustweave/trust/TrustPolicy {
+	public static final field INSTANCE Lorg/trustweave/trust/TrustPolicy$NoTrustRequired;
+}
+
+public final class org/trustweave/trust/TrustPolicy$RequireTrustAnchor : org/trustweave/trust/TrustPolicy {
+	public fun <init> (Lorg/trustweave/trust/TrustRegistry;)V
+	public final fun component1 ()Lorg/trustweave/trust/TrustRegistry;
+	public final fun copy (Lorg/trustweave/trust/TrustRegistry;)Lorg/trustweave/trust/TrustPolicy$RequireTrustAnchor;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/TrustPolicy$RequireTrustAnchor;Lorg/trustweave/trust/TrustRegistry;ILjava/lang/Object;)Lorg/trustweave/trust/TrustPolicy$RequireTrustAnchor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegistry ()Lorg/trustweave/trust/TrustRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/TrustPolicy$RequireTrustPath : org/trustweave/trust/TrustPolicy {
+	public fun <init> (ILorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;)V
+	public synthetic fun <init> (ILorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Lorg/trustweave/trust/TrustRegistry;
+	public final fun component3 ()Lorg/trustweave/credential/model/CredentialType;
+	public final fun copy (ILorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;)Lorg/trustweave/trust/TrustPolicy$RequireTrustPath;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/TrustPolicy$RequireTrustPath;ILorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;ILjava/lang/Object;)Lorg/trustweave/trust/TrustPolicy$RequireTrustPath;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialType ()Lorg/trustweave/credential/model/CredentialType;
+	public final fun getMaxPathLength ()I
+	public final fun getRegistry ()Lorg/trustweave/trust/TrustRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/trust/TrustRegistry : org/trustweave/credential/trust/TrustEvaluator {
+	public abstract fun addTrustAnchor (Ljava/lang/String;Lorg/trustweave/trust/TrustAnchorMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun findTrustPath-hbdn0iQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getTrustedIssuers (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTrustedIssuers (Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrusted (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isTrustedIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrustedIssuer-QWjaZAQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun removeTrustAnchor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/TrustRegistry$DefaultImpls {
+	public static fun getTrustedIssuers (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isTrusted (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isTrustedIssuer-QWjaZAQ (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/TrustWeave : java/io/Closeable, org/trustweave/did/resolver/DidResolver, org/trustweave/trust/context/DidDslContext, org/trustweave/trust/context/WalletDslContext {
+	public static final field Companion Lorg/trustweave/trust/TrustWeave$Companion;
+	public final fun anchorThroughDomain (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun anchorThroughDomain$default (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun close ()V
+	public final fun createDid-dWUq8MI (Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDid-dWUq8MI$default (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createDidWithKey-dWUq8MI (Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDidWithKey-dWUq8MI$default (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun delegate-KLykuaI (JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delegate-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun findTrustPath-SvUgx20 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun findTrustPath-SvUgx20$default (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getActiveDomain ()Lorg/trustweave/trust/domain/TrustedDomainManager;
+	public final fun getBlockchains ()Lorg/trustweave/anchor/services/BlockchainService;
+	public fun getConfiguration ()Lorg/trustweave/trust/dsl/TrustWeaveConfig;
+	public final fun getContracts ()Lorg/trustweave/contract/SmartContractService;
+	public fun getDidMethod (Ljava/lang/String;)Lorg/trustweave/did/DidMethod;
+	public fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public fun getDidResolver ()Lorg/trustweave/did/resolver/DidResolver;
+	public final fun getKeyId-gIAlu-s (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public fun getWalletFactory ()Lorg/trustweave/wallet/services/WalletFactory;
+	public final fun issue-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun issue-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveDid-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveDid-8Mi8wO0 (Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resolveDid-8Mi8wO0$default (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun resolveDid-8Mi8wO0$default (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun revoke-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revoke-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun rotateKey-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rotateKey-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun trust (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun updateDid-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateDid-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun verify-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verify-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun verify-zkXUZaI (Lorg/trustweave/credential/model/vc/VerifiableCredential;ZZJLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verify-zkXUZaI$default (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/credential/model/vc/VerifiableCredential;ZZJLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun wallet (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/TrustWeave$Companion {
+	public final fun build (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun build$default (Lorg/trustweave/trust/TrustWeave$Companion;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/TrustWeaveFactoriesKt {
+	public static final fun from (Lorg/trustweave/trust/TrustWeave$Companion;Lorg/trustweave/trust/dsl/TrustWeaveConfig;)Lorg/trustweave/trust/TrustWeave;
+	public static final fun inMemory (Lorg/trustweave/trust/TrustWeave$Companion;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lorg/trustweave/revocation/services/StatusListRegistryFactory;Lorg/trustweave/trust/services/TrustRegistryFactory;Lorg/trustweave/wallet/services/WalletFactory;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun inMemory$default (Lorg/trustweave/trust/TrustWeave$Companion;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lorg/trustweave/revocation/services/StatusListRegistryFactory;Lorg/trustweave/trust/services/TrustRegistryFactory;Lorg/trustweave/wallet/services/WalletFactory;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun quickStart (Lorg/trustweave/trust/TrustWeave$Companion;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/trust/context/DidDslContext {
+	public abstract fun getConfiguration ()Lorg/trustweave/trust/dsl/TrustWeaveConfig;
+	public abstract fun getDidMethod (Ljava/lang/String;)Lorg/trustweave/did/DidMethod;
+	public abstract fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public abstract fun getDidResolver ()Lorg/trustweave/did/resolver/DidResolver;
+}
+
+public abstract interface class org/trustweave/trust/context/WalletDslContext {
+	public abstract fun getWalletFactory ()Lorg/trustweave/wallet/services/WalletFactory;
+}
+
+public final class org/trustweave/trust/domain/DomainId {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lorg/trustweave/trust/domain/DomainId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/TrustedDomainManager {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/DomainTreasury;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/trust/domain/events/DomainEventSink;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/DomainTreasury;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/trust/domain/events/DomainEventSink;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun anchor (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun anchor$default (Lorg/trustweave/trust/domain/TrustedDomainManager;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getPayerDid ()Ljava/lang/String;
+	public final fun treasury ()Lorg/trustweave/trust/domain/treasury/DomainTreasury;
+}
+
+public abstract class org/trustweave/trust/domain/events/DomainEvent {
+	public abstract fun getChainId ()Ljava/lang/String;
+	public abstract fun getCorrelationId ()Ljava/lang/String;
+	public abstract fun getDomainId-77G6FPU ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/events/DomainEvent$OnChainSpendCancelled : org/trustweave/trust/domain/events/DomainEvent {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-77G6FPU ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy-oouBRqE (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendCancelled;
+	public static synthetic fun copy-oouBRqE$default (Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendCancelled;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendCancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public fun getCorrelationId ()Ljava/lang/String;
+	public fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/events/DomainEvent$OnChainSpendFailed : org/trustweave/trust/domain/events/DomainEvent {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-77G6FPU ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy-Iv00Ua8 (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendFailed;
+	public static synthetic fun copy-Iv00Ua8$default (Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public fun getCorrelationId ()Ljava/lang/String;
+	public fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/events/DomainEvent$OnChainSpendReserved : org/trustweave/trust/domain/events/DomainEvent {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-77G6FPU ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy-Iv00Ua8 (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendReserved;
+	public static synthetic fun copy-Iv00Ua8$default (Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendReserved;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendReserved;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public fun getCorrelationId ()Ljava/lang/String;
+	public fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getEstimate ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/events/DomainEvent$OnChainSpendSettled : org/trustweave/trust/domain/events/DomainEvent {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-77G6FPU ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy-i2pylPQ (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendSettled;
+	public static synthetic fun copy-i2pylPQ$default (Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendSettled;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/domain/events/DomainEvent$OnChainSpendSettled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualFee ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun getChainId ()Ljava/lang/String;
+	public fun getCorrelationId ()Ljava/lang/String;
+	public fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getPayerAddress ()Ljava/lang/String;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/trust/domain/events/DomainEventSink {
+	public abstract fun emit (Lorg/trustweave/trust/domain/events/DomainEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/events/LoggingDomainEventSink : org/trustweave/trust/domain/events/DomainEventSink {
+	public fun <init> ()V
+	public fun <init> (Lorg/slf4j/Logger;)V
+	public synthetic fun <init> (Lorg/slf4j/Logger;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun emit (Lorg/trustweave/trust/domain/events/DomainEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/events/NoopDomainEventSink : org/trustweave/trust/domain/events/DomainEventSink {
+	public static final field INSTANCE Lorg/trustweave/trust/domain/events/NoopDomainEventSink;
+	public fun emit (Lorg/trustweave/trust/domain/events/DomainEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/trust/domain/treasury/Cap {
+	public abstract fun getChainId ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/Cap$GasPriceCeiling : org/trustweave/trust/domain/treasury/Cap {
+	public fun <init> (Ljava/lang/String;Ljava/math/BigInteger;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/math/BigInteger;
+	public final fun copy (Ljava/lang/String;Ljava/math/BigInteger;)Lorg/trustweave/trust/domain/treasury/Cap$GasPriceCeiling;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/Cap$GasPriceCeiling;Ljava/lang/String;Ljava/math/BigInteger;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/Cap$GasPriceCeiling;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public final fun getMaxGasPriceWei ()Ljava/math/BigInteger;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/Cap$PerOperation : org/trustweave/trust/domain/treasury/Cap {
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/trust/domain/treasury/Cap$PerOperation;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/Cap$PerOperation;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/Cap$PerOperation;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public final fun getMax ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/Cap$PerWindow : org/trustweave/trust/domain/treasury/Cap {
+	public synthetic fun <init> (Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-UwyO8pc ()J
+	public final fun component3 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy-8Mi8wO0 (Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/trust/domain/treasury/Cap$PerWindow;
+	public static synthetic fun copy-8Mi8wO0$default (Lorg/trustweave/trust/domain/treasury/Cap$PerWindow;Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/Cap$PerWindow;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChainId ()Ljava/lang/String;
+	public final fun getMax ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getWindow-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/trust/domain/treasury/ChainAccount {
+	public abstract fun balance (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun estimateFee (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAddress ()Ljava/lang/String;
+	public abstract fun getChainId ()Ljava/lang/String;
+	public abstract fun getKeyRef ()Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public abstract fun sign (Lorg/trustweave/trust/domain/treasury/UnsignedTx;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/trust/domain/treasury/DomainTreasury {
+	public abstract fun account (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun accounts (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cancel (Lorg/trustweave/trust/domain/treasury/Reservation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public abstract fun ledger ()Lorg/trustweave/trust/domain/treasury/TreasuryLedger;
+	public abstract fun policy (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun reserve (Lorg/trustweave/anchor/payment/PaymentContext;Lorg/trustweave/anchor/payment/TokenAmount;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun settle (Lorg/trustweave/trust/domain/treasury/Reservation;Lorg/trustweave/anchor/AnchorResult;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun settle$default (Lorg/trustweave/trust/domain/treasury/DomainTreasury;Lorg/trustweave/trust/domain/treasury/Reservation;Lorg/trustweave/anchor/AnchorResult;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/DomainTreasury$DefaultImpls {
+	public static synthetic fun settle$default (Lorg/trustweave/trust/domain/treasury/DomainTreasury;Lorg/trustweave/trust/domain/treasury/Reservation;Lorg/trustweave/anchor/AnchorResult;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/InMemoryChainAccount : org/trustweave/trust/domain/treasury/ChainAccount {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/KmsKeyRef;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/kms/KeyManagementService;)V
+	public fun balance (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun estimateFee (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAddress ()Ljava/lang/String;
+	public fun getChainId ()Ljava/lang/String;
+	public fun getKeyRef ()Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public fun sign (Lorg/trustweave/trust/domain/treasury/UnsignedTx;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/InMemoryDomainTreasury : org/trustweave/trust/domain/treasury/DomainTreasury {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/trust/domain/treasury/SpendPolicy;Lorg/trustweave/trust/domain/treasury/TreasuryLedgerStore;Lorg/trustweave/trust/domain/treasury/TreasuryConfig;Lorg/trustweave/trust/domain/events/DomainEventSink;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/trust/domain/treasury/SpendPolicy;Lorg/trustweave/trust/domain/treasury/TreasuryLedgerStore;Lorg/trustweave/trust/domain/treasury/TreasuryConfig;Lorg/trustweave/trust/domain/events/DomainEventSink;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun account (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun accounts (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun cancel (Lorg/trustweave/trust/domain/treasury/Reservation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public fun ledger ()Lorg/trustweave/trust/domain/treasury/TreasuryLedger;
+	public fun policy (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reserve (Lorg/trustweave/anchor/payment/PaymentContext;Lorg/trustweave/anchor/payment/TokenAmount;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun settle (Lorg/trustweave/trust/domain/treasury/Reservation;Lorg/trustweave/anchor/AnchorResult;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/InMemoryTreasuryLedgerStore : org/trustweave/trust/domain/treasury/TreasuryLedgerStore {
+	public fun <init> ()V
+	public fun append (Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun entries-oouBRqE (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun spentSince-Iv00Ua8 (Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun update (Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/KmsKeyRef {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/KmsKeyRef;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId ()Ljava/lang/String;
+	public final fun getKmsId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/PolicyEvaluationContext {
+	public fun <init> (Lkotlinx/datetime/Instant;Ljava/util/List;)V
+	public final fun component1 ()Lkotlinx/datetime/Instant;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lkotlinx/datetime/Instant;Ljava/util/List;)Lorg/trustweave/trust/domain/treasury/PolicyEvaluationContext;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/PolicyEvaluationContext;Lkotlinx/datetime/Instant;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/PolicyEvaluationContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNow ()Lkotlinx/datetime/Instant;
+	public final fun getWindowStates ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/Reservation {
+	public static final field Companion Lorg/trustweave/trust/domain/treasury/Reservation$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlinx/datetime/Instant;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlinx/datetime/Instant;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-77G6FPU ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lkotlinx/datetime/Instant;
+	public final fun component7-UwyO8pc ()J
+	public final fun copy-0HwF0Ng (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlinx/datetime/Instant;J)Lorg/trustweave/trust/domain/treasury/Reservation;
+	public static synthetic fun copy-0HwF0Ng$default (Lorg/trustweave/trust/domain/treasury/Reservation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlinx/datetime/Instant;JILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/Reservation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getCorrelationId ()Ljava/lang/String;
+	public final fun getCreatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getExpiresAt ()Lkotlinx/datetime/Instant;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLocked ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getTtl-UwyO8pc ()J
+	public fun hashCode ()I
+	public final fun isExpired (Lkotlinx/datetime/Instant;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/Reservation$Companion {
+	public final fun getDEFAULT_TTL-UwyO8pc ()J
+}
+
+public final class org/trustweave/trust/domain/treasury/SettlementStatus : java/lang/Enum {
+	public static final field CANCELLED Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public static final field FAILED Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public static final field RESERVED Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public static final field SETTLED Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public static fun values ()[Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+}
+
+public final class org/trustweave/trust/domain/treasury/SignedTx {
+	public fun <init> (Ljava/lang/String;[B)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()[B
+	public final fun copy (Ljava/lang/String;[B)Lorg/trustweave/trust/domain/treasury/SignedTx;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/SignedTx;Ljava/lang/String;[BILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/SignedTx;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBytes ()[B
+	public final fun getChainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/SpendPolicy {
+	public static final field Companion Lorg/trustweave/trust/domain/treasury/SpendPolicy$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/Set;ZLjava/util/Set;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/Set;ZLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/List;Ljava/util/Set;ZLjava/util/Set;)Lorg/trustweave/trust/domain/treasury/SpendPolicy;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/SpendPolicy;Ljava/util/List;Ljava/util/Set;ZLjava/util/Set;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/SpendPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowedStrategies ()Ljava/util/Set;
+	public final fun getCaps ()Ljava/util/List;
+	public final fun getRequireSponsorAllowList ()Z
+	public final fun getSponsorAllowList ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/SpendPolicy$Companion {
+	public final fun getDEFAULT ()Lorg/trustweave/trust/domain/treasury/SpendPolicy;
+}
+
+public final class org/trustweave/trust/domain/treasury/SpendPolicy$WindowState {
+	public synthetic fun <init> (Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-UwyO8pc ()J
+	public final fun component3 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy-8Mi8wO0 (Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/trust/domain/treasury/SpendPolicy$WindowState;
+	public static synthetic fun copy-8Mi8wO0$default (Lorg/trustweave/trust/domain/treasury/SpendPolicy$WindowState;Ljava/lang/String;JLorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/SpendPolicy$WindowState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getSpent ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getWindow-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/TreasuryConfig {
+	public synthetic fun <init> (IIJLkotlinx/datetime/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (IIJLkotlinx/datetime/Clock;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3-UwyO8pc ()J
+	public final fun component4 ()Lkotlinx/datetime/Clock;
+	public final fun copy-exY8QGI (IIJLkotlinx/datetime/Clock;)Lorg/trustweave/trust/domain/treasury/TreasuryConfig;
+	public static synthetic fun copy-exY8QGI$default (Lorg/trustweave/trust/domain/treasury/TreasuryConfig;IIJLkotlinx/datetime/Clock;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/TreasuryConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClock ()Lkotlinx/datetime/Clock;
+	public final fun getReservationTtl-UwyO8pc ()J
+	public final fun getSafetyMarginDenominator ()I
+	public final fun getSafetyMarginNumerator ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/TreasuryLedger {
+	public final fun all (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun all$default (Lorg/trustweave/trust/domain/treasury/TreasuryLedger;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun windowState-dWUq8MI (Ljava/lang/String;JLkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/TreasuryLedgerEntry {
+	public static final field Companion Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;J)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun actualFee ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public final fun component11 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;J)Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;JILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun estimatedFee ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getActualFeeAmount ()Ljava/lang/String;
+	public final fun getAsset ()Ljava/lang/String;
+	public final fun getAtEpochMillis ()J
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getCorrelationId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public final fun getEstimatedFeeAmount ()Ljava/lang/String;
+	public final fun getOperation ()Ljava/lang/String;
+	public final fun getPayerDid ()Ljava/lang/String;
+	public final fun getStatus ()Lorg/trustweave/trust/domain/treasury/SettlementStatus;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/domain/treasury/TreasuryLedgerEntry$Companion {
+}
+
+public abstract interface class org/trustweave/trust/domain/treasury/TreasuryLedgerStore {
+	public abstract fun append (Lorg/trustweave/trust/domain/treasury/TreasuryLedgerEntry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun entries-oouBRqE (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun entries-oouBRqE$default (Lorg/trustweave/trust/domain/treasury/TreasuryLedgerStore;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun spentSince-Iv00Ua8 (Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun update (Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/SettlementStatus;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/TreasuryLedgerStore$DefaultImpls {
+	public static synthetic fun entries-oouBRqE$default (Lorg/trustweave/trust/domain/treasury/TreasuryLedgerStore;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/domain/treasury/UnsignedTx {
+	public fun <init> (Ljava/lang/String;[BLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;[BLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()[B
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;[BLjava/lang/String;)Lorg/trustweave/trust/domain/treasury/UnsignedTx;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/domain/treasury/UnsignedTx;Ljava/lang/String;[BLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/domain/treasury/UnsignedTx;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBytes ()[B
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDomainSeparation ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/KeyRotationBuilder {
+	public fun <init> (Lorg/trustweave/trust/context/DidDslContext;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/services/KmsService;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public synthetic fun <init> (Lorg/trustweave/trust/context/DidDslContext;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/services/KmsService;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun algorithm (Ljava/lang/String;)V
+	public final fun algorithm (Lorg/trustweave/did/KeyAlgorithm;)V
+	public final fun did (Ljava/lang/String;)V
+	public final fun method (Ljava/lang/String;)V
+	public final fun removeOldKey (Ljava/lang/String;)V
+	public final fun rotate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/TrustAnchorBuilder {
+	public fun <init> ()V
+	public final fun addedAt (Lkotlinx/datetime/Instant;)V
+	public final fun credentialTypes (Ljava/lang/String;)V
+	public final fun credentialTypes (Ljava/util/List;)V
+	public final fun description (Ljava/lang/String;)V
+	public final fun getAddedAt ()Lkotlinx/datetime/Instant;
+	public final fun getCredentialTypes ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun setAddedAt (Lkotlinx/datetime/Instant;)V
+	public final fun setCredentialTypes (Ljava/util/List;)V
+	public final fun setDescription (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/TrustAnchorConfig {
+	public fun <init> (Lorg/trustweave/trust/dsl/TrustAnchorMetadataBuilder;)V
+	public final fun getMetadataBuilder ()Lorg/trustweave/trust/dsl/TrustAnchorMetadataBuilder;
+}
+
+public final class org/trustweave/trust/dsl/TrustAnchorMetadataBuilder {
+	public fun <init> ()V
+	public final fun addedAt (Lkotlinx/datetime/Instant;)V
+	public final fun credentialTypes (Ljava/util/List;)V
+	public final fun credentialTypes ([Ljava/lang/String;)V
+	public final fun description (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/TrustBuilder {
+	public fun <init> (Lorg/trustweave/trust/TrustRegistry;)V
+	public final fun addAnchor (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun addAnchor (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/trust/dsl/TrustAnchorConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun addAnchor$default (Lorg/trustweave/trust/dsl/TrustBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun findTrustPath-hbdn0iQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getTrustedIssuers (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getTrustedIssuers$default (Lorg/trustweave/trust/dsl/TrustBuilder;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun isTrusted (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun isTrusted$default (Lorg/trustweave/trust/dsl/TrustBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun removeAnchor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolve (Lorg/trustweave/trust/dsl/TrustPathFinder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/TrustDslExtensionsKt {
+	public static final fun and (Lorg/trustweave/credential/trust/TrustEvaluator;Lorg/trustweave/credential/trust/TrustEvaluator;)Lorg/trustweave/credential/trust/TrustEvaluator;
+	public static final fun because (Lorg/trustweave/trust/dsl/TrustAnchorBuilder;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/trust/dsl/TrustAnchorConfig;
+	public static final fun findTrustPath (Lorg/trustweave/trust/dsl/TrustBuilder;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun getTrustsAll (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/dsl/TrustAnchorBuilder;
+	public static final fun not (Lorg/trustweave/credential/trust/TrustEvaluator;)Lorg/trustweave/credential/trust/TrustEvaluator;
+	public static final fun or (Lorg/trustweave/credential/trust/TrustEvaluator;Lorg/trustweave/credential/trust/TrustEvaluator;)Lorg/trustweave/credential/trust/TrustEvaluator;
+	public static final fun trusts (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)Lorg/trustweave/trust/dsl/TrustAnchorBuilder;
+	public static final fun trusts (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;)Lorg/trustweave/trust/dsl/TrustAnchorBuilder;
+	public static final fun trustsPath (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/dsl/TrustPathFinder;
+}
+
+public final class org/trustweave/trust/dsl/TrustPathFinder {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)V
+	public final fun getFrom ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getTo ()Lorg/trustweave/did/identifiers/Did;
+	public final fun resolve (Lorg/trustweave/trust/dsl/TrustBuilder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/TrustWeaveConfig {
+	public final fun getAnchorClients ()Ljava/util/Map;
+	public final fun getBlockchainRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public final fun getCredentialConfig ()Lorg/trustweave/trust/dsl/TrustWeaveConfig$CredentialConfig;
+	public final fun getCredentialService ()Lorg/trustweave/credential/CredentialService;
+	public final fun getDefaultDidMethod ()Ljava/lang/String;
+	public final fun getDidMethods ()Ljava/util/Map;
+	public final fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun getDidResolver ()Lorg/trustweave/did/resolver/DidResolver;
+	public final fun getIoDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public final fun getKmsService ()Lorg/trustweave/kms/services/KmsService;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRevocationManager ()Lorg/trustweave/credential/revocation/CredentialRevocationManager;
+	public final fun getSchemaRegistry ()Lorg/trustweave/credential/schema/SchemaRegistry;
+	public final fun getSmartContractService ()Lorg/trustweave/contract/SmartContractService;
+	public final fun getTrustRegistry ()Lorg/trustweave/trust/TrustRegistry;
+	public final fun getTrustedDomainManager ()Lorg/trustweave/trust/domain/TrustedDomainManager;
+	public final fun getWalletFactory ()Lorg/trustweave/wallet/services/WalletFactory;
+}
+
+public final class org/trustweave/trust/dsl/TrustWeaveConfig$Builder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun anchor (Lkotlin/jvm/functions/Function1;)V
+	public final fun build (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun credentialService (Lorg/trustweave/credential/CredentialService;)V
+	public final fun credentials (Lkotlin/jvm/functions/Function1;)V
+	public final fun customKms (Lorg/trustweave/kms/KeyManagementService;)V
+	public final fun did (Lkotlin/jvm/functions/Function1;)V
+	public final fun dispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun domain (Lkotlin/jvm/functions/Function1;)V
+	public final fun factories (Lorg/trustweave/revocation/services/StatusListRegistryFactory;Lorg/trustweave/trust/services/TrustRegistryFactory;Lorg/trustweave/wallet/services/WalletFactory;)V
+	public static synthetic fun factories$default (Lorg/trustweave/trust/dsl/TrustWeaveConfig$Builder;Lorg/trustweave/revocation/services/StatusListRegistryFactory;Lorg/trustweave/trust/services/TrustRegistryFactory;Lorg/trustweave/wallet/services/WalletFactory;ILjava/lang/Object;)V
+	public final fun keys (Lkotlin/jvm/functions/Function1;)V
+	public final fun revocation (Ljava/lang/String;)V
+	public final fun revocation (Lkotlin/jvm/functions/Function1;)V
+	public final fun schemas (ZLorg/trustweave/credential/model/SchemaFormat;)V
+	public static synthetic fun schemas$default (Lorg/trustweave/trust/dsl/TrustWeaveConfig$Builder;ZLorg/trustweave/credential/model/SchemaFormat;ILjava/lang/Object;)V
+	public final fun smartContractService (Lorg/trustweave/contract/SmartContractService;)V
+	public final fun trust (Ljava/lang/String;)V
+	public final fun trust (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class org/trustweave/trust/dsl/TrustWeaveConfig$CredentialConfig {
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/credential/model/ProofType;ZLjava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/model/ProofType;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/credential/model/ProofType;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/credential/model/ProofType;ZLjava/lang/String;)Lorg/trustweave/trust/dsl/TrustWeaveConfig$CredentialConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/TrustWeaveConfig$CredentialConfig;Lorg/trustweave/credential/model/ProofType;ZLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/TrustWeaveConfig$CredentialConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAutoAnchor ()Z
+	public final fun getDefaultChain ()Ljava/lang/String;
+	public final fun getDefaultProofType ()Lorg/trustweave/credential/model/ProofType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/TrustWeaveConfigKt {
+	public static final fun trustWeave (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun trustWeave$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface annotation class org/trustweave/trust/dsl/TrustWeaveDsl : java/lang/annotation/Annotation {
+}
+
+public final class org/trustweave/trust/dsl/TrustWeaveExtensionsKt {
+	public static final fun completeWorkflow (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lorg/trustweave/wallet/Wallet;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun completeWorkflow$default (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lorg/trustweave/wallet/Wallet;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun createDidAndIssue (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun createDidIssueAndStore (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lorg/trustweave/wallet/Wallet;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun storeIn (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/wallet/Wallet;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/WorkflowResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/trust/dsl/wallet/OrganizationResult;Lorg/trustweave/credential/results/VerificationResult;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/trust/dsl/wallet/OrganizationResult;Lorg/trustweave/credential/results/VerificationResult;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun component3 ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun component4 ()Lorg/trustweave/trust/dsl/wallet/OrganizationResult;
+	public final fun component5 ()Lorg/trustweave/credential/results/VerificationResult;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/trust/dsl/wallet/OrganizationResult;Lorg/trustweave/credential/results/VerificationResult;)Lorg/trustweave/trust/dsl/WorkflowResult;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/WorkflowResult;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/trust/dsl/wallet/OrganizationResult;Lorg/trustweave/credential/results/VerificationResult;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/WorkflowResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredential ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getOrganizationResult ()Lorg/trustweave/trust/dsl/wallet/OrganizationResult;
+	public final fun getStoredCredential ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun getVerificationResult ()Lorg/trustweave/credential/results/VerificationResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/builders/AnchorChainConfigBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/trust/dsl/builders/AnchorConfig;
+	public final fun inMemory (Ljava/lang/String;)V
+	public static synthetic fun inMemory$default (Lorg/trustweave/trust/dsl/builders/AnchorChainConfigBuilder;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun options (Lkotlin/jvm/functions/Function1;)V
+	public final fun provider (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/AnchorConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/trust/dsl/builders/AnchorConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/builders/AnchorConfig;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/builders/AnchorConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOptions ()Ljava/util/Map;
+	public final fun getProvider ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/builders/AnchorConfigBuilder {
+	public fun <init> ()V
+	public final fun chain (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun getChains ()Ljava/util/Map;
+}
+
+public final class org/trustweave/trust/dsl/builders/ChainAccountBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getKeyRef ()Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public final fun setAddress (Ljava/lang/String;)V
+	public final fun setKeyRef (Lorg/trustweave/trust/domain/treasury/KmsKeyRef;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/CredentialsBuilder {
+	public fun <init> ()V
+	public final fun autoAnchor (Z)V
+	public final fun defaultChain (Ljava/lang/String;)V
+	public final fun defaultProofType (Lorg/trustweave/credential/model/ProofType;)V
+	public final fun getAutoAnchor ()Ljava/lang/Boolean;
+	public final fun getDefaultChain ()Ljava/lang/String;
+	public final fun getDefaultProofType ()Lorg/trustweave/credential/model/ProofType;
+	public final fun setAutoAnchor (Ljava/lang/Boolean;)V
+	public final fun setDefaultChain (Ljava/lang/String;)V
+	public final fun setDefaultProofType (Lorg/trustweave/credential/model/ProofType;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/DidConfigBuilder {
+	public fun <init> ()V
+	public final fun default (Ljava/lang/String;)V
+	public final fun getDefaultMethod ()Ljava/lang/String;
+	public final fun getMethods ()Ljava/util/Map;
+	public final fun method (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/DidMethodConfig {
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/KeyAlgorithm;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/trustweave/did/KeyAlgorithm;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/KeyAlgorithm;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lorg/trustweave/did/KeyAlgorithm;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/trust/dsl/builders/DidMethodConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/builders/DidMethodConfig;Lorg/trustweave/did/KeyAlgorithm;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/builders/DidMethodConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getAlgorithm ()Lorg/trustweave/did/KeyAlgorithm;
+	public final fun getDomain ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toOptions (Lorg/trustweave/kms/KeyManagementService;)Lorg/trustweave/did/DidCreationOptions;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/builders/DidMethodConfigBuilder {
+	public fun <init> ()V
+	public final fun algorithm (Ljava/lang/String;)V
+	public final fun algorithm (Lorg/trustweave/did/KeyAlgorithm;)V
+	public final fun build ()Lorg/trustweave/trust/dsl/builders/DidMethodConfig;
+	public final fun domain (Ljava/lang/String;)V
+	public final fun option (Ljava/lang/String;Ljava/lang/Object;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/DomainChainAccountConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/KmsKeyRef;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/KmsKeyRef;)Lorg/trustweave/trust/dsl/builders/DomainChainAccountConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/builders/DomainChainAccountConfig;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/trust/domain/treasury/KmsKeyRef;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/builders/DomainChainAccountConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getKeyRef ()Lorg/trustweave/trust/domain/treasury/KmsKeyRef;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/builders/DomainConfig {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/trust/domain/treasury/SpendPolicy;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-77G6FPU ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lorg/trustweave/trust/domain/treasury/SpendPolicy;
+	public final fun copy-Iv00Ua8 (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/trust/domain/treasury/SpendPolicy;)Lorg/trustweave/trust/dsl/builders/DomainConfig;
+	public static synthetic fun copy-Iv00Ua8$default (Lorg/trustweave/trust/dsl/builders/DomainConfig;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/trust/domain/treasury/SpendPolicy;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/builders/DomainConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccounts ()Ljava/util/List;
+	public final fun getDomainId-77G6FPU ()Ljava/lang/String;
+	public final fun getPayerDid ()Ljava/lang/String;
+	public final fun getSpendPolicy ()Lorg/trustweave/trust/domain/treasury/SpendPolicy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/builders/DomainConfigBuilder {
+	public fun <init> ()V
+	public final fun chainAccount (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun domainId (Ljava/lang/String;)V
+	public final fun domainId-T0DawrE (Ljava/lang/String;)V
+	public final fun payerDid (Ljava/lang/String;)V
+	public final fun spendPolicy (Lorg/trustweave/trust/domain/treasury/SpendPolicy;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/KeysBuilder {
+	public fun <init> ()V
+	public final fun algorithm (Ljava/lang/String;)V
+	public final fun algorithm (Lorg/trustweave/did/KeyAlgorithm;)V
+	public final fun custom (Lorg/trustweave/kms/KeyManagementService;)V
+	public final fun getAlgorithm ()Ljava/lang/String;
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public final fun getProvider ()Ljava/lang/String;
+	public final fun getSigner ()Lkotlin/jvm/functions/Function3;
+	public final fun provider (Ljava/lang/String;)V
+	public final fun setKms (Lorg/trustweave/kms/KeyManagementService;)V
+	public final fun setProvider (Ljava/lang/String;)V
+	public final fun setSigner (Lkotlin/jvm/functions/Function3;)V
+	public final fun signer (Lkotlin/jvm/functions/Function3;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/OptionsBuilder {
+	public fun <init> ()V
+	public final fun getOptions ()Ljava/util/Map;
+	public final fun to (Ljava/lang/String;Ljava/lang/Object;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/RevocationConfigBuilder {
+	public fun <init> ()V
+	public final fun getProvider ()Ljava/lang/String;
+	public final fun provider (Ljava/lang/String;)V
+	public final fun setProvider (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/SchemaConfigBuilder {
+	public fun <init> ()V
+	public final fun getProvider ()Ljava/lang/String;
+	public final fun provider (Ljava/lang/String;)V
+	public final fun setProvider (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/builders/TrustConfigBuilder {
+	public fun <init> ()V
+	public final fun getProvider ()Ljava/lang/String;
+	public final fun provider (Ljava/lang/String;)V
+	public final fun setProvider (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/AnchorProviders {
+	public static final field ALGORAND Ljava/lang/String;
+	public static final field ARBITRUM Ljava/lang/String;
+	public static final field BASE Ljava/lang/String;
+	public static final field ETHEREUM Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/AnchorProviders;
+	public static final field IN_MEMORY Ljava/lang/String;
+	public static final field POLYGON Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/BatchIssuanceBuilder {
+	public fun <init> ()V
+	public final fun getMaxConcurrency ()I
+	public final fun getRequests ()Ljava/util/List;
+	public final fun setMaxConcurrency (I)V
+	public final fun setRequests (Ljava/util/List;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/BatchOperationsKt {
+	public static final fun issueBatch (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun verifyBatch (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/credential/BatchVerificationBuilder {
+	public fun <init> ()V
+	public final fun getCredentials ()Ljava/util/List;
+	public final fun getMaxConcurrency ()I
+	public final fun getOptions ()Lorg/trustweave/credential/requests/VerificationOptions;
+	public final fun getTrustPolicy ()Lorg/trustweave/credential/trust/TrustEvaluator;
+	public final fun setCredentials (Ljava/util/List;)V
+	public final fun setMaxConcurrency (I)V
+	public final fun setOptions (Lorg/trustweave/credential/requests/VerificationOptions;)V
+	public final fun setTrustPolicy (Lorg/trustweave/credential/trust/TrustEvaluator;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/CredentialBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun evidence (Lkotlin/jvm/functions/Function1;)V
+	public final fun expires (Lkotlinx/datetime/Instant;)V
+	public final fun expires-LRDsOJo (J)V
+	public final fun expiresIn-LRDsOJo (J)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun issued (Lkotlinx/datetime/Instant;)V
+	public final fun issuer (Ljava/lang/String;)V
+	public final fun issuer (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun refreshService (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun schema (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun schema$default (Lorg/trustweave/trust/dsl/credential/CredentialBuilder;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun status (Lkotlin/jvm/functions/Function1;)V
+	public final fun subject (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun subject (Lkotlin/jvm/functions/Function1;)V
+	public final fun subject (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun subject$default (Lorg/trustweave/trust/dsl/credential/CredentialBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun subject$default (Lorg/trustweave/trust/dsl/credential/CredentialBuilder;Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun termsOfUse (Lkotlin/jvm/functions/Function1;)V
+	public final fun type ([Ljava/lang/String;)V
+	public final fun type ([Lorg/trustweave/credential/model/CredentialType;)V
+	public final fun validFrom (Lkotlinx/datetime/Instant;)V
+	public final fun validUntil (Lkotlinx/datetime/Instant;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/CredentialBuilderKt {
+	public static final fun credential (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+}
+
+public final class org/trustweave/trust/dsl/credential/CredentialStatusBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/credential/model/vc/CredentialStatus;
+	public final fun hasId ()Z
+	public final fun id (Ljava/lang/String;)V
+	public final fun statusListCredential (Ljava/lang/String;)V
+	public final fun statusListIndex (Ljava/lang/String;)V
+	public final fun statusPurpose (Ljava/lang/String;)V
+	public final fun type (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/DidMethods {
+	public static final field ETHR Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/DidMethods;
+	public static final field ION Ljava/lang/String;
+	public static final field KEY Ljava/lang/String;
+	public static final field WEB Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/EvidenceBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/credential/model/Evidence;
+	public final fun date (Ljava/lang/String;)V
+	public final fun document (Lkotlin/jvm/functions/Function1;)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun type ([Ljava/lang/String;)V
+	public final fun verifier (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/IssuanceBuilder {
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/credential/revocation/CredentialRevocationManager;Lorg/trustweave/credential/format/ProofSuiteId;Lkotlinx/coroutines/CoroutineDispatcher;Lorg/trustweave/did/resolver/DidResolver;ZLjava/lang/String;Lorg/trustweave/anchor/services/BlockchainService;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/credential/revocation/CredentialRevocationManager;Lorg/trustweave/credential/format/ProofSuiteId;Lkotlinx/coroutines/CoroutineDispatcher;Lorg/trustweave/did/resolver/DidResolver;ZLjava/lang/String;Lorg/trustweave/anchor/services/BlockchainService;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun additionalOption (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun build (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun challenge (Ljava/lang/String;)V
+	public final fun credential (Lkotlin/jvm/functions/Function1;)V
+	public final fun credential (Lorg/trustweave/credential/model/vc/VerifiableCredential;)V
+	public final fun domain (Ljava/lang/String;)V
+	public final fun signedBy (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun signedBy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)V
+	public final fun withProof (Lorg/trustweave/credential/format/ProofSuiteId;)V
+	public final fun withRevocation ()V
+}
+
+public final class org/trustweave/trust/dsl/credential/JsonObjectBuilder {
+	public fun <init> ()V
+	public final fun build ()Lkotlinx/serialization/json/JsonObject;
+	public final fun invoke (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun put (Ljava/lang/String;Ljava/lang/Number;)V
+	public final fun put (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun put (Ljava/lang/String;Ljava/util/List;)V
+	public final fun put (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun put (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public final fun put (Ljava/lang/String;Z)V
+	public final fun to (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun to (Ljava/lang/String;Ljava/util/List;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/KeyAlgorithms {
+	public static final field ED25519 Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/KeyAlgorithms;
+	public static final field RSA Ljava/lang/String;
+	public static final field SECP256K1 Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/KmsProviders {
+	public static final field AWS Ljava/lang/String;
+	public static final field AZURE Ljava/lang/String;
+	public static final field CYBERARK Ljava/lang/String;
+	public static final field FORTANIX Ljava/lang/String;
+	public static final field GOOGLE Ljava/lang/String;
+	public static final field HASHICORP Ljava/lang/String;
+	public static final field IBM Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/KmsProviders;
+	public static final field IN_MEMORY Ljava/lang/String;
+	public static final field THALES Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/PresentationBuilder {
+	public fun <init> (Lorg/trustweave/credential/CredentialService;)V
+	public final fun buildResult (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun challenge (Ljava/lang/String;)V
+	public final fun credentials (Ljava/util/List;)V
+	public final fun credentials ([Lorg/trustweave/credential/model/vc/VerifiableCredential;)V
+	public final fun domain (Ljava/lang/String;)V
+	public final fun holder (Ljava/lang/String;)V
+	public final fun holder (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun selectiveDisclosure (Lkotlin/jvm/functions/Function1;)V
+	public final fun verificationMethod (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/PresentationBuilderKt {
+	public static final fun presentationResult (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/credential/ProofPurposes {
+	public static final field ASSERTION_METHOD Ljava/lang/String;
+	public static final field AUTHENTICATION Ljava/lang/String;
+	public static final field CAPABILITY_DELEGATION Ljava/lang/String;
+	public static final field CAPABILITY_INVOCATION Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/ProofPurposes;
+	public static final field KEY_AGREEMENT Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/RevocationBuilder {
+	public fun <init> (Lorg/trustweave/credential/revocation/CredentialRevocationManager;)V
+	public final fun check (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun createStatusList (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun credential (Ljava/lang/String;)V
+	public final fun forIssuer (Ljava/lang/String;)V
+	public final fun getStatusList (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun purpose (Lorg/trustweave/credential/model/StatusPurpose;)V
+	public final fun revoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun size (I)V
+	public final fun statusList (Ljava/lang/String;)V
+	public final fun suspend (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/credential/RevocationBuilderKt {
+	public static final fun revocation (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/trust/dsl/credential/RevocationBuilder;
+}
+
+public final class org/trustweave/trust/dsl/credential/RevocationProviders {
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/RevocationProviders;
+	public static final field IN_MEMORY Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/SchemaBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/credential/schema/SchemaRegistry;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/schema/SchemaRegistry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun definition (Lkotlinx/serialization/json/JsonObject;)V
+	public final fun format (Lorg/trustweave/credential/model/SchemaFormat;)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun jsonSchema (Lkotlin/jvm/functions/Function1;)V
+	public final fun register (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun shacl (Lkotlin/jvm/functions/Function1;)V
+	public final fun validate (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/credential/SchemaBuilderKt {
+	public static final fun registerSchema (Lorg/trustweave/trust/TrustWeave;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun schema (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/trust/dsl/credential/SchemaBuilder;
+	public static synthetic fun schema$default (Lorg/trustweave/trust/TrustWeave;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/credential/SchemaBuilder;
+}
+
+public final class org/trustweave/trust/dsl/credential/SchemaValidatorTypes {
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/SchemaValidatorTypes;
+	public static final field JSON_SCHEMA Ljava/lang/String;
+	public static final field SHACL Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/SelectiveDisclosureBuilder {
+	public fun <init> ()V
+	public final fun getRevealedFields ()Ljava/util/List;
+	public final fun reveal ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/ServiceTypes {
+	public static final field CREDENTIAL_REVOCATION Ljava/lang/String;
+	public static final field DID_COMM_MESSAGING Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/ServiceTypes;
+	public static final field LINKED_DOMAINS Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/StatusPurposes {
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/StatusPurposes;
+	public static final field REVOCATION Ljava/lang/String;
+	public static final field SUSPENSION Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/SubjectBuilder {
+	public fun <init> ()V
+	public final fun build ()Lkotlinx/serialization/json/JsonObject;
+	public final fun id (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun invoke (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun to (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun to (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/TermsOfUseBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/credential/model/vc/TermsOfUse;
+	public final fun id (Ljava/lang/String;)V
+	public final fun terms (Lkotlin/jvm/functions/Function1;)V
+	public final fun type (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/TrustProviders {
+	public static final field INSTANCE Lorg/trustweave/trust/dsl/credential/TrustProviders;
+	public static final field IN_MEMORY Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/credential/VerificationBuilder {
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun additionalOption (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun allowUntrusted ()V
+	public final fun build (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun challenge (Ljava/lang/String;)V
+	public final fun checkExpiration ()V
+	public final fun checkRevocation ()V
+	public final fun credential (Lorg/trustweave/credential/model/vc/VerifiableCredential;)V
+	public final fun domain (Ljava/lang/String;)V
+	public final fun enforceHolderBinding (Z)V
+	public final fun requireTrust (Lorg/trustweave/trust/TrustRegistry;)V
+	public final fun requireTrustPath (Lorg/trustweave/trust/TrustRegistry;I)V
+	public static synthetic fun requireTrustPath$default (Lorg/trustweave/trust/dsl/credential/VerificationBuilder;Lorg/trustweave/trust/TrustRegistry;IILjava/lang/Object;)V
+	public final fun skipExpiration ()V
+	public final fun skipRevocation ()V
+	public final fun skipSchema ()V
+	public final fun validateProofPurpose ()V
+	public final fun validateSchema (Ljava/lang/String;)V
+	public final fun verifyPresentationProof (Z)V
+	public final fun withTrustPolicy (Lorg/trustweave/credential/trust/TrustEvaluator;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/jades/JadesIssuanceExtensionsKt {
+	public static final fun withJadesKeyId (Lorg/trustweave/trust/dsl/credential/IssuanceBuilder;Ljava/lang/String;)V
+	public static final fun withJadesProfile (Lorg/trustweave/trust/dsl/credential/IssuanceBuilder;Lorg/trustweave/signatures/jades/JadesProfile;Ljava/util/List;Lorg/trustweave/signatures/tsa/TsaConfig;Ljava/lang/String;)V
+	public static synthetic fun withJadesProfile$default (Lorg/trustweave/trust/dsl/credential/IssuanceBuilder;Lorg/trustweave/signatures/jades/JadesProfile;Ljava/util/List;Lorg/trustweave/signatures/tsa/TsaConfig;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class org/trustweave/trust/dsl/credential/jades/JadesVerificationExtensionsKt {
+	public static final fun requireJadesProfile (Lorg/trustweave/trust/dsl/credential/VerificationBuilder;Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;)V
+	public static synthetic fun requireJadesProfile$default (Lorg/trustweave/trust/dsl/credential/VerificationBuilder;Lorg/trustweave/signatures/jades/JadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/util/Set;ILjava/lang/Object;)V
+	public static final fun withJadesTrustAnchorResolver (Lorg/trustweave/trust/dsl/credential/VerificationBuilder;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;)V
+}
+
+public final class org/trustweave/trust/dsl/did/DelegationBuilder {
+	public fun <init> (Lorg/trustweave/trust/context/DidDslContext;)V
+	public final fun from (Ljava/lang/String;)V
+	public final fun to (Ljava/lang/String;)V
+	public final fun verify (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyChain (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyChain (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/did/DelegationBuilderKt {
+	public static final fun delegation (Lorg/trustweave/trust/context/DidDslContext;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/did/DidBuilder {
+	public fun <init> (Lorg/trustweave/trust/context/DidDslContext;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public synthetic fun <init> (Lorg/trustweave/trust/context/DidDslContext;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun algorithm (Ljava/lang/String;)V
+	public final fun algorithm (Lorg/trustweave/did/KeyAlgorithm;)V
+	public final fun build (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun method (Ljava/lang/String;)V
+	public final fun option (Ljava/lang/String;Ljava/lang/Object;)V
+}
+
+public final class org/trustweave/trust/dsl/did/DidDocumentBuilder {
+	public fun <init> (Lorg/trustweave/trust/context/DidDslContext;)V
+	public final fun addCapabilityDelegation (Ljava/lang/String;)V
+	public final fun addCapabilityInvocation (Ljava/lang/String;)V
+	public final fun addKey (Lkotlin/jvm/functions/Function1;)V
+	public final fun addService (Lkotlin/jvm/functions/Function1;)V
+	public final fun context ([Ljava/lang/String;)V
+	public final fun did (Ljava/lang/String;)V
+	public final fun method (Ljava/lang/String;)V
+	public final fun removeCapabilityDelegation (Ljava/lang/String;)V
+	public final fun removeCapabilityInvocation (Ljava/lang/String;)V
+	public final fun removeKey (Ljava/lang/String;)V
+	public final fun removeService (Ljava/lang/String;)V
+	public final fun update (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/did/DidDocumentBuilder$ServiceBuilder {
+	public fun <init> (Lorg/trustweave/trust/dsl/did/DidDocumentBuilder;)V
+	public final fun endpoint (Ljava/lang/Object;)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun type (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/did/DidDocumentBuilder$VerificationMethodBuilder {
+	public fun <init> (Lorg/trustweave/trust/dsl/did/DidDocumentBuilder;Ljava/lang/String;)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun publicKeyJwk (Ljava/util/Map;)V
+	public final fun publicKeyMultibase (Ljava/lang/String;)V
+	public final fun type (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/wallet/OrganizationResult {
+	public fun <init> (ILjava/util/List;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (ILjava/util/List;)Lorg/trustweave/trust/dsl/wallet/OrganizationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/wallet/OrganizationResult;ILjava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/wallet/OrganizationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCollectionsCreated ()I
+	public final fun getErrors ()Ljava/util/List;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/wallet/QueryBuilder {
+	public fun <init> (Lorg/trustweave/wallet/Wallet;)V
+	public final fun collection (Ljava/lang/String;)V
+	public final fun execute (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun expired ()V
+	public final fun issuer (Ljava/lang/String;)V
+	public final fun notExpired ()V
+	public final fun notRevoked ()V
+	public final fun revoked ()V
+	public final fun subject (Ljava/lang/String;)V
+	public final fun tag (Ljava/lang/String;)V
+	public final fun type (Ljava/lang/String;)V
+	public final fun types ([Ljava/lang/String;)V
+	public final fun valid ()V
+}
+
+public final class org/trustweave/trust/dsl/wallet/QueryBuilderKt {
+	public static final fun query (Lorg/trustweave/wallet/Wallet;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletBuilder {
+	public fun <init> (Lorg/trustweave/trust/context/WalletDslContext;)V
+	public final fun basic ()V
+	public final fun build (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun enableOrganization ()V
+	public final fun enablePresentation ()V
+	public final fun holder (Ljava/lang/String;)V
+	public final fun holder (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun id (Ljava/lang/String;)V
+	public final fun inMemory ()V
+	public final fun option (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun provider (Ljava/lang/String;)V
+	public final fun walletDid (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder {
+	public fun <init> (Lorg/trustweave/wallet/Wallet;)V
+	public final fun collection (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun collection$default (Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun execute (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun metadata (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun notes (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun tag (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun untag (Ljava/lang/String;[Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$CollectionBuilder {
+	public fun <init> (Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun add ([Ljava/lang/String;)V
+	public final fun getCredentialIds ()Ljava/util/List;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTags ()Ljava/util/List;
+	public final fun tag (Ljava/lang/String;[Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$MetadataBuilder {
+	public fun <init> (Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder;)V
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun to (Ljava/lang/String;Ljava/lang/Object;)V
+}
+
+public abstract class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation {
+	public abstract fun getCredentialId ()Ljava/lang/String;
+	public abstract fun getTags ()Ljava/util/Set;
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Add : org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation {
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Add;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Add;Ljava/lang/String;Ljava/util/Set;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Add;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCredentialId ()Ljava/lang/String;
+	public fun getTags ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Remove : org/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation {
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Remove;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Remove;Ljava/lang/String;Ljava/util/Set;ILjava/lang/Object;)Lorg/trustweave/trust/dsl/wallet/WalletOrganizationBuilder$TagOperation$Remove;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCredentialId ()Ljava/lang/String;
+	public fun getTags ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletOrganizationBuilderKt {
+	public static final fun organize (Lorg/trustweave/wallet/Wallet;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletPresentationBuilder {
+	public fun <init> (Lorg/trustweave/wallet/Wallet;Lorg/trustweave/credential/CredentialService;)V
+	public final fun buildResult (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun challenge (Ljava/lang/String;)V
+	public final fun domain (Ljava/lang/String;)V
+	public final fun fromQuery (Lkotlin/jvm/functions/Function1;)V
+	public final fun fromWallet (Ljava/util/List;)V
+	public final fun fromWallet ([Ljava/lang/String;)V
+	public final fun holder (Ljava/lang/String;)V
+	public final fun selectiveDisclosure (Lkotlin/jvm/functions/Function1;)V
+	public final fun verificationMethod (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/trust/dsl/wallet/WalletPresentationBuilderKt {
+	public static final fun presentationFromWalletResult (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/wallet/Wallet;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/CredentialIssuanceService {
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/credential/revocation/CredentialRevocationManager;Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/credential/model/ProofType;Lkotlinx/coroutines/CoroutineDispatcher;ZLjava/lang/String;Lorg/trustweave/anchor/services/BlockchainService;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/credential/revocation/CredentialRevocationManager;Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/credential/model/ProofType;Lkotlinx/coroutines/CoroutineDispatcher;ZLjava/lang/String;Lorg/trustweave/anchor/services/BlockchainService;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun issue-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun issue-KLykuaI$default (Lorg/trustweave/trust/services/CredentialIssuanceService;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/CredentialRevocationService {
+	public fun <init> (Lorg/trustweave/credential/revocation/CredentialRevocationManager;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun revoke-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revoke-KLykuaI$default (Lorg/trustweave/trust/services/CredentialRevocationService;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/CredentialVerificationService {
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun verify-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verify-KLykuaI$default (Lorg/trustweave/trust/services/CredentialVerificationService;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/DidManagementService {
+	public fun <init> (Lorg/trustweave/trust/context/DidDslContext;Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/kms/services/KmsService;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun createDid-dWUq8MI (Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDid-dWUq8MI$default (Lorg/trustweave/trust/services/DidManagementService;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createDidWithKey-dWUq8MI (Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDidWithKey-dWUq8MI$default (Lorg/trustweave/trust/services/DidManagementService;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun delegate-KLykuaI (JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delegate-KLykuaI$default (Lorg/trustweave/trust/services/DidManagementService;JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getKeyId-gIAlu-s (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveDid-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveDid-8Mi8wO0 (Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resolveDid-8Mi8wO0$default (Lorg/trustweave/trust/services/DidManagementService;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun resolveDid-8Mi8wO0$default (Lorg/trustweave/trust/services/DidManagementService;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun rotateKey-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun rotateKey-KLykuaI$default (Lorg/trustweave/trust/services/DidManagementService;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun updateDid-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateDid-KLykuaI$default (Lorg/trustweave/trust/services/DidManagementService;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/TrustManagementService {
+	public fun <init> (Lorg/trustweave/trust/TrustRegistry;)V
+	public final fun findTrustPath-SvUgx20 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun findTrustPath-SvUgx20$default (Lorg/trustweave/trust/services/TrustManagementService;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun trust (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/trust/services/TrustRegistryFactory {
+	public abstract fun create (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/trust/services/WalletManagementService {
+	public fun <init> (Lorg/trustweave/trust/context/WalletDslContext;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun wallet (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/trust/types/DidCreationResult {
+}
+
+public abstract class org/trustweave/trust/types/DidCreationResult$Failure : org/trustweave/trust/types/DidCreationResult {
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Failure$DocumentCreationFailed : org/trustweave/trust/types/DidCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/DidCreationResult$Failure$DocumentCreationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Failure$DocumentCreationFailed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Failure$DocumentCreationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Failure$InvalidConfiguration : org/trustweave/trust/types/DidCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/trust/types/DidCreationResult$Failure$InvalidConfiguration;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Failure$InvalidConfiguration;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Failure$InvalidConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetails ()Ljava/util/Map;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Failure$KeyGenerationFailed : org/trustweave/trust/types/DidCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/DidCreationResult$Failure$KeyGenerationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Failure$KeyGenerationFailed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Failure$KeyGenerationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Failure$MethodNotRegistered : org/trustweave/trust/types/DidCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/trust/types/DidCreationResult$Failure$MethodNotRegistered;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Failure$MethodNotRegistered;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Failure$MethodNotRegistered;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableMethods ()Ljava/util/List;
+	public final fun getMethod ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Failure$Other : org/trustweave/trust/types/DidCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/DidCreationResult$Failure$Other;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Failure$Other;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Failure$Other;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationResult$Success : org/trustweave/trust/types/DidCreationResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;)Lorg/trustweave/trust/types/DidCreationResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationResult$Success;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/trust/types/DidCreationWithKeyResult {
+}
+
+public abstract class org/trustweave/trust/types/DidCreationWithKeyResult$Failure : org/trustweave/trust/types/DidCreationWithKeyResult {
+}
+
+public final class org/trustweave/trust/types/DidCreationWithKeyResult$Failure$FromCreation : org/trustweave/trust/types/DidCreationWithKeyResult$Failure {
+	public fun <init> (Lorg/trustweave/trust/types/DidCreationResult$Failure;)V
+	public final fun component1 ()Lorg/trustweave/trust/types/DidCreationResult$Failure;
+	public final fun copy (Lorg/trustweave/trust/types/DidCreationResult$Failure;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$FromCreation;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$FromCreation;Lorg/trustweave/trust/types/DidCreationResult$Failure;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$FromCreation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFailure ()Lorg/trustweave/trust/types/DidCreationResult$Failure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationWithKeyResult$Failure$KeyExtractionFailed : org/trustweave/trust/types/DidCreationWithKeyResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$KeyExtractionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$KeyExtractionFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Failure$KeyExtractionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidCreationWithKeyResult$Success : org/trustweave/trust/types/DidCreationWithKeyResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidCreationWithKeyResult$Success;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidCreationWithKeyResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getKeyId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/trust/types/DidResult {
+}
+
+public abstract class org/trustweave/trust/types/DidResult$Failure : org/trustweave/trust/types/DidResult {
+}
+
+public final class org/trustweave/trust/types/DidResult$Failure$CreationFailed : org/trustweave/trust/types/DidResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/DidResult$Failure$CreationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidResult$Failure$CreationFailed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidResult$Failure$CreationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidResult$Failure$DeactivationFailed : org/trustweave/trust/types/DidResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/DidResult$Failure$DeactivationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidResult$Failure$DeactivationFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidResult$Failure$DeactivationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidResult$Failure$ResolutionFailed : org/trustweave/trust/types/DidResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)Lorg/trustweave/trust/types/DidResult$Failure$ResolutionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidResult$Failure$ResolutionFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidResult$Failure$ResolutionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidResult$Failure$UpdateFailed : org/trustweave/trust/types/DidResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/DidResult$Failure$UpdateFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidResult$Failure$UpdateFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidResult$Failure$UpdateFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidResult$Success : org/trustweave/trust/types/DidResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;)Lorg/trustweave/trust/types/DidResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/DidResult$Success;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;ILjava/lang/Object;)Lorg/trustweave/trust/types/DidResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/DidResultKt {
+	public static final fun getOrThrow (Lorg/trustweave/trust/types/DidCreationWithKeyResult;)Lkotlin/Pair;
+}
+
+public final class org/trustweave/trust/types/HolderIdentity {
+	public static final field Companion Lorg/trustweave/trust/types/HolderIdentity$Companion;
+	public static final synthetic fun box-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/types/HolderIdentity;
+	public static fun constructor-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/identifiers/Did;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lorg/trustweave/did/identifiers/Did;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lorg/trustweave/did/identifiers/Did;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lorg/trustweave/did/identifiers/Did;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lorg/trustweave/did/identifiers/Did;
+}
+
+public final class org/trustweave/trust/types/HolderIdentity$Companion {
+	public final fun invoke-w2bgSiU (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+}
+
+public final class org/trustweave/trust/types/IssuerIdentity {
+	public static final field Companion Lorg/trustweave/trust/types/IssuerIdentity$Companion;
+	public static final synthetic fun box-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/types/IssuerIdentity;
+	public static fun constructor-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/identifiers/Did;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lorg/trustweave/did/identifiers/Did;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lorg/trustweave/did/identifiers/Did;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lorg/trustweave/did/identifiers/Did;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lorg/trustweave/did/identifiers/Did;
+}
+
+public final class org/trustweave/trust/types/IssuerIdentity$Companion {
+	public final fun invoke-2PGuBWI (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+}
+
+public abstract class org/trustweave/trust/types/PresentationResult {
+	public final fun getAllErrors ()Ljava/util/List;
+	public final fun getPresentationOrNull ()Lorg/trustweave/credential/model/vc/VerifiablePresentation;
+}
+
+public abstract class org/trustweave/trust/types/PresentationResult$Failure : org/trustweave/trust/types/PresentationResult {
+	public abstract fun getErrors ()Ljava/util/List;
+	public abstract fun getWarnings ()Ljava/util/List;
+}
+
+public final class org/trustweave/trust/types/PresentationResult$Failure$AdapterError : org/trustweave/trust/types/PresentationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/Throwable;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/Throwable;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterError;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterError;Ljava/lang/Throwable;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public fun getErrors ()Ljava/util/List;
+	public fun getWarnings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/PresentationResult$Failure$AdapterNotReady : org/trustweave/trust/types/PresentationResult$Failure {
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterNotReady;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterNotReady;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/types/PresentationResult$Failure$AdapterNotReady;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getErrors ()Ljava/util/List;
+	public fun getWarnings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/PresentationResult$Failure$InvalidRequest : org/trustweave/trust/types/PresentationResult$Failure {
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/trustweave/trust/types/PresentationResult$Failure$InvalidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/PresentationResult$Failure$InvalidRequest;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/trust/types/PresentationResult$Failure$InvalidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getErrors ()Ljava/util/List;
+	public fun getWarnings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/PresentationResult$Success : org/trustweave/trust/types/PresentationResult {
+	public fun <init> (Lorg/trustweave/credential/model/vc/VerifiablePresentation;)V
+	public final fun component1 ()Lorg/trustweave/credential/model/vc/VerifiablePresentation;
+	public final fun copy (Lorg/trustweave/credential/model/vc/VerifiablePresentation;)Lorg/trustweave/trust/types/PresentationResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/PresentationResult$Success;Lorg/trustweave/credential/model/vc/VerifiablePresentation;ILjava/lang/Object;)Lorg/trustweave/trust/types/PresentationResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPresentation ()Lorg/trustweave/credential/model/vc/VerifiablePresentation;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/ResultExtensionsKt {
+	public static final fun getOrThrow (Lorg/trustweave/credential/results/VerificationResult;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun getOrThrow (Lorg/trustweave/trust/types/DidCreationResult;)Lkotlin/Pair;
+	public static final fun getOrThrow (Lorg/trustweave/trust/types/PresentationResult;)Lorg/trustweave/credential/model/vc/VerifiablePresentation;
+	public static final fun getOrThrow (Lorg/trustweave/trust/types/WalletCreationResult;)Lorg/trustweave/wallet/Wallet;
+	public static final fun getOrThrowDid (Lorg/trustweave/trust/types/DidCreationResult;)Lorg/trustweave/did/identifiers/Did;
+	public static final fun getOrThrowDocument (Lorg/trustweave/trust/types/DidCreationResult;)Lorg/trustweave/did/model/DidDocument;
+}
+
+public final class org/trustweave/trust/types/TrustAnchor {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/trust/TrustAnchorMetadata;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/trust/TrustAnchorMetadata;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/trust/TrustAnchorMetadata;)Lorg/trustweave/trust/types/TrustAnchor;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/TrustAnchor;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/trust/TrustAnchorMetadata;ILjava/lang/Object;)Lorg/trustweave/trust/types/TrustAnchor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getMetadata ()Lorg/trustweave/trust/TrustAnchorMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/trust/types/TrustPath {
+}
+
+public final class org/trustweave/trust/types/TrustPath$NotConfigured : org/trustweave/trust/types/TrustPath {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/TrustPath$NotConfigured;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/TrustPath$NotConfigured;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/TrustPath$NotConfigured;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/TrustPath$NotFound : org/trustweave/trust/types/TrustPath {
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-GmRj5EU ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2-SH5qupQ ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy-hbdn0iQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;)Lorg/trustweave/trust/types/TrustPath$NotFound;
+	public static synthetic fun copy-hbdn0iQ$default (Lorg/trustweave/trust/types/TrustPath$NotFound;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/TrustPath$NotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrom-GmRj5EU ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getTo-SH5qupQ ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/TrustPath$Verified : org/trustweave/trust/types/TrustPath {
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ZLkotlinx/datetime/Instant;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ZLkotlinx/datetime/Instant;DLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-GmRj5EU ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2-SH5qupQ ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Z
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun component6 ()D
+	public final fun copy-xGb4uB0 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ZLkotlinx/datetime/Instant;D)Lorg/trustweave/trust/types/TrustPath$Verified;
+	public static synthetic fun copy-xGb4uB0$default (Lorg/trustweave/trust/types/TrustPath$Verified;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ZLkotlinx/datetime/Instant;DILjava/lang/Object;)Lorg/trustweave/trust/types/TrustPath$Verified;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchors ()Ljava/util/List;
+	public final fun getFrom-GmRj5EU ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getFullPath ()Ljava/util/List;
+	public final fun getLength ()I
+	public final fun getTo-SH5qupQ ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getTrustScore ()D
+	public final fun getVerified ()Z
+	public final fun getVerifiedAt ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/VerificationResultsKt {
+	public static final fun getDelegationValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getErrors (Lorg/trustweave/credential/results/VerificationResult;)Ljava/util/List;
+	public static final fun getIssuerValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getNotExpired (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getNotRevoked (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getProofPurposeValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getProofValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getRevoked (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getTrustRegistryValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getValid (Lorg/trustweave/credential/results/VerificationResult;)Z
+	public static final fun getWarnings (Lorg/trustweave/credential/results/VerificationResult;)Ljava/util/List;
+}
+
+public final class org/trustweave/trust/types/VerifierIdentity {
+	public static final field Companion Lorg/trustweave/trust/types/VerifierIdentity$Companion;
+	public static final synthetic fun box-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/types/VerifierIdentity;
+	public static fun constructor-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/identifiers/Did;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lorg/trustweave/did/identifiers/Did;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lorg/trustweave/did/identifiers/Did;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lorg/trustweave/did/identifiers/Did;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lorg/trustweave/did/identifiers/Did;
+}
+
+public final class org/trustweave/trust/types/VerifierIdentity$Companion {
+	public final fun invoke-RrfFl5k (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+}
+
+public abstract class org/trustweave/trust/types/WalletCreationResult {
+}
+
+public abstract class org/trustweave/trust/types/WalletCreationResult$Failure : org/trustweave/trust/types/WalletCreationResult {
+}
+
+public final class org/trustweave/trust/types/WalletCreationResult$Failure$FactoryNotConfigured : org/trustweave/trust/types/WalletCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$FactoryNotConfigured;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/WalletCreationResult$Failure$FactoryNotConfigured;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$FactoryNotConfigured;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/WalletCreationResult$Failure$InvalidHolderDid : org/trustweave/trust/types/WalletCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$InvalidHolderDid;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/WalletCreationResult$Failure$InvalidHolderDid;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$InvalidHolderDid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHolderDid ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/WalletCreationResult$Failure$Other : org/trustweave/trust/types/WalletCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$Other;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/WalletCreationResult$Failure$Other;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$Other;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/WalletCreationResult$Failure$StorageFailed : org/trustweave/trust/types/WalletCreationResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$StorageFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/WalletCreationResult$Failure$StorageFailed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/WalletCreationResult$Failure$StorageFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/WalletCreationResult$Success : org/trustweave/trust/types/WalletCreationResult {
+	public fun <init> (Lorg/trustweave/wallet/Wallet;)V
+	public final fun component1 ()Lorg/trustweave/wallet/Wallet;
+	public final fun copy (Lorg/trustweave/wallet/Wallet;)Lorg/trustweave/trust/types/WalletCreationResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/WalletCreationResult$Success;Lorg/trustweave/wallet/Wallet;ILjava/lang/Object;)Lorg/trustweave/trust/types/WalletCreationResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getWallet ()Lorg/trustweave/wallet/Wallet;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

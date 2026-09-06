@@ -21,7 +21,9 @@ sealed class Cap {
         override val chainId: String,
         val max: TokenAmount,
     ) : Cap() {
-        init { require(max.chainId == chainId) { "max.chainId must match cap.chainId" } }
+        init {
+            require(max.chainId == chainId) { "max.chainId must match cap.chainId" }
+        }
     }
 
     data class PerWindow(
@@ -39,7 +41,9 @@ sealed class Cap {
         override val chainId: String,
         val maxGasPriceWei: BigInteger,
     ) : Cap() {
-        init { require(maxGasPriceWei.signum() > 0) { "maxGasPriceWei must be positive" } }
+        init {
+            require(maxGasPriceWei.signum() > 0) { "maxGasPriceWei must be positive" }
+        }
     }
 }
 
@@ -58,9 +62,10 @@ sealed class Cap {
  */
 data class SpendPolicy(
     val caps: List<Cap> = emptyList(),
-    val allowedStrategies: Set<KClass<out FeeStrategy>> = setOf(
-        FeeStrategy.DomainPays::class,
-    ),
+    val allowedStrategies: Set<KClass<out FeeStrategy>> =
+        setOf(
+            FeeStrategy.DomainPays::class,
+        ),
     val requireSponsorAllowList: Boolean = false,
     val sponsorAllowList: Set<String> = emptySet(),
 ) {
@@ -68,7 +73,11 @@ data class SpendPolicy(
      * Snapshot of recent spend used by [PerWindow] evaluation. Plumbed in
      * from the treasury ledger at evaluation time, not embedded in the policy.
      */
-    data class WindowState(val chainId: String, val window: Duration, val spent: TokenAmount)
+    data class WindowState(
+        val chainId: String,
+        val window: Duration,
+        val spent: TokenAmount,
+    )
 
     companion object {
         /**

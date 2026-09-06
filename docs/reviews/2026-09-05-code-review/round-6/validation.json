@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "area": "Reference wallet unit tests",
+      "result": "33 passed",
+      "scope": "Includes five new restoration regressions. Final production build and TypeScript validation passed."
+    },
+    {
+      "area": "Production Chromium",
+      "result": "10 passed",
+      "scope": "Includes new backup upload/export regression, plus prior camera, CSP, disclosure and custody checks. No physical-device/hardware claim."
+    },
+    {
+      "area": "SaaS backend",
+      "result": "15 passed; zero failures/errors/skips",
+      "scope": "Five migrations, five recovery/access, three Stripe controller and two monitor tests. Targeted run excludes the full-server coverage threshold; last broad coverage result remains Round 4."
+    },
+    {
+      "area": "SaaS frontend",
+      "result": "294 passed across 63 files; lint and production build passed",
+      "scope": "Two new recovery-panel regressions, existing route/API contract checks and full frontend suite. Initial JS 454,703 bytes against a 500,000-byte budget."
+    },
+    {
+      "area": "SDK Kotlin and providers",
+      "result": "Runtime unchanged in this round; historical evidence retained",
+      "scope": "Round 4 full JVM/lint/storage results are not represented as a new full-suite run. No hosted provider validation performed."
+    },
+    {
+      "area": "Release/custody boundaries",
+      "result": "Still open",
+      "scope": "No publication, staging deployment, hosted alert delivery or hardware-backed signing. Production custody direction was requested during this pass."
+    }
+  ],
+  "logs": [
+    "backend-validation.json",
+    "scores.json",
+    "../round-5/release-validation.json",
+    "../round-4/sdk-tests.json"
+  ]
+}

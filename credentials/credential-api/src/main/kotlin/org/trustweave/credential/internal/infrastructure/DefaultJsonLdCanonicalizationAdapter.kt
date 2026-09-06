@@ -13,7 +13,5 @@ import org.trustweave.credential.spi.proof.JsonLdCanonicalizationPort
  * mask `@context` resolution failures). See [JsonLdUtils.canonicalizeDocument].
  */
 internal class DefaultJsonLdCanonicalizationAdapter : JsonLdCanonicalizationPort {
-
-    override fun canonicalize(document: JsonObject): String =
-        JsonLdUtils.canonicalizeDocument(document)
+    override fun canonicalize(document: JsonObject): String = JsonLdUtils.canonicalizeDocument(document)
 }

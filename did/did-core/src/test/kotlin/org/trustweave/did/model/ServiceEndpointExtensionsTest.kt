@@ -9,14 +9,14 @@ import kotlin.test.*
  * [DidService.serviceEndpoint] is the sealed [ServiceEndpoint] type.
  */
 class ServiceEndpointExtensionsTest {
-
     @Test
     fun `test serviceEndpointTyped with URL string`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+            )
 
         val typed = service.serviceEndpointTyped()
         assertTrue(typed is ServiceEndpoint.Url)
@@ -25,15 +25,17 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointTyped with object map`() {
-        val endpointMap = mapOf(
-            "uri" to "https://example.com",
-            "routingKeys" to listOf("key1", "key2")
-        )
-        val service = DidService(
-            id = "service-1",
-            type = listOf("DIDCommMessaging"),
-            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpointMap)
-        )
+        val endpointMap =
+            mapOf(
+                "uri" to "https://example.com",
+                "routingKeys" to listOf("key1", "key2"),
+            )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("DIDCommMessaging"),
+                serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpointMap),
+            )
 
         val typed = service.serviceEndpointTyped()
         assertTrue(typed is ServiceEndpoint.ObjectEndpoint)
@@ -43,16 +45,18 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointTyped with array`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.of(
-                listOf(
-                    "https://example.com/endpoint1",
-                    "https://example.com/endpoint2"
-                )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint =
+                    ServiceEndpoint.of(
+                        listOf(
+                            "https://example.com/endpoint1",
+                            "https://example.com/endpoint2",
+                        ),
+                    ),
             )
-        )
 
         val typed = service.serviceEndpointTyped()
         assertTrue(typed is ServiceEndpoint.ArrayEndpoint)
@@ -63,16 +67,18 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointTyped with mixed array`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("CustomService"),
-            serviceEndpoint = ServiceEndpoint.of(
-                listOf(
-                    "https://example.com/endpoint1",
-                    mapOf("uri" to "https://example.com/endpoint2", "type" to "custom")
-                )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("CustomService"),
+                serviceEndpoint =
+                    ServiceEndpoint.of(
+                        listOf(
+                            "https://example.com/endpoint1",
+                            mapOf("uri" to "https://example.com/endpoint2", "type" to "custom"),
+                        ),
+                    ),
             )
-        )
 
         val typed = service.serviceEndpointTyped()
         assertTrue(typed is ServiceEndpoint.ArrayEndpoint)
@@ -83,11 +89,12 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsUrl with URL string`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+            )
 
         val url = service.serviceEndpointAsUrl()
         assertNotNull(url)
@@ -96,11 +103,12 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsUrl with object returns null`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("DIDCommMessaging"),
-            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://example.com"))
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("DIDCommMessaging"),
+                serviceEndpoint = ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://example.com")),
+            )
 
         val url = service.serviceEndpointAsUrl()
         assertNull(url)
@@ -108,15 +116,17 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsObject with object map`() {
-        val endpointMap = mapOf(
-            "uri" to "https://example.com",
-            "routingKeys" to listOf("key1")
-        )
-        val service = DidService(
-            id = "service-1",
-            type = listOf("DIDCommMessaging"),
-            serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpointMap)
-        )
+        val endpointMap =
+            mapOf(
+                "uri" to "https://example.com",
+                "routingKeys" to listOf("key1"),
+            )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("DIDCommMessaging"),
+                serviceEndpoint = ServiceEndpoint.ObjectEndpoint(endpointMap),
+            )
 
         val obj = service.serviceEndpointAsObject()
         assertNotNull(obj)
@@ -126,11 +136,12 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsObject with URL returns null`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+            )
 
         val obj = service.serviceEndpointAsObject()
         assertNull(obj)
@@ -138,11 +149,12 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsArray with array`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.of(listOf("https://example.com/1", "https://example.com/2"))
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.of(listOf("https://example.com/1", "https://example.com/2")),
+            )
 
         val array = service.serviceEndpointAsArray()
         assertNotNull(array)
@@ -153,11 +165,12 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test serviceEndpointAsArray with URL returns null`() {
-        val service = DidService(
-            id = "service-1",
-            type = listOf("LinkedDomains"),
-            serviceEndpoint = ServiceEndpoint.Url("https://example.com")
-        )
+        val service =
+            DidService(
+                id = "service-1",
+                type = listOf("LinkedDomains"),
+                serviceEndpoint = ServiceEndpoint.Url("https://example.com"),
+            )
 
         val array = service.serviceEndpointAsArray()
         assertNull(array)
@@ -168,17 +181,19 @@ class ServiceEndpointExtensionsTest {
         val urlEndpoint = ServiceEndpoint.Url("https://example.com")
         assertEquals("https://example.com", urlEndpoint.toAny())
 
-        val objectEndpoint = ServiceEndpoint.ObjectEndpoint(
-            mapOf("uri" to "https://example.com")
-        )
+        val objectEndpoint =
+            ServiceEndpoint.ObjectEndpoint(
+                mapOf("uri" to "https://example.com"),
+            )
         val obj = objectEndpoint.toAny()
         assertTrue(obj is Map<*, *>)
         @Suppress("UNCHECKED_CAST")
         assertEquals("https://example.com", (obj as Map<String, Any?>)["uri"])
 
-        val arrayEndpoint = ServiceEndpoint.ArrayEndpoint(
-            listOf(ServiceEndpoint.Url("https://example.com/1"))
-        )
+        val arrayEndpoint =
+            ServiceEndpoint.ArrayEndpoint(
+                listOf(ServiceEndpoint.Url("https://example.com/1")),
+            )
         val arr = arrayEndpoint.toAny()
         assertTrue(arr is List<*>)
         assertEquals("https://example.com/1", (arr as List<*>)[0])
@@ -186,12 +201,13 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test ServiceEndpoint nested array conversion`() {
-        val nestedArray = ServiceEndpoint.ArrayEndpoint(
-            listOf(
-                ServiceEndpoint.Url("https://example.com/1"),
-                ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://example.com/2"))
+        val nestedArray =
+            ServiceEndpoint.ArrayEndpoint(
+                listOf(
+                    ServiceEndpoint.Url("https://example.com/1"),
+                    ServiceEndpoint.ObjectEndpoint(mapOf("uri" to "https://example.com/2")),
+                ),
             )
-        )
 
         val converted = nestedArray.toAny()
         assertTrue(converted is List<*>)
@@ -210,10 +226,11 @@ class ServiceEndpointExtensionsTest {
 
     @Test
     fun `test ServiceEndpoint ofOrNull with array containing invalid items returns null`() {
-        val endpointArray = listOf(
-            "https://example.com",
-            12345 // Invalid item in array
-        )
+        val endpointArray =
+            listOf(
+                "https://example.com",
+                12345, // Invalid item in array
+            )
 
         // Should return null because the array contains an invalid item.
         assertNull(ServiceEndpoint.ofOrNull(endpointArray))

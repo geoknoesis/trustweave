@@ -21,11 +21,10 @@ public data class ConstraintCheckResult(
  * Validates that an L3 fulfillment satisfies the L2 open-mandate constraints. Ports
  * `verification/constraint_checker.py`.
  *
- * Implemented in full: `amount_range` (integer minor-unit bounds + currency). `allowed_payees` /
- * `allowed_merchants` honor the reference behavior of skipping when the allowlist is entirely SD
- * references (resolved out-of-band). `budget` / `recurrence` / `agent_recurrence` / `reference` are
- * acknowledged as network/integrity-enforced. `line_items` deep-matching is unimplemented, so it is reported as *skipped* and fails closed
- * for an open mandate or under STRICT rather than being counted as checked.
+ * Enforces non-negative integer amount bounds and currency, and resolves disclosed allowlists.
+ * Budget and recurrence require external state: open mandates and STRICT checks fail closed.
+ * Reference integrity is checked separately by ChainVerifier. Line-item matching is unsupported
+ * and fails closed for open mandates and STRICT checks.
  *
  * Unknown types: rejected when [isOpenMandate] (an unevaluable constraint leaves authority unbounded)
  * or under [StrictnessMode.STRICT]; otherwise skipped.
@@ -82,11 +81,18 @@ public object ConstraintChecker {
                         skipped += c.type
                     }
                 }
-                is Constraint.Reference,
+                is Constraint.Reference -> skipped += c.type // ChainVerifier independently checks cross-mandate integrity.
                 is Constraint.Budget,
                 is Constraint.Recurrence,
                 is Constraint.AgentRecurrence,
-                -> checked += c.type // integrity-/network-enforced; acknowledged here
+                -> {
+                    if (isOpenMandate || mode == StrictnessMode.STRICT) {
+                        satisfied = false
+                        violations += "Constraint ${c.type} requires external enforcement that this verifier cannot establish"
+                    } else {
+                        skipped += c.type
+                    }
+                }
                 is Constraint.Malformed -> {
                     // A recognized constraint the verifier cannot evaluate always fails closed,
                     // regardless of strictness: the issuer declared a bound that would
@@ -115,9 +121,12 @@ public object ConstraintChecker {
         val amount =
             pa["amount"]?.let { runCatching { it.longValue() }.getOrNull() }
                 ?: return "Missing/invalid amount in fulfillment payment_amount"
+        if (amount < 0) return "Payment amount must be non-negative"
         c.min?.let { if (amount < it) return "Amount below minimum: $amount < $it ${c.currency}" }
         c.max?.let { if (amount > it) return "Amount exceeds maximum: $amount > $it ${c.currency}" }
-        val currency = pa["currency"]?.contentOrNull() ?: c.currency
+        val currency =
+            (pa["currency"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: return "Missing or invalid payment currency"
         if (currency != c.currency) return "Currency mismatch: expected ${c.currency}, got $currency"
         return null
     }
@@ -165,7 +174,7 @@ public object ConstraintChecker {
                 null
             }
         }
-        if (candidates.isEmpty()) return null // empty allowlist constrains nothing
+        if (candidates.isEmpty()) return "Allowlist contains no valid permitted targets"
         return "Target not in allowlist (id=${target["id"]?.contentOrNull()})"
     }
 
@@ -186,4 +195,7 @@ public object ConstraintChecker {
 }
 
 private fun kotlinx.serialization.json.JsonElement.longValue(): Long =
-    (this as kotlinx.serialization.json.JsonPrimitive).let { it.longOrNull ?: it.long }
+    (this as kotlinx.serialization.json.JsonPrimitive).let {
+        require(!it.isString) { "Amount must be a JSON number" }
+        it.longOrNull ?: it.long
+    }

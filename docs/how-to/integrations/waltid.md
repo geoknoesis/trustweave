@@ -143,6 +143,7 @@ when (val resolutionResult = keyMethod.resolveDid(didDoc.id)) {
 ### Using TrustWeave Facade
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.waltid.WaltIdIntegration

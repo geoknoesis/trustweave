@@ -20,7 +20,6 @@ import org.trustweave.credential.internal.JsonLdContextLoader
  *    `additionalOption("contexts", listOf(url))` on the issuance builder).
  */
 object JsonLdContexts {
-
     /**
      * Key under `ProofOptions.additionalOptions` carrying the list of additional
      * `@context` URLs (`List<String>`) a credential declares at issuance.
@@ -34,7 +33,10 @@ object JsonLdContexts {
      * @param url The context URL exactly as it appears in `@context`
      * @param contextJson The full JSON context document as a string
      */
-    fun register(url: String, contextJson: String) {
+    fun register(
+        url: String,
+        contextJson: String,
+    ) {
         JsonLdContextLoader.registerContext(url, contextJson)
     }
 }

@@ -20,7 +20,5 @@ dependencies {
     compileOnly("org.slf4j:slf4j-api:2.0.9")
     // Test dependencies
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(project(":did:registrar")) // Available for tests only
     // Other test dependencies are standardized in root build.gradle.kts
 }
-

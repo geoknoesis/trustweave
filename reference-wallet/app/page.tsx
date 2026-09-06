@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { isCredentialBoundToHolder } from '@/lib/holder-binding'
+import { CredentialBackup } from '@/components/CredentialBackup'
 import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { CredentialDetailPanel } from '@/components/CredentialDetailPanel'
@@ -30,6 +32,7 @@ export default function HomePage() {
 
   const { holder, credentials } = state
   const count = credentials.length
+  const reissue = credentials.filter(credential => !isCredentialBoundToHolder(credential, holder.did))
 
   const onDelete = async (id: string) => {
     if (!confirm('Remove this credential from your wallet?')) return
@@ -58,6 +61,14 @@ export default function HomePage() {
         </p>
       </div>
 
+      {reissue.length > 0 && <section className="panel" aria-label="Credential reissuance">
+        <h3>{reissue.length} credential{reissue.length === 1 ? '' : 's'} need reissuance</h3>
+        <p>These credentials belong to an older identity. They are preserved for reference and cannot be shared with your current key. Export them before clearing browser storage.</p>
+        <ol><li>Contact each issuer through a channel you already trust and report the lost key.</li><li>Ask them to revoke or replace the old credential after verifying your identity.</li><li>Give them your current wallet identity below, then add the newly issued credential.</li></ol>
+        <p>Current wallet identity: <code style={{ overflowWrap: 'anywhere' }}>{holder.did}</code></p>
+        <ul>{[...new Set(reissue.map(credential => credential.issuerDid))].map(issuer => <li key={issuer} style={{ overflowWrap: 'anywhere' }}>{issuer}</li>)}</ul>
+        <p>Issuers decide whether reissuance is allowed. Creating this identity does not revoke the old credentials automatically.</p>
+      </section>}
       {count === 0 ? (
         <div className="panel empty-library">
           <div className="icon">📚</div>
@@ -79,11 +90,13 @@ export default function HomePage() {
           </div>
           <div style={{ marginTop: '1rem' }}>
             {credentials.map((c) => (
-              <CredentialLibraryCard key={c.id} cred={c} onSelect={() => setDetailCred(c)} />
+              <CredentialLibraryCard key={c.id} cred={c} needsReissue={!isCredentialBoundToHolder(c, holder.did)} onSelect={() => setDetailCred(c)} />
             ))}
           </div>
         </>
       )}
+
+      <CredentialBackup onRestored={async () => { setState(await bootstrap()) }} />
 
       <details className="identity-section">
         <summary>Your digital identity</summary>

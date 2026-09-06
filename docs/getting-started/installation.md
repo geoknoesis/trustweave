@@ -15,15 +15,18 @@ redirect_from:
 
 # Installation
 
-Add TrustWeave to your Kotlin project using Gradle or Maven.
+Add TrustWeave to your Kotlin project using Gradle or Maven. These examples target
+the current 0.7.0 source checkout; confirm artifact availability in your configured
+repository before using the coordinates in a separate project. Local source
+validation is not proof that a matching immutable release has been published.
 
 ## Prerequisites
 
 Before installing TrustWeave, ensure you have:
 
-- **Kotlin 2.2.21+** (included via Gradle plugin, no manual installation needed)
+- **Kotlin 2.3.21+** (included via Gradle plugin, no manual installation needed)
 - **Java 21+** (required for compilation and runtime)
-- **Gradle 8.5+** (automatically downloaded via Gradle Wrapper, no manual installation needed)
+- **Gradle 9.5.0 via this repository's wrapper** (no separate Gradle installation needed)
 - **Basic Kotlin knowledge** (coroutines, data classes, sealed classes)
 - **Familiarity with W3C standards** (helpful but not required):
   - [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/)
@@ -179,9 +182,9 @@ repositories {
 ## Version Information
 
 - **Current Version**: 0.7.0
-- **Kotlin Version**: 2.2.21+
+- **Kotlin Version**: 2.3.21+
 - **Java Version**: 21+
-- **Gradle Version**: 8.5+
+- **Gradle wrapper version**: 9.5.0
 
 ## Next Steps
 

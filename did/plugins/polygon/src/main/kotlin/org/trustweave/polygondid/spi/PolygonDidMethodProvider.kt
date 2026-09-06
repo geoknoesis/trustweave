@@ -13,12 +13,14 @@ import org.trustweave.polygondid.PolygonDidMethod
  * Automatically discovers did:polygon method when this module is on the classpath.
  */
 class PolygonDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "polygon"
 
     override val supportedMethods: List<String> = listOf("polygon")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "polygon") return null
         val config = createConfig(options)
         return PolygonDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
@@ -41,7 +43,7 @@ class PolygonDidMethodProvider : AbstractDidMethodProvider() {
      */
     private fun getOrCreateAnchorClient(
         options: DidCreationOptions,
-        config: PolygonDidConfig
+        config: PolygonDidConfig,
     ): BlockchainAnchorClient {
         // Check if anchor client is provided in options
         val providedClient = options.additionalProperties["anchorClient"] as? BlockchainAnchorClient
@@ -50,12 +52,13 @@ class PolygonDidMethodProvider : AbstractDidMethodProvider() {
         }
 
         // Create anchor client options for Polygon
-        val anchorOptions = buildMap<String, Any?> {
-            put("rpcUrl", config.rpcUrl)
-            if (config.privateKey != null) {
-                put("privateKey", config.privateKey)
+        val anchorOptions =
+            buildMap<String, Any?> {
+                put("rpcUrl", config.rpcUrl)
+                if (config.privateKey != null) {
+                    put("privateKey", config.privateKey)
+                }
             }
-        }
 
         // Use PolygonBlockchainAnchorClient
         return try {
@@ -66,10 +69,9 @@ class PolygonDidMethodProvider : AbstractDidMethodProvider() {
         } catch (e: Exception) {
             throw IllegalStateException(
                 "BlockchainAnchorClient is required for did:polygon. " +
-                "Provide 'anchorClient' in options or add TrustWeave-polygon dependency. " +
-                "Error: ${e.message}"
+                    "Provide 'anchorClient' in options or add TrustWeave-polygon dependency. " +
+                    "Error: ${e.message}",
             )
         }
     }
 }
-

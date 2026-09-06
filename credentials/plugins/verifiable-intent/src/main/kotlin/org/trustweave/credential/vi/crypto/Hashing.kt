@@ -14,5 +14,4 @@ internal object B64 {
 }
 
 /** SHA-256 over [bytes], base64url-encoded (no padding). The VI canonical digest form. */
-internal fun sha256B64Url(bytes: ByteArray): String =
-    B64.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
+internal fun sha256B64Url(bytes: ByteArray): String = B64.encode(MessageDigest.getInstance("SHA-256").digest(bytes))

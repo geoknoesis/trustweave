@@ -9,88 +9,71 @@ import org.trustweave.credential.requests.PresentationRequest
 
 /**
  * Create a copy with a different purpose.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val options = proofOptionsForIssuance()
  *     .withPurpose(ProofPurpose.Authentication)
  * ```
  */
-fun ProofOptions.withPurpose(purpose: ProofPurpose): ProofOptions {
-    return copy(purpose = purpose)
-}
+fun ProofOptions.withPurpose(purpose: ProofPurpose): ProofOptions = copy(purpose = purpose)
 
 /**
  * Create a copy with a challenge.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val options = proofOptionsForIssuance()
  *     .withChallenge("nonce-123")
  * ```
  */
-fun ProofOptions.withChallenge(challenge: String): ProofOptions {
-    return copy(challenge = challenge)
-}
+fun ProofOptions.withChallenge(challenge: String): ProofOptions = copy(challenge = challenge)
 
 /**
  * Create a copy with domain binding.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val options = proofOptionsForIssuance()
  *     .withDomain("example.com")
  * ```
  */
-fun ProofOptions.withDomain(domain: String): ProofOptions {
-    return copy(domain = domain)
-}
+fun ProofOptions.withDomain(domain: String): ProofOptions = copy(domain = domain)
 
 /**
  * Create a copy with verification method.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val options = proofOptionsForIssuance()
  *     .withVerificationMethod("did:key:example#key-1")
  * ```
  */
-fun ProofOptions.withVerificationMethod(verificationMethod: String): ProofOptions {
-    return copy(verificationMethod = verificationMethod)
-}
-
+fun ProofOptions.withVerificationMethod(verificationMethod: String): ProofOptions = copy(verificationMethod = verificationMethod)
 
 /**
  * Check if proof options are for authentication.
  */
-fun ProofOptions.isForAuthentication(): Boolean {
-    return purpose == ProofPurpose.Authentication
-}
+fun ProofOptions.isForAuthentication(): Boolean = purpose == ProofPurpose.Authentication
 
 /**
  * Check if proof options are for issuance (assertion method).
  */
-fun ProofOptions.isForIssuance(): Boolean {
-    return purpose == ProofPurpose.AssertionMethod
-}
+fun ProofOptions.isForIssuance(): Boolean = purpose == ProofPurpose.AssertionMethod
 
 /**
  * Check if proof options have a challenge.
  */
-fun ProofOptions.hasChallenge(): Boolean {
-    return challenge != null
-}
+fun ProofOptions.hasChallenge(): Boolean = challenge != null
 
 /**
  * Check if proof options have domain binding.
  */
-fun ProofOptions.hasDomain(): Boolean {
-    return domain != null
-}
+fun ProofOptions.hasDomain(): Boolean = domain != null
 
 /**
  * Builder extension for IssuanceRequest to add proof options.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val request = IssuanceRequest(...)
@@ -107,12 +90,12 @@ fun IssuanceRequest.withProofOptions(block: ProofOptionsBuilder.() -> Unit = {})
 
 /**
  * Builder extension for IssuanceRequest to add proof options using convenience function.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val request = IssuanceRequest(...)
  *     .withProofOptionsForIssuance()
- * 
+ *
  * // Or use the DSL builder
  * val request = IssuanceRequest(...)
  *     .withProofOptions {
@@ -121,15 +104,12 @@ fun IssuanceRequest.withProofOptions(block: ProofOptionsBuilder.() -> Unit = {})
  *     }
  * ```
  */
-fun IssuanceRequest.withProofOptionsForIssuance(
-    verificationMethod: String? = null
-): IssuanceRequest {
-    return copy(proofOptions = proofOptionsForIssuance(verificationMethod))
-}
+fun IssuanceRequest.withProofOptionsForIssuance(verificationMethod: String? = null): IssuanceRequest =
+    copy(proofOptions = proofOptionsForIssuance(verificationMethod))
 
 /**
  * Builder extension for PresentationRequest to add proof options.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val request = PresentationRequest(...)
@@ -146,7 +126,7 @@ fun PresentationRequest.withProofOptions(block: ProofOptionsBuilder.() -> Unit =
 
 /**
  * Builder extension for PresentationRequest to add proof options using convenience function.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val request = PresentationRequest(...)
@@ -159,8 +139,5 @@ fun PresentationRequest.withProofOptions(block: ProofOptionsBuilder.() -> Unit =
 fun PresentationRequest.withProofOptionsForPresentation(
     challenge: String,
     domain: String? = null,
-    verificationMethod: String? = null
-): PresentationRequest {
-    return copy(proofOptions = proofOptionsForPresentation(challenge, domain, verificationMethod))
-}
-
+    verificationMethod: String? = null,
+): PresentationRequest = copy(proofOptions = proofOptionsForPresentation(challenge, domain, verificationMethod))

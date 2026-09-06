@@ -97,4 +97,4 @@ After 2.5e, the iOS app's only SwiftUI-side code is the views and Keychain plumb
 
 ## License
 
-Apache 2.0.
+See the repository [LICENSE](../../LICENSE) and [commercial license terms](../../LICENSE-COMMERCIAL.md).

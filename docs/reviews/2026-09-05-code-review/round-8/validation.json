@@ -1,0 +1,44 @@
+{
+  "checks": [
+    {
+      "area": "SDK common module",
+      "result": "430 tests passed; 0 failures/skips; ktlint passed",
+      "scope": "Includes two new provider-policy tests. Other SDK modules retain earlier evidence."
+    },
+    {
+      "area": "Wallet unit",
+      "result": "42 passed; 0 failures",
+      "scope": "Five new adversarial custody/migration cases; earlier issuance, disclosure, restore and recovery tests."
+    },
+    {
+      "area": "Wallet production/browser",
+      "result": "Build/TypeScript and 11 Chromium regressions passed",
+      "scope": "Native WebCrypto and IndexedDB persistence, reload, disclosure, restore/replacement and CSP."
+    },
+    {
+      "area": "Provider documentation",
+      "result": "Generated capability drift check passed",
+      "scope": "No supported-provider promotion or external cloud/hardware claim."
+    },
+    {
+      "area": "SaaS integration boundary",
+      "result": "Reviewed local fingerprint updated and verified",
+      "scope": "No new SaaS runtime change or backend/full-stack rerun; immutable release pairing remains open."
+    },
+    {
+      "area": "SDK fingerprint verifier",
+      "result": "2 tests passed; fingerprint matches reviewed local source",
+      "scope": "5de202557972a1ab6498deda3591d01492485fcd47a727384e87684d8f6235dd; not an immutable release attestation."
+    },
+    {
+      "area": "HTML report",
+      "result": "All local links and four filters passed; desktop/mobile visually checked; no mobile overflow",
+      "scope": "Five findings; screenshots recorded in this report directory."
+    }
+  ],
+  "logs": [
+    "common-validation.json",
+    "wallet-validation.json",
+    "../round-7/validation.json"
+  ]
+}

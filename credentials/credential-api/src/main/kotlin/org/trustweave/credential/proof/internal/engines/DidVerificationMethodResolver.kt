@@ -11,7 +11,7 @@ import org.trustweave.did.resolver.DidResolver
  * [VcLdProofEngine] no longer holds DID resolver lookup logic inline.
  */
 internal class DidVerificationMethodResolver(
-    private val didResolver: DidResolver?
+    private val didResolver: DidResolver?,
 ) {
     /**
      * Resolve a verification method from a DID document.
@@ -26,7 +26,7 @@ internal class DidVerificationMethodResolver(
     suspend fun resolve(
         issuerIri: Iri,
         verificationMethodId: String,
-        expectedProofPurpose: String? = null
+        expectedProofPurpose: String? = null,
     ): VerificationMethod? {
         if (!issuerIri.isDid) return null
         val resolver = didResolver ?: return null
@@ -34,7 +34,7 @@ internal class DidVerificationMethodResolver(
             issuerIri = issuerIri,
             verificationMethodId = verificationMethodId,
             didResolver = resolver,
-            expectedProofPurpose = expectedProofPurpose
+            expectedProofPurpose = expectedProofPurpose,
         )
     }
 
@@ -48,6 +48,8 @@ internal class DidVerificationMethodResolver(
      * @param keyId The key fragment (e.g. "key-1") or full ID
      * @return A fully-qualified verification method reference
      */
-    fun buildVerificationMethodId(issuerIri: String, keyId: String?): String =
-        keyId?.let { "$issuerIri#$it" } ?: "$issuerIri#key-1"
+    fun buildVerificationMethodId(
+        issuerIri: String,
+        keyId: String?,
+    ): String = keyId?.let { "$issuerIri#$it" } ?: "$issuerIri#key-1"
 }

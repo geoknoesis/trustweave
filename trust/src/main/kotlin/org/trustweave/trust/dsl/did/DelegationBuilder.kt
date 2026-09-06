@@ -1,11 +1,11 @@
 package org.trustweave.trust.dsl.did
 
-import org.trustweave.trust.context.DidDslContext
-import org.trustweave.did.verifier.DidDocumentDelegationVerifier
-import org.trustweave.did.verifier.DelegationChainResult
-import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.verifier.DelegationChainResult
+import org.trustweave.did.verifier.DidDocumentDelegationVerifier
+import org.trustweave.trust.context.DidDslContext
 
 /**
  * Delegation DSL.
@@ -27,7 +27,9 @@ import kotlinx.coroutines.withContext
  * }
  * ```
  */
-class DelegationBuilder(private val didContext: DidDslContext) {
+class DelegationBuilder(
+    private val didContext: DidDslContext,
+) {
     private val didResolver = didContext.getDidResolver()
 
     private val verifier: DidDocumentDelegationVerifier = DidDocumentDelegationVerifier(didResolver)
@@ -43,21 +45,21 @@ class DelegationBuilder(private val didContext: DidDslContext) {
         this.delegateDid = delegateDid
     }
 
-    suspend fun verify(): DelegationChainResult = withContext(Dispatchers.IO) {
-        val delegatorStr = delegatorDid ?: throw IllegalStateException("Delegator DID is required. Use from(\"did:key:...\")")
-        val delegateStr = delegateDid ?: throw IllegalStateException("Delegate DID is required. Use to(\"did:key:...\")")
-        val delegator = Did(delegatorStr)
-        val delegate = Did(delegateStr)
-        return@withContext verifier.verify(delegator, delegate)
-    }
+    suspend fun verify(): DelegationChainResult =
+        withContext(Dispatchers.IO) {
+            val delegatorStr = delegatorDid ?: throw IllegalStateException("Delegator DID is required. Use from(\"did:key:...\")")
+            val delegateStr = delegateDid ?: throw IllegalStateException("Delegate DID is required. Use to(\"did:key:...\")")
+            val delegator = Did(delegatorStr)
+            val delegate = Did(delegateStr)
+            return@withContext verifier.verify(delegator, delegate)
+        }
 
-    suspend fun verifyChain(delegatorDid: String, delegateDid: String): DelegationChainResult {
-        return verifier.verify(Did(delegatorDid), Did(delegateDid))
-    }
+    suspend fun verifyChain(
+        delegatorDid: String,
+        delegateDid: String,
+    ): DelegationChainResult = verifier.verify(Did(delegatorDid), Did(delegateDid))
 
-    suspend fun verifyChain(chain: List<String>): DelegationChainResult {
-        return verifier.verifyChain(chain.map { Did(it) })
-    }
+    suspend fun verifyChain(chain: List<String>): DelegationChainResult = verifier.verifyChain(chain.map { Did(it) })
 }
 
 /**
@@ -68,4 +70,3 @@ suspend fun DidDslContext.delegation(block: DelegationBuilder.() -> Unit): Deleg
     builder.block()
     return builder
 }
-

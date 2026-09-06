@@ -38,7 +38,6 @@ import org.trustweave.did.registrar.model.*
  * ```
  */
 interface DidRegistrar {
-
     /**
      * Creates a new DID according to the DID Registration specification.
      *
@@ -51,7 +50,10 @@ interface DidRegistrar {
      * @return Registration response with jobId and didState
      * @throws TrustWeaveException if creation fails
      */
-    suspend fun createDid(method: String, options: CreateDidOptions): DidRegistrationResponse
+    suspend fun createDid(
+        method: String,
+        options: CreateDidOptions,
+    ): DidRegistrationResponse
 
     /**
      * Updates a DID Document according to the DID Registration specification.
@@ -69,7 +71,7 @@ interface DidRegistrar {
     suspend fun updateDid(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions = UpdateDidOptions()
+        options: UpdateDidOptions = UpdateDidOptions(),
     ): DidRegistrationResponse
 
     /**
@@ -86,7 +88,6 @@ interface DidRegistrar {
      */
     suspend fun deactivateDid(
         did: String,
-        options: DeactivateDidOptions = DeactivateDidOptions()
+        options: DeactivateDidOptions = DeactivateDidOptions(),
     ): DidRegistrationResponse
 }
-

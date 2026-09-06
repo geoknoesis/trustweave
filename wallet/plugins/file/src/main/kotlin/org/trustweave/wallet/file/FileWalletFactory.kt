@@ -1,9 +1,9 @@
 package org.trustweave.wallet.file
 
-import org.trustweave.wallet.services.WalletFactory
-import org.trustweave.wallet.services.WalletCreationOptions
 import org.trustweave.wallet.Wallet
-import java.io.File
+import org.trustweave.wallet.services.WalletCreationOptions
+import org.trustweave.wallet.services.WalletFactory
+import org.trustweave.wallet.services.validateDeployment
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.UUID
@@ -35,27 +35,37 @@ import java.util.UUID
  * ```
  */
 class FileWalletFactory : WalletFactory {
-
     override suspend fun create(
         providerName: String,
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: WalletCreationOptions
+        options: WalletCreationOptions,
     ): Wallet {
+        options.validateDeployment("wallet:plugins:file")
         if (providerName.lowercase() != "file") {
             throw IllegalArgumentException("Provider name must be 'file'")
         }
 
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
+        require(finalWalletId.matches(Regex("[A-Za-z0-9_-]{1,128}"))) {
+            "walletId must be a safe single path component (letters, digits, underscore or hyphen)"
+        }
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
-        val finalHolderDid = holderDid
-            ?: throw IllegalArgumentException("holderDid is required for FileWallet")
+        val finalHolderDid =
+            holderDid
+                ?: throw IllegalArgumentException("holderDid is required for FileWallet")
 
-        val storagePath = options.storagePath
-            ?: throw IllegalArgumentException("storagePath is required for FileWallet")
+        val storagePath =
+            options.storagePath
+                ?: throw IllegalArgumentException("storagePath is required for FileWallet")
 
-        val encryptionKey = options.additionalProperties["encryptionKey"] as? String
+        val legacyKey = options.additionalProperties["encryptionKey"]
+        require(legacyKey == null || legacyKey is String) { "encryptionKey must be a string" }
+        require(options.encryptionKey == null || legacyKey == null || options.encryptionKey == legacyKey) {
+            "Conflicting typed and legacy encryption keys"
+        }
+        val encryptionKey = options.encryptionKey ?: legacyKey as? String
         val walletDir = Paths.get(storagePath, finalWalletId)
 
         // Create wallet directory if it doesn't exist
@@ -68,8 +78,7 @@ class FileWalletFactory : WalletFactory {
             walletDid = finalWalletDid,
             holderDid = finalHolderDid,
             walletDir = walletDir,
-            encryptionKey = encryptionKey
+            encryptionKey = encryptionKey,
         )
     }
 }
-

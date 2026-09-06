@@ -114,6 +114,7 @@ if (result.valid) {
 When a credential is issued by a delegate, the verification can check the delegation chain:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.datetime.Clock
 import org.trustweave.trust.types.delegationValid
 import org.trustweave.did.identifiers.Did
@@ -186,6 +187,7 @@ trustWeave.updateDid {
 ## Example: Corporate Hierarchy
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.trustweave.credential.results.VerificationResult

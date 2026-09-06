@@ -1,0 +1,105 @@
+[
+  {
+    "id": "TW-R9-01",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Storage factories enforce deployment policy before side effects",
+    "detail": "Added a typed LEGACY / EXPERIMENTAL / SUPPORTED_ONLY policy to wallet options and their builder. File, database and cloud factories apply the maturity gate before opening files, pools or clients.",
+    "evidence": "Direct factory tests verify production refusal occurs before missing configuration or resource creation. Explicit experimental encrypted storage is tested through create/store/reopen.",
+    "files": [
+      "wallet/wallet-core-mp/src/commonMain/kotlin/org/trustweave/wallet/services/WalletCreationOptions.kt",
+      "wallet/wallet-core/src/main/kotlin/org/trustweave/wallet/services/WalletDeployment.kt",
+      "wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/DeploymentPolicyTest.kt",
+      "wallet/plugins/database/src/test/kotlin/org/trustweave/wallet/database/DeploymentPolicyTest.kt"
+    ],
+    "limit": "Compatibility default is LEGACY. Direct constructors and other domain providers are not automatically covered. No provider was promoted; SDK consumers must rebuild against changed options."
+  },
+  {
+    "id": "TW-R9-02",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Typed encryption key and file-wallet path isolation",
+    "detail": "The factory previously ignored the typed encryption key and accepted wallet IDs that could escape the storage root. It now honors the key, refuses conflicting/invalid key configuration and restricts IDs to a safe path component.",
+    "evidence": "Regression verifies ciphertext does not expose issuer data, decrypts correctly after reopen, rejects invalid typed keys and blocks traversal, separators and empty IDs.",
+    "files": [
+      "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWalletFactory.kt",
+      "wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletFactoryTest.kt",
+      "wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletTest.kt"
+    ],
+    "limit": "IDs outside 1?128 ASCII letters/digits/underscore/hyphen need an explicit migration. The configured storage directory is operator-controlled; no local-administrator or hostile-filesystem isolation is claimed."
+  },
+  {
+    "id": "TW-R9-03",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "One bounded issuer profile at import and verification",
+    "detail": "Rejects VC/SD-JWT format confusion, arbitrary key fragments, conflicting issuer/holder bindings, unsupported confirmation keys, invalid time intervals and unsupported array disclosures. The demo verifier now uses the same validation as import.",
+    "evidence": "Fifteen new credential-profile cases exercise valid and adversarial signed inputs. Existing issuer/disclosure browser regressions remain covered.",
+    "files": [
+      "reference-wallet/lib/credential-verification.ts",
+      "reference-wallet/app/api/demo-verifier/verify/route.ts",
+      "reference-wallet/tests/credential-profile.test.ts",
+      "reference-wallet/tests/import-profile.test.ts"
+    ],
+    "limit": "This is a deliberately bounded Ed25519 did:key profile, not general VC or SD-JWT conformance. Existing supported browser claim-encryption behavior remains separate from new custody adapters."
+  },
+  {
+    "id": "TW-R9-04",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Separate passkey and managed-KMS custody adapters",
+    "detail": "Explicit dispatch has no browser fallback. Passkey proof checks RP/origin, user presence/verification, backup policy, challenge and signature; the payload verifier requires an atomic nonce-consumption callback. Managed signing checks authorization configuration, exact returned payload, pinned key and algorithm, with timeouts, bounded streaming and no redirects.",
+    "evidence": "Chromium virtual-authenticator enrollment/signing test and adversarial signature/challenge/credential/UV checks. Local cryptographic fixtures cover EdDSA and ES256 responses, substitution, authorization/network failures and response limits.",
+    "files": [
+      "reference-wallet/lib/custody/index.ts",
+      "reference-wallet/lib/custody/passkey.ts",
+      "reference-wallet/lib/custody/managed.ts",
+      "reference-wallet/tests/passkey-custody.test.ts",
+      "reference-wallet/tests/managed-custody.test.ts",
+      "reference-wallet/tests/browser/passkey.spec.ts",
+      "reference-wallet/CUSTODY.md"
+    ],
+    "limit": "Experimental primitives only. WebAuthn assertions are not JWT signatures. The existing wallet UI is not switched to these adapters, and no production managed service, physical authenticator attestation or hardware KMS was validated."
+  },
+  {
+    "id": "PRODUCTION-CUSTODY",
+    "repo": "trustweave",
+    "status": "remaining",
+    "title": "Complete production custody integration and provider qualification",
+    "detail": "Both custody models are selected. Remaining work includes trusted enrollment, durable authorization/nonces, recovery and audit persistence, issuer/verifier presentation compatibility, user-facing integration and actual device/service qualification. A non-production HSM/KMS target and existing credential profile were requested but not supplied.",
+    "evidence": "No hardware/provider maturity promotion is claimed. Current adapter tests use a virtual authenticator and software cryptographic fixtures.",
+    "files": [
+      "reference-wallet/CUSTODY.md",
+      "docs/api-reference/provider-deployment-profiles.md"
+    ],
+    "limit": "This remains open. The adapters do not justify a perfect score or a claim that production custody is finished."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Published exact-pair Linux/staging validation",
+    "detail": "The reviewed SDK runtime changed locally; the fingerprint was deliberately updated and verified. The immutable revision remains the prior commit. Coordinate a new SDK commit and SaaS pin, publication and exact-pair remote Linux/staging validation.",
+    "evidence": "No publication or staging execution is claimed.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-4-operations.md",
+      ".trustweave-source-sha256"
+    ],
+    "limit": "A matching local fingerprint cannot substitute for a reviewed, published and tested immutable pair."
+  },
+  {
+    "id": "BILLING-OPERATIONS",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Live billing workflow and hosted alert delivery",
+    "detail": "Real local Accountly/Kill Bill application, tenant, subscriber and payment-metadata behavior is now verified. External PSP setup/collection, settlement, service-account authentication, hosted alerts and the supported legacy Stripe cutover still require validation.",
+    "evidence": "Dedicated deployed contract passed. Original two Accountly tests requiring the PSP stand-in remain unexecuted in this pass.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyLiveContractTest.kt",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "The supported Accountly cutover/legacy Stripe workflow needs to be defined and exercised before claiming completeness."
+  }
+]

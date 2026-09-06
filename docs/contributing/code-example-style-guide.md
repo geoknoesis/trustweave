@@ -281,6 +281,7 @@ when (created) {
 package com.example.TrustWeave.example
 
 // TrustWeave imports
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.did.resolver.DidResolutionResult

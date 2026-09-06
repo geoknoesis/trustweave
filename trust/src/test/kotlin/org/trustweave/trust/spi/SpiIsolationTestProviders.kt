@@ -29,9 +29,10 @@ class BrokenSpiIsolationDidMethodProvider : DidMethodProvider {
     override val name: String = "spi-isolation-broken"
     override val supportedMethods: List<String> = listOf(SPI_ISOLATION_DID_METHOD)
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod {
-        throw RuntimeException("Synthetic broken DidMethodProvider (SPI isolation test)")
-    }
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod = throw RuntimeException("Synthetic broken DidMethodProvider (SPI isolation test)")
 }
 
 /** Working DID method provider listed after the broken one. */
@@ -39,16 +40,22 @@ class WorkingSpiIsolationDidMethodProvider : DidMethodProvider {
     override val name: String = "spi-isolation-working"
     override val supportedMethods: List<String> = listOf(SPI_ISOLATION_DID_METHOD)
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName != SPI_ISOLATION_DID_METHOD) return null
-        val kms = options.additionalProperties["kms"] as? KeyManagementService
-            ?: InMemoryKeyManagementService()
+        val kms =
+            options.additionalProperties["kms"] as? KeyManagementService
+                ?: InMemoryKeyManagementService()
         return SpiIsolationDidMethod(kms)
     }
 }
 
 /** Minimal working DID method: a key mock that reports the isolation-test method name. */
-class SpiIsolationDidMethod(kms: KeyManagementService) : DidMethod by DidKeyMockMethod(kms) {
+class SpiIsolationDidMethod(
+    kms: KeyManagementService,
+) : DidMethod by DidKeyMockMethod(kms) {
     override val method: String = SPI_ISOLATION_DID_METHOD
 }
 
@@ -57,9 +64,10 @@ class BrokenSpiIsolationAnchorClientProvider : BlockchainAnchorClientProvider {
     override val name: String = SPI_ISOLATION_ANCHOR_PROVIDER
     override val supportedChains: List<String> = listOf(SPI_ISOLATION_CHAIN_ID)
 
-    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient {
-        throw RuntimeException("Synthetic broken BlockchainAnchorClientProvider (SPI isolation test)")
-    }
+    override fun create(
+        chainId: String,
+        options: Map<String, Any?>,
+    ): BlockchainAnchorClient = throw RuntimeException("Synthetic broken BlockchainAnchorClientProvider (SPI isolation test)")
 }
 
 /** Working anchor client provider listed after the broken one. */
@@ -67,7 +75,10 @@ class WorkingSpiIsolationAnchorClientProvider : BlockchainAnchorClientProvider {
     override val name: String = SPI_ISOLATION_ANCHOR_PROVIDER
     override val supportedChains: List<String> = listOf(SPI_ISOLATION_CHAIN_ID)
 
-    override fun create(chainId: String, options: Map<String, Any?>): BlockchainAnchorClient? {
+    override fun create(
+        chainId: String,
+        options: Map<String, Any?>,
+    ): BlockchainAnchorClient? {
         if (chainId != SPI_ISOLATION_CHAIN_ID) return null
         return InMemoryBlockchainAnchorClient(chainId)
     }

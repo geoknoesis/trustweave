@@ -3,8 +3,7 @@ package org.trustweave.trust
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.trustweave.revocation.services.StatusListRegistryFactory
-import org.trustweave.trust.dsl.trustWeave
-import org.trustweave.trust.dsl.*
+import org.trustweave.trust.dsl.TrustWeaveConfig
 import org.trustweave.trust.services.TrustRegistryFactory
 import org.trustweave.wallet.services.WalletFactory
 
@@ -42,14 +41,14 @@ suspend fun TrustWeave.Companion.inMemory(
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     statusListRegistryFactory: StatusListRegistryFactory? = null,
     trustRegistryFactory: TrustRegistryFactory? = null,
-    walletFactory: WalletFactory? = null
-): TrustWeave {
-    return build {
+    walletFactory: WalletFactory? = null,
+): TrustWeave =
+    build {
         dispatcher(dispatcher)
         factories(
             statusListRegistryFactory = statusListRegistryFactory,
             trustRegistryFactory = trustRegistryFactory,
-            walletFactory = walletFactory
+            walletFactory = walletFactory,
         )
         keys {
             provider("inMemory")
@@ -69,11 +68,8 @@ suspend fun TrustWeave.Companion.inMemory(
             provider("inMemory")
         }
     }
-}
 
 /**
  * Wrap an existing [TrustWeaveConfig] in the facade.
  */
-fun TrustWeave.Companion.from(config: TrustWeaveConfig): TrustWeave {
-    return TrustWeave(config)
-}
+fun TrustWeave.Companion.from(config: TrustWeaveConfig): TrustWeave = TrustWeave(config)

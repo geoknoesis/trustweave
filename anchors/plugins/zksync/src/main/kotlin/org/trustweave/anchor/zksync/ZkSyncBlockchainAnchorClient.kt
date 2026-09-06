@@ -32,11 +32,10 @@ import java.math.BigInteger
  */
 class ZkSyncBlockchainAnchorClient(
     chainId: String,
-    options: Map<String, Any?> = emptyMap()
+    options: Map<String, Any?> = emptyMap(),
 ) : AbstractEvmAnchorClient(chainId, options, resolveChain(chainId)) {
-
     companion object {
-        const val MAINNET = "eip155:324"  // zkSync Era mainnet
+        const val MAINNET = "eip155:324" // zkSync Era mainnet
         const val SEPOLIA = "eip155:300" // zkSync Era Sepolia testnet
 
         // Network RPC endpoints
@@ -60,20 +59,23 @@ class ZkSyncBlockchainAnchorClient(
          * gas model charges bootloader/validation overhead and pubdata costs inside
          * the gas limit (a simple transfer needs ~10^5+ gas) — and logs a warning.
          */
-        internal fun gasLimitFrom(estimatedGas: BigInteger?, data: ByteArray): BigInteger {
+        internal fun gasLimitFrom(
+            estimatedGas: BigInteger?,
+            data: ByteArray,
+        ): BigInteger {
             if (estimatedGas == null) {
                 val fallback = EvmGas.txGasLimit(data)
                 logger.warn(
                     "eth_estimateGas failed; falling back to Ethereum intrinsic gas limit {} — " +
                         "this is likely too low on zkSync Era (bootloader/validation overhead and " +
                         "pubdata costs are charged inside the gas limit) and the transaction may be rejected.",
-                    fallback
+                    fallback,
                 )
                 return fallback
             }
             return maxOf(
                 EvmGas.withMargin(estimatedGas, ESTIMATE_GAS_MARGIN_PERCENT),
-                EvmGas.intrinsicGas(data)
+                EvmGas.intrinsicGas(data),
             )
         }
 
@@ -86,18 +88,20 @@ class ZkSyncBlockchainAnchorClient(
                 "Unsupported zkSync chain ID: $chainId. Use 'eip155:324' (mainnet) or 'eip155:300' (Sepolia testnet)"
             }
             return when (chainId) {
-                MAINNET -> EvmChainConfig(
-                    numericChainId = 324L,
-                    defaultRpcUrl = MAINNET_RPC_URL,
-                    blockchainName = "zkSync Era",
-                    networkName = "zksync-era-mainnet"
-                )
-                else -> EvmChainConfig(
-                    numericChainId = 300L,
-                    defaultRpcUrl = SEPOLIA_RPC_URL,
-                    blockchainName = "zkSync Era",
-                    networkName = "zksync-era-sepolia"
-                )
+                MAINNET ->
+                    EvmChainConfig(
+                        numericChainId = 324L,
+                        defaultRpcUrl = MAINNET_RPC_URL,
+                        blockchainName = "zkSync Era",
+                        networkName = "zksync-era-mainnet",
+                    )
+                else ->
+                    EvmChainConfig(
+                        numericChainId = 300L,
+                        defaultRpcUrl = SEPOLIA_RPC_URL,
+                        blockchainName = "zkSync Era",
+                        networkName = "zksync-era-sepolia",
+                    )
             }
         }
     }
@@ -108,6 +112,8 @@ class ZkSyncBlockchainAnchorClient(
      * too low here. eth_estimateGas is authoritative; add headroom for L2
      * variability and fall back to intrinsic gas only if estimation fails.
      */
-    override fun deriveGasLimit(data: ByteArray, from: String): BigInteger =
-        gasLimitFrom(tryEstimateGas(data, from), data)
+    override fun deriveGasLimit(
+        data: ByteArray,
+        from: String,
+    ): BigInteger = gasLimitFrom(tryEstimateGas(data, from), data)
 }

@@ -470,6 +470,7 @@ Here's a complete example combining all features:
 
 ```kotlin
 // Kotlin stdlib
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
 
 // TrustWeave core

@@ -15,7 +15,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
 
-
     // HTTP client for ION node communication
     implementation(libs.okhttp)
 
@@ -25,4 +24,3 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
 }
-

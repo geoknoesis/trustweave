@@ -1,25 +1,35 @@
 package org.trustweave.did.resolver
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.DidDocumentMetadata
-import org.trustweave.did.model.DidService
-import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.parser.DidDocumentJsonParser
-import org.trustweave.did.exception.DidException
-import org.trustweave.did.representation.DidMediaTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
+import org.trustweave.did.exception.DidException
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.DidDocumentMetadata
+import org.trustweave.did.parser.DidDocumentJsonParser
+import org.trustweave.did.representation.DidMediaTypes
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
-import kotlinx.datetime.Instant
 
 /**
  * Default implementation of [UniversalResolver] using Java's built-in HTTP client.
@@ -62,17 +72,18 @@ class DefaultUniversalResolver(
     private val timeout: Int = 30,
     private val apiKey: String? = null,
     private val protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter(),
-    private val retryConfig: RetryConfig = RetryConfig.default().copy(
-        nonRetryableExceptions = listOf(
-            org.trustweave.did.exception.DidException.InvalidDidFormat::class,
-            // Any DidException subtype is a domain-level error, not a transient network condition,
-            // and must never be retried.
-            org.trustweave.did.exception.DidException::class,
-        )
-    ),
-    httpClient: HttpClient? = null
+    private val retryConfig: RetryConfig =
+        RetryConfig.default().copy(
+            nonRetryableExceptions =
+                listOf(
+                    org.trustweave.did.exception.DidException.InvalidDidFormat::class,
+                    // Any DidException subtype is a domain-level error, not a transient network condition,
+                    // and must never be retried.
+                    org.trustweave.did.exception.DidException::class,
+                ),
+        ),
+    httpClient: HttpClient? = null,
 ) : UniversalResolver {
-
     init {
         // Validate and cache baseUrl format once during initialization
         require(baseUrl.isNotBlank()) { "Base URL cannot be blank" }
@@ -85,21 +96,24 @@ class DefaultUniversalResolver(
         } catch (e: IllegalArgumentException) {
             throw DidException.InvalidDidFormat(
                 did = baseUrl,
-                reason = "Invalid base URL format: ${e.message}"
+                reason = "Invalid base URL format: ${e.message}",
             )
         }
     }
 
-    private val httpClient: HttpClient = httpClient ?: HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(timeout.toLong()))
-        .build()
+    private val httpClient: HttpClient =
+        httpClient ?: HttpClient
+            .newBuilder()
+            .connectTimeout(Duration.ofSeconds(timeout.toLong()))
+            .build()
 
-    private val logger = org.trustweave.did.util.DidLogging.getLogger(DefaultUniversalResolver::class.java)
+    private val logger =
+        org.trustweave.did.util.DidLogging
+            .getLogger(DefaultUniversalResolver::class.java)
 
-    private val MAX_RESPONSE_BYTES = 1 * 1024 * 1024 // 1 MB
+    private val maxResponseBytes = 1 * 1024 * 1024 // 1 MB
 
-    private fun sanitizeDid(did: String): String =
-        did.replace(Regex("[\\r\\n\\t\\x00-\\x1F\\x7F]"), "?").take(200)
+    private fun sanitizeDid(did: String): String = did.replace(Regex("[\\r\\n\\t\\x00-\\x1F\\x7F]"), "?").take(200)
 
     /**
      * Normalises a URI host string for case-insensitive, JVM-version-independent comparison.
@@ -110,49 +124,55 @@ class DefaultUniversalResolver(
      *
      * Returns `null` when [h] is `null` (opaque URI — SSRF guard should reject the request).
      */
-    private fun normalizeHost(h: String?): String? =
-        h?.lowercase()?.removePrefix("[")?.removeSuffix("]")
+    private fun normalizeHost(h: String?): String? = h?.lowercase()?.removePrefix("[")?.removeSuffix("]")
 
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        // Validate input before entering the try/retry block so that format errors
-        // are not caught by the generic catch(e: Exception) clause and misrouted.
-        if (did.isBlank()) {
-            throw DidException.InvalidDidFormat(did = sanitizeDid(did), reason = "DID cannot be blank")
-        }
-        if (!did.startsWith("did:")) {
-            throw DidException.InvalidDidFormat(did = sanitizeDid(did), reason = "DID must start with 'did:'")
-        }
+    override suspend fun resolveDid(did: String): DidResolutionResult =
+        withContext(Dispatchers.IO) {
+            // Validate input before entering the try/retry block so that format errors
+            // are not caught by the generic catch(e: Exception) clause and misrouted.
+            if (did.isBlank()) {
+                throw DidException.InvalidDidFormat(did = sanitizeDid(did), reason = "DID cannot be blank")
+            }
+            if (!did.startsWith("did:")) {
+                throw DidException.InvalidDidFormat(did = sanitizeDid(did), reason = "DID must start with 'did:'")
+            }
 
-        // Use retry logic for HTTP operations
-        try {
-            retryConfig.executeWithRetry {
-                performResolution(did)
+            // Use retry logic for HTTP operations
+            try {
+                retryConfig.executeWithRetry {
+                    performResolution(did)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                val safeDid =
+                    try {
+                        Did(sanitizeDid(did))
+                    } catch (_: Exception) {
+                        Did("did:unknown:interrupted")
+                    }
+                throw DidException.DidResolutionFailed(
+                    did = safeDid,
+                    reason = "HTTP request interrupted",
+                    cause = e,
+                )
+            } catch (e: DidException) {
+                throw e
+            } catch (e: Exception) {
+                val safeDid =
+                    try {
+                        Did(sanitizeDid(did))
+                    } catch (_: Exception) {
+                        Did("did:unknown:resolution-error")
+                    }
+                throw DidException.DidResolutionFailed(
+                    did = safeDid,
+                    reason = e.message ?: "Unknown error during resolution",
+                    cause = e,
+                )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            val safeDid = try { Did(sanitizeDid(did)) } catch (_: Exception) { Did("did:unknown:interrupted") }
-            throw DidException.DidResolutionFailed(
-                did = safeDid,
-                reason = "HTTP request interrupted",
-                cause = e
-            )
-        } catch (e: DidException) {
-            throw e
-        } catch (e: Exception) {
-            val safeDid = try {
-                Did(sanitizeDid(did))
-            } catch (_: Exception) {
-                Did("did:unknown:resolution-error")
-            }
-            throw DidException.DidResolutionFailed(
-                did = safeDid,
-                reason = e.message ?: "Unknown error during resolution",
-                cause = e
-            )
         }
-    }
 
     private suspend fun performResolution(did: String): DidResolutionResult {
         // The protocol adapter is responsible for encoding the DID value in the URL.
@@ -165,47 +185,50 @@ class DefaultUniversalResolver(
         // Use URI.create() (single-arg, throws IllegalArgumentException) for consistency
         // with the rest of this class. URISyntaxException from the multi-arg constructor
         // would silently bypass the SSRF guard and fall through to a ResolutionError.
-        val uri = try {
-            val resolvedUri = URI.create(url)
-            val baseUri = URI.create(baseUrl)
-            val basePort = baseUri.port.takeIf { it != -1 } ?: if (baseUri.scheme == "https") 443 else 80
-            val resolvedPort = resolvedUri.port.takeIf { it != -1 } ?: if (resolvedUri.scheme == "https") 443 else 80
-            // RFC 3986 §3.2.2: host comparison must be case-insensitive and bracket-stripped
-            // so IPv6 behaviour is consistent across JDK versions.
-            // resolvedUri.host is null for opaque URIs (urn:, data:, etc.) — treat as a
-            // guard failure rather than letting a null-receiver NPE bypass the check.
-            if (normalizeHost(resolvedUri.host) == null ||
-                normalizeHost(resolvedUri.host) != normalizeHost(baseUri.host) ||
-                resolvedUri.scheme != baseUri.scheme ||
-                resolvedPort != basePort
-            ) {
+        val uri =
+            try {
+                val resolvedUri = URI.create(url)
+                val baseUri = URI.create(baseUrl)
+                val basePort = baseUri.port.takeIf { it != -1 } ?: if (baseUri.scheme == "https") 443 else 80
+                val resolvedPort = resolvedUri.port.takeIf { it != -1 } ?: if (resolvedUri.scheme == "https") 443 else 80
+                // RFC 3986 §3.2.2: host comparison must be case-insensitive and bracket-stripped
+                // so IPv6 behaviour is consistent across JDK versions.
+                // resolvedUri.host is null for opaque URIs (urn:, data:, etc.) — treat as a
+                // guard failure rather than letting a null-receiver NPE bypass the check.
+                if (normalizeHost(resolvedUri.host) == null ||
+                    normalizeHost(resolvedUri.host) != normalizeHost(baseUri.host) ||
+                    resolvedUri.scheme != baseUri.scheme ||
+                    resolvedPort != basePort
+                ) {
+                    throw DidException.InvalidDidFormat(
+                        did = sanitizeDid(did),
+                        reason = "SSRF guard: resolved URL host is null or does not match base URL",
+                    )
+                }
+                // A bare base URL (no path component) passes host/scheme/port checks but indicates
+                // the adapter failed to build a proper resolve path, which could facilitate SSRF.
+                if (resolvedUri.path.isNullOrBlank()) {
+                    throw DidException.InvalidDidFormat(
+                        did = sanitizeDid(did),
+                        reason = "SSRF guard: adapter-built URL has no path component: $url",
+                    )
+                }
+                resolvedUri
+            } catch (e: IllegalArgumentException) {
+                // URI.create() throws IllegalArgumentException for a malformed URL.
+                // A malformed adapter-built URL is treated as an SSRF/format failure.
                 throw DidException.InvalidDidFormat(
                     did = sanitizeDid(did),
-                    reason = "SSRF guard: resolved URL host is null or does not match base URL"
+                    reason = "Invalid resolver URL format: $url. Error: ${e.message}",
                 )
             }
-            // A bare base URL (no path component) passes host/scheme/port checks but indicates
-            // the adapter failed to build a proper resolve path, which could facilitate SSRF.
-            if (resolvedUri.path.isNullOrBlank()) {
-                throw DidException.InvalidDidFormat(
-                    did = sanitizeDid(did),
-                    reason = "SSRF guard: adapter-built URL has no path component: $url"
-                )
-            }
-            resolvedUri
-        } catch (e: IllegalArgumentException) {
-            // URI.create() throws IllegalArgumentException for a malformed URL.
-            // A malformed adapter-built URL is treated as an SSRF/format failure.
-            throw DidException.InvalidDidFormat(
-                did = sanitizeDid(did),
-                reason = "Invalid resolver URL format: $url. Error: ${e.message}"
-            )
-        }
 
-        val requestBuilder = HttpRequest.newBuilder()
-            .uri(uri)
-            .timeout(Duration.ofSeconds(timeout.toLong()))
-            .header("Accept", DidMediaTypes.DID_RESOLUTION)
+        val requestBuilder =
+            HttpRequest
+                .newBuilder()
+                .uri(uri)
+                .timeout(Duration.ofSeconds(timeout.toLong()))
+                .header("Accept", DidMediaTypes.DID_RESOLUTION)
 
         // Use protocol adapter to configure authentication
         protocolAdapter.configureAuth(requestBuilder, apiKey)
@@ -217,30 +240,34 @@ class DefaultUniversalResolver(
             when (response.statusCode()) {
                 200 -> {
                     // Parse JSON response
-                    val responseBody = run {
-                        val bytes = bodyStream.readNBytes(MAX_RESPONSE_BYTES + 1)
-                        if (bytes.size > MAX_RESPONSE_BYTES) {
+                    val responseBody =
+                        run {
+                            val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                            if (bytes.size > maxResponseBytes) {
+                                return@use DidResolutionResult.Failure.ResolutionError(
+                                    did = Did(sanitizeDid(did)),
+                                    reason = "Response exceeds maximum allowed size",
+                                )
+                            }
+                            String(bytes, Charsets.UTF_8)
+                        }
+                    val jsonResponse =
+                        try {
+                            parseJsonResponse(responseBody)
+                        } catch (e: kotlinx.serialization.SerializationException) {
                             return@use DidResolutionResult.Failure.ResolutionError(
                                 did = Did(sanitizeDid(did)),
-                                reason = "Response exceeds maximum allowed size"
+                                reason = "Malformed JSON in resolver response: ${e.message}",
+                                cause = e,
+                                resolutionMetadata =
+                                    DidResolutionMetadata(
+                                        error =
+                                            DidResolutionError.internalError(
+                                                "Malformed JSON in resolver response: ${e.message}",
+                                            ),
+                                    ),
                             )
                         }
-                        String(bytes, Charsets.UTF_8)
-                    }
-                    val jsonResponse = try {
-                        parseJsonResponse(responseBody)
-                    } catch (e: kotlinx.serialization.SerializationException) {
-                        return@use DidResolutionResult.Failure.ResolutionError(
-                            did = Did(sanitizeDid(did)),
-                            reason = "Malformed JSON in resolver response: ${e.message}",
-                            cause = e,
-                            resolutionMetadata = DidResolutionMetadata(
-                                error = DidResolutionError.internalError(
-                                    "Malformed JSON in resolver response: ${e.message}"
-                                )
-                            )
-                        )
-                    }
 
                     // A null response means the root element was not a JSON object —
                     // not a valid DID resolution response.
@@ -249,9 +276,10 @@ class DefaultUniversalResolver(
                             did = Did(sanitizeDid(did)),
                             reason = "Resolver response is not a JSON object",
                             cause = null,
-                            resolutionMetadata = DidResolutionMetadata(
-                                error = DidResolutionError.internalError("Resolver response is not a JSON object")
-                            )
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    error = DidResolutionError.internalError("Resolver response is not a JSON object"),
+                                ),
                         )
                     }
 
@@ -278,15 +306,18 @@ class DefaultUniversalResolver(
                                 null
                             }
                         }
-                    val documentMetadata = parseDidDocumentMetadata(
-                        protocolAdapter.extractDocumentMetadata(jsonResponse)
-                    )
-                    val resolutionMetadataMap = parseResolutionMetadata(
-                        protocolAdapter.extractResolutionMetadata(jsonResponse)
-                    )
-                    val resolutionMetadata = DidResolutionMetadata.fromMap(
-                        resolutionMetadataMap.plus("provider" to protocolAdapter.providerName)
-                    )
+                    val documentMetadata =
+                        parseDidDocumentMetadata(
+                            protocolAdapter.extractDocumentMetadata(jsonResponse),
+                        )
+                    val resolutionMetadataMap =
+                        parseResolutionMetadata(
+                            protocolAdapter.extractResolutionMetadata(jsonResponse),
+                        )
+                    val resolutionMetadata =
+                        DidResolutionMetadata.fromMap(
+                            resolutionMetadataMap.plus("provider" to protocolAdapter.providerName),
+                        )
 
                     when {
                         // §4.4/§12.1: deactivation is checked before document-presence. An
@@ -301,14 +332,14 @@ class DefaultUniversalResolver(
                             DidResolutionResult.Deactivated(
                                 did = Did(did),
                                 documentMetadata = documentMetadata.copy(deactivated = true),
-                                resolutionMetadata = resolutionMetadata
+                                resolutionMetadata = resolutionMetadata,
                             )
                         }
                         document != null -> {
                             DidResolutionResult.Success(
                                 document = document,
                                 documentMetadata = documentMetadata,
-                                resolutionMetadata = resolutionMetadata
+                                resolutionMetadata = resolutionMetadata,
                             )
                         }
                         malformedDocumentReason != null -> {
@@ -338,10 +369,11 @@ class DefaultUniversalResolver(
                             // errorMessage to avoid mislabeling a successful resolution — it is
                             // safe here to treat an upstream errorMessage with no structured error
                             // as the failure reason.
-                            val upstreamReason = resolutionMetadata.error?.detail
-                                ?: (resolutionMetadataMap["errorMessage"] as? String)
-                                ?: resolutionMetadata.error?.title
-                                ?: "DID document not found in response"
+                            val upstreamReason =
+                                resolutionMetadata.error?.detail
+                                    ?: (resolutionMetadataMap["errorMessage"] as? String)
+                                    ?: resolutionMetadata.error?.title
+                                    ?: "DID document not found in response"
                             // §4 / Failure's invariant: every Failure MUST carry a non-null
                             // error. `resolutionMetadata` here is parsed straight from an
                             // upstream body that may carry no structured error member at all —
@@ -350,10 +382,12 @@ class DefaultUniversalResolver(
                             DidResolutionResult.Failure.NotFound(
                                 did = Did(did),
                                 reason = upstreamReason,
-                                resolutionMetadata = resolutionMetadata.copy(
-                                    error = resolutionMetadata.error
-                                        ?: DidResolutionError.notFound(upstreamReason)
-                                )
+                                resolutionMetadata =
+                                    resolutionMetadata.copy(
+                                        error =
+                                            resolutionMetadata.error
+                                                ?: DidResolutionError.notFound(upstreamReason),
+                                    ),
                             )
                         }
                     }
@@ -363,10 +397,11 @@ class DefaultUniversalResolver(
                     DidResolutionResult.Failure.NotFound(
                         did = Did(did),
                         reason = "DID not found",
-                        resolutionMetadata = DidResolutionMetadata(
-                            error = DidResolutionError.notFound("DID not found"),
-                            properties = mapOf("provider" to protocolAdapter.providerName)
-                        )
+                        resolutionMetadata =
+                            DidResolutionMetadata(
+                                error = DidResolutionError.notFound("DID not found"),
+                                properties = mapOf("provider" to protocolAdapter.providerName),
+                            ),
                     )
                 }
                 410 -> {
@@ -379,36 +414,38 @@ class DefaultUniversalResolver(
                     // failing resolution — the 410 status itself already establishes
                     // deactivation, so a body we can't/won't fully buffer must not downgrade
                     // that to an error.
-                    val documentMetadata = try {
-                        val bytes = bodyStream.readNBytes(MAX_RESPONSE_BYTES + 1)
-                        if (bytes.size > MAX_RESPONSE_BYTES) {
+                    val documentMetadata =
+                        try {
+                            val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                            if (bytes.size > maxResponseBytes) {
+                                null
+                            } else {
+                                val body = String(bytes, Charsets.UTF_8)
+                                parseJsonResponse(body)
+                                    ?.let { protocolAdapter.extractDocumentMetadata(it) }
+                                    ?.let { parseDidDocumentMetadata(it) }
+                            }
+                        } catch (_: kotlinx.serialization.SerializationException) {
                             null
-                        } else {
-                            val body = String(bytes, Charsets.UTF_8)
-                            parseJsonResponse(body)
-                                ?.let { protocolAdapter.extractDocumentMetadata(it) }
-                                ?.let { parseDidDocumentMetadata(it) }
-                        }
-                    } catch (_: kotlinx.serialization.SerializationException) {
-                        null
-                    } catch (_: IllegalArgumentException) {
-                        // Belt-and-braces backstop: parseJsonResponse/extractDocumentMetadata/
-                        // parseDidDocumentMetadata are all now guarded against wrong-shaped and
-                        // JsonNull-valued fields (see parseDidDocumentMetadata's kdoc), so this
-                        // should not fire today. It stays because this exact call chain has
-                        // already had two unguarded-cast regressions found one level apart across
-                        // two review rounds — the one property that must hold unconditionally is
-                        // "410 always yields Deactivated", and that guarantee should not depend on
-                        // every downstream helper staying perfectly guarded as this code evolves.
-                        null
-                    } ?: DidDocumentMetadata(deactivated = true)
+                        } catch (_: IllegalArgumentException) {
+                            // Belt-and-braces backstop: parseJsonResponse/extractDocumentMetadata/
+                            // parseDidDocumentMetadata are all now guarded against wrong-shaped and
+                            // JsonNull-valued fields (see parseDidDocumentMetadata's kdoc), so this
+                            // should not fire today. It stays because this exact call chain has
+                            // already had two unguarded-cast regressions found one level apart across
+                            // two review rounds — the one property that must hold unconditionally is
+                            // "410 always yields Deactivated", and that guarantee should not depend on
+                            // every downstream helper staying perfectly guarded as this code evolves.
+                            null
+                        } ?: DidDocumentMetadata(deactivated = true)
 
                     DidResolutionResult.Deactivated(
                         did = Did(did),
                         documentMetadata = documentMetadata.copy(deactivated = true),
-                        resolutionMetadata = DidResolutionMetadata(
-                            properties = mapOf("provider" to protocolAdapter.providerName)
-                        )
+                        resolutionMetadata =
+                            DidResolutionMetadata(
+                                properties = mapOf("provider" to protocolAdapter.providerName),
+                            ),
                     )
                 }
                 else -> {
@@ -420,36 +457,41 @@ class DefaultUniversalResolver(
                     }
                     // Non-retryable errors map through the §12.1 HTTP status table to the
                     // matching error type; unmapped statuses fall back to INTERNAL_ERROR.
-                    val errorType = when (statusCode) {
-                        400 -> DidErrorType.INVALID_DID
-                        406 -> DidErrorType.REPRESENTATION_NOT_SUPPORTED
-                        501 -> DidErrorType.METHOD_NOT_SUPPORTED
-                        else -> DidErrorType.INTERNAL_ERROR
-                    }
+                    val errorType =
+                        when (statusCode) {
+                            400 -> DidErrorType.INVALID_DID
+                            406 -> DidErrorType.REPRESENTATION_NOT_SUPPORTED
+                            501 -> DidErrorType.METHOD_NOT_SUPPORTED
+                            else -> DidErrorType.INTERNAL_ERROR
+                        }
                     val detail = "Upstream resolver returned HTTP $statusCode"
                     if (errorType == DidErrorType.METHOD_NOT_SUPPORTED) {
                         DidResolutionResult.Failure.MethodNotRegistered(
                             method = Did(did).method,
-                            resolutionMetadata = DidResolutionMetadata(
-                                error = DidResolutionError.methodNotSupported(detail),
-                                properties = mapOf(
-                                    "statusCode" to statusCode.toString(),
-                                    "provider" to protocolAdapter.providerName
-                                )
-                            )
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    error = DidResolutionError.methodNotSupported(detail),
+                                    properties =
+                                        mapOf(
+                                            "statusCode" to statusCode.toString(),
+                                            "provider" to protocolAdapter.providerName,
+                                        ),
+                                ),
                         )
                     } else {
                         DidResolutionResult.Failure.ResolutionError(
                             did = Did(did),
                             reason = detail,
                             cause = null,
-                            resolutionMetadata = DidResolutionMetadata(
-                                error = DidResolutionError.of(errorType, detail),
-                                properties = mapOf(
-                                    "statusCode" to statusCode.toString(),
-                                    "provider" to protocolAdapter.providerName
-                                )
-                            )
+                            resolutionMetadata =
+                                DidResolutionMetadata(
+                                    error = DidResolutionError.of(errorType, detail),
+                                    properties =
+                                        mapOf(
+                                            "statusCode" to statusCode.toString(),
+                                            "provider" to protocolAdapter.providerName,
+                                        ),
+                                ),
                         )
                     }
                 }
@@ -457,87 +499,93 @@ class DefaultUniversalResolver(
         }
     }
 
-    override suspend fun getSupportedMethods(): List<String>? = withContext(Dispatchers.IO) {
-        // Use protocol adapter to build methods URL
-        val methodsUrl = protocolAdapter.buildMethodsUrl(baseUrl) ?: return@withContext null
+    override suspend fun getSupportedMethods(): List<String>? =
+        withContext(Dispatchers.IO) {
+            // Use protocol adapter to build methods URL
+            val methodsUrl = protocolAdapter.buildMethodsUrl(baseUrl) ?: return@withContext null
 
-        try {
-            // Parse once with URI.create (consistent with the rest of this class).
-            // Reuse the same parsed URI for the SSRF host-check and the HTTP request.
-            val methodsUri = try {
-                URI.create(methodsUrl)
-            } catch (e: IllegalArgumentException) {
-                return@withContext emptyList()
-            }
-            val baseUri = try {
-                URI.create(baseUrl)
-            } catch (e: IllegalArgumentException) {
-                return@withContext emptyList()
-            }
-            val basePortM = baseUri.port.takeIf { it != -1 } ?: if (baseUri.scheme == "https") 443 else 80
-            val resolvedPortM = methodsUri.port.takeIf { it != -1 } ?: if (methodsUri.scheme == "https") 443 else 80
-            // RFC 3986 §3.2.2: host comparison must be case-insensitive and bracket-stripped
-            // so IPv6 behaviour is consistent across JDK versions.
-            // methodsUri.host is null for opaque URIs (urn:, data:, etc.) — treat as a
-            // guard failure rather than letting a null-receiver NPE bypass the check.
-            if (normalizeHost(methodsUri.host) == null ||
-                normalizeHost(methodsUri.host) != normalizeHost(baseUri.host) ||
-                methodsUri.scheme != baseUri.scheme ||
-                resolvedPortM != basePortM
-            ) {
-                return@withContext emptyList()
-            }
-            // A bare base URL (no path component) passes host/scheme/port checks but indicates
-            // the adapter failed to build a proper methods path, which could facilitate SSRF.
-            if (methodsUri.path.isNullOrBlank()) {
-                return@withContext emptyList()
-            }
-
-            val requestBuilder = HttpRequest.newBuilder()
-                .uri(methodsUri)
-                .timeout(Duration.ofSeconds(timeout.toLong()))
-                .header("Accept", "application/json")
-
-            // Use protocol adapter to configure authentication
-            protocolAdapter.configureAuth(requestBuilder, apiKey)
-
-            val request = requestBuilder.build()
-            val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).await()
-
-            response.body().use { bodyStream ->
-                if (response.statusCode() == 200) {
-                    val bytes = bodyStream.readNBytes(MAX_RESPONSE_BYTES + 1)
-                    if (bytes.size > MAX_RESPONSE_BYTES) {
+            try {
+                // Parse once with URI.create (consistent with the rest of this class).
+                // Reuse the same parsed URI for the SSRF host-check and the HTTP request.
+                val methodsUri =
+                    try {
+                        URI.create(methodsUrl)
+                    } catch (e: IllegalArgumentException) {
                         return@withContext emptyList()
                     }
-                    val responseBody = String(bytes, Charsets.UTF_8)
-                    parseMethodsList(responseBody)
-                } else {
-                    // body is ignored; use{} closes the stream
-                    null
+                val baseUri =
+                    try {
+                        URI.create(baseUrl)
+                    } catch (e: IllegalArgumentException) {
+                        return@withContext emptyList()
+                    }
+                val basePortM = baseUri.port.takeIf { it != -1 } ?: if (baseUri.scheme == "https") 443 else 80
+                val resolvedPortM = methodsUri.port.takeIf { it != -1 } ?: if (methodsUri.scheme == "https") 443 else 80
+                // RFC 3986 §3.2.2: host comparison must be case-insensitive and bracket-stripped
+                // so IPv6 behaviour is consistent across JDK versions.
+                // methodsUri.host is null for opaque URIs (urn:, data:, etc.) — treat as a
+                // guard failure rather than letting a null-receiver NPE bypass the check.
+                if (normalizeHost(methodsUri.host) == null ||
+                    normalizeHost(methodsUri.host) != normalizeHost(baseUri.host) ||
+                    methodsUri.scheme != baseUri.scheme ||
+                    resolvedPortM != basePortM
+                ) {
+                    return@withContext emptyList()
                 }
-            }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.warn("getSupportedMethods interrupted for $baseUrl")
-            return@withContext emptyList()
-        } catch (e: java.io.IOException) {
-            // Endpoint not available or network failure — treat as unsupported
-            logger.warn("getSupportedMethods: I/O error contacting methods endpoint: ${e.message}")
-            null
-        } catch (e: kotlinx.serialization.SerializationException) {
-            // Malformed response from endpoint — treat as unsupported
-            logger.warn("getSupportedMethods: serialization error parsing methods response: ${e.message}")
-            null
-        }
-        // All other exceptions (SecurityException, programming errors, etc.) propagate
-    }
+                // A bare base URL (no path component) passes host/scheme/port checks but indicates
+                // the adapter failed to build a proper methods path, which could facilitate SSRF.
+                if (methodsUri.path.isNullOrBlank()) {
+                    return@withContext emptyList()
+                }
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+                val requestBuilder =
+                    HttpRequest
+                        .newBuilder()
+                        .uri(methodsUri)
+                        .timeout(Duration.ofSeconds(timeout.toLong()))
+                        .header("Accept", "application/json")
+
+                // Use protocol adapter to configure authentication
+                protocolAdapter.configureAuth(requestBuilder, apiKey)
+
+                val request = requestBuilder.build()
+                val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).await()
+
+                response.body().use { bodyStream ->
+                    if (response.statusCode() == 200) {
+                        val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                        if (bytes.size > maxResponseBytes) {
+                            return@withContext emptyList()
+                        }
+                        val responseBody = String(bytes, Charsets.UTF_8)
+                        parseMethodsList(responseBody)
+                    } else {
+                        // body is ignored; use{} closes the stream
+                        null
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                logger.warn("getSupportedMethods interrupted for $baseUrl")
+                return@withContext emptyList()
+            } catch (e: java.io.IOException) {
+                // Endpoint not available or network failure — treat as unsupported
+                logger.warn("getSupportedMethods: I/O error contacting methods endpoint: ${e.message}")
+                null
+            } catch (e: kotlinx.serialization.SerializationException) {
+                // Malformed response from endpoint — treat as unsupported
+                logger.warn("getSupportedMethods: serialization error parsing methods response: ${e.message}")
+                null
+            }
+            // All other exceptions (SecurityException, programming errors, etc.) propagate
+        }
+
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
     /**
      * Parses the Universal Resolver JSON response.
@@ -548,12 +596,11 @@ class DefaultUniversalResolver(
      * only [kotlinx.serialization.SerializationException] is propagated to the caller for
      * malformed JSON.
      */
-    private fun parseJsonResponse(jsonString: String): JsonObject? {
-        return when (val element = json.parseToJsonElement(jsonString)) {
+    private fun parseJsonResponse(jsonString: String): JsonObject? =
+        when (val element = json.parseToJsonElement(jsonString)) {
             is JsonObject -> element
             else -> null // non-object root is not a valid DID resolution response
         }
-    }
 
     /**
      * Parses a DID document from a JsonObject using the shared conforming consumer.
@@ -562,9 +609,7 @@ class DefaultUniversalResolver(
      * @return Parsed DidDocument
      * @throws DidException.InvalidDidFormat if the document is invalid
      */
-    private fun parseDidDocumentFromJson(json: JsonObject): DidDocument {
-        return DidDocumentJsonParser.parse(json)
-    }
+    private fun parseDidDocumentFromJson(json: JsonObject): DidDocument = DidDocumentJsonParser.parse(json)
 
     /**
      * Parses DID document metadata from JSON.
@@ -582,26 +627,51 @@ class DefaultUniversalResolver(
     private fun parseDidDocumentMetadata(metadataJson: JsonObject?): DidDocumentMetadata {
         if (metadataJson == null) return DidDocumentMetadata()
 
-        val created = (metadataJson["created"] as? JsonPrimitive)?.contentOrNull?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
-        val updated = (metadataJson["updated"] as? JsonPrimitive)?.contentOrNull?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
+        val created =
+            (metadataJson["created"] as? JsonPrimitive)?.contentOrNull?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        val updated =
+            (metadataJson["updated"] as? JsonPrimitive)?.contentOrNull?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
         val deactivated = (metadataJson["deactivated"] as? JsonPrimitive)?.booleanOrNull ?: false
         val versionId = (metadataJson["versionId"] as? JsonPrimitive)?.contentOrNull
-        val nextUpdate = (metadataJson["nextUpdate"] as? JsonPrimitive)?.contentOrNull?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
-        val nextVersionId = (metadataJson["nextVersionId"] as? JsonPrimitive)?.contentOrNull
-        val canonicalId = (metadataJson["canonicalId"] as? JsonPrimitive)?.contentOrNull?.let {
-            try { Did(it) } catch (e: Exception) { null }
-        }
-        val equivalentId = (metadataJson["equivalentId"] as? JsonArray)?.mapNotNull { element ->
-            (element as? JsonPrimitive)?.contentOrNull?.let { id ->
-                try { Did(id) } catch (e: Exception) { null }
+        val nextUpdate =
+            (metadataJson["nextUpdate"] as? JsonPrimitive)?.contentOrNull?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
             }
-        } ?: emptyList()
+        val nextVersionId = (metadataJson["nextVersionId"] as? JsonPrimitive)?.contentOrNull
+        val canonicalId =
+            (metadataJson["canonicalId"] as? JsonPrimitive)?.contentOrNull?.let {
+                try {
+                    Did(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        val equivalentId =
+            (metadataJson["equivalentId"] as? JsonArray)?.mapNotNull { element ->
+                (element as? JsonPrimitive)?.contentOrNull?.let { id ->
+                    try {
+                        Did(id)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            } ?: emptyList()
         // §4.3 `proof`: controller/VDR proofs. toJson() has always emitted this; read it back too
         // so a §9 round-trip does not silently drop it.
         val proof = (metadataJson["proof"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: emptyList()
@@ -615,22 +685,21 @@ class DefaultUniversalResolver(
             nextVersionId = nextVersionId,
             canonicalId = canonicalId,
             equivalentId = equivalentId,
-            proof = proof
+            proof = proof,
         )
     }
 
     /**
      * Parses resolution metadata from JSON.
      */
-    private fun parseResolutionMetadata(metadataJson: JsonObject): Map<String, Any?> {
-        return metadataJson.entries.associate { it.key to convertJsonElement(it.value) }
-    }
+    private fun parseResolutionMetadata(metadataJson: JsonObject): Map<String, Any?> =
+        metadataJson.entries.associate { it.key to convertJsonElement(it.value) }
 
     /**
      * Converts JsonElement to Any for metadata maps.
      */
-    private fun convertJsonElement(element: JsonElement): Any? {
-        return when (element) {
+    private fun convertJsonElement(element: JsonElement): Any? =
+        when (element) {
             // `JsonNull` is itself a `JsonPrimitive` subtype, so this branch must be checked
             // before `is JsonPrimitive` below — otherwise it is unreachable dead code and a
             // genuine JSON null silently becomes the literal string "null" via the `else ->
@@ -648,7 +717,6 @@ class DefaultUniversalResolver(
             is JsonArray -> element.map { convertJsonElement(it) }
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
         }
-    }
 
     /**
      * Parses a list of supported methods from JSON response.
@@ -670,4 +738,3 @@ class DefaultUniversalResolver(
         }
     }
 }
-

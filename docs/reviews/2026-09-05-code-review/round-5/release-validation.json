@@ -1,0 +1,9 @@
+{
+  "python_tests": 2,
+  "python_result": "passed",
+  "sdk_revision": "a41d482a96dcdd3962c2a0a95fd1da469f310fa9",
+  "sdk_fingerprint": "7a436c8e1fff33cbbd7a4b4117e8b4f9e46ed446fe727f308a6655f7bc839f72",
+  "publication": "not performed",
+  "remote_ci": "not run",
+  "staging": "not configured"
+}

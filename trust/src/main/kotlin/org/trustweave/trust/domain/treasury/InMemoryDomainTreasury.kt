@@ -4,7 +4,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.TreasuryException
-import org.trustweave.anchor.payment.AssetRef
 import org.trustweave.anchor.payment.FeeStrategy
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
@@ -34,7 +33,6 @@ class InMemoryDomainTreasury(
     private val config: TreasuryConfig = TreasuryConfig(),
     private val eventSink: DomainEventSink = NoopDomainEventSink,
 ) : DomainTreasury {
-
     private val mutex = Mutex()
     private val reservations = HashMap<String, Reservation>()
     private val lockedByChain = HashMap<String, BigInteger>()
@@ -47,7 +45,10 @@ class InMemoryDomainTreasury(
 
     override fun ledger(): TreasuryLedger = TreasuryLedger(domainId, store)
 
-    override suspend fun reserve(ctx: PaymentContext, estimate: TokenAmount): Reservation {
+    override suspend fun reserve(
+        ctx: PaymentContext,
+        estimate: TokenAmount,
+    ): Reservation {
         require(estimate.chainId == ctx.chainId) {
             "estimate.chainId (${estimate.chainId}) must match ctx.chainId (${ctx.chainId})"
         }
@@ -57,53 +58,56 @@ class InMemoryDomainTreasury(
         enforceCallerCap(ctx, estimate)
         enforcePolicyCaps(ctx, estimate)
 
-        val account = accounts[ctx.chainId]
-            ?: throw TreasuryException.NoAccountForChain(domainId.value, ctx.chainId)
+        val account =
+            accounts[ctx.chainId]
+                ?: throw TreasuryException.NoAccountForChain(domainId.value, ctx.chainId)
 
         val locked = applySafetyMargin(estimate)
         val balance = account.balance()
         val now = config.clock.now()
 
-        val reservation = mutex.withLock {
-            sweepExpired(now)
-            val already = lockedByChain[ctx.chainId] ?: BigInteger.ZERO
-            val needed = already + locked.amount
-            if (balance.amount < needed) {
-                throw TreasuryException.InsufficientFunds(
-                    domainId = domainId.value,
-                    chainId = ctx.chainId,
-                    required = TokenAmount(ctx.chainId, locked.asset, needed),
-                    available = balance,
-                )
-            }
-            val r = Reservation(
-                id = UUID.randomUUID().toString(),
-                domainId = domainId,
-                chainId = ctx.chainId,
-                locked = locked,
-                correlationId = ctx.correlationId,
-                createdAt = now,
-                ttl = config.reservationTtl,
-            )
-            reservations[r.id] = r
-            lockedByChain[ctx.chainId] = needed
+        val reservation =
+            mutex.withLock {
+                sweepExpired(now)
+                val already = lockedByChain[ctx.chainId] ?: BigInteger.ZERO
+                val needed = already + locked.amount
+                if (balance.amount < needed) {
+                    throw TreasuryException.InsufficientFunds(
+                        domainId = domainId.value,
+                        chainId = ctx.chainId,
+                        required = TokenAmount(ctx.chainId, locked.asset, needed),
+                        available = balance,
+                    )
+                }
+                val r =
+                    Reservation(
+                        id = UUID.randomUUID().toString(),
+                        domainId = domainId,
+                        chainId = ctx.chainId,
+                        locked = locked,
+                        correlationId = ctx.correlationId,
+                        createdAt = now,
+                        ttl = config.reservationTtl,
+                    )
+                reservations[r.id] = r
+                lockedByChain[ctx.chainId] = needed
 
-            store.append(
-                TreasuryLedgerEntry(
-                    correlationId = ctx.correlationId,
-                    domainId = domainId.value,
-                    payerDid = ctx.payerDid,
-                    chainId = ctx.chainId,
-                    operation = "reserve",
-                    estimatedFeeAmount = estimate.amount.toString(),
-                    actualFeeAmount = "0",
-                    asset = TreasuryLedgerEntry.assetTag(locked.asset),
-                    status = SettlementStatus.RESERVED,
-                    atEpochMillis = now.toEpochMilliseconds(),
-                ),
-            )
-            r
-        }
+                store.append(
+                    TreasuryLedgerEntry(
+                        correlationId = ctx.correlationId,
+                        domainId = domainId.value,
+                        payerDid = ctx.payerDid,
+                        chainId = ctx.chainId,
+                        operation = "reserve",
+                        estimatedFeeAmount = estimate.amount.toString(),
+                        actualFeeAmount = "0",
+                        asset = TreasuryLedgerEntry.assetTag(locked.asset),
+                        status = SettlementStatus.RESERVED,
+                        atEpochMillis = now.toEpochMilliseconds(),
+                    ),
+                )
+                r
+            }
         emitSafely(
             DomainEvent.OnChainSpendReserved(
                 domainId = domainId,
@@ -115,11 +119,16 @@ class InMemoryDomainTreasury(
         return reservation
     }
 
-    override suspend fun settle(reservation: Reservation, result: AnchorResult, success: Boolean) {
+    override suspend fun settle(
+        reservation: Reservation,
+        result: AnchorResult,
+        success: Boolean,
+    ) {
         val actual = result.fee ?: TokenAmount.zero(reservation.chainId, reservation.locked.asset)
         mutex.withLock {
-            val held = reservations.remove(reservation.id)
-                ?: throw TreasuryException.ReservationNotFound(reservation.id)
+            val held =
+                reservations.remove(reservation.id)
+                    ?: throw TreasuryException.ReservationNotFound(reservation.id)
             val unlocked = (lockedByChain[held.chainId] ?: BigInteger.ZERO) - held.locked.amount
             lockedByChain[held.chainId] = unlocked.coerceAtLeast(BigInteger.ZERO)
         }
@@ -151,12 +160,13 @@ class InMemoryDomainTreasury(
     }
 
     override suspend fun cancel(reservation: Reservation) {
-        val released = mutex.withLock {
-            val held = reservations.remove(reservation.id) ?: return@withLock false
-            val unlocked = (lockedByChain[held.chainId] ?: BigInteger.ZERO) - held.locked.amount
-            lockedByChain[held.chainId] = unlocked.coerceAtLeast(BigInteger.ZERO)
-            true
-        }
+        val released =
+            mutex.withLock {
+                val held = reservations.remove(reservation.id) ?: return@withLock false
+                val unlocked = (lockedByChain[held.chainId] ?: BigInteger.ZERO) - held.locked.amount
+                lockedByChain[held.chainId] = unlocked.coerceAtLeast(BigInteger.ZERO)
+                true
+            }
         if (!released) return
         store.update(
             correlationId = reservation.correlationId,
@@ -219,7 +229,10 @@ class InMemoryDomainTreasury(
         }
     }
 
-    private fun enforceCallerCap(ctx: PaymentContext, estimate: TokenAmount) {
+    private fun enforceCallerCap(
+        ctx: PaymentContext,
+        estimate: TokenAmount,
+    ) {
         val maxFee = ctx.maxFee ?: return
         if (estimate.amount > maxFee.amount) {
             throw TreasuryException.CallerCapExceeded(
@@ -231,21 +244,25 @@ class InMemoryDomainTreasury(
         }
     }
 
-    private suspend fun enforcePolicyCaps(ctx: PaymentContext, estimate: TokenAmount) {
+    private suspend fun enforcePolicyCaps(
+        ctx: PaymentContext,
+        estimate: TokenAmount,
+    ) {
         val ledger = ledger()
         val now = config.clock.now()
         for (cap in spendPolicy.caps) {
             if (cap.chainId != ctx.chainId) continue
             when (cap) {
-                is Cap.PerOperation -> if (estimate.amount > cap.max.amount) {
-                    throw TreasuryException.CapExceeded(
-                        domainId = domainId.value,
-                        chainId = ctx.chainId,
-                        capKind = "PerOperation",
-                        attempted = estimate,
-                        cap = cap.max,
-                    )
-                }
+                is Cap.PerOperation ->
+                    if (estimate.amount > cap.max.amount) {
+                        throw TreasuryException.CapExceeded(
+                            domainId = domainId.value,
+                            chainId = ctx.chainId,
+                            capKind = "PerOperation",
+                            attempted = estimate,
+                            cap = cap.max,
+                        )
+                    }
                 is Cap.PerWindow -> {
                     val state = ledger.windowState(ctx.chainId, cap.window, now)
                     val total = state.spent.amount + estimate.amount

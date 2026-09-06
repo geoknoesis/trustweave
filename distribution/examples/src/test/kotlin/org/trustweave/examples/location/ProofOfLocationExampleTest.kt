@@ -1,14 +1,12 @@
 package org.trustweave.examples.location
 
-import org.trustweave.examples.StubScenarioTest
-import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for Proof of Location scenario.
  */
-class ProofOfLocationExampleTest : StubScenarioTest() {
+class ProofOfLocationExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
 }
-

@@ -1,187 +1,242 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.testkit.did.DidKeyMockMethod
+import kotlinx.coroutines.runBlocking
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import kotlinx.coroutines.runBlocking
+import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Tests for extended DID Document DSL.
  */
 class DidDocumentDslExtendedTest {
+    @Test
+    fun `test add capability invocation via DSL`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did { method(DidMethods.KEY) {} }
+                }
+
+            val did =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val updatedDoc =
+                trustWeave.updateDid {
+                    did(did.value)
+                    method(DidMethods.KEY)
+                    addCapabilityInvocation("${did.value}#key-1")
+                }
+
+            assertNotNull(updatedDoc)
+        }
 
     @Test
-    fun `test add capability invocation via DSL`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeave = TrustWeave.build {
-            keys { 
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test add capability delegation via DSL`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
                     }
+                    did { method(DidMethods.KEY) {} }
                 }
-            }
-            did { method(DidMethods.KEY) {} }
+
+            val did =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val updatedDoc =
+                trustWeave.updateDid {
+                    did(did.value)
+                    method(DidMethods.KEY)
+                    addCapabilityDelegation("${did.value}#key-1")
+                }
+
+            assertNotNull(updatedDoc)
         }
-
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            addCapabilityInvocation("${did.value}#key-1")
-        }
-
-        assertNotNull(updatedDoc)
-    }
 
     @Test
-    fun `test add capability delegation via DSL`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeave = TrustWeave.build {
-            keys { 
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test set context via DSL`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
                     }
+                    did { method(DidMethods.KEY) {} }
                 }
-            }
-            did { method(DidMethods.KEY) {} }
+
+            val did =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val updatedDoc =
+                trustWeave.updateDid {
+                    did(did.value)
+                    method(DidMethods.KEY)
+                    context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
+                }
+
+            assertNotNull(updatedDoc)
         }
-
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            addCapabilityDelegation("${did.value}#key-1")
-        }
-
-        assertNotNull(updatedDoc)
-    }
 
     @Test
-    fun `test set context via DSL`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeave = TrustWeave.build {
-            keys { 
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test remove capability invocation via DSL`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
                     }
+                    did { method(DidMethods.KEY) {} }
                 }
+
+            val did =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            // First add, then remove
+            trustWeave.updateDid {
+                did(did.value)
+                method(DidMethods.KEY)
+                addCapabilityInvocation("${did.value}#key-1")
             }
-            did { method(DidMethods.KEY) {} }
+
+            val updatedDoc =
+                trustWeave.updateDid {
+                    did(did.value)
+                    method(DidMethods.KEY)
+                    removeCapabilityInvocation("${did.value}#key-1")
+                }
+
+            assertNotNull(updatedDoc)
         }
-
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            context("https://www.w3.org/ns/did/v1", "https://example.com/context/v1")
-        }
-
-        assertNotNull(updatedDoc)
-    }
 
     @Test
-    fun `test remove capability invocation via DSL`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeave = TrustWeave.build {
-            keys { 
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun `test full DID document update with all new fields`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kms)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kms.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did { method(DidMethods.KEY) {} }
+                }
+
+            val did =
+                trustWeave
+                    .createDid {
+                        method(DidMethods.KEY)
+                        algorithm(KeyAlgorithms.ED25519)
+                    }.getOrThrowDid()
+
+            val updatedDoc =
+                trustWeave.updateDid {
+                    did(did.value)
+                    method(DidMethods.KEY)
+                    addKey {
+                        type("Ed25519VerificationKey2020")
+                    }
+                    addCapabilityInvocation("$did#key-1")
+                    addCapabilityDelegation("${did.value}#key-1")
+                    context("https://www.w3.org/ns/did/v1")
+                    addService {
+                        id("${did.value}#service-1")
+                        type("LinkedDomains")
+                        endpoint("https://example.com")
                     }
                 }
-            }
-            did { method(DidMethods.KEY) {} }
+
+            assertNotNull(updatedDoc)
         }
-
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        // First add, then remove
-        trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            addCapabilityInvocation("${did.value}#key-1")
-        }
-
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            removeCapabilityInvocation("${did.value}#key-1")
-        }
-
-        assertNotNull(updatedDoc)
-    }
-
-    @Test
-    fun `test full DID document update with all new fields`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val trustWeave = TrustWeave.build {
-            keys { 
-                custom(kms)
-                signer { data, keyId ->
-                    when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
-                    }
-                }
-            }
-            did { method(DidMethods.KEY) {} }
-        }
-
-        val did = trustWeave.createDid {
-            method(DidMethods.KEY)
-            algorithm(KeyAlgorithms.ED25519)
-        }.getOrThrowDid()
-
-        val updatedDoc = trustWeave.updateDid {
-            did(did.value)
-            method(DidMethods.KEY)
-            addKey {
-                type("Ed25519VerificationKey2020")
-            }
-            addCapabilityInvocation("$did#key-1")
-            addCapabilityDelegation("${did.value}#key-1")
-            context("https://www.w3.org/ns/did/v1")
-            addService {
-                id("${did.value}#service-1")
-                type("LinkedDomains")
-                endpoint("https://example.com")
-            }
-        }
-
-        assertNotNull(updatedDoc)
-    }
 }
-
-

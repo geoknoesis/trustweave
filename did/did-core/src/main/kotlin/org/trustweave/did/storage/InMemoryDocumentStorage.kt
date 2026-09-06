@@ -1,10 +1,10 @@
 package org.trustweave.did.storage
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -39,22 +39,22 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class InMemoryDocumentStorage : DidDocumentStorage {
     override val backend: StorageBackend = StorageBackend.IN_MEMORY
-    
+
     private val documents = ConcurrentHashMap<String, DidDocument>()
     private val metadata = ConcurrentHashMap<String, DidDocumentMetadata>()
     private val mutex = Mutex()
-    
+
     override suspend fun store(
         did: Did,
         document: DidDocument,
-        metadata: DidDocumentMetadata?
+        metadata: DidDocumentMetadata?,
     ) {
         mutex.withLock {
             documents[did.value] = document
             this.metadata[did.value] = metadata ?: DidDocumentMetadata()
         }
     }
-    
+
     override suspend fun get(did: Did): Pair<DidDocument, DidDocumentMetadata>? {
         return mutex.withLock {
             val doc = documents[did.value] ?: return null
@@ -62,53 +62,59 @@ class InMemoryDocumentStorage : DidDocumentStorage {
             doc to meta
         }
     }
-    
+
     override suspend fun update(
         did: Did,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument {
-        return mutex.withLock {
-            val current = documents[did.value]
-                ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
-                    resource = did.value
-                )
-            
+        updater: (DidDocument) -> DidDocument,
+    ): DidDocument =
+        mutex.withLock {
+            val current =
+                documents[did.value]
+                    ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
+                        resource = did.value,
+                    )
+
             val updated = updater(current)
             documents[did.value] = updated
-            
+
             // Update metadata
             val currentMeta = metadata[did.value] ?: DidDocumentMetadata()
-            metadata[did.value] = currentMeta.copy(updated = kotlinx.datetime.Clock.System.now())
-            
+            metadata[did.value] =
+                currentMeta.copy(
+                    updated =
+                        kotlinx.datetime.Clock.System
+                            .now(),
+                )
+
             updated
         }
-    }
-    
+
     override suspend fun deactivate(
         did: Did,
-        deactivatedDocument: DidDocument
+        deactivatedDocument: DidDocument,
     ) {
         mutex.withLock {
             documents[did.value] = deactivatedDocument
             val currentMeta = metadata[did.value] ?: DidDocumentMetadata()
-            metadata[did.value] = currentMeta.copy(
-                updated = kotlinx.datetime.Clock.System.now()
-            )
+            metadata[did.value] =
+                currentMeta.copy(
+                    updated =
+                        kotlinx.datetime.Clock.System
+                            .now(),
+                )
         }
     }
-    
-    override suspend fun exists(did: Did): Boolean {
-        return mutex.withLock {
+
+    override suspend fun exists(did: Did): Boolean =
+        mutex.withLock {
             documents.containsKey(did.value)
         }
-    }
-    
-    override suspend fun delete(did: Did): Boolean {
-        return mutex.withLock {
+
+    override suspend fun delete(did: Did): Boolean =
+        mutex.withLock {
             documents.remove(did.value) != null && metadata.remove(did.value) != null
         }
-    }
-    
+
     /**
      * Clears all stored documents (useful for testing).
      */
@@ -118,15 +124,14 @@ class InMemoryDocumentStorage : DidDocumentStorage {
             metadata.clear()
         }
     }
-    
+
     /**
      * Gets the number of stored documents.
      */
-    suspend fun size(): Int {
-        return mutex.withLock {
+    suspend fun size(): Int =
+        mutex.withLock {
             documents.size
         }
-    }
 }
 
 /**
@@ -136,4 +141,3 @@ class InMemoryDocumentStorage : DidDocumentStorage {
  * interface name (`InMemoryDidDocumentStorage` mirrors the `DidDocumentStorage` interface).
  */
 typealias InMemoryDidDocumentStorage = InMemoryDocumentStorage
-

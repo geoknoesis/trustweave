@@ -1,0 +1,1193 @@
+public abstract class org/trustweave/testkit/BaseIntegrationTest : org/trustweave/testkit/BasePluginTest {
+	public fun <init> ()V
+	protected final fun assertEventually (JJLjava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun assertEventually$default (Lorg/trustweave/testkit/BaseIntegrationTest;JJLjava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	protected fun getMaxRetries ()I
+	protected fun getOperationTimeoutSeconds ()J
+	protected fun getRetryDelayMs ()J
+	public final fun retry (IJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun retry$default (Lorg/trustweave/testkit/BaseIntegrationTest;IJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun setUpIntegration ()V
+	public final fun tearDownIntegration ()V
+	public final fun waitFor (JJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun waitFor$default (Lorg/trustweave/testkit/BaseIntegrationTest;JJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	protected final fun withRetry (ILkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun withRetry$default (Lorg/trustweave/testkit/BaseIntegrationTest;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/testkit/BasePluginTest {
+	protected field fixture Lorg/trustweave/testkit/TrustWeaveTestFixture;
+	public fun <init> ()V
+	protected fun createFixture ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
+	protected final fun createFixture (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/testkit/TrustWeaveTestFixture;
+	protected final fun createTestDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestDid$default (Lorg/trustweave/testkit/BasePluginTest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	protected final fun createTestKms ()Lorg/trustweave/kms/KeyManagementService;
+	protected fun getDidMethod ()Lorg/trustweave/did/DidMethod;
+	protected final fun getFixture ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
+	protected fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	protected final fun setFixture (Lorg/trustweave/testkit/TrustWeaveTestFixture;)V
+	public final fun setUp ()V
+	public final fun tearDown ()V
+	protected final fun withFixture (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/TrustWeaveTestFixture : java/lang/AutoCloseable {
+	public static final field Companion Lorg/trustweave/testkit/TrustWeaveTestFixture$Companion;
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/DidMethod;Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public fun close ()V
+	public final fun createIssuerDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createIssuerDid$default (Lorg/trustweave/testkit/TrustWeaveTestFixture;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestCredentialSubject (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestCredentialSubject$default (Lorg/trustweave/testkit/TrustWeaveTestFixture;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getAllBlockchainClients ()Ljava/util/Map;
+	public final fun getBlockchainClient (Ljava/lang/String;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public final fun getBlockchainRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public final fun getDidMethod ()Lorg/trustweave/did/DidMethod;
+	public final fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public static final fun minimal ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
+}
+
+public final class org/trustweave/testkit/TrustWeaveTestFixture$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
+	public final fun withBlockchainClient (Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withChainPlugin (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public static synthetic fun withChainPlugin$default (Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withDidMethod (Ljava/lang/String;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withDidMethod (Lorg/trustweave/did/DidMethod;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public static synthetic fun withDidMethod$default (Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withDidMethodPlugin (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public static synthetic fun withDidMethodPlugin$default (Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withInMemoryBlockchainClient (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public static synthetic fun withInMemoryBlockchainClient$default (Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withKms (Lorg/trustweave/kms/KeyManagementService;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun withKmsPlugin (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+}
+
+public final class org/trustweave/testkit/TrustWeaveTestFixture$Companion {
+	public final fun builder ()Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
+	public final fun minimal ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
+}
+
+public final class org/trustweave/testkit/anchor/InMemoryBlockchainAnchorClient : org/trustweave/anchor/BlockchainAnchorClient {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public fun estimate (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun readPayload (Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun size ()I
+	public fun verifyAnchor (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface annotation class org/trustweave/testkit/annotations/RequiresPlugin : java/lang/annotation/Annotation {
+	public abstract fun plugins ()[Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig {
+	public static final field INSTANCE Lorg/trustweave/testkit/config/PluginTestConfig;
+	public final fun algorand ()Lorg/trustweave/testkit/config/PluginTestConfig$AlgorandConfig;
+	public final fun aws ()Lorg/trustweave/testkit/config/PluginTestConfig$AwsConfig;
+	public final fun azure ()Lorg/trustweave/testkit/config/PluginTestConfig$AzureConfig;
+	public final fun ethereum ()Lorg/trustweave/testkit/config/PluginTestConfig$EthereumConfig;
+	public final fun google ()Lorg/trustweave/testkit/config/PluginTestConfig$GoogleConfig;
+	public final fun polygon ()Lorg/trustweave/testkit/config/PluginTestConfig$PolygonConfig;
+	public final fun vault ()Lorg/trustweave/testkit/config/PluginTestConfig$VaultConfig;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$AlgorandConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZZJ)V
+	public synthetic fun <init> (Ljava/lang/String;ZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;ZZJ)Lorg/trustweave/testkit/config/PluginTestConfig$AlgorandConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$AlgorandConfig;Ljava/lang/String;ZZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$AlgorandConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlgodUrl ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public fun getUseRealService ()Z
+	public final fun getUseTestnet ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$AwsConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZJ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()J
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZJ)Lorg/trustweave/testkit/config/PluginTestConfig$AwsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$AwsConfig;Ljava/lang/String;Ljava/lang/String;ZZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$AwsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndpointOverride ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public final fun getUseLocalStack ()Z
+	public fun getUseRealService ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$AzureConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZZJ)V
+	public synthetic fun <init> (Ljava/lang/String;ZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;ZZJ)Lorg/trustweave/testkit/config/PluginTestConfig$AzureConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$AzureConfig;Ljava/lang/String;ZZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$AzureConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getTimeoutSeconds ()J
+	public final fun getUseEmulator ()Z
+	public fun getUseRealService ()Z
+	public final fun getVaultUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$EthereumConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZIZJ)V
+	public synthetic fun <init> (Ljava/lang/String;ZIZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()I
+	public final fun component4 ()Z
+	public final fun component5 ()J
+	public final fun copy (Ljava/lang/String;ZIZJ)Lorg/trustweave/testkit/config/PluginTestConfig$EthereumConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$EthereumConfig;Ljava/lang/String;ZIZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$EthereumConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGanachePort ()I
+	public final fun getRpcUrl ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public final fun getUseGanache ()Z
+	public fun getUseRealService ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$GoogleConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()J
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJ)Lorg/trustweave/testkit/config/PluginTestConfig$GoogleConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$GoogleConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$GoogleConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyRing ()Ljava/lang/String;
+	public final fun getLocation ()Ljava/lang/String;
+	public final fun getProjectId ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public fun getUseRealService ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> (Ljava/lang/String;ZJ)V
+	public synthetic fun <init> (Ljava/lang/String;ZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPluginName ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public fun getUseRealService ()Z
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$PolygonConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZZJ)V
+	public synthetic fun <init> (Ljava/lang/String;ZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;ZZJ)Lorg/trustweave/testkit/config/PluginTestConfig$PolygonConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$PolygonConfig;Ljava/lang/String;ZZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$PolygonConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRpcUrl ()Ljava/lang/String;
+	public fun getTimeoutSeconds ()J
+	public fun getUseRealService ()Z
+	public final fun getUseTestnet ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/PluginTestConfig$VaultConfig : org/trustweave/testkit/config/PluginTestConfig$PluginConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZJ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()J
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZJ)Lorg/trustweave/testkit/config/PluginTestConfig$VaultConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/config/PluginTestConfig$VaultConfig;Ljava/lang/String;Ljava/lang/String;ZZJILjava/lang/Object;)Lorg/trustweave/testkit/config/PluginTestConfig$VaultConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getTimeoutSeconds ()J
+	public final fun getToken ()Ljava/lang/String;
+	public fun getUseRealService ()Z
+	public final fun getUseTestContainer ()Z
+	public final fun getVaultUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/config/TestConfig {
+	public static final field DEFAULT_MAX_RETRIES I
+	public static final field DEFAULT_OPERATION_TIMEOUT_SECONDS J
+	public static final field DEFAULT_RETRY_DELAY_MS J
+	public static final field DEFAULT_TEST_ALGORITHM Ljava/lang/String;
+	public static final field DEFAULT_TEST_CHAIN_ID Ljava/lang/String;
+	public static final field DEFAULT_TEST_DID_METHOD Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/testkit/config/TestConfig;
+	public final fun logLevel ()Ljava/lang/String;
+	public final fun maxRetries ()I
+	public final fun operationTimeout ()J
+	public final fun skipIfNoCredentials ()Z
+	public final fun skipIntegrationTests ()Z
+	public final fun useRealServices ()Z
+}
+
+public final class org/trustweave/testkit/config/TestConfig$EnvVars {
+	public static final field INSTANCE Lorg/trustweave/testkit/config/TestConfig$EnvVars;
+	public static final field MAX_RETRIES Ljava/lang/String;
+	public static final field SKIP_IF_NO_CREDENTIALS Ljava/lang/String;
+	public static final field SKIP_INTEGRATION_TESTS Ljava/lang/String;
+	public static final field TEST_LOG_LEVEL Ljava/lang/String;
+	public static final field TEST_TIMEOUT Ljava/lang/String;
+	public static final field USE_REAL_SERVICES Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/containers/LocalStackContainer : org/testcontainers/containers/GenericContainer {
+	public static final field Companion Lorg/trustweave/testkit/containers/LocalStackContainer$Companion;
+	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun create ()Lorg/trustweave/testkit/containers/LocalStackContainer;
+	public static final fun create (Ljava/util/List;)Lorg/trustweave/testkit/containers/LocalStackContainer;
+	public final fun getAccessKeyId ()Ljava/lang/String;
+	public final fun getKmsEndpoint ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getS3Endpoint ()Ljava/lang/String;
+	public final fun getSecretAccessKey ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/containers/LocalStackContainer$Companion {
+	public final fun create ()Lorg/trustweave/testkit/containers/LocalStackContainer;
+	public final fun create (Ljava/util/List;)Lorg/trustweave/testkit/containers/LocalStackContainer;
+}
+
+public final class org/trustweave/testkit/containers/LocalStackContainer$Services {
+	public static final field DYNAMODB Ljava/lang/String;
+	public static final field IAM Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/testkit/containers/LocalStackContainer$Services;
+	public static final field KMS Ljava/lang/String;
+	public static final field LAMBDA Ljava/lang/String;
+	public static final field S3 Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/containers/PostgresContainer : org/testcontainers/containers/GenericContainer {
+	public static final field Companion Lorg/trustweave/testkit/containers/PostgresContainer$Companion;
+	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun create ()Lorg/trustweave/testkit/containers/PostgresContainer;
+	public static final fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/containers/PostgresContainer;
+	public final fun getDatabaseName ()Ljava/lang/String;
+	public final fun getJdbcUrl ()Ljava/lang/String;
+	public final fun getPassword ()Ljava/lang/String;
+	public final fun getUsername ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/containers/PostgresContainer$Companion {
+	public final fun create ()Lorg/trustweave/testkit/containers/PostgresContainer;
+	public final fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/containers/PostgresContainer;
+	public static synthetic fun create$default (Lorg/trustweave/testkit/containers/PostgresContainer$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/containers/PostgresContainer;
+}
+
+public final class org/trustweave/testkit/containers/VaultContainer : org/testcontainers/containers/GenericContainer {
+	public static final field Companion Lorg/trustweave/testkit/containers/VaultContainer$Companion;
+	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun create ()Lorg/trustweave/testkit/containers/VaultContainer;
+	public static final fun create (Ljava/lang/String;)Lorg/trustweave/testkit/containers/VaultContainer;
+	public final fun getRootToken ()Ljava/lang/String;
+	public final fun getVaultAddr ()Ljava/lang/String;
+	public final fun getVaultUrl ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/containers/VaultContainer$Companion {
+	public final fun create ()Lorg/trustweave/testkit/containers/VaultContainer;
+	public final fun create (Ljava/lang/String;)Lorg/trustweave/testkit/containers/VaultContainer;
+}
+
+public final class org/trustweave/testkit/credential/BasicWallet : org/trustweave/wallet/Wallet {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public fun close ()V
+	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/wallet/WalletCapabilities;
+	public fun getStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWalletId ()Ljava/lang/String;
+	public fun list (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun size ()I
+	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/credential/InMemoryWallet : org/trustweave/wallet/CredentialLifecycle, org/trustweave/wallet/CredentialOrganization, org/trustweave/wallet/CredentialPresentation, org/trustweave/wallet/DidManagement, org/trustweave/wallet/Wallet {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun addMetadata (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun addToCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun archive (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun clear ()V
+	public fun close ()V
+	public fun createCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createDid (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createDid (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createPresentation (Ljava/util/List;Ljava/lang/String;Lorg/trustweave/credential/proof/ProofOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createSelectiveDisclosure (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/credential/proof/ProofOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun findByTag (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAllTags (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getArchived (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/wallet/WalletCapabilities;
+	public fun getCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCredentialsInCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDids (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getHolderDid ()Ljava/lang/String;
+	public fun getMetadata (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPrimaryDid (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatistics (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTags (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWalletDid ()Ljava/lang/String;
+	public fun getWalletId ()Ljava/lang/String;
+	public fun list (Lorg/trustweave/wallet/CredentialFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listCollections (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun refreshCredential (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun removeFromCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setPrimaryDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tagCredential (Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun totalSize ()I
+	public fun unarchive (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun untagCredential (Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateNotes (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/did/DidKeyMockMethod : org/trustweave/did/DidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;)V
+	public final fun clear ()V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	public fun getMethod ()Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/testkit/eo/BaseEoIntegrationTest {
+	public fun <init> ()V
+	public fun cleanup ()V
+	public abstract fun createAnchorClient (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getAnchorClientOptions ()Ljava/util/Map;
+	protected final fun getBlockchainRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public fun getChainId ()Ljava/lang/String;
+	protected final fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun runEoTestScenario (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/eo/EoTestResult;
+	public static synthetic fun runEoTestScenario$default (Lorg/trustweave/testkit/eo/BaseEoIntegrationTest;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/eo/EoTestResult;
+	public fun setupDidMethod ()Lorg/trustweave/did/DidMethod;
+}
+
+public final class org/trustweave/testkit/eo/EoTestIntegration {
+	public static final field INSTANCE Lorg/trustweave/testkit/eo/EoTestIntegration;
+	public final fun createScenario (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createScenario$default (Lorg/trustweave/testkit/eo/EoTestIntegration;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun executeScenario (Lorg/trustweave/testkit/eo/EoTestScenario;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun runCompleteScenario (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun runCompleteScenario$default (Lorg/trustweave/testkit/eo/EoTestIntegration;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/eo/EoTestResult {
+	public fun <init> (Lorg/trustweave/anchor/AnchorResult;Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;Lorg/trustweave/testkit/eo/EoTestScenario;)V
+	public final fun component1 ()Lorg/trustweave/anchor/AnchorResult;
+	public final fun component2 ()Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;
+	public final fun component3 ()Lorg/trustweave/testkit/eo/EoTestScenario;
+	public final fun copy (Lorg/trustweave/anchor/AnchorResult;Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;Lorg/trustweave/testkit/eo/EoTestScenario;)Lorg/trustweave/testkit/eo/EoTestResult;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/eo/EoTestResult;Lorg/trustweave/anchor/AnchorResult;Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;Lorg/trustweave/testkit/eo/EoTestScenario;ILjava/lang/Object;)Lorg/trustweave/testkit/eo/EoTestResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorResult ()Lorg/trustweave/anchor/AnchorResult;
+	public final fun getScenario ()Lorg/trustweave/testkit/eo/EoTestScenario;
+	public final fun getVerificationResult ()Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/eo/EoTestScenario {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/util/Map;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component6 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component7 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/util/Map;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/eo/EoTestScenario;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/eo/EoTestScenario;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;Ljava/util/Map;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/eo/EoTestScenario;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorClient ()Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public final fun getArtifacts ()Ljava/util/Map;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDigestPayload ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getIssuerDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getLinkset ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getLinksetDigest ()Ljava/lang/String;
+	public final fun getVc ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getVcDigest ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/extensions/PluginCredentialExtension : org/junit/jupiter/api/extension/ExecutionCondition {
+	public fun <init> ()V
+	public fun evaluateExecutionCondition (Lorg/junit/jupiter/api/extension/ExtensionContext;)Lorg/junit/jupiter/api/extension/ConditionEvaluationResult;
+}
+
+public abstract class org/trustweave/testkit/integration/ChainIntegrationTest : org/trustweave/testkit/BaseIntegrationTest {
+	public fun <init> ()V
+	protected final fun createTestPayload ()Lkotlinx/serialization/json/JsonObject;
+	public abstract fun getChainClient ()Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public abstract fun getChainId ()Ljava/lang/String;
+	protected final fun testAnchorRoundtrip (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testInvalidAnchorReference (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testMultipleAnchors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/integration/CredentialLifecycleScenario {
+	public fun <init> (Lorg/trustweave/testkit/TrustWeaveTestFixture;)V
+	public final fun execute (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/testkit/integration/DidMethodIntegrationTest : org/trustweave/testkit/BaseIntegrationTest {
+	public fun <init> ()V
+	protected abstract fun getDidMethod ()Lorg/trustweave/did/DidMethod;
+	public fun getMethodName ()Ljava/lang/String;
+	protected final fun testCreateAndResolveDid (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testCrossMethodCompatibility (Lorg/trustweave/did/DidMethod;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testDeactivateDid (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testUpdateDid (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/integration/ErrorRecoveryScenario {
+	public fun <init> (Lorg/trustweave/testkit/BaseIntegrationTest;)V
+	public final fun testInvalidInputHandling (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun testNetworkErrorRecovery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun testPartialFailureRecovery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun testTimeoutHandling (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/testkit/integration/KmsIntegrationTest : org/trustweave/testkit/BaseIntegrationTest {
+	public fun <init> ()V
+	protected abstract fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+	public fun getSupportedAlgorithms ()Ljava/util/List;
+	protected final fun testDeleteKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testGenerateAndSign (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testMultipleAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testRetrieveKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun testSigningWithDifferentAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/integration/MultiPluginScenario {
+	public fun <init> (Lorg/trustweave/testkit/TrustWeaveTestFixture;)V
+	public final fun testDidWithDifferentKms (Lorg/trustweave/did/DidMethod;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun testMultipleDidMethods (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun testMultipleKmsProviders (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/integrity/IntegrityVerificationResult {
+	public fun <init> (ZLjava/util/List;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (ZLjava/util/List;)Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;ZLjava/util/List;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/IntegrityVerificationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSteps ()Ljava/util/List;
+	public final fun getValid ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/integrity/IntegrityVerifier {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/IntegrityVerifier;
+	public final fun discoverAnchorFromDidDocument (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/anchor/AnchorRef;
+	public final fun discoverAnchorFromEvidence (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/anchor/AnchorRef;
+	public final fun discoverAnchorFromManifest (Lorg/trustweave/testkit/integrity/models/AnchorManifest;)Lorg/trustweave/anchor/AnchorRef;
+	public final fun discoverAnchorFromRegistry (Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;)Lorg/trustweave/anchor/AnchorRef;
+	public final fun discoverAnchorFromStatusService (Lorg/trustweave/testkit/integrity/models/StatusResponse;)Lorg/trustweave/anchor/AnchorRef;
+	public final fun verifyArtifactIntegrity (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Z
+	public final fun verifyIntegrityChain (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;Lorg/trustweave/anchor/AnchorRef;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyLinksetIntegrity (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Z
+	public final fun verifyVcIntegrity (Lkotlinx/serialization/json/JsonObject;Lorg/trustweave/anchor/AnchorRef;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/integrity/TestDataBuilders {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/TestDataBuilders;
+	public final fun buildAnchorEvidence (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;
+	public static synthetic fun buildAnchorEvidence$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;
+	public final fun buildAnchorInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public static synthetic fun buildAnchorInfo$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public final fun buildAnchorManifest (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorManifest;
+	public static synthetic fun buildAnchorManifest$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorManifest;
+	public final fun buildAnchorService (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorService;
+	public static synthetic fun buildAnchorService$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorService;
+	public final fun buildArtifact (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public static synthetic fun buildArtifact$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/serialization/json/JsonObject;
+	public final fun buildCredentialStatus (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public static synthetic fun buildCredentialStatus$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public final fun buildLink (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/Link;
+	public static synthetic fun buildLink$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/Link;
+	public final fun buildLinkset (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public static synthetic fun buildLinkset$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/serialization/json/JsonObject;
+	public final fun buildStatusResponse (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;)Lorg/trustweave/testkit/integrity/models/StatusResponse;
+	public static synthetic fun buildStatusResponse$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/StatusResponse;
+	public final fun buildVc (Lorg/trustweave/did/identifiers/Did;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public static synthetic fun buildVc$default (Lorg/trustweave/testkit/integrity/TestDataBuilders;Lorg/trustweave/did/identifiers/Did;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/serialization/json/JsonObject;
+	public final fun createMetadataArtifact (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkotlin/Pair;
+	public final fun createProvenanceArtifact (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;)Lkotlin/Pair;
+	public final fun createQualityReportArtifact (Ljava/lang/String;DLjava/util/Map;)Lkotlin/Pair;
+}
+
+public final class org/trustweave/testkit/integrity/VerificationStep {
+	public fun <init> (Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/VerificationStep;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/VerificationStep;Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/VerificationStep;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDigest ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getValid ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorContext {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorContext$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorContext;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getNetwork ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorContext$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorContext$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorContext;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorContext;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorContext$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorInfo {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorInfo$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getTimestamp ()Ljava/lang/Long;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorInfo;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorManifest {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorManifest$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorContext;Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorContext;Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/testkit/integrity/models/AnchorContext;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorContext;Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;)Lorg/trustweave/testkit/integrity/models/AnchorManifest;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorManifest;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorContext;Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorManifest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorContext ()Lorg/trustweave/testkit/integrity/models/AnchorContext;
+	public final fun getAnchoredDigests ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getIssuer ()Ljava/lang/String;
+	public final fun getTimestamp ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorManifest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorManifest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorManifest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorManifest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorRegistryEntry {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getIssuer ()Ljava/lang/String;
+	public final fun getTimestamp ()J
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorRegistryEntry$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorRegistryEntry;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorRegistryEntry$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorService {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorService$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;)Lorg/trustweave/testkit/integrity/models/AnchorService;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorService;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorService;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorService$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorService$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorService;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorService;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorService$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorServiceEndpoint {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorLookup ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getChainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/AnchorServiceEndpoint$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/AnchorServiceEndpoint;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/AnchorServiceEndpoint$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/Artifact {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/Artifact;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/Artifact;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/Artifact;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMediaType ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/integrity/models/BlockchainAnchorEvidence {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getNetwork ()Ljava/lang/String;
+	public final fun getTxHash ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/BlockchainAnchorEvidence$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/BlockchainAnchorEvidence;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/BlockchainAnchorEvidence$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/CredentialStatus {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/CredentialStatus$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getStatusListIndex ()Ljava/lang/String;
+	public final fun getStatusPurpose ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/CredentialStatus$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/CredentialStatus$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/CredentialStatus;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/CredentialStatus$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/Link {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/Link$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/Link;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/Link;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/Link;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getHref ()Ljava/lang/String;
+	public final fun getRel ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/Link$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/Link$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/Link;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/Link;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/Link$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/Linkset {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/Linkset$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/Linkset;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/Linkset;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/Linkset;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Ljava/lang/String;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLinks ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/Linkset$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/Linkset$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/Linkset;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/Linkset;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/Linkset$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/StatusResponse {
+	public static final field Companion Lorg/trustweave/testkit/integrity/models/StatusResponse$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;)Lorg/trustweave/testkit/integrity/models/StatusResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/StatusResponse;Ljava/lang/String;Lorg/trustweave/testkit/integrity/models/AnchorInfo;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/StatusResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchor ()Lorg/trustweave/testkit/integrity/models/AnchorInfo;
+	public final fun getRevocationStatus ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/testkit/integrity/models/StatusResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/testkit/integrity/models/StatusResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/testkit/integrity/models/StatusResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/testkit/integrity/models/StatusResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/StatusResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/testkit/integrity/models/VerifiableCredential {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/integrity/models/VerifiableCredential;
+	public static synthetic fun copy$default (Lorg/trustweave/testkit/integrity/models/VerifiableCredential;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/testkit/integrity/models/CredentialStatus;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/testkit/integrity/models/VerifiableCredential;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialStatus ()Lorg/trustweave/testkit/integrity/models/CredentialStatus;
+	public final fun getCredentialSubject ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getDigestMultibase ()Ljava/lang/String;
+	public final fun getEvidence ()Ljava/util/List;
+	public final fun getExpirationDate ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getIssued ()Ljava/lang/String;
+	public final fun getIssuer ()Ljava/lang/String;
+	public final fun getType ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/kms/InMemoryKeyManagementService : org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/testkit/kms/InMemoryKeyManagementService$Companion;
+	public fun <init> ()V
+	public final fun clear ()V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/kms/InMemoryKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/testkit/kms/InMemoryKeyManagementServiceKt {
+	public static final fun deleteKey-oGkFW4U (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun generateKey (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun generateKey (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun getPublicKey-oGkFW4U (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun sign-Mi9n8ek (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signLegacy-Mi9n8ek (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signLegacy-Mi9n8ek (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signLegacy-Mi9n8ek$default (Lorg/trustweave/testkit/kms/InMemoryKeyManagementService;Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/testkit/kms/PluginEdgeCaseTestTemplate {
+	public fun <init> ()V
+	public abstract fun createKms ()Lorg/trustweave/kms/KeyManagementService;
+	public abstract fun getSupportedAlgorithms ()Ljava/util/List;
+	public final fun test concurrent key generation ()V
+	public final fun test concurrent signing with same key ()V
+	public final fun test delete non-existent key is idempotent ()V
+	public final fun test empty key ID ()V
+	public final fun test key ID with special characters ()V
+	public final fun test multiple operations on same key ()V
+	public final fun test signing with empty data ()V
+	public final fun test signing with incompatible algorithm ()V
+	public final fun test signing with very large data ()V
+	public final fun test very long key ID ()V
+}
+
+public final class org/trustweave/testkit/proof/ProofEngineTestData {
+	public static final field INSTANCE Lorg/trustweave/testkit/proof/ProofEngineTestData;
+	public final fun createMinimalCredential (Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/credential/model/vc/CredentialProof;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static synthetic fun createMinimalCredential$default (Lorg/trustweave/testkit/proof/ProofEngineTestData;Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/credential/model/vc/CredentialProof;ILjava/lang/Object;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun createMinimalIssuanceRequest (Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/credential/requests/IssuanceRequest;
+	public static synthetic fun createMinimalIssuanceRequest$default (Lorg/trustweave/testkit/proof/ProofEngineTestData;Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/credential/requests/IssuanceRequest;
+	public final fun defaultPresentationRequest ()Lorg/trustweave/credential/requests/PresentationRequest;
+	public final fun defaultVerificationOptions ()Lorg/trustweave/credential/requests/VerificationOptions;
+}
+
+public final class org/trustweave/testkit/proof/ProofEngineTestHelpers {
+	public fun <init> (Lorg/trustweave/testkit/TrustWeaveTestFixture;)V
+	public final fun createAuthenticationProofOptions (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/proof/ProofOptions;
+	public static synthetic fun createAuthenticationProofOptions$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/credential/proof/ProofOptions;
+	public final fun createCredentialWithInvalidProof (Lorg/trustweave/credential/format/ProofSuiteId;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun createCredentialWithoutProof (Lorg/trustweave/credential/format/ProofSuiteId;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun createExpiredCredential-8Mi8wO0 (Lorg/trustweave/credential/format/ProofSuiteId;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createExpiredCredential-8Mi8wO0$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/credential/format/ProofSuiteId;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createExpiringSoonCredential-8Mi8wO0 (Lorg/trustweave/credential/format/ProofSuiteId;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createExpiringSoonCredential-8Mi8wO0$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/credential/format/ProofSuiteId;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createIssuanceProofOptions (Ljava/lang/String;)Lorg/trustweave/credential/proof/ProofOptions;
+	public static synthetic fun createIssuanceProofOptions$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/credential/proof/ProofOptions;
+	public final fun createIssuanceRequest (Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/did/identifiers/VerificationMethodId;Lorg/trustweave/credential/proof/ProofOptions;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createIssuanceRequest$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/did/identifiers/VerificationMethodId;Lorg/trustweave/credential/proof/ProofOptions;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createPresentationProofOptions (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/proof/ProofOptions;
+	public static synthetic fun createPresentationProofOptions$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/credential/proof/ProofOptions;
+	public final fun createPresentationRequest (Ljava/util/Set;Ljava/util/List;Lorg/trustweave/credential/proof/ProofOptions;)Lorg/trustweave/credential/requests/PresentationRequest;
+	public static synthetic fun createPresentationRequest$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Ljava/util/Set;Ljava/util/List;Lorg/trustweave/credential/proof/ProofOptions;ILjava/lang/Object;)Lorg/trustweave/credential/requests/PresentationRequest;
+	public final fun createProofEngineConfigWithKms ()Lorg/trustweave/credential/spi/proof/ProofEngineConfig;
+	public final fun createTestCredential (Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/credential/model/vc/CredentialProof;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestCredential$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/credential/format/ProofSuiteId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Lorg/trustweave/credential/model/vc/CredentialProof;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestDid (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun createTestIssuer (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestIssuer$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestKey-5XYrn_0 (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestKey-5XYrn_0$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestSubject (Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestSubject$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestVerificationMethodId (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createTestVerificationMethodId$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createTestableProofEngineConfig ()Lorg/trustweave/credential/spi/proof/ProofEngineConfig;
+	public final fun createVerificationOptions-17CK4j0 (ZZZZZJ)Lorg/trustweave/credential/requests/VerificationOptions;
+	public static synthetic fun createVerificationOptions-17CK4j0$default (Lorg/trustweave/testkit/proof/ProofEngineTestHelpers;ZZZZZJILjava/lang/Object;)Lorg/trustweave/credential/requests/VerificationOptions;
+	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
+}
+
+public final class org/trustweave/testkit/proof/ProofEngineTestHelpersKt {
+	public static final fun proofEngineHelpers (Lorg/trustweave/testkit/TrustWeaveTestFixture;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/proof/TestableProofEnginesKt {
+	public static final fun createProofEngineConfigWithSigner (Lkotlin/jvm/functions/Function3;)Lorg/trustweave/credential/spi/proof/ProofEngineConfig;
+	public static final fun toProofEngineConfig (Lorg/trustweave/kms/KeyManagementService;)Lorg/trustweave/credential/spi/proof/ProofEngineConfig;
+}
+
+public final class org/trustweave/testkit/services/TestkitKmsService : org/trustweave/kms/services/KmsService {
+	public fun <init> ()V
+	public fun generateKey (Lorg/trustweave/kms/KeyManagementService;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getKeyId (Lorg/trustweave/kms/KeyHandle;)Ljava/lang/String;
+	public fun getPublicKeyJwk (Lorg/trustweave/kms/KeyHandle;)Ljava/util/Map;
+}
+
+public final class org/trustweave/testkit/services/TestkitStatusListRegistryFactory : org/trustweave/revocation/services/StatusListRegistryFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/services/TestkitTrustRegistryFactory : org/trustweave/trust/services/TrustRegistryFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/services/TestkitWalletFactory : org/trustweave/wallet/services/WalletFactory {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createInMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/testkit/spi/TestkitBlockchainAnchorClientProvider : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/testkit/spi/TestkitDidMethodProvider : org/trustweave/did/spi/DidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getPriority ()I
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedMethods ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/testkit/spi/TestkitKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/testkit/trust/InMemoryTrustRegistry : org/trustweave/trust/TrustRegistry {
+	public fun <init> ()V
+	public fun addTrustAnchor (Ljava/lang/String;Lorg/trustweave/trust/TrustAnchorMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun addTrustRelationship (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun clear ()V
+	public fun findTrustPath-hbdn0iQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTrustedIssuers (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTrustedIssuers (Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrusted (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrustedIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrustedIssuer-QWjaZAQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun removeTrustAnchor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

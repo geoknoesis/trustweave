@@ -1,0 +1,130 @@
+public final class org/trustweave/awskms/AlgorithmMapping {
+	public static final field INSTANCE Lorg/trustweave/awskms/AlgorithmMapping;
+	public final fun publicKeyToJwk ([BLorg/trustweave/kms/Algorithm;)Ljava/util/Map;
+	public final fun resolveKeyId (Ljava/lang/String;)Ljava/lang/String;
+	public final fun toAwsKeySpec (Lorg/trustweave/kms/Algorithm;)Lsoftware/amazon/awssdk/services/kms/model/KeySpec;
+	public final fun toAwsSigningAlgorithm (Lorg/trustweave/kms/Algorithm;)Lsoftware/amazon/awssdk/services/kms/model/SigningAlgorithmSpec;
+}
+
+public final class org/trustweave/awskms/AwsKeyManagementService : java/lang/AutoCloseable, org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/awskms/AwsKeyManagementService$Companion;
+	public static final field DEFAULT_PENDING_WINDOW_DAYS I
+	public fun <init> (Lorg/trustweave/awskms/AwsKmsConfig;Lsoftware/amazon/awssdk/services/kms/KmsClient;)V
+	public synthetic fun <init> (Lorg/trustweave/awskms/AwsKmsConfig;Lsoftware/amazon/awssdk/services/kms/KmsClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/awskms/AwsKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/awskms/AwsKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/awskms/AwsKmsClientFactory {
+	public static final field INSTANCE Lorg/trustweave/awskms/AwsKmsClientFactory;
+	public final fun createClient (Lorg/trustweave/awskms/AwsKmsConfig;)Lsoftware/amazon/awssdk/services/kms/KmsClient;
+}
+
+public final class org/trustweave/awskms/AwsKmsConfig {
+	public static final field Companion Lorg/trustweave/awskms/AwsKmsConfig$Companion;
+	public static final field DEFAULT_CACHE_TTL_SECONDS J
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Integer;
+	public final fun component7 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;)Lorg/trustweave/awskms/AwsKmsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/awskms/AwsKmsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Long;ILjava/lang/Object;)Lorg/trustweave/awskms/AwsKmsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessKeyId ()Ljava/lang/String;
+	public final fun getCacheTtlSeconds ()Ljava/lang/Long;
+	public final fun getEndpointOverride ()Ljava/lang/String;
+	public final fun getPendingWindowInDays ()Ljava/lang/Integer;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getSecretAccessKey ()Ljava/lang/String;
+	public final fun getSessionToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/awskms/AwsKmsConfig$Builder {
+	public fun <init> ()V
+	public final fun accessKeyId (Ljava/lang/String;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun build ()Lorg/trustweave/awskms/AwsKmsConfig;
+	public final fun cacheTtlSeconds (Ljava/lang/Long;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun endpointOverride (Ljava/lang/String;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun pendingWindowInDays (Ljava/lang/Integer;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun region (Ljava/lang/String;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun secretAccessKey (Ljava/lang/String;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun sessionToken (Ljava/lang/String;)Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+}
+
+public final class org/trustweave/awskms/AwsKmsConfig$Companion {
+	public final fun builder ()Lorg/trustweave/awskms/AwsKmsConfig$Builder;
+	public final fun fromEnvironment ()Lorg/trustweave/awskms/AwsKmsConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/awskms/AwsKmsConfig;
+}
+
+public final class org/trustweave/awskms/AwsKmsCreationOptionsKt {
+	public static final fun awsKmsOptions (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/kms/KmsCreationOptions;
+}
+
+public final class org/trustweave/awskms/AwsKmsOptionKeys {
+	public static final field ACCESS_KEY_ID Ljava/lang/String;
+	public static final field ALIAS Ljava/lang/String;
+	public static final field ENABLE_AUTOMATIC_ROTATION Ljava/lang/String;
+	public static final field ENDPOINT_OVERRIDE Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/awskms/AwsKmsOptionKeys;
+	public static final field PENDING_WINDOW_IN_DAYS Ljava/lang/String;
+	public static final field REGION Ljava/lang/String;
+	public static final field SECRET_ACCESS_KEY Ljava/lang/String;
+	public static final field SESSION_TOKEN Ljava/lang/String;
+	public static final field TAGS Ljava/lang/String;
+}
+
+public final class org/trustweave/awskms/AwsKmsOptionsBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/kms/KmsCreationOptions;
+	public final fun getAccessKeyId ()Ljava/lang/String;
+	public final fun getCacheTtlSeconds ()Ljava/lang/Long;
+	public final fun getEnabled ()Z
+	public final fun getEndpointOverride ()Ljava/lang/String;
+	public final fun getPendingWindowInDays ()Ljava/lang/Integer;
+	public final fun getPriority ()Ljava/lang/Integer;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getSecretAccessKey ()Ljava/lang/String;
+	public final fun getSessionToken ()Ljava/lang/String;
+	public final fun setAccessKeyId (Ljava/lang/String;)V
+	public final fun setCacheTtlSeconds (Ljava/lang/Long;)V
+	public final fun setEnabled (Z)V
+	public final fun setEndpointOverride (Ljava/lang/String;)V
+	public final fun setPendingWindowInDays (Ljava/lang/Integer;)V
+	public final fun setPriority (Ljava/lang/Integer;)V
+	public final fun setRegion (Ljava/lang/String;)V
+	public final fun setSecretAccessKey (Ljava/lang/String;)V
+	public final fun setSessionToken (Ljava/lang/String;)V
+}
+

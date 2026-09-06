@@ -1,5 +1,11 @@
 package org.trustweave.trust.services
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.extensions.toProofSuiteId
 import org.trustweave.credential.model.ProofType
@@ -7,12 +13,6 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.trust.dsl.credential.IssuanceBuilder
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -31,7 +31,7 @@ class CredentialIssuanceService(
     /** See `IssuanceBuilder.autoAnchor` — anchors a digest envelope of every issued credential. */
     private val autoAnchor: Boolean = false,
     private val defaultChain: String? = null,
-    private val blockchainService: org.trustweave.anchor.services.BlockchainService? = null
+    private val blockchainService: org.trustweave.anchor.services.BlockchainService? = null,
 ) {
     /**
      * Issue a verifiable credential using the configured service.
@@ -42,32 +42,34 @@ class CredentialIssuanceService(
      */
     suspend fun issue(
         timeout: Duration = 30.seconds,
-        block: IssuanceBuilder.() -> Unit
-    ): IssuanceResult = try {
-        withTimeout(timeout) {
-            withContext(ioDispatcher) {
-                val builder = IssuanceBuilder(
-                    credentialService = credentialService,
-                    revocationManager = revocationManager,
-                    defaultProofSuite = defaultProofType.toProofSuiteId(),
-                    ioDispatcher = ioDispatcher,
-                    didResolver = didResolver,
-                    autoAnchor = autoAnchor,
-                    defaultChain = defaultChain,
-                    blockchainService = blockchainService
-                )
-                builder.block()
-                builder.build()
+        block: IssuanceBuilder.() -> Unit,
+    ): IssuanceResult =
+        try {
+            withTimeout(timeout) {
+                withContext(ioDispatcher) {
+                    val builder =
+                        IssuanceBuilder(
+                            credentialService = credentialService,
+                            revocationManager = revocationManager,
+                            defaultProofSuite = defaultProofType.toProofSuiteId(),
+                            ioDispatcher = ioDispatcher,
+                            didResolver = didResolver,
+                            autoAnchor = autoAnchor,
+                            defaultChain = defaultChain,
+                            blockchainService = blockchainService,
+                        )
+                    builder.block()
+                    builder.build()
+                }
             }
+        } catch (e: TimeoutCancellationException) {
+            // Map OUR timeout to the sealed failure contract. If the surrounding coroutine
+            // was itself cancelled (parent cancellation / enclosing timeout), propagate it.
+            currentCoroutineContext().ensureActive()
+            IssuanceResult.Failure.AdapterError(
+                format = defaultProofType.toProofSuiteId(),
+                reason = "Credential issuance timed out after $timeout",
+                cause = e,
+            )
         }
-    } catch (e: TimeoutCancellationException) {
-        // Map OUR timeout to the sealed failure contract. If the surrounding coroutine
-        // was itself cancelled (parent cancellation / enclosing timeout), propagate it.
-        currentCoroutineContext().ensureActive()
-        IssuanceResult.Failure.AdapterError(
-            format = defaultProofType.toProofSuiteId(),
-            reason = "Credential issuance timed out after $timeout",
-            cause = e
-        )
-    }
 }

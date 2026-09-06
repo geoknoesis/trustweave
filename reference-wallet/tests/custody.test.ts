@@ -4,7 +4,7 @@ import 'fake-indexeddb/auto'
 import { generateEd25519KeyPair, publicKeyToDidKey, b64uEncode, verifyJws, signJws } from '../lib/crypto'
 import { clearHolderKeys, importHolderKeys, loadHolderKeys, signHolderJws } from '../lib/key-store'
 import { loadCredentials, loadHolder, exportWalletData } from '../lib/storage'
-import { bootstrap, store, createPresentation } from '../lib/wallet'
+import { bootstrap, store, createPresentation, restoreCredentials, canReplaceLostKey, replaceLostKey } from '../lib/wallet'
 
 class MemoryStorage {
   values = new Map<string, string>()
@@ -25,6 +25,63 @@ beforeEach(async () => {
 })
 
 describe('holder custody and recovery', () => {
+  async function replaceStoredKeys(did: string, keys: unknown) {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open('trustweave-holder-keys', 1)
+      request.onsuccess = () => {
+        const db = request.result
+        const tx = db.transaction('keys', 'readwrite')
+        tx.objectStore('keys').put(keys, did)
+        tx.oncomplete = () => { db.close(); resolve() }
+        tx.onabort = () => { db.close(); reject(tx.error) }
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  it.each(['signing', 'agreement'] as const)('rejects a substituted %s key without rotating or deleting credentials', async key => {
+    const holder = (await bootstrap()).holder
+    const original = await loadHolderKeys(holder.did)
+    const attacker = generateEd25519KeyPair()
+    const attackerDid = publicKeyToDidKey(attacker.publicKey)
+    await importHolderKeys(attackerDid, attacker.privateKey)
+    const other = await loadHolderKeys(attackerDid)
+    const before = exportWalletData()
+    await replaceStoredKeys(holder.did, { ...original, [key]: other[key] })
+    await expect(loadHolderKeys(holder.did)).rejects.toThrow(`Stored ${key} key does not match`)
+    await expect(canReplaceLostKey()).rejects.toThrow('does not match')
+    expect(exportWalletData()).toBe(before)
+  })
+
+  it('rejects malformed custody records as corruption rather than missing keys', async () => {
+    const holder = (await bootstrap()).holder
+    for (const record of [null, false, 0, { signing: { extractable: false }, agreement: { extractable: false } }]) {
+      await replaceStoredKeys(holder.did, record)
+      await expect(signHolderJws({}, holder.did)).rejects.toThrow('Unsafe key storage')
+      await expect(canReplaceLostKey()).rejects.toThrow('Unsafe key storage')
+    }
+  })
+
+  it('permits a migration retry but never overwrites corrupt existing keys', async () => {
+    const pair = generateEd25519KeyPair()
+    const seed = pair.privateKey.slice()
+    const did = publicKeyToDidKey(pair.publicKey)
+    await importHolderKeys(did, pair.privateKey)
+    await importHolderKeys(did, seed.slice())
+    await replaceStoredKeys(did, {})
+    const retry = seed.slice()
+    await expect(importHolderKeys(did, retry)).rejects.toThrow('Unsafe key storage')
+    expect(retry.every(byte => byte === 0)).toBe(true)
+    await expect(loadHolderKeys(did)).rejects.toThrow('Unsafe key storage')
+    seed.fill(0)
+  })
+
+  it('clears invalid seed material even when validation fails before import', async () => {
+    const seed = new Uint8Array(31).fill(7)
+    await expect(importHolderKeys('did:key:invalid', seed)).rejects.toThrow()
+    expect(seed.every(byte => byte === 0)).toBe(true)
+  })
+
   it('persists non-extractable keys that still produce verifiable signatures', async () => {
     const pair = generateEd25519KeyPair()
     const did = publicKeyToDidKey(pair.publicKey)
@@ -141,4 +198,100 @@ describe('holder custody and recovery', () => {
     expect(verifyJws(presented.issuerJwt, issuer.publicKey)._sd).toContain(presented.disclosures[0].hash)
   })
 
+})
+
+
+describe('credential backup restoration', () => {
+  const backup = (did: string, credentials: unknown[]) => JSON.stringify({ version: '2', holder: { did }, credentials: JSON.stringify(credentials) })
+  const issued = (did: string, name = 'Employee') => {
+    const issuer = generateEd25519KeyPair()
+    const issuerDid = publicKeyToDidKey(issuer.publicKey)
+    return { credential: signJws({ iss: issuerDid, sub: did, vc: { type: ['VerifiableCredential', name], credentialSubject: { id: did } } }, issuer.privateKey, issuerDid), format: 'vc+jwt' }
+  }
+  it('restores an export without replacing keys or duplicating existing records', async () => {
+    const holder = (await bootstrap()).holder
+    const credential = issued(holder.did)
+    await store(credential.credential, 'vc+jwt')
+    const exported = exportWalletData()
+    const originalKeys = await loadHolderKeys(holder.did)
+    storage.setItem('trustweave-wallet-credentials', '[]')
+    expect(await restoreCredentials(exported)).toEqual({ added: 1, skipped: 0 })
+    expect(await restoreCredentials(exported)).toEqual({ added: 0, skipped: 1 })
+    expect(loadHolder()?.did).toBe(holder.did)
+    expect((await loadHolderKeys(holder.did)).signing.extractable).toBe(originalKeys.signing.extractable)
+    expect(loadCredentials()[0].credential).toBe(credential.credential)
+  })
+  it('rejects a bad signature after a good record without partial writes', async () => {
+    const holder = (await bootstrap()).holder
+    const good = issued(holder.did)
+    const bad = { ...issued(holder.did), credential: 'bad.signature.value' }
+    const before = storage.getItem('trustweave-wallet-credentials')
+    await expect(restoreCredentials(backup(holder.did, [good, bad]))).rejects.toThrow()
+    expect(storage.getItem('trustweave-wallet-credentials')).toBe(before)
+  })
+  it('rejects another identity and refuses forged holder metadata', async () => {
+    const holder = (await bootstrap()).holder
+    await expect(restoreCredentials(backup('did:key:other', []))).rejects.toThrow('different wallet')
+    await expect(restoreCredentials(backup(holder.did, [issued('did:key:other')]))).rejects.toThrow()
+    expect(loadCredentials()).toHaveLength(0)
+  })
+  it('reconstructs labels and disclosure choices from verified content', async () => {
+    const holder = (await bootstrap()).holder
+    const issuer = generateEd25519KeyPair()
+    const did = publicKeyToDidKey(issuer.publicKey)
+    const { issueSdJwtVc } = await import('../lib/sdjwt')
+    const credential = issueSdJwtVc({ issuerDid: did, issuerPrivateKey: issuer.privateKey, issuerKid: did, holderDid: holder.did,
+      alwaysVisible: {}, selectivelyDisclosable: [{ name: 'secret', value: 'hidden' }], vct: 'Employee', now: Math.floor(Date.now() / 1000) })
+    await restoreCredentials(backup(holder.did, [{ credential, format: 'vc+sd-jwt', issuerDid: 'attacker', preview: { title: 'forged' }, selectivelyDisclosable: ['forged'] }]))
+    expect(loadCredentials()[0].issuerDid).toBe(did)
+    expect(loadCredentials()[0].preview.title).not.toBe('forged')
+    expect(loadCredentials()[0].selectivelyDisclosable).toEqual(['secret'])
+  })
+  it('bounds untrusted input and preserves the existing wallet', async () => {
+    const holder = (await bootstrap()).holder
+    await expect(restoreCredentials('x'.repeat(5 * 1024 * 1024 + 1))).rejects.toThrow('5 MB')
+    await expect(restoreCredentials(backup(holder.did, Array(501).fill({})))).rejects.toThrow('500')
+    await expect(restoreCredentials(JSON.stringify({ version: '99' }))).rejects.toThrow('Unsupported')
+    expect(loadHolder()?.did).toBe(holder.did)
+  })
+})
+
+
+describe('lost-key replacement', () => {
+  it('keeps old credentials, rejects their presentation and accepts reissuance to the new identity', async () => {
+    const old = (await bootstrap()).holder
+    const issuer = generateEd25519KeyPair()
+    const did = publicKeyToDidKey(issuer.publicKey)
+    const issue = (subject: string) => signJws({ iss: did, sub: subject, vc: { type: ['Employee'], credentialSubject: { id: subject } } }, issuer.privateKey, did)
+    const previous = (await store(issue(old.did), 'vc+jwt')).credential
+    await clearHolderKeys()
+    expect(await canReplaceLostKey()).toBe(true)
+    const replacement = await replaceLostKey()
+    expect(replacement.holder.did).not.toBe(old.did)
+    expect(replacement.credentials).toEqual([previous])
+    expect((await bootstrap()).holder.did).toBe(replacement.holder.did)
+    await expect(createPresentation([previous.id], 'verifier', 'nonce')).rejects.toThrow('another holder')
+    const reissued = (await store(issue(replacement.holder.did), 'vc+jwt')).credential
+    expect(await createPresentation([reissued.id], 'verifier', 'nonce')).toBeTruthy()
+  })
+  it('refuses replacement while the existing key is usable', async () => {
+    const before = (await bootstrap()).holder
+    expect(await canReplaceLostKey()).toBe(false)
+    await expect(replaceLostKey()).rejects.toThrow('only when')
+    expect(loadHolder()).toEqual(before)
+  })
+  it('retains identity and credentials if replacement metadata cannot be committed', async () => {
+    await bootstrap(); await clearHolderKeys()
+    const before = exportWalletData()
+    const write = storage.setItem.bind(storage)
+    vi.spyOn(storage, 'setItem').mockImplementation((key, value) => { if (key === 'trustweave-wallet-holder') throw new Error('quota'); write(key, value) })
+    await expect(replaceLostKey()).rejects.toThrow('quota')
+    expect(exportWalletData()).toBe(before)
+  })
+  it('serializes competing replacement requests so only one new identity wins', async () => {
+    await bootstrap(); await clearHolderKeys()
+    const results = await Promise.allSettled([replaceLostKey(), replaceLostKey()])
+    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
+    expect(await canReplaceLostKey()).toBe(false)
+  })
 })

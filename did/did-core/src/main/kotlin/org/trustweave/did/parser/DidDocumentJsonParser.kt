@@ -1,5 +1,19 @@
 package org.trustweave.did.parser
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -9,7 +23,6 @@ import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.parseServiceTypesFromJson
 import org.trustweave.did.model.serviceEndpointFromJsonElement
-import kotlinx.serialization.json.*
 
 /**
  * Shared conforming consumer for DID document JSON per DID 1.1 §6.2.2.
@@ -27,14 +40,14 @@ import kotlinx.serialization.json.*
  * @throws DidException.InvalidDidFormat when required fields are missing or invalid
  */
 object DidDocumentJsonParser {
-
-    private val RELATIONSHIP_NAMES = listOf(
-        "authentication",
-        "assertionMethod",
-        "keyAgreement",
-        "capabilityInvocation",
-        "capabilityDelegation"
-    )
+    private val RELATIONSHIP_NAMES =
+        listOf(
+            "authentication",
+            "assertionMethod",
+            "keyAgreement",
+            "capabilityInvocation",
+            "capabilityDelegation",
+        )
 
     /**
      * Parses a DID document from a JSON object.
@@ -44,11 +57,12 @@ object DidDocumentJsonParser {
      * @throws DidException.InvalidDidFormat if document is missing required "id" or otherwise invalid
      */
     fun parse(json: JsonObject): DidDocument {
-        val idString = json["id"]?.jsonPrimitive?.content
-            ?: throw DidException.InvalidDidFormat(
-                did = "unknown",
-                reason = "DID document missing 'id' field"
-            )
+        val idString =
+            json["id"]?.jsonPrimitive?.content
+                ?: throw DidException.InvalidDidFormat(
+                    did = "unknown",
+                    reason = "DID document missing 'id' field",
+                )
         val baseDid = Did(idString)
 
         val context = parseContext(json)
@@ -63,12 +77,13 @@ object DidDocumentJsonParser {
         val embeddedVmsById = mutableMapOf<String, VerificationMethod>()
 
         for (fieldName in RELATIONSHIP_NAMES) {
-            val refs = parseRelationshipArray(
-                json[fieldName],
-                baseDid,
-                idString,
-                embeddedVmsById
-            )
+            val refs =
+                parseRelationshipArray(
+                    json[fieldName],
+                    baseDid,
+                    idString,
+                    embeddedVmsById,
+                )
             if (refs.isNotEmpty()) {
                 relationshipVmIds[fieldName] = refs.toMutableList()
             }
@@ -98,12 +113,12 @@ object DidDocumentJsonParser {
             keyAgreement = keyAgreement,
             capabilityInvocation = capabilityInvocation,
             capabilityDelegation = capabilityDelegation,
-            service = service
+            service = service,
         )
     }
 
-    private fun parseContext(json: JsonObject): List<String> {
-        return when {
+    private fun parseContext(json: JsonObject): List<String> =
+        when {
             json["@context"] != null -> {
                 when (val ctx = json["@context"]) {
                     is JsonPrimitive -> listOf(ctx.content)
@@ -113,7 +128,6 @@ object DidDocumentJsonParser {
             }
             else -> listOf("https://www.w3.org/ns/did/v1")
         }
-    }
 
     private fun parseController(json: JsonObject): List<Did> {
         val c = json["controller"] ?: return emptyList()
@@ -124,15 +138,14 @@ object DidDocumentJsonParser {
         }
     }
 
-    private fun parseAlsoKnownAs(json: JsonObject): List<DidOrUrl> {
-        return json["alsoKnownAs"]?.jsonArray?.mapNotNull { el ->
+    private fun parseAlsoKnownAs(json: JsonObject): List<DidOrUrl> =
+        json["alsoKnownAs"]?.jsonArray?.mapNotNull { el ->
             (el as? JsonPrimitive)?.content?.let { DidOrUrl.tryParse(it) }
         } ?: emptyList()
-    }
 
     private fun parseVerificationMethodArray(
         arr: JsonArray?,
-        baseDid: String
+        baseDid: String,
     ): List<VerificationMethod> {
         if (arr == null) return emptyList()
         return arr.mapNotNull { el ->
@@ -140,25 +153,30 @@ object DidDocumentJsonParser {
         }
     }
 
-    private fun parseOneVerificationMethod(vmObj: JsonObject, baseDid: String): VerificationMethod? {
+    private fun parseOneVerificationMethod(
+        vmObj: JsonObject,
+        baseDid: String,
+    ): VerificationMethod? {
         val vmIdString = vmObj["id"]?.jsonPrimitive?.content ?: return null
         val vmType = vmObj["type"]?.jsonPrimitive?.content ?: return null
         val controllerString = vmObj["controller"]?.jsonPrimitive?.content ?: baseDid
-        val vmId = try {
-            VerificationMethodId.parse(vmIdString, Did(baseDid))
-        } catch (_: IllegalArgumentException) {
-            return null
-        }
-        val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
-            jwk.entries.associate { it.key to convertJsonElement(it.value) }
-        }
+        val vmId =
+            try {
+                VerificationMethodId.parse(vmIdString, Did(baseDid))
+            } catch (_: IllegalArgumentException) {
+                return null
+            }
+        val publicKeyJwk =
+            vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
+                jwk.entries.associate { it.key to convertJsonElement(it.value) }
+            }
         val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
         return VerificationMethod(
             id = vmId,
             type = vmType,
             controller = Did(controllerString),
             publicKeyJwk = publicKeyJwk,
-            publicKeyMultibase = publicKeyMultibase
+            publicKeyMultibase = publicKeyMultibase,
         )
     }
 
@@ -170,34 +188,37 @@ object DidDocumentJsonParser {
         element: JsonElement?,
         baseDid: Did,
         baseDidString: String,
-        embeddedVmsById: MutableMap<String, VerificationMethod>
+        embeddedVmsById: MutableMap<String, VerificationMethod>,
     ): List<VerificationMethodId> {
         if (element == null) return emptyList()
         return when (element) {
-            is JsonPrimitive -> element.content?.let { idStr ->
-                try {
-                    listOf(VerificationMethodId.parse(idStr, baseDid))
-                } catch (_: IllegalArgumentException) {
-                    emptyList()
-                }
-            } ?: emptyList()
-            is JsonArray -> element.flatMap { entry ->
-                when (entry) {
-                    is JsonPrimitive -> entry.content?.let { idStr ->
-                        try {
-                            listOf(VerificationMethodId.parse(idStr, baseDid))
-                        } catch (_: IllegalArgumentException) {
-                            emptyList()
-                        }
-                    } ?: emptyList()
-                    is JsonObject -> {
-                        val vm = parseOneVerificationMethod(entry, baseDidString) ?: return@flatMap emptyList()
-                        embeddedVmsById.putIfAbsent(vm.id.value, vm)
-                        listOf(vm.id)
+            is JsonPrimitive ->
+                element.content?.let { idStr ->
+                    try {
+                        listOf(VerificationMethodId.parse(idStr, baseDid))
+                    } catch (_: IllegalArgumentException) {
+                        emptyList()
                     }
-                    else -> emptyList()
+                } ?: emptyList()
+            is JsonArray ->
+                element.flatMap { entry ->
+                    when (entry) {
+                        is JsonPrimitive ->
+                            entry.content?.let { idStr ->
+                                try {
+                                    listOf(VerificationMethodId.parse(idStr, baseDid))
+                                } catch (_: IllegalArgumentException) {
+                                    emptyList()
+                                }
+                            } ?: emptyList()
+                        is JsonObject -> {
+                            val vm = parseOneVerificationMethod(entry, baseDidString) ?: return@flatMap emptyList()
+                            embeddedVmsById.putIfAbsent(vm.id.value, vm)
+                            listOf(vm.id)
+                        }
+                        else -> emptyList()
+                    }
                 }
-            }
             else -> emptyList()
         }
     }
@@ -213,14 +234,16 @@ object DidDocumentJsonParser {
                 DidService(
                     id = sId,
                     type = sTypes,
-                    serviceEndpoint = endpoint
+                    serviceEndpoint = endpoint,
                 )
-            } else null
+            } else {
+                null
+            }
         } ?: emptyList()
     }
 
-    private fun convertJsonElement(element: JsonElement): Any? {
-        return when (element) {
+    private fun convertJsonElement(element: JsonElement): Any? =
+        when (element) {
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -234,5 +257,4 @@ object DidDocumentJsonParser {
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
             is JsonNull -> null
         }
-    }
 }

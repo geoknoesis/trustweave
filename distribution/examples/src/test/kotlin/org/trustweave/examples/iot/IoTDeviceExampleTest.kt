@@ -1,14 +1,12 @@
 package org.trustweave.examples.iot
 
-import org.trustweave.examples.StubScenarioTest
-import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for IoT Device Identity scenario.
  */
-class IoTDeviceExampleTest : StubScenarioTest() {
+class IoTDeviceExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
 }
-

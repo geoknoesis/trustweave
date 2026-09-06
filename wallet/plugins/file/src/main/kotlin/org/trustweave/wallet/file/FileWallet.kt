@@ -81,13 +81,15 @@ class FileWallet(
     override val walletId: String,
     val walletDid: String,
     val holderDid: String,
-    private val walletDir: Path,
+    walletDir: Path,
     private val encryptionKey: String? = null,
     private val statusResolver: WalletStatusResolver? = null,
 ) : Wallet,
     CredentialStorage,
     CredentialRecordStorage,
     CredentialRecovery {
+    private val normalizedWalletDir = walletDir.toAbsolutePath().normalize()
+
     private companion object {
         private val ioLocks =
             Array(64) {
@@ -138,10 +140,10 @@ class FileWallet(
             ignoreUnknownKeys = true
         }
 
-    private val credentialsDir: Path = walletDir.resolve("credentials")
-    private val collectionsDir: Path = walletDir.resolve("collections")
-    private val metadataDir: Path = walletDir.resolve("metadata")
-    private val tagsDir: Path = walletDir.resolve("tags")
+    private val credentialsDir: Path = normalizedWalletDir.resolve("credentials")
+    private val collectionsDir: Path = normalizedWalletDir.resolve("collections")
+    private val metadataDir: Path = normalizedWalletDir.resolve("metadata")
+    private val tagsDir: Path = normalizedWalletDir.resolve("tags")
 
     init {
         // Initialize directory structure

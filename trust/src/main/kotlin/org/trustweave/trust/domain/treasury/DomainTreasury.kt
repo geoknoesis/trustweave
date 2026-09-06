@@ -56,7 +56,9 @@ interface DomainTreasury {
     val domainId: DomainId
 
     suspend fun account(chainId: String): ChainAccount?
+
     suspend fun accounts(): List<ChainAccount>
+
     suspend fun policy(): SpendPolicy
 
     /**
@@ -65,7 +67,10 @@ interface DomainTreasury {
      * subclasses on policy violation or insufficient funds — never on a
      * recoverable mempool condition (that's the plugin's concern).
      */
-    suspend fun reserve(ctx: PaymentContext, estimate: TokenAmount): Reservation
+    suspend fun reserve(
+        ctx: PaymentContext,
+        estimate: TokenAmount,
+    ): Reservation
 
     /**
      * Commit a reservation against the actual fee reported in [result].
@@ -73,7 +78,11 @@ interface DomainTreasury {
      * and appends the terminal `SETTLED` (or `FAILED` if [success] is false)
      * entry to the ledger.
      */
-    suspend fun settle(reservation: Reservation, result: AnchorResult, success: Boolean = true)
+    suspend fun settle(
+        reservation: Reservation,
+        result: AnchorResult,
+        success: Boolean = true,
+    )
 
     /**
      * Release the reservation in full. Used on submission errors before any

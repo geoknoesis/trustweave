@@ -1,0 +1,897 @@
+public abstract class org/trustweave/anchor/AbstractBlockchainAnchorClient : org/trustweave/anchor/BlockchainAnchorClient {
+	public static final field Companion Lorg/trustweave/anchor/AbstractBlockchainAnchorClient$Companion;
+	public static final field DEFAULT_CONFIRMATION_POLL_INTERVAL_MS J
+	public static final field DEFAULT_CONFIRMATION_TIMEOUT_MS J
+	public static final field OPTION_CONFIRMATION_POLL_INTERVAL_MS Ljava/lang/String;
+	public static final field OPTION_CONFIRMATION_TIMEOUT_MS Ljava/lang/String;
+	public static final field OPTION_IN_MEMORY_TEST_MODE Ljava/lang/String;
+	public static final field OPTION_PAYLOAD_MODE Ljava/lang/String;
+	public static final field PAYLOAD_MODE_DIGEST Ljava/lang/String;
+	public static final field PAYLOAD_MODE_FULL Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	protected final fun anchorExtraMetadata (Ljava/lang/String;)Ljava/util/Map;
+	protected final fun buildAnchorRef (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/AnchorRef;
+	public static synthetic fun buildAnchorRef$default (Lorg/trustweave/anchor/AbstractBlockchainAnchorClient;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/anchor/AnchorRef;
+	protected fun buildExtraMetadata (Ljava/lang/String;)Ljava/util/Map;
+	protected abstract fun canSubmitTransaction ()Z
+	protected final fun encodeAnchoredBytes (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)[B
+	public fun estimate (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun generateTestTxHash ()Ljava/lang/String;
+	protected abstract fun getBlockchainName ()Ljava/lang/String;
+	protected final fun getChainId ()Ljava/lang/String;
+	protected final fun getConfirmationPollIntervalMs ()J
+	protected final fun getConfirmationTimeoutMs ()J
+	protected fun getContractAddress ()Ljava/lang/String;
+	protected final fun getDigestPayloadMode ()Z
+	protected final fun getInMemoryTestMode ()Z
+	protected final fun getOptions ()Ljava/util/Map;
+	protected final fun getPayloadMode ()Ljava/lang/String;
+	protected final fun getStorage ()Ljava/util/concurrent/ConcurrentHashMap;
+	public fun readPayload (Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun readTransactionFromBlockchain (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun submitTransactionToBlockchain ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun uniqueTestHashHex (I)Ljava/lang/String;
+	public static synthetic fun uniqueTestHashHex$default (Lorg/trustweave/anchor/AbstractBlockchainAnchorClient;IILjava/lang/Object;)Ljava/lang/String;
+	protected final fun uniqueTestHashSuffix ()Ljava/lang/String;
+	protected final fun validateChainId (Ljava/lang/String;)V
+	public fun verifyAnchor (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/anchor/AbstractBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/AnchorDigest {
+	public static final field ALGORITHM Ljava/lang/String;
+	public static final field FIELD_ALG Ljava/lang/String;
+	public static final field FIELD_DIGEST Ljava/lang/String;
+	public static final field FIELD_MEDIA_TYPE Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/anchor/AnchorDigest;
+	public static final fun digestBase64Url ([B)Ljava/lang/String;
+	public static final fun envelope ([BLjava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public static final fun isEnvelope (Lkotlinx/serialization/json/JsonElement;)Z
+	public static final fun matches (Lkotlinx/serialization/json/JsonObject;[B)Z
+	public static final fun sha256 ([B)[B
+}
+
+public final class org/trustweave/anchor/AnchorRef {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/AnchorRef;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/AnchorRef;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/anchor/AnchorRef;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getExtra ()Ljava/util/Map;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/AnchorResult {
+	public fun <init> (Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Long;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Long;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/anchor/AnchorRef;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun component5 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Long;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;)Lorg/trustweave/anchor/AnchorResult;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/AnchorResult;Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/Long;Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/AnchorResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFee ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getMediaType ()Ljava/lang/String;
+	public final fun getPayerAddress ()Ljava/lang/String;
+	public final fun getPayload ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getRef ()Lorg/trustweave/anchor/AnchorRef;
+	public final fun getTimestamp ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/anchor/BlockchainAnchorClient {
+	public fun estimate (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun readPayload (Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyAnchor (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun writePayload (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun writePayload$default (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun writePayload$default (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/anchor/BlockchainAnchorClient$DefaultImpls {
+	public static fun estimate (Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun verifyAnchor (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun writePayload (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun writePayload$default (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun writePayload$default (Lorg/trustweave/anchor/BlockchainAnchorClient;Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/anchor/BlockchainAnchorRegistry {
+	public abstract fun clear ()V
+	public abstract fun get (Ljava/lang/String;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public abstract fun getAllChainIds ()Ljava/util/List;
+	public abstract fun getAllClients ()Ljava/util/Map;
+	public abstract fun has (Ljava/lang/String;)Z
+	public abstract fun register (Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;)V
+	public fun registerAll ([Lkotlin/Pair;)V
+	public abstract fun size ()I
+	public abstract fun snapshot ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public abstract fun unregister (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/anchor/BlockchainAnchorRegistry$DefaultImpls {
+	public static fun registerAll (Lorg/trustweave/anchor/BlockchainAnchorRegistry;[Lkotlin/Pair;)V
+}
+
+public final class org/trustweave/anchor/BlockchainAnchorRegistryKt {
+	public static final fun BlockchainAnchorRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public static final fun anchorTyped (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/lang/Object;Lkotlinx/serialization/KSerializer;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun anchorTyped$default (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/lang/Object;Lkotlinx/serialization/KSerializer;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun readTyped (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/KSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/trustweave/anchor/ChainId {
+	public static final field Companion Lorg/trustweave/anchor/ChainId$Companion;
+	public abstract fun getNamespace ()Ljava/lang/String;
+	public static final fun isValid (Ljava/lang/String;)Z
+	public static final fun parse (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId;
+	public abstract fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/anchor/ChainId$Algorand : org/trustweave/anchor/ChainId {
+	public static final field Companion Lorg/trustweave/anchor/ChainId$Algorand$Companion;
+	public static final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Algorand;
+}
+
+public final class org/trustweave/anchor/ChainId$Algorand$Betanet : org/trustweave/anchor/ChainId$Algorand {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Algorand$Betanet;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Algorand$Companion {
+	public final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Algorand;
+}
+
+public final class org/trustweave/anchor/ChainId$Algorand$Mainnet : org/trustweave/anchor/ChainId$Algorand {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Algorand$Mainnet;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Algorand$Testnet : org/trustweave/anchor/ChainId$Algorand {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Algorand$Testnet;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Companion {
+	public final fun isValid (Ljava/lang/String;)Z
+	public final fun parse (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId;
+}
+
+public final class org/trustweave/anchor/ChainId$Custom : org/trustweave/anchor/ChainId {
+	public static final field Companion Lorg/trustweave/anchor/ChainId$Custom$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Custom;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/ChainId$Custom;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/ChainId$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Custom;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Custom$Companion {
+	public final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Custom;
+}
+
+public abstract class org/trustweave/anchor/ChainId$Eip155 : org/trustweave/anchor/ChainId {
+	public static final field Companion Lorg/trustweave/anchor/ChainId$Eip155$Companion;
+	public synthetic fun <init> (ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun fromChainNumber (I)Lorg/trustweave/anchor/ChainId$Eip155;
+	public static final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Eip155;
+	public static final fun getAll ()Ljava/util/List;
+	public final fun getChainNumber ()I
+	public final fun getNamespace ()Ljava/lang/String;
+	public final fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$AmoyTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$AmoyTestnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$ArbitrumOneMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$ArbitrumOneMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$ArbitrumSepoliaTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$ArbitrumSepoliaTestnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$BaseMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$BaseMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$BaseSepoliaTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$BaseSepoliaTestnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$Companion {
+	public final fun fromChainNumber (I)Lorg/trustweave/anchor/ChainId$Eip155;
+	public final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Eip155;
+	public final fun getAll ()Ljava/util/List;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$EthereumMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$EthereumMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$GanacheLocal : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$GanacheLocal;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$OptimismMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$OptimismMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$OptimismSepoliaTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$OptimismSepoliaTestnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$PolygonMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$PolygonMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$SepoliaTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$SepoliaTestnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$ZkSyncEraMainnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$ZkSyncEraMainnet;
+}
+
+public final class org/trustweave/anchor/ChainId$Eip155$ZkSyncEraSepoliaTestnet : org/trustweave/anchor/ChainId$Eip155 {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Eip155$ZkSyncEraSepoliaTestnet;
+}
+
+public abstract class org/trustweave/anchor/ChainId$Indy : org/trustweave/anchor/ChainId {
+	public static final field Companion Lorg/trustweave/anchor/ChainId$Indy$Companion;
+	public static final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Indy;
+}
+
+public final class org/trustweave/anchor/ChainId$Indy$BCovrinTestnet : org/trustweave/anchor/ChainId$Indy {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Indy$BCovrinTestnet;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Indy$Companion {
+	public final fun fromString (Ljava/lang/String;)Lorg/trustweave/anchor/ChainId$Indy;
+}
+
+public final class org/trustweave/anchor/ChainId$Indy$SovrinMainnet : org/trustweave/anchor/ChainId$Indy {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Indy$SovrinMainnet;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/ChainId$Indy$SovrinStaging : org/trustweave/anchor/ChainId$Indy {
+	public static final field INSTANCE Lorg/trustweave/anchor/ChainId$Indy$SovrinStaging;
+	public fun getNamespace ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/DefaultBlockchainAnchorRegistry : org/trustweave/anchor/BlockchainAnchorRegistry {
+	public fun <init> ()V
+	public fun clear ()V
+	public fun get (Ljava/lang/String;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getAllChainIds ()Ljava/util/List;
+	public fun getAllClients ()Ljava/util/Map;
+	public fun has (Ljava/lang/String;)Z
+	public fun register (Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorClient;)V
+	public fun registerAll ([Lkotlin/Pair;)V
+	public fun size ()I
+	public fun snapshot ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public fun unregister (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/anchor/evm/EvmGas {
+	public static final field DEFAULT_MARGIN_PERCENT I
+	public static final field INSTANCE Lorg/trustweave/anchor/evm/EvmGas;
+	public static final field NONZERO_BYTE_GAS J
+	public static final field TX_BASE_GAS J
+	public static final field ZERO_BYTE_GAS J
+	public static final fun intrinsicGas ([B)Ljava/math/BigInteger;
+	public static final fun intrinsicGasForSize (J)Ljava/math/BigInteger;
+	public static final fun txGasLimit ([B)Ljava/math/BigInteger;
+	public static final fun txGasLimit ([BI)Ljava/math/BigInteger;
+	public static synthetic fun txGasLimit$default ([BIILjava/lang/Object;)Ljava/math/BigInteger;
+	public static final fun txGasLimitForSize (J)Ljava/math/BigInteger;
+	public static final fun txGasLimitForSize (JI)Ljava/math/BigInteger;
+	public static synthetic fun txGasLimitForSize$default (JIILjava/lang/Object;)Ljava/math/BigInteger;
+	public static final fun withMargin (Ljava/math/BigInteger;)Ljava/math/BigInteger;
+	public static final fun withMargin (Ljava/math/BigInteger;I)Ljava/math/BigInteger;
+	public static synthetic fun withMargin$default (Ljava/math/BigInteger;IILjava/lang/Object;)Ljava/math/BigInteger;
+}
+
+public abstract class org/trustweave/anchor/exceptions/BlockchainException : org/trustweave/core/exception/TrustWeaveException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getCode ()Ljava/lang/String;
+	public fun getContext ()Ljava/util/Map;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/BlockchainException$ChainNotRegistered : org/trustweave/anchor/exceptions/BlockchainException {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/anchor/exceptions/BlockchainException$ChainNotRegistered;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/BlockchainException$ChainNotRegistered;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/BlockchainException$ChainNotRegistered;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableChains ()Ljava/util/List;
+	public final fun getChainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/BlockchainException$ConfigurationFailed : org/trustweave/anchor/exceptions/BlockchainException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/anchor/exceptions/BlockchainException$ConfigurationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/BlockchainException$ConfigurationFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/BlockchainException$ConfigurationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getConfigKey ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/BlockchainException$ConnectionFailed : org/trustweave/anchor/exceptions/BlockchainException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/anchor/exceptions/BlockchainException$ConnectionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/BlockchainException$ConnectionFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/BlockchainException$ConnectionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/BlockchainException$TransactionFailed : org/trustweave/anchor/exceptions/BlockchainException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/anchor/exceptions/BlockchainException$TransactionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/BlockchainException$TransactionFailed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/BlockchainException$TransactionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getGasUsed ()Ljava/lang/Long;
+	public final fun getOperation ()Ljava/lang/String;
+	public final fun getPayloadSize ()Ljava/lang/Long;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getTxHash ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/BlockchainException$UnsupportedOperation : org/trustweave/anchor/exceptions/BlockchainException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/exceptions/BlockchainException$UnsupportedOperation;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/BlockchainException$UnsupportedOperation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/BlockchainException$UnsupportedOperation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getOperation ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/anchor/exceptions/TreasuryException : org/trustweave/core/exception/TrustWeaveException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getCode ()Ljava/lang/String;
+	public fun getContext ()Ljava/util/Map;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$CallerCapExceeded : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/exceptions/TreasuryException$CallerCapExceeded;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$CallerCapExceeded;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$CallerCapExceeded;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCallerMax ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getCorrelationId ()Ljava/lang/String;
+	public final fun getEstimated ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$CapExceeded : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component5 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/exceptions/TreasuryException$CapExceeded;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$CapExceeded;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$CapExceeded;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttempted ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getCap ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getCapKind ()Ljava/lang/String;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$InsufficientFunds : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/exceptions/TreasuryException$InsufficientFunds;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$InsufficientFunds;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$InsufficientFunds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailable ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public final fun getRequired ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$NoAccountForChain : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/exceptions/TreasuryException$NoAccountForChain;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$NoAccountForChain;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$NoAccountForChain;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$ReservationExpired : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationExpired;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationExpired;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationExpired;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReservationId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$ReservationNotFound : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationNotFound;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationNotFound;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$ReservationNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReservationId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$SponsorNotAllowed : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/exceptions/TreasuryException$SponsorNotAllowed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$SponsorNotAllowed;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$SponsorNotAllowed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDomainId ()Ljava/lang/String;
+	public final fun getSponsorDid ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/exceptions/TreasuryException$StrategyNotAllowed : org/trustweave/anchor/exceptions/TreasuryException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/anchor/exceptions/TreasuryException$StrategyNotAllowed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/exceptions/TreasuryException$StrategyNotAllowed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;ILjava/lang/Object;)Lorg/trustweave/anchor/exceptions/TreasuryException$StrategyNotAllowed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowed ()Ljava/util/Set;
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public final fun getStrategy ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/options/AlgorandOptions : org/trustweave/anchor/options/BlockchainAnchorClientOptions {
+	public static final field Companion Lorg/trustweave/anchor/options/AlgorandOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/options/AlgorandOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/options/AlgorandOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/options/AlgorandOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/AlgorandOptions;
+	public final fun getAlgodToken ()Ljava/lang/String;
+	public final fun getAlgodUrl ()Ljava/lang/String;
+	public final fun getAppId ()Ljava/lang/String;
+	public final fun getIndexerToken ()Ljava/lang/String;
+	public final fun getIndexerUrl ()Ljava/lang/String;
+	public final fun getPrivateKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/options/AlgorandOptions$Companion {
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/AlgorandOptions;
+}
+
+public abstract class org/trustweave/anchor/options/BlockchainAnchorClientOptions {
+	public static final field Companion Lorg/trustweave/anchor/options/BlockchainAnchorClientOptions$Companion;
+	public static final fun fromMap (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/options/BlockchainAnchorClientOptions;
+	public static final fun registerParser (Lorg/trustweave/anchor/options/BlockchainAnchorOptionsParser;)V
+	public abstract fun toMap ()Ljava/util/Map;
+}
+
+public final class org/trustweave/anchor/options/BlockchainAnchorClientOptions$Companion {
+	public final fun fromMap (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/options/BlockchainAnchorClientOptions;
+	public final fun registerParser (Lorg/trustweave/anchor/options/BlockchainAnchorOptionsParser;)V
+}
+
+public abstract interface class org/trustweave/anchor/options/BlockchainAnchorOptionsParser {
+	public abstract fun parse (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/options/BlockchainAnchorClientOptions;
+}
+
+public final class org/trustweave/anchor/options/GanacheOptions : org/trustweave/anchor/options/BlockchainAnchorClientOptions {
+	public static final field Companion Lorg/trustweave/anchor/options/GanacheOptions$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/options/GanacheOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/options/GanacheOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/options/GanacheOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/GanacheOptions;
+	public final fun getContractAddress ()Ljava/lang/String;
+	public final fun getPrivateKey ()Ljava/lang/String;
+	public final fun getRpcUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/options/GanacheOptions$Companion {
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/GanacheOptions;
+}
+
+public final class org/trustweave/anchor/options/IndyOptions : org/trustweave/anchor/options/BlockchainAnchorClientOptions {
+	public static final field Companion Lorg/trustweave/anchor/options/IndyOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/options/IndyOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/options/IndyOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/options/IndyOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/IndyOptions;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getPoolEndpoint ()Ljava/lang/String;
+	public final fun getWalletKey ()Ljava/lang/String;
+	public final fun getWalletName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/options/IndyOptions$Companion {
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/IndyOptions;
+}
+
+public final class org/trustweave/anchor/options/PolygonOptions : org/trustweave/anchor/options/BlockchainAnchorClientOptions {
+	public static final field Companion Lorg/trustweave/anchor/options/PolygonOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/options/PolygonOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/options/PolygonOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/options/PolygonOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/PolygonOptions;
+	public final fun getContractAddress ()Ljava/lang/String;
+	public final fun getPrivateKey ()Ljava/lang/String;
+	public final fun getRpcUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/options/PolygonOptions$Companion {
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/anchor/options/PolygonOptions;
+}
+
+public abstract class org/trustweave/anchor/payment/AssetRef {
+}
+
+public final class org/trustweave/anchor/payment/AssetRef$Native : org/trustweave/anchor/payment/AssetRef {
+	public static final field INSTANCE Lorg/trustweave/anchor/payment/AssetRef$Native;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/AssetRef$OperatorCredit : org/trustweave/anchor/payment/AssetRef {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/anchor/payment/AssetRef$OperatorCredit;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/AssetRef$OperatorCredit;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/AssetRef$OperatorCredit;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOperatorId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/AssetRef$Token : org/trustweave/anchor/payment/AssetRef {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/payment/AssetRef$Token;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/AssetRef$Token;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/AssetRef$Token;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContract ()Ljava/lang/String;
+	public final fun getSymbol ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/ContractCall {
+	public fun <init> (Ljava/lang/String;[BLorg/trustweave/anchor/payment/TokenAmount;)V
+	public synthetic fun <init> (Ljava/lang/String;[BLorg/trustweave/anchor/payment/TokenAmount;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()[B
+	public final fun component3 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun copy (Ljava/lang/String;[BLorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/payment/ContractCall;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/ContractCall;Ljava/lang/String;[BLorg/trustweave/anchor/payment/TokenAmount;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/ContractCall;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCallData ()[B
+	public final fun getContractAddress ()Ljava/lang/String;
+	public final fun getValue ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/anchor/payment/FeeStrategy {
+}
+
+public final class org/trustweave/anchor/payment/FeeStrategy$DomainPays : org/trustweave/anchor/payment/FeeStrategy {
+	public static final field INSTANCE Lorg/trustweave/anchor/payment/FeeStrategy$DomainPays;
+}
+
+public final class org/trustweave/anchor/payment/FeeStrategy$Escrowed : org/trustweave/anchor/payment/FeeStrategy {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/anchor/payment/FeeStrategy$Escrowed;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/FeeStrategy$Escrowed;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/FeeStrategy$Escrowed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEscrowRef ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/FeeStrategy$SelfPay : org/trustweave/anchor/payment/FeeStrategy {
+	public static final field INSTANCE Lorg/trustweave/anchor/payment/FeeStrategy$SelfPay;
+}
+
+public final class org/trustweave/anchor/payment/FeeStrategy$Sponsored : org/trustweave/anchor/payment/FeeStrategy {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/anchor/payment/FeeStrategy$Sponsored;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/FeeStrategy$Sponsored;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/FeeStrategy$Sponsored;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSponsorDid ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/OperationDescriptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/Long;Lorg/trustweave/anchor/payment/ContractCall;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/Long;Lorg/trustweave/anchor/payment/ContractCall;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun component5 ()Lorg/trustweave/anchor/payment/ContractCall;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/Long;Lorg/trustweave/anchor/payment/ContractCall;)Lorg/trustweave/anchor/payment/OperationDescriptor;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/OperationDescriptor;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/Long;Lorg/trustweave/anchor/payment/ContractCall;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/OperationDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getContractCall ()Lorg/trustweave/anchor/payment/ContractCall;
+	public final fun getKind ()Ljava/lang/String;
+	public final fun getPayload ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getPayloadSizeBytes ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/PaymentContext {
+	public static final field Companion Lorg/trustweave/anchor/payment/PaymentContext$Companion;
+	public static final field UNMANAGED_DOMAIN Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/SponsorRef;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/SponsorRef;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/anchor/payment/FeeStrategy;
+	public final fun component5 ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun component6 ()Lorg/trustweave/anchor/payment/SponsorRef;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/SponsorRef;Ljava/lang/String;)Lorg/trustweave/anchor/payment/PaymentContext;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/anchor/payment/FeeStrategy;Lorg/trustweave/anchor/payment/TokenAmount;Lorg/trustweave/anchor/payment/SponsorRef;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/PaymentContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChainId ()Ljava/lang/String;
+	public final fun getCorrelationId ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public final fun getFeeStrategy ()Lorg/trustweave/anchor/payment/FeeStrategy;
+	public final fun getMaxFee ()Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun getPayerDid ()Ljava/lang/String;
+	public final fun getSponsor ()Lorg/trustweave/anchor/payment/SponsorRef;
+	public final fun getStrategyKey ()Lkotlin/reflect/KClass;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/PaymentContext$Companion {
+	public final fun unmanaged (Ljava/lang/String;)Lorg/trustweave/anchor/payment/PaymentContext;
+}
+
+public final class org/trustweave/anchor/payment/PaymentContextKt {
+	public static final fun isUnmanaged (Lorg/trustweave/anchor/payment/PaymentContext;)Z
+}
+
+public final class org/trustweave/anchor/payment/PaymentDeprecation {
+	public static final field INSTANCE Lorg/trustweave/anchor/payment/PaymentDeprecation;
+	public final fun warnIfRawCreds (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;Lorg/slf4j/Logger;)V
+	public static synthetic fun warnIfRawCreds$default (Lorg/trustweave/anchor/payment/PaymentDeprecation;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;Lorg/slf4j/Logger;ILjava/lang/Object;)V
+}
+
+public final class org/trustweave/anchor/payment/SponsorRef {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/payment/SponsorRef;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/SponsorRef;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/SponsorRef;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChannel ()Ljava/lang/String;
+	public final fun getParams ()Ljava/util/Map;
+	public final fun getSponsorDid ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/TokenAmount {
+	public static final field Companion Lorg/trustweave/anchor/payment/TokenAmount$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;Ljava/math/BigInteger;)V
+	public final fun compareTo (Lorg/trustweave/anchor/payment/TokenAmount;)I
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/anchor/payment/AssetRef;
+	public final fun component3 ()Ljava/math/BigInteger;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;Ljava/math/BigInteger;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/payment/TokenAmount;Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;Ljava/math/BigInteger;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()Ljava/math/BigInteger;
+	public final fun getAsset ()Lorg/trustweave/anchor/payment/AssetRef;
+	public final fun getChainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun minus (Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun plus (Lorg/trustweave/anchor/payment/TokenAmount;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun times (I)Lorg/trustweave/anchor/payment/TokenAmount;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/payment/TokenAmount$Companion {
+	public final fun unknown (Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public static synthetic fun unknown$default (Lorg/trustweave/anchor/payment/TokenAmount$Companion;Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public final fun zero (Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;)Lorg/trustweave/anchor/payment/TokenAmount;
+	public static synthetic fun zero$default (Lorg/trustweave/anchor/payment/TokenAmount$Companion;Ljava/lang/String;Lorg/trustweave/anchor/payment/AssetRef;ILjava/lang/Object;)Lorg/trustweave/anchor/payment/TokenAmount;
+}
+
+public final class org/trustweave/anchor/services/BlockchainService {
+	public fun <init> (Lorg/trustweave/anchor/BlockchainAnchorRegistry;)V
+	public final fun anchor (Ljava/lang/Object;Lkotlinx/serialization/KSerializer;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun availableChains ()Ljava/util/List;
+	public final fun read (Lorg/trustweave/anchor/AnchorRef;Lkotlinx/serialization/KSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public abstract fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public static synthetic fun create$default (Lorg/trustweave/anchor/spi/BlockchainAnchorClientProvider;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public abstract fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public abstract fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/anchor/spi/BlockchainAnchorClientProvider$DefaultImpls {
+	public static synthetic fun create$default (Lorg/trustweave/anchor/spi/BlockchainAnchorClientProvider;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public static fun getRequiredEnvironmentVariables (Lorg/trustweave/anchor/spi/BlockchainAnchorClientProvider;)Ljava/util/List;
+	public static fun hasRequiredEnvironmentVariables (Lorg/trustweave/anchor/spi/BlockchainAnchorClientProvider;)Z
+}
+
+public final class org/trustweave/anchor/spi/BlockchainIntegrationHelper {
+	public static final field INSTANCE Lorg/trustweave/anchor/spi/BlockchainIntegrationHelper;
+	public final fun discoverAndRegister (Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/Map;)Ljava/util/List;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/anchor/spi/BlockchainIntegrationHelper;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/List;
+	public final fun setup (Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Z)Ljava/util/List;
+	public static synthetic fun setup$default (Lorg/trustweave/anchor/spi/BlockchainIntegrationHelper;Ljava/lang/String;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;Ljava/util/List;Ljava/util/Map;ZILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class org/trustweave/anchor/validation/ChainIdValidator {
+	public static final field INSTANCE Lorg/trustweave/anchor/validation/ChainIdValidator;
+	public final fun validateFormat (Ljava/lang/String;)Lorg/trustweave/core/util/ValidationResult;
+	public final fun validateRegistered (Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/core/util/ValidationResult;
+}
+
+public final class org/trustweave/anchor/validation/ChainIdValidator$ErrorCodes {
+	public static final field CHAIN_ID_EMPTY Ljava/lang/String;
+	public static final field CHAIN_NOT_REGISTERED Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/anchor/validation/ChainIdValidator$ErrorCodes;
+	public static final field INVALID_CHAIN_ID_FORMAT Ljava/lang/String;
+}
+

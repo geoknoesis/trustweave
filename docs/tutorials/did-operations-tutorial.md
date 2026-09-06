@@ -19,7 +19,7 @@ dependencies {
 
 **Result:** Gives you the DID registry, DID method interfaces, KMS abstractions, and in-memory implementations used throughout this tutorial.
 
-> Tip: The runnable quick-start sample (`./gradlew :TrustWeave-examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced DID logic.
+> Tip: The runnable quick-start sample (`./gradlew :distribution:examples:runQuickStartSample`) mirrors the core flows below. Clone it as a starting point before wiring more advanced DID logic.
 
 ## Prerequisites
 

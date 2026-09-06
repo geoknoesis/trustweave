@@ -44,23 +44,26 @@ fun interface DidResolver {
      * validated (§4.4 step 4), unsupported method-specific options produce FEATURE_NOT_SUPPORTED
      * (§4.4 step 3), and anything else delegates to [resolve].
      */
-    suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+    suspend fun resolve(
+        did: Did,
+        options: ResolutionOptions,
+    ): DidResolutionResult {
         options.validate()?.let { error ->
             return DidResolutionResult.Failure.OptionsError(
                 did = did,
                 reason = error.detail ?: "Invalid resolution options",
-                errorType = error.type
+                errorType = error.type,
             )
         }
         val unsupported = options.methodSpecificOptions()
         if (unsupported.isNotEmpty()) {
             return DidResolutionResult.Failure.OptionsError(
                 did = did,
-                reason = "Resolution options not supported by this resolver: " +
-                    unsupported.sorted().joinToString(", ")
+                reason =
+                    "Resolution options not supported by this resolver: " +
+                        unsupported.sorted().joinToString(", "),
             )
         }
         return resolve(did)
     }
 }
-

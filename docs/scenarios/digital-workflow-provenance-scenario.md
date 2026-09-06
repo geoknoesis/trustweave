@@ -6,6 +6,9 @@ nav_order: 32
 
 # Digital Workflow & Provenance Scenario
 
+> **Runnable companion:** [digital-workflow example](../../distribution/examples/scenarios/digital-workflow/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+
+
 This guide demonstrates how to build a digital workflow provenance system using TrustWeave and PROV-O (Provenance Ontology) to track and verify the provenance of digital information through processing workflows, transformations, and data lineage.
 
 ## What You'll Build
@@ -150,7 +153,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Familiarity with PROV-O concepts (helpful but not required)

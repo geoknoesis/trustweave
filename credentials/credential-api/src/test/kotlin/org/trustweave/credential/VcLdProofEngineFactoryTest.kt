@@ -2,8 +2,8 @@ package org.trustweave.credential
 
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -142,3 +142,51 @@ test('real browser custody survives reload and concurrent tabs retain imports', 
   }, ids[0])
   expect(result).toEqual({ did, count: 2, exportRejected: true, disclosures: 0, nonce: 'nonce' })
 })
+
+
+test('production wallet restores a signed backup and exports without private keys', async ({ page, request }) => {
+  await page.goto('http://127.0.0.1:4175/')
+  await page.waitForFunction(() => !!localStorage.getItem('trustweave-wallet-holder'))
+  const holder = await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!))
+  const issued = await (await request.get('http://127.0.0.1:4175/api/demo-issuer/credential', { params: { subject: holder.did } })).json()
+  const content = JSON.stringify({ version: '2', holder, credentials: JSON.stringify([issued]) })
+  await page.getByText('Back up and restore credentials', { exact: true }).click()
+  page.on('dialog', dialog => dialog.accept())
+  const upload = () => page.getByLabel('Credential backup file').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(content) })
+  await upload()
+  await expect(page.getByRole('status')).toContainText('Restored 1 credential; 0 already present.')
+  await upload()
+  await expect(page.getByRole('status')).toContainText('Restored 0 credentials; 1 already present.')
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-credentials')!).length)).toBe(1)
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Export credentials', exact: true }).click()
+  const stream = await (await download).createReadStream()
+  let exported = ''
+  for await (const chunk of stream!) exported += chunk.toString()
+  expect(JSON.parse(exported).holder.did).toBe(holder.did)
+  expect(exported).not.toContain('privateKey')
+})
+
+
+test('key loss offers replacement while preserving old credentials for reissuance', async ({ page, request }) => {
+  await page.goto('http://127.0.0.1:4175/')
+  await page.waitForFunction(() => !!localStorage.getItem('trustweave-wallet-holder'))
+  const holder = await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!))
+  const issued = await (await request.get('http://127.0.0.1:4175/api/demo-issuer/credential', { params: { subject: holder.did } })).json()
+  await page.getByText('Back up and restore credentials', { exact: true }).click()
+  page.on('dialog', dialog => dialog.accept())
+  await page.getByLabel('Credential backup file').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ version: '2', holder, credentials: JSON.stringify([issued]) })) })
+  await expect(page.getByRole('status')).toContainText('Restored 1 credential')
+  const before = await page.evaluate(() => localStorage.getItem('trustweave-wallet-credentials'))
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open('trustweave-holder-keys', 1)
+    request.onsuccess = () => { const db = request.result; const tx = db.transaction('keys', 'readwrite'); tx.objectStore('keys').clear(); tx.oncomplete = () => { db.close(); resolve() }; tx.onerror = () => reject(tx.error) }
+    request.onerror = () => reject(request.error)
+  }))
+  await page.reload()
+  await page.getByRole('button', { name: 'Create replacement identity' }).click()
+  await expect(page.getByRole('region', { name: 'Credential reissuance' })).toBeVisible()
+  await expect(page.getByText('Reissue needed', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('trustweave-wallet-credentials'))).toBe(before)
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!).did)).not.toBe(holder.did)
+})

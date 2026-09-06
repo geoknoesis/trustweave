@@ -1,13 +1,13 @@
 package org.trustweave.did.events
 
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.model.DidDocument
-import kotlinx.datetime.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.Instant
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.model.DidDocument
 
 /**
  * DID Event Bus.
@@ -50,14 +50,14 @@ interface DidEventBus {
      * Flow of DID events.
      */
     val events: Flow<DidEvent>
-    
+
     /**
      * Publish an event.
      *
      * @param event The event to publish
      */
     suspend fun publish(event: DidEvent)
-    
+
     /**
      * Subscribe to events of a specific type.
      *
@@ -75,21 +75,23 @@ sealed class DidEvent {
      * The DID associated with this event.
      */
     abstract val did: Did
-    
+
     /**
      * Timestamp when the event occurred.
      */
     abstract val timestamp: Instant
-    
+
     /**
      * DID was created.
      */
     data class Created(
         override val did: Did,
         val document: DidDocument? = null,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * DID was updated.
      */
@@ -97,52 +99,64 @@ sealed class DidEvent {
         override val did: Did,
         val previousDocument: DidDocument? = null,
         val updatedDocument: DidDocument? = null,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * DID was deactivated.
      */
     data class Deactivated(
         override val did: Did,
         val document: DidDocument? = null,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * Verification method was added.
      */
     data class VerificationMethodAdded(
         override val did: Did,
         val methodId: String,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * Verification method was removed.
      */
     data class VerificationMethodRemoved(
         override val did: Did,
         val methodId: String,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * Service was added.
      */
     data class ServiceAdded(
         override val did: Did,
         val serviceId: String,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
-    
+
     /**
      * Service was removed.
      */
     data class ServiceRemoved(
         override val did: Did,
         val serviceId: String,
-        override val timestamp: Instant = kotlinx.datetime.Clock.System.now()
+        override val timestamp: Instant =
+            kotlinx.datetime.Clock.System
+                .now(),
     ) : DidEvent()
 }
 
@@ -150,27 +164,25 @@ sealed class DidEvent {
  * Default implementation of DID event bus using Kotlin Flow.
  */
 class DefaultDidEventBus : DidEventBus {
-    private val _events = MutableSharedFlow<DidEvent>(
-        replay = 0,
-        extraBufferCapacity = 64
-    )
-    
+    private val _events =
+        MutableSharedFlow<DidEvent>(
+            replay = 0,
+            extraBufferCapacity = 64,
+        )
+
     override val events: Flow<DidEvent> = _events.asSharedFlow()
-    
+
     override suspend fun publish(event: DidEvent) {
         _events.emit(event)
     }
-    
-    override fun <T : DidEvent> subscribe(eventType: Class<T>): Flow<T> {
-        return events.filter { eventType.isInstance(it) }
+
+    override fun <T : DidEvent> subscribe(eventType: Class<T>): Flow<T> =
+        events
+            .filter { eventType.isInstance(it) }
             .map { it as T }
-    }
 }
 
 /**
  * Extension function for type-safe event subscription.
  */
-inline fun <reified T : DidEvent> DidEventBus.subscribe(): Flow<T> {
-    return subscribe(T::class.java)
-}
-
+inline fun <reified T : DidEvent> DidEventBus.subscribe(): Flow<T> = subscribe(T::class.java)

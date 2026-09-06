@@ -1,0 +1,483 @@
+public final class org/trustweave/godiddy/GodiddyClient {
+	public fun <init> (Lorg/trustweave/godiddy/GodiddyConfig;)V
+	public final fun close ()V
+	public final fun getJson (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun postJson (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/godiddy/GodiddyConfig {
+	public static final field Companion Lorg/trustweave/godiddy/GodiddyConfig$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;JLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;JLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;JLjava/lang/String;)Lorg/trustweave/godiddy/GodiddyConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/GodiddyConfig;Ljava/lang/String;JLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/godiddy/GodiddyConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getTimeout ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/godiddy/GodiddyConfig$Companion {
+	public final fun default ()Lorg/trustweave/godiddy/GodiddyConfig;
+	public final fun fromOptions (Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/godiddy/GodiddyConfig;
+}
+
+public final class org/trustweave/godiddy/GodiddyIntegration {
+	public static final field INSTANCE Lorg/trustweave/godiddy/GodiddyIntegration;
+	public final fun discoverAndRegister (Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/godiddy/GodiddyIntegration;Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+	public final fun setup (Ljava/lang/String;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+	public static synthetic fun setup$default (Lorg/trustweave/godiddy/GodiddyIntegration;Ljava/lang/String;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+}
+
+public final class org/trustweave/godiddy/GodiddyIntegrationResult {
+	public fun <init> (Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/resolver/UniversalResolver;Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;Lorg/trustweave/godiddy/issuer/GodiddyIssuer;Lorg/trustweave/godiddy/verifier/GodiddyVerifier;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/resolver/UniversalResolver;Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;Lorg/trustweave/godiddy/issuer/GodiddyIssuer;Lorg/trustweave/godiddy/verifier/GodiddyVerifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lorg/trustweave/did/resolver/UniversalResolver;
+	public final fun component4 ()Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;
+	public final fun component5 ()Lorg/trustweave/godiddy/issuer/GodiddyIssuer;
+	public final fun component6 ()Lorg/trustweave/godiddy/verifier/GodiddyVerifier;
+	public final fun copy (Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/resolver/UniversalResolver;Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;Lorg/trustweave/godiddy/issuer/GodiddyIssuer;Lorg/trustweave/godiddy/verifier/GodiddyVerifier;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/GodiddyIntegrationResult;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;Lorg/trustweave/did/resolver/UniversalResolver;Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;Lorg/trustweave/godiddy/issuer/GodiddyIssuer;Lorg/trustweave/godiddy/verifier/GodiddyVerifier;ILjava/lang/Object;)Lorg/trustweave/godiddy/GodiddyIntegrationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIssuer ()Lorg/trustweave/godiddy/issuer/GodiddyIssuer;
+	public final fun getRegisteredDidMethods ()Ljava/util/List;
+	public final fun getRegistrar ()Lorg/trustweave/godiddy/registrar/GodiddyRegistrar;
+	public final fun getRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun getResolver ()Lorg/trustweave/did/resolver/UniversalResolver;
+	public final fun getVerifier ()Lorg/trustweave/godiddy/verifier/GodiddyVerifier;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/godiddy/did/GodiddyDidMethod : org/trustweave/did/DidMethod {
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/UniversalResolver;Lorg/trustweave/did/registrar/DidRegistrar;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	public fun getMethod ()Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/godiddy/issuer/GodiddyIssuer {
+	public fun <init> (Lorg/trustweave/godiddy/GodiddyClient;)V
+	public final fun issueCredential (Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun issueCredential$default (Lorg/trustweave/godiddy/issuer/GodiddyIssuer;Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyCreateDidRequest {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyCreateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyCreateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyCreateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyCreateDidResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getDidDocument ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getJobId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyCreateDidResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyCreateDidResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyCreateDidResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyDeactivateDidRequest {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyDeactivateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyDeactivateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyDeactivateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyErrorResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyErrorResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/godiddy/models/GodiddyErrorResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyErrorResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyErrorResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyErrorResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyErrorResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyErrorResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyErrorResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyIssueCredentialRequest {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest$Companion;
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredential ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyIssueCredentialRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyIssueCredentialRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyIssueCredentialRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyIssueCredentialResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredential ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getError ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyIssueCredentialResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyIssueCredentialResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyIssueCredentialResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyOperationResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyOperationResponse$Companion;
+	public fun <init> (ZLjava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (ZLjava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/godiddy/models/GodiddyOperationResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyOperationResponse;ZLjava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyOperationResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getDidDocument ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getJobId ()Ljava/lang/String;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyOperationResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyOperationResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyOperationResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyOperationResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyOperationResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyResolutionResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyResolutionResponse$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyResolutionResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyResolutionResponse;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyResolutionResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidDocument ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getDidDocumentMetadata ()Ljava/util/Map;
+	public final fun getDidResolutionMetadata ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyResolutionResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyResolutionResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyResolutionResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyResolutionResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyResolutionResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyUpdateDidRequest {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getDidDocument ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyUpdateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyUpdateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyUpdateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyVerifyCredentialRequest {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest$Companion;
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest;Lkotlinx/serialization/json/JsonElement;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredential ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyVerifyCredentialRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyVerifyCredentialRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyVerifyCredentialResponse {
+	public static final field Companion Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse$Companion;
+	public fun <init> (ZLjava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (ZLjava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (ZLjava/lang/String;Ljava/util/Map;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse;ZLjava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecks ()Ljava/util/Map;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/godiddy/models/GodiddyVerifyCredentialResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/godiddy/models/GodiddyVerifyCredentialResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/models/GodiddyVerifyCredentialResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/godiddy/registrar/GodiddyRegistrar : org/trustweave/did/registrar/DidRegistrar {
+	public fun <init> (Lorg/trustweave/godiddy/GodiddyClient;)V
+	public fun createDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/godiddy/resolver/GodiddyProtocolAdapter : org/trustweave/did/resolver/UniversalResolverProtocolAdapter {
+	public fun <init> ()V
+	public fun buildMethodsUrl (Ljava/lang/String;)Ljava/lang/String;
+	public fun buildResolveUrl (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun configureAuth (Ljava/net/http/HttpRequest$Builder;Ljava/lang/String;)V
+	public fun extractDidDocument (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun extractDocumentMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun extractResolutionMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun getProviderName ()Ljava/lang/String;
+}
+
+public final class org/trustweave/godiddy/resolver/GodiddyResolver : org/trustweave/did/resolver/UniversalResolver {
+	public fun <init> (Lorg/trustweave/godiddy/GodiddyClient;)V
+	public fun getBaseUrl ()Ljava/lang/String;
+	public fun getSupportedMethods (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/godiddy/spi/GodiddyDidMethodProvider : org/trustweave/did/spi/DidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getPriority ()I
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedMethods ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/godiddy/verifier/CredentialVerificationResult {
+	public fun <init> (ZLjava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (ZLjava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (ZLjava/lang/String;Ljava/util/Map;)Lorg/trustweave/godiddy/verifier/CredentialVerificationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/godiddy/verifier/CredentialVerificationResult;ZLjava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/godiddy/verifier/CredentialVerificationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecks ()Ljava/util/Map;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/godiddy/verifier/GodiddyVerifier {
+	public fun <init> (Lorg/trustweave/godiddy/GodiddyClient;)V
+	public final fun verifyCredential (Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyCredential$default (Lorg/trustweave/godiddy/verifier/GodiddyVerifier;Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+

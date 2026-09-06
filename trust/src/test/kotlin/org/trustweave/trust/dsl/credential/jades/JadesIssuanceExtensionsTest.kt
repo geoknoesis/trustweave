@@ -23,9 +23,7 @@ import kotlin.test.assertTrue
  * DSL→options-map projection.
  */
 class JadesIssuanceExtensionsTest {
-
-    private fun newBuilder(): IssuanceBuilder =
-        IssuanceBuilder(credentialService = createTestCredentialService())
+    private fun newBuilder(): IssuanceBuilder = IssuanceBuilder(credentialService = createTestCredentialService())
 
     private fun cert(seed: Byte): ByteArray = ByteArray(8) { (seed + it).toByte() }
 
@@ -102,24 +100,26 @@ class JadesIssuanceExtensionsTest {
     @Test
     fun `withJadesProfile rejects empty signer certificate chain`() {
         val builder = newBuilder()
-        val ex = assertFailsWith<IllegalArgumentException> {
-            builder.withJadesProfile(
-                profile = JadesProfile.B_B,
-                signerCertificateChain = emptyList(),
-            )
-        }
+        val ex =
+            assertFailsWith<IllegalArgumentException> {
+                builder.withJadesProfile(
+                    profile = JadesProfile.B_B,
+                    signerCertificateChain = emptyList(),
+                )
+            }
         assertTrue(ex.message!!.contains("signerCertificateChain"))
     }
 
     @Test
     fun `withJadesProfile B_T without tsaConfig is rejected`() {
         val builder = newBuilder()
-        val ex = assertFailsWith<IllegalArgumentException> {
-            builder.withJadesProfile(
-                profile = JadesProfile.B_T,
-                signerCertificateChain = listOf(cert(1)),
-            )
-        }
+        val ex =
+            assertFailsWith<IllegalArgumentException> {
+                builder.withJadesProfile(
+                    profile = JadesProfile.B_T,
+                    signerCertificateChain = listOf(cert(1)),
+                )
+            }
         assertTrue(ex.message!!.contains("B_T"))
     }
 

@@ -1,12 +1,27 @@
 package org.trustweave.credential.schema.internal
 
-import org.trustweave.credential.model.vc.VerifiableCredential
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 import org.trustweave.credential.model.Claims
 import org.trustweave.credential.model.SchemaFormat
-import org.trustweave.credential.schema.SchemaValidator
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.schema.SchemaValidationError
 import org.trustweave.credential.schema.SchemaValidationResult
-import kotlinx.serialization.json.*
+import org.trustweave.credential.schema.SchemaValidator
 
 /**
  * JSON Schema validator.
@@ -61,13 +76,17 @@ internal class JsonSchemaValidator : SchemaValidator {
     // Core recursive validation
     // -------------------------------------------------------------------------
 
-    private fun validateValue(value: JsonElement, schema: JsonObject, path: String): List<SchemaValidationError> {
+    private fun validateValue(
+        value: JsonElement,
+        schema: JsonObject,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
         // const
         val const = schema["const"]
         if (const != null && value != const) {
-            errors.add(err(path, "Value must equal const ${const}", "const_mismatch"))
+            errors.add(err(path, "Value must equal const $const", "const_mismatch"))
         }
 
         // enum
@@ -100,7 +119,11 @@ internal class JsonSchemaValidator : SchemaValidator {
         return errors
     }
 
-    private fun validateObject(obj: JsonObject, schema: JsonObject, path: String): List<SchemaValidationError> {
+    private fun validateObject(
+        obj: JsonObject,
+        schema: JsonObject,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
         val properties = schema["properties"]?.jsonObject
         val required = schema["required"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
@@ -136,7 +159,11 @@ internal class JsonSchemaValidator : SchemaValidator {
         return errors
     }
 
-    private fun validateArray(arr: JsonArray, schema: JsonObject, path: String): List<SchemaValidationError> {
+    private fun validateArray(
+        arr: JsonArray,
+        schema: JsonObject,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
         schema["minItems"]?.jsonPrimitive?.intOrNull?.let { min ->
@@ -163,7 +190,11 @@ internal class JsonSchemaValidator : SchemaValidator {
         return errors
     }
 
-    private fun validatePrimitive(value: JsonPrimitive, schema: JsonObject, path: String): List<SchemaValidationError> {
+    private fun validatePrimitive(
+        value: JsonPrimitive,
+        schema: JsonObject,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
         if (value.isString) {
@@ -209,7 +240,11 @@ internal class JsonSchemaValidator : SchemaValidator {
         return errors
     }
 
-    private fun validateComposition(value: JsonElement, schema: JsonObject, path: String): List<SchemaValidationError> {
+    private fun validateComposition(
+        value: JsonElement,
+        schema: JsonObject,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
         schema["allOf"]?.jsonArray?.let { schemas ->
@@ -237,24 +272,33 @@ internal class JsonSchemaValidator : SchemaValidator {
         return errors
     }
 
-    private fun validateFormat(str: String, format: String, path: String): List<SchemaValidationError> {
+    private fun validateFormat(
+        str: String,
+        format: String,
+        path: String,
+    ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
         when (format) {
-            "email" -> if (!str.matches(Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))) {
-                errors.add(err(path, "Value must be a valid email address", "format_email"))
-            }
-            "uri", "iri" -> if (!str.matches(Regex("^[a-zA-Z][a-zA-Z0-9+\\-.]*:.*"))) {
-                errors.add(err(path, "Value must be a valid URI", "format_uri"))
-            }
-            "date" -> if (!str.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
-                errors.add(err(path, "Value must be a valid date (YYYY-MM-DD)", "format_date"))
-            }
-            "date-time" -> if (!str.matches(Regex("^\\d{4}-\\d{2}-\\d{2}T.*"))) {
-                errors.add(err(path, "Value must be a valid date-time (ISO 8601)", "format_date_time"))
-            }
-            "uuid" -> if (!str.matches(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))) {
-                errors.add(err(path, "Value must be a valid UUID", "format_uuid"))
-            }
+            "email" ->
+                if (!str.matches(Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))) {
+                    errors.add(err(path, "Value must be a valid email address", "format_email"))
+                }
+            "uri", "iri" ->
+                if (!str.matches(Regex("^[a-zA-Z][a-zA-Z0-9+\\-.]*:.*"))) {
+                    errors.add(err(path, "Value must be a valid URI", "format_uri"))
+                }
+            "date" ->
+                if (!str.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
+                    errors.add(err(path, "Value must be a valid date (YYYY-MM-DD)", "format_date"))
+                }
+            "date-time" ->
+                if (!str.matches(Regex("^\\d{4}-\\d{2}-\\d{2}T.*"))) {
+                    errors.add(err(path, "Value must be a valid date-time (ISO 8601)", "format_date_time"))
+                }
+            "uuid" ->
+                if (!str.matches(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))) {
+                    errors.add(err(path, "Value must be a valid UUID", "format_uuid"))
+                }
         }
         return errors
     }
@@ -263,25 +307,34 @@ internal class JsonSchemaValidator : SchemaValidator {
     // Utilities
     // -------------------------------------------------------------------------
 
-    private fun jsonType(element: JsonElement): String = when (element) {
-        is JsonObject -> "object"
-        is JsonArray -> "array"
-        is JsonNull -> "null"
-        is JsonPrimitive -> when {
-            element.isString -> "string"
-            element.booleanOrNull != null -> "boolean"
-            element.longOrNull != null -> "integer"
-            element.doubleOrNull != null -> "number"
-            else -> "string"
+    private fun jsonType(element: JsonElement): String =
+        when (element) {
+            is JsonObject -> "object"
+            is JsonArray -> "array"
+            is JsonNull -> "null"
+            is JsonPrimitive ->
+                when {
+                    element.isString -> "string"
+                    element.booleanOrNull != null -> "boolean"
+                    element.longOrNull != null -> "integer"
+                    element.doubleOrNull != null -> "number"
+                    else -> "string"
+                }
         }
-    }
 
-    private fun typeCompatible(actual: String, expected: String): Boolean = when {
-        actual == expected -> true
-        actual == "integer" && expected == "number" -> true
-        else -> false
-    }
+    private fun typeCompatible(
+        actual: String,
+        expected: String,
+    ): Boolean =
+        when {
+            actual == expected -> true
+            actual == "integer" && expected == "number" -> true
+            else -> false
+        }
 
-    private fun err(path: String, message: String, code: String) =
-        SchemaValidationError(path = path, message = message, code = code)
+    private fun err(
+        path: String,
+        message: String,
+        code: String,
+    ) = SchemaValidationError(path = path, message = message, code = code)
 }

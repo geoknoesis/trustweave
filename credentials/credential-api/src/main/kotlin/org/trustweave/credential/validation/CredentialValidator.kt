@@ -1,11 +1,9 @@
 package org.trustweave.credential.validation
 
+import kotlinx.serialization.json.JsonNull
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.getFormatId
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.core.identifiers.Iri
 import org.trustweave.did.identifiers.Did
-import kotlinx.serialization.json.JsonNull
 
 /**
  * Verifiable Credential validation utilities.
@@ -28,7 +26,7 @@ object CredentialValidator {
                 code = "MISSING_VERIFIABLE_CREDENTIAL_TYPE",
                 message = "Credential type must include 'VerifiableCredential'",
                 field = "type",
-                value = credential.type.map { it.value }
+                value = credential.type.map { it.value },
             )
         }
 
@@ -39,7 +37,7 @@ object CredentialValidator {
                 code = "MISSING_ISSUER",
                 message = "Credential issuer is required",
                 field = "issuer",
-                value = issuerIri.value
+                value = issuerIri.value,
             )
         }
 
@@ -52,7 +50,7 @@ object CredentialValidator {
                     code = "INVALID_ISSUER_DID",
                     message = "Invalid issuer DID format: ${e.message}",
                     field = "issuer",
-                    value = issuerIri.value
+                    value = issuerIri.value,
                 )
             }
         }
@@ -69,7 +67,7 @@ object CredentialValidator {
                     code = "INVALID_SUBJECT_DID",
                     message = "Invalid subject DID format: ${e.message}",
                     field = "credentialSubject.id",
-                    value = subjectId.value
+                    value = subjectId.value,
                 )
             }
         }
@@ -81,7 +79,7 @@ object CredentialValidator {
                     code = "NULL_CLAIM_VALUE",
                     message = "Claim '$key' cannot be null",
                     field = "credentialSubject.claims.$key",
-                    value = null
+                    value = null,
                 )
             }
         }
@@ -92,7 +90,7 @@ object CredentialValidator {
                 code = "MISSING_PROOF",
                 message = "Credential proof is required",
                 field = "proof",
-                value = null
+                value = null,
             )
         }
 
@@ -103,7 +101,7 @@ object CredentialValidator {
                 code = "MISSING_PROOF_FORMAT",
                 message = "Credential proof format could not be determined",
                 field = "proof",
-                value = null
+                value = null,
             )
         }
 
@@ -122,7 +120,7 @@ object CredentialValidator {
                 code = "MISSING_PROOF",
                 message = "Credential must have a proof",
                 field = "proof",
-                value = null
+                value = null,
             )
         }
 
@@ -132,7 +130,7 @@ object CredentialValidator {
                 code = "MISSING_PROOF_FORMAT",
                 message = "Credential must have a proof with valid format",
                 field = "proof",
-                value = null
+                value = null,
             )
         }
 
@@ -148,7 +146,7 @@ sealed class ValidationResult {
      * Validation passed.
      */
     object Valid : ValidationResult()
-    
+
     /**
      * Validation failed.
      */
@@ -156,14 +154,14 @@ sealed class ValidationResult {
         val code: String,
         val message: String,
         val field: String? = null,
-        val value: Any? = null
+        val value: Any? = null,
     ) : ValidationResult()
-    
+
     /**
      * Check if validation passed.
      */
     fun isValid(): Boolean = this is Valid
-    
+
     /**
      * Get error message if validation failed.
      */

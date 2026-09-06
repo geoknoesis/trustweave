@@ -13,7 +13,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DidResolutionResultJsonTest {
-
     private val did = Did("did:example:123456789abcdefghi")
 
     @Test
@@ -23,9 +22,10 @@ class DidResolutionResultJsonTest {
 
     @Test
     fun `a success carries all three members`() {
-        val json = DidResolutionResultJson.toJson(
-            DidResolutionResult.Success(DidDocument(id = did))
-        )
+        val json =
+            DidResolutionResultJson.toJson(
+                DidResolutionResult.Success(DidDocument(id = did)),
+            )
         assertTrue(json.containsKey("didDocument"))
         assertTrue(json.containsKey("didResolutionMetadata"))
         assertTrue(json.containsKey("didDocumentMetadata"))
@@ -39,15 +39,16 @@ class DidResolutionResultJsonTest {
         assertTrue(json["didDocumentMetadata"]!!.jsonObject.isEmpty())
         assertEquals(
             JsonPrimitive(DidErrorType.NOT_FOUND),
-            json["didResolutionMetadata"]!!.jsonObject["error"]!!.jsonObject["type"]
+            json["didResolutionMetadata"]!!.jsonObject["error"]!!.jsonObject["type"],
         )
     }
 
     @Test
     fun `a deactivated result has a null document and deactivated metadata`() {
-        val json = DidResolutionResultJson.toJson(
-            DidResolutionResult.Deactivated(did, DidDocumentMetadata(deactivated = true))
-        )
+        val json =
+            DidResolutionResultJson.toJson(
+                DidResolutionResult.Deactivated(did, DidDocumentMetadata(deactivated = true)),
+            )
         assertEquals(JsonNull, json["didDocument"])
         assertEquals(JsonPrimitive(true), json["didDocumentMetadata"]!!.jsonObject["deactivated"])
         assertTrue(json["didResolutionMetadata"]!!.jsonObject["error"] == null)

@@ -16,6 +16,7 @@ The **TrustWeave** class is the main entry point (facade pattern). It provides a
 
 **Example:**
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.getOrThrowDid

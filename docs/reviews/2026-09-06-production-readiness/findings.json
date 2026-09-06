@@ -1,0 +1,162 @@
+[
+  {
+    "id": "PR2-B1",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "CI on main has been red since 2026-08-23; lint fails before anything else runs",
+    "file": ".github/workflows/ci.yml",
+    "line": 56,
+    "evidence": "gh run list --workflow ci.yml: every run on main since 2026-08-23 concluded failure; run 33264669629 (2d8f8989) fails at 'Lint with ktlint' on :did:plugins:ens:ktlintKotlinScriptCheck. Local ./gradlew ktlintCheck on the working tree: 218 violations in 13 files (TrustWeaveFactory 58, TrustWeave 32, PeerDidMethodTest 67, IndyVdrProxyTransport 14 + test 20, credential-api build script 8, btcr/tezos/threebox tests 4 each, did-core/ens/ion/polygon build scripts).",
+    "impact": "The build, test, checkKotlinAbi, Kover and CycloneDX steps added in this diff have never executed on CI. Green nightly conformance runs are the only automated evidence and they do not cover the SDK build."
+  },
+  {
+    "id": "PR2-B2",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "Stale ServiceLoader entries for optimism and zksync",
+    "file": "anchors/plugins/optimism/src/main/resources/META-INF/services/org.trustweave.anchor.spi.BlockchainAnchorClientProvider",
+    "line": 1,
+    "evidence": "Files name org.trustweave.chain.optimism.OptimismIntegration and org.trustweave.chain.zksync.ZkSyncIntegration; the only packages under those modules are org.trustweave.anchor.optimism and org.trustweave.anchor.zksync. The diff fixed arbitrum and base but not these two.",
+    "impact": "ServiceLoader.load(BlockchainAnchorClientProvider) throws ServiceConfigurationError while iterating on any classpath that includes either jar (distribution:all), which breaks discovery of providers iterated after the broken entry."
+  },
+  {
+    "id": "PR2-B3",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "OpenID Federation trust chain verified in the wrong direction; leaf never signature-checked; alg=none accepted",
+    "file": "credentials/plugins/openid-federation/src/main/kotlin/org/trustweave/credential/federation/TrustChainResolver.kt",
+    "line": 142,
+    "evidence": "verifyChain: for i in 0 until size-1, verify(statements[i+1], parsed[i].jwks). The resolver builds statements as [leaf EC, subordinate statement, ..., anchor]. OpenID Federation 1.0 section 10.2 verifies ES[j] with ES[j+1].jwks. statements[0] is never verified. EntityStatementJwtProcessor.parse accepts PlainJWT. TrustChainResolverTest has no positive-path chain test, only empty/expired/unparseable cases.",
+    "impact": "A genuine chain fails; an attacker serving an unsigned leaf entity configuration whose jwks lists the trust anchor key passes. Module is Experimental per module-maturity.md but is shipped and wired into FederationExchangeProtocol."
+  },
+  {
+    "id": "PR2-B4",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "FileWallet listing throws for any relative or non-normalized storage path",
+    "file": "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt",
+    "line": 403,
+    "evidence": "readRecord: check(resolveDataFile(credentialsDir, handle) == path). resolveDataFile returns dir.toAbsolutePath().normalize().resolve(name); recordPaths() returns Files.list(credentialsDir) entries, which keep the un-normalized form. FileWalletFactory builds walletDir = Paths.get(storagePath, id). Path.equals compares textual form. Tests use @TempDir only.",
+    "impact": "store() succeeds but list/listRecords/query/getStatistics throw IllegalStateException for every record; recoverRecords reports every record as failed. Regression introduced by this diff."
+  },
+  {
+    "id": "PR2-B5",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "Verifiable Intent: L3 aud/nonce unchecked; budget counted as checked; negative amounts accepted",
+    "file": "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt",
+    "line": 360,
+    "evidence": "audNonce() is called once, for L2 (line 96). verifyL3 has no expected aud/nonce parameters. The Python reference (c:/tmp/verifiable-intent chain.py:137-140, tests/test_aud_nonce.py:310) checks expected_l3_payment_aud/nonce and expected_l3_checkout_aud/nonce. ConstraintChecker line 89 still appends Budget/Recurrence/AgentRecurrence/Reference to checked (TW-R13-01). checkAmount accepts amount=-1 under a max-only range and Constraint.parse defaults currency to USD (TW-R13-02).",
+    "impact": "An L3 payment token can be replayed to any network within its 1 h lifetime; verifiers see constraints_satisfied for budgets nothing enforced."
+  },
+  {
+    "id": "PR2-B6",
+    "severity": "Blocker",
+    "verdict": "CONFIRMED",
+    "title": "Release controls cannot validate an uncommitted tree",
+    "file": ".github/workflows/release-evidence.yml",
+    "line": 24,
+    "evidence": "git status: 269 modified, 10 deleted, 165 untracked paths, 105 of them api/ ABI dumps required by checkKotlinAbi; 5 commits ahead of origin/main. gh release list is empty; tag v0.7.0 has no release or attestation.",
+    "impact": "If the ABI dumps are not staged with the code (the repo's habit is explicit-path staging), the first CI run fails on 'expected ABI dump does not exist'. No signed, attested artifact has ever been produced."
+  },
+  {
+    "id": "PR2-N1",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "revoked filter throws mid-iteration",
+    "file": "wallet/wallet-core/src/main/kotlin/org/trustweave/wallet/StoredCredentialRecord.kt",
+    "line": 40,
+    "evidence": "matchesOfflineStatusFilter: check(credential.credentialStatus == null) when filter.revoked != null. FileWallet:328 and DatabaseWallet:1169 carry the same check. No wallet factory accepts a WalletStatusResolver.",
+    "impact": "list(CredentialFilter(revoked=false)) throws IllegalStateException on the first status-bearing credential; DatabaseWallet re-wraps it as StorageError."
+  },
+  {
+    "id": "PR2-N2",
+    "severity": "Needed",
+    "verdict": "PLAUSIBLE",
+    "title": "Cloud listing aborts on concurrent delete; statistics paths are O(N)",
+    "file": "wallet/plugins/cloud/src/main/kotlin/org/trustweave/wallet/cloud/CloudWallet.kt",
+    "line": 140,
+    "evidence": "readRecord does error(\"Credential disappeared during listing\") when download() is null; old code skipped. listRecords downloads every object sequentially. DatabaseWallet.getStatistics (line 1283) calls list(null), which no longer carries a LIMIT, then resolves status per credential.",
+    "impact": "One benign race or one corrupt object fails every list/query/getStatistics call; a 50k-row wallet materialises 50k credentials for a count."
+  },
+  {
+    "id": "PR2-N3",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "Status-list server echoes exception messages and swallows cancellation",
+    "file": "credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutes.kt",
+    "line": 66,
+    "evidence": "Lines 63-66 and 101-104: catch (e: Exception) -> ErrorResponse(\"INTERNAL_ERROR\", e.message). Unchanged since TW-R13-03.",
+    "impact": "JDBC or KMS error text reaches anonymous clients."
+  },
+  {
+    "id": "PR2-N4",
+    "severity": "Needed",
+    "verdict": "PLAUSIBLE",
+    "title": "Transport gate applied inconsistently across anchors and KMS clients",
+    "file": "common/src/main/kotlin/org/trustweave/core/net/TransportSecurity.kt",
+    "line": 34,
+    "evidence": "requireSecureForPublicHosts is called from AbstractEvmAnchorClient and BitcoinBlockchainAnchorClient only. Algorand (algodToken), Cardano (Blockfrost project id), Indy proxy, Vault and Thales configs accept http:// to any host. java.net.URI(url).host is null for hostnames containing underscores, so docker-style names are refused as unparseable. Bitcoin throws raw IllegalArgumentException; EVM wraps to BlockchainException.ConfigurationFailed.",
+    "impact": "Secrets travel in plaintext on the ungated clients; documented in-cluster plaintext deployments with underscore hostnames fail to construct."
+  },
+  {
+    "id": "PR2-N5",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "Unbounded session state in sibling protocols; bounded store hard-fails",
+    "file": "credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/session/SessionStore.kt",
+    "line": 22,
+    "evidence": "InMemorySessionStore and SiopV2Service.sessions (line 100) are plain ConcurrentHashMaps with no expiry. Oidc4VciService offers use ExpiringExchangeStore, which throws IllegalStateException at capacity 1000 with no Oidc4VciException type. TrustChainResolver.resolveInternal bounds depth but not breadth or cycles.",
+    "impact": "Request floods grow memory without bound on oidc4vp/SIOP/CHAPI; a batch enrolment of 1000+ offers fails with an unchecked exception; a hostile federation leaf drives O(N^depth) fetches."
+  },
+  {
+    "id": "PR2-N6",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "Observability unchanged",
+    "file": "common/src/main/kotlin/org/trustweave/core/plugin/PluginRegistry.kt",
+    "line": 1,
+    "evidence": "35 of 777 main-source Kotlin files reference a logger; 648 catch (e: Exception|Throwable) sites; 6 empty catch blocks; no correlation-id, metrics or structured-logging guidance in docs.",
+    "impact": "Operators cannot diagnose provider failures from the library's own output."
+  },
+  {
+    "id": "PR2-N7",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "26 modules with main code and no test source",
+    "file": "docs/api-reference/module-maturity.md",
+    "line": 85,
+    "evidence": "Directory scan: anchors/plugins/starknet; credentials/plugins/{anchor,chapi,platforms/salesforce,platforms/servicenow,status-list/database}; did/plugins/{cheqd,ens,ion,plc,polygon,sol}; did/registrar-server-{ktor,spring}; kms/plugins/venafi; wallet/wallet-services; reference-wallet/android/app; 9 distribution/examples/scenarios modules. Federation verifyChain has no positive-path test; ChainVerifierKnownAnswerTest dropped the passing checkout-chain case.",
+    "impact": "Kover merged coverage will report these as zero; the ABI gate freezes APIs that nothing exercises."
+  },
+  {
+    "id": "PR2-N8",
+    "severity": "Needed",
+    "verdict": "PLAUSIBLE",
+    "title": "Reference wallet flows broken by this diff (demo scope)",
+    "file": "reference-wallet/lib/wallet.ts",
+    "line": 359,
+    "evidence": "trustweave_claim_keys is written at wallet.ts:359 and read nowhere outside tests; app/present/page.tsx:53 initialises every disclosure to false while demo-sf-airspace.ts requires trustDomainId and activityType; restoreCredentials accepts version '2' only while the recovery export writes the raw stored version; resetWallet awaits clearHolderKeys before touching localStorage; enrollPasskey rejects BE/BS credentials after create().",
+    "impact": "Encrypted portrait disclosure, the airspace gate demo, recovery and passkey enrollment regress. reference-wallet/README.md states the wallets are not production custody products, so this is weighted as demo scope."
+  },
+  {
+    "id": "PR2-N9",
+    "severity": "Needed",
+    "verdict": "CONFIRMED",
+    "title": "Docs workflow left unpinned and weakened",
+    "file": ".github/workflows/docs-check.yml",
+    "line": 37,
+    "evidence": "docs-check.yml uses checkout@v4/setup-java@v4 tags while ci.yml and release-evidence.yml are SHA-pinned; the blocking module-name check was removed and scripts/check-documentation.py does not restore it; the workflow now triggers on **/*.kt and runs all 24 example mains.",
+    "impact": "A workflow that runs on nearly every PR executes mutable third-party actions."
+  },
+  {
+    "id": "PR2-N10",
+    "severity": "Needed",
+    "verdict": "PLAUSIBLE",
+    "title": "Deployment policy has a bypass and cannot admit any wallet",
+    "file": "testkit/src/main/kotlin/org/trustweave/testkit/services/TestkitWalletFactory.kt",
+    "line": 17,
+    "evidence": "validateDeployment is called in File/Database/Cloud factories only; TestkitWalletFactory (the default quickStart wiring) ignores it. Every catalogued wallet plugin is 'experimental', so SUPPORTED_ONLY constructs nothing. PluginRegistry.requireOperations requireNotNull's the catalog entry, so uncatalogued modules are rejected with 'No assessed capabilities'.",
+    "impact": "The policy gives a false sense of enforcement and blocks legitimate registration."
+  }
+]

@@ -1,42 +1,50 @@
 package org.trustweave.credential.proof.internal.engines
 
-import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.internal.CredentialConstants
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.credential.model.vc.CredentialProof
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.spi.proof.ProofEngine
-import org.trustweave.credential.spi.proof.ProofEngineCapabilities
-import org.trustweave.credential.spi.proof.ProofEngineConfig
-import org.trustweave.credential.spi.status.CredentialStatusChecker
-import org.trustweave.credential.spi.status.CredentialStatusCheckResult
-import org.trustweave.credential.requests.IssuanceRequest
-import org.trustweave.credential.requests.PresentationRequest
-import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.did.identifiers.Did
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.SignResult
 import com.nimbusds.jose.JOSEException
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.JWSSigner
-import com.nimbusds.jose.jwk.OctetKeyPair
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import java.security.MessageDigest
-import java.security.SecureRandom
-import java.security.SignatureException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import java.util.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.vc.CredentialProof
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.requests.PresentationRequest
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.spi.proof.ProofEngine
+import org.trustweave.credential.spi.proof.ProofEngineCapabilities
+import org.trustweave.credential.spi.proof.ProofEngineConfig
+import org.trustweave.credential.spi.status.CredentialStatusCheckResult
+import org.trustweave.credential.spi.status.CredentialStatusChecker
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.results.SignResult
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Base64
+import java.util.Date
+import java.util.UUID
 import java.time.Instant as JavaInstant
 
 /**
@@ -58,18 +66,18 @@ import java.time.Instant as JavaInstant
 internal class SdJwtProofEngine(
     private val config: ProofEngineConfig = ProofEngineConfig(),
 ) : ProofEngine {
-
     override val format = ProofSuiteId.SD_JWT_VC
     override val formatName = "SD-JWT-VC"
     override val formatVersion = "draft-ietf-oauth-sd-jwt-vc-04"
 
-    override val capabilities = ProofEngineCapabilities(
-        selectiveDisclosure = true,
-        zeroKnowledge = false,
-        revocation = true,
-        presentation = true,
-        predicates = false,
-    )
+    override val capabilities =
+        ProofEngineCapabilities(
+            selectiveDisclosure = true,
+            zeroKnowledge = false,
+            revocation = true,
+            presentation = true,
+            predicates = false,
+        )
 
     private val b64url = Base64.getUrlEncoder().withoutPadding()
     private val b64urlDec = Base64.getUrlDecoder()
@@ -84,15 +92,17 @@ internal class SdJwtProofEngine(
             "Request format ${request.format.value} does not match engine format ${format.value}"
         }
 
-        val issuerIri = request.issuer.let { issuer ->
-            when (issuer) {
-                is Issuer.IriIssuer -> issuer.id
-                is Issuer.ObjectIssuer -> issuer.id
+        val issuerIri =
+            request.issuer.let { issuer ->
+                when (issuer) {
+                    is Issuer.IriIssuer -> issuer.id
+                    is Issuer.ObjectIssuer -> issuer.id
+                }
             }
-        }
 
-        val keyId = ProofEngineUtils.extractKeyId(request.issuerKeyId?.value)
-            ?: throw IllegalArgumentException("issuerKeyId is required for SD-JWT-VC signing")
+        val keyId =
+            ProofEngineUtils.extractKeyId(request.issuerKeyId?.value)
+                ?: throw IllegalArgumentException("issuerKeyId is required for SD-JWT-VC signing")
 
         // Build per-claim disclosures
         val disclosures = mutableListOf<String>()
@@ -105,14 +115,18 @@ internal class SdJwtProofEngine(
         }
 
         val now = JavaInstant.now()
-        val claimsBuilder = JWTClaimsSet.Builder()
-            .issuer(issuerIri.value)
-            .subject(request.credentialSubject.id?.value ?: "")
-            .issueTime(Date.from(now))
-            .claim("_sd_alg", "sha-256")
-            .claim("vct", request.type.firstOrNull { it.value != "VerifiableCredential" }?.value
-                ?: "VerifiableCredential")
-            .claim("vc", buildVcClaim(request, sdHashes))
+        val claimsBuilder =
+            JWTClaimsSet
+                .Builder()
+                .issuer(issuerIri.value)
+                .subject(request.credentialSubject.id?.value ?: "")
+                .issueTime(Date.from(now))
+                .claim("_sd_alg", "sha-256")
+                .claim(
+                    "vct",
+                    request.type.firstOrNull { it.value != "VerifiableCredential" }?.value
+                        ?: "VerifiableCredential",
+                ).claim("vc", buildVcClaim(request, sdHashes))
 
         request.validUntil?.let {
             claimsBuilder.expirationTime(Date.from(JavaInstant.ofEpochSecond(it.epochSeconds)))
@@ -133,16 +147,18 @@ internal class SdJwtProofEngine(
 
         val header = JWSHeader.Builder(JWSAlgorithm.EdDSA).keyID(keyId).build()
         val signedJWT = SignedJWT(header, claimsBuilder.build())
-        val signer = getSigner(keyId)
-            ?: throw IllegalArgumentException(
-                "No signer available for key $keyId. Configure KMS via ProofEngineConfig.",
-            )
+        val signer =
+            getSigner(keyId)
+                ?: throw IllegalArgumentException(
+                    "No signer available for key $keyId. Configure KMS via ProofEngineConfig.",
+                )
         signedJWT.sign(signer)
 
-        val proof = CredentialProof.SdJwtVcProof(
-            sdJwtVc = signedJWT.serialize(),
-            disclosures = disclosures.toList(),
-        )
+        val proof =
+            CredentialProof.SdJwtVcProof(
+                sdJwtVc = signedJWT.serialize(),
+                disclosures = disclosures.toList(),
+            )
 
         return VerifiableCredential(
             id = request.id ?: CredentialId("urn:uuid:${UUID.randomUUID()}"),
@@ -167,32 +183,35 @@ internal class SdJwtProofEngine(
         credential: VerifiableCredential,
         options: VerificationOptions,
     ): VerificationResult {
-        val proof = credential.proof as? CredentialProof.SdJwtVcProof
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "SD-JWT-VC credential must have SdJwtVcProof",
-                errors = listOf("Expected SdJwtVcProof but got ${credential.proof?.javaClass?.simpleName}"),
-                warnings = emptyList(),
-            )
+        val proof =
+            credential.proof as? CredentialProof.SdJwtVcProof
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "SD-JWT-VC credential must have SdJwtVcProof",
+                    errors = listOf("Expected SdJwtVcProof but got ${credential.proof?.javaClass?.simpleName}"),
+                    warnings = emptyList(),
+                )
 
         return try {
             // The sdJwtVc field may carry the full compact SD-JWT
             // (`<JWT>~<Disclosure 1>~...~[<KB-JWT>]`, e.g. after presentation); the
             // issuer-signed JWT is always the first '~'-separated segment.
             val signedJWT = SignedJWT.parse(proof.sdJwtVc.substringBefore("~"))
-            val issuerIri = when (val issuer = credential.issuer) {
-                is Issuer.IriIssuer -> issuer.id
-                is Issuer.ObjectIssuer -> issuer.id
-            }
+            val issuerIri =
+                when (val issuer = credential.issuer) {
+                    is Issuer.IriIssuer -> issuer.id
+                    is Issuer.ObjectIssuer -> issuer.id
+                }
 
-            val issuerVerificationMethod = getIssuerVerificationMethod(issuerIri, proof.sdJwtVc)
-                ?: return VerificationResult.Invalid.InvalidIssuer(
-                    credential = credential,
-                    issuerIri = issuerIri,
-                    reason = "Could not resolve issuer or get verification key",
-                    errors = listOf("Failed to resolve issuer: ${issuerIri.value}"),
-                    warnings = emptyList(),
-                )
+            val issuerVerificationMethod =
+                getIssuerVerificationMethod(issuerIri, proof.sdJwtVc)
+                    ?: return VerificationResult.Invalid.InvalidIssuer(
+                        credential = credential,
+                        issuerIri = issuerIri,
+                        reason = "Could not resolve issuer or get verification key",
+                        errors = listOf("Failed to resolve issuer: ${issuerIri.value}"),
+                        warnings = emptyList(),
+                    )
 
             if (!ProofEngineUtils.verifyEd25519Jws(signedJWT, issuerVerificationMethod)) {
                 return VerificationResult.Invalid.InvalidProof(
@@ -211,11 +230,13 @@ internal class SdJwtProofEngine(
                 return VerificationResult.Invalid.InvalidIssuer(
                     credential = credential,
                     issuerIri = issuerIri,
-                    reason = "Signed 'iss' claim does not match the credential envelope issuer " +
-                        "(possible envelope tampering)",
-                    errors = listOf(
-                        "Signed iss '${claimsSet.issuer}' does not match envelope issuer '${issuerIri.value}'",
-                    ),
+                    reason =
+                        "Signed 'iss' claim does not match the credential envelope issuer " +
+                            "(possible envelope tampering)",
+                    errors =
+                        listOf(
+                            "Signed iss '${claimsSet.issuer}' does not match envelope issuer '${issuerIri.value}'",
+                        ),
                     warnings = emptyList(),
                 )
             }
@@ -240,13 +261,14 @@ internal class SdJwtProofEngine(
                             warnings = emptyList(),
                         )
                     }
-                    val parsed = parseDisclosure(discB64)
-                        ?: return VerificationResult.Invalid.InvalidProof(
-                            credential = credential,
-                            reason = "Malformed disclosure",
-                            errors = listOf("Disclosure could not be decoded as [salt, name, value]"),
-                            warnings = emptyList(),
-                        )
+                    val parsed =
+                        parseDisclosure(discB64)
+                            ?: return VerificationResult.Invalid.InvalidProof(
+                                credential = credential,
+                                reason = "Malformed disclosure",
+                                errors = listOf("Disclosure could not be decoded as [salt, name, value]"),
+                                warnings = emptyList(),
+                            )
                     disclosedClaims[parsed.first] = parsed.second
                 }
             }
@@ -255,17 +277,22 @@ internal class SdJwtProofEngine(
             // disclosure or a non-selectively-disclosed signed claim — name AND value.
             reconcileEnvelopeClaims(credential, signedJWT, disclosedClaims)?.let { return it }
 
-            val subjectIri = claimsSet.subject?.takeIf { it.isNotBlank() }?.let { Iri(it) }
-                ?: credential.credentialSubject.id
+            val subjectIri =
+                claimsSet.subject?.takeIf { it.isNotBlank() }?.let { Iri(it) }
+                    ?: credential.credentialSubject.id
             val issuedAt: kotlinx.datetime.Instant =
-                claimsSet.issueTime?.toInstant()
+                claimsSet.issueTime
+                    ?.toInstant()
                     ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
                     ?: credential.issuanceDate
                     ?: credential.validFrom
-                    ?: kotlinx.datetime.Clock.System.now()
-            val expiresAt = claimsSet.expirationTime?.toInstant()
-                ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
-                ?: credential.expirationDate
+                    ?: kotlinx.datetime.Clock.System
+                        .now()
+            val expiresAt =
+                claimsSet.expirationTime
+                    ?.toInstant()
+                    ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
+                    ?: credential.expirationDate
 
             // Revocation / suspension check
             val checker = config.properties["statusChecker"] as? CredentialStatusChecker
@@ -293,11 +320,12 @@ internal class SdJwtProofEngine(
                 issuedAt = issuedAt,
                 expiresAt = expiresAt,
                 warnings = emptyList(),
-                formatMetadata = buildJsonObject {
-                    put("jwt_id", claimsSet.jwtid ?: "")
-                    put("disclosed_claims", disclosures.size)
-                    put("_sd_alg", claimsSet.getStringClaim("_sd_alg") ?: "sha-256")
-                },
+                formatMetadata =
+                    buildJsonObject {
+                        put("jwt_id", claimsSet.jwtid ?: "")
+                        put("disclosed_claims", disclosures.size)
+                        put("_sd_alg", claimsSet.getStringClaim("_sd_alg") ?: "sha-256")
+                    },
             )
         } catch (e: Exception) {
             VerificationResult.Invalid.InvalidProof(
@@ -321,76 +349,86 @@ internal class SdJwtProofEngine(
             throw IllegalArgumentException("At least one credential is required for presentation")
         }
 
-        val holder = credentials.first().credentialSubject.id
-            ?: throw IllegalArgumentException("Cannot create presentation: credential subject has no id")
+        val holder =
+            credentials.first().credentialSubject.id
+                ?: throw IllegalArgumentException("Cannot create presentation: credential subject has no id")
 
         // For each credential, filter disclosures to requested claims only
-        val presentedCredentials = credentials.map { credential ->
-            val proof = credential.proof as? CredentialProof.SdJwtVcProof ?: return@map credential
-            val allDisclosures = proof.disclosures ?: return@map credential
+        val presentedCredentials =
+            credentials.map { credential ->
+                val proof = credential.proof as? CredentialProof.SdJwtVcProof ?: return@map credential
+                val allDisclosures = proof.disclosures ?: return@map credential
 
-            val requestedClaims = (request.proofOptions
-                ?.additionalOptions
-                ?.get("disclosedClaims") as? Set<*>)
-                ?.filterIsInstance<String>()
-                ?.toSet()
+                val requestedClaims =
+                    (
+                        request.proofOptions
+                            ?.additionalOptions
+                            ?.get("disclosedClaims") as? Set<*>
+                    )?.filterIsInstance<String>()
+                        ?.toSet()
 
-            val selectedDisclosures = if (requestedClaims == null || requestedClaims.isEmpty()) {
-                allDisclosures
-            } else {
-                allDisclosures.filter { discB64 ->
-                    parseDisclosureClaimName(discB64) in requestedClaims
-                }
-            }
-
-            // Optionally append KB-JWT if challenge is provided
-            val challenge = request.proofOptions?.challenge
-            val kbJwt = if (challenge != null) {
-                buildKbJwt(
-                    proof = proof,
-                    selectedDisclosures = selectedDisclosures,
-                    challenge = challenge,
-                    audience = request.proofOptions?.domain,
-                    holderVerificationMethod = request.proofOptions?.verificationMethod,
-                )
-            } else {
-                null
-            }
-
-            // When only a subset of claims is disclosed, the unsigned envelope must not leak
-            // the withheld claims — and verification reconciles envelope claims against the
-            // disclosures, so the envelope must only carry the selected claims.
-            val presentedSubject = if (requestedClaims.isNullOrEmpty()) {
-                credential.credentialSubject
-            } else {
-                val selectedNames = selectedDisclosures.mapNotNull { parseDisclosureClaimName(it) }.toSet()
-                credential.credentialSubject.copy(
-                    claims = credential.credentialSubject.claims.filterKeys { it in selectedNames },
-                )
-            }
-
-            credential.copy(
-                credentialSubject = presentedSubject,
-                proof = CredentialProof.SdJwtVcProof(
-                    sdJwtVc = proof.sdJwtVc,
-                    disclosures = selectedDisclosures,
-                ).let {
-                    // Annotate with KB-JWT via additionalProperties is not possible on SdJwtVcProof
-                    // but we can embed it in the sdJwtVc field as the full compound token
-                    if (kbJwt != null) {
-                        val compound = buildCompactSdJwt(proof.sdJwtVc, selectedDisclosures, kbJwt)
-                        CredentialProof.SdJwtVcProof(sdJwtVc = compound, disclosures = selectedDisclosures)
+                val selectedDisclosures =
+                    if (requestedClaims == null || requestedClaims.isEmpty()) {
+                        allDisclosures
                     } else {
-                        it
+                        allDisclosures.filter { discB64 ->
+                            parseDisclosureClaimName(discB64) in requestedClaims
+                        }
                     }
-                },
-            )
-        }
+
+                // Optionally append KB-JWT if challenge is provided
+                val challenge = request.proofOptions?.challenge
+                val kbJwt =
+                    if (challenge != null) {
+                        buildKbJwt(
+                            proof = proof,
+                            selectedDisclosures = selectedDisclosures,
+                            challenge = challenge,
+                            audience = request.proofOptions?.domain,
+                            holderVerificationMethod = request.proofOptions?.verificationMethod,
+                        )
+                    } else {
+                        null
+                    }
+
+                // When only a subset of claims is disclosed, the unsigned envelope must not leak
+                // the withheld claims — and verification reconciles envelope claims against the
+                // disclosures, so the envelope must only carry the selected claims.
+                val presentedSubject =
+                    if (requestedClaims.isNullOrEmpty()) {
+                        credential.credentialSubject
+                    } else {
+                        val selectedNames = selectedDisclosures.mapNotNull { parseDisclosureClaimName(it) }.toSet()
+                        credential.credentialSubject.copy(
+                            claims = credential.credentialSubject.claims.filterKeys { it in selectedNames },
+                        )
+                    }
+
+                credential.copy(
+                    credentialSubject = presentedSubject,
+                    proof =
+                        CredentialProof
+                            .SdJwtVcProof(
+                                sdJwtVc = proof.sdJwtVc,
+                                disclosures = selectedDisclosures,
+                            ).let {
+                                // Annotate with KB-JWT via additionalProperties is not possible on SdJwtVcProof
+                                // but we can embed it in the sdJwtVc field as the full compound token
+                                if (kbJwt != null) {
+                                    val compound = buildCompactSdJwt(proof.sdJwtVc, selectedDisclosures, kbJwt)
+                                    CredentialProof.SdJwtVcProof(sdJwtVc = compound, disclosures = selectedDisclosures)
+                                } else {
+                                    it
+                                }
+                            },
+                )
+            }
 
         // Surface the first credential's compact SD-JWT (with KB-JWT appended) as the
         // presentation proof so verifiers can verify holder key binding.
-        val presentationProof = (presentedCredentials.firstOrNull()?.proof as? CredentialProof.SdJwtVcProof)
-            ?.takeIf { it.sdJwtVc.substringAfterLast("~", "").isNotBlank() }
+        val presentationProof =
+            (presentedCredentials.firstOrNull()?.proof as? CredentialProof.SdJwtVcProof)
+                ?.takeIf { it.sdJwtVc.substringAfterLast("~", "").isNotBlank() }
 
         return VerifiablePresentation(
             type = listOf(CredentialType.Custom("VerifiablePresentation")),
@@ -403,7 +441,9 @@ internal class SdJwtProofEngine(
     }
 
     override suspend fun initialize(config: ProofEngineConfig) {}
+
     override suspend fun close() {}
+
     override fun isReady(): Boolean = true
 
     // -------------------------------------------------------------------------
@@ -417,30 +457,36 @@ internal class SdJwtProofEngine(
      *
      * Disclosure format: base64url(`["<salt>", "<name>", <value>]`)
      */
-    private fun createDisclosure(claimName: String, claimValue: JsonElement): Pair<String, String> {
+    private fun createDisclosure(
+        claimName: String,
+        claimValue: JsonElement,
+    ): Pair<String, String> {
         val saltBytes = ByteArray(16).also { random.nextBytes(it) }
         val salt = b64url.encodeToString(saltBytes)
 
-        val disclosureJson = buildJsonArray {
-            add(salt)
-            add(claimName)
-            add(claimValue)
-        }.toString()
+        val disclosureJson =
+            buildJsonArray {
+                add(salt)
+                add(claimName)
+                add(claimValue)
+            }.toString()
 
         val discB64 = b64url.encodeToString(disclosureJson.toByteArray(Charsets.UTF_8))
         val hashB64 = sha256B64(discB64.toByteArray(Charsets.UTF_8))
         return Pair(discB64, hashB64)
     }
 
-    private fun sha256B64(input: ByteArray): String =
-        b64url.encodeToString(MessageDigest.getInstance("SHA-256").digest(input))
+    private fun sha256B64(input: ByteArray): String = b64url.encodeToString(MessageDigest.getInstance("SHA-256").digest(input))
 
     private fun extractSdHashes(signedJWT: SignedJWT): Set<String> {
         val claimsSet = signedJWT.jwtClaimsSet
+
         @Suppress("UNCHECKED_CAST")
         val vcClaim = claimsSet.getJSONObjectClaim("vc") as? Map<String, Any?> ?: return emptySet()
+
         @Suppress("UNCHECKED_CAST")
         val credSubject = vcClaim["credentialSubject"] as? Map<String, Any?> ?: return emptySet()
+
         @Suppress("UNCHECKED_CAST")
         val sdList = credSubject["_sd"] as? List<*> ?: return emptySet()
         return sdList.filterIsInstance<String>().toSet()
@@ -483,19 +529,24 @@ internal class SdJwtProofEngine(
         val now = Clock.System.now()
         val skew = options.clockSkewTolerance
 
-        val signedExp = claimsSet.expirationTime?.toInstant()
-            ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
-        val signedNbf = claimsSet.notBeforeTime?.toInstant()
-            ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
+        val signedExp =
+            claimsSet.expirationTime
+                ?.toInstant()
+                ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
+        val signedNbf =
+            claimsSet.notBeforeTime
+                ?.toInstant()
+                ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
 
         if (options.checkExpiration && signedExp != null && now > signedExp.plus(skew)) {
             return VerificationResult.Invalid.Expired(
                 credential = credential,
                 expiredAt = signedExp,
-                errors = listOf(
-                    "Signed 'exp' claim has passed: $signedExp (current time: $now, " +
-                        "accounting for $skew clock skew tolerance)",
-                ),
+                errors =
+                    listOf(
+                        "Signed 'exp' claim has passed: $signedExp (current time: $now, " +
+                            "accounting for $skew clock skew tolerance)",
+                    ),
             )
         }
 
@@ -503,34 +554,39 @@ internal class SdJwtProofEngine(
             return VerificationResult.Invalid.NotYetValid(
                 credential = credential,
                 validFrom = signedNbf,
-                errors = listOf(
-                    "Signed 'nbf' claim is in the future: $signedNbf (current time: $now, " +
-                        "accounting for $skew clock skew tolerance)",
-                ),
+                errors =
+                    listOf(
+                        "Signed 'nbf' claim is in the future: $signedNbf (current time: $now, " +
+                            "accounting for $skew clock skew tolerance)",
+                    ),
             )
         }
 
         // The unsigned envelope expiry must agree with the signed exp claim. A stripped
         // envelope expirationDate would otherwise bypass the format-agnostic expiry check.
-        val envelopeExpiry = if (credential.isVc2 && !credential.isVc1) {
-            credential.validUntil
-        } else {
-            credential.validUntil ?: credential.expirationDate
-        }
-        val expiryMismatch = when {
-            signedExp == null && envelopeExpiry == null -> false
-            signedExp == null || envelopeExpiry == null -> true
-            // JWT exp has second precision; compare at that granularity.
-            else -> signedExp.epochSeconds != envelopeExpiry.epochSeconds
-        }
+        val envelopeExpiry =
+            if (credential.isVc2 && !credential.isVc1) {
+                credential.validUntil
+            } else {
+                credential.validUntil ?: credential.expirationDate
+            }
+        val expiryMismatch =
+            when {
+                signedExp == null && envelopeExpiry == null -> false
+                signedExp == null || envelopeExpiry == null -> true
+                // JWT exp has second precision; compare at that granularity.
+                else -> signedExp.epochSeconds != envelopeExpiry.epochSeconds
+            }
         if (expiryMismatch) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
-                reason = "Credential envelope expiration does not match the signed 'exp' claim " +
-                    "(possible envelope tampering)",
-                errors = listOf(
-                    "Envelope expiry '$envelopeExpiry' does not match signed exp '$signedExp'",
-                ),
+                reason =
+                    "Credential envelope expiration does not match the signed 'exp' claim " +
+                        "(possible envelope tampering)",
+                errors =
+                    listOf(
+                        "Envelope expiry '$envelopeExpiry' does not match signed exp '$signedExp'",
+                    ),
                 warnings = emptyList(),
             )
         }
@@ -550,12 +606,16 @@ internal class SdJwtProofEngine(
         // Subject identifier: the signed 'sub' claim is authoritative (issuance writes
         // the subject id, or "" when absent, into 'sub').
         val signedSubject = signedJWT.jwtClaimsSet.subject.orEmpty()
-        val envelopeSubject = credential.credentialSubject.id?.value.orEmpty()
+        val envelopeSubject =
+            credential.credentialSubject.id
+                ?.value
+                .orEmpty()
         if (signedSubject != envelopeSubject) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
-                reason = "Envelope credentialSubject.id does not match the signed 'sub' claim " +
-                    "(possible envelope tampering)",
+                reason =
+                    "Envelope credentialSubject.id does not match the signed 'sub' claim " +
+                        "(possible envelope tampering)",
                 errors = listOf("Envelope subject '$envelopeSubject' != signed sub '$signedSubject'"),
                 warnings = emptyList(),
             )
@@ -563,22 +623,26 @@ internal class SdJwtProofEngine(
 
         val signedSubjectClaims = extractSignedSubjectClaims(signedJWT)
         for ((name, envelopeValue) in credential.credentialSubject.claims) {
-            val backedValue = disclosedClaims[name] ?: signedSubjectClaims[name]
-                ?: return VerificationResult.Invalid.InvalidProof(
-                    credential = credential,
-                    reason = "Envelope claim '$name' is not backed by a verified disclosure " +
-                        "or signed claim",
-                    errors = listOf("Unbacked envelope claim: $name"),
-                    warnings = emptyList(),
-                )
+            val backedValue =
+                disclosedClaims[name] ?: signedSubjectClaims[name]
+                    ?: return VerificationResult.Invalid.InvalidProof(
+                        credential = credential,
+                        reason =
+                            "Envelope claim '$name' is not backed by a verified disclosure " +
+                                "or signed claim",
+                        errors = listOf("Unbacked envelope claim: $name"),
+                        warnings = emptyList(),
+                    )
             if (backedValue != envelopeValue) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = credential,
-                    reason = "Envelope claim '$name' does not match the verified disclosure value " +
-                        "(possible envelope tampering)",
-                    errors = listOf(
-                        "Envelope claim '$name' value '$envelopeValue' != verified value '$backedValue'",
-                    ),
+                    reason =
+                        "Envelope claim '$name' does not match the verified disclosure value " +
+                            "(possible envelope tampering)",
+                    errors =
+                        listOf(
+                            "Envelope claim '$name' value '$envelopeValue' != verified value '$backedValue'",
+                        ),
                     warnings = emptyList(),
                 )
             }
@@ -592,8 +656,10 @@ internal class SdJwtProofEngine(
      */
     private fun extractSignedSubjectClaims(signedJWT: SignedJWT): Map<String, JsonElement> {
         @Suppress("UNCHECKED_CAST")
-        val vcClaim = signedJWT.jwtClaimsSet.getJSONObjectClaim("vc") as? Map<String, Any?>
-            ?: return emptyMap()
+        val vcClaim =
+            signedJWT.jwtClaimsSet.getJSONObjectClaim("vc") as? Map<String, Any?>
+                ?: return emptyMap()
+
         @Suppress("UNCHECKED_CAST")
         val credSubject = vcClaim["credentialSubject"] as? Map<String, Any?> ?: return emptyMap()
         return credSubject
@@ -602,20 +668,26 @@ internal class SdJwtProofEngine(
     }
 
     /** Converts Nimbus' untyped JSON values to kotlinx [JsonElement] for comparison. */
-    private fun anyToJsonElement(value: Any?): JsonElement = when (value) {
-        null -> JsonNull
-        is JsonElement -> value
-        is Boolean -> JsonPrimitive(value)
-        is Number -> JsonPrimitive(value)
-        is String -> JsonPrimitive(value)
-        is Map<*, *> -> buildJsonObject {
-            value.forEach { (k, v) -> if (k is String) put(k, anyToJsonElement(v)) }
+    private fun anyToJsonElement(value: Any?): JsonElement =
+        when (value) {
+            null -> JsonNull
+            is JsonElement -> value
+            is Boolean -> JsonPrimitive(value)
+            is Number -> JsonPrimitive(value)
+            is String -> JsonPrimitive(value)
+            is Map<*, *> ->
+                buildJsonObject {
+                    value.forEach { (k, v) -> if (k is String) put(k, anyToJsonElement(v)) }
+                }
+            is Collection<*> -> buildJsonArray { value.forEach { add(anyToJsonElement(it)) } }
+            else -> JsonPrimitive(value.toString())
         }
-        is Collection<*> -> buildJsonArray { value.forEach { add(anyToJsonElement(it)) } }
-        else -> JsonPrimitive(value.toString())
-    }
 
-    private fun buildCompactSdJwt(jwt: String, disclosures: List<String>, kbJwt: String?): String {
+    private fun buildCompactSdJwt(
+        jwt: String,
+        disclosures: List<String>,
+        kbJwt: String?,
+    ): String {
         val sb = StringBuilder(jwt)
         for (disc in disclosures) sb.append("~").append(disc)
         sb.append("~")
@@ -638,23 +710,34 @@ internal class SdJwtProofEngine(
         // Prefer the holder's verification method (proofOptions.verificationMethod); the
         // KB-JWT proves possession of the HOLDER's key. Fall back to the issuer JWT's kid
         // for self-issued credentials where holder and issuer keys coincide.
-        val keyId = ProofEngineUtils.extractKeyId(holderVerificationMethod)
-            ?: proof.sdJwtVc.let {
-                try { SignedJWT.parse(it.substringBefore("~")).header.keyID } catch (e: Exception) { null }
-            } ?: return null
+        val keyId =
+            ProofEngineUtils.extractKeyId(holderVerificationMethod)
+                ?: proof.sdJwtVc.let {
+                    try {
+                        SignedJWT.parse(it.substringBefore("~")).header.keyID
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: return null
         val headerKeyId = holderVerificationMethod ?: keyId
 
         val compactForHash = buildCompactSdJwt(proof.sdJwtVc, selectedDisclosures, null)
         val sdHash = sha256B64(compactForHash.toByteArray(Charsets.UTF_8))
 
-        val header = JWSHeader.Builder(JWSAlgorithm.EdDSA).keyID(headerKeyId).type(
-            com.nimbusds.jose.JOSEObjectType("kb+jwt"),
-        ).build()
+        val header =
+            JWSHeader
+                .Builder(JWSAlgorithm.EdDSA)
+                .keyID(headerKeyId)
+                .type(
+                    com.nimbusds.jose.JOSEObjectType("kb+jwt"),
+                ).build()
 
-        val claimsBuilder = JWTClaimsSet.Builder()
-            .issueTime(Date.from(JavaInstant.now()))
-            .claim("nonce", challenge)
-            .claim("sd_hash", sdHash)
+        val claimsBuilder =
+            JWTClaimsSet
+                .Builder()
+                .issueTime(Date.from(JavaInstant.now()))
+                .claim("nonce", challenge)
+                .claim("sd_hash", sdHash)
         audience?.let { claimsBuilder.audience(it) }
 
         val kbJwt = SignedJWT(header, claimsBuilder.build())
@@ -666,8 +749,11 @@ internal class SdJwtProofEngine(
     // VC claim builder
     // -------------------------------------------------------------------------
 
-    private fun buildVcClaim(request: IssuanceRequest, sdHashes: List<String>): Map<String, Any> {
-        return buildMap {
+    private fun buildVcClaim(
+        request: IssuanceRequest,
+        sdHashes: List<String>,
+    ): Map<String, Any> =
+        buildMap {
             put("@context", listOf("https://www.w3.org/2018/credentials/v1"))
             put("type", request.type.map { it.value })
             put(
@@ -699,7 +785,6 @@ internal class SdJwtProofEngine(
                 )
             }
         }
-    }
 
     // -------------------------------------------------------------------------
     // KMS / Signer helpers
@@ -711,8 +796,8 @@ internal class SdJwtProofEngine(
     private fun getSignerFunction(): (suspend (ByteArray, String) -> ByteArray)? =
         config.properties["signer"] as? (suspend (ByteArray, String) -> ByteArray)
 
-    private fun createKmsSigner(kms: KeyManagementService): suspend (ByteArray, String) -> ByteArray {
-        return { data: ByteArray, kid: String ->
+    private fun createKmsSigner(kms: KeyManagementService): suspend (ByteArray, String) -> ByteArray =
+        { data: ByteArray, kid: String ->
             when (val result = kms.sign(KeyId(kid), data)) {
                 is SignResult.Success -> result.signature
                 is SignResult.Failure.KeyNotFound ->
@@ -723,13 +808,13 @@ internal class SdJwtProofEngine(
                     throw IllegalStateException("SD-JWT sign failed: ${result.reason}", result.cause)
             }
         }
-    }
 
     private fun getSigner(keyId: String): JWSSigner? {
-        val signerFn = getSignerFunction() ?: run {
-            val kms = getKms() ?: return null
-            createKmsSigner(kms)
-        }
+        val signerFn =
+            getSignerFunction() ?: run {
+                val kms = getKms() ?: return null
+                createKmsSigner(kms)
+            }
         return KmsJwsSigner(keyId, signerFn)
     }
 
@@ -739,11 +824,12 @@ internal class SdJwtProofEngine(
     ): org.trustweave.did.model.VerificationMethod? {
         if (!issuerIri.isDid) return null
         val didResolver = config.getDidResolver() ?: return null
-        val keyIdFromJwt = try {
-            SignedJWT.parse(jwtString.substringBefore("~")).header.keyID
-        } catch (e: Exception) {
-            null
-        }
+        val keyIdFromJwt =
+            try {
+                SignedJWT.parse(jwtString.substringBefore("~")).header.keyID
+            } catch (e: Exception) {
+                null
+            }
         // The issuer key signs assertions (credentials): it must be authorized under the
         // DID document's `assertionMethod` relationship, not merely present in
         // `verificationMethod` (fail closed on purpose mismatch).
@@ -762,19 +848,22 @@ internal class SdJwtProofEngine(
         private val keyId: String,
         private val signer: suspend (ByteArray, String) -> ByteArray,
     ) : JWSSigner {
-        override fun sign(header: JWSHeader, signingInput: ByteArray): com.nimbusds.jose.util.Base64URL {
-            return try {
+        override fun sign(
+            header: JWSHeader,
+            signingInput: ByteArray,
+        ): com.nimbusds.jose.util.Base64URL =
+            try {
                 val signature = runBlocking { signer(signingInput, keyId) }
-                com.nimbusds.jose.util.Base64URL.encode(signature)
+                com.nimbusds.jose.util.Base64URL
+                    .encode(signature)
             } catch (e: Exception) {
                 throw JOSEException("KMS signing failed: ${e.message}", e)
             }
-        }
 
-        override fun supportedJWSAlgorithms(): MutableSet<JWSAlgorithm> =
-            mutableSetOf(JWSAlgorithm.EdDSA)
+        override fun supportedJWSAlgorithms(): MutableSet<JWSAlgorithm> = mutableSetOf(JWSAlgorithm.EdDSA)
 
         override fun getJCAContext(): com.nimbusds.jose.jca.JCAContext =
-            com.nimbusds.jose.jca.JCAContext()
+            com.nimbusds.jose.jca
+                .JCAContext()
     }
 }

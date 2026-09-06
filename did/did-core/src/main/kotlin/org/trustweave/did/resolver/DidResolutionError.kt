@@ -29,27 +29,29 @@ object DidErrorType {
     const val FEATURE_NOT_SUPPORTED: String = BASE + "FEATURE_NOT_SUPPORTED"
 
     /** HTTP status code for an error type per the §12.1 binding table. Unknown types map to 500. */
-    fun httpStatus(type: String): Int = when (type) {
-        INVALID_DID, INVALID_DID_URL, INVALID_OPTIONS -> 400
-        NOT_FOUND -> 404
-        REPRESENTATION_NOT_SUPPORTED -> 406
-        METHOD_NOT_SUPPORTED, FEATURE_NOT_SUPPORTED -> 501
-        else -> 500
-    }
+    fun httpStatus(type: String): Int =
+        when (type) {
+            INVALID_DID, INVALID_DID_URL, INVALID_OPTIONS -> 400
+            NOT_FOUND -> 404
+            REPRESENTATION_NOT_SUPPORTED -> 406
+            METHOD_NOT_SUPPORTED, FEATURE_NOT_SUPPORTED -> 501
+            else -> 500
+        }
 
     /** Short human-readable title for an error type (§11: `title` SHOULD be present). */
-    fun title(type: String): String = when (type) {
-        INVALID_DID -> "Invalid DID"
-        INVALID_DID_DOCUMENT -> "Invalid DID document"
-        NOT_FOUND -> "Not found"
-        REPRESENTATION_NOT_SUPPORTED -> "Representation not supported"
-        INVALID_DID_URL -> "Invalid DID URL"
-        METHOD_NOT_SUPPORTED -> "Method not supported"
-        INVALID_OPTIONS -> "Invalid options"
-        INTERNAL_ERROR -> "Internal error"
-        FEATURE_NOT_SUPPORTED -> "Feature not supported"
-        else -> "DID resolution error"
-    }
+    fun title(type: String): String =
+        when (type) {
+            INVALID_DID -> "Invalid DID"
+            INVALID_DID_DOCUMENT -> "Invalid DID document"
+            NOT_FOUND -> "Not found"
+            REPRESENTATION_NOT_SUPPORTED -> "Representation not supported"
+            INVALID_DID_URL -> "Invalid DID URL"
+            METHOD_NOT_SUPPORTED -> "Method not supported"
+            INVALID_OPTIONS -> "Invalid options"
+            INTERNAL_ERROR -> "Internal error"
+            FEATURE_NOT_SUPPORTED -> "Feature not supported"
+            else -> "DID resolution error"
+        }
 
     /**
      * Maps a DID Resolution v0.3 / FPWD camelCase error code to its CR type URI.
@@ -58,18 +60,19 @@ object DidErrorType {
      * upgraded rather than rejected. Values that are already absolute URLs pass through; any
      * other unknown value is prefixed with [BASE] as §11 requires.
      */
-    fun fromLegacyCode(code: String): String = when (code) {
-        "invalidDid", "invalidDidFormat" -> INVALID_DID
-        "invalidDidDocument" -> INVALID_DID_DOCUMENT
-        "notFound" -> NOT_FOUND
-        "representationNotSupported" -> REPRESENTATION_NOT_SUPPORTED
-        "invalidDidUrl" -> INVALID_DID_URL
-        "methodNotSupported", "unsupportedDidMethod" -> METHOD_NOT_SUPPORTED
-        "invalidOptions" -> INVALID_OPTIONS
-        "internalError", "resolutionError" -> INTERNAL_ERROR
-        "featureNotSupported" -> FEATURE_NOT_SUPPORTED
-        else -> if (code.startsWith("http://") || code.startsWith("https://")) code else BASE + code
-    }
+    fun fromLegacyCode(code: String): String =
+        when (code) {
+            "invalidDid", "invalidDidFormat" -> INVALID_DID
+            "invalidDidDocument" -> INVALID_DID_DOCUMENT
+            "notFound" -> NOT_FOUND
+            "representationNotSupported" -> REPRESENTATION_NOT_SUPPORTED
+            "invalidDidUrl" -> INVALID_DID_URL
+            "methodNotSupported", "unsupportedDidMethod" -> METHOD_NOT_SUPPORTED
+            "invalidOptions" -> INVALID_OPTIONS
+            "internalError", "resolutionError" -> INTERNAL_ERROR
+            "featureNotSupported" -> FEATURE_NOT_SUPPORTED
+            else -> if (code.startsWith("http://") || code.startsWith("https://")) code else BASE + code
+        }
 }
 
 /**
@@ -84,7 +87,7 @@ object DidErrorType {
 data class DidResolutionError(
     val type: String,
     val title: String? = null,
-    val detail: String? = null
+    val detail: String? = null,
 ) {
     init {
         require(type.startsWith("http://") || type.startsWith("https://")) {
@@ -96,38 +99,37 @@ data class DidResolutionError(
     val httpStatus: Int get() = DidErrorType.httpStatus(type)
 
     /** Serializes to the RFC 9457 JSON object, omitting absent members. */
-    fun toJson(): JsonObject = buildJsonObject {
-        put("type", type)
-        title?.let { put("title", it) }
-        detail?.let { put("detail", it) }
-    }
+    fun toJson(): JsonObject =
+        buildJsonObject {
+            put("type", type)
+            title?.let { put("title", it) }
+            detail?.let { put("detail", it) }
+        }
 
     companion object {
         /** Builds an error with the registered [DidErrorType.title] for [type]. */
-        fun of(type: String, detail: String? = null): DidResolutionError =
-            DidResolutionError(type = type, title = DidErrorType.title(type), detail = detail)
+        fun of(
+            type: String,
+            detail: String? = null,
+        ): DidResolutionError = DidResolutionError(type = type, title = DidErrorType.title(type), detail = detail)
 
         fun invalidDid(detail: String): DidResolutionError = of(DidErrorType.INVALID_DID, detail)
 
-        fun invalidDidDocument(detail: String): DidResolutionError =
-            of(DidErrorType.INVALID_DID_DOCUMENT, detail)
+        fun invalidDidDocument(detail: String): DidResolutionError = of(DidErrorType.INVALID_DID_DOCUMENT, detail)
 
         fun notFound(detail: String): DidResolutionError = of(DidErrorType.NOT_FOUND, detail)
 
-        fun representationNotSupported(detail: String): DidResolutionError =
-            of(DidErrorType.REPRESENTATION_NOT_SUPPORTED, detail)
+        fun representationNotSupported(detail: String): DidResolutionError = of(DidErrorType.REPRESENTATION_NOT_SUPPORTED, detail)
 
         fun invalidDidUrl(detail: String): DidResolutionError = of(DidErrorType.INVALID_DID_URL, detail)
 
-        fun methodNotSupported(detail: String): DidResolutionError =
-            of(DidErrorType.METHOD_NOT_SUPPORTED, detail)
+        fun methodNotSupported(detail: String): DidResolutionError = of(DidErrorType.METHOD_NOT_SUPPORTED, detail)
 
         fun invalidOptions(detail: String): DidResolutionError = of(DidErrorType.INVALID_OPTIONS, detail)
 
         fun internalError(detail: String): DidResolutionError = of(DidErrorType.INTERNAL_ERROR, detail)
 
-        fun featureNotSupported(detail: String): DidResolutionError =
-            of(DidErrorType.FEATURE_NOT_SUPPORTED, detail)
+        fun featureNotSupported(detail: String): DidResolutionError = of(DidErrorType.FEATURE_NOT_SUPPORTED, detail)
 
         /**
          * Parses an `error` member from a resolution-metadata JSON structure.
@@ -139,31 +141,33 @@ data class DidResolutionError(
          * shapes) — malformed members degrade to `null`/absent rather than throwing, so a
          * single bad field never crashes the caller.
          */
-        fun fromJson(element: JsonElement?): DidResolutionError? = when {
-            element == null || element is JsonNull -> null
-            element is JsonPrimitive && element.isString -> {
-                val type = DidErrorType.fromLegacyCode(element.content)
-                DidResolutionError(
-                    type = type,
-                    title = DidErrorType.title(type),
-                    detail = element.content
-                )
-            }
-            element is JsonObject -> {
-                val typeValue = (element["type"] as? JsonPrimitive)?.contentOrNull
-                if (typeValue == null) {
-                    null
-                } else {
-                    val type = DidErrorType.fromLegacyCode(typeValue)
+        fun fromJson(element: JsonElement?): DidResolutionError? =
+            when {
+                element == null || element is JsonNull -> null
+                element is JsonPrimitive && element.isString -> {
+                    val type = DidErrorType.fromLegacyCode(element.content)
                     DidResolutionError(
                         type = type,
-                        title = (element["title"] as? JsonPrimitive)?.contentOrNull
-                            ?: DidErrorType.title(type),
-                        detail = (element["detail"] as? JsonPrimitive)?.contentOrNull
+                        title = DidErrorType.title(type),
+                        detail = element.content,
                     )
                 }
+                element is JsonObject -> {
+                    val typeValue = (element["type"] as? JsonPrimitive)?.contentOrNull
+                    if (typeValue == null) {
+                        null
+                    } else {
+                        val type = DidErrorType.fromLegacyCode(typeValue)
+                        DidResolutionError(
+                            type = type,
+                            title =
+                                (element["title"] as? JsonPrimitive)?.contentOrNull
+                                    ?: DidErrorType.title(type),
+                            detail = (element["detail"] as? JsonPrimitive)?.contentOrNull,
+                        )
+                    }
+                }
+                else -> null
             }
-            else -> null
-        }
     }
 }

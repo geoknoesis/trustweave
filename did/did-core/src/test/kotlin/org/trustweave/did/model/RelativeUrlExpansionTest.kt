@@ -6,19 +6,20 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 
 class RelativeUrlExpansionTest {
-
     private val did = Did("did:example:123456789abcdefghi")
 
-    private fun documentWithService(serviceId: String) = DidDocument(
-        id = did,
-        service = listOf(
-            DidService(
-                id = serviceId,
-                type = listOf("VerifiableCredentialService"),
-                serviceEndpoint = ServiceEndpoint.Url("https://example.com/vc/")
-            )
+    private fun documentWithService(serviceId: String) =
+        DidDocument(
+            id = did,
+            service =
+                listOf(
+                    DidService(
+                        id = serviceId,
+                        type = listOf("VerifiableCredentialService"),
+                        serviceEndpoint = ServiceEndpoint.Url("https://example.com/vc/"),
+                    ),
+                ),
         )
-    )
 
     @Test
     fun `a fragment service id is expanded against the document id`() {

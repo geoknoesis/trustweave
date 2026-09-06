@@ -1,21 +1,21 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.trust.TrustEvaluator
-import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Semaphore
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.trust.TrustWeave
 
 /**
  * Flow-based batch operations for credentials.
- * 
+ *
  * Provides reactive, backpressure-aware batch processing using Kotlin Flow.
  * Ideal for processing large numbers of credentials efficiently.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * // Batch issuance with Flow
@@ -31,7 +31,7 @@ import kotlinx.coroutines.sync.Semaphore
  *         is IssuanceResult.Failure -> println("Failed: ${result.allErrors}")
  *     }
  * }
- * 
+ *
  * // Batch verification with Flow
  * trustWeave.verifyBatch {
  *     credentials = listOf(cred1, cred2, cred3)
@@ -54,13 +54,13 @@ class BatchIssuanceBuilder {
      * Each request is a DSL block that will be passed to the issue function.
      */
     var requests: List<IssuanceBuilder.() -> Unit> = emptyList()
-    
+
     /**
      * Maximum concurrency for parallel issuance (default: 10).
      * Set to 1 for sequential processing.
      */
     var maxConcurrency: Int = 10
-    
+
     init {
         require(maxConcurrency > 0) { "maxConcurrency must be positive" }
     }
@@ -74,23 +74,23 @@ class BatchVerificationBuilder {
      * List of credentials to verify.
      */
     var credentials: List<VerifiableCredential> = emptyList()
-    
+
     /**
      * Optional trust policy to apply to all verifications.
      */
     var trustPolicy: TrustEvaluator? = null
-    
+
     /**
      * Verification options to apply to all verifications.
      */
     var options: VerificationOptions = VerificationOptions()
-    
+
     /**
      * Maximum concurrency for parallel verification (default: 10).
      * Set to 1 for sequential processing.
      */
     var maxConcurrency: Int = 10
-    
+
     init {
         require(maxConcurrency > 0) { "maxConcurrency must be positive" }
     }
@@ -98,7 +98,7 @@ class BatchVerificationBuilder {
 
 /**
  * Issue multiple credentials using Flow for reactive processing.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.issueBatch {
@@ -114,38 +114,37 @@ class BatchVerificationBuilder {
  *     }
  * }
  * ```
- * 
+ *
  * @param block Configuration block for batch issuance
  * @return Flow of [IssuanceResult] for each request. If [CredentialService] is not configured, each
  *   emission is [IssuanceResult.Failure.AdapterNotReady] (same as single [issue]).
  */
-suspend fun TrustWeave.issueBatch(
-    block: BatchIssuanceBuilder.() -> Unit
-): Flow<IssuanceResult> = flow {
-    val builder = BatchIssuanceBuilder()
-    builder.block()
-    
-    require(builder.requests.isNotEmpty()) { 
-        "Batch issuance requires at least one request. Set requests = listOf(...)" 
-    }
-    
-    // Process requests with controlled concurrency
-    val semaphore = Semaphore(builder.maxConcurrency)
-    
-    builder.requests.forEach { requestBlock ->
-        semaphore.acquire()
-        try {
-            val result = this@issueBatch.issue(block = requestBlock)
-            emit(result)
-        } finally {
-            semaphore.release()
+suspend fun TrustWeave.issueBatch(block: BatchIssuanceBuilder.() -> Unit): Flow<IssuanceResult> =
+    flow {
+        val builder = BatchIssuanceBuilder()
+        builder.block()
+
+        require(builder.requests.isNotEmpty()) {
+            "Batch issuance requires at least one request. Set requests = listOf(...)"
+        }
+
+        // Process requests with controlled concurrency
+        val semaphore = Semaphore(builder.maxConcurrency)
+
+        builder.requests.forEach { requestBlock ->
+            semaphore.acquire()
+            try {
+                val result = this@issueBatch.issue(block = requestBlock)
+                emit(result)
+            } finally {
+                semaphore.release()
+            }
         }
     }
-}
 
 /**
  * Verify multiple credentials using Flow for reactive processing.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.verifyBatch {
@@ -159,38 +158,38 @@ suspend fun TrustWeave.issueBatch(
  *     }
  * }
  * ```
- * 
+ *
  * @param block Configuration block for batch verification
  * @return Flow of [VerificationResult] for each credential. If [CredentialService] is not configured,
  *   each emission is [VerificationResult.Invalid.AdapterNotReady] (same as single [verify]).
  */
-suspend fun TrustWeave.verifyBatch(
-    block: BatchVerificationBuilder.() -> Unit
-): Flow<VerificationResult> = flow {
-    val builder = BatchVerificationBuilder()
-    builder.block()
-    
-    require(builder.credentials.isNotEmpty()) { 
-        "Batch verification requires at least one credential. Set credentials = listOf(...)" 
-    }
-    
-    // Process verifications with controlled concurrency
-    val semaphore = Semaphore(builder.maxConcurrency)
-    
-    builder.credentials.forEach { credential ->
-        semaphore.acquire()
-        try {
-            val result = this@verifyBatch.verify {
-                this.credential(credential)
-                builder.trustPolicy?.let { withTrustPolicy(it) }
-                // Apply options
-                if (!builder.options.checkRevocation) skipRevocation()
-                if (!builder.options.checkExpiration) skipExpiration()
-                builder.options.schemaId?.let { validateSchema(it.value) }
+suspend fun TrustWeave.verifyBatch(block: BatchVerificationBuilder.() -> Unit): Flow<VerificationResult> =
+    flow {
+        val builder = BatchVerificationBuilder()
+        builder.block()
+
+        require(builder.credentials.isNotEmpty()) {
+            "Batch verification requires at least one credential. Set credentials = listOf(...)"
+        }
+
+        // Process verifications with controlled concurrency
+        val semaphore = Semaphore(builder.maxConcurrency)
+
+        builder.credentials.forEach { credential ->
+            semaphore.acquire()
+            try {
+                val result =
+                    this@verifyBatch.verify {
+                        this.credential(credential)
+                        builder.trustPolicy?.let { withTrustPolicy(it) }
+                        // Apply options
+                        if (!builder.options.checkRevocation) skipRevocation()
+                        if (!builder.options.checkExpiration) skipExpiration()
+                        builder.options.schemaId?.let { validateSchema(it.value) }
+                    }
+                emit(result)
+            } finally {
+                semaphore.release()
             }
-            emit(result)
-        } finally {
-            semaphore.release()
         }
     }
-}

@@ -34,7 +34,6 @@ import java.net.URLDecoder
  * ```
  */
 object QrCodeParser {
-
     /**
      * Parses a QR code string and returns typed content.
      *
@@ -44,7 +43,7 @@ object QrCodeParser {
      */
     fun parse(qrCodeString: String): QrCodeContent {
         val trimmed = qrCodeString.trim()
-        
+
         return when {
             trimmed.startsWith("openid-credential-offer://", ignoreCase = true) -> {
                 parseCredentialOfferUrl(trimmed)
@@ -91,21 +90,22 @@ object QrCodeParser {
         if (credentialOfferUri == null && credentialIssuer == null) {
             throw IllegalArgumentException(
                 "Missing 'credential_offer', 'credential_offer_uri' and 'credential_issuer' " +
-                    "in credential offer URL. At least one must be present."
+                    "in credential offer URL. At least one must be present.",
             )
         }
 
-        val credentialConfigurationIds = params["credential_configuration_ids"]
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotEmpty() }
-            ?: emptyList()
+        val credentialConfigurationIds =
+            params["credential_configuration_ids"]
+                ?.split(",")
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                ?: emptyList()
 
         return QrCodeContent.CredentialOffer(
-            credentialIssuer = credentialIssuer ?: "",  // Empty if using credential_offer_uri
+            credentialIssuer = credentialIssuer ?: "", // Empty if using credential_offer_uri
             credentialConfigurationIds = credentialConfigurationIds,
             credentialOfferUri = credentialOfferUri,
-            rawUrl = url
+            rawUrl = url,
         )
     }
 
@@ -113,31 +113,38 @@ object QrCodeParser {
      * Parses the JSON document carried in a `credential_offer` query parameter
      * (offer-by-value, OID4VCI v1.0 §4.1).
      */
-    private fun parseCredentialOfferJson(offerJson: String, rawUrl: String): QrCodeContent.CredentialOffer {
-        val offer = try {
-            Json.parseToJsonElement(offerJson) as? JsonObject
-                ?: throw IllegalArgumentException("'credential_offer' is not a JSON object")
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            throw IllegalArgumentException(
-                "'credential_offer' parameter is not valid JSON: ${e.message}", e
-            )
-        }
+    private fun parseCredentialOfferJson(
+        offerJson: String,
+        rawUrl: String,
+    ): QrCodeContent.CredentialOffer {
+        val offer =
+            try {
+                Json.parseToJsonElement(offerJson) as? JsonObject
+                    ?: throw IllegalArgumentException("'credential_offer' is not a JSON object")
+            } catch (e: IllegalArgumentException) {
+                throw e
+            } catch (e: Exception) {
+                throw IllegalArgumentException(
+                    "'credential_offer' parameter is not valid JSON: ${e.message}",
+                    e,
+                )
+            }
 
-        val credentialIssuer = (offer["credential_issuer"] as? JsonPrimitive)?.contentOrNull
-            ?: throw IllegalArgumentException("Missing 'credential_issuer' in credential_offer JSON")
+        val credentialIssuer =
+            (offer["credential_issuer"] as? JsonPrimitive)?.contentOrNull
+                ?: throw IllegalArgumentException("Missing 'credential_issuer' in credential_offer JSON")
 
-        val credentialConfigurationIds = (offer["credential_configuration_ids"] as? JsonArray)
-            ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
-            ?: emptyList()
+        val credentialConfigurationIds =
+            (offer["credential_configuration_ids"] as? JsonArray)
+                ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                ?: emptyList()
 
         return QrCodeContent.CredentialOffer(
             credentialIssuer = credentialIssuer,
             credentialConfigurationIds = credentialConfigurationIds,
             credentialOfferUri = null,
             rawUrl = rawUrl,
-            grantsJson = (offer["grants"] as? JsonObject)?.toString()
+            grantsJson = (offer["grants"] as? JsonObject)?.toString(),
         )
     }
 
@@ -148,18 +155,18 @@ object QrCodeParser {
         // Format: openid4vp://authorize?client_id=...&request_uri=...
         val queryString = url.substringAfter("?", missingDelimiterValue = "")
         val params = parseQueryParameters(queryString)
-        
+
         val clientId = params["client_id"]
         val requestUri = params["request_uri"]
-        
+
         if (clientId == null && requestUri == null) {
             throw IllegalArgumentException("Missing both 'client_id' and 'request_uri' in presentation request URL")
         }
-        
+
         return QrCodeContent.PresentationRequest(
             authorizationUrl = url,
             clientId = clientId,
-            requestUri = requestUri
+            requestUri = requestUri,
         )
     }
 
@@ -169,13 +176,14 @@ object QrCodeParser {
     private fun parseHttpUrl(url: String): QrCodeContent {
         // Try to determine the type based on path or query parameters
         // Extract query string manually to avoid deprecated URL constructor
-        val queryString = if (url.contains("?")) {
-            url.substringAfter("?")
-        } else {
-            ""
-        }
+        val queryString =
+            if (url.contains("?")) {
+                url.substringAfter("?")
+            } else {
+                ""
+            }
         val queryParams = parseQueryParameters(queryString)
-        
+
         return when {
             // Check for credential offer indicators
             queryParams.containsKey("credential_offer") ||
@@ -198,7 +206,7 @@ object QrCodeParser {
      */
     private fun parseQueryParameters(query: String): Map<String, String> {
         if (query.isBlank()) return emptyMap()
-        
+
         return query.split("&").associate { param ->
             val parts = param.split("=", limit = 2)
             val key = URLDecoder.decode(parts[0], "UTF-8")
@@ -225,11 +233,11 @@ sealed class QrCodeContent {
      *   offers. Carries e.g. the pre-authorized code grant and `tx_code` requirements.
      */
     data class CredentialOffer(
-        val credentialIssuer: String,  // Can be empty if credentialOfferUri is present
+        val credentialIssuer: String, // Can be empty if credentialOfferUri is present
         val credentialConfigurationIds: List<String>,
         val credentialOfferUri: String? = null,
         val rawUrl: String,
-        val grantsJson: String? = null
+        val grantsJson: String? = null,
     ) : QrCodeContent()
 
     /**
@@ -238,12 +246,13 @@ sealed class QrCodeContent {
     data class PresentationRequest(
         val authorizationUrl: String,
         val clientId: String?,
-        val requestUri: String?
+        val requestUri: String?,
     ) : QrCodeContent()
 
     /**
      * Generic HTTP/HTTPS URL that couldn't be classified.
      */
-    data class GenericUrl(val url: String) : QrCodeContent()
+    data class GenericUrl(
+        val url: String,
+    ) : QrCodeContent()
 }
-

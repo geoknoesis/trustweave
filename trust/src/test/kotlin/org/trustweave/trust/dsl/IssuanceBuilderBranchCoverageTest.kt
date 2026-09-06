@@ -1,632 +1,707 @@
 package org.trustweave.trust.dsl
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.jsonPrimitive
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.getOrThrow
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyHandle
-import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.createTestCredentialService
-import org.trustweave.trust.dsl.credential.DidMethods
-import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.credential
-import org.trustweave.credential.model.ProofType
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.jsonPrimitive
-import kotlin.test.*
+import org.trustweave.trust.types.getOrThrow
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive branch coverage tests for IssuanceBuilder DSL.
  * Tests all conditional branches, error paths, and edge cases.
  */
 class IssuanceBuilderBranchCoverageTest {
-
     private lateinit var trustWeave: TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
-    fun setUp() = runBlocking {
-        kms = InMemoryKeyManagementService()
-        assertNotNull(kms) { "KMS must be initialized" }
+    fun setUp() =
+        runBlocking {
+            kms = InMemoryKeyManagementService()
+            assertNotNull(kms) { "KMS must be initialized" }
 
-        // Capture KMS reference for closure
-        val kmsRef = kms
+            // Capture KMS reference for closure
+            val kmsRef = kms
 
-        // Create DID resolver that uses the DID registry from TrustWeave
-        val tempTrustWeave = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-                signer { data, keyId ->
-                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+            // Create DID resolver that uses the DID registry from TrustWeave
+            val tempTrustWeave =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kmsRef.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {}
                     }
                 }
-            }
-            did {
-                method("key") {}
-            }
-        }
-        
-        val didResolver = DidResolver { did ->
-            tempTrustWeave.configuration.didRegistry.resolve(did.value)
-        }
-        
-        val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
-        trustWeave = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-                // Provide signer function directly to avoid reflection
-                signer { data, keyId ->
-                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
-                    }
+
+            val didResolver =
+                DidResolver { did ->
+                    tempTrustWeave.configuration.didRegistry.resolve(did.value)
                 }
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(false)
-            }
-            // Set CredentialService as issuer for issuance builder
-            credentialService(credentialService)
+
+            val credentialService = createTestCredentialService(kms = kmsRef, didResolver = didResolver)
+            trustWeave =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                        // Provide signer function directly to avoid reflection
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kmsRef.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(false)
+                    }
+                    // Set CredentialService as issuer for issuance builder
+                    credentialService(credentialService)
+                }
         }
-    }
 
     // ========== Credential Required Branches ==========
 
     @Test
-    fun `test branch credential required returns InvalidRequest`() = runBlocking<Unit> {
-        val result =
-            trustWeave.issue {
-                // Missing credential
-                signedBy(issuerDid = Did("did:key:issuer"), keyId = "key-1")
-            }
-
-        assertTrue(
-            result is IssuanceResult.Failure.InvalidRequest,
-            "Issuing with no credential must yield InvalidRequest, got: $result",
-        )
-    }
-
-    @Test
-    fun `test branch credential from inline builder`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch credential required returns InvalidRequest`() =
+        runBlocking<Unit> {
+            val result =
+                trustWeave.issue {
+                    // Missing credential
+                    signedBy(issuerDid = Did("did:key:issuer"), keyId = "key-1")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrThrow()
 
-        assertNotNull(issuedCredential)
-    }
+            assertTrue(
+                result is IssuanceResult.Failure.InvalidRequest,
+                "Issuing with no credential must yield InvalidRequest, got: $result",
+            )
+        }
 
     @Test
-    fun `test branch credential from pre-built`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
+    fun `test branch credential from inline builder`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
         }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        val preBuiltCredential = credential {
-            type("PersonCredential")
-            issuer(issuerDidDoc.id)
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
+    @Test
+    fun `test branch credential from pre-built`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            val preBuiltCredential =
+                credential {
+                    type("PersonCredential")
+                    issuer(issuerDidDoc.id)
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
+
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential(preBuiltCredential)
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
         }
-
-        val issuedCredential = trustWeave.issue {
-            credential(preBuiltCredential)
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrThrow()
-
-        assertNotNull(issuedCredential)
-    }
 
     // ========== Issuer DID Required Branches ==========
 
     @Test
-    fun `test branch issuer DID required returns InvalidRequest`() = runBlocking<Unit> {
-        val result =
-            trustWeave.issue {
-                credential {
-                    type("PersonCredential")
-                    issuer("did:key:issuer")
-                    subject {
-                        id("did:key:subject")
+    fun `test branch issuer DID required returns InvalidRequest`() =
+        runBlocking<Unit> {
+            val result =
+                trustWeave.issue {
+                    credential {
+                        type("PersonCredential")
+                        issuer("did:key:issuer")
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Clock.System.now())
                     }
-                    issued(Clock.System.now())
+                    // Missing signedBy() call
                 }
-                // Missing signedBy() call
-            }
 
-        assertTrue(
-            result is IssuanceResult.Failure.InvalidRequest,
-            "Issuing with no issuer DID must yield InvalidRequest, got: $result",
-        )
-    }
+            assertTrue(
+                result is IssuanceResult.Failure.InvalidRequest,
+                "Issuing with no issuer DID must yield InvalidRequest, got: $result",
+            )
+        }
 
     @Test
-    fun `test branch issuer DID provided`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch issuer DID provided`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
+        }
 
     // ========== Key ID Required Branches ==========
 
     @Test
-    fun `test branch blank key ID is rejected`() = runBlocking<Unit> {
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
+    fun `test branch blank key ID is rejected`() =
+        runBlocking<Unit> {
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertFailsWith<IllegalArgumentException> {
-            trustWeave.issue {
-                credential {
-                    type("PersonCredential")
-                    issuer(issuerDidDoc.id)
-                    subject {
-                        id("did:key:subject")
+            assertFailsWith<IllegalArgumentException> {
+                trustWeave.issue {
+                    credential {
+                        type("PersonCredential")
+                        issuer(issuerDidDoc.id)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Clock.System.now())
                     }
-                    issued(Clock.System.now())
+                    signedBy(issuerDid = issuerDidDoc.id, keyId = "") // Empty key ID
                 }
-                signedBy(issuerDid = issuerDidDoc.id, keyId = "") // Empty key ID
             }
         }
-    }
 
     // ========== Proof Type Branches ==========
 
     @Test
-    fun `test branch proof type from default config`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch proof type from default config`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            // No proof type - uses default
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential.proof)
-        assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
-        val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-        assertEquals("Ed25519Signature2020", linkedDataProof.type)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        // No proof type - uses default
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential.proof)
+            assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+            val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertEquals("Ed25519Signature2020", linkedDataProof.type)
+        }
 
     @Test
-    fun `test branch proof type from custom value`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch proof type from custom value`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            withProof(org.trustweave.credential.format.ProofSuiteId.VC_LD) // Use supported proof suite
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential.proof)
-        assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
-        val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-        assertEquals("Ed25519Signature2020", linkedDataProof.type)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        withProof(org.trustweave.credential.format.ProofSuiteId.VC_LD) // Use supported proof suite
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential.proof)
+            assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+            val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertEquals("Ed25519Signature2020", linkedDataProof.type)
+        }
 
     // ========== Challenge and Domain Branches ==========
 
     @Test
-    fun `test branch challenge provided`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch challenge provided`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            challenge("challenge-123")
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential.proof)
-        assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
-        val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        challenge("challenge-123")
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential.proof)
+            assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+            val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+        }
 
     @Test
-    fun `test branch domain provided`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch domain provided`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            domain("example.com")
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential.proof)
-        assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
-        val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        domain("example.com")
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential.proof)
+            assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+            val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
+        }
 
     @Test
-    fun `test branch challenge and domain both provided`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch challenge and domain both provided`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            challenge("challenge-123")
-            domain("example.com")
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential.proof)
-        assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
-        val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
-        assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
-        assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        challenge("challenge-123")
+                        domain("example.com")
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential.proof)
+            assertTrue(issuedCredential.proof is org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof)
+            val linkedDataProof = issuedCredential.proof as org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertEquals("challenge-123", linkedDataProof.additionalProperties["challenge"]?.jsonPrimitive?.content)
+            assertEquals("example.com", linkedDataProof.additionalProperties["domain"]?.jsonPrimitive?.content)
+        }
 
     // ========== Auto-Anchor Branches ==========
 
     @Test
-    fun `test branch auto-anchor disabled in config`() = runBlocking<Unit> {
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeave.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    fun `test branch auto-anchor disabled in config`() =
+        runBlocking<Unit> {
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            // autoAnchor is false in config
-        }.getOrThrow()
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
 
-        assertNotNull(issuedCredential)
-        // Credential should be issued but not anchored
-    }
+            val issuedCredential =
+                trustWeave
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        // autoAnchor is false in config
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
+            // Credential should be issued but not anchored
+        }
 
     @Test
-    fun `test branch auto-anchor enabled in config`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAutoAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
-                }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(true)
-                defaultChain("algorand:testnet")
-            }
-        }
-
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeaveWithAutoAnchor.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
-                }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrThrow()
-
-        assertNotNull(issuedCredential)
-        // Anchoring may fail silently, but credential is issued
-    }
-
-    @Test
-    fun `test branch explicit anchor call`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAnchor = TrustWeave.build {
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
-                }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(false)
-            }
-        }
-
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val issuedCredential = trustWeaveWithAnchor.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
-                }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            // Note: anchor() function not available in current DSL
-        }.getOrThrow()
-
-        assertNotNull(issuedCredential)
-    }
-
-    @Test
-    fun `test branch auto-anchor without chain ID fails closed`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAutoAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(true)
-                // No defaultChain specified
-            }
-        }
-
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        // Should fail when trying to anchor without chain ID
-        val result =
-            trustWeaveWithAutoAnchor.issue {
-                credential {
-                    type("PersonCredential")
-                    issuer(issuerDidDoc.id)
-                    subject {
-                        id("did:key:subject")
+    fun `test branch auto-anchor enabled in config`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAutoAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
                     }
-                    issued(Clock.System.now())
-                }
-                signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-                // No anchor() call and no defaultChain
-            }
-
-        assertTrue(
-            result is IssuanceResult.Failure.InvalidRequest,
-            "Auto-anchor with no chain configured must fail closed, not issue an un-anchored " +
-                "credential the caller believes was anchored. Got: $result",
-        )
-    }
-
-    @Test
-    fun `test branch auto-anchor with unregistered chain fails closed`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAutoAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(true)
-                defaultChain("nonexistent:chain")
-            }
-        }
-
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        val result =
-            trustWeaveWithAutoAnchor.issue {
-                credential {
-                    type("PersonCredential")
-                    issuer(issuerDidDoc.id)
-                    subject {
-                        id("did:key:subject")
+                    did {
+                        method("key") {}
                     }
-                    issued(Clock.System.now())
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(true)
+                        defaultChain("algorand:testnet")
+                    }
                 }
-                signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-            }
 
-        assertTrue(
-            result is IssuanceResult.Failure,
-            "An unregistered anchor chain must fail closed, not silently skip anchoring. " +
-                "Got: $result",
-        )
-    }
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            val issuedCredential =
+                trustWeaveWithAutoAnchor
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
+            // Anchoring may fail silently, but credential is issued
+        }
 
     @Test
-    fun `test branch anchor failure handling`() = runBlocking<Unit> {
-        // This tests the exception handling when anchoring fails
-        // The credential should still be issued even if anchoring fails
-        val kmsRef = kms
-        val trustWeaveWithAutoAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch explicit anchor call`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAnchor =
+                TrustWeave.build {
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(false)
+                    }
                 }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                autoAnchor(true)
-                defaultChain("algorand:testnet")
-            }
+
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            val issuedCredential =
+                trustWeaveWithAnchor
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                        // Note: anchor() function not available in current DSL
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
         }
 
-        val issuerKey: KeyHandle = when (val result = kms.generateKey("Ed25519", emptyMap())) {
-            is GenerateKeyResult.Success -> result.keyHandle
-            else -> throw IllegalStateException("Failed to generate key: $result")
-        }
-        val didMethod = DidKeyMockMethod(kms)
-        val issuerDidDoc: DidDocument = didMethod.createDid()
-
-        // Anchoring may fail, but credential should still be issued
-        val issuedCredential = trustWeaveWithAutoAnchor.issue {
-            credential {
-                type("PersonCredential")
-                issuer(issuerDidDoc.id)
-                subject {
-                    id("did:key:subject")
+    @Test
+    fun `test branch auto-anchor without chain ID fails closed`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAutoAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(true)
+                        // No defaultChain specified
+                    }
                 }
-                issued(Clock.System.now())
-            }
-            signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
-        }.getOrThrow()
 
-        assertNotNull(issuedCredential)
-    }
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            // Should fail when trying to anchor without chain ID
+            val result =
+                trustWeaveWithAutoAnchor.issue {
+                    credential {
+                        type("PersonCredential")
+                        issuer(issuerDidDoc.id)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Clock.System.now())
+                    }
+                    signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    // No anchor() call and no defaultChain
+                }
+
+            assertTrue(
+                result is IssuanceResult.Failure.InvalidRequest,
+                "Auto-anchor with no chain configured must fail closed, not issue an un-anchored " +
+                    "credential the caller believes was anchored. Got: $result",
+            )
+        }
+
+    @Test
+    fun `test branch auto-anchor with unregistered chain fails closed`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAutoAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(true)
+                        defaultChain("nonexistent:chain")
+                    }
+                }
+
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            val result =
+                trustWeaveWithAutoAnchor.issue {
+                    credential {
+                        type("PersonCredential")
+                        issuer(issuerDidDoc.id)
+                        subject {
+                            id("did:key:subject")
+                        }
+                        issued(Clock.System.now())
+                    }
+                    signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                }
+
+            assertTrue(
+                result is IssuanceResult.Failure,
+                "An unregistered anchor chain must fail closed, not silently skip anchoring. " +
+                    "Got: $result",
+            )
+        }
+
+    @Test
+    fun `test branch anchor failure handling`() =
+        runBlocking<Unit> {
+            // This tests the exception handling when anchoring fails
+            // The credential should still be issued even if anchoring fails
+            val kmsRef = kms
+            val trustWeaveWithAutoAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        autoAnchor(true)
+                        defaultChain("algorand:testnet")
+                    }
+                }
+
+            val issuerKey: KeyHandle =
+                when (val result = kms.generateKey("Ed25519", emptyMap())) {
+                    is GenerateKeyResult.Success -> result.keyHandle
+                    else -> throw IllegalStateException("Failed to generate key: $result")
+                }
+            val didMethod = DidKeyMockMethod(kms)
+            val issuerDidDoc: DidDocument = didMethod.createDid()
+
+            // Anchoring may fail, but credential should still be issued
+            val issuedCredential =
+                trustWeaveWithAutoAnchor
+                    .issue {
+                        credential {
+                            type("PersonCredential")
+                            issuer(issuerDidDoc.id)
+                            subject {
+                                id("did:key:subject")
+                            }
+                            issued(Clock.System.now())
+                        }
+                        signedBy(issuerDid = issuerDidDoc.id, keyId = issuerKey.id.value)
+                    }.getOrThrow()
+
+            assertNotNull(issuedCredential)
+        }
 }
-
-

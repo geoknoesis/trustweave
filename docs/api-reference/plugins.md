@@ -233,6 +233,7 @@ dependencies {
 Plugins are automatically discovered and registered via the SPI (Service Provider Interface) pattern. No extra registration call is required at runtime: providers on the classpath are considered when you build the facade:
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 

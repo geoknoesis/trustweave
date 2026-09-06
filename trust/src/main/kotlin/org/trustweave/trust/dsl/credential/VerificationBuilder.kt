@@ -1,18 +1,15 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.credential.CredentialService
-import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.credential.results.VerificationResult as CredentialVerificationResult
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.identifiers.SchemaId
-import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
-import org.trustweave.trust.TrustRegistry
-import org.trustweave.trust.TrustPolicy
-import org.trustweave.trust.TrustWeave
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Duration
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.trust.TrustRegistry
+import org.trustweave.credential.results.VerificationResult as CredentialVerificationResult
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 
 /**
  * Verification Builder DSL.
@@ -36,7 +33,7 @@ class VerificationBuilder(
      * Coroutine dispatcher for I/O-bound operations.
      * Defaults to [Dispatchers.IO] if not provided.
      */
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     internal var credential: VerifiableCredential? = null
         private set
@@ -70,14 +67,17 @@ class VerificationBuilder(
      * Prefer typed extension functions (e.g. `requireJadesProfile(...)`) where they exist; this
      * setter is the low-level escape hatch for engines that do not yet have a typed extension.
      */
-    fun additionalOption(key: String, value: Any?) {
+    fun additionalOption(
+        key: String,
+        value: Any?,
+    ) {
         require(key.isNotBlank()) { "Additional option key cannot be blank" }
         additionalOptions[key] = value
     }
 
     /**
      * Set the credential to verify.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -86,7 +86,7 @@ class VerificationBuilder(
      *     checkExpiration()
      * }
      * ```
-     * 
+     *
      * @param credential The verifiable credential to verify
      */
     fun credential(credential: VerifiableCredential) {
@@ -95,9 +95,9 @@ class VerificationBuilder(
 
     /**
      * Enable revocation checking.
-     * 
+     *
      * This is enabled by default. Only needed to explicitly enable after disabling.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -112,7 +112,7 @@ class VerificationBuilder(
 
     /**
      * Disable revocation checking.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -127,9 +127,9 @@ class VerificationBuilder(
 
     /**
      * Enable expiration checking.
-     * 
+     *
      * This is enabled by default. Only needed to explicitly enable after disabling.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -144,7 +144,7 @@ class VerificationBuilder(
 
     /**
      * Disable expiration checking.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -159,9 +159,9 @@ class VerificationBuilder(
 
     /**
      * Enable schema validation.
-     * 
+     *
      * Validates the credential against a JSON Schema or SHACL shape.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -169,7 +169,7 @@ class VerificationBuilder(
      *     validateSchema("https://example.com/schemas/degree.json")
      * }
      * ```
-     * 
+     *
      * @param schemaId The schema IRI to validate against
      */
     fun validateSchema(schemaId: String) {
@@ -179,7 +179,7 @@ class VerificationBuilder(
 
     /**
      * Disable schema validation.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -202,7 +202,7 @@ class VerificationBuilder(
 
     /**
      * Require issuer to be a trusted anchor in the trust registry.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -210,7 +210,7 @@ class VerificationBuilder(
      *     requireTrust(trustRegistry)
      * }
      * ```
-     * 
+     *
      * @param registry The trust registry to check against
      */
     fun requireTrust(registry: TrustRegistry) {
@@ -220,7 +220,7 @@ class VerificationBuilder(
 
     /**
      * Require a trust path from verifier to issuer.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.verify {
@@ -228,18 +228,21 @@ class VerificationBuilder(
      *     requireTrustPath(trustRegistry, maxLength = 3)
      * }
      * ```
-     * 
+     *
      * @param registry The trust registry to check against
      * @param maxPathLength Reserved for future trust-path depth limits (currently ignored)
      */
     @Suppress("UNUSED_PARAMETER")
-    fun requireTrustPath(registry: TrustRegistry, maxPathLength: Int = 3) {
+    fun requireTrustPath(
+        registry: TrustRegistry,
+        maxPathLength: Int = 3,
+    ) {
         this.trustPolicy = registry
     }
 
     /**
      * Use a custom trust policy.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * val policy = TrustEvaluator.allowlist(trustedIssuers)
@@ -248,7 +251,7 @@ class VerificationBuilder(
      *     withTrustPolicy(policy)
      * }
      * ```
-     * 
+     *
      * @param policy The trust policy to use
      */
     fun withTrustPolicy(policy: CredentialTrustPolicy) {
@@ -298,31 +301,34 @@ class VerificationBuilder(
 
     /**
      * Build and perform verification.
-     * 
+     *
      * This operation performs I/O-bound work (credential verification, DID resolution, revocation checking)
      * and uses the configured dispatcher. It is non-blocking and can be cancelled.
      */
-    suspend fun build(): CredentialVerificationResult = withContext(ioDispatcher) {
-        val cred = credential ?: throw IllegalStateException(
-            "Credential is required. Use credential(credential) to specify the credential to verify."
-        )
+    suspend fun build(): CredentialVerificationResult =
+        withContext(ioDispatcher) {
+            val cred =
+                credential ?: throw IllegalStateException(
+                    "Credential is required. Use credential(credential) to specify the credential to verify.",
+                )
 
-        val options = VerificationOptions(
-            checkRevocation = checkRevocation,
-            checkExpiration = checkExpiration,
-            checkNotBefore = true,
-            resolveIssuerDid = true,
-            validateSchema = validateSchema,
-            schemaId = schemaId?.let { SchemaId(it) },
-            verifyPresentationProof = verifyPresentationProof,
-            enforceHolderBinding = enforceHolderBinding,
-            verifyChallenge = verifyChallenge,
-            expectedChallenge = expectedChallenge,
-            verifyDomain = verifyDomain,
-            expectedDomain = expectedDomain,
-            additionalOptions = additionalOptions.toMap(),
-        )
+            val options =
+                VerificationOptions(
+                    checkRevocation = checkRevocation,
+                    checkExpiration = checkExpiration,
+                    checkNotBefore = true,
+                    resolveIssuerDid = true,
+                    validateSchema = validateSchema,
+                    schemaId = schemaId?.let { SchemaId(it) },
+                    verifyPresentationProof = verifyPresentationProof,
+                    enforceHolderBinding = enforceHolderBinding,
+                    verifyChallenge = verifyChallenge,
+                    expectedChallenge = expectedChallenge,
+                    verifyDomain = verifyDomain,
+                    expectedDomain = expectedDomain,
+                    additionalOptions = additionalOptions.toMap(),
+                )
 
-        credentialService.verify(cred, trustPolicy = trustPolicy, options = options)
-    }
+            credentialService.verify(cred, trustPolicy = trustPolicy, options = options)
+        }
 }

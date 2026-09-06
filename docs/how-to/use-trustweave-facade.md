@@ -36,6 +36,7 @@ After completing this guide, you will have:
 Here's a complete example showing the simplicity of the facade API:
 
 ```kotlin
+import org.trustweave.trust.inMemory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.getOrThrowDid
@@ -122,6 +123,7 @@ val (issuerDid, issuerDoc) = tw.createDid().getOrThrow()  // Uses default from c
 Issue a credential using the DSL:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.extractKeyId
 
 val issuerKeyId = issuerDoc.verificationMethod.firstOrNull()?.extractKeyId()
@@ -197,6 +199,7 @@ val cred = trustWeave.issue {
 ### Full Configuration
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.DidMethods.WEB
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
@@ -297,6 +300,7 @@ fun main() = runBlocking {
 ### Pattern 2: Production with Blockchain Anchoring
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.DidMethods.WEB
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519

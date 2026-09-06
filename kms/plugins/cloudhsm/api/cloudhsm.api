@@ -1,0 +1,92 @@
+public final class org/trustweave/kms/cloudhsm/CloudHsmException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/kms/cloudhsm/CloudHsmKeyManagementService : java/io/Closeable, org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/kms/cloudhsm/CloudHsmKeyManagementService$Companion;
+	public fun <init> (Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun describeCluster (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getClusterCertificateAuthorityPem (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getClusterState (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun requireClusterActive (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/kms/cloudhsm/CloudHsmKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/kms/cloudhsm/CloudHsmKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/kms/cloudhsm/CloudHsmKmsConfig {
+	public static final field Companion Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig$Companion;
+	public static final field DEFAULT_PARTITION Ljava/lang/String;
+	public static final field DEFAULT_PASSWORD_ENV_VAR Ljava/lang/String;
+	public static final field DEFAULT_REGION Ljava/lang/String;
+	public static final field KEY_CLB_ENDPOINT Ljava/lang/String;
+	public static final field KEY_CLUSTER_ID Ljava/lang/String;
+	public static final field KEY_ENABLE_SOFT_DELETE Ljava/lang/String;
+	public static final field KEY_HSM_PASSWORD_ENV_VAR Ljava/lang/String;
+	public static final field KEY_HSM_USER Ljava/lang/String;
+	public static final field KEY_PARTITION Ljava/lang/String;
+	public static final field KEY_PKCS11_LIBRARY_PATH Ljava/lang/String;
+	public static final field KEY_REGION Ljava/lang/String;
+	public static final field KEY_SLOT Ljava/lang/String;
+	public static final field LINUX_PKCS11_LIBRARY Ljava/lang/String;
+	public static final field WINDOWS_PKCS11_LIBRARY Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()I
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Z
+	public final fun composeLoginPin ()[C
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Z)Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;ZILjava/lang/Object;)Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClassicLoadBalancerEndpoint ()Ljava/lang/String;
+	public final fun getClusterId ()Ljava/lang/String;
+	public final fun getEnableSoftDelete ()Z
+	public final fun getHsmPasswordEnvVar ()Ljava/lang/String;
+	public final fun getHsmUser ()Ljava/lang/String;
+	public final fun getPartition ()Ljava/lang/String;
+	public final fun getPkcs11LibraryPath ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getSlot ()I
+	public fun hashCode ()I
+	public final fun resolvedHsmPassword ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/cloudhsm/CloudHsmKmsConfig$Companion {
+	public final fun defaultPkcs11LibraryPath ()Ljava/lang/String;
+	public final fun fromEnvironment ()Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/kms/cloudhsm/CloudHsmKmsConfig;
+}
+

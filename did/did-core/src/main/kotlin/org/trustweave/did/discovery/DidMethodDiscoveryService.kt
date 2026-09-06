@@ -1,6 +1,5 @@
 package org.trustweave.did.discovery
 
-import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.MethodCapabilities
 import org.trustweave.did.registry.DidMethodRegistry
 
@@ -76,16 +75,11 @@ interface DidMethodDiscoveryService {
  * Default implementation of method discovery service.
  */
 class DefaultDidMethodDiscoveryService(
-    private val registry: DidMethodRegistry
+    private val registry: DidMethodRegistry,
 ) : DidMethodDiscoveryService {
+    override suspend fun discoverAvailableMethods(): List<String> = registry.getAllMethodNames()
 
-    override suspend fun discoverAvailableMethods(): List<String> {
-        return registry.getAllMethodNames()
-    }
-
-    override suspend fun isMethodSupported(method: String): Boolean {
-        return registry.get(method) != null
-    }
+    override suspend fun isMethodSupported(method: String): Boolean = registry.get(method) != null
 
     override suspend fun getMethodCapabilities(method: String): MethodCapabilities? {
         val didMethod = registry.get(method) ?: return null
@@ -93,7 +87,5 @@ class DefaultDidMethodDiscoveryService(
             ?: MethodCapabilities(method = method, resolve = true)
     }
 
-    override suspend fun discoverFromUniversalResolver(endpoint: String): List<String> {
-        return emptyList()
-    }
+    override suspend fun discoverFromUniversalResolver(endpoint: String): List<String> = emptyList()
 }

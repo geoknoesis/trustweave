@@ -1,25 +1,24 @@
 package org.trustweave.credential.schema.internal
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.SchemaFormat
-import org.trustweave.credential.model.Claims
-import org.trustweave.credential.schema.SchemaValidator
-import org.trustweave.credential.schema.SchemaValidationResult
-import org.trustweave.credential.schema.SchemaValidationError
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.trustweave.credential.model.Claims
+import org.trustweave.credential.model.SchemaFormat
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.schema.SchemaValidationError
+import org.trustweave.credential.schema.SchemaValidationResult
+import org.trustweave.credential.schema.SchemaValidator
 
 /**
  * SHACL (Shapes Constraint Language) validator implementation.
@@ -55,25 +54,31 @@ class ShaclValidator : SchemaValidator {
 
     override suspend fun validate(
         credential: VerifiableCredential,
-        schema: JsonObject
+        schema: JsonObject,
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
 
         // Validate credential structure
         if (!credential.type.any { it.value == "VerifiableCredential" }) {
-            errors.add(SchemaValidationError(
-                path = "/type",
-                message = "Credential must include 'VerifiableCredential' in type array",
-                code = "missing_type"
-            ))
+            errors.add(
+                SchemaValidationError(
+                    path = "/type",
+                    message = "Credential must include 'VerifiableCredential' in type array",
+                    code = "missing_type",
+                ),
+            )
         }
 
-        if (credential.issuer.id.value.isBlank()) {
-            errors.add(SchemaValidationError(
-                path = "/issuer",
-                message = "Credential issuer is required",
-                code = "missing_issuer"
-            ))
+        if (credential.issuer.id.value
+                .isBlank()
+        ) {
+            errors.add(
+                SchemaValidationError(
+                    path = "/issuer",
+                    message = "Credential issuer is required",
+                    code = "missing_issuer",
+                ),
+            )
         }
 
         // Validate against SHACL shape
@@ -82,33 +87,36 @@ class ShaclValidator : SchemaValidator {
 
         return SchemaValidationResult(
             valid = errors.isEmpty(),
-            errors = errors
+            errors = errors,
         )
     }
 
     override suspend fun validateClaims(
         claims: Claims,
-        schema: JsonObject
+        schema: JsonObject,
     ): SchemaValidationResult {
         val errors = mutableListOf<SchemaValidationError>()
 
         // Extract SHACL properties
-        val properties = schema["sh:property"]?.let {
-            when (it) {
-                is kotlinx.serialization.json.JsonArray -> it.mapNotNull { elem ->
-                    elem.jsonObject
+        val properties =
+            schema["sh:property"]?.let {
+                when (it) {
+                    is kotlinx.serialization.json.JsonArray ->
+                        it.mapNotNull { elem ->
+                            elem.jsonObject
+                        }
+                    is kotlinx.serialization.json.JsonObject -> listOf(it)
+                    else -> emptyList()
                 }
-                is kotlinx.serialization.json.JsonObject -> listOf(it)
-                else -> emptyList()
-            }
-        } ?: emptyList()
+            } ?: emptyList()
 
         // Convert Claims (Map<String, JsonElement>) to JsonObject for validation
-        val claimsObject = buildJsonObject {
-            for (entry in claims) {
-                put(entry.key, entry.value)
+        val claimsObject =
+            buildJsonObject {
+                for (entry in claims) {
+                    put(entry.key, entry.value)
+                }
             }
-        }
 
         // Validate each property constraint
         for (propertyShape in properties) {
@@ -127,18 +135,20 @@ class ShaclValidator : SchemaValidator {
             if (path != null && minCount > 0) {
                 val fieldName = path.substringAfterLast("/").substringAfterLast(":")
                 if (!claimsObject.containsKey(fieldName)) {
-                    errors.add(SchemaValidationError(
-                        path = "/claims/$fieldName",
-                        message = "Required property '$fieldName' is missing (minCount: $minCount)",
-                        code = "missing_required_property"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/claims/$fieldName",
+                            message = "Required property '$fieldName' is missing (minCount: $minCount)",
+                            code = "missing_required_property",
+                        ),
+                    )
                 }
             }
         }
 
         return SchemaValidationResult(
             valid = errors.isEmpty(),
-            errors = errors
+            errors = errors,
         )
     }
 
@@ -147,7 +157,7 @@ class ShaclValidator : SchemaValidator {
      */
     private fun validateShaclShape(
         credential: VerifiableCredential,
-        schema: JsonObject
+        schema: JsonObject,
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
@@ -156,27 +166,31 @@ class ShaclValidator : SchemaValidator {
         if (targetClass != null) {
             val credentialType = credential.type.find { it.value != "VerifiableCredential" }
             if (credentialType?.value != targetClass) {
-                errors.add(SchemaValidationError(
-                    path = "/type",
-                    message = "Credential type '${credentialType?.value}' does not match SHACL target class '$targetClass'",
-                    code = "type_mismatch"
-                ))
+                errors.add(
+                    SchemaValidationError(
+                        path = "/type",
+                        message = "Credential type '${credentialType?.value}' does not match SHACL target class '$targetClass'",
+                        code = "type_mismatch",
+                    ),
+                )
             }
         }
 
         // Validate credentialSubject against property shapes
         // Convert credentialSubject.claims to JsonObject for validation
-        val subjectClaimsObject = buildJsonObject {
-            for (entry in credential.credentialSubject.claims) {
-                put(entry.key, entry.value)
+        val subjectClaimsObject =
+            buildJsonObject {
+                for (entry in credential.credentialSubject.claims) {
+                    put(entry.key, entry.value)
+                }
             }
-        }
-        val properties = schema["sh:property"]?.let {
-            when (it) {
-                is JsonArray -> it
-                else -> null
+        val properties =
+            schema["sh:property"]?.let {
+                when (it) {
+                    is JsonArray -> it
+                    else -> null
+                }
             }
-        }
         if (properties != null) {
             for (propertyShape in properties) {
                 val propertyObj = propertyShape.jsonObject
@@ -186,11 +200,13 @@ class ShaclValidator : SchemaValidator {
                 if (path != null && minCount > 0) {
                     val fieldName = path.substringAfterLast("/").substringAfterLast(":")
                     if (!subjectClaimsObject.containsKey(fieldName)) {
-                        errors.add(SchemaValidationError(
-                            path = "/credentialSubject/$fieldName",
-                            message = "Required property '$fieldName' is missing (minCount: $minCount)",
-                            code = "missing_required_property"
-                        ))
+                        errors.add(
+                            SchemaValidationError(
+                                path = "/credentialSubject/$fieldName",
+                                message = "Required property '$fieldName' is missing (minCount: $minCount)",
+                                code = "missing_required_property",
+                            ),
+                        )
                     }
                 }
             }
@@ -205,7 +221,7 @@ class ShaclValidator : SchemaValidator {
     private fun validatePropertyConstraint(
         subject: kotlinx.serialization.json.JsonObject,
         path: String,
-        propertyShape: JsonObject
+        propertyShape: JsonObject,
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
@@ -224,32 +240,38 @@ class ShaclValidator : SchemaValidator {
         // Check minCount constraint
         val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull
         if (minCount != null && minCount > 0 && fieldValue == null) {
-            errors.add(SchemaValidationError(
-                path = "/credentialSubject/$fieldName",
-                message = "Property '$fieldName' is required (minCount: $minCount)",
-                code = "min_count_violation"
-            ))
+            errors.add(
+                SchemaValidationError(
+                    path = "/credentialSubject/$fieldName",
+                    message = "Property '$fieldName' is required (minCount: $minCount)",
+                    code = "min_count_violation",
+                ),
+            )
         }
 
         // Check maxCount constraint
         val maxCount = propertyShape["sh:maxCount"]?.jsonPrimitive?.intOrNull
         if (maxCount != null && maxCount == 1 && fieldValue is kotlinx.serialization.json.JsonArray && fieldValue.size > 1) {
-            errors.add(SchemaValidationError(
-                path = "/credentialSubject/$fieldName",
-                message = "Property '$fieldName' exceeds maxCount ($maxCount)",
-                code = "max_count_violation"
-            ))
+            errors.add(
+                SchemaValidationError(
+                    path = "/credentialSubject/$fieldName",
+                    message = "Property '$fieldName' exceeds maxCount ($maxCount)",
+                    code = "max_count_violation",
+                ),
+            )
         }
 
         // Check minLength constraint
         val minLength = propertyShape["sh:minLength"]?.jsonPrimitive?.intOrNull
         if (minLength != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
             if (fieldValue.content.length < minLength) {
-                errors.add(SchemaValidationError(
-                    path = "/credentialSubject/$fieldName",
-                    message = "Property '$fieldName' length must be at least $minLength",
-                    code = "min_length_violation"
-                ))
+                errors.add(
+                    SchemaValidationError(
+                        path = "/credentialSubject/$fieldName",
+                        message = "Property '$fieldName' length must be at least $minLength",
+                        code = "min_length_violation",
+                    ),
+                )
             }
         }
 
@@ -257,11 +279,13 @@ class ShaclValidator : SchemaValidator {
         val maxLength = propertyShape["sh:maxLength"]?.jsonPrimitive?.intOrNull
         if (maxLength != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
             if (fieldValue.content.length > maxLength) {
-                errors.add(SchemaValidationError(
-                    path = "/credentialSubject/$fieldName",
-                    message = "Property '$fieldName' length must be at most $maxLength",
-                    code = "max_length_violation"
-                ))
+                errors.add(
+                    SchemaValidationError(
+                        path = "/credentialSubject/$fieldName",
+                        message = "Property '$fieldName' length must be at most $maxLength",
+                        code = "max_length_violation",
+                    ),
+                )
             }
         }
 
@@ -269,39 +293,49 @@ class ShaclValidator : SchemaValidator {
         val pattern = propertyShape["sh:pattern"]?.jsonPrimitive?.content
         if (pattern != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
             try {
-                val regex = java.util.regex.Pattern.compile(pattern)
+                val regex =
+                    java.util.regex.Pattern
+                        .compile(pattern)
                 if (!regex.matcher(fieldValue.content).matches()) {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' does not match pattern: $pattern",
-                        code = "pattern_violation"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' does not match pattern: $pattern",
+                            code = "pattern_violation",
+                        ),
+                    )
                 }
             } catch (e: Exception) {
                 // Invalid regex pattern - add warning
-                errors.add(SchemaValidationError(
-                    path = "/credentialSubject/$fieldName",
-                    message = "Invalid pattern constraint: $pattern",
-                    code = "invalid_pattern"
-                ))
+                errors.add(
+                    SchemaValidationError(
+                        path = "/credentialSubject/$fieldName",
+                        message = "Invalid pattern constraint: $pattern",
+                        code = "invalid_pattern",
+                    ),
+                )
             }
         }
 
         // Check in constraint (enum-like)
-        val `in` = propertyShape["sh:in"]?.let {
-            when (it) {
-                is kotlinx.serialization.json.JsonArray -> it.mapNotNull { elem ->
-                    elem.jsonPrimitive?.content
+        val `in` =
+            propertyShape["sh:in"]?.let {
+                when (it) {
+                    is kotlinx.serialization.json.JsonArray ->
+                        it.mapNotNull { elem ->
+                            elem.jsonPrimitive?.content
+                        }
+                    else -> emptyList()
                 }
-                else -> emptyList()
             }
-        }
         if (`in` != null && fieldValue is kotlinx.serialization.json.JsonPrimitive && fieldValue.isString) {
             if (!`in`.contains(fieldValue.content)) {
-                errors.add(SchemaValidationError(
-                    path = "/credentialSubject/$fieldName",
-                    message = "Property '$fieldName' value '${fieldValue.content}' is not in allowed values: ${`in`.joinToString()}"
-                ))
+                errors.add(
+                    SchemaValidationError(
+                        path = "/credentialSubject/$fieldName",
+                        message = "Property '$fieldName' value '${fieldValue.content}' is not in allowed values: ${`in`.joinToString()}",
+                    ),
+                )
             }
         }
 
@@ -314,90 +348,112 @@ class ShaclValidator : SchemaValidator {
     private fun validateDatatype(
         value: kotlinx.serialization.json.JsonElement,
         datatype: String,
-        fieldName: String
+        fieldName: String,
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
         when (datatype) {
             "http://www.w3.org/2001/XMLSchema#string",
-            "xsd:string" -> {
+            "xsd:string",
+            -> {
                 if (value !is kotlinx.serialization.json.JsonPrimitive || !value.isString) {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be a string",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be a string",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
             "http://www.w3.org/2001/XMLSchema#integer",
-            "xsd:integer" -> {
+            "xsd:integer",
+            -> {
                 if (value !is kotlinx.serialization.json.JsonPrimitive || value.longOrNull == null) {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be an integer",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be an integer",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
             "http://www.w3.org/2001/XMLSchema#decimal",
             "http://www.w3.org/2001/XMLSchema#double",
             "xsd:decimal",
-            "xsd:double" -> {
+            "xsd:double",
+            -> {
                 if (value !is kotlinx.serialization.json.JsonPrimitive || value.doubleOrNull == null) {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be a number",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be a number",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
             "http://www.w3.org/2001/XMLSchema#boolean",
-            "xsd:boolean" -> {
+            "xsd:boolean",
+            -> {
                 if (value !is kotlinx.serialization.json.JsonPrimitive || value.booleanOrNull == null) {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be a boolean",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be a boolean",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
             "http://www.w3.org/2001/XMLSchema#dateTime",
-            "xsd:dateTime" -> {
+            "xsd:dateTime",
+            -> {
                 if (value is kotlinx.serialization.json.JsonPrimitive && value.isString) {
                     try {
                         Instant.parse(value.content)
                     } catch (e: Exception) {
-                        errors.add(SchemaValidationError(
-                            path = "/credentialSubject/$fieldName",
-                            message = "Property '$fieldName' must be a valid dateTime",
-                            code = "datatype_mismatch"
-                        ))
+                        errors.add(
+                            SchemaValidationError(
+                                path = "/credentialSubject/$fieldName",
+                                message = "Property '$fieldName' must be a valid dateTime",
+                                code = "datatype_mismatch",
+                            ),
+                        )
                     }
                 } else {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be a dateTime string",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be a dateTime string",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
             "http://www.w3.org/2001/XMLSchema#anyURI",
-            "xsd:anyURI" -> {
+            "xsd:anyURI",
+            -> {
                 if (value is kotlinx.serialization.json.JsonPrimitive && value.isString) {
                     val uri = value.content
                     if (!uri.startsWith("http://") && !uri.startsWith("https://") && !uri.startsWith("did:") && !uri.startsWith("urn:")) {
-                        errors.add(SchemaValidationError(
-                            path = "/credentialSubject/$fieldName",
-                            message = "Property '$fieldName' must be a valid URI",
-                            code = "datatype_mismatch"
-                        ))
+                        errors.add(
+                            SchemaValidationError(
+                                path = "/credentialSubject/$fieldName",
+                                message = "Property '$fieldName' must be a valid URI",
+                                code = "datatype_mismatch",
+                            ),
+                        )
                     }
                 } else {
-                    errors.add(SchemaValidationError(
-                        path = "/credentialSubject/$fieldName",
-                        message = "Property '$fieldName' must be a URI string",
-                        code = "datatype_mismatch"
-                    ))
+                    errors.add(
+                        SchemaValidationError(
+                            path = "/credentialSubject/$fieldName",
+                            message = "Property '$fieldName' must be a URI string",
+                            code = "datatype_mismatch",
+                        ),
+                    )
                 }
             }
         }
@@ -405,4 +461,3 @@ class ShaclValidator : SchemaValidator {
         return errors
     }
 }
-

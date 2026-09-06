@@ -45,7 +45,7 @@ interface DidDocumentCanonicalizationService {
      * @return Canonicalized JSON-LD string
      */
     suspend fun canonicalize(document: DidDocument): String
-    
+
     /**
      * Compute document digest for integrity verification.
      *
@@ -55,7 +55,7 @@ interface DidDocumentCanonicalizationService {
      * @return Multibase-encoded digest (e.g., "zQm...")
      */
     suspend fun computeDigest(document: DidDocument): String
-    
+
     /**
      * Normalize document for comparison.
      *
@@ -75,7 +75,6 @@ interface DidDocumentCanonicalizationService {
  * For production use, consider integrating with a full JSON-LD library.
  */
 class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
-
     /**
      * Not URDNA2015-conformant: this implementation uses deterministic JSON serialization,
      * not the RDF Dataset Normalisation algorithm. A conformant implementation would set
@@ -87,50 +86,60 @@ class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
         // Simplified canonicalization
         // Full implementation would use URDNA2015 algorithm from JSON-LD spec
         // For now, we use a deterministic JSON serialization
-        
+
         val normalized = normalize(document)
-        
+
         // Serialize to JSON with deterministic ordering
         // In production, use a proper JSON-LD canonicalization library
-        return kotlinx.serialization.json.Json {
-            prettyPrint = false
-            encodeDefaults = false
-            ignoreUnknownKeys = false
-        }.encodeToString(
-            org.trustweave.did.model.DidDocument.serializer(),
-            normalized
-        )
+        return kotlinx.serialization.json
+            .Json {
+                prettyPrint = false
+                encodeDefaults = false
+                ignoreUnknownKeys = false
+            }.encodeToString(
+                org.trustweave.did.model.DidDocument
+                    .serializer(),
+                normalized,
+            )
     }
-    
+
     override suspend fun computeDigest(document: DidDocument): String {
         val canonical = canonicalize(document)
-        val hash = MessageDigest.getInstance("SHA-256")
-            .digest(canonical.toByteArray(Charsets.UTF_8))
-        
+        val hash =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest(canonical.toByteArray(Charsets.UTF_8))
+
         // Multibase encoding: 'u' prefix = base64url without padding (RFC 4648 §5).
         // The previous code mistakenly used the base58btc prefix 'z' here while encoding
         // with base64url — this commit corrects the prefix to match the actual encoding.
         return "u" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
     }
-    
+
     override suspend fun normalize(document: DidDocument): DidDocument {
         // Normalize: sort arrays, remove duplicates, etc.
         return document.copy(
-            verificationMethod = document.verificationMethod
-                .sortedBy { it.id.value },
-            service = document.service
-                .sortedBy { it.id },
-            authentication = document.authentication
-                .sortedBy { it.value },
-            assertionMethod = document.assertionMethod
-                .sortedBy { it.value },
-            keyAgreement = document.keyAgreement
-                .sortedBy { it.value },
-            capabilityInvocation = document.capabilityInvocation
-                .sortedBy { it.value },
-            capabilityDelegation = document.capabilityDelegation
-                .sortedBy { it.value }
+            verificationMethod =
+                document.verificationMethod
+                    .sortedBy { it.id.value },
+            service =
+                document.service
+                    .sortedBy { it.id },
+            authentication =
+                document.authentication
+                    .sortedBy { it.value },
+            assertionMethod =
+                document.assertionMethod
+                    .sortedBy { it.value },
+            keyAgreement =
+                document.keyAgreement
+                    .sortedBy { it.value },
+            capabilityInvocation =
+                document.capabilityInvocation
+                    .sortedBy { it.value },
+            capabilityDelegation =
+                document.capabilityDelegation
+                    .sortedBy { it.value },
         )
     }
 }
-

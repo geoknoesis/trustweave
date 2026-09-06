@@ -1,14 +1,12 @@
 package org.trustweave.examples.healthcare
 
-import org.trustweave.examples.StubScenarioTest
-import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for Healthcare Medical Records scenario.
  */
-class HealthcareExampleTest : StubScenarioTest() {
+class HealthcareExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
 }
-

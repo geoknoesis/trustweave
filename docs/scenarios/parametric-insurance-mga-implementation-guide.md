@@ -380,6 +380,7 @@ data class SarFloodMeasurement(
 ```kotlin
 package com.atlasparametric.products.heatwave
 
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
@@ -605,6 +606,7 @@ data class HeatwavePolicy(
 ```kotlin
 package com.atlasparametric.products.solar
 
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils

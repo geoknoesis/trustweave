@@ -1,0 +1,21 @@
+public final class org/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient, java/io/Closeable {
+	public static final field Companion Lorg/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient$Companion;
+	public static final field MAINNET Ljava/lang/String;
+	public static final field TESTNET Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+}
+
+public final class org/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/bitcoin/BitcoinIntegration : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+

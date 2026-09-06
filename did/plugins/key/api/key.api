@@ -1,0 +1,13 @@
+public final class org/trustweave/keydid/KeyDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/keydid/spi/KeyDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

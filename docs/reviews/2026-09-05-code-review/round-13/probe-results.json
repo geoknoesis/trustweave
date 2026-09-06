@@ -1,0 +1,23 @@
+{
+  "tests": "4",
+  "failures": "4",
+  "errors": "0",
+  "cases": [
+    {
+      "name": "amount range without required currency must be rejected()",
+      "failure": "org.opentest4j.AssertionFailedError: Expected value to be false."
+    },
+    {
+      "name": "budget must reject a first transaction above its entire cap()",
+      "failure": "org.opentest4j.AssertionFailedError: Expected value to be false."
+    },
+    {
+      "name": "string encoded payment amounts must be rejected()",
+      "failure": "org.opentest4j.AssertionFailedError: Expected value to be false."
+    },
+    {
+      "name": "negative payment amounts must be rejected()",
+      "failure": "org.opentest4j.AssertionFailedError: Expected value to be false."
+    }
+  ]
+}

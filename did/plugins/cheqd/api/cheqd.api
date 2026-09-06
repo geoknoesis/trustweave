@@ -1,0 +1,64 @@
+public final class org/trustweave/cheqddid/CheqdDidConfig {
+	public static final field Companion Lorg/trustweave/cheqddid/CheqdDidConfig$Companion;
+	public static final field MAINNET Ljava/lang/String;
+	public static final field MAINNET_API_URL Ljava/lang/String;
+	public static final field TESTNET Ljava/lang/String;
+	public static final field TESTNET_API_URL Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()I
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/Map;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/cheqddid/CheqdDidConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/Map;ILjava/lang/Object;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccountAddress ()Ljava/lang/String;
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getCheqdApiUrl ()Ljava/lang/String;
+	public final fun getNetwork ()Ljava/lang/String;
+	public final fun getPrivateKey ()Ljava/lang/String;
+	public final fun getTimeoutSeconds ()I
+	public fun hashCode ()I
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/cheqddid/CheqdDidConfig$Builder {
+	public fun <init> ()V
+	public final fun accountAddress (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun build ()Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public final fun cheqdApiUrl (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun network (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun privateKey (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun timeoutSeconds (I)Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+}
+
+public final class org/trustweave/cheqddid/CheqdDidConfig$Companion {
+	public final fun builder ()Lorg/trustweave/cheqddid/CheqdDidConfig$Builder;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public final fun mainnet (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public static synthetic fun mainnet$default (Lorg/trustweave/cheqddid/CheqdDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public final fun testnet (Ljava/lang/String;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+	public static synthetic fun testnet$default (Lorg/trustweave/cheqddid/CheqdDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/cheqddid/CheqdDidConfig;
+}
+
+public final class org/trustweave/cheqddid/CheqdDidMethod : org/trustweave/did/base/AbstractBlockchainDidMethod {
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/cheqddid/CheqdDidConfig;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/cheqddid/spi/CheqdDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

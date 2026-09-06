@@ -29,23 +29,25 @@ val DidResolutionResult.documentOrNull: DidDocument?
 
 /** §4.2 resolution metadata for any outcome. */
 val DidResolutionResult.resolutionMetadata: DidResolutionMetadata
-    get() = when (this) {
-        is DidResolutionResult.Success -> resolutionMetadata
-        is DidResolutionResult.Deactivated -> resolutionMetadata
-        is DidResolutionResult.Failure.NotFound -> resolutionMetadata
-        is DidResolutionResult.Failure.InvalidFormat -> resolutionMetadata
-        is DidResolutionResult.Failure.MethodNotRegistered -> resolutionMetadata
-        is DidResolutionResult.Failure.ResolutionError -> resolutionMetadata
-        is DidResolutionResult.Failure.OptionsError -> resolutionMetadata
-    }
+    get() =
+        when (this) {
+            is DidResolutionResult.Success -> resolutionMetadata
+            is DidResolutionResult.Deactivated -> resolutionMetadata
+            is DidResolutionResult.Failure.NotFound -> resolutionMetadata
+            is DidResolutionResult.Failure.InvalidFormat -> resolutionMetadata
+            is DidResolutionResult.Failure.MethodNotRegistered -> resolutionMetadata
+            is DidResolutionResult.Failure.ResolutionError -> resolutionMetadata
+            is DidResolutionResult.Failure.OptionsError -> resolutionMetadata
+        }
 
 /** §4.3 document metadata; empty for failed resolutions, as §4 requires. */
 val DidResolutionResult.documentMetadata: DidDocumentMetadata
-    get() = when (this) {
-        is DidResolutionResult.Success -> documentMetadata
-        is DidResolutionResult.Deactivated -> documentMetadata
-        is DidResolutionResult.Failure -> DidDocumentMetadata()
-    }
+    get() =
+        when (this) {
+            is DidResolutionResult.Success -> documentMetadata
+            is DidResolutionResult.Deactivated -> documentMetadata
+            is DidResolutionResult.Failure -> DidDocumentMetadata()
+        }
 
 /** The RFC 9457 error object, or null when resolution did not fail. */
 val DidResolutionResult.error: DidResolutionError?
@@ -64,10 +66,11 @@ val DidResolutionResult.errorMessage: String?
  *
  * A deactivated DID throws — per §4.4 there is no document to return.
  */
-fun DidResolutionResult.getOrThrow(): DidDocument = when (this) {
-    is DidResolutionResult.Success -> document
-    is DidResolutionResult.Deactivated -> throw IllegalStateException("DID is deactivated: ${did.value}")
-    is DidResolutionResult.Failure -> throw IllegalStateException(
-        errorMessage ?: "DID resolution failed: ${errorType ?: "unknown error"}"
-    )
-}
+fun DidResolutionResult.getOrThrow(): DidDocument =
+    when (this) {
+        is DidResolutionResult.Success -> document
+        is DidResolutionResult.Deactivated -> throw IllegalStateException("DID is deactivated: ${did.value}")
+        is DidResolutionResult.Failure -> throw IllegalStateException(
+            errorMessage ?: "DID resolution failed: ${errorType ?: "unknown error"}",
+        )
+    }

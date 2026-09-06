@@ -1,0 +1,147 @@
+public class org/trustweave/did/registrar/server/spring/DidRegistrarConfiguration {
+	public fun <init> ()V
+	public fun didRegistrarService (Lorg/trustweave/did/registrar/DidRegistrar;Lorg/trustweave/did/registrar/storage/JobStorage;)Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;
+}
+
+public class org/trustweave/did/registrar/server/spring/DidRegistrarController {
+	public fun <init> (Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;)V
+	public fun createDid (Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deactivateDid$default (Lorg/trustweave/did/registrar/server/spring/DidRegistrarController;Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun getJobStatus (Ljava/lang/String;)Lorg/springframework/http/ResponseEntity;
+	public fun updateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/registrar/server/spring/DidRegistrarService {
+	public fun <init> (Lorg/trustweave/did/registrar/DidRegistrar;Lorg/trustweave/did/registrar/storage/JobStorage;)V
+	public final fun createDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getJobStatus (Ljava/lang/String;)Lorg/trustweave/did/registrar/model/DidRegistrationResponse;
+	public final fun updateDid (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/CreateDidRequest {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/did/registrar/model/CreateDidOptions;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;)Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getOptions ()Lorg/trustweave/did/registrar/model/CreateDidOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/server/spring/dto/CreateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/CreateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/registrar/model/DeactivateDidOptions;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/model/DeactivateDidOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registrar/model/DeactivateDidOptions;
+	public final fun copy (Lorg/trustweave/did/registrar/model/DeactivateDidOptions;)Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOptions ()Lorg/trustweave/did/registrar/model/DeactivateDidOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/ErrorResponse {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/did/registrar/model/DidState;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidState ()Lorg/trustweave/did/registrar/model/DidState;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getErrorCode ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/server/spring/dto/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/ErrorResponse$Companion {
+	public final fun fromException (Ljava/lang/Throwable;Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public static synthetic fun fromException$default (Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse$Companion;Ljava/lang/Throwable;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public final fun fromMessage (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public static synthetic fun fromMessage$default (Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse$Companion;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/ErrorResponse;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/UpdateDidRequest {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest$Companion;
+	public fun <init> (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;)V
+	public synthetic fun <init> (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component2 ()Lorg/trustweave/did/registrar/model/UpdateDidOptions;
+	public final fun copy (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;)Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;ILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidDocument ()Lorg/trustweave/did/model/DidDocument;
+	public final fun getOptions ()Lorg/trustweave/did/registrar/model/UpdateDidOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/server/spring/dto/UpdateDidRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/server/spring/dto/UpdateDidRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

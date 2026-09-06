@@ -1,32 +1,32 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.credential.model.vc.CredentialSchema
-import org.trustweave.credential.model.vc.CredentialStatus
-import org.trustweave.credential.model.Evidence
-import org.trustweave.credential.model.vc.RefreshService
-import org.trustweave.credential.model.vc.TermsOfUse
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.CredentialSubject
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.SchemaFormat
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.StatusPurpose
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.SchemaId
 import org.trustweave.credential.identifiers.StatusListId
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.credential.model.vc.SubjectBuilder as VcSubjectBuilder
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.Evidence
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.CredentialSchema
+import org.trustweave.credential.model.vc.CredentialStatus
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.RefreshService
+import org.trustweave.credential.model.vc.TermsOfUse
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.microseconds
-import kotlin.time.Duration.Companion.nanoseconds
+import org.trustweave.credential.model.vc.SubjectBuilder as VcSubjectBuilder
 
 // Approximation: uses 365.25-day average. For calendar-exact expiry use validUntil(instant) directly.
 private val Int.years: kotlin.time.Duration get() = (this * 365.25).toLong().days
@@ -74,14 +74,14 @@ class CredentialBuilder {
 
     /**
      * Set credential ID.
-     * 
+     *
      * @param id Must be a valid URI or follow the format: `credential:<identifier>`
      * @throws IllegalArgumentException if id is blank or contains invalid characters
      */
     fun id(id: String) {
         require(id.isNotBlank()) { "Credential ID cannot be blank" }
-        require(id.matches(Regex("^[a-zA-Z0-9._:/?#\\[\\]@!$&'()*+,;=%-]+$"))) { 
-            "Credential ID contains invalid characters. Must be a valid URI or identifier." 
+        require(id.matches(Regex("^[a-zA-Z0-9._:/?#\\[\\]@!$&'()*+,;=%-]+$"))) {
+            "Credential ID contains invalid characters. Must be a valid URI or identifier."
         }
         this.id = id
     }
@@ -89,7 +89,7 @@ class CredentialBuilder {
     /**
      * Add credential type(s) using type-safe CredentialType instances.
      * "VerifiableCredential" is automatically added.
-     * 
+     *
      * @param types One or more CredentialType instances (e.g., CredentialType.Education, CredentialType.Custom("MyType"))
      */
     fun type(vararg types: CredentialType) {
@@ -99,7 +99,7 @@ class CredentialBuilder {
     /**
      * Add credential type(s) using string values (for backward compatibility).
      * "VerifiableCredential" is automatically added.
-     * 
+     *
      * @param types One or more credential type strings (e.g., "EducationCredential", "PersonCredential")
      */
     fun type(vararg types: String) {
@@ -108,21 +108,21 @@ class CredentialBuilder {
 
     /**
      * Set issuer DID.
-     * 
+     *
      * @param did Must be a valid DID starting with "did:"
      * @throws IllegalArgumentException if did is blank or doesn't start with "did:"
      */
     fun issuer(did: String) {
         require(did.isNotBlank()) { "Issuer DID cannot be blank" }
-        require(did.startsWith("did:")) { 
-            "Issuer DID must start with 'did:'. Got: $did" 
+        require(did.startsWith("did:")) {
+            "Issuer DID must start with 'did:'. Got: $did"
         }
         this.issuer = did
     }
-    
+
     /**
      * Set credential issuer DID.
-     * 
+     *
      * @param did The issuer DID
      */
     fun issuer(did: Did) {
@@ -137,20 +137,26 @@ class CredentialBuilder {
         builder.block()
         subjectBuilder = builder
     }
-    
+
     /**
      * Configure credential subject with DID.
      */
-    fun subject(did: Did, block: VcSubjectBuilder.() -> Unit = {}) {
+    fun subject(
+        did: Did,
+        block: VcSubjectBuilder.() -> Unit = {},
+    ) {
         val builder = VcSubjectBuilder(did)
         builder.block()
         subjectBuilder = builder
     }
-    
+
     /**
      * Configure credential subject with IRI string.
      */
-    fun subject(iri: String, block: VcSubjectBuilder.() -> Unit = {}) {
+    fun subject(
+        iri: String,
+        block: VcSubjectBuilder.() -> Unit = {},
+    ) {
         val builder = VcSubjectBuilder(Iri(iri))
         builder.block()
         subjectBuilder = builder
@@ -158,9 +164,9 @@ class CredentialBuilder {
 
     /**
      * Set issuance date.
-     * 
+     *
      * If not provided, defaults to `Clock.System.now()` when building the credential.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * credential {
@@ -168,7 +174,7 @@ class CredentialBuilder {
      *     // Or omit for automatic: issued()
      * }
      * ```
-     * 
+     *
      * @param date The issuance date (defaults to current time if not specified)
      */
     fun issued(date: Instant) {
@@ -186,7 +192,7 @@ class CredentialBuilder {
 
     /**
      * Set expiration date as duration from now.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * credential {
@@ -217,7 +223,7 @@ class CredentialBuilder {
      * Set expiration date as duration from now (convenience alias).
      *
      * This is an alias for `expires(duration)` for better readability.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * credential {
@@ -244,15 +250,18 @@ class CredentialBuilder {
 
     /**
      * Set credential schema.
-     * 
+     *
      * @param schemaId Must be a valid URI (e.g., "https://example.com/schemas/degree.json")
      * @param type Schema validator type (default: "JsonSchemaValidator2018")
      * @throws IllegalArgumentException if schemaId is blank or not a valid URI
      */
-    fun schema(schemaId: String, type: String = "JsonSchemaValidator2018") {
+    fun schema(
+        schemaId: String,
+        type: String = "JsonSchemaValidator2018",
+    ) {
         require(schemaId.isNotBlank()) { "Schema ID cannot be blank" }
-        require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
-            "Schema ID must be a valid URI. Got: $schemaId" 
+        require(schemaId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) {
+            "Schema ID must be a valid URI. Got: $schemaId"
         }
         credentialSchema = CredentialSchema(SchemaId(schemaId), type)
     }
@@ -285,7 +294,10 @@ class CredentialBuilder {
      * @param type Service type identifier
      * @throws IllegalArgumentException if any parameter is blank or id is not a valid URI
      */
-    fun refreshService(id: String, type: String) {
+    fun refreshService(
+        id: String,
+        type: String,
+    ) {
         require(id.isNotBlank()) { "Refresh service ID cannot be blank" }
         require(type.isNotBlank()) { "Refresh service type cannot be blank" }
         require(id.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) {
@@ -299,12 +311,12 @@ class CredentialBuilder {
      */
     fun build(): VerifiableCredential {
         // Ensure "VerifiableCredential" is in types
-        val allTypes = if (types.isEmpty() || !types.contains("VerifiableCredential")) {
-            mutableListOf("VerifiableCredential").apply { addAll(types) }
-        } else {
-            types
-        }
-
+        val allTypes =
+            if (types.isEmpty() || !types.contains("VerifiableCredential")) {
+                mutableListOf("VerifiableCredential").apply { addAll(types) }
+            } else {
+                types
+            }
 
         // VC 2.0 temporal consistency
         val effectiveStart = validFrom ?: issuanceDate
@@ -332,24 +344,27 @@ class CredentialBuilder {
         // - If neither issued() nor validFrom() was called, default to now() for backward-compat VC 1.1.
         // - If only validFrom() was set (VC 2.0 caller), omit the deprecated issuanceDate field
         //   entirely by setting it to null.
-        val issuanceDateInstant: Instant? = when {
-            capturedIssuanceDate != null -> capturedIssuanceDate  // explicit issued() call
-            validFrom == null -> Clock.System.now()               // VC 1.1 default
-            else -> null                                          // VC 2.0: omit issuanceDate
-        }
+        val issuanceDateInstant: Instant? =
+            when {
+                capturedIssuanceDate != null -> capturedIssuanceDate // explicit issued() call
+                validFrom == null -> Clock.System.now() // VC 1.1 default
+                else -> null // VC 2.0: omit issuanceDate
+            }
 
-        val subjectCredential = subjectBuilder?.build()
-            ?: throw IllegalStateException(
-                "Credential subject is required. Use subject { ... } to build the credential subject."
-            )
+        val subjectCredential =
+            subjectBuilder?.build()
+                ?: throw IllegalStateException(
+                    "Credential subject is required. Use subject { ... } to build the credential subject.",
+                )
 
         return VerifiableCredential(
             id = id?.let { CredentialId(it) },
             type = allTypes.map { CredentialType.fromString(it) },
-            issuer = issuer?.let { Issuer.from(it) }
-                ?: throw IllegalStateException(
-                    "Issuer is required. Use issuer(did) to specify the credential issuer DID."
-                ),
+            issuer =
+                issuer?.let { Issuer.from(it) }
+                    ?: throw IllegalStateException(
+                        "Issuer is required. Use issuer(did) to specify the credential issuer DID.",
+                    ),
             credentialSubject = subjectCredential,
             issuanceDate = issuanceDateInstant,
             validFrom = this.validFrom,
@@ -360,7 +375,7 @@ class CredentialBuilder {
             evidence = if (evidenceList.isEmpty()) null else evidenceList,
             proof = null, // Proof is added during issuance
             termsOfUse = termsOfUse,
-            refreshService = refreshService
+            refreshService = refreshService,
         )
     }
 }
@@ -375,7 +390,7 @@ class SubjectBuilder {
 
     /**
      * Set subject ID from a Did type.
-     * 
+     *
      * @param did The subject DID
      */
     fun id(did: Did) {
@@ -384,7 +399,7 @@ class SubjectBuilder {
 
     /**
      * Add claims from a map, handling nested structures.
-     * 
+     *
      * This is a helper method to add multiple claims at once, properly handling
      * nested maps and primitive values.
      */
@@ -419,19 +434,20 @@ class SubjectBuilder {
      * Set a simple property value.
      */
     infix fun String.to(value: Any?) {
-        properties[this] = when (value) {
-            is String -> JsonPrimitive(value)
-            is Number -> JsonPrimitive(value)
-            is Boolean -> JsonPrimitive(value)
-            is JsonElement -> value
-            null -> JsonNull
-            else -> JsonPrimitive(value.toString())
-        }
+        properties[this] =
+            when (value) {
+                is String -> JsonPrimitive(value)
+                is Number -> JsonPrimitive(value)
+                is Boolean -> JsonPrimitive(value)
+                is JsonElement -> value
+                null -> JsonNull
+                else -> JsonPrimitive(value.toString())
+            }
     }
 
     /**
      * Add a nested object using 'to' syntax.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * "degree" to {
@@ -449,13 +465,12 @@ class SubjectBuilder {
     /**
      * Build the credential subject JSON.
      */
-    fun build(): JsonObject {
-        return buildJsonObject {
+    fun build(): JsonObject =
+        buildJsonObject {
             properties.forEach { (key, value) ->
                 put(key, value)
             }
         }
-    }
 }
 
 /**
@@ -477,46 +492,52 @@ class JsonObjectBuilder {
      * Set a nested property.
      */
     infix fun String.to(value: Any?) {
-        properties[this] = when (value) {
-            is String -> JsonPrimitive(value)
-            is Number -> JsonPrimitive(value)
-            is Boolean -> JsonPrimitive(value)
-            is JsonElement -> value
-            is List<*> -> {
-                // Handle arrays - check if items are objects built via DSL
-                JsonArray(value.map {
-                    when (it) {
-                        is String -> JsonPrimitive(it)
-                        is Number -> JsonPrimitive(it)
-                        is Boolean -> JsonPrimitive(it)
-                        is JsonObject -> it
-                        is Map<*, *> -> {
-                            // Convert Map to JsonObject - safely handle any map type
-                            buildJsonObject {
-                                it.entries.forEach { (key, v) ->
-                                    put(key.toString(), when (v) {
-                                        is String -> JsonPrimitive(v)
-                                        is Number -> JsonPrimitive(v)
-                                        is Boolean -> JsonPrimitive(v)
-                                        is JsonElement -> v
-                                        else -> JsonPrimitive(v?.toString() ?: "")
-                                    })
+        properties[this] =
+            when (value) {
+                is String -> JsonPrimitive(value)
+                is Number -> JsonPrimitive(value)
+                is Boolean -> JsonPrimitive(value)
+                is JsonElement -> value
+                is List<*> -> {
+                    // Handle arrays - check if items are objects built via DSL
+                    JsonArray(
+                        value.map {
+                            when (it) {
+                                is String -> JsonPrimitive(it)
+                                is Number -> JsonPrimitive(it)
+                                is Boolean -> JsonPrimitive(it)
+                                is JsonObject -> it
+                                is Map<*, *> -> {
+                                    // Convert Map to JsonObject - safely handle any map type
+                                    buildJsonObject {
+                                        it.entries.forEach { (key, v) ->
+                                            put(
+                                                key.toString(),
+                                                when (v) {
+                                                    is String -> JsonPrimitive(v)
+                                                    is Number -> JsonPrimitive(v)
+                                                    is Boolean -> JsonPrimitive(v)
+                                                    is JsonElement -> v
+                                                    else -> JsonPrimitive(v?.toString() ?: "")
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
+                                else -> JsonPrimitive(it.toString())
                             }
-                        }
-                        else -> JsonPrimitive(it.toString())
-                    }
-                })
+                        },
+                    )
+                }
+                null -> JsonNull
+                else -> JsonPrimitive(value.toString())
             }
-            null -> JsonNull
-            else -> JsonPrimitive(value.toString())
-        }
     }
-    
+
     /**
      * Set an array property with a list of object builders.
      * This allows creating arrays of objects using DSL syntax.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * "grades" to listOf(
@@ -526,38 +547,53 @@ class JsonObjectBuilder {
      * ```
      */
     infix fun String.to(blocks: List<JsonObjectBuilder.() -> Unit>) {
-        properties[this] = JsonArray(blocks.map { block ->
-            JsonObjectBuilder().apply(block).build()
-        })
+        properties[this] =
+            JsonArray(
+                blocks.map { block ->
+                    JsonObjectBuilder().apply(block).build()
+                },
+            )
     }
 
     /**
      * Put a property value.
-     * 
+     *
      * This method supports the SchemaDsl interface pattern.
      */
-    fun put(key: String, value: String) {
+    fun put(
+        key: String,
+        value: String,
+    ) {
         properties[key] = JsonPrimitive(value)
     }
 
     /**
      * Put a property value (number).
      */
-    fun put(key: String, value: Number) {
+    fun put(
+        key: String,
+        value: Number,
+    ) {
         properties[key] = JsonPrimitive(value)
     }
 
     /**
      * Put a property value (boolean).
      */
-    fun put(key: String, value: Boolean) {
+    fun put(
+        key: String,
+        value: Boolean,
+    ) {
         properties[key] = JsonPrimitive(value)
     }
 
     /**
      * Put a nested JSON object.
      */
-    fun put(key: String, block: JsonObjectBuilder.() -> Unit) {
+    fun put(
+        key: String,
+        block: JsonObjectBuilder.() -> Unit,
+    ) {
         val builder = JsonObjectBuilder()
         builder.block()
         properties[key] = builder.build()
@@ -566,27 +602,32 @@ class JsonObjectBuilder {
     /**
      * Put a JSON array.
      */
-    fun put(key: String, values: List<JsonElement>) {
+    fun put(
+        key: String,
+        values: List<JsonElement>,
+    ) {
         properties[key] = JsonArray(values)
     }
 
     /**
      * Put a JsonObject directly.
      */
-    fun put(key: String, value: JsonObject) {
+    fun put(
+        key: String,
+        value: JsonObject,
+    ) {
         properties[key] = value
     }
 
     /**
      * Build nested JSON object.
      */
-    fun build(): JsonObject {
-        return buildJsonObject {
+    fun build(): JsonObject =
+        buildJsonObject {
             properties.forEach { (key, value) ->
                 put(key, value)
             }
         }
-    }
 }
 
 /**
@@ -608,11 +649,12 @@ class CredentialStatusBuilder {
     }
 
     fun statusPurpose(purpose: String) {
-        this.statusPurpose = when (purpose.lowercase()) {
-            "revocation" -> StatusPurpose.REVOCATION
-            "suspension" -> StatusPurpose.SUSPENSION
-            else -> throw IllegalArgumentException("Invalid status purpose: $purpose. Must be 'revocation' or 'suspension'")
-        }
+        this.statusPurpose =
+            when (purpose.lowercase()) {
+                "revocation" -> StatusPurpose.REVOCATION
+                "suspension" -> StatusPurpose.SUSPENSION
+                else -> throw IllegalArgumentException("Invalid status purpose: $purpose. Must be 'revocation' or 'suspension'")
+            }
     }
 
     fun statusListIndex(index: String) {
@@ -632,7 +674,7 @@ class CredentialStatusBuilder {
             type = type,
             statusPurpose = statusPurpose,
             statusListIndex = statusListIndex,
-            statusListCredential = statusListCredential?.let { StatusListId(it) }
+            statusListCredential = statusListCredential?.let { StatusListId(it) },
         )
     }
 }
@@ -669,15 +711,22 @@ class EvidenceBuilder {
         this.evidenceDate = date
     }
 
-    fun build(): Evidence {
-        return Evidence(
-            id = id?.let { org.trustweave.credential.identifiers.CredentialId(it) },
+    fun build(): Evidence =
+        Evidence(
+            id =
+                id?.let {
+                    org.trustweave.credential.identifiers
+                        .CredentialId(it)
+                },
             type = if (types.isEmpty()) listOf("Evidence") else types,
             evidenceDocument = evidenceDocument,
-            verifier = verifier?.let { org.trustweave.credential.identifiers.IssuerId(it) },
-            evidenceDate = evidenceDate
+            verifier =
+                verifier?.let {
+                    org.trustweave.credential.identifiers
+                        .IssuerId(it)
+                },
+            evidenceDate = evidenceDate,
         )
-    }
 }
 
 /**
@@ -707,7 +756,7 @@ class TermsOfUseBuilder {
         return TermsOfUse(
             id = id,
             type = type,
-            additionalProperties = termsObj
+            additionalProperties = termsObj,
         )
     }
 }
@@ -720,4 +769,3 @@ fun credential(block: CredentialBuilder.() -> Unit): VerifiableCredential {
     builder.block()
     return builder.build()
 }
-

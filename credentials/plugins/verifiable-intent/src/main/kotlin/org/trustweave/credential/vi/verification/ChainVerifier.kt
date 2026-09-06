@@ -21,10 +21,10 @@ import org.trustweave.credential.vi.model.Vct
  * case. Implemented: L1/L2/L3 ES256 signatures, cross-layer `sd_hash` bindings, embedded-JWK key
  * resolution (L1.cnf→L2, L2.mandate.cnf→L3, L3 no-cnf, `kid` match), the L2 reference binding, the
  * L3 pair-identity binding, temporal checks (incl. L3 `exp − iat ≤ 1h`), payment required-fields and
- * the L2↔L3 `payment_instrument` cross-check, and constraint enforcement on the payment side.
+ * the L2↔L3 `payment_instrument` cross-check, and constraint enforcement on both fulfilment sides.
  *
- * Documented TODO (return an explicit error rather than silently passing): immediate mode, multi-pair
- * L2, the L3a↔L3b cross-reference when both L3s are presented together, and `card_id` cross-check.
+ * Multi-pair L2 and checkout line-item matching are not implemented and fail closed.
+ * Immediate mode, card-id matching and L3 cross-references are implemented within this profile.
  */
 internal object ChainVerifier {
     private const val MAX_L3_LIFETIME_SECONDS = 3600L
@@ -55,9 +55,26 @@ internal object ChainVerifier {
         expectedL2Aud: String? = null,
         expectedL2Nonce: String? = null,
         strictness: StrictnessMode = StrictnessMode.PERMISSIVE,
+        requireReplayProtection: Boolean = true,
+        allowMissingTemporalClaims: Boolean = false,
+        expectedL3PaymentAud: String? = null,
+        expectedL3PaymentNonce: String? = null,
+        expectedL3CheckoutAud: String? = null,
+        expectedL3CheckoutNonce: String? = null,
     ): ChainVerificationResult {
         val performed = mutableListOf<String>()
         val skipped = mutableListOf<String>()
+        if (now < 0 || clockSkewSeconds < 0) return fail("Verification time and skew must be non-negative", performed)
+        if (requireReplayProtection && (expectedL2Aud.isNullOrBlank() || expectedL2Nonce.isNullOrBlank())) {
+            return fail("Expected L2 audience and nonce are required for presentation verification", performed)
+        }
+        if (!requireReplayProtection) skipped += "replay_protection_not_required (explicit offline audit policy)"
+        for ((label, token) in listOf("L1" to l1, "L2" to l2)) {
+            temporalShape(token.payload, label, allowMissingTemporalClaims)?.let { return fail(it, performed) }
+            if (allowMissingTemporalClaims && (token.payload["iat"] == null || token.payload["exp"] == null)) {
+                skipped += "$label temporal claims absent (explicit audit policy)"
+            }
+        }
 
         // --- L1: header, signature, vct, temporal ---
         header(l1.header, "L1", Vct.Typ.L1)?.let { return fail(it, performed) }
@@ -81,6 +98,17 @@ internal object ChainVerifier {
         future(l2.payload["iat"], now, clockSkewSeconds)?.let { return fail("L2 iat $it", performed) }
         expired(l2.payload["exp"], now, clockSkewSeconds)?.let { return fail("L2 $it", performed) }
         audNonce("l2", l2.payload, expectedL2Aud, expectedL2Nonce, performed, skipped)?.let { return fail(it, performed) }
+
+        for ((label, token, expected) in listOf(
+            Triple("l3_payment", l3Payment, expectedL3PaymentAud to expectedL3PaymentNonce),
+            Triple("l3_checkout", l3Checkout, expectedL3CheckoutAud to expectedL3CheckoutNonce),
+        )) {
+            if (token == null) continue
+            if (requireReplayProtection && (expected.first.isNullOrBlank() || expected.second.isNullOrBlank())) {
+                return fail("Expected $label audience and nonce are required for presentation verification", performed)
+            }
+            audNonce(label, token.payload, expected.first, expected.second, performed, skipped)?.let { return fail(it, performed) }
+        }
 
         // --- Resolve L2, infer mode ---
         val l2Resolved = l2.resolve()
@@ -161,6 +189,12 @@ internal object ChainVerifier {
             performed += "open_checkout_contains_line_items"
         }
         payment?.let {
+            val instrument =
+                it.resolved["payment_instrument"] as? JsonObject
+                    ?: return fail("Open payment mandate missing authorized payment_instrument", performed)
+            if (instrument["id"]?.contentOrNull().isNullOrBlank() || instrument["type"]?.contentOrNull().isNullOrBlank()) {
+                return fail("Open payment mandate payment_instrument requires id and type", performed)
+            }
             if (!hasConstraint(it.resolved, Constraint.Reference.TYPE)) {
                 return fail("Open payment mandate must contain a mandate.payment.reference constraint", performed)
             }
@@ -182,11 +216,16 @@ internal object ChainVerifier {
             listOfNotNull(checkout, payment).filter {
                 it.resolved["vct"]?.contentOrNull() in setOf(Vct.CHECKOUT_OPEN, Vct.PAYMENT_OPEN)
             }
-        val agentJwks = openMandates.mapNotNull { Cnf.jwk(it.resolved) }
+        val agentJwks =
+            openMandates.map {
+                Cnf.jwk(it.resolved)
+                    ?: return fail("L2 mandates missing cnf.jwk for agent delegation", performed)
+            }
         val agentJwk =
             agentJwks.firstOrNull()
                 ?: return fail("L2 mandates missing cnf.jwk for agent delegation", performed)
-        if (agentJwks.any { it["x"]?.contentOrNull() != agentJwk["x"]?.contentOrNull() }) {
+        val publicKeyFields = listOf("kty", "crv", "x", "y")
+        if (agentJwks.any { key -> publicKeyFields.any { key[it] != agentJwk[it] } }) {
             return fail("L2 mandate cnf.jwk values must be identical across mandates but differ", performed)
         }
         val agentKid = Cnf.kid(agentJwk)
@@ -223,27 +262,8 @@ internal object ChainVerifier {
             )?.let { return fail(it, performed) }
             val resolved = l3Payment.resolve()
             l3PaymentResolved = resolved
-            // Constraint enforcement on the payment side
-            payment?.let { pm ->
-                val constraints =
-                    (pm.resolved["constraints"] as? JsonArray)
-                        ?.mapNotNull { it as? JsonObject }
-                        ?.map(Constraint::parse) ?: emptyList()
-                val fulfillment =
-                    finalMandate(resolved, Vct.PAYMENT_FINAL)
-                        ?: return fail("L3a missing final payment mandate", performed)
-                val cr =
-                    ConstraintChecker.check(
-                        constraints,
-                        fulfillment,
-                        strictness,
-                        isOpenMandate = true,
-                        disclosuresByHash = discByHash,
-                    )
-                performed += cr.checked.map { "constraint:$it" }
-                if (!cr.satisfied) return fail("Constraints not satisfied: ${cr.violations}", performed)
-                performed += "constraints_satisfied"
-            }
+            checkConstraints(checkNotNull(payment).resolved, resolved, Vct.PAYMENT_FINAL, strictness, discByHash, performed)
+                ?.let { return fail(it, performed) }
         }
         if (l3Checkout != null) {
             val routed = l2RoutedForCheckout ?: return fail("l2RoutedForCheckout required to verify L3b", performed)
@@ -261,6 +281,8 @@ internal object ChainVerifier {
                 performed = performed,
             )?.let { return fail(it, performed) }
             l3CheckoutResolved = l3Checkout.resolve()
+            checkConstraints(checkNotNull(checkout).resolved, l3CheckoutResolved, Vct.CHECKOUT_FINAL, strictness, discByHash, performed)
+                ?.let { return fail(it, performed) }
         }
         // When both L3s are presented together, they must agree on the cross-reference value.
         if (l3PaymentResolved != null && l3CheckoutResolved != null) {
@@ -280,6 +302,45 @@ internal object ChainVerifier {
     }
 
     // ---------------------------------------------------------------------------------------------
+
+    private fun checkConstraints(
+        mandate: JsonObject,
+        resolved: JsonObject,
+        vct: String,
+        strictness: StrictnessMode,
+        disclosures: Map<String, String>,
+        performed: MutableList<String>,
+    ): String? {
+        val raw = mandate["constraints"] as? JsonArray ?: return "Mandate constraints must be an array"
+        if (raw.any { it !is JsonObject }) return "Malformed mandate constraint entry"
+        val constraints = raw.map { Constraint.parse(it as JsonObject) }
+        val fulfillment = finalMandate(resolved, vct) ?: return "L3 missing final mandate: $vct"
+        val result = ConstraintChecker.check(constraints, fulfillment, strictness, isOpenMandate = true, disclosuresByHash = disclosures)
+        performed += result.checked.map { "constraint:$it" }
+        if (!result.satisfied) return "Constraints not satisfied: ${result.violations}"
+        performed += "constraints_satisfied"
+        return null
+    }
+
+    private fun temporalShape(
+        payload: JsonObject,
+        label: String,
+        allowMissing: Boolean,
+    ): String? {
+        for (key in listOf("iat", "exp")) {
+            val claim = payload[key]
+            if (claim == null && allowMissing) continue
+            val primitive = claim as? JsonPrimitive
+            val value = primitive?.longOrNull
+            if (primitive == null || primitive.isString || value == null || value < 0) {
+                return "$label requires a non-negative integer $key claim"
+            }
+        }
+        val iat = (payload["iat"] as? JsonPrimitive)?.longOrNull
+        val exp = (payload["exp"] as? JsonPrimitive)?.longOrNull
+        if (iat != null && exp != null && exp <= iat) return "$label exp must be after iat"
+        return null
+    }
 
     private data class MandateInfo(
         val resolved: JsonObject,
@@ -336,6 +397,7 @@ internal object ChainVerifier {
         }
         performed += "${tag(label)}_identity_binding"
         sdAlg(l3.payload, label)?.let { return it }
+        temporalShape(l3.payload, label, false)?.let { return it }
         future(l3.payload["iat"], now, skew)?.let { return "$label iat $it" }
         expired(l3.payload["exp"], now, skew)?.let { return "$label $it" }
         val iat = (l3.payload["iat"] as? JsonPrimitive)?.longOrNull
@@ -395,7 +457,7 @@ internal object ChainVerifier {
         l2Payment: JsonObject?,
         label: String,
     ): String? {
-        val l2Pi = (l2Payment?.get("payment_instrument") as? JsonObject) ?: return null
+        val l2Pi = (l2Payment?.get("payment_instrument") as? JsonObject) ?: return "$label L2 mandate missing authorized payment_instrument"
         val l3Pi = l3Mandate["payment_instrument"] as? JsonObject ?: return null
         if (l3Pi["id"]?.contentOrNull() != l2Pi["id"]?.contentOrNull() ||
             l3Pi["type"]?.contentOrNull() != l2Pi["type"]?.contentOrNull()
@@ -451,7 +513,7 @@ internal object ChainVerifier {
         skew: Long,
     ): String? {
         val v = (exp as? JsonPrimitive)?.longOrNull ?: return null
-        return if (now > v + skew) "expired at $v" else null
+        return if (now > v && now - v > skew) "expired at $v" else null
     }
 
     private fun future(
@@ -460,7 +522,7 @@ internal object ChainVerifier {
         skew: Long,
     ): String? {
         val v = (iat as? JsonPrimitive)?.longOrNull ?: return null
-        return if (v > now + skew) "is in the future: $v" else null
+        return if (v > now && v - now > skew) "is in the future: $v" else null
     }
 
     private fun audNonce(

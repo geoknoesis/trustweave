@@ -188,6 +188,7 @@ val offer = ExchangeRequest.Offer(
 ### Step 3: Drive the exchange (offer → request → issue)
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.exchange.request.ExchangeRequest
 import org.trustweave.credential.exchange.result.ExchangeResult
 import org.trustweave.credential.exchange.result.getOrThrow
@@ -385,6 +386,7 @@ registered protocol — substitute `ExchangeProtocolName.Oidc4Vci` / `.Chapi` fo
 DIDComm name to switch.
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
 import org.trustweave.credential.exchange.ExchangeServices
 import org.trustweave.credential.exchange.model.CredentialPreview

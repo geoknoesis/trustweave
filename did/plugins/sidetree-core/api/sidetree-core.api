@@ -1,0 +1,184 @@
+public final class org/trustweave/did/sidetree/FileSidetreeKeyStore : org/trustweave/did/sidetree/SidetreeKeyStore {
+	public fun <init> (Ljava/nio/file/Path;)V
+	public final fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeKeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/sidetree/InMemorySidetreeKeyStore : org/trustweave/did/sidetree/SidetreeKeyStore {
+	public fun <init> ()V
+	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeKeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeCommitment {
+	public static final field INSTANCE Lorg/trustweave/did/sidetree/SidetreeCommitment;
+	public final fun compute (Ljava/util/Map;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeHttpClient {
+	public static final field Companion Lorg/trustweave/did/sidetree/SidetreeHttpClient$Companion;
+	public fun <init> (Lokhttp3/OkHttpClient;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeMethodSpec;Lkotlin/Pair;)V
+	public synthetic fun <init> (Lokhttp3/OkHttpClient;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeMethodSpec;Lkotlin/Pair;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun submitOperation (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeHttpClient$Companion {
+}
+
+public final class org/trustweave/did/sidetree/SidetreeHttpClient$OperationResponse {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZILjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZILjava/lang/String;)Lorg/trustweave/did/sidetree/SidetreeHttpClient$OperationResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeHttpClient$OperationResponse;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeHttpClient$OperationResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHttpStatus ()I
+	public final fun getRawBody ()Ljava/lang/String;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeHttpClient$ResolutionResponse {
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ZILjava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component3 ()Z
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ZILjava/lang/String;)Lorg/trustweave/did/sidetree/SidetreeHttpClient$ResolutionResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeHttpClient$ResolutionResponse;Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonObject;ZILjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeHttpClient$ResolutionResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getHttpStatus ()I
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeJcs {
+	public static final field INSTANCE Lorg/trustweave/did/sidetree/SidetreeJcs;
+	public final fun canonicalize (Ljava/util/Map;)[B
+	public final fun canonicalize (Lkotlinx/serialization/json/JsonObject;)[B
+	public final fun mapToJsonObject (Ljava/util/Map;)Lkotlinx/serialization/json/JsonObject;
+	public final fun multihashSha256 ([B)[B
+	public final fun sha256 ([B)[B
+}
+
+public final class org/trustweave/did/sidetree/SidetreeJwsCompact {
+	public static final field INSTANCE Lorg/trustweave/did/sidetree/SidetreeJwsCompact;
+	public final fun signES256 (Lkotlinx/serialization/json/JsonObject;Ljava/util/Map;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeKeyPair {
+	public fun <init> (Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;)Lorg/trustweave/did/sidetree/SidetreeKeyPair;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeKeyPair;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeKeyPair;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRecoveryPrivateJwk ()Ljava/util/Map;
+	public final fun getRecoveryPublicJwk ()Ljava/util/Map;
+	public final fun getUpdatePrivateJwk ()Ljava/util/Map;
+	public final fun getUpdatePublicJwk ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/did/sidetree/SidetreeKeyStore {
+	public abstract fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun put (Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeKeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun remove (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeMethodSpec {
+	public static final field Companion Lorg/trustweave/did/sidetree/SidetreeMethodSpec$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)Lorg/trustweave/did/sidetree/SidetreeMethodSpec;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeMethodSpec;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeMethodSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIdentifiersPath ()Ljava/lang/String;
+	public final fun getNamespace ()Ljava/lang/String;
+	public final fun getOperationsPath ()Ljava/lang/String;
+	public final fun getRecoverSignedDataExtensionFields ()Ljava/util/Map;
+	public final fun getSuffixDataExtensionFields ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeMethodSpec$Companion {
+	public final fun getION ()Lorg/trustweave/did/sidetree/SidetreeMethodSpec;
+	public final fun getORB ()Lorg/trustweave/did/sidetree/SidetreeMethodSpec;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeOperationBuilder {
+	public fun <init> (Lorg/trustweave/did/sidetree/SidetreeMethodSpec;)V
+	public final fun buildCreateOperation (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun buildDeactivateOperation (Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun buildRecoverOperation (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun buildUpdateOperation (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun extractDidSuffix (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeOperationBuilder$CreateOperationResult {
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public final fun component5 ()Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;)Lorg/trustweave/did/sidetree/SidetreeOperationBuilder$CreateOperationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeOperationBuilder$CreateOperationResult;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeOperationBuilder$CreateOperationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidSuffix ()Ljava/lang/String;
+	public final fun getLongFormDid ()Ljava/lang/String;
+	public final fun getOperation ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getRecoveryKeyPair ()Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public final fun getUpdateKeyPair ()Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeP256KeyPair {
+	public static final field Companion Lorg/trustweave/did/sidetree/SidetreeP256KeyPair$Companion;
+	public fun <init> (Ljava/util/Map;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;Ljava/util/Map;)Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public static synthetic fun copy$default (Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPrivateJwk ()Ljava/util/Map;
+	public final fun getPublicJwk ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeP256KeyPair$Companion {
+	public final fun generate ()Lorg/trustweave/did/sidetree/SidetreeP256KeyPair;
+}
+
+public final class org/trustweave/did/sidetree/SidetreeP256KeyPairKt {
+	public static final fun withoutPrivateD (Ljava/util/Map;)Ljava/util/Map;
+}
+

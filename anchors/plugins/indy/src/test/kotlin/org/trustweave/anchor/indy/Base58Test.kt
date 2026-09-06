@@ -7,7 +7,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class Base58Test {
-
     @Test
     fun `round trip hello world`() {
         val bytes = "Hello, world!".toByteArray()

@@ -15,9 +15,10 @@ import org.trustweave.credential.model.ProofType
  * // ProofSuiteId.VC_LD
  * ```
  */
-fun ProofType.toProofSuiteId(): ProofSuiteId = when (this) {
-    is ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
-    is ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
-    is ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
-    is ProofType.Custom -> ProofSuiteId.VC_LD
-}
+fun ProofType.toProofSuiteId(): ProofSuiteId =
+    when (this) {
+        is ProofType.Ed25519Signature2020 -> ProofSuiteId.VC_LD
+        is ProofType.JsonWebSignature2020 -> ProofSuiteId.VC_JWT
+        is ProofType.BbsBlsSignature2020 -> ProofSuiteId.SD_JWT_VC
+        is ProofType.Custom -> ProofSuiteId.VC_LD
+    }

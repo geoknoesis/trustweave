@@ -23,6 +23,6 @@ interface SignatureVerificationPort {
         documentBytes: ByteArray,
         signatureBytes: ByteArray,
         verificationMethod: VerificationMethod,
-        proofType: String
+        proofType: String,
     ): Boolean
 }

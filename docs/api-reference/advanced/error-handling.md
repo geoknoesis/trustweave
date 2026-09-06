@@ -585,6 +585,7 @@ result.fold(
 ### Basic Error Handling
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.types.DidCreationResult
 

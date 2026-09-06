@@ -1,0 +1,20 @@
+public final class org/trustweave/anchor/optimism/OptimismBlockchainAnchorClient : org/trustweave/anchor/evm/AbstractEvmAnchorClient {
+	public static final field Companion Lorg/trustweave/anchor/optimism/OptimismBlockchainAnchorClient$Companion;
+	public static final field MAINNET Ljava/lang/String;
+	public static final field SEPOLIA Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/anchor/optimism/OptimismBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/optimism/OptimismIntegration : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+

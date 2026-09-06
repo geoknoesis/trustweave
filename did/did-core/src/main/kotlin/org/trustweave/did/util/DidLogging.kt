@@ -14,8 +14,8 @@ internal object DidLogging {
      * Gets a logger instance for the given class.
      * Returns a no-op logger if SLF4J is not available.
      */
-    fun getLogger(clazz: Class<*>): Logger {
-        return try {
+    fun getLogger(clazz: Class<*>): Logger =
+        try {
             val loggerFactory = Class.forName("org.slf4j.LoggerFactory")
             val getLoggerMethod = loggerFactory.getMethod("getLogger", Class::class.java)
             val slf4jLogger = getLoggerMethod.invoke(null, clazz)
@@ -27,15 +27,23 @@ internal object DidLogging {
             // Any other error - use no-op logger
             NoOpLogger
         }
-    }
 
     /**
      * Simple logger interface.
      */
     interface Logger {
-        fun error(message: String, throwable: Throwable? = null)
-        fun warn(message: String, throwable: Throwable? = null)
+        fun error(
+            message: String,
+            throwable: Throwable? = null,
+        )
+
+        fun warn(
+            message: String,
+            throwable: Throwable? = null,
+        )
+
         fun info(message: String)
+
         fun debug(message: String)
     }
 
@@ -43,11 +51,17 @@ internal object DidLogging {
      * No-op logger implementation for when SLF4J is not available.
      */
     private object NoOpLogger : Logger {
-        override fun error(message: String, throwable: Throwable?) {
+        override fun error(
+            message: String,
+            throwable: Throwable?,
+        ) {
             // Silent - no logging implementation available
         }
 
-        override fun warn(message: String, throwable: Throwable?) {
+        override fun warn(
+            message: String,
+            throwable: Throwable?,
+        ) {
             // Silent
         }
 
@@ -63,13 +77,18 @@ internal object DidLogging {
     /**
      * SLF4J logger adapter.
      */
-    private class Slf4jLoggerAdapter(private val slf4jLogger: Any) : Logger {
+    private class Slf4jLoggerAdapter(
+        private val slf4jLogger: Any,
+    ) : Logger {
         private val errorMethod = slf4jLogger.javaClass.getMethod("error", String::class.java, Throwable::class.java)
         private val warnMethod = slf4jLogger.javaClass.getMethod("warn", String::class.java, Throwable::class.java)
         private val infoMethod = slf4jLogger.javaClass.getMethod("info", String::class.java)
         private val debugMethod = slf4jLogger.javaClass.getMethod("debug", String::class.java)
 
-        override fun error(message: String, throwable: Throwable?) {
+        override fun error(
+            message: String,
+            throwable: Throwable?,
+        ) {
             try {
                 errorMethod.invoke(slf4jLogger, message, throwable)
             } catch (e: Exception) {
@@ -77,7 +96,10 @@ internal object DidLogging {
             }
         }
 
-        override fun warn(message: String, throwable: Throwable?) {
+        override fun warn(
+            message: String,
+            throwable: Throwable?,
+        ) {
             try {
                 warnMethod.invoke(slf4jLogger, message, throwable)
             } catch (e: Exception) {
@@ -102,4 +124,3 @@ internal object DidLogging {
         }
     }
 }
-

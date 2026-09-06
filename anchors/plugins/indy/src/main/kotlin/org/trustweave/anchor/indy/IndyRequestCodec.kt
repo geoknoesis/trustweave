@@ -1,16 +1,13 @@
 package org.trustweave.anchor.indy
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
 /**
@@ -23,12 +20,12 @@ import java.security.MessageDigest
  * See: https://github.com/hyperledger/indy-node/blob/main/docs/source/requests.md#attrib
  */
 internal object IndyRequestCodec {
-
     /** Stable JSON used for both signing input and on-wire serialization. */
-    val json: Json = Json {
-        encodeDefaults = true
-        prettyPrint = false
-    }
+    val json: Json =
+        Json {
+            encodeDefaults = true
+            prettyPrint = false
+        }
 
     /**
      * Build an unsigned ATTRIB request that stores [rawPayload] under the configured
@@ -45,18 +42,21 @@ internal object IndyRequestCodec {
         submitterDid: String,
         targetDid: String,
         rawPayload: JsonObject,
-        reqId: Long = nextReqId()
+        reqId: Long = nextReqId(),
     ): JsonObject {
         require(submitterDid.isNotBlank()) { "submitterDid must not be blank" }
         require(targetDid.isNotBlank()) { "targetDid must not be blank" }
 
         val rawString = json.encodeToString(JsonObject.serializer(), rawPayload)
         return buildJsonObject {
-            put("operation", buildJsonObject {
-                put("type", JsonPrimitive(IndyTxnTypes.ATTRIB))
-                put("dest", JsonPrimitive(targetDid))
-                put("raw", JsonPrimitive(rawString))
-            })
+            put(
+                "operation",
+                buildJsonObject {
+                    put("type", JsonPrimitive(IndyTxnTypes.ATTRIB))
+                    put("dest", JsonPrimitive(targetDid))
+                    put("raw", JsonPrimitive(rawString))
+                },
+            )
             put("identifier", JsonPrimitive(submitterDid))
             put("reqId", JsonPrimitive(reqId))
             put("protocolVersion", JsonPrimitive(IndyTxnTypes.PROTOCOL_VERSION))
@@ -71,18 +71,21 @@ internal object IndyRequestCodec {
         submitterDid: String,
         targetDid: String,
         attributeName: String = IndyAttribFields.ATTRIB_NAME,
-        reqId: Long = nextReqId()
+        reqId: Long = nextReqId(),
     ): JsonObject {
         require(submitterDid.isNotBlank()) { "submitterDid must not be blank" }
         require(targetDid.isNotBlank()) { "targetDid must not be blank" }
         require(attributeName.isNotBlank()) { "attributeName must not be blank" }
 
         return buildJsonObject {
-            put("operation", buildJsonObject {
-                put("type", JsonPrimitive(IndyTxnTypes.GET_ATTRIB))
-                put("dest", JsonPrimitive(targetDid))
-                put("raw", JsonPrimitive(attributeName))
-            })
+            put(
+                "operation",
+                buildJsonObject {
+                    put("type", JsonPrimitive(IndyTxnTypes.GET_ATTRIB))
+                    put("dest", JsonPrimitive(targetDid))
+                    put("raw", JsonPrimitive(attributeName))
+                },
+            )
             put("identifier", JsonPrimitive(submitterDid))
             put("reqId", JsonPrimitive(reqId))
             put("protocolVersion", JsonPrimitive(IndyTxnTypes.PROTOCOL_VERSION))
@@ -105,7 +108,10 @@ internal object IndyRequestCodec {
         return builder.toString().toByteArray(Charsets.UTF_8)
     }
 
-    private fun appendSorted(out: StringBuilder, element: JsonElement) {
+    private fun appendSorted(
+        out: StringBuilder,
+        element: JsonElement,
+    ) {
         when (element) {
             is JsonObject -> {
                 val keys = element.keys.sorted()
@@ -133,7 +139,10 @@ internal object IndyRequestCodec {
     /**
      * Attach a Base58-encoded signature to a request in-place. Returns the signed request.
      */
-    fun attachSignature(request: JsonObject, signatureBase58: String): JsonObject {
+    fun attachSignature(
+        request: JsonObject,
+        signatureBase58: String,
+    ): JsonObject {
         require(signatureBase58.isNotBlank()) { "signatureBase58 must not be blank" }
         return buildJsonObject {
             request.forEach { (k, v) -> put(k, v) }
@@ -161,20 +170,23 @@ internal object IndyRequestCodec {
      *   (Indy returns `"data": null` for never-set attributes).
      */
     fun parseGetAttribResponse(responseJson: JsonObject): GetAttribReply {
-        val result = responseJson["result"]?.jsonObject
-            ?: throw IllegalArgumentException("Missing 'result' field in Indy reply: $responseJson")
+        val result =
+            responseJson["result"]?.jsonObject
+                ?: throw IllegalArgumentException("Missing 'result' field in Indy reply: $responseJson")
 
         val dataField = result["data"]
-        val rawString = when {
-            dataField == null -> null
-            dataField is JsonPrimitive && !dataField.isString -> null
-            dataField is JsonPrimitive -> dataField.contentOrNull
-            else -> dataField.toString()
-        }
+        val rawString =
+            when {
+                dataField == null -> null
+                dataField is JsonPrimitive && !dataField.isString -> null
+                dataField is JsonPrimitive -> dataField.contentOrNull
+                else -> dataField.toString()
+            }
 
-        val parsedRaw = rawString?.takeIf { it.isNotBlank() && it != "null" }?.let {
-            json.parseToJsonElement(it).jsonObject
-        }
+        val parsedRaw =
+            rawString?.takeIf { it.isNotBlank() && it != "null" }?.let {
+                json.parseToJsonElement(it).jsonObject
+            }
 
         val seqNo = result["seqNo"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
         val txnTime = result["txnTime"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
@@ -182,7 +194,7 @@ internal object IndyRequestCodec {
         return GetAttribReply(
             raw = parsedRaw,
             seqNo = seqNo,
-            txnTime = txnTime
+            txnTime = txnTime,
         )
     }
 
@@ -193,13 +205,24 @@ internal object IndyRequestCodec {
      * We prefer `seqNo` because it is shorter and is what most explorers index against.
      */
     fun parseWriteReply(responseJson: JsonObject): String {
-        val result = responseJson["result"]?.jsonObject
-            ?: throw IllegalArgumentException("Missing 'result' field in Indy write reply: $responseJson")
+        val result =
+            responseJson["result"]?.jsonObject
+                ?: throw IllegalArgumentException("Missing 'result' field in Indy write reply: $responseJson")
 
         result["seqNo"]?.jsonPrimitive?.contentOrNull?.let { return it }
         result["txnId"]?.jsonPrimitive?.contentOrNull?.let { return it }
-        result["txnMetadata"]?.jsonObject?.get("seqNo")?.jsonPrimitive?.contentOrNull?.let { return it }
-        result["txnMetadata"]?.jsonObject?.get("txnId")?.jsonPrimitive?.contentOrNull?.let { return it }
+        result["txnMetadata"]
+            ?.jsonObject
+            ?.get("seqNo")
+            ?.jsonPrimitive
+            ?.contentOrNull
+            ?.let { return it }
+        result["txnMetadata"]
+            ?.jsonObject
+            ?.get("txnId")
+            ?.jsonPrimitive
+            ?.contentOrNull
+            ?.let { return it }
 
         throw IllegalArgumentException("Indy write reply has no seqNo / txnId: $responseJson")
     }
@@ -222,12 +245,14 @@ internal object IndyRequestCodec {
         return now * 1_000 + ctr
     }
 
-    private val counter = java.util.concurrent.atomic.AtomicLong(0)
+    private val counter =
+        java.util.concurrent.atomic
+            .AtomicLong(0)
 }
 
 /** Parsed GET_ATTRIB reply with the most relevant fields surfaced for the anchor layer. */
 internal data class GetAttribReply(
     val raw: JsonObject?,
     val seqNo: Long?,
-    val txnTime: Long?
+    val txnTime: Long?,
 )

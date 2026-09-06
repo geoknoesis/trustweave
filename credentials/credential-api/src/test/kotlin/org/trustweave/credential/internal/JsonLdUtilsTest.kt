@@ -4,10 +4,10 @@ import kotlinx.serialization.json.*
 import org.trustweave.core.exception.SerializationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFailsWith
 
 /**
  * Comprehensive tests for JsonLdUtils.
@@ -20,14 +20,14 @@ import kotlin.test.assertFailsWith
  * [SerializationException] instead of silently falling back to plain JSON serialization.
  */
 class JsonLdUtilsTest {
-
     @Test
     fun `test toJakartaObject with simple object`() {
-        val jsonObject = buildJsonObject {
-            put("name", "John")
-            put("age", 30)
-            put("active", true)
-        }
+        val jsonObject =
+            buildJsonObject {
+                put("name", "John")
+                put("age", 30)
+                put("active", true)
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -39,12 +39,16 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test toJakartaObject with nested object`() {
-        val jsonObject = buildJsonObject {
-            put("person", buildJsonObject {
-                put("name", "John")
-                put("age", 30)
-            })
-        }
+        val jsonObject =
+            buildJsonObject {
+                put(
+                    "person",
+                    buildJsonObject {
+                        put("name", "John")
+                        put("age", 30)
+                    },
+                )
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -55,13 +59,17 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test toJakartaObject with array preserves element types`() {
-        val jsonObject = buildJsonObject {
-            put("items", buildJsonArray {
-                add("item1")
-                add("item2")
-                add(42)
-            })
-        }
+        val jsonObject =
+            buildJsonObject {
+                put(
+                    "items",
+                    buildJsonArray {
+                        add("item1")
+                        add("item2")
+                        add(42)
+                    },
+                )
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -74,12 +82,13 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test toJakartaObject with number types`() {
-        val jsonObject = buildJsonObject {
-            put("int", 42)
-            put("long", 123456789L)
-            put("double", 3.14)
-            put("stringNumber", "123")
-        }
+        val jsonObject =
+            buildJsonObject {
+                put("int", 42)
+                put("long", 123456789L)
+                put("double", 3.14)
+                put("stringNumber", "123")
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -91,22 +100,34 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test canonicalizeDocument with valid document and defined claim terms`() {
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(buildJsonObject {
-                    put("name", "https://schema.org/name")
-                })
-            })
-            put("type", buildJsonArray {
-                add("VerifiableCredential")
-            })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(
+                            buildJsonObject {
+                                put("name", "https://schema.org/name")
+                            },
+                        )
+                    },
+                )
+                put(
+                    "type",
+                    buildJsonArray {
+                        add("VerifiableCredential")
+                    },
+                )
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("id", "did:key:subject")
+                        put("name", "John Doe")
+                    },
+                )
+            }
 
         val result = JsonLdUtils.canonicalizeDocument(document)
 
@@ -122,35 +143,49 @@ class JsonLdUtilsTest {
     @Test
     fun `test canonicalizeDocument is deterministic regardless of property order`() {
         val claimsContext = buildJsonObject { put("name", "https://schema.org/name") }
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(claimsContext)
-            })
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            })
-        }
-        val reordered = buildJsonObject {
-            put("credentialSubject", buildJsonObject {
-                put("name", "John Doe")
-                put("id", "did:key:subject")
-            })
-            put("issuer", "did:key:test")
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(claimsContext)
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(claimsContext)
+                    },
+                )
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("id", "did:key:subject")
+                        put("name", "John Doe")
+                    },
+                )
+            }
+        val reordered =
+            buildJsonObject {
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("name", "John Doe")
+                        put("id", "did:key:subject")
+                    },
+                )
+                put("issuer", "did:key:test")
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(claimsContext)
+                    },
+                )
+            }
 
         assertEquals(
             JsonLdUtils.canonicalizeDocument(document),
             JsonLdUtils.canonicalizeDocument(reordered),
-            "URDNA2015 canonical N-Quads must be independent of JSON property order"
+            "URDNA2015 canonical N-Quads must be independent of JSON property order",
         )
     }
 
@@ -158,35 +193,47 @@ class JsonLdUtilsTest {
     fun `test canonicalizeDocument drops undefined claims - fails closed`() {
         // "name" is not defined by the credentials/v1 context, so JSON-LD would silently
         // drop it from the canonical form — the claim would not be signed. Must throw.
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-            })
-            put("type", buildJsonArray {
-                add("VerifiableCredential")
-            })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonObject {
-                put("id", "did:key:subject")
-                put("name", "John Doe")
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                    },
+                )
+                put(
+                    "type",
+                    buildJsonArray {
+                        add("VerifiableCredential")
+                    },
+                )
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("id", "did:key:subject")
+                        put("name", "John Doe")
+                    },
+                )
+            }
 
-        val exception = assertFailsWith<SerializationException> {
-            JsonLdUtils.canonicalizeDocument(document)
-        }
+        val exception =
+            assertFailsWith<SerializationException> {
+                JsonLdUtils.canonicalizeDocument(document)
+            }
         assertTrue(
             exception.message?.contains("@context") == true,
-            "Error should instruct the caller to declare a proper @context, got: ${exception.message}"
+            "Error should instruct the caller to declare a proper @context, got: ${exception.message}",
         )
     }
 
     @Test
     fun `test canonicalizeDocument without context throws instead of falling back`() {
-        val document = buildJsonObject {
-            put("name", "test")
-            put("value", 123)
-        }
+        val document =
+            buildJsonObject {
+                put("name", "test")
+                put("value", 123)
+            }
 
         // No @context: canonicalization produces no RDF statements. The old behaviour was
         // a silent fallback to plain JSON — that is forbidden (non-deterministic signing
@@ -209,20 +256,25 @@ class JsonLdUtilsTest {
     fun `test canonicalizeDocument with unresolvable remote context throws`() {
         // Remote context loading is disabled by default; an unknown context URL must fail
         // canonicalization rather than fall back to plain JSON.
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://unknown.example.com/never-registered/v1")
-            })
-            put("name", "test")
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://unknown.example.com/never-registered/v1")
+                    },
+                )
+                put("name", "test")
+            }
 
-        val exception = assertFailsWith<SerializationException> {
-            JsonLdUtils.canonicalizeDocument(document)
-        }
+        val exception =
+            assertFailsWith<SerializationException> {
+                JsonLdUtils.canonicalizeDocument(document)
+            }
         assertTrue(
             exception.message?.contains("canonicalization") == true ||
                 exception.message?.contains("failed") == true,
-            "Error should mention the canonicalization failure, got: ${exception.message}"
+            "Error should mention the canonicalization failure, got: ${exception.message}",
         )
     }
 
@@ -230,46 +282,69 @@ class JsonLdUtilsTest {
     fun `test canonicalizeDocument respects size limit`() {
         // Use an inline context so the large literal actually reaches the canonical form.
         val largeString = "x".repeat(SecurityConstants.MAX_CANONICALIZED_DOCUMENT_SIZE_BYTES + 1)
-        val document = buildJsonObject {
-            put("@context", buildJsonObject {
-                put("largeField", "https://example.org/vocab#largeField")
-            })
-            put("largeField", largeString)
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonObject {
+                        put("largeField", "https://example.org/vocab#largeField")
+                    },
+                )
+                put("largeField", largeString)
+            }
 
-        val exception = assertFailsWith<IllegalArgumentException> {
-            JsonLdUtils.canonicalizeDocument(document)
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                JsonLdUtils.canonicalizeDocument(document)
+            }
         assertTrue(exception.message?.contains("exceeds maximum size") == true)
     }
 
     @Test
     fun `test canonicalizeDocument with complex nested structure`() {
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add("https://w3id.org/security/suites/ed25519-2020/v1")
-                add(buildJsonObject {
-                    put("degree", "https://example.org/vocab#degree")
-                    put("name", "https://schema.org/name")
-                    put("field", "https://example.org/vocab#field")
-                })
-            })
-            put("type", buildJsonArray {
-                add("VerifiableCredential")
-            })
-            put("issuer", buildJsonObject {
-                put("id", "did:key:issuer")
-                put("name", "Test University")
-            })
-            put("credentialSubject", buildJsonObject {
-                put("id", "did:key:subject")
-                put("degree", buildJsonObject {
-                    put("name", "Bachelor of Science")
-                    put("field", "Computer Science")
-                })
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add("https://w3id.org/security/suites/ed25519-2020/v1")
+                        add(
+                            buildJsonObject {
+                                put("degree", "https://example.org/vocab#degree")
+                                put("name", "https://schema.org/name")
+                                put("field", "https://example.org/vocab#field")
+                            },
+                        )
+                    },
+                )
+                put(
+                    "type",
+                    buildJsonArray {
+                        add("VerifiableCredential")
+                    },
+                )
+                put(
+                    "issuer",
+                    buildJsonObject {
+                        put("id", "did:key:issuer")
+                        put("name", "Test University")
+                    },
+                )
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("id", "did:key:subject")
+                        put(
+                            "degree",
+                            buildJsonObject {
+                                put("name", "Bachelor of Science")
+                                put("field", "Computer Science")
+                            },
+                        )
+                    },
+                )
+            }
 
         val result = JsonLdUtils.canonicalizeDocument(document)
 
@@ -283,18 +358,25 @@ class JsonLdUtilsTest {
      * and a single defined claim term, so the only thing that can fail canonicalization is
      * the relative-IRI subject-id guard (the claim term is always defined by the @context).
      */
-    private fun vcWithSubjectId(subjectId: String?) = buildJsonObject {
-        put("@context", buildJsonArray {
-            add("https://www.w3.org/2018/credentials/v1")
-            add(buildJsonObject { put("name", "https://schema.org/name") })
-        })
-        put("type", buildJsonArray { add("VerifiableCredential") })
-        put("issuer", "did:key:test")
-        put("credentialSubject", buildJsonObject {
-            if (subjectId != null) put("id", subjectId)
-            put("name", "John Doe")
-        })
-    }
+    private fun vcWithSubjectId(subjectId: String?) =
+        buildJsonObject {
+            put(
+                "@context",
+                buildJsonArray {
+                    add("https://www.w3.org/2018/credentials/v1")
+                    add(buildJsonObject { put("name", "https://schema.org/name") })
+                },
+            )
+            put("type", buildJsonArray { add("VerifiableCredential") })
+            put("issuer", "did:key:test")
+            put(
+                "credentialSubject",
+                buildJsonObject {
+                    if (subjectId != null) put("id", subjectId)
+                    put("name", "John Doe")
+                },
+            )
+        }
 
     @Test
     fun `canonicalizeDocument rejects a relative-IRI credentialSubject id - bare uuid`() {
@@ -303,13 +385,14 @@ class JsonLdUtilsTest {
         // the credential still verifies. Must fail closed.
         val document = vcWithSubjectId("9bc8be44-1234-5678-9abc-def012345678")
 
-        val exception = assertFailsWith<SerializationException> {
-            JsonLdUtils.canonicalizeDocument(document)
-        }
+        val exception =
+            assertFailsWith<SerializationException> {
+                JsonLdUtils.canonicalizeDocument(document)
+            }
         assertTrue(
             exception.message?.contains("relative", ignoreCase = true) == true ||
                 exception.message?.contains("absolute", ignoreCase = true) == true,
-            "Error should explain the relative/absolute subject-id requirement, got: ${exception.message}"
+            "Error should explain the relative/absolute subject-id requirement, got: ${exception.message}",
         )
     }
 
@@ -369,52 +452,71 @@ class JsonLdUtilsTest {
         // (An explicit "id": null is a degenerate input the broader claims-preserved round-trip
         // does not support, so the whole canonicalization may still fail for that orthogonal
         // reason — but never with the relative-IRI message, which is what this test pins down.)
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(buildJsonObject { put("name", "https://schema.org/name") })
-            })
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonObject {
-                put("id", JsonNull)
-                put("name", "John Doe")
-            })
-        }
-        val message = try {
-            JsonLdUtils.canonicalizeDocument(document)
-            null
-        } catch (e: SerializationException) {
-            e.message
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(buildJsonObject { put("name", "https://schema.org/name") })
+                    },
+                )
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonObject {
+                        put("id", JsonNull)
+                        put("name", "John Doe")
+                    },
+                )
+            }
+        val message =
+            try {
+                JsonLdUtils.canonicalizeDocument(document)
+                null
+            } catch (e: SerializationException) {
+                e.message
+            }
         if (message != null) {
             assertFalse(
                 message.contains("relative IRI"),
-                "The relative-IRI guard must not reject a JSON-null (anonymous) subject id; got: $message"
+                "The relative-IRI guard must not reject a JSON-null (anonymous) subject id; got: $message",
             )
         }
     }
 
     @Test
     fun `canonicalizeDocument rejects a relative id in any subject of a credentialSubject array`() {
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(buildJsonObject { put("name", "https://schema.org/name") })
-            })
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonArray {
-                add(buildJsonObject {
-                    put("id", "did:key:z6MkSubject")
-                    put("name", "Alice")
-                })
-                add(buildJsonObject {
-                    put("id", "9bc8be44-relative")
-                    put("name", "Bob")
-                })
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(buildJsonObject { put("name", "https://schema.org/name") })
+                    },
+                )
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonArray {
+                        add(
+                            buildJsonObject {
+                                put("id", "did:key:z6MkSubject")
+                                put("name", "Alice")
+                            },
+                        )
+                        add(
+                            buildJsonObject {
+                                put("id", "9bc8be44-relative")
+                                put("name", "Bob")
+                            },
+                        )
+                    },
+                )
+            }
 
         assertFailsWith<SerializationException> {
             JsonLdUtils.canonicalizeDocument(document)
@@ -428,27 +530,28 @@ class JsonLdUtilsTest {
         // has a colon (old guard passed it) but is not a usable absolute IRI, so toRdf drops the
         // subject's triples and its claims go UNSIGNED while the credential still verifies.
         // Every value below MUST fail closed.
-        val mustReject = listOf(
-            "9bc8be44-1234",        // bare uuid (no scheme)
-            "#subject",             // fragment-only
-            "subjects/123",         // bare path
-            "//host/path",          // network-path reference (no scheme)
-            ":foo",                 // empty scheme
-            "urn:has space",        // colon present but illegal space -> invalid IRI
-            "urn:uuid:with space",  // illegal space
-            "did:key:abc def",      // illegal space
-            "http://exa mple/x",    // illegal space in authority
-            "urn:a\"b",             // illegal double-quote
-            "urn:a^b",              // illegal caret
-            "urn:a`b",              // illegal backtick
-            "urn:a{b}",             // illegal braces
-            "urn:a|b",              // illegal pipe
-            "urn:a\\b"              // illegal backslash
-        )
+        val mustReject =
+            listOf(
+                "9bc8be44-1234", // bare uuid (no scheme)
+                "#subject", // fragment-only
+                "subjects/123", // bare path
+                "//host/path", // network-path reference (no scheme)
+                ":foo", // empty scheme
+                "urn:has space", // colon present but illegal space -> invalid IRI
+                "urn:uuid:with space", // illegal space
+                "did:key:abc def", // illegal space
+                "http://exa mple/x", // illegal space in authority
+                "urn:a\"b", // illegal double-quote
+                "urn:a^b", // illegal caret
+                "urn:a`b", // illegal backtick
+                "urn:a{b}", // illegal braces
+                "urn:a|b", // illegal pipe
+                "urn:a\\b", // illegal backslash
+            )
         for (id in mustReject) {
             assertFailsWith<SerializationException>(
                 "credentialSubject.id '$id' must be rejected (toRdf would drop its triples), " +
-                    "but canonicalization did not throw"
+                    "but canonicalization did not throw",
             ) {
                 JsonLdUtils.canonicalizeDocument(vcWithSubjectId(id))
             }
@@ -457,11 +560,12 @@ class JsonLdUtilsTest {
 
     @Test
     fun `canonicalizeDocument accepts valid absolute credentialSubject ids`() {
-        val mustAccept = listOf(
-            "urn:uuid:9bc8be44-7abc-4d29-a8f8-1e2c3d4e5f6a",
-            "https://example.com/status-lists/t/9bc8be44",
-            "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-        )
+        val mustAccept =
+            listOf(
+                "urn:uuid:9bc8be44-7abc-4d29-a8f8-1e2c3d4e5f6a",
+                "https://example.com/status-lists/t/9bc8be44",
+                "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            )
         for (id in mustAccept) {
             val result = JsonLdUtils.canonicalizeDocument(vcWithSubjectId(id))
             assertTrue(result.isNotBlank(), "credentialSubject.id '$id' should canonicalize, but result was blank")
@@ -471,24 +575,35 @@ class JsonLdUtilsTest {
     @Test
     fun `canonicalizeDocument rejects an invalid (non-relative) id in any subject of a credentialSubject array`() {
         // The array path must also reject syntactically-invalid (not merely relative) ids.
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(buildJsonObject { put("name", "https://schema.org/name") })
-            })
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", "did:key:test")
-            put("credentialSubject", buildJsonArray {
-                add(buildJsonObject {
-                    put("id", "did:key:z6MkSubject")
-                    put("name", "Alice")
-                })
-                add(buildJsonObject {
-                    put("id", "urn:has space")
-                    put("name", "Bob")
-                })
-            })
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(buildJsonObject { put("name", "https://schema.org/name") })
+                    },
+                )
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put("issuer", "did:key:test")
+                put(
+                    "credentialSubject",
+                    buildJsonArray {
+                        add(
+                            buildJsonObject {
+                                put("id", "did:key:z6MkSubject")
+                                put("name", "Alice")
+                            },
+                        )
+                        add(
+                            buildJsonObject {
+                                put("id", "urn:has space")
+                                put("name", "Bob")
+                            },
+                        )
+                    },
+                )
+            }
 
         assertFailsWith<SerializationException> {
             JsonLdUtils.canonicalizeDocument(document)
@@ -499,25 +614,30 @@ class JsonLdUtilsTest {
     fun `canonicalizeDocument with no credentialSubject does not throw on the subject-id guard`() {
         // Proof configs / presentations canonicalized here have no credentialSubject; the
         // guard must do nothing.
-        val document = buildJsonObject {
-            put("@context", buildJsonArray {
-                add("https://www.w3.org/2018/credentials/v1")
-                add(buildJsonObject { put("name", "https://schema.org/name") })
-            })
-            put("type", buildJsonArray { add("VerifiableCredential") })
-            put("issuer", "did:key:test")
-            put("name", "no subject here")
-        }
+        val document =
+            buildJsonObject {
+                put(
+                    "@context",
+                    buildJsonArray {
+                        add("https://www.w3.org/2018/credentials/v1")
+                        add(buildJsonObject { put("name", "https://schema.org/name") })
+                    },
+                )
+                put("type", buildJsonArray { add("VerifiableCredential") })
+                put("issuer", "did:key:test")
+                put("name", "no subject here")
+            }
         val result = JsonLdUtils.canonicalizeDocument(document)
         assertTrue(result.isNotBlank())
     }
 
     @Test
     fun `test toJakartaObject with boolean values`() {
-        val jsonObject = buildJsonObject {
-            put("trueValue", true)
-            put("falseValue", false)
-        }
+        val jsonObject =
+            buildJsonObject {
+                put("trueValue", true)
+                put("falseValue", false)
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -527,10 +647,11 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test toJakartaObject with null handling`() {
-        val jsonObject = buildJsonObject {
-            put("nullValue", JsonNull)
-            put("stringValue", "test")
-        }
+        val jsonObject =
+            buildJsonObject {
+                put("nullValue", JsonNull)
+                put("stringValue", "test")
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 
@@ -543,15 +664,25 @@ class JsonLdUtilsTest {
 
     @Test
     fun `test toJakartaObject with deep nesting`() {
-        val jsonObject = buildJsonObject {
-            put("level1", buildJsonObject {
-                put("level2", buildJsonObject {
-                    put("level3", buildJsonObject {
-                        put("value", "deep")
-                    })
-                })
-            })
-        }
+        val jsonObject =
+            buildJsonObject {
+                put(
+                    "level1",
+                    buildJsonObject {
+                        put(
+                            "level2",
+                            buildJsonObject {
+                                put(
+                                    "level3",
+                                    buildJsonObject {
+                                        put("value", "deep")
+                                    },
+                                )
+                            },
+                        )
+                    },
+                )
+            }
 
         val result = JsonLdUtils.toJakartaObject(jsonObject)
 

@@ -1,17 +1,15 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.schema.SchemaRegistry
-import org.trustweave.credential.schema.SchemaRegistrationResult
-import org.trustweave.credential.schema.SchemaValidationResult
-import org.trustweave.credential.model.SchemaFormat
-import org.trustweave.credential.identifiers.SchemaId
-import org.trustweave.trust.TrustWeave
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.trustweave.credential.identifiers.SchemaId
+import org.trustweave.credential.model.SchemaFormat
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.schema.SchemaRegistrationResult
+import org.trustweave.credential.schema.SchemaRegistry
+import org.trustweave.credential.schema.SchemaValidationResult
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.JsonObjectBuilder
 
 /**
@@ -58,7 +56,7 @@ import org.trustweave.trust.dsl.credential.JsonObjectBuilder
  * ```
  */
 class SchemaBuilder(
-    private val schemaRegistry: SchemaRegistry? = null
+    private val schemaRegistry: SchemaRegistry? = null,
 ) {
     private var schemaId: String? = null
     private var format: SchemaFormat = SchemaFormat.JSON_SCHEMA
@@ -110,19 +108,23 @@ class SchemaBuilder(
      *
      * @return Registration result
      */
-    suspend fun register(): SchemaRegistrationResult = withContext(Dispatchers.IO) {
-        val registry = schemaRegistry ?: throw IllegalStateException(
-            "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }"
-        )
-        val id = schemaId ?: throw IllegalStateException(
-            "Schema ID is required. Use id(\"https://example.com/schemas/...\")"
-        )
-        val def = definition ?: throw IllegalStateException(
-            "Schema definition is required. Use jsonSchema { } or shacl { }"
-        )
+    suspend fun register(): SchemaRegistrationResult =
+        withContext(Dispatchers.IO) {
+            val registry =
+                schemaRegistry ?: throw IllegalStateException(
+                    "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }",
+                )
+            val id =
+                schemaId ?: throw IllegalStateException(
+                    "Schema ID is required. Use id(\"https://example.com/schemas/...\")",
+                )
+            val def =
+                definition ?: throw IllegalStateException(
+                    "Schema definition is required. Use jsonSchema { } or shacl { }",
+                )
 
-        registry.registerSchema(SchemaId(id), format, def)
-    }
+            registry.registerSchema(SchemaId(id), format, def)
+        }
 
     /**
      * Validate a credential against this schema.
@@ -130,16 +132,19 @@ class SchemaBuilder(
      * @param credential Credential to validate
      * @return Validation result
      */
-    suspend fun validate(credential: VerifiableCredential): SchemaValidationResult = withContext(Dispatchers.IO) {
-        val registry = schemaRegistry ?: throw IllegalStateException(
-            "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }"
-        )
-        val id = schemaId ?: throw IllegalStateException(
-            "Schema ID is required. Use id(\"https://example.com/schemas/...\")"
-        )
+    suspend fun validate(credential: VerifiableCredential): SchemaValidationResult =
+        withContext(Dispatchers.IO) {
+            val registry =
+                schemaRegistry ?: throw IllegalStateException(
+                    "SchemaRegistry is not available. Configure it in TrustWeave.build { ... }",
+                )
+            val id =
+                schemaId ?: throw IllegalStateException(
+                    "Schema ID is required. Use id(\"https://example.com/schemas/...\")",
+                )
 
-        registry.validate(credential, SchemaId(id))
-    }
+            registry.validate(credential, SchemaId(id))
+        }
 }
 
 // JsonObjectBuilder is defined in CredentialDsl.kt and shared across DSL files
@@ -147,7 +152,10 @@ class SchemaBuilder(
 /**
  * Extension function to access schema operations.
  */
-fun TrustWeave.schema(schemaId: String? = null, block: SchemaBuilder.() -> Unit = {}): SchemaBuilder {
+fun TrustWeave.schema(
+    schemaId: String? = null,
+    block: SchemaBuilder.() -> Unit = {},
+): SchemaBuilder {
     val schemaRegistry = getSchemaRegistry()
     val builder = SchemaBuilder(schemaRegistry)
     schemaId?.let(builder::id)
@@ -164,4 +172,3 @@ suspend fun TrustWeave.registerSchema(block: SchemaBuilder.() -> Unit): SchemaRe
     builder.block()
     return builder.register()
 }
-

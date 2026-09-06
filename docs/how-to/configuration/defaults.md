@@ -15,6 +15,7 @@ This document explains the **default configuration** you get from **`TrustWeave.
 **`TrustWeave.quickStart()`** wires an in-memory KMS, **`did:key`**, and credential services suitable for demos. **`TrustWeave.build { }`** uses the same style of defaults for any block you omit (see factory behavior in source / [Installation](../../getting-started/installation.md)).
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.quickStart() // in-memory did:key — see quick start

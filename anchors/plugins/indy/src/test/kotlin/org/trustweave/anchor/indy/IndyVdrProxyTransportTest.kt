@@ -26,7 +26,6 @@ import kotlin.test.assertFailsWith
  * boundary and the HTTP request/response handling.
  */
 class IndyVdrProxyTransportTest {
-
     private lateinit var wireMock: WireMockServer
     private lateinit var httpClient: HttpClient
 
@@ -44,62 +43,75 @@ class IndyVdrProxyTransportTest {
         httpClient.close()
     }
 
-    private fun transport() = IndyVdrProxyTransport(
-        baseUrl = "http://localhost:${wireMock.port()}",
-        httpClient = httpClient
-    )
+    private fun transport() =
+        IndyVdrProxyTransport(
+            baseUrl = "http://localhost:${wireMock.port()}",
+            httpClient = httpClient,
+        )
 
     @Test
-    fun `submit ATTRIB request returns parsed seqNo`() = runBlocking<Unit> {
-        wireMock.stubFor(
-            post(urlPathEqualTo("/submit"))
-                .willReturn(
-                    aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                            """{"op":"REPLY","result":{"seqNo":42,"txnTime":1700000000}}"""
-                        )
-                )
-        )
+    fun `health probe propagates cancellation instead of reporting unavailable`() =
+        runBlocking<Unit> {
+            httpClient.requestPipeline.intercept(io.ktor.client.request.HttpRequestPipeline.Before) {
+                throw kotlinx.coroutines.CancellationException("cancelled probe")
+            }
+            assertFailsWith<kotlinx.coroutines.CancellationException> { transport().isReady() }
+        }
 
-        val req = IndyRequestCodec.buildAttribRequest(
-            submitterDid = "V4SGRU86Z58d6TV7PBUe6f",
-            targetDid = "V4SGRU86Z58d6TV7PBUe6f",
-            rawPayload = buildJsonObject { put("digest", JsonPrimitive("abc")) },
-            reqId = 1L
-        )
-        val signed = IndyRequestCodec.attachSignature(req, "sig123")
-        val reply = transport().submit(signed)
+    @Test
+    fun `submit ATTRIB request returns parsed seqNo`() =
+        runBlocking<Unit> {
+            wireMock.stubFor(
+                post(urlPathEqualTo("/submit"))
+                    .willReturn(
+                        aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(
+                                """{"op":"REPLY","result":{"seqNo":42,"txnTime":1700000000}}""",
+                            ),
+                    ),
+            )
 
-        assertEquals("42", IndyRequestCodec.parseWriteReply(reply))
-        wireMock.verify(
-            WireMock.postRequestedFor(urlPathEqualTo("/submit"))
-                .withRequestBody(
-                    equalToJson(
-                        """
-                        {
-                          "operation": {
-                            "type": "100",
-                            "dest": "V4SGRU86Z58d6TV7PBUe6f",
-                            "raw": "{\"digest\":\"abc\"}"
-                          },
-                          "identifier": "V4SGRU86Z58d6TV7PBUe6f",
-                          "reqId": 1,
-                          "protocolVersion": 2,
-                          "signature": "sig123"
-                        }
-                        """.trimIndent()
-                    )
+            val req =
+                IndyRequestCodec.buildAttribRequest(
+                    submitterDid = "V4SGRU86Z58d6TV7PBUe6f",
+                    targetDid = "V4SGRU86Z58d6TV7PBUe6f",
+                    rawPayload = buildJsonObject { put("digest", JsonPrimitive("abc")) },
+                    reqId = 1L,
                 )
-        )
-    }
+            val signed = IndyRequestCodec.attachSignature(req, "sig123")
+            val reply = transport().submit(signed)
+
+            assertEquals("42", IndyRequestCodec.parseWriteReply(reply))
+            wireMock.verify(
+                WireMock
+                    .postRequestedFor(urlPathEqualTo("/submit"))
+                    .withRequestBody(
+                        equalToJson(
+                            """
+                            {
+                              "operation": {
+                                "type": "100",
+                                "dest": "V4SGRU86Z58d6TV7PBUe6f",
+                                "raw": "{\"digest\":\"abc\"}"
+                              },
+                              "identifier": "V4SGRU86Z58d6TV7PBUe6f",
+                              "reqId": 1,
+                              "protocolVersion": 2,
+                              "signature": "sig123"
+                            }
+                            """.trimIndent(),
+                        ),
+                    ),
+            )
+        }
 
     @Test
     fun `submit maps non-2xx to ConnectionFailed`() {
         wireMock.stubFor(
             post(urlPathEqualTo("/submit"))
-                .willReturn(aResponse().withStatus(500).withBody("internal error"))
+                .willReturn(aResponse().withStatus(500).withBody("internal error")),
         )
 
         assertFailsWith<BlockchainException.ConnectionFailed> {
@@ -108,8 +120,8 @@ class IndyVdrProxyTransportTest {
                     IndyRequestCodec.buildGetAttribRequest(
                         submitterDid = "V4SGRU86Z58d6TV7PBUe6f",
                         targetDid = "V4SGRU86Z58d6TV7PBUe6f",
-                        reqId = 2L
-                    )
+                        reqId = 2L,
+                    ),
                 )
             }
         }
@@ -122,8 +134,8 @@ class IndyVdrProxyTransportTest {
                 .willReturn(
                     aResponse()
                         .withStatus(200)
-                        .withBody("""{"op":"REJECT","reason":"unknown identifier"}""")
-                )
+                        .withBody("""{"op":"REJECT","reason":"unknown identifier"}"""),
+                ),
         )
 
         assertFailsWith<BlockchainException.TransactionFailed> {
@@ -132,8 +144,8 @@ class IndyVdrProxyTransportTest {
                     IndyRequestCodec.buildGetAttribRequest(
                         submitterDid = "V4SGRU86Z58d6TV7PBUe6f",
                         targetDid = "V4SGRU86Z58d6TV7PBUe6f",
-                        reqId = 3L
-                    )
+                        reqId = 3L,
+                    ),
                 )
             }
         }

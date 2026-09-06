@@ -1,20 +1,17 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 import org.trustweave.did.identifiers.Did
-import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.datetime.Instant
+import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 
 /**
  * Infix operators for expressive trust DSL.
- * 
+ *
  * These operators make trust relationships read naturally and provide
  * a beautiful, fluent syntax for trust management.
- * 
+ *
  * **Example Usage:**
  * ```kotlin
  * trustWeave.trust {
@@ -22,7 +19,7 @@ import kotlinx.datetime.Instant
  *     universityDid trusts "EducationCredential" because {
  *         description("Trusted university")
  *     }
- *     
+ *
  *     // Find trust path: "resolve(verifierDid trustsPath issuerDid)"
  *     val path = resolve(verifierDid trustsPath issuerDid)
  *     when (path) {
@@ -31,13 +28,11 @@ import kotlinx.datetime.Instant
  *     }
  * }
  * ```
- */
-
-/**
+ *
  * Infix operator to express trust relationship: `did trusts credentialType`.
- * 
+ *
  * Creates a trust anchor builder that can be configured with metadata.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
@@ -47,19 +42,18 @@ import kotlinx.datetime.Instant
  *     }
  * }
  * ```
- * 
+ *
  * @param credentialType The credential type this DID trusts
  * @return TrustAnchorBuilder for configuring trust anchor metadata
  */
-infix fun Did.trusts(credentialType: String): TrustAnchorBuilder {
-    return TrustAnchorBuilder().apply {
+infix fun Did.trusts(credentialType: String): TrustAnchorBuilder =
+    TrustAnchorBuilder().apply {
         credentialTypes(credentialType)
     }
-}
 
 /**
  * Infix operator to express trust relationship for multiple credential types.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
@@ -69,15 +63,14 @@ infix fun Did.trusts(credentialType: String): TrustAnchorBuilder {
  * }
  * ```
  */
-infix fun Did.trusts(credentialTypes: List<String>): TrustAnchorBuilder {
-    return TrustAnchorBuilder().apply {
+infix fun Did.trusts(credentialTypes: List<String>): TrustAnchorBuilder =
+    TrustAnchorBuilder().apply {
         credentialTypes(credentialTypes)
     }
-}
 
 /**
  * Infix operator to express trust relationship for any credential type.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
@@ -92,7 +85,7 @@ val Did.trustsAll: TrustAnchorBuilder
 
 /**
  * Infix operator to configure trust anchor metadata: `builder because { ... }`.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
@@ -123,24 +116,26 @@ infix fun TrustAnchorBuilder.because(block: TrustAnchorMetadataBuilder.() -> Uni
  * Configuration holder for trust anchor.
  */
 class TrustAnchorConfig(
-    val metadataBuilder: TrustAnchorMetadataBuilder
+    val metadataBuilder: TrustAnchorMetadataBuilder,
 )
 
 /**
  * Extension function to find trust path within TrustBuilder context.
  */
-suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
-    return findTrustPath(
+suspend fun TrustBuilder.findTrustPath(
+    from: Did,
+    to: Did,
+): TrustPath =
+    findTrustPath(
         from = VerifierIdentity(from),
-        to = IssuerIdentity(to)
+        to = IssuerIdentity(to),
     )
-}
 
 /**
  * Infix operator to find trust path: `fromDid trustsPath toDid`.
- * 
+ *
  * Creates a TrustPathFinder that can be resolved within TrustBuilder context.
- * 
+ *
  * **Example:**
  * ```kotlin
  * trustWeave.trust {
@@ -151,26 +146,24 @@ suspend fun TrustBuilder.findTrustPath(from: Did, to: Did): TrustPath {
  *     }
  * }
  * ```
- * 
+ *
  * @param target The target DID to find a trust path to
  * @return TrustPathFinder that can be resolved using `resolve()` in TrustBuilder context
  */
-infix fun Did.trustsPath(target: Did): TrustPathFinder {
-    return TrustPathFinder(this, target)
-}
+infix fun Did.trustsPath(target: Did): TrustPathFinder = TrustPathFinder(this, target)
 
 /**
  * Helper class for trust path discovery using infix syntax.
- * 
+ *
  * This allows the natural syntax: `fromDid trustsPath toDid`
  */
 class TrustPathFinder(
     val from: Did,
-    val to: Did
+    val to: Did,
 ) {
     /**
      * Resolve the trust path using the provided TrustBuilder.
-     * 
+     *
      * **Example:**
      * ```kotlin
      * trustWeave.trust {
@@ -178,72 +171,59 @@ class TrustPathFinder(
      * }
      * ```
      */
-    suspend fun resolve(builder: TrustBuilder): TrustPath {
-        return builder.findTrustPath(
+    suspend fun resolve(builder: TrustBuilder): TrustPath =
+        builder.findTrustPath(
             from = VerifierIdentity(from),
-            to = IssuerIdentity(to)
+            to = IssuerIdentity(to),
         )
-    }
 }
 
 /**
  * Policy composition operators for combining trust policies.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val policy = requireAnchor(caDid) and requireSchema(degreeSchema) or allowExpired()
  * ```
- */
-
-/**
+ *
  * Compose two trust policies with AND logic.
- * 
+ *
  * Both policies must pass for the issuer to be trusted.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val policy = TrustPolicy.allowlist(issuers) and TrustPolicy.blocklist(blocked)
  * ```
  */
-infix fun CredentialTrustPolicy.and(other: CredentialTrustPolicy): CredentialTrustPolicy {
-    return object : CredentialTrustPolicy {
-        override suspend fun isTrusted(issuer: Did): Boolean {
-            return this@and.isTrusted(issuer) && other.isTrusted(issuer)
-        }
+infix fun CredentialTrustPolicy.and(other: CredentialTrustPolicy): CredentialTrustPolicy =
+    object : CredentialTrustPolicy {
+        override suspend fun isTrusted(issuer: Did): Boolean = this@and.isTrusted(issuer) && other.isTrusted(issuer)
     }
-}
 
 /**
  * Compose two trust policies with OR logic.
- * 
+ *
  * Either policy can pass for the issuer to be trusted.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val policy = requireAnchor(caDid) or requirePath(maxLength = 3)
  * ```
  */
-infix fun CredentialTrustPolicy.or(other: CredentialTrustPolicy): CredentialTrustPolicy {
-    return object : CredentialTrustPolicy {
-        override suspend fun isTrusted(issuer: Did): Boolean {
-            return this@or.isTrusted(issuer) || other.isTrusted(issuer)
-        }
+infix fun CredentialTrustPolicy.or(other: CredentialTrustPolicy): CredentialTrustPolicy =
+    object : CredentialTrustPolicy {
+        override suspend fun isTrusted(issuer: Did): Boolean = this@or.isTrusted(issuer) || other.isTrusted(issuer)
     }
-}
 
 /**
  * Negate a trust policy.
- * 
+ *
  * **Example:**
  * ```kotlin
  * val policy = !TrustPolicy.blocklist(blockedIssuers)
  * ```
  */
-operator fun CredentialTrustPolicy.not(): CredentialTrustPolicy {
-    return object : CredentialTrustPolicy {
-        override suspend fun isTrusted(issuer: Did): Boolean {
-            return !this@not.isTrusted(issuer)
-        }
+operator fun CredentialTrustPolicy.not(): CredentialTrustPolicy =
+    object : CredentialTrustPolicy {
+        override suspend fun isTrusted(issuer: Did): Boolean = !this@not.isTrusted(issuer)
     }
-}
-

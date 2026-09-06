@@ -18,6 +18,40 @@ import org.trustweave.credential.vi.verification.StrictnessMode
  * constraint simply by withholding the allowlist disclosures).
  */
 class ConstraintCheckerTest {
+    @Test
+    fun `empty or invalid allowlists never authorize an open mandate`() {
+        val fulfillment = buildJsonObject { put("payee", payee("unexpected")) }
+        for (allowed in listOf(emptyList(), listOf(buildJsonObject {}))) {
+            val constraint = Constraint.AllowedPayees(buildJsonObject {}, allowed)
+            ConstraintChecker
+                .check(listOf(constraint), fulfillment, isOpenMandate = true)
+                .satisfied
+                .shouldBeFalse()
+        }
+    }
+
+    @Test
+    fun `malformed constraint shapes return violations instead of throwing or dropping entries`() {
+        val malformed =
+            listOf(
+                "{}",
+                "{\"type\":{}}",
+                "{\"type\":false}",
+                "{\"type\":\"mandate.payment.allowed_payees\"}",
+                "{\"type\":\"mandate.payment.allowed_payees\",\"allowed\":[{},42]}",
+                "{\"type\":\"mandate.checkout.allowed_merchants\",\"allowed\":{}}",
+                "{\"type\":\"mandate.checkout.line_items\",\"items\":[null]}",
+            )
+        for (json in malformed) {
+            val constraint =
+                Constraint.parse(
+                    kotlinx.serialization.json.Json
+                        .parseToJsonElement(json) as kotlinx.serialization.json.JsonObject,
+                )
+            ConstraintChecker.check(listOf(constraint), buildJsonObject {}).satisfied.shouldBeFalse()
+        }
+    }
+
     private fun payee(id: String) = buildJsonObject { put("id", id) }
 
     @Test

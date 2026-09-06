@@ -11,7 +11,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DidResolutionMetadataTest {
-
     @Test
     fun `default content type is application-did`() {
         assertEquals("application/did", DidResolutionMetadata().contentType)
@@ -23,7 +22,7 @@ class DidResolutionMetadataTest {
         val json = metadata.toJson()
         assertEquals(
             JsonPrimitive("https://www.w3.org/ns/did#NOT_FOUND"),
-            json["error"]!!.jsonObject["type"]
+            json["error"]!!.jsonObject["type"],
         )
         assertEquals(JsonPrimitive("no such DID"), json["error"]!!.jsonObject["detail"])
     }
@@ -42,16 +41,17 @@ class DidResolutionMetadataTest {
 
     @Test
     fun `fromJson parses a CR error object`() {
-        val json = buildJsonObject {
-            put("contentType", "application/did")
-            put(
-                "error",
-                buildJsonObject {
-                    put("type", "https://www.w3.org/ns/did#METHOD_NOT_SUPPORTED")
-                    put("detail", "did:nope is unknown")
-                }
-            )
-        }
+        val json =
+            buildJsonObject {
+                put("contentType", "application/did")
+                put(
+                    "error",
+                    buildJsonObject {
+                        put("type", "https://www.w3.org/ns/did#METHOD_NOT_SUPPORTED")
+                        put("detail", "did:nope is unknown")
+                    },
+                )
+            }
         val metadata = DidResolutionMetadata.fromJson(json)
         assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
         assertEquals("did:nope is unknown", metadata.error?.detail)
@@ -88,12 +88,13 @@ class DidResolutionMetadataTest {
 
     @Test
     fun `fromMap preserves the sibling errorMessage sentence for a legacy string error`() {
-        val metadata = DidResolutionMetadata.fromMap(
-            mapOf(
-                "error" to "notFound",
-                "errorMessage" to "DID did:x:y does not exist"
+        val metadata =
+            DidResolutionMetadata.fromMap(
+                mapOf(
+                    "error" to "notFound",
+                    "errorMessage" to "DID did:x:y does not exist",
+                ),
             )
-        )
         assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
         assertEquals("DID did:x:y does not exist", metadata.error?.detail)
     }
@@ -114,11 +115,12 @@ class DidResolutionMetadataTest {
 
     @Test
     fun `toMap then fromMap round-trip preserves error type, contentType and properties`() {
-        val original = DidResolutionMetadata(
-            contentType = "application/did+json",
-            error = DidResolutionError.invalidDid("malformed identifier"),
-            properties = mapOf("blockNumber" to "42")
-        )
+        val original =
+            DidResolutionMetadata(
+                contentType = "application/did+json",
+                error = DidResolutionError.invalidDid("malformed identifier"),
+                properties = mapOf("blockNumber" to "42"),
+            )
         val roundTripped = DidResolutionMetadata.fromMap(original.toMap())
 
         assertEquals(original.contentType, roundTripped.contentType)

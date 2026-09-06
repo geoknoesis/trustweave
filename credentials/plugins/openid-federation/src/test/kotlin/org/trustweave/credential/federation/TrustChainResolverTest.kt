@@ -4,12 +4,10 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TrustChainResolverTest {
-
     private val resolver = TrustChainResolver()
 
     // -------------------------------------------------------------------------
@@ -30,8 +28,9 @@ class TrustChainResolverTest {
         // Header: {"alg":"none"} (base64url of '{"alg":"none"}')
         // Payload: JSON with iss, sub, iat, exp, jwks
         // Signature: empty (unsigned token — parsed but not verified here)
-        val header = "eyJhbGciOiJub25lIn0"  // {"alg":"none"}
-        val payloadJson = """
+        val header = "eyJhbGciOiJub25lIn0" // {"alg":"none"}
+        val payloadJson =
+            """
             {
               "iss": "https://leaf.example.com",
               "sub": "https://leaf.example.com",
@@ -50,27 +49,24 @@ class TrustChainResolverTest {
               },
               "authority_hints": ["https://anchor.example.com"]
             }
-        """.trimIndent()
-        val encodedPayload = java.util.Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.toByteArray())
+            """.trimIndent()
+        val encodedPayload =
+            java.util.Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(payloadJson.toByteArray())
         val jwt = "$header.$encodedPayload."
 
         val statement = resolver.parseEntityStatement(jwt)
 
-        assertNotNull(statement)
-        assertEquals("https://leaf.example.com", statement.iss)
-        assertEquals("https://leaf.example.com", statement.sub)
-        assertEquals(1700000000L, statement.iat)
-        assertEquals(9999999999L, statement.exp)
-        assertEquals(1, statement.jwks.keys.size)
-        assertEquals("leaf-key-1", statement.jwks.keys.first().kid)
-        assertEquals(listOf("https://anchor.example.com"), statement.authorityHints)
+        assertNull(statement, "Unsigned entity statements must not be accepted")
     }
 
     @Test
     fun `parseEntityStatement handles optional fields absent`() {
         val header = "eyJhbGciOiJub25lIn0"
-        val payloadJson = """
+        val payloadJson =
+            """
             {
               "iss": "https://anchor.example.com",
               "sub": "https://leaf.example.com",
@@ -78,19 +74,17 @@ class TrustChainResolverTest {
               "exp": 9999999999,
               "jwks": { "keys": [] }
             }
-        """.trimIndent()
-        val encodedPayload = java.util.Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.toByteArray())
+            """.trimIndent()
+        val encodedPayload =
+            java.util.Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(payloadJson.toByteArray())
         val jwt = "$header.$encodedPayload."
 
         val statement = resolver.parseEntityStatement(jwt)
 
-        assertNotNull(statement)
-        assertNull(statement.authorityHints)
-        assertNull(statement.metadata)
-        assertNull(statement.constraints)
-        assertNull(statement.trustMarks)
-        assertNull(statement.metadataPolicy)
+        assertNull(statement, "Unsigned entity statements must not be accepted")
     }
 
     // -------------------------------------------------------------------------
@@ -99,11 +93,12 @@ class TrustChainResolverTest {
 
     @Test
     fun `verifyChain returns false for empty chain`() {
-        val chain = TrustChain(
-            statements = emptyList(),
-            trustAnchorId = "https://anchor.example.com",
-            leafEntityId = "https://leaf.example.com",
-        )
+        val chain =
+            TrustChain(
+                statements = emptyList(),
+                trustAnchorId = "https://anchor.example.com",
+                leafEntityId = "https://leaf.example.com",
+            )
         assertFalse(resolver.verifyChain(chain))
     }
 
@@ -112,7 +107,8 @@ class TrustChainResolverTest {
         val header = "eyJhbGciOiJub25lIn0"
 
         // Leaf statement — expired
-        val expiredLeafPayload = """
+        val expiredLeafPayload =
+            """
             {
               "iss": "https://leaf.example.com",
               "sub": "https://leaf.example.com",
@@ -120,13 +116,17 @@ class TrustChainResolverTest {
               "exp": 1000000001,
               "jwks": { "keys": [] }
             }
-        """.trimIndent()
-        val encodedExpiredLeaf = java.util.Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(expiredLeafPayload.toByteArray())
+            """.trimIndent()
+        val encodedExpiredLeaf =
+            java.util.Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(expiredLeafPayload.toByteArray())
         val expiredLeafJwt = "$header.$encodedExpiredLeaf."
 
         // Anchor statement
-        val anchorPayload = """
+        val anchorPayload =
+            """
             {
               "iss": "https://anchor.example.com",
               "sub": "https://leaf.example.com",
@@ -134,27 +134,32 @@ class TrustChainResolverTest {
               "exp": 9999999999,
               "jwks": { "keys": [] }
             }
-        """.trimIndent()
-        val encodedAnchor = java.util.Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(anchorPayload.toByteArray())
+            """.trimIndent()
+        val encodedAnchor =
+            java.util.Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(anchorPayload.toByteArray())
         val anchorJwt = "$header.$encodedAnchor."
 
-        val chain = TrustChain(
-            statements = listOf(expiredLeafJwt, anchorJwt),
-            trustAnchorId = "https://anchor.example.com",
-            leafEntityId = "https://leaf.example.com",
-        )
+        val chain =
+            TrustChain(
+                statements = listOf(expiredLeafJwt, anchorJwt),
+                trustAnchorId = "https://anchor.example.com",
+                leafEntityId = "https://leaf.example.com",
+            )
 
         assertFalse(resolver.verifyChain(chain))
     }
 
     @Test
     fun `verifyChain returns false when chain contains unparseable statements`() {
-        val chain = TrustChain(
-            statements = listOf("valid.looking.jwt", "also.invalid.jwt"),
-            trustAnchorId = "https://anchor.example.com",
-            leafEntityId = "https://leaf.example.com",
-        )
+        val chain =
+            TrustChain(
+                statements = listOf("valid.looking.jwt", "also.invalid.jwt"),
+                trustAnchorId = "https://anchor.example.com",
+                leafEntityId = "https://leaf.example.com",
+            )
         assertFalse(resolver.verifyChain(chain))
     }
 
@@ -164,29 +169,34 @@ class TrustChainResolverTest {
 
     @Test
     fun `EntityStatement serializes and deserializes with correct snake_case field names`() {
-        val statement = EntityStatement(
-            iss = "https://anchor.example.com",
-            sub = "https://leaf.example.com",
-            iat = 1700000000L,
-            exp = 1800000000L,
-            jwks = FederationJwkSet(
-                keys = listOf(
-                    FederationJwk(kty = "EC", crv = "P-256", kid = "key-1", x = "abc", y = "def"),
-                ),
-            ),
-            authorityHints = listOf("https://anchor.example.com"),
-            constraints = PolicyConstraints(maxPathLength = 2),
-            trustMarks = listOf(TrustMark(id = "https://tm.example.com", trustMark = "signed.tm.jwt")),
-        )
+        val statement =
+            EntityStatement(
+                iss = "https://anchor.example.com",
+                sub = "https://leaf.example.com",
+                iat = 1700000000L,
+                exp = 1800000000L,
+                jwks =
+                    FederationJwkSet(
+                        keys =
+                            listOf(
+                                FederationJwk(kty = "EC", crv = "P-256", kid = "key-1", x = "abc", y = "def"),
+                            ),
+                    ),
+                authorityHints = listOf("https://anchor.example.com"),
+                constraints = PolicyConstraints(maxPathLength = 2),
+                trustMarks = listOf(TrustMark(id = "https://tm.example.com", trustMark = "signed.tm.jwt")),
+            )
 
-        val serialized = Json { encodeDefaults = false }.encodeToString(
-            EntityStatement.serializer(),
-            statement,
-        )
-        val deserialized = Json { ignoreUnknownKeys = true }.decodeFromString(
-            EntityStatement.serializer(),
-            serialized,
-        )
+        val serialized =
+            Json { encodeDefaults = false }.encodeToString(
+                EntityStatement.serializer(),
+                statement,
+            )
+        val deserialized =
+            Json { ignoreUnknownKeys = true }.decodeFromString(
+                EntityStatement.serializer(),
+                serialized,
+            )
 
         assertEquals(statement, deserialized)
         assertTrue(serialized.contains("\"authority_hints\""))
@@ -197,12 +207,14 @@ class TrustChainResolverTest {
 
     @Test
     fun `FederationJwkSet serializes all key fields`() {
-        val jwkSet = FederationJwkSet(
-            keys = listOf(
-                FederationJwk(kty = "EC", use = "sig", kid = "k1", crv = "P-256", x = "x1", y = "y1", alg = "ES256"),
-                FederationJwk(kty = "RSA", n = "modulus", e = "AQAB", kid = "k2"),
-            ),
-        )
+        val jwkSet =
+            FederationJwkSet(
+                keys =
+                    listOf(
+                        FederationJwk(kty = "EC", use = "sig", kid = "k1", crv = "P-256", x = "x1", y = "y1", alg = "ES256"),
+                        FederationJwk(kty = "RSA", n = "modulus", e = "AQAB", kid = "k2"),
+                    ),
+            )
         val json = Json { encodeDefaults = false }
         val serialized = json.encodeToString(FederationJwkSet.serializer(), jwkSet)
         val deserialized = json.decodeFromString(FederationJwkSet.serializer(), serialized)
@@ -230,11 +242,12 @@ class TrustChainResolverTest {
 
     @Test
     fun `TrustChainResolutionResult sealed classes are distinct`() {
-        val chain = TrustChain(
-            statements = listOf("a.b.c"),
-            trustAnchorId = "https://anchor.example.com",
-            leafEntityId = "https://leaf.example.com",
-        )
+        val chain =
+            TrustChain(
+                statements = listOf("a.b.c"),
+                trustAnchorId = "https://anchor.example.com",
+                leafEntityId = "https://leaf.example.com",
+            )
         val success: TrustChainResolutionResult = TrustChainResolutionResult.Success(chain, 1700000000L)
         val failure: TrustChainResolutionResult = TrustChainResolutionResult.Failure("reason", "https://leaf.example.com")
 

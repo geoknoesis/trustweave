@@ -129,7 +129,7 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.2.21+
+- Kotlin 2.3.21+
 - Gradle 8.5+
 - Basic understanding of Kotlin and coroutines
 - Understanding of SOC2 requirements
@@ -649,6 +649,7 @@ suspend fun logAuditEvent(
 Preserve credential verification history during key rotation:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.did.identifiers.Did
 

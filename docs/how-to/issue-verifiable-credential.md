@@ -21,7 +21,7 @@ Verifiable Credentials enable trust without intermediaries. They're tamper-proof
 
 ## Prerequisites
 
-- **Kotlin**: 2.2.21+ or higher
+- **Kotlin**: 2.3.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: `distribution-all` and `testkit` (for in-memory KMS)
@@ -162,6 +162,7 @@ println("Signing key ID: $keyId")
 Define the credential content using the DSL builder. Specify the subject, types, and metadata.
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Clock

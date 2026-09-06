@@ -69,13 +69,20 @@ val result = VerifiableIntent.verifyChain(
     issuerJwk = issuerPublicJwk,          // issuer EC P-256 public key (JWK)
     l3Payment = l3aCompact,
     l2RoutedForPayment = routedL2ForNetwork,
-    now = kotlinx.datetime.Clock.System.now().epochSeconds,
+    expectedL2Aud = expectedAgentAudience,
+    expectedL2Nonce = expectedDelegationNonce,
+    expectedL3PaymentAud = expectedNetworkAudience,
+    expectedL3PaymentNonce = expectedPaymentNonce,
 )
 if (result.valid) {
     // signatures, cross-layer sd_hash, key binding, reference binding and
     // all constraints checked — the agent acted within the mandate.
 }
 ```
+
+The expectations above must come from verifier-controlled request state. Use a fresh nonce and
+atomically consume it when accepting a payment; comparing a nonce alone does not prevent reuse.
+For a presented checkout token, also supply `expectedL3CheckoutAud` and `expectedL3CheckoutNonce`.
 
 Mode is inferred automatically — for an immediate chain pass only `l1` + `l2`.
 
@@ -102,11 +109,11 @@ ambiguity):
 | Type | Enforces |
 |---|---|
 | `mandate.checkout.allowed_merchants` | Merchant allowlist |
-| `mandate.checkout.line_items` | Item allowlist + quantity caps |
+| `mandate.checkout.line_items` | Not implemented; autonomous checkout fails closed |
 | `mandate.payment.allowed_payees` | Payee allowlist |
 | `mandate.payment.amount_range` | Per-transaction min/max + currency |
-| `mandate.payment.budget` | Cumulative spend cap (network-enforced) |
-| `mandate.payment.recurrence` / `agent_recurrence` | Subscription / recurring terms |
+| `mandate.payment.budget` | Requires external state; open mandates fail closed |
+| `mandate.payment.recurrence` / `agent_recurrence` | Requires external state; open mandates fail closed |
 | `mandate.payment.reference` | Binds the payment mandate to the checkout disclosure |
 
 Unknown constraint types are rejected in open mandates (an unevaluable constraint would leave agent
@@ -136,7 +143,7 @@ Draft, tracking VI spec v0.1 — **Experimental** (see the
 - **Cross-stack interop** — verifies tokens minted by the reference Python implementation against a
   committed known-answer fixture.
 - **Round trip** — mints L1/L2/L3 through the in-memory KMS + `KmsEs256Signer`, then verifies
-  (autonomous, immediate, and a negative over-budget case).
+  (autonomous, immediate, and a negative per-transaction amount case).
 
 Run the suite: `./gradlew :credentials:plugins:verifiable-intent:test`
 

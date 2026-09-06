@@ -1,12 +1,11 @@
 package org.trustweave.examples.spatial
 
 import kotlinx.coroutines.runBlocking
-import org.trustweave.examples.ExampleContexts
-import org.trustweave.testkit.services.TestkitWalletFactory
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.credential.model.ProofType
@@ -14,7 +13,9 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
+import org.trustweave.examples.ExampleContexts
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.testkit.services.TestkitWalletFactory
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.credential
@@ -36,9 +37,10 @@ import kotlin.time.Duration.Companion.days
  *
  * Runnable counterpart of the reference-wallet demo at `/issuer/airspace`.
  */
-fun main() = runBlocking {
-    runSpatialWebDroneDemo(printSteps = true)
-}
+fun main(): Unit =
+    runBlocking {
+        runSpatialWebDroneDemo(printSteps = true)
+    }
 
 data class SpatialWebDroneDemoResult(
     val domainAuthorityDid: Did,
@@ -64,13 +66,14 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
     step("=== Spatial Web — Drone Airspace Authorization ===\n")
     step("Step 1: Configuring TrustWeave...")
     val kms = InMemoryKeyManagementService()
-    val trustWeave = TrustWeave.build {
-        factories(walletFactory = TestkitWalletFactory())
-        keys { custom(kms) }
-        did { method(KEY) {} }
-        anchor { chain("algorand:testnet") { inMemory() } }
-        credentials { defaultProofType(ProofType.Ed25519Signature2020) }
-    }
+    val trustWeave =
+        TrustWeave.build {
+            factories(walletFactory = TestkitWalletFactory())
+            keys { custom(kms) }
+            did { method(KEY) {} }
+            anchor { chain("algorand:testnet") { inMemory() } }
+            credentials { defaultProofType(ProofType.Ed25519Signature2020) }
+        }
     step("✓ TrustWeave configured")
 
     step("\nStep 2: Creating domain authority, FAA authority, and drone DIDs...")
@@ -84,107 +87,120 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
     step("Operator: ${operatorDid.value}")
 
     step("\nStep 3: FAA issues drone identification credential (with photo metadata)...")
-    val identificationCredential = trustWeave.issue {
-        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
-        credential {
-            id("https://demo-faa.trustweave.example/registry/${droneDid.value.substringAfterLast(":")}")
-            type("VerifiableCredential", "DroneIdentificationCredential")
-            issuer(faaAuthorityDid)
-            subject {
-                id(droneDid)
-                "registrationNumber" to "FA3N8X2K91"
-                "issuingAuthority" to "Federal Aviation Administration"
-                "make" to "DJI"
-                "model" to "Mavic 3 Enterprise"
-                "serialNumber" to "SN-M3E-88421"
-                "weightClass" to "Category 2"
-                "callsign" to "SF-BAY-ALPHA"
-                "dronePhotoUrl" to "https://demo-faa.trustweave.example/drones/DRONE-001.svg"
-                "dronePhotoDigest" to "uE8demoPhotoDigestPlaceholderForDRONE001"
-            }
-            issued(Clock.System.now())
-            expires(365.days)
-        }
-        signedBy(faaAuthorityDid)
-    }.getOrThrow()
+    val identificationCredential =
+        trustWeave
+            .issue {
+                additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
+                credential {
+                    id("https://demo-faa.trustweave.example/registry/${droneDid.value.substringAfterLast(":")}")
+                    type("VerifiableCredential", "DroneIdentificationCredential")
+                    issuer(faaAuthorityDid)
+                    subject {
+                        id(droneDid)
+                        "registrationNumber" to "FA3N8X2K91"
+                        "issuingAuthority" to "Federal Aviation Administration"
+                        "make" to "DJI"
+                        "model" to "Mavic 3 Enterprise"
+                        "serialNumber" to "SN-M3E-88421"
+                        "weightClass" to "Category 2"
+                        "callsign" to "SF-BAY-ALPHA"
+                        "dronePhotoUrl" to "https://demo-faa.trustweave.example/drones/DRONE-001.svg"
+                        "dronePhotoDigest" to "uE8demoPhotoDigestPlaceholderForDRONE001"
+                    }
+                    issued(Clock.System.now())
+                    expires(365.days)
+                }
+                signedBy(faaAuthorityDid)
+            }.getOrThrow()
     step("✓ FAA identification issued (registration FA3N8X2K91, photo URL embedded)")
 
     step("\nStep 4: Defining controlled airspace domain...")
     val airspaceDomain = demoSfBayAirspaceDomain(domainAuthorityDid)
     step("Domain: ${airspaceDomain.domainId}")
-    step("  Boundary: (${airspaceDomain.boundary.minLat}, ${airspaceDomain.boundary.minLon}) → " +
-        "(${airspaceDomain.boundary.maxLat}, ${airspaceDomain.boundary.maxLon})")
+    step(
+        "  Boundary: (${airspaceDomain.boundary.minLat}, ${airspaceDomain.boundary.minLon}) → " +
+            "(${airspaceDomain.boundary.maxLat}, ${airspaceDomain.boundary.maxLon})",
+    )
 
     step("\nStep 5: Issuing activity authorization credential to drone...")
-    val issuedCredential = trustWeave.issue {
-        additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
-        credential {
-            id("https://demo-sf-airspace.trustweave.example/authorizations/${droneDid.value.substringAfterLast(":")}")
-            type("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential")
-            issuer(domainAuthorityDid)
-            subject {
-                id(droneDid)
-                "authorization" {
-                    "agentDid" to droneDid.value
-                    "activityType" to "data-collection"
-                    "domainDid" to airspaceDomain.domainDid
-                    "domainId" to airspaceDomain.domainId
-                    "operatorDid" to operatorDid.value
-                    "constraints" {
-                        "maxAltitudeFt" to "400"
-                        "maxDuration" to "PT2H"
-                        "callsign" to "SF-BAY-ALPHA"
+    val issuedCredential =
+        trustWeave
+            .issue {
+                additionalOption(ExampleContexts.OPTION_KEY, ExampleContexts.contexts)
+                credential {
+                    id("https://demo-sf-airspace.trustweave.example/authorizations/${droneDid.value.substringAfterLast(":")}")
+                    type("VerifiableCredential", "ActivityAuthorizationCredential", "SpatialWebCredential")
+                    issuer(domainAuthorityDid)
+                    subject {
+                        id(droneDid)
+                        "authorization" {
+                            "agentDid" to droneDid.value
+                            "activityType" to "data-collection"
+                            "domainDid" to airspaceDomain.domainDid
+                            "domainId" to airspaceDomain.domainId
+                            "operatorDid" to operatorDid.value
+                            "constraints" {
+                                "maxAltitudeFt" to "400"
+                                "maxDuration" to "PT2H"
+                                "callsign" to "SF-BAY-ALPHA"
+                            }
+                        }
                     }
+                    issued(Clock.System.now())
+                    expires(30.days)
                 }
-            }
-            issued(Clock.System.now())
-            expires(30.days)
-        }
-        signedBy(domainAuthorityDid)
-    }.getOrThrow()
+                signedBy(domainAuthorityDid)
+            }.getOrThrow()
     step("✓ Credential issued (proof present: ${issuedCredential.proof != null})")
 
     step("\nStep 6: Anchoring authorization digest...")
-    val credentialJson = Json { ignoreUnknownKeys = true }
-        .encodeToJsonElement(VerifiableCredential.serializer(), issuedCredential)
+    val credentialJson =
+        Json { ignoreUnknownKeys = true }
+            .encodeToJsonElement(VerifiableCredential.serializer(), issuedCredential)
     val credentialDigest = DigestUtils.sha256DigestMultibase(credentialJson)
-    val anchorPayload = buildJsonObject {
-        put("agentDid", droneDid.value)
-        put("activityType", "data-collection")
-        put("domainId", airspaceDomain.domainId)
-        put("credentialDigest", credentialDigest)
-    }
-    val anchorResult = trustWeave.blockchains.anchor(
-        data = anchorPayload,
-        serializer = JsonElement.serializer(),
-        chainId = "algorand:testnet",
-    )
+    val anchorPayload =
+        buildJsonObject {
+            put("agentDid", droneDid.value)
+            put("activityType", "data-collection")
+            put("domainId", airspaceDomain.domainId)
+            put("credentialDigest", credentialDigest)
+        }
+    val anchorResult =
+        trustWeave.blockchains.anchor(
+            data = anchorPayload,
+            serializer = JsonElement.serializer(),
+            chainId = "algorand:testnet",
+        )
     step("✓ Anchored: ${anchorResult.ref.txHash}")
 
     step("\nStep 7: Storing credentials in drone agent wallet...")
-    val droneWallet = trustWeave.wallet {
-        id("drone-wallet-${droneDid.value.substringAfterLast(":")}")
-        holder(droneDid.value)
-        enablePresentation()
-    }.getOrThrow()
+    val droneWallet =
+        trustWeave
+            .wallet {
+                id("drone-wallet-${droneDid.value.substringAfterLast(":")}")
+                holder(droneDid.value)
+                enablePresentation()
+            }.getOrThrow()
     droneWallet.store(identificationCredential)
     val credentialId = droneWallet.store(issuedCredential)
     step("✓ Stored FAA identification + airspace authorization")
 
     step("\nStep 8: Verifying credentials...")
-    val identificationVerification = trustWeave.verify {
-        credential(identificationCredential)
-        checkExpiration()
-    }
+    val identificationVerification =
+        trustWeave.verify {
+            credential(identificationCredential)
+            checkExpiration()
+        }
     when (identificationVerification) {
         is VerificationResult.Valid -> step("✅ FAA identification valid")
         is VerificationResult.Invalid -> step("❌ FAA identification failed: ${identificationVerification.allErrors.joinToString()}")
     }
 
-    val verificationResult = trustWeave.verify {
-        credential(issuedCredential)
-        checkExpiration()
-    }
+    val verificationResult =
+        trustWeave.verify {
+            credential(issuedCredential)
+            checkExpiration()
+        }
     when (verificationResult) {
         is VerificationResult.Valid -> step("✅ Cryptographic verification passed")
         is VerificationResult.Invalid -> step("❌ Verification failed: ${verificationResult.allErrors.joinToString()}")
@@ -192,22 +208,24 @@ suspend fun runSpatialWebDroneDemo(printSteps: Boolean = false): SpatialWebDrone
 
     step("\nStep 9: Checking domain authorization at San Francisco coordinates...")
     val currentLocation = 37.7749 to -122.4194
-    val authorized = checkDomainAuthorization(
-        agentDid = droneDid,
-        activityType = "data-collection",
-        domain = airspaceDomain,
-        credential = issuedCredential,
-        currentLocation = currentLocation,
-    )
+    val authorized =
+        checkDomainAuthorization(
+            agentDid = droneDid,
+            activityType = "data-collection",
+            domain = airspaceDomain,
+            credential = issuedCredential,
+            currentLocation = currentLocation,
+        )
     step(if (authorized) "✅ Drone authorized for data-collection in ${airspaceDomain.domainId}" else "❌ Not authorized")
 
     step("\nStep 10: Creating presentation for airspace gatekeeper...")
     when (
-        val presentation = trustWeave.presentationResult {
-            holder(droneDid)
-            credentials(issuedCredential)
-            challenge("airspace-gate-${Clock.System.now().epochSeconds}")
-        }
+        val presentation =
+            trustWeave.presentationResult {
+                holder(droneDid)
+                credentials(issuedCredential)
+                challenge("airspace-gate-${Clock.System.now().epochSeconds}")
+            }
     ) {
         is PresentationResult.Success -> {
             step("✓ Presentation created for holder ${presentation.presentation.holder}")

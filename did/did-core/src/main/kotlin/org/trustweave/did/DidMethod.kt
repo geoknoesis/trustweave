@@ -37,20 +37,24 @@ fun interface DidMethodResolver {
      * method-specific options yield FEATURE_NOT_SUPPORTED, and everything else delegates to
      * [resolveDid]. Methods that support `versionId`, `versionTime` or `noCache` override this.
      */
-    suspend fun resolveDid(did: Did, options: ResolutionOptions): DidResolutionResult {
+    suspend fun resolveDid(
+        did: Did,
+        options: ResolutionOptions,
+    ): DidResolutionResult {
         options.validate()?.let { error ->
             return DidResolutionResult.Failure.OptionsError(
                 did = did,
                 reason = error.detail ?: "Invalid resolution options",
-                errorType = error.type
+                errorType = error.type,
             )
         }
         val unsupported = options.methodSpecificOptions()
         if (unsupported.isNotEmpty()) {
             return DidResolutionResult.Failure.OptionsError(
                 did = did,
-                reason = "Resolution options not supported by this DID method: " +
-                    unsupported.sorted().joinToString(", ")
+                reason =
+                    "Resolution options not supported by this DID method: " +
+                        unsupported.sorted().joinToString(", "),
             )
         }
         return resolveDid(did)
@@ -65,7 +69,6 @@ fun interface DidMethodResolver {
  * is needed without wrapping.
  */
 interface DidMethod : DidMethodResolver {
-
     /**
      * The DID method name (e.g., "web", "key", "ion").
      */
@@ -108,7 +111,7 @@ interface DidMethod : DidMethodResolver {
      */
     suspend fun updateDid(
         did: Did,
-        updater: (DidDocument) -> DidDocument
+        updater: (DidDocument) -> DidDocument,
     ): DidDocument
 
     /**
@@ -119,4 +122,3 @@ interface DidMethod : DidMethodResolver {
      */
     suspend fun deactivateDid(did: Did): Boolean
 }
-

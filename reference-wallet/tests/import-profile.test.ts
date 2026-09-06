@@ -7,7 +7,7 @@ import { isCredentialBoundToHolder } from '../lib/holder-binding'
 const issuer = generateEd25519KeyPair()
 const did = publicKeyToDidKey(issuer.publicKey)
 const compact = (payload: Record<string, unknown>, disclosure: string) =>
-  `${signJws({ iss: did, ...payload }, issuer.privateKey, did)}~${disclosure}~`
+  `${signJws({ iss: did, sub: 'holder', cnf: { kid: 'holder' }, vct: 'Employee', ...payload }, issuer.privateKey, did)}~${disclosure}~`
 
 describe('supported disclosure profile', () => {
   it.each([

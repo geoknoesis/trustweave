@@ -19,7 +19,6 @@ data class DeactivateDidOptions(
      * - Method-specific authorization material
      */
     val secret: Secret? = null,
-
     /**
      * Method-specific options.
      *
@@ -27,6 +26,5 @@ data class DeactivateDidOptions(
      * - Deactivation reason
      * - Method-specific configuration
      */
-    val methodSpecificOptions: Map<String, JsonElement> = emptyMap()
+    val methodSpecificOptions: Map<String, JsonElement> = emptyMap(),
 )
-

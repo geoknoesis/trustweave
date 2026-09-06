@@ -212,7 +212,7 @@ class CredentialQueryBuilder {
      * Filter to only valid credentials (not expired, not revoked, has proof).
      *
      * **Revocation:** Same limitation as [notRevoked]—credentials with [credentialStatus] are
-     * included optimistically. Use [CredentialRevocationManager] for accurate revocation checks.
+     * excluded conservatively. Use [CredentialRevocationManager] for accurate revocation checks.
      */
     fun valid() {
         filters.add { credential ->

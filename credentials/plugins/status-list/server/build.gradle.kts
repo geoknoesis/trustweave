@@ -16,5 +16,6 @@ dependencies {
     implementation(libs.bundles.ktor.server)
 
     testImplementation(project(":testkit"))
+    testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlinx.coroutines.test)
 }

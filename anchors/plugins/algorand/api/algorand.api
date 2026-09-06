@@ -1,0 +1,67 @@
+public final class org/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient {
+	public static final field BETANET Ljava/lang/String;
+	public static final field Companion Lorg/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient$Companion;
+	public static final field MAINNET Ljava/lang/String;
+	public static final field TESTNET Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/algorand/SponsorRegistry;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/algorand/SponsorRegistry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/anchor/options/AlgorandOptions;)V
+	public fun estimate (Lorg/trustweave/anchor/payment/OperationDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/algorand/AlgorandBlockchainAnchorClientProvider : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/anchor/algorand/AlgorandIntegration {
+	public static final field INSTANCE Lorg/trustweave/anchor/algorand/AlgorandIntegration;
+	public final fun discoverAndRegister (Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/anchor/algorand/AlgorandIntegration;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+	public final fun setup (Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+	public static synthetic fun setup$default (Lorg/trustweave/anchor/algorand/AlgorandIntegration;Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+}
+
+public final class org/trustweave/anchor/algorand/AlgorandIntegrationResult {
+	public fun <init> (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)V
+	public final fun component1 ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/anchor/algorand/AlgorandIntegrationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegisteredChains ()Ljava/util/List;
+	public final fun getRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/anchor/algorand/ConfigSponsorRegistry : org/trustweave/anchor/algorand/SponsorRegistry {
+	public fun <init> (Ljava/util/Map;)V
+	public fun resolve (Ljava/lang/String;)Lorg/trustweave/anchor/algorand/SponsorEntry;
+}
+
+public final class org/trustweave/anchor/algorand/SponsorEntry {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/anchor/algorand/SponsorEntry;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/algorand/SponsorEntry;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/trustweave/anchor/algorand/SponsorEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getSign ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/anchor/algorand/SponsorRegistry {
+	public abstract fun resolve (Ljava/lang/String;)Lorg/trustweave/anchor/algorand/SponsorEntry;
+}
+

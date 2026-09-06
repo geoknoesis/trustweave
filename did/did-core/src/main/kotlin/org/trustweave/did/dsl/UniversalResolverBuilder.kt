@@ -32,7 +32,7 @@ annotation class UniversalResolverDsl
  */
 inline fun universalResolver(
     baseUrl: String,
-    block: UniversalResolverBuilder.() -> Unit = {}
+    block: UniversalResolverBuilder.() -> Unit = {},
 ): DefaultUniversalResolver {
     val builder = UniversalResolverBuilder(baseUrl)
     builder.block()
@@ -44,7 +44,7 @@ inline fun universalResolver(
  */
 @UniversalResolverDsl
 class UniversalResolverBuilder(
-    val baseUrl: String
+    val baseUrl: String,
 ) {
     var timeout: Int = 30
     var apiKey: String? = null
@@ -60,15 +60,14 @@ class UniversalResolverBuilder(
         retryConfig = retryBuilder.build()
     }
 
-    fun build(): DefaultUniversalResolver {
-        return DefaultUniversalResolver(
+    fun build(): DefaultUniversalResolver =
+        DefaultUniversalResolver(
             baseUrl = baseUrl,
             timeout = timeout,
             apiKey = apiKey,
             protocolAdapter = protocolAdapter,
-            retryConfig = retryConfig ?: RetryConfig.default()
+            retryConfig = retryConfig ?: RetryConfig.default(),
         )
-    }
 }
 
 /**
@@ -81,18 +80,17 @@ class RetryConfigBuilder {
     var maxDelayMs: Long = 2000
     var retryableStatusCodes: Set<Int> = setOf(500, 502, 503, 504)
 
-    fun build(): RetryConfig {
-        return RetryConfig(
+    fun build(): RetryConfig =
+        RetryConfig(
             maxRetries = maxRetries,
             initialDelayMs = initialDelayMs,
             maxDelayMs = maxDelayMs,
             retryableStatusCodes = retryableStatusCodes,
-            retryableExceptions = setOf(
-                java.net.ConnectException::class.java,
-                java.net.SocketTimeoutException::class.java,
-                java.io.IOException::class.java
-            )
+            retryableExceptions =
+                setOf(
+                    java.net.ConnectException::class.java,
+                    java.net.SocketTimeoutException::class.java,
+                    java.io.IOException::class.java,
+                ),
         )
-    }
 }
-

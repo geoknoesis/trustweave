@@ -7,7 +7,7 @@ ISO/IEC 18013-5 Mobile Driving Licence (mDL) and mDoc credential support for Tru
 This module provides a [`ProofEngine`](../../credential-api/src/main/kotlin/org/trustweave/credential/spi/proof/ProofEngine.kt)
 implementation that issues and verifies ISO/IEC 18013-5 mobile documents (mdocs)
 using CBOR encoding and COSE_Sign1 signatures (RFC 8152). The engine is registered
-under the [`ProofSuiteId.MDOC`](../../credential-api/src/main/kotlin/org/trustweave/credential/format/ProofSuiteId.kt)
+under the [`ProofSuiteId.MDOC`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/format/ProofSuiteId.kt)
 proof format (`mso_mdoc`) and is auto-discovered through Java SPI.
 
 mDoc credentials are signed by the issuer over a Mobile Security Object (MSO) that
@@ -43,7 +43,7 @@ lives in [`MdocCoseSign.kt`](src/main/kotlin/org/trustweave/credential/mdl/engin
 and uses Bouncy Castle for ECDSA and Ed25519 primitives.
 
 The wrapping `VerifiableCredential` carries the mdoc bytes inside a
-[`CredentialProof.MdocProof`](../../credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt),
+[`CredentialProof.MdocProof`](../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/vc/CredentialProof.kt),
 whose `deviceResponse` field holds the CBOR-encoded `MobileDocument` and whose
 `docType` mirrors the mdoc document type.
 

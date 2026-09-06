@@ -42,14 +42,15 @@ TrustWeave is a Kotlin library for decentralized identity and trust management. 
 `trust/src/main/kotlin/org/trustweave/trust/TrustWeave.kt` is the main facade. It wires all services together:
 
 ```kotlin
-// In-memory quick start (did:key + in-memory KMS)
-val tw = TrustWeave.quickStart()
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.quickStart
 
-// Custom DSL configuration
-val tw = TrustWeave.build {
-    kms { provider = AwsKmsProvider(...) }
-    did { methods += EthrDidMethod(...) }
-    wallet { storage = DatabaseWalletStorage(...) }
+// Call from a coroutine; close the instance when finished.
+val tw = TrustWeave.quickStart()
+try {
+    // Use tw here. See the compiled documentation quick start for issuance.
+} finally {
+    tw.close()
 }
 ```
 
@@ -59,7 +60,7 @@ All extensible services use SPI-based discovery via `PluginMetadata` / `PluginLi
 
 ### Result Pattern
 
-All service operations return `Result<T>` sealed classes — never raw values or thrown exceptions across module boundaries. Use `.getOrThrow()`, `.getOrNull()`, or pattern-match on `Success`/`Failure`. Domain-specific subtypes: `IssuanceResult`, `VerificationResult`.
+Credential issue/verify and presentation-result APIs use sealed results. DID, wallet, provider configuration and explicit getOrThrow calls can throw exceptions; follow each API contract. See docs/getting-started/api-patterns.md.
 
 ### Exception Hierarchy
 

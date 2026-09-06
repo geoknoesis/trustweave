@@ -1,8 +1,5 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.ProofType
-
 /**
  * Type-Safe Helpers.
  *
@@ -16,9 +13,7 @@ import org.trustweave.credential.model.ProofType
  *     // Use DidMethods.KEY, KeyAlgorithms.ED25519, etc. for string identifiers
  * }
  * ```
- */
-
-/**
+ *
  * Type-safe DID methods.
  */
 object DidMethods {
@@ -75,12 +70,12 @@ object ProofPurposes {
 
 /**
  * Type-safe KMS providers.
- * 
+ *
  * Use these constants for well-known providers:
  * ```kotlin
  * keys { provider(KmsProviders.IN_MEMORY); algorithm(ED25519) }
  * ```
- * 
+ *
  * For third-party/custom providers, use strings directly:
  * ```kotlin
  * keys { provider("myCustomKms"); ... }
@@ -100,7 +95,7 @@ object KmsProviders {
 
 /**
  * Type-safe blockchain anchor providers.
- * 
+ *
  * Use these constants for well-known blockchain providers:
  * ```kotlin
  * anchor { chain("algorand:testnet") { provider(AnchorProviders.ALGORAND) } }
@@ -128,4 +123,3 @@ object TrustProviders {
 object RevocationProviders {
     const val IN_MEMORY = "inMemory"
 }
-

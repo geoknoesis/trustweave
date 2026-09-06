@@ -1,14 +1,12 @@
 package org.trustweave.examples.government
 
-import org.trustweave.examples.StubScenarioTest
-import org.junit.jupiter.api.Test
+import org.trustweave.examples.ScenarioExecutionTest
 
 /**
  * Unit tests for Government Digital Identity scenario.
  */
-class GovernmentIdentityExampleTest : StubScenarioTest() {
+class GovernmentIdentityExampleTest : ScenarioExecutionTest() {
     override fun runScenario() {
         main()
     }
 }
-

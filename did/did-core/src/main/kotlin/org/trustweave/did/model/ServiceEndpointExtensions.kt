@@ -10,18 +10,18 @@ import kotlinx.serialization.json.*
  * Serialize service [type] (DID 1.1: string or set of strings) to JSON.
  * Single type → string; multiple → array.
  */
-fun List<String>.toServiceTypeJsonElement(): JsonElement =
-    if (size == 1) JsonPrimitive(this[0]) else JsonArray(map { JsonPrimitive(it) })
+fun List<String>.toServiceTypeJsonElement(): JsonElement = if (size == 1) JsonPrimitive(this[0]) else JsonArray(map { JsonPrimitive(it) })
 
 /**
  * Parse service type from JSON (string or array of strings) per DID 1.1 §5.4.
  */
-fun parseServiceTypesFromJson(el: JsonElement?): List<String>? = when (el) {
-    null -> null
-    is JsonPrimitive -> el.content?.let { listOf(it) }
-    is JsonArray -> el.mapNotNull { (it as? JsonPrimitive)?.content }.takeIf { it.isNotEmpty() }
-    else -> null
-}
+fun parseServiceTypesFromJson(el: JsonElement?): List<String>? =
+    when (el) {
+        null -> null
+        is JsonPrimitive -> el.content?.let { listOf(it) }
+        is JsonArray -> el.mapNotNull { (it as? JsonPrimitive)?.content }.takeIf { it.isNotEmpty() }
+        else -> null
+    }
 
 /**
  * Type-safe model for [DidService.serviceEndpoint].
@@ -40,17 +40,23 @@ sealed class ServiceEndpoint {
     /**
      * Service endpoint as a single URL string.
      */
-    data class Url(val url: String) : ServiceEndpoint()
+    data class Url(
+        val url: String,
+    ) : ServiceEndpoint()
 
     /**
      * Service endpoint as an object (map of key-value pairs).
      */
-    data class ObjectEndpoint(val data: Map<String, Any?>) : ServiceEndpoint()
+    data class ObjectEndpoint(
+        val data: Map<String, Any?>,
+    ) : ServiceEndpoint()
 
     /**
      * Service endpoint as an array of endpoints (can be mixed types).
      */
-    data class ArrayEndpoint(val endpoints: List<ServiceEndpoint>) : ServiceEndpoint()
+    data class ArrayEndpoint(
+        val endpoints: List<ServiceEndpoint>,
+    ) : ServiceEndpoint()
 
     companion object {
         /**
@@ -61,47 +67,50 @@ sealed class ServiceEndpoint {
          *
          * @throws IllegalArgumentException if [value] (or any array item) is not a String, Map, or List
          */
-        fun of(value: Any): ServiceEndpoint = when (value) {
-            is ServiceEndpoint -> value
-            is String -> Url(value)
-            is Map<*, *> -> {
-                @Suppress("UNCHECKED_CAST")
-                ObjectEndpoint(value as Map<String, Any?>)
-            }
-            is List<*> -> ArrayEndpoint(
-                value.map { item ->
-                    requireNotNull(item) { "Service endpoint array items must not be null" }
-                    of(item)
+        fun of(value: Any): ServiceEndpoint =
+            when (value) {
+                is ServiceEndpoint -> value
+                is String -> Url(value)
+                is Map<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    ObjectEndpoint(value as Map<String, Any?>)
                 }
-            )
-            else -> throw IllegalArgumentException(
-                "Unsupported service endpoint type: ${value::class.simpleName}"
-            )
-        }
+                is List<*> ->
+                    ArrayEndpoint(
+                        value.map { item ->
+                            requireNotNull(item) { "Service endpoint array items must not be null" }
+                            of(item)
+                        },
+                    )
+                else -> throw IllegalArgumentException(
+                    "Unsupported service endpoint type: ${value::class.simpleName}",
+                )
+            }
 
         /**
          * Like [of] but returns `null` instead of throwing when [value] (or any array item)
          * is not a String, Map, or List.
          */
-        fun ofOrNull(value: Any?): ServiceEndpoint? = when (value) {
-            null -> null
-            is ServiceEndpoint -> value
-            is String -> Url(value)
-            is Map<*, *> -> {
-                @Suppress("UNCHECKED_CAST")
-                ObjectEndpoint(value as Map<String, Any?>)
-            }
-            is List<*> -> {
-                val typed = value.map { item -> ofOrNull(item) }
-                if (typed.size == value.size && typed.all { it != null }) {
+        fun ofOrNull(value: Any?): ServiceEndpoint? =
+            when (value) {
+                null -> null
+                is ServiceEndpoint -> value
+                is String -> Url(value)
+                is Map<*, *> -> {
                     @Suppress("UNCHECKED_CAST")
-                    ArrayEndpoint(typed as List<ServiceEndpoint>)
-                } else {
-                    null
+                    ObjectEndpoint(value as Map<String, Any?>)
                 }
+                is List<*> -> {
+                    val typed = value.map { item -> ofOrNull(item) }
+                    if (typed.size == value.size && typed.all { it != null }) {
+                        @Suppress("UNCHECKED_CAST")
+                        ArrayEndpoint(typed as List<ServiceEndpoint>)
+                    } else {
+                        null
+                    }
+                }
+                else -> null
             }
-            else -> null
-        }
     }
 }
 
@@ -118,41 +127,45 @@ fun DidService.serviceEndpointTyped(): ServiceEndpoint = serviceEndpoint
  *
  * @return The URL string, or null if the endpoint is not a simple URL
  */
-fun DidService.serviceEndpointAsUrl(): String? = when (val endpoint = serviceEndpoint) {
-    is ServiceEndpoint.Url -> endpoint.url
-    else -> null
-}
+fun DidService.serviceEndpointAsUrl(): String? =
+    when (val endpoint = serviceEndpoint) {
+        is ServiceEndpoint.Url -> endpoint.url
+        else -> null
+    }
 
 /**
  * Gets the service endpoint as an object (map), if it's an object.
  *
  * @return The object map, or null if the endpoint is not an object
  */
-fun DidService.serviceEndpointAsObject(): Map<String, Any?>? = when (val endpoint = serviceEndpoint) {
-    is ServiceEndpoint.ObjectEndpoint -> endpoint.data
-    else -> null
-}
+fun DidService.serviceEndpointAsObject(): Map<String, Any?>? =
+    when (val endpoint = serviceEndpoint) {
+        is ServiceEndpoint.ObjectEndpoint -> endpoint.data
+        else -> null
+    }
 
 /**
  * Gets the service endpoint as an array, if it's an array.
  *
  * @return The array list of raw values, or null if the endpoint is not an array
  */
-fun DidService.serviceEndpointAsArray(): List<Any>? = when (val endpoint = serviceEndpoint) {
-    is ServiceEndpoint.ArrayEndpoint -> endpoint.endpoints.map { it.toAny() }
-    else -> null
-}
+fun DidService.serviceEndpointAsArray(): List<Any>? =
+    when (val endpoint = serviceEndpoint) {
+        is ServiceEndpoint.ArrayEndpoint -> endpoint.endpoints.map { it.toAny() }
+        else -> null
+    }
 
 /**
  * Converts a [ServiceEndpoint] back to a raw value (`String`, `Map`, or `List`).
  *
  * @return The endpoint as `Any` for interop with untyped consumers
  */
-fun ServiceEndpoint.toAny(): Any = when (this) {
-    is ServiceEndpoint.Url -> url
-    is ServiceEndpoint.ObjectEndpoint -> data
-    is ServiceEndpoint.ArrayEndpoint -> endpoints.map { it.toAny() }
-}
+fun ServiceEndpoint.toAny(): Any =
+    when (this) {
+        is ServiceEndpoint.Url -> url
+        is ServiceEndpoint.ObjectEndpoint -> data
+        is ServiceEndpoint.ArrayEndpoint -> endpoints.map { it.toAny() }
+    }
 
 /**
  * KSerializer for [ServiceEndpoint] that preserves the exact W3C DID Core wire format:
@@ -167,15 +180,20 @@ fun ServiceEndpoint.toAny(): Any = when (this) {
 object ServiceEndpointSerializer : KSerializer<ServiceEndpoint> {
     override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
 
-    override fun serialize(encoder: Encoder, value: ServiceEndpoint) {
-        val jsonEncoder = encoder as? JsonEncoder
-            ?: throw IllegalStateException("ServiceEndpoint can only be serialized to JSON")
+    override fun serialize(
+        encoder: Encoder,
+        value: ServiceEndpoint,
+    ) {
+        val jsonEncoder =
+            encoder as? JsonEncoder
+                ?: throw IllegalStateException("ServiceEndpoint can only be serialized to JSON")
         jsonEncoder.encodeJsonElement(serviceEndpointToJsonElement(value))
     }
 
     override fun deserialize(decoder: Decoder): ServiceEndpoint {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: throw IllegalStateException("ServiceEndpoint can only be deserialized from JSON")
+        val jsonDecoder =
+            decoder as? JsonDecoder
+                ?: throw IllegalStateException("ServiceEndpoint can only be deserialized from JSON")
         return serviceEndpointFromJsonElement(jsonDecoder.decodeJsonElement())
             ?: throw IllegalArgumentException("Unsupported serviceEndpoint JSON shape")
     }
@@ -187,55 +205,63 @@ object ServiceEndpointSerializer : KSerializer<ServiceEndpoint> {
  * [ServiceEndpoint.ObjectEndpoint]/[ServiceEndpoint.ArrayEndpoint] follow the same rules as the
  * shared DID document producer.
  */
-fun serviceEndpointToJsonElement(endpoint: ServiceEndpoint): JsonElement = when (endpoint) {
-    is ServiceEndpoint.Url -> JsonPrimitive(endpoint.url)
-    is ServiceEndpoint.ObjectEndpoint -> anyToServiceEndpointJsonElement(endpoint.data)
-    is ServiceEndpoint.ArrayEndpoint -> JsonArray(endpoint.endpoints.map { serviceEndpointToJsonElement(it) })
-}
+fun serviceEndpointToJsonElement(endpoint: ServiceEndpoint): JsonElement =
+    when (endpoint) {
+        is ServiceEndpoint.Url -> JsonPrimitive(endpoint.url)
+        is ServiceEndpoint.ObjectEndpoint -> anyToServiceEndpointJsonElement(endpoint.data)
+        is ServiceEndpoint.ArrayEndpoint -> JsonArray(endpoint.endpoints.map { serviceEndpointToJsonElement(it) })
+    }
 
 /**
  * Parses a [JsonElement] into a [ServiceEndpoint], or returns `null` for null/unsupported shapes.
  * Object values are decoded into native Kotlin values (String/Long/Double/Boolean/Map/List) so the
  * representation matches what the previous untyped parser produced.
  */
-fun serviceEndpointFromJsonElement(element: JsonElement?): ServiceEndpoint? = when (element) {
-    null, is JsonNull -> null
-    is JsonPrimitive -> if (element.isString) {
-        ServiceEndpoint.Url(element.content)
-    } else {
-        null
+fun serviceEndpointFromJsonElement(element: JsonElement?): ServiceEndpoint? =
+    when (element) {
+        null, is JsonNull -> null
+        is JsonPrimitive ->
+            if (element.isString) {
+                ServiceEndpoint.Url(element.content)
+            } else {
+                null
+            }
+        is JsonObject ->
+            ServiceEndpoint.ObjectEndpoint(
+                element.entries.associate { it.key to jsonElementToAny(it.value) },
+            )
+        is JsonArray -> {
+            val typed = element.mapNotNull { serviceEndpointFromJsonElement(it) }
+            if (typed.size == element.size) ServiceEndpoint.ArrayEndpoint(typed) else null
+        }
     }
-    is JsonObject -> ServiceEndpoint.ObjectEndpoint(
-        element.entries.associate { it.key to jsonElementToAny(it.value) }
-    )
-    is JsonArray -> {
-        val typed = element.mapNotNull { serviceEndpointFromJsonElement(it) }
-        if (typed.size == element.size) ServiceEndpoint.ArrayEndpoint(typed) else null
-    }
-}
 
-private fun jsonElementToAny(element: JsonElement): Any? = when (element) {
-    is JsonPrimitive -> when {
-        element.isString -> element.content
-        element.booleanOrNull != null -> element.boolean
-        element.longOrNull != null -> element.long
-        element.doubleOrNull != null -> element.double
-        else -> element.content
+private fun jsonElementToAny(element: JsonElement): Any? =
+    when (element) {
+        is JsonPrimitive ->
+            when {
+                element.isString -> element.content
+                element.booleanOrNull != null -> element.boolean
+                element.longOrNull != null -> element.long
+                element.doubleOrNull != null -> element.double
+                else -> element.content
+            }
+        is JsonArray -> element.map { jsonElementToAny(it) }
+        is JsonObject -> element.entries.associate { it.key to jsonElementToAny(it.value) }
+        is JsonNull -> null
     }
-    is JsonArray -> element.map { jsonElementToAny(it) }
-    is JsonObject -> element.entries.associate { it.key to jsonElementToAny(it.value) }
-    is JsonNull -> null
-}
 
-private fun anyToServiceEndpointJsonElement(value: Any?): JsonElement = when (value) {
-    null -> JsonNull
-    is String -> JsonPrimitive(value)
-    is Number -> JsonPrimitive(value.toDouble())
-    is Boolean -> JsonPrimitive(value)
-    is Map<*, *> -> buildJsonObject {
-        value.forEach { (key, v) -> put(key.toString(), anyToServiceEndpointJsonElement(v)) }
+private fun anyToServiceEndpointJsonElement(value: Any?): JsonElement =
+    when (value) {
+        null -> JsonNull
+        is String -> JsonPrimitive(value)
+        is Number -> JsonPrimitive(value.toDouble())
+        is Boolean -> JsonPrimitive(value)
+        is Map<*, *> ->
+            buildJsonObject {
+                value.forEach { (key, v) -> put(key.toString(), anyToServiceEndpointJsonElement(v)) }
+            }
+        is List<*> -> JsonArray(value.map { anyToServiceEndpointJsonElement(it) })
+        is ServiceEndpoint -> serviceEndpointToJsonElement(value)
+        else -> JsonPrimitive(value.toString())
     }
-    is List<*> -> JsonArray(value.map { anyToServiceEndpointJsonElement(it) })
-    is ServiceEndpoint -> serviceEndpointToJsonElement(value)
-    else -> JsonPrimitive(value.toString())
-}

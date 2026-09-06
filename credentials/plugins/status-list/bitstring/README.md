@@ -5,7 +5,7 @@ credential status mechanism backed by a JDBC `DataSource`.
 
 ## Overview
 
-This module implements the [`CredentialRevocationManager`](../../../credential-api/src/main/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
+This module implements the [`CredentialRevocationManager`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
 SPI on top of the [W3C Bitstring Status List v1.0](https://www.w3.org/TR/vc-bitstring-status-list/)
 specification. Each credential is assigned an integer index into a long bitstring; flipping the
 bit at that index revokes (or suspends) the credential. The bitstring itself is GZIP-compressed,
@@ -32,7 +32,7 @@ so on.
 `revocation` (permanent withdrawal), `suspension` (temporary hold; the bit can be cleared later),
 and `message` (application-defined; not implemented here — use a separate list). This module
 honours `StatusPurpose.REVOCATION` and `StatusPurpose.SUSPENSION` from
-[`CredentialTypes.kt`](../../../credential-api/src/main/kotlin/org/trustweave/credential/model/CredentialTypes.kt).
+[`CredentialTypes.kt`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/model/CredentialTypes.kt).
 
 **Encoding pipeline.** Bits → little-endian byte array (bit 0 of the first byte = entry 0) →
 GZIP → base64url without padding. The encoded string appears as `encodedList` in the published
@@ -232,7 +232,7 @@ The provider throws `IllegalStateException` if `kms` is not set before `create(.
 ## Integration with `CredentialStatusChecker`
 
 This manager produces and reads status data but does not itself implement the verifier-side
-[`CredentialStatusChecker`](../../../credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
+[`CredentialStatusChecker`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
 SPI used by proof engines to gate `VerificationResult`. A thin adapter is enough:
 
 ```kotlin
@@ -277,9 +277,9 @@ Register the adapter under the `"statusChecker"` key in
 
 - [W3C Bitstring Status List v1.0](https://www.w3.org/TR/vc-bitstring-status-list/)
 - [W3C Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/)
-- [`CredentialRevocationManager`](../../../credential-api/src/main/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
+- [`CredentialRevocationManager`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/revocation/CredentialRevocationManager.kt)
   — the SPI implemented by this module.
-- [`CredentialStatusChecker`](../../../credential-api/src/main/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
+- [`CredentialStatusChecker`](../../../credential-models-mp/src/commonMain/kotlin/org/trustweave/credential/spi/status/CredentialStatusChecker.kt)
   — the verifier-side SPI to which this manager is adapted.
 - [`BitstringStatusListManagerTest`](src/test/kotlin/org/trustweave/revocation/bitstring/BitstringStatusListManagerTest.kt)
   — runnable examples of every public API call.

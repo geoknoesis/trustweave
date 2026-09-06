@@ -17,7 +17,10 @@ class ThreeBoxIntegration : AbstractDidMethodProvider() {
 
     override val supportedMethods: List<String> = listOf("3")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName != "3") return null
         ModuleCapabilities.requireOperations("did:plugins:threebox", setOf("create"))
         return ThreeBoxDidMethod(resolveKms(options))

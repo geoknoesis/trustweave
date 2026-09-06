@@ -274,6 +274,7 @@ graph LR
 ### Basic Usage
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519

@@ -145,7 +145,21 @@ public sealed class Constraint {
          * unrecognized `type` values. Mirrors `models/constraints.py::parse_constraint`.
          */
         public fun parse(obj: JsonObject): Constraint {
-            val type = obj["type"]?.jsonPrimitive?.contentOrNullSafe().orEmpty()
+            val type =
+                obj.string("type")
+                    ?: return Malformed(obj, "<invalid>", "type must be a string")
+            val listField =
+                when (type) {
+                    AllowedMerchants.TYPE, AllowedPayees.TYPE -> "allowed"
+                    LineItems.TYPE -> "items"
+                    else -> null
+                }
+            if (listField != null) {
+                val values = obj[listField] as? JsonArray
+                if (values == null || values.any { it !is JsonObject }) {
+                    return Malformed(obj, type, "$listField must be an array of objects")
+                }
+            }
             return when (type) {
                 AllowedMerchants.TYPE -> AllowedMerchants(obj, obj.objectList("allowed"))
                 LineItems.TYPE -> LineItems(obj, obj.objectList("items"), obj.string("match_mode") ?: "minimum")
@@ -169,11 +183,15 @@ private fun parseAmountRange(
     obj: JsonObject,
     type: String,
 ): Constraint {
+    val currency = obj.string("currency")
+    if (currency == null || !Regex("[A-Z]{3}").matches(currency)) {
+        return Constraint.Malformed(obj, type, "currency must be an uppercase three-letter string")
+    }
     val unreadable = obj.unreadableBound("min") ?: obj.unreadableBound("max")
     if (unreadable != null) return Constraint.Malformed(obj, type, unreadable)
     return Constraint.AmountRange(
         obj,
-        obj.string("currency") ?: "USD",
+        currency,
         obj.longOrNullSafe("min"),
         obj.longOrNullSafe("max"),
     )
@@ -187,17 +205,21 @@ private fun parseBudget(
     obj: JsonObject,
     type: String,
 ): Constraint {
+    val currency = obj.string("currency")
+    if (currency == null || !Regex("[A-Z]{3}").matches(currency)) {
+        return Constraint.Malformed(obj, type, "currency must be an uppercase three-letter string")
+    }
     val unreadable = obj.unreadableBound("min") ?: obj.unreadableBound("max")
     if (unreadable != null) return Constraint.Malformed(obj, type, unreadable)
     val max =
         obj.longOrNullSafe("max")
             ?: return Constraint.Malformed(obj, type, "budget declares no 'max'")
-    return Constraint.Budget(obj, obj.string("currency") ?: "USD", max, obj.longOrNullSafe("min"))
+    return Constraint.Budget(obj, currency, max, obj.longOrNullSafe("min"))
 }
 
 private fun JsonPrimitive.contentOrNullSafe(): String? = runCatching { content }.getOrNull()
 
-private fun JsonObject.string(key: String): String? = this[key]?.jsonPrimitive?.contentOrNullSafe()
+private fun JsonObject.string(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
 
 private fun JsonObject.longOrNullSafe(key: String): Long? =
     this[key]?.let {
@@ -213,8 +235,8 @@ private fun JsonObject.longOrNullSafe(key: String): Long? =
  */
 private fun JsonObject.unreadableBound(key: String): String? {
     val element = this[key] ?: return null
-    val value = runCatching { element.jsonPrimitive.longOrNull }.getOrNull()
-    return if (value == null) "'$key' is not a whole number of minor units: $element" else null
+    val value = (element as? JsonPrimitive)?.takeUnless { it.isString }?.longOrNull
+    return if (value == null || value < 0) "'$key' must be a non-negative integer number of minor units" else null
 }
 
 private fun JsonObject.objectList(key: String): List<JsonObject> =

@@ -1,0 +1,289 @@
+public final class org/trustweave/examples/ExampleContexts {
+	public static final field INSTANCE Lorg/trustweave/examples/ExampleContexts;
+	public static final field OPTION_KEY Ljava/lang/String;
+	public static final field URL Ljava/lang/String;
+	public final fun getContexts ()Ljava/util/List;
+}
+
+public final class org/trustweave/examples/academic/AcademicCredentialsDslExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/academic/AcademicCredentialsExampleKt {
+	public static final fun createDegreeCredential (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/blockchain/BlockchainAnchoringExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/comprehensive/ComprehensiveDslExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/dcat/DataCatalogExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/delegation/DelegationChainExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/did_jwk/JwkDidExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/did_key/KeyDidExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/documentation/DocumentationQuickStartKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/eo/EarthObservationExampleKt {
+	public static final fun anchorCredentialDigest (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun computeCredentialDigest (Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun computeCredentialDigest$default (Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun createLinksetWithDigest (Ljava/util/List;Ljava/lang/String;)Lkotlin/Pair;
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+	public static final fun verifyIntegrityChain (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/examples/financial/FinancialServicesExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/government/GovernmentIdentityExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/healthcare/HealthcareExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/indy/IndyIntegrationExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/iot/IoTDeviceExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/location/ProofOfLocationExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/national/NationalEducationExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/news/NewsIndustryExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/professional/ProfessionalIdentityExampleKt {
+	public static final fun createCertificationCredential (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun createEducationCredential (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun createEmploymentCredential (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/quickstart/QuickStartSampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/scenarios/SignedScenarioKt {
+	public static final fun runSignedScenario (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/examples/spatial/ActivityAuthorizationAnchor {
+	public static final field Companion Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor;
+	public static synthetic fun copy$default (Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActivityType ()Ljava/lang/String;
+	public final fun getAgentDid ()Ljava/lang/String;
+	public final fun getCredentialDigest ()Ljava/lang/String;
+	public final fun getDomainDid ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/examples/spatial/ActivityAuthorizationAnchor$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/examples/spatial/ActivityAuthorizationAnchor;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/ActivityAuthorizationAnchor$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/BoundingBox {
+	public static final field Companion Lorg/trustweave/examples/spatial/BoundingBox$Companion;
+	public fun <init> (DDDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (DDDD)Lorg/trustweave/examples/spatial/BoundingBox;
+	public static synthetic fun copy$default (Lorg/trustweave/examples/spatial/BoundingBox;DDDDILjava/lang/Object;)Lorg/trustweave/examples/spatial/BoundingBox;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxLat ()D
+	public final fun getMaxLon ()D
+	public final fun getMinLat ()D
+	public final fun getMinLon ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/examples/spatial/BoundingBox$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/examples/spatial/BoundingBox$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/examples/spatial/BoundingBox;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/examples/spatial/BoundingBox;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/BoundingBox$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/SpatialDomain {
+	public static final field Companion Lorg/trustweave/examples/spatial/SpatialDomain$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/examples/spatial/BoundingBox;Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/examples/spatial/BoundingBox;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/examples/spatial/BoundingBox;Ljava/util/List;Ljava/lang/String;)Lorg/trustweave/examples/spatial/SpatialDomain;
+	public static synthetic fun copy$default (Lorg/trustweave/examples/spatial/SpatialDomain;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/examples/spatial/BoundingBox;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/examples/spatial/SpatialDomain;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowedActivities ()Ljava/util/List;
+	public final fun getAuthorityDid ()Ljava/lang/String;
+	public final fun getBoundary ()Lorg/trustweave/examples/spatial/BoundingBox;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDomainDid ()Ljava/lang/String;
+	public final fun getDomainId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/examples/spatial/SpatialDomain$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/examples/spatial/SpatialDomain$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/examples/spatial/SpatialDomain;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/examples/spatial/SpatialDomain;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/SpatialDomain$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/examples/spatial/SpatialWebDroneDemoResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/examples/spatial/SpatialDomain;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lorg/trustweave/credential/results/VerificationResult;Lorg/trustweave/credential/results/VerificationResult;ZLorg/trustweave/wallet/Wallet;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component10 ()Lorg/trustweave/credential/results/VerificationResult;
+	public final fun component11 ()Z
+	public final fun component12 ()Lorg/trustweave/wallet/Wallet;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component3 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component4 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component5 ()Lorg/trustweave/examples/spatial/SpatialDomain;
+	public final fun component6 ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun component7 ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Lorg/trustweave/credential/results/VerificationResult;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/examples/spatial/SpatialDomain;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lorg/trustweave/credential/results/VerificationResult;Lorg/trustweave/credential/results/VerificationResult;ZLorg/trustweave/wallet/Wallet;Ljava/lang/String;)Lorg/trustweave/examples/spatial/SpatialWebDroneDemoResult;
+	public static synthetic fun copy$default (Lorg/trustweave/examples/spatial/SpatialWebDroneDemoResult;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/examples/spatial/SpatialDomain;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lorg/trustweave/credential/results/VerificationResult;Lorg/trustweave/credential/results/VerificationResult;ZLorg/trustweave/wallet/Wallet;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/examples/spatial/SpatialWebDroneDemoResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchorTxHash ()Ljava/lang/String;
+	public final fun getAuthorizedInDomain ()Z
+	public final fun getCredential ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun getCredentialId ()Ljava/lang/String;
+	public final fun getDomain ()Lorg/trustweave/examples/spatial/SpatialDomain;
+	public final fun getDomainAuthorityDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDroneDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDroneWallet ()Lorg/trustweave/wallet/Wallet;
+	public final fun getFaaAuthorityDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getIdentificationCredential ()Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public final fun getIdentificationVerification ()Lorg/trustweave/credential/results/VerificationResult;
+	public final fun getOperatorDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getVerification ()Lorg/trustweave/credential/results/VerificationResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/examples/spatial/SpatialWebExampleKt {
+	public static final fun buildDroneAuthorizationCredential (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/examples/spatial/SpatialDomain;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static synthetic fun buildDroneAuthorizationCredential$default (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/examples/spatial/SpatialDomain;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/credential/model/vc/VerifiableCredential;
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+	public static final fun runSpatialWebDroneDemo (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun runSpatialWebDroneDemo$default (ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/examples/spatial/SpatialWebModelsKt {
+	public static final fun checkDomainAuthorization (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/examples/spatial/SpatialDomain;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/Pair;)Z
+	public static final fun demoSfBayAirspaceDomain (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/examples/spatial/SpatialDomain;
+}
+
+public final class org/trustweave/examples/supplychain/SupplyChainExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/trust/WebOfTrustExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+
+public final class org/trustweave/examples/workflow/DigitalWorkflowExampleKt {
+	public static final fun main ()V
+	public static synthetic fun main ([Ljava/lang/String;)V
+}
+

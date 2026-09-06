@@ -1,14 +1,14 @@
 package org.trustweave.trust.services
 
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.credential.revocation.CredentialRevocationManager
-import org.trustweave.trust.dsl.credential.RevocationBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.trust.dsl.credential.RevocationBuilder
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class CredentialRevocationService(
     private val revocationManager: CredentialRevocationManager?,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) {
     /**
      * Revoke a credential.
@@ -40,22 +40,23 @@ class CredentialRevocationService(
      */
     suspend fun revoke(
         timeout: Duration = 10.seconds,
-        block: RevocationBuilder.() -> Unit
-    ): Boolean = try {
-        withTimeout(timeout) {
-            val builder = RevocationBuilder(revocationManager)
-            builder.block()
-            withContext(ioDispatcher) {
-                builder.revoke()
+        block: RevocationBuilder.() -> Unit,
+    ): Boolean =
+        try {
+            withTimeout(timeout) {
+                val builder = RevocationBuilder(revocationManager)
+                builder.block()
+                withContext(ioDispatcher) {
+                    builder.revoke()
+                }
             }
+        } catch (e: TimeoutCancellationException) {
+            // Propagate real cancellation (parent cancellation / enclosing timeout) untouched.
+            currentCoroutineContext().ensureActive()
+            throw TrustWeaveException.OperationTimedOut(
+                operation = "credential revocation",
+                timeout = timeout.toString(),
+                cause = e,
+            )
         }
-    } catch (e: TimeoutCancellationException) {
-        // Propagate real cancellation (parent cancellation / enclosing timeout) untouched.
-        currentCoroutineContext().ensureActive()
-        throw TrustWeaveException.OperationTimedOut(
-            operation = "credential revocation",
-            timeout = timeout.toString(),
-            cause = e
-        )
-    }
 }

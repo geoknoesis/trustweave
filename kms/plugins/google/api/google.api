@@ -1,0 +1,99 @@
+public final class org/trustweave/googlekms/AlgorithmMapping {
+	public static final field INSTANCE Lorg/trustweave/googlekms/AlgorithmMapping;
+	public final fun extractKeyName (Ljava/lang/String;)Ljava/lang/String;
+	public final fun fromGoogleKmsAlgorithm (Lcom/google/cloud/kms/v1/CryptoKeyVersion$CryptoKeyVersionAlgorithm;)Lorg/trustweave/kms/Algorithm;
+	public final fun publicKeyToJwk ([BLorg/trustweave/kms/Algorithm;)Ljava/util/Map;
+	public final fun resolveKeyName (Ljava/lang/String;Lorg/trustweave/googlekms/GoogleKmsConfig;)Ljava/lang/String;
+	public final fun toGoogleKmsAlgorithm (Lorg/trustweave/kms/Algorithm;)Lcom/google/cloud/kms/v1/CryptoKeyVersion$CryptoKeyVersionAlgorithm;
+}
+
+public final class org/trustweave/googlekms/GcpKmsOptionKeys {
+	public static final field INSTANCE Lorg/trustweave/googlekms/GcpKmsOptionKeys;
+	public static final field KEY_RING Ljava/lang/String;
+	public static final field LABELS Ljava/lang/String;
+}
+
+public final class org/trustweave/googlekms/GoogleCloudKeyManagementService : java/lang/AutoCloseable, org/trustweave/core/plugin/PluginLifecycle, org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/googlekms/GoogleCloudKeyManagementService$Companion;
+	public fun <init> (Lorg/trustweave/googlekms/GoogleKmsConfig;Lcom/google/cloud/kms/v1/KeyManagementServiceClient;)V
+	public synthetic fun <init> (Lorg/trustweave/googlekms/GoogleKmsConfig;Lcom/google/cloud/kms/v1/KeyManagementServiceClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cleanup (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun initialize (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun start (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun stop (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/googlekms/GoogleCloudKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/googlekms/GoogleKmsClientFactory {
+	public static final field INSTANCE Lorg/trustweave/googlekms/GoogleKmsClientFactory;
+	public final fun createClient (Lorg/trustweave/googlekms/GoogleKmsConfig;)Lcom/google/cloud/kms/v1/KeyManagementServiceClient;
+}
+
+public final class org/trustweave/googlekms/GoogleKmsConfig {
+	public static final field Companion Lorg/trustweave/googlekms/GoogleKmsConfig$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lorg/trustweave/googlekms/GoogleKmsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/googlekms/GoogleKmsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lorg/trustweave/googlekms/GoogleKmsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheTtlSeconds ()Ljava/lang/Long;
+	public final fun getCredentialsJson ()Ljava/lang/String;
+	public final fun getCredentialsPath ()Ljava/lang/String;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getKeyRing ()Ljava/lang/String;
+	public final fun getLocation ()Ljava/lang/String;
+	public final fun getProjectId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/googlekms/GoogleKmsConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/googlekms/GoogleKmsConfig;
+	public final fun cacheTtlSeconds (Ljava/lang/Long;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun credentialsJson (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun credentialsPath (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun endpoint (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun keyRing (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun location (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun projectId (Ljava/lang/String;)Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+}
+
+public final class org/trustweave/googlekms/GoogleKmsConfig$Companion {
+	public final fun builder ()Lorg/trustweave/googlekms/GoogleKmsConfig$Builder;
+	public final fun fromEnvironment ()Lorg/trustweave/googlekms/GoogleKmsConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/googlekms/GoogleKmsConfig;
+}
+
+public final class org/trustweave/googlekms/GoogleKmsProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+

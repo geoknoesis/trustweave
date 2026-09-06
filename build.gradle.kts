@@ -1,3 +1,5 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+
 plugins {
     // Declare Kotlin plugin here so its types (e.g., KotlinCompile) are available in this build script.
     // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.
@@ -7,6 +9,8 @@ plugins {
     // re-stating the version (the plugin is already on the classpath via kotlin("jvm") apply false above).
     alias(libs.plugins.kotlin.multiplatform) apply false
     id("org.jlleitschuh.gradle.ktlint")
+    alias(libs.plugins.kover)
+    id("org.cyclonedx.bom") version "3.4.1"
 }
 
 // Configure common settings for all projects (root + all subprojects).
@@ -17,9 +21,62 @@ allprojects {
     }
     group = "org.trustweave"
     version = "0.7.0"
+    tasks.withType<org.cyclonedx.gradle.CyclonedxDirectTask>().configureEach {
+        includeConfigs = listOf("(?i).*runtimeClasspath", "(?i).*compileClasspath")
+        skipConfigs = listOf("(?i).*test.*")
+    }
 }
 
 subprojects {
+
+    plugins.withId("org.jetbrains.kotlin.jvm") {
+        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>() as ExtensionAware)
+            .extensions
+            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationExtension> {
+                enabled.set(true)
+            }
+        apply(plugin = "org.jetbrains.kotlinx.kover")
+        rootProject.dependencies.add("kover", project)
+    }
+    plugins.withId("org.jetbrains.kotlin.multiplatform") {
+        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>() as ExtensionAware)
+            .extensions
+            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationMultiplatformExtension> {
+                enabled.set(true)
+            }
+        apply(plugin = "org.jetbrains.kotlinx.kover")
+        rootProject.dependencies.add("kover", project)
+    }
+
+    // Signing is mandatory for remote publication; local development publication stays usable.
+    plugins.withId("maven-publish") {
+        apply(plugin = "signing")
+        val signingKey = providers.environmentVariable("TRUSTWEAVE_SIGNING_KEY")
+        val signingPassword = providers.environmentVariable("TRUSTWEAVE_SIGNING_PASSWORD")
+        val signing = extensions.getByType<org.gradle.plugins.signing.SigningExtension>()
+        signing.isRequired = false
+        if (signingKey.isPresent) {
+            signing.useInMemoryPgpKeys(signingKey.get(), signingPassword.orNull)
+        }
+        extensions.getByType<org.gradle.api.publish.PublishingExtension>().publications.all {
+            signing.sign(this)
+            if (this is org.gradle.api.publish.maven.MavenPublication) {
+                val sbom = tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom")
+                artifact(sbom.flatMap { it.jsonOutput }) {
+                    classifier = "cyclonedx"
+                    extension = "json"
+                    builtBy(sbom)
+                }
+            }
+        }
+        tasks.withType<org.gradle.api.publish.maven.tasks.PublishToMavenRepository>().configureEach {
+            doFirst {
+                require(signingKey.isPresent) {
+                    "Remote publication requires TRUSTWEAVE_SIGNING_KEY; use publishToMavenLocal for development."
+                }
+            }
+        }
+    }
 
     // Apply ktlint to every subproject so module Kotlin sources are actually linted.
     // The root project's plugins {} block above requests the plugin (and applies it to the root
@@ -275,6 +332,9 @@ subprojects {
                                 .removePrefix(":")
                                 .replace(":", "-")
                         artifactId = artifactName
+                        tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom") {
+                            componentName = artifactName
+                        }
 
                         pom {
                             name.set(project.name)

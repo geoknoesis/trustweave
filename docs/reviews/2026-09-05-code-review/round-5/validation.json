@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "area": "Release source guard",
+      "result": "2 Python tests passed; actual SDK revision and fingerprint match",
+      "scope": "Local committed SDK. No publication, remote CI or deployment."
+    },
+    {
+      "area": "Backend compilation",
+      "result": "Production and test Kotlin compilation passed",
+      "scope": "Production and test Kotlin compile; V25 migration and retry behavior also passed their database regressions."
+    },
+    {
+      "area": "Webhook unit tests",
+      "result": "5 passed in final targeted run",
+      "scope": "Two recovery monitor tests and three Stripe controller tests; all passed."
+    },
+    {
+      "area": "PostgreSQL integration and migration",
+      "result": "9 passed; 14 total targeted tests with zero failures or skips",
+      "scope": "Five Flyway and four recovery/access tests. BUILD SUCCESSFUL in 3m 14s. The targeted run excludes the whole-server coverage threshold; no full-suite/coverage rerun is claimed."
+    },
+    {
+      "area": "SDK and wallet",
+      "result": "Unchanged runtime; Round 4 evidence retained",
+      "scope": "3,729 JVM tests with 15 skips, 28 wallet unit tests and 9 browser tests were validated in Round 4, not rerun here."
+    },
+    {
+      "area": "SaaS broad suite",
+      "result": "Round 4 evidence retained: 526 tests, 2 skips; coverage passed then",
+      "scope": "Historical broad-suite baseline. The new webhook database change is now additionally covered by successful Round 5 targeted validation."
+    }
+  ],
+  "logs": [
+    "release-validation.json",
+    "backend-validation.json",
+    "../round-4/sdk-tests.json",
+    "../round-4/backend-tests.json"
+  ]
+}

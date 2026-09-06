@@ -1,20 +1,32 @@
 package org.trustweave.credential.internal.transform
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.spi.transform.CredentialFormatConverter
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.*
-import kotlinx.serialization.serializer
-import kotlinx.datetime.Instant as KotlinInstant
-import java.time.Instant as JavaInstant
-import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jwt.PlainJWT
-import com.nimbusds.jwt.SignedJWT
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.fasterxml.jackson.databind.JsonNode
+import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.PlainJWT
+import com.nimbusds.jwt.SignedJWT
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.serializer
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.spi.transform.CredentialFormatConverter
+import java.time.Instant as JavaInstant
 
 /**
  * Credential transformer for format conversion.
@@ -62,23 +74,26 @@ import com.fasterxml.jackson.databind.JsonNode
  * @see org.trustweave.credential.internal.transform.CredentialTransformationBuilder For DSL builder
  */
 class CredentialTransformer : CredentialFormatConverter {
-    private val json = Json {
-        prettyPrint = false
-        encodeDefaults = false
-        ignoreUnknownKeys = true
-        classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
-        useArrayPolymorphism = false
-    }
-    
+    private val json =
+        Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+            classDiscriminator = "@type" // Use @type instead of type to avoid conflict with LinkedDataProof.type
+            useArrayPolymorphism = false
+        }
+
     // Jackson ObjectMapper configured for CBOR
-    private val cborMapper = ObjectMapper(CBORFactory()).apply {
-        registerKotlinModule()
-    }
-    
+    private val cborMapper =
+        ObjectMapper(CBORFactory()).apply {
+            registerKotlinModule()
+        }
+
     // Jackson ObjectMapper configured for JSON (used for CBOR->JSON conversion)
-    private val jsonMapper = ObjectMapper().apply {
-        registerKotlinModule()
-    }
+    private val jsonMapper =
+        ObjectMapper().apply {
+            registerKotlinModule()
+        }
 
     /**
      * Convert credential to JWT format.
@@ -134,8 +149,8 @@ class CredentialTransformer : CredentialFormatConverter {
     /**
      * Convert JsonElement to Map for JWT claims.
      */
-    private fun jsonElementToMap(element: kotlinx.serialization.json.JsonElement): Map<String, Any?> {
-        return when (element) {
+    private fun jsonElementToMap(element: kotlinx.serialization.json.JsonElement): Map<String, Any?> =
+        when (element) {
             is kotlinx.serialization.json.JsonObject -> {
                 element.entries.associate { (key, value) ->
                     key to jsonElementToValue(value)
@@ -143,13 +158,12 @@ class CredentialTransformer : CredentialFormatConverter {
             }
             else -> emptyMap()
         }
-    }
 
     /**
      * Convert JsonElement to value for JWT claims.
      */
-    private fun jsonElementToValue(element: kotlinx.serialization.json.JsonElement): Any? {
-        return when (element) {
+    private fun jsonElementToValue(element: kotlinx.serialization.json.JsonElement): Any? =
+        when (element) {
             is kotlinx.serialization.json.JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -167,7 +181,6 @@ class CredentialTransformer : CredentialFormatConverter {
             }
             is kotlinx.serialization.json.JsonNull -> null
         }
-    }
 
     /**
      * Convert JWT to credential.
@@ -185,12 +198,13 @@ class CredentialTransformer : CredentialFormatConverter {
         try {
             // Use nimbus-jose-jwt library directly (it's a required dependency)
             // Try parsing as SignedJWT first, then PlainJWT
-            val jwtObject = try {
-                SignedJWT.parse(jwt)
-            } catch (e: Exception) {
-                // Try PlainJWT
-                PlainJWT.parse(jwt)
-            }
+            val jwtObject =
+                try {
+                    SignedJWT.parse(jwt)
+                } catch (e: Exception) {
+                    // Try PlainJWT
+                    PlainJWT.parse(jwt)
+                }
 
             // Get claims set
             val claimsSet = jwtObject.jwtClaimsSet
@@ -204,6 +218,7 @@ class CredentialTransformer : CredentialFormatConverter {
 
             // Convert claim to JsonObject
             val vcMap = vcClaim as? Map<*, *> ?: throw IllegalArgumentException("'vc' claim is not a valid object")
+
             @Suppress("UNCHECKED_CAST")
             val vcJson = mapToJsonObject(vcMap as Map<String, Any?>)
 
@@ -218,19 +233,18 @@ class CredentialTransformer : CredentialFormatConverter {
     /**
      * Convert Map to JsonObject.
      */
-    private fun mapToJsonObject(map: Map<String, Any?>): kotlinx.serialization.json.JsonObject {
-        return buildJsonObject {
+    private fun mapToJsonObject(map: Map<String, Any?>): kotlinx.serialization.json.JsonObject =
+        buildJsonObject {
             map.forEach { (key, value) ->
                 put(key, valueToJsonElement(value))
             }
         }
-    }
 
     /**
      * Convert value to JsonElement.
      */
-    private fun valueToJsonElement(value: Any?): kotlinx.serialization.json.JsonElement {
-        return when (value) {
+    private fun valueToJsonElement(value: Any?): kotlinx.serialization.json.JsonElement =
+        when (value) {
             null -> kotlinx.serialization.json.JsonNull
             is String -> kotlinx.serialization.json.JsonPrimitive(value)
             is Number -> kotlinx.serialization.json.JsonPrimitive(value)
@@ -242,7 +256,6 @@ class CredentialTransformer : CredentialFormatConverter {
             }
             else -> kotlinx.serialization.json.JsonPrimitive(value.toString())
         }
-    }
 
     /**
      * Convert credential to JSON-LD format.
@@ -269,9 +282,7 @@ class CredentialTransformer : CredentialFormatConverter {
      * @return Verifiable credential
      * @see org.trustweave.credential.internal.transform.toCredential Extension function
      */
-    override suspend fun fromJsonLd(json: JsonObject): VerifiableCredential {
-        return this.json.decodeFromJsonElement<VerifiableCredential>(json)
-    }
+    override suspend fun fromJsonLd(json: JsonObject): VerifiableCredential = this.json.decodeFromJsonElement<VerifiableCredential>(json)
 
     /**
      * Convert credential to CBOR format.
@@ -301,10 +312,10 @@ class CredentialTransformer : CredentialFormatConverter {
     override suspend fun toCbor(credential: VerifiableCredential): ByteArray {
         // Step 1: Serialize credential to JSON string using kotlinx.serialization
         val jsonString = json.encodeToString(VerifiableCredential.serializer(), credential)
-        
+
         // Step 2: Parse JSON string to Jackson tree model using JSON mapper
         val jsonNode = jsonMapper.readTree(jsonString)
-        
+
         // Step 3: Write to CBOR bytes using CBOR mapper
         return cborMapper.writeValueAsBytes(jsonNode)
     }
@@ -338,10 +349,10 @@ class CredentialTransformer : CredentialFormatConverter {
         try {
             // Step 1: Parse CBOR bytes to Jackson tree model using CBOR mapper
             val jsonNode = cborMapper.readTree(bytes)
-            
+
             // Step 2: Convert JSON tree to JSON string using JSON mapper
             val jsonString = jsonMapper.writeValueAsString(jsonNode)
-            
+
             // Step 3: Deserialize JSON string to VerifiableCredential using kotlinx.serialization
             return json.decodeFromString<VerifiableCredential>(jsonString)
         } catch (e: com.fasterxml.jackson.core.JsonProcessingException) {
@@ -351,5 +362,3 @@ class CredentialTransformer : CredentialFormatConverter {
         }
     }
 }
-
-

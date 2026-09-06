@@ -1,14 +1,14 @@
 package org.trustweave.trust.services
 
-import org.trustweave.credential.CredentialService
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.trust.dsl.credential.VerificationBuilder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.trust.dsl.credential.VerificationBuilder
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class CredentialVerificationService(
     private val credentialService: CredentialService,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) {
     /**
      * Verify a verifiable credential.
@@ -35,14 +35,15 @@ class CredentialVerificationService(
      */
     suspend fun verify(
         timeout: Duration = 10.seconds,
-        block: VerificationBuilder.() -> Unit
+        block: VerificationBuilder.() -> Unit,
     ): VerificationResult {
         // Configure the builder outside the timeout so the request credential is retained
         // and can be reported in a timeout failure result.
-        val builder = VerificationBuilder(
-            credentialService = credentialService,
-            ioDispatcher = ioDispatcher
-        )
+        val builder =
+            VerificationBuilder(
+                credentialService = credentialService,
+                ioDispatcher = ioDispatcher,
+            )
         builder.block()
         return try {
             withTimeout(timeout) {
@@ -58,7 +59,7 @@ class CredentialVerificationService(
             VerificationResult.Invalid.InvalidProof(
                 credential = builder.credential,
                 reason = reason,
-                errors = listOf(reason)
+                errors = listOf(reason),
             )
         }
     }

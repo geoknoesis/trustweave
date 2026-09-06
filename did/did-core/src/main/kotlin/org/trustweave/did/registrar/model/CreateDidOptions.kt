@@ -1,9 +1,9 @@
 package org.trustweave.did.registrar.model
 
-import org.trustweave.did.model.DidDocument
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import org.trustweave.did.model.DidDocument
 
 /**
  * Options for DID creation operations according to DID Registration specification.
@@ -23,7 +23,6 @@ data class CreateDidOptions(
      * Default: `INTERNAL_SECRET`
      */
     val keyManagementMode: KeyManagementMode = KeyManagementMode.INTERNAL_SECRET,
-
     /**
      * Whether the registrar should store the generated secrets.
      *
@@ -31,7 +30,6 @@ data class CreateDidOptions(
      * Default: `false` (secrets are not stored by default)
      */
     val storeSecrets: Boolean = false,
-
     /**
      * Whether the registrar should return secrets to the client.
      *
@@ -40,7 +38,6 @@ data class CreateDidOptions(
      * Default: `false` (secrets are not returned by default)
      */
     val returnSecrets: Boolean = false,
-
     /**
      * Secret material provided by the client.
      *
@@ -48,7 +45,6 @@ data class CreateDidOptions(
      * Contains keys that the client manages externally.
      */
     val secret: Secret? = null,
-
     /**
      * Pre-created DID Document.
      *
@@ -57,7 +53,6 @@ data class CreateDidOptions(
      */
     @Contextual
     val didDocument: DidDocument? = null,
-
     /**
      * Method-specific options.
      *
@@ -67,7 +62,7 @@ data class CreateDidOptions(
      * - Service endpoints
      * - Method-specific configuration
      */
-    val methodSpecificOptions: Map<String, JsonElement> = emptyMap()
+    val methodSpecificOptions: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -90,6 +85,5 @@ enum class KeyManagementMode {
      * Registrar performs cryptographic operations through wallet interface
      * without direct access to private keys.
      */
-    EXTERNAL_SECRET
+    EXTERNAL_SECRET,
 }
-

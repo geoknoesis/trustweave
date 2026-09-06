@@ -49,7 +49,6 @@ import kotlin.test.assertTrue
  * `assertionMethod` authorization, and Ed25519 signature verification.
  */
 class Ed25519Signature2020InteropTest {
-
     companion object {
         private const val ALUMNI_CONTEXT_URL = "https://example.org/contexts/alumni/v1"
 
@@ -58,7 +57,7 @@ class Ed25519Signature2020InteropTest {
             // served to the Digital Bazaar stack when the fixture was signed (see README).
             JsonLdContextLoader.registerContext(
                 ALUMNI_CONTEXT_URL,
-                resourceText("/interop/contexts/trustweave-alumni-test-v1.jsonld")
+                resourceText("/interop/contexts/trustweave-alumni-test-v1.jsonld"),
             )
         }
 
@@ -95,17 +94,19 @@ class Ed25519Signature2020InteropTest {
             type = json.getValue("type").jsonArray.map { CredentialType.fromString(it.jsonPrimitive.content) },
             issuer = Issuer.IriIssuer(Iri(json.getValue("issuer").jsonPrimitive.content)),
             issuanceDate = Instant.parse(json.getValue("issuanceDate").jsonPrimitive.content),
-            credentialSubject = CredentialSubject(
-                id = subjectJson["id"]?.let { Iri(it.jsonPrimitive.content) },
-                claims = subjectJson.filterKeys { it != "id" }
-            ),
-            proof = CredentialProof.LinkedDataProof(
-                type = proofJson.getValue("type").jsonPrimitive.content,
-                created = Instant.parse(proofJson.getValue("created").jsonPrimitive.content),
-                verificationMethod = proofJson.getValue("verificationMethod").jsonPrimitive.content,
-                proofPurpose = proofJson.getValue("proofPurpose").jsonPrimitive.content,
-                proofValue = proofJson.getValue("proofValue").jsonPrimitive.content
-            )
+            credentialSubject =
+                CredentialSubject(
+                    id = subjectJson["id"]?.let { Iri(it.jsonPrimitive.content) },
+                    claims = subjectJson.filterKeys { it != "id" },
+                ),
+            proof =
+                CredentialProof.LinkedDataProof(
+                    type = proofJson.getValue("type").jsonPrimitive.content,
+                    created = Instant.parse(proofJson.getValue("created").jsonPrimitive.content),
+                    verificationMethod = proofJson.getValue("verificationMethod").jsonPrimitive.content,
+                    proofPurpose = proofJson.getValue("proofPurpose").jsonPrimitive.content,
+                    proofValue = proofJson.getValue("proofValue").jsonPrimitive.content,
+                ),
         )
     }
 
@@ -117,88 +118,99 @@ class Ed25519Signature2020InteropTest {
         val issuerDidValue = (credential.issuer as Issuer.IriIssuer).id.value
         val issuerDid = Did(issuerDidValue)
         val multibaseKey = issuerDidValue.removePrefix("did:key:")
-        val vmId = VerificationMethodId.parse(
-            (credential.proof as CredentialProof.LinkedDataProof).verificationMethod,
-            issuerDid
-        )
-        val document = DidDocument(
-            id = issuerDid,
-            verificationMethod = listOf(
-                VerificationMethod(
-                    id = vmId,
-                    type = "Ed25519VerificationKey2020",
-                    controller = issuerDid,
-                    publicKeyMultibase = multibaseKey
-                )
-            ),
-            assertionMethod = listOf(vmId),
-            authentication = listOf(vmId)
-        )
-        val resolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                require(did.value == issuerDid.value) { "Unexpected DID resolution request: ${did.value}" }
-                return DidResolutionResult.Success(document)
+        val vmId =
+            VerificationMethodId.parse(
+                (credential.proof as CredentialProof.LinkedDataProof).verificationMethod,
+                issuerDid,
+            )
+        val document =
+            DidDocument(
+                id = issuerDid,
+                verificationMethod =
+                    listOf(
+                        VerificationMethod(
+                            id = vmId,
+                            type = "Ed25519VerificationKey2020",
+                            controller = issuerDid,
+                            publicKeyMultibase = multibaseKey,
+                        ),
+                    ),
+                assertionMethod = listOf(vmId),
+                authentication = listOf(vmId),
+            )
+        val resolver =
+            object : DidResolver {
+                override suspend fun resolve(did: Did): DidResolutionResult {
+                    require(did.value == issuerDid.value) { "Unexpected DID resolution request: ${did.value}" }
+                    return DidResolutionResult.Success(document)
+                }
             }
-        }
         return document to resolver
     }
 
-    private fun engineFor(resolver: DidResolver) = VcLdProofEngine(
-        config = ProofEngineConfig(didResolver = resolver)
-    )
+    private fun engineFor(resolver: DidResolver) =
+        VcLdProofEngine(
+            config = ProofEngineConfig(didResolver = resolver),
+        )
 
     // --- Positive: the externally signed credential must verify -------------------------
 
     @Test
-    fun `credential signed by the Digital Bazaar stack verifies through the real engine path`() = runBlocking<Unit> {
-        val credential = parseFixture(fixture)
-        val (_, resolver) = issuerEnvironment(credential)
+    fun `credential signed by the Digital Bazaar stack verifies through the real engine path`() =
+        runBlocking<Unit> {
+            val credential = parseFixture(fixture)
+            val (_, resolver) = issuerEnvironment(credential)
 
-        val result = engineFor(resolver).verify(credential, VerificationOptions())
+            val result = engineFor(resolver).verify(credential, VerificationOptions())
 
-        assertTrue(
-            result is VerificationResult.Valid,
-            "Externally signed Ed25519Signature2020 credential must verify; got " +
-                "${result::class.simpleName}: ${(result as? VerificationResult.Invalid)?.errors}"
-        )
-        assertEquals(Iri("did:key:z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2"), result.issuerIri)
-    }
+            assertTrue(
+                result is VerificationResult.Valid,
+                "Externally signed Ed25519Signature2020 credential must verify; got " +
+                    "${result::class.simpleName}: ${(result as? VerificationResult.Invalid)?.errors}",
+            )
+            assertEquals(Iri("did:key:z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2"), result.issuerIri)
+        }
 
     // --- Negatives: any tampering must invalidate the external signature ----------------
 
     @Test
-    fun `flipping a claim on the externally signed credential fails verification`() = runBlocking<Unit> {
-        val credential = parseFixture(fixture)
-        val (_, resolver) = issuerEnvironment(credential)
-        val tampered = credential.copy(
-            credentialSubject = credential.credentialSubject.copy(
-                claims = credential.credentialSubject.claims + ("alumniOf" to JsonPrimitive("The School of Forgers"))
+    fun `flipping a claim on the externally signed credential fails verification`() =
+        runBlocking<Unit> {
+            val credential = parseFixture(fixture)
+            val (_, resolver) = issuerEnvironment(credential)
+            val tampered =
+                credential.copy(
+                    credentialSubject =
+                        credential.credentialSubject.copy(
+                            claims = credential.credentialSubject.claims + ("alumniOf" to JsonPrimitive("The School of Forgers")),
+                        ),
+                )
+
+            val result = engineFor(resolver).verify(tampered, VerificationOptions())
+
+            assertTrue(
+                result is VerificationResult.Invalid,
+                "Tampered claim must fail verification, got ${result::class.simpleName}",
             )
-        )
-
-        val result = engineFor(resolver).verify(tampered, VerificationOptions())
-
-        assertTrue(
-            result is VerificationResult.Invalid,
-            "Tampered claim must fail verification, got ${result::class.simpleName}"
-        )
-    }
+        }
 
     @Test
-    fun `rewriting the proof created timestamp fails verification`() = runBlocking<Unit> {
-        val credential = parseFixture(fixture)
-        val (_, resolver) = issuerEnvironment(credential)
-        val proof = credential.proof as CredentialProof.LinkedDataProof
-        val tampered = credential.copy(
-            proof = proof.copy(created = Instant.parse("2024-01-01T00:00:00Z"))
-        )
+    fun `rewriting the proof created timestamp fails verification`() =
+        runBlocking<Unit> {
+            val credential = parseFixture(fixture)
+            val (_, resolver) = issuerEnvironment(credential)
+            val proof = credential.proof as CredentialProof.LinkedDataProof
+            val tampered =
+                credential.copy(
+                    proof = proof.copy(created = Instant.parse("2024-01-01T00:00:00Z")),
+                )
 
-        val result = engineFor(resolver).verify(tampered, VerificationOptions())
+            val result = engineFor(resolver).verify(tampered, VerificationOptions())
 
-        assertTrue(
-            result is VerificationResult.Invalid,
-            "Tampered proof.created must fail verification (proof options are signed), " +
-                "got ${result::class.simpleName}"
-        )
-    }
+            assertTrue(
+                result is VerificationResult.Invalid,
+                "Tampered proof.created must fail verification (proof options are signed), " +
+                    "got ${result::class.simpleName}",
+            )
+        }
 }

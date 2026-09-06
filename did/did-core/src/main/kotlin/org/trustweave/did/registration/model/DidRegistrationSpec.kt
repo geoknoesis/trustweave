@@ -45,38 +45,32 @@ data class DidRegistrationSpec(
      * The DID method name (e.g., "web", "key", "ion").
      */
     val name: String,
-
     /**
      * Implementation status of the method.
      * Common values: "proposed", "implemented", "deprecated"
      */
     val status: String? = null,
-
     /**
      * URL to the full DID method specification document.
      */
     val specification: String? = null,
-
     /**
      * Contact information for the method maintainers.
      */
     val contact: ContactInfo? = null,
-
     /**
      * Driver configuration for how to interact with this DID method.
      * This determines how resolution, creation, etc. are handled.
      */
     val driver: DriverConfig? = null,
-
     /**
      * Capabilities supported by this DID method implementation.
      */
     val capabilities: MethodCapabilities? = null,
-
     /**
      * Additional properties not defined in the spec.
      */
-    val additionalProperties: Map<String, JsonObject> = emptyMap()
+    val additionalProperties: Map<String, JsonObject> = emptyMap(),
 )
 
 /**
@@ -93,63 +87,53 @@ data class DriverConfig(
      * Type of driver: "universal-resolver", "native", or "custom"
      */
     val type: String,
-
     /**
      * Base URL for Universal Resolver (required for universal-resolver type)
      */
     val baseUrl: String? = null,
-
     /**
      * Base URL for Universal Registrar (optional, for create/update/deactivate operations)
-     * 
+     *
      * If provided, HttpDidMethod will automatically create a DefaultUniversalRegistrar
      * instance to handle registration operations. This enables full DID Registration
      * specification compliance without requiring explicit registrar configuration.
      */
     val registrarUrl: String? = null,
-
     /**
      * Protocol adapter name for Universal Resolver (e.g., "standard", "godiddy")
      */
     val protocolAdapter: String? = null,
-
     /**
      * API key for authentication (if required)
      */
     val apiKey: String? = null,
-
     /**
      * Timeout in seconds for HTTP requests (default: 30)
      */
     val timeout: Int? = null,
-
     /**
      * Additional driver-specific configuration
      */
-    val config: Map<String, String> = emptyMap()
+    val config: Map<String, String> = emptyMap(),
 )
 
 /**
  * Companion object with parsing utilities.
  */
 object DidRegistrationSpecParser {
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     /**
      * Parses a DID Registration JSON string into a DidRegistrationSpec.
      */
-    fun parse(jsonString: String): DidRegistrationSpec {
-        return json.decodeFromString(jsonString)
-    }
+    fun parse(jsonString: String): DidRegistrationSpec = json.decodeFromString(jsonString)
 
     /**
      * Parses a DID Registration JSON object into a DidRegistrationSpec.
      */
-    fun parse(jsonObject: JsonObject): DidRegistrationSpec {
-        return json.decodeFromJsonElement(jsonObject)
-    }
+    fun parse(jsonObject: JsonObject): DidRegistrationSpec = json.decodeFromJsonElement(jsonObject)
 }
-

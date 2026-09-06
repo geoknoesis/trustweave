@@ -1,0 +1,113 @@
+{
+  "scope": "Targeted verification and remediation of runtime authorization and database-default findings; not a complete re-review of all 17 findings.",
+  "findings": [
+    {
+      "id": "TW-R10-01",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Both L3 paths use the same constraint checker. Checkout line-item matching remains unsupported and therefore rejects checkout authorization."
+    },
+    {
+      "id": "TW-R10-02",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Live verification requires nonblank expected L2 audience and nonce. Offline audit opt-out is explicit and recorded; nonce issuance and atomic single-use consumption remain the caller's responsibility."
+    },
+    {
+      "id": "TW-R10-03",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Numeric nonnegative iat/exp and exp > iat are required by default. Only explicit audit policy allows absent L1/L2 claims; L3 always requires both and the one-hour cap."
+    },
+    {
+      "id": "TW-R10-04",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Open payment mandates require an authorized instrument with id/type; L3 must match it."
+    },
+    {
+      "id": "TW-R10-05",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-06",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-07",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-08",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-09",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-10",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "TW-R10-11",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "SA-R10-01",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Default Flyway + Hibernate validate, a clean PostgreSQL/JPA parity test and a real SDK application smoke boot. Added V30-V33 for missing migrated columns; CI runs the guard in the full backend suite."
+    },
+    {
+      "id": "SA-R10-02",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "SA-R10-03",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "SA-R10-04",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "SA-R10-05",
+      "status": "open_not_addressed_in_this_pass",
+      "note": "Retained for a separate implementation and verification pass."
+    },
+    {
+      "id": "SA-R10-06",
+      "status": "fixed_targeted_tests_passed",
+      "note": "Default datasource settings require environment values. Local credential fallbacks are confined to the explicit dev profile."
+    }
+  ],
+  "validation": {
+    "vi_tests": 30,
+    "targeted_saas_tests": 17,
+    "full_backend": {
+      "status": "failed",
+      "tests": 536,
+      "passed": 530,
+      "failed": 3,
+      "skipped": 3,
+      "coverage": "not validated; full run failed before coverage tasks",
+      "details": "backend-full-result.json"
+    },
+    "documentation_checker": "passed",
+    "isolated_failure_recheck": {
+      "tests": 25,
+      "failures": 0,
+      "skipped": 0,
+      "gradle_result": "BUILD SUCCESSFUL",
+      "global_coverage_task": "excluded for this subset only",
+      "conclusion": "All three full-run failures passed in isolation; clean full-suite reliability and coverage remain unverified."
+    }
+  },
+  "scoring": "No new overall score assigned. Earlier 98/96 are not reliable global production-readiness ratings. Original independent baseline and findings are preserved."
+}

@@ -20,33 +20,27 @@ data class IonDidConfig(
      * Can be a single node or multiple nodes for redundancy.
      */
     val ionNodeUrl: String,
-
     /**
      * Bitcoin RPC endpoint for anchoring operations (optional, for direct anchoring).
      */
     val bitcoinRpcUrl: String? = null,
-
     /**
      * Bitcoin network (mainnet, testnet, regtest) - default: mainnet.
      */
     val bitcoinNetwork: String = "mainnet",
-
     /**
      * Operation batch size (default: 10).
      */
     val batchSize: Int = 10,
-
     /**
      * Timeout for ION node requests in seconds (default: 60).
      */
     val timeoutSeconds: Int = 60,
-
     /**
      * Additional configuration properties.
      */
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
-
     companion object {
         /**
          * Common ION node endpoints.
@@ -64,46 +58,43 @@ data class IonDidConfig(
         /**
          * Creates configuration for ION mainnet.
          */
-        fun mainnet(ionNodeUrl: String = ION_MAINNET_NODE): IonDidConfig {
-            return IonDidConfig(
+        fun mainnet(ionNodeUrl: String = ION_MAINNET_NODE): IonDidConfig =
+            IonDidConfig(
                 ionNodeUrl = ionNodeUrl,
-                bitcoinNetwork = BITCOIN_MAINNET
+                bitcoinNetwork = BITCOIN_MAINNET,
             )
-        }
 
         /**
          * Creates configuration for ION testnet.
          */
-        fun testnet(ionNodeUrl: String = ION_TESTNET_NODE): IonDidConfig {
-            return IonDidConfig(
+        fun testnet(ionNodeUrl: String = ION_TESTNET_NODE): IonDidConfig =
+            IonDidConfig(
                 ionNodeUrl = ionNodeUrl,
-                bitcoinNetwork = BITCOIN_TESTNET
+                bitcoinNetwork = BITCOIN_TESTNET,
             )
-        }
 
         /**
          * Creates configuration from a map (for backward compatibility).
          */
-        fun fromMap(map: Map<String, Any?>): IonDidConfig {
-            return IonDidConfig(
-                ionNodeUrl = map["ionNodeUrl"] as? String
-                    ?: throw IllegalArgumentException("ionNodeUrl is required"),
+        fun fromMap(map: Map<String, Any?>): IonDidConfig =
+            IonDidConfig(
+                ionNodeUrl =
+                    map["ionNodeUrl"] as? String
+                        ?: throw IllegalArgumentException("ionNodeUrl is required"),
                 bitcoinRpcUrl = map["bitcoinRpcUrl"] as? String,
                 bitcoinNetwork = map["bitcoinNetwork"] as? String ?: BITCOIN_MAINNET,
                 batchSize = map["batchSize"] as? Int ?: 10,
                 timeoutSeconds = map["timeoutSeconds"] as? Int ?: 60,
-                additionalProperties = map.filterKeys {
-                    it !in setOf("ionNodeUrl", "bitcoinRpcUrl", "bitcoinNetwork", "batchSize", "timeoutSeconds")
-                }
+                additionalProperties =
+                    map.filterKeys {
+                        it !in setOf("ionNodeUrl", "bitcoinRpcUrl", "bitcoinNetwork", "batchSize", "timeoutSeconds")
+                    },
             )
-        }
 
         /**
          * Builder for IonDidConfig.
          */
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
     }
 
     /**
@@ -142,7 +133,10 @@ data class IonDidConfig(
             return this
         }
 
-        fun property(key: String, value: Any?): Builder {
+        fun property(
+            key: String,
+            value: Any?,
+        ): Builder {
             this.additionalProperties[key] = value
             return this
         }
@@ -156,7 +150,7 @@ data class IonDidConfig(
                 bitcoinNetwork = bitcoinNetwork,
                 batchSize = batchSize,
                 timeoutSeconds = timeoutSeconds,
-                additionalProperties = additionalProperties.toMap()
+                additionalProperties = additionalProperties.toMap(),
             )
         }
     }
@@ -164,8 +158,8 @@ data class IonDidConfig(
     /**
      * Converts to map format.
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             put("ionNodeUrl", ionNodeUrl)
             put("bitcoinRpcUrl", bitcoinRpcUrl)
             put("bitcoinNetwork", bitcoinNetwork)
@@ -173,6 +167,4 @@ data class IonDidConfig(
             put("timeoutSeconds", timeoutSeconds)
             putAll(additionalProperties)
         }
-    }
 }
-

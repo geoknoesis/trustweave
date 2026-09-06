@@ -1,8 +1,8 @@
 package org.trustweave.trust.types
 
-import org.trustweave.trust.TrustAnchorMetadata
-import org.trustweave.did.identifiers.Did
 import kotlinx.datetime.Instant
+import org.trustweave.did.identifiers.Did
+import org.trustweave.trust.TrustAnchorMetadata
 
 /**
  * Trust anchor in a trust path.
@@ -14,7 +14,7 @@ import kotlinx.datetime.Instant
  */
 data class TrustAnchor(
     val did: Did,
-    val metadata: TrustAnchorMetadata
+    val metadata: TrustAnchorMetadata,
 )
 
 /**
@@ -61,7 +61,7 @@ sealed class TrustPath {
         val anchors: List<TrustAnchor>,
         val verified: Boolean = true,
         val verifiedAt: Instant,
-        val trustScore: Double = 1.0
+        val trustScore: Double = 1.0,
     ) : TrustPath() {
         init {
             require(trustScore in 0.0..1.0) { "Trust score must be between 0.0 and 1.0" }
@@ -90,7 +90,7 @@ sealed class TrustPath {
     data class NotFound(
         val from: VerifierIdentity,
         val to: IssuerIdentity,
-        val reason: String? = null
+        val reason: String? = null,
     ) : TrustPath()
 
     /**
@@ -99,7 +99,6 @@ sealed class TrustPath {
      * @param reason Description of the missing configuration
      */
     data class NotConfigured(
-        val reason: String = "Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }"
+        val reason: String = "Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }",
     ) : TrustPath()
 }
-

@@ -105,6 +105,7 @@ Wrong method prefix or malformed DID string should use **`DidResolutionResult.Fa
 
 **Smoke test in a coroutine:**
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 

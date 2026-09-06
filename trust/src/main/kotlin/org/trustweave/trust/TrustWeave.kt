@@ -1,60 +1,63 @@
 package org.trustweave.trust
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonElement
+import org.slf4j.LoggerFactory
 import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.payment.FeeStrategy
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.anchor.services.BlockchainService
 import org.trustweave.contract.DefaultSmartContractService
 import org.trustweave.contract.SmartContractService
-import org.trustweave.trust.domain.TrustedDomainManager
-import org.trustweave.trust.context.DidDslContext
-import org.trustweave.trust.context.WalletDslContext
-import org.trustweave.trust.dsl.*
-import org.trustweave.trust.dsl.credential.IssuanceBuilder
-import org.trustweave.trust.dsl.credential.RevocationBuilder
-import org.trustweave.trust.dsl.credential.VerificationBuilder
-import org.trustweave.trust.dsl.KeyRotationBuilder
-import org.trustweave.trust.dsl.did.DelegationBuilder
-import org.trustweave.trust.dsl.did.DidBuilder
-import org.trustweave.trust.dsl.did.DidDocumentBuilder
-import org.trustweave.trust.dsl.wallet.WalletBuilder
-import org.trustweave.did.DidMethod
-import org.trustweave.did.model.DidDocument
-import org.trustweave.did.registry.DidMethodRegistry
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.verifier.DelegationChainResult
-import org.trustweave.did.resolver.DidResolver
-import org.trustweave.did.identifiers.Did
+import org.trustweave.core.plugin.PluginLifecycle
+import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.schema.SchemaRegistry
+import org.trustweave.did.DidMethod
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.registry.DidMethodRegistry
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.verifier.DelegationChainResult
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.services.KmsService
+import org.trustweave.trust.context.DidDslContext
+import org.trustweave.trust.context.WalletDslContext
+import org.trustweave.trust.domain.TrustedDomainManager
+import org.trustweave.trust.dsl.KeyRotationBuilder
+import org.trustweave.trust.dsl.TrustBuilder
+import org.trustweave.trust.dsl.TrustWeaveConfig
+import org.trustweave.trust.dsl.credential.IssuanceBuilder
+import org.trustweave.trust.dsl.credential.RevocationBuilder
+import org.trustweave.trust.dsl.credential.VerificationBuilder
+import org.trustweave.trust.dsl.did.DelegationBuilder
+import org.trustweave.trust.dsl.did.DidBuilder
+import org.trustweave.trust.dsl.did.DidDocumentBuilder
+import org.trustweave.trust.dsl.findTrustPath
+import org.trustweave.trust.dsl.not
+import org.trustweave.trust.dsl.trustWeave
+import org.trustweave.trust.dsl.wallet.WalletBuilder
+import org.trustweave.trust.internal.placeholderCredentialForUnconfiguredVerification
+import org.trustweave.trust.services.CredentialIssuanceService
+import org.trustweave.trust.services.CredentialRevocationService
+import org.trustweave.trust.services.CredentialVerificationService
+import org.trustweave.trust.services.DidManagementService
+import org.trustweave.trust.services.TrustManagementService
+import org.trustweave.trust.services.WalletManagementService
 import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.DidCreationWithKeyResult
 import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.WalletCreationResult
-import org.trustweave.trust.types.TrustPath
-import org.trustweave.trust.internal.placeholderCredentialForUnconfiguredVerification
-import org.trustweave.core.plugin.PluginLifecycle
-import kotlinx.coroutines.runBlocking
+import org.trustweave.wallet.services.WalletFactory
 import java.io.Closeable
 import java.util.concurrent.atomic.AtomicBoolean
-import org.trustweave.trust.services.CredentialIssuanceService
-import org.trustweave.trust.services.CredentialVerificationService
-import org.trustweave.trust.services.CredentialRevocationService
-import org.trustweave.trust.services.DidManagementService
-import org.trustweave.trust.services.WalletManagementService
-import org.trustweave.trust.services.TrustManagementService
-import org.trustweave.wallet.services.WalletFactory
-import org.trustweave.anchor.BlockchainAnchorClient
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.services.KmsService
-import org.trustweave.credential.revocation.CredentialRevocationManager
-import org.trustweave.credential.schema.SchemaRegistry
-import org.trustweave.credential.model.ProofType
-import org.slf4j.LoggerFactory
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -108,10 +111,13 @@ import kotlin.time.Duration.Companion.seconds
  * ```
  */
 class TrustWeave internal constructor(
-    private val config: TrustWeaveConfig
-) : DidResolver, Closeable, DidDslContext, WalletDslContext {
+    private val config: TrustWeaveConfig,
+) : DidResolver,
+    Closeable,
+    DidDslContext,
+    WalletDslContext {
     private val logger = LoggerFactory.getLogger(TrustWeave::class.java)
-    
+
     /**
      * The underlying configuration.
      *
@@ -162,7 +168,7 @@ class TrustWeave internal constructor(
     val contracts: SmartContractService by lazy {
         config.smartContractService ?: DefaultSmartContractService(
             credentialService = config.credentialService,
-            blockchainRegistry = config.blockchainRegistry
+            blockchainRegistry = config.blockchainRegistry,
         )
     }
 
@@ -206,11 +212,12 @@ class TrustWeave internal constructor(
         maxFee: TokenAmount? = null,
         mediaType: String = "application/json",
     ): AnchorResult {
-        val domain = activeDomain
-            ?: error(
-                "No active Trusted Domain. Configure one in TrustWeave.build { domain { ... } } " +
-                    "before calling anchorThroughDomain.",
-            )
+        val domain =
+            activeDomain
+                ?: error(
+                    "No active Trusted Domain. Configure one in TrustWeave.build { domain { ... } } " +
+                        "before calling anchorThroughDomain.",
+                )
         return domain.anchor(
             operationKind = operationKind,
             chainId = chainId,
@@ -233,7 +240,7 @@ class TrustWeave internal constructor(
                 ioDispatcher = config.ioDispatcher,
                 autoAnchor = config.credentialConfig.autoAnchor,
                 defaultChain = config.credentialConfig.defaultChain,
-                blockchainService = blockchains
+                blockchainService = blockchains,
             )
         }
     }
@@ -242,7 +249,7 @@ class TrustWeave internal constructor(
         config.credentialService?.let { cs ->
             CredentialVerificationService(
                 credentialService = cs,
-                ioDispatcher = config.ioDispatcher
+                ioDispatcher = config.ioDispatcher,
             )
         }
     }
@@ -250,7 +257,7 @@ class TrustWeave internal constructor(
     private val revocationService: CredentialRevocationService by lazy {
         CredentialRevocationService(
             revocationManager = config.revocationManager,
-            ioDispatcher = config.ioDispatcher
+            ioDispatcher = config.ioDispatcher,
         )
     }
 
@@ -261,14 +268,14 @@ class TrustWeave internal constructor(
             kms = config.kms,
             kmsService = config.kmsService,
             defaultDidMethod = config.defaultDidMethod,
-            ioDispatcher = config.ioDispatcher
+            ioDispatcher = config.ioDispatcher,
         )
     }
 
     internal val walletService: WalletManagementService by lazy {
         WalletManagementService(
             walletContext = this,
-            ioDispatcher = config.ioDispatcher
+            ioDispatcher = config.ioDispatcher,
         )
     }
 
@@ -277,7 +284,7 @@ class TrustWeave internal constructor(
     }
 
     // ========== Internal Configuration Access Methods ==========
-    
+
     /**
      * Get a DID method by name.
      */
@@ -291,8 +298,8 @@ class TrustWeave internal constructor(
      * Get a DID resolver for delegation operations.
      * This returns the native DID resolver interface used by did:core.
      */
-    override fun getDidResolver(): DidResolver {
-        return DidResolver { did ->
+    override fun getDidResolver(): DidResolver =
+        DidResolver { did ->
             try {
                 config.didRegistry.resolve(did.value)
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -300,18 +307,15 @@ class TrustWeave internal constructor(
             } catch (e: Exception) {
                 DidResolutionResult.Failure.ResolutionError(
                     did = did,
-                    reason = "Failed to resolve DID: ${e.message}"
+                    reason = "Failed to resolve DID: ${e.message}",
                 )
             }
         }
-    }
 
     /**
      * Get wallet factory.
      */
-    override fun getWalletFactory(): WalletFactory? {
-        return config.walletFactory
-    }
+    override fun getWalletFactory(): WalletFactory? = config.walletFactory
 
     /**
      * Get an anchor client by chain ID.
@@ -319,52 +323,39 @@ class TrustWeave internal constructor(
      * @param chainId The blockchain chain identifier (e.g., "algorand:testnet")
      * @return The blockchain anchor client, or null if not registered
      */
-    internal fun getAnchorClient(chainId: String): BlockchainAnchorClient? {
-        return config.blockchainRegistry.get(chainId)
-    }
+    internal fun getAnchorClient(chainId: String): BlockchainAnchorClient? = config.blockchainRegistry.get(chainId)
 
     /**
      * Configured [org.trustweave.credential.CredentialService], if any.
      */
-    internal fun getCredentialService(): org.trustweave.credential.CredentialService? =
-        config.credentialService
+    internal fun getCredentialService(): org.trustweave.credential.CredentialService? = config.credentialService
 
     /**
      * Get the revocation manager.
      */
-    internal fun getRevocationManager(): CredentialRevocationManager? {
-        return config.revocationManager
-    }
+    internal fun getRevocationManager(): CredentialRevocationManager? = config.revocationManager
 
     /**
      * Get the default proof type.
      */
-    internal fun getDefaultProofType(): ProofType {
-        return config.credentialConfig.defaultProofType
-    }
+    internal fun getDefaultProofType(): ProofType = config.credentialConfig.defaultProofType
 
     /**
      * Get the DID registry.
      *
      * @return The DID method registry
      */
-    override fun getDidRegistry(): DidMethodRegistry {
-        return config.didRegistry
-    }
+    override fun getDidRegistry(): DidMethodRegistry = config.didRegistry
 
     /**
      * Get the trust registry.
      */
-    internal fun getTrustRegistry(): TrustRegistry? {
-        return config.trustRegistry
-    }
+    internal fun getTrustRegistry(): TrustRegistry? = config.trustRegistry
 
     /**
      * Get the KMS service adapter.
      */
-    internal fun getKmsService(): KmsService? {
-        return config.kmsService
-    }
+    internal fun getKmsService(): KmsService? = config.kmsService
 
     /**
      * Get the underlying KMS.
@@ -375,21 +366,22 @@ class TrustWeave internal constructor(
      * The return type stays nullable for source compatibility with existing callers, but the
      * configured KMS is always non-null.
      */
-    fun getKms(): KeyManagementService? {
-        return config.kms
-    }
+    fun getKms(): KeyManagementService? = config.kms
 
     /**
      * Get the schema registry.
      * Returns the configured registry if set, otherwise falls back to the default registry.
      */
-    internal fun getSchemaRegistry(): SchemaRegistry? {
-        return config.schemaRegistry ?: org.trustweave.credential.schema.SchemaRegistries.default()
+    private val fallbackSchemaRegistry: SchemaRegistry by lazy {
+        org.trustweave.credential.schema.SchemaRegistries
+            .default()
     }
+
+    internal fun getSchemaRegistry(): SchemaRegistry = config.schemaRegistry ?: fallbackSchemaRegistry
 
     /**
      * Get the configured I/O dispatcher.
-     * 
+     *
      * Returns the dispatcher configured in TrustWeaveConfig, or Dispatchers.IO as default.
      */
     private fun getIoDispatcher() = config.ioDispatcher
@@ -428,16 +420,13 @@ class TrustWeave internal constructor(
      */
     suspend fun issue(
         timeout: Duration = 30.seconds,
-        block: IssuanceBuilder.() -> Unit
-    ): IssuanceResult {
-        return issuanceService?.issue(timeout, block)
+        block: IssuanceBuilder.() -> Unit,
+    ): IssuanceResult =
+        issuanceService?.issue(timeout, block)
             ?: IssuanceResult.Failure.AdapterNotReady(
                 format = org.trustweave.credential.format.ProofSuiteId.VC_LD,
-                reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }"
+                reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
             )
-    }
-
-
 
     /**
      * Verify a verifiable credential (convenience overload).
@@ -462,12 +451,13 @@ class TrustWeave internal constructor(
         credential: VerifiableCredential,
         checkRevocation: Boolean = true,
         checkExpiration: Boolean = true,
-        timeout: Duration = 10.seconds
+        timeout: Duration = 10.seconds,
     ): VerificationResult {
-        val service = verificationService ?: return VerificationResult.Invalid.AdapterNotReady(
-            credential = credential,
-            reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
-        )
+        val service =
+            verificationService ?: return VerificationResult.Invalid.AdapterNotReady(
+                credential = credential,
+                reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
+            )
         return service.verify(timeout) {
             this.credential(credential)
             if (checkRevocation) checkRevocation() else skipRevocation()
@@ -495,12 +485,13 @@ class TrustWeave internal constructor(
      */
     suspend fun verify(
         timeout: Duration = 10.seconds,
-        block: VerificationBuilder.() -> Unit
+        block: VerificationBuilder.() -> Unit,
     ): VerificationResult {
-        val service = verificationService ?: return VerificationResult.Invalid.AdapterNotReady(
-            credential = placeholderCredentialForUnconfiguredVerification(),
-            reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
-        )
+        val service =
+            verificationService ?: return VerificationResult.Invalid.AdapterNotReady(
+                credential = placeholderCredentialForUnconfiguredVerification(),
+                reason = "CredentialService is not available. Configure it in TrustWeave.build { ... }",
+            )
         return service.verify(timeout, block)
     }
 
@@ -509,40 +500,40 @@ class TrustWeave internal constructor(
     suspend fun createDid(
         method: String? = null,
         timeout: Duration = 10.seconds,
-        block: DidBuilder.() -> Unit = {}
+        block: DidBuilder.() -> Unit = {},
     ): DidCreationResult = didService.createDid(method, timeout, block)
 
     suspend fun createDidWithKey(
         method: String? = null,
         timeout: Duration = 10.seconds,
-        block: DidBuilder.() -> Unit = {}
+        block: DidBuilder.() -> Unit = {},
     ): DidCreationWithKeyResult = didService.createDidWithKey(method, timeout, block)
 
     suspend fun getKeyId(did: Did): Result<String> = didService.getKeyId(did)
 
     suspend fun resolveDid(
         did: String,
-        timeout: Duration = 30.seconds
+        timeout: Duration = 30.seconds,
     ): DidResolutionResult = didService.resolveDid(did, timeout)
 
     suspend fun resolveDid(
         did: Did,
-        timeout: Duration = 30.seconds
+        timeout: Duration = 30.seconds,
     ): DidResolutionResult = didService.resolveDid(did, timeout)
 
     suspend fun updateDid(
         timeout: Duration = 30.seconds,
-        block: DidDocumentBuilder.() -> Unit
+        block: DidDocumentBuilder.() -> Unit,
     ): DidResult = didService.updateDid(timeout, block)
 
     suspend fun delegate(
         timeout: Duration = 30.seconds,
-        block: suspend DelegationBuilder.() -> Unit
+        block: suspend DelegationBuilder.() -> Unit,
     ): DelegationChainResult = didService.delegate(timeout, block)
 
     suspend fun rotateKey(
         timeout: Duration = 30.seconds,
-        block: KeyRotationBuilder.() -> Unit
+        block: KeyRotationBuilder.() -> Unit,
     ): DidResult = didService.rotateKey(timeout, block)
 
     override suspend fun resolve(did: Did): DidResolutionResult = didService.resolveDid(did)
@@ -555,8 +546,7 @@ class TrustWeave internal constructor(
      * @param block DSL block for configuring the wallet
      * @return Sealed result type with success or detailed failure information
      */
-    suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult =
-        walletService.wallet(block)
+    suspend fun wallet(block: WalletBuilder.() -> Unit): WalletCreationResult = walletService.wallet(block)
 
     // ========== Trust Operations ==========
 
@@ -588,10 +578,11 @@ class TrustWeave internal constructor(
     suspend fun findTrustPath(
         verifier: VerifierIdentity,
         issuer: IssuerIdentity,
-        timeout: Duration = 10.seconds
+        timeout: Duration = 10.seconds,
     ): TrustPath {
-        val service = trustService
-            ?: return TrustPath.NotConfigured("Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }")
+        val service =
+            trustService
+                ?: return TrustPath.NotConfigured("Trust registry is not configured. Configure it in TrustWeave.build { trust { ... } }")
         return service.findTrustPath(verifier, issuer, timeout)
     }
 
@@ -621,8 +612,11 @@ class TrustWeave internal constructor(
      * @return [TrustPath.NotConfigured] if the trust registry is not configured, null on success
      */
     suspend fun trust(block: suspend TrustBuilder.() -> Unit): TrustPath.NotConfigured? {
-        val service = trustService
-            ?: return TrustPath.NotConfigured("Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }")
+        val service =
+            trustService
+                ?: return TrustPath.NotConfigured(
+                    "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }",
+                )
         service.trust(block)
         return null
     }
@@ -644,7 +638,7 @@ class TrustWeave internal constructor(
      */
     suspend fun revoke(
         timeout: Duration = 10.seconds,
-        block: RevocationBuilder.() -> Unit
+        block: RevocationBuilder.() -> Unit,
     ): Boolean = revocationService.revoke(timeout, block)
 
     /** Guards [close] so repeated calls are no-ops (idempotent close). */
@@ -737,18 +731,22 @@ class TrustWeave internal constructor(
      * to [PluginLifecycle] `stop()` + `cleanup()`. Failures are logged, never propagated,
      * so every remaining component still gets closed.
      */
-    private fun closeComponent(name: String, component: Any?) {
+    private fun closeComponent(
+        name: String,
+        component: Any?,
+    ) {
         if (component == null) return
         try {
             when (component) {
                 is AutoCloseable -> component.close()
-                is PluginLifecycle -> runBlocking {
-                    try {
-                        component.stop()
-                    } finally {
-                        component.cleanup()
+                is PluginLifecycle ->
+                    runBlocking {
+                        try {
+                            component.stop()
+                        } finally {
+                            component.cleanup()
+                        }
                     }
-                }
                 else -> Unit
             }
         } catch (e: Exception) {
@@ -763,11 +761,10 @@ class TrustWeave internal constructor(
     companion object {
         suspend fun build(
             name: String = "default",
-            block: TrustWeaveConfig.Builder.() -> Unit
+            block: TrustWeaveConfig.Builder.() -> Unit,
         ): TrustWeave {
             val config = trustWeave(name, block)
             return TrustWeave(config)
         }
     }
 }
-

@@ -18,7 +18,6 @@ import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
  * **ServiceLoader registration**: `META-INF/services/org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider`
  */
 class FederationExchangeProtocolProvider : CredentialExchangeProtocolProvider {
-
     override val name = "openid-federation"
     override val supportedProtocols = listOf("openid-federation")
 
@@ -29,20 +28,34 @@ class FederationExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     ): CredentialExchangeProtocol? {
         if (protocolName != "openid-federation") return null
 
-        val trustedAnchorIds: Set<String> = when (val raw = options["trustedAnchorIds"]) {
-            is Set<*> -> raw.filterIsInstance<String>().toSet()
-            is Collection<*> -> raw.filterIsInstance<String>().toSet()
-            is String -> raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-            else -> emptySet()
-        }
+        val trustedAnchorIds: Set<String> =
+            when (val raw = options["trustedAnchorIds"]) {
+                is Set<*> -> raw.filterIsInstance<String>().toSet()
+                is Collection<*> -> raw.filterIsInstance<String>().toSet()
+                is String ->
+                    raw
+                        .split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .toSet()
+                else -> emptySet()
+            }
 
-        val httpClient = options["httpClient"] as? OkHttpClient ?: OkHttpClient()
+        val httpClient = options["httpClient"] as? OkHttpClient ?: TrustChainResolver.defaultHttpClient()
         val maxChainLength = (options["maxChainLength"] as? Int) ?: 5
 
-        val resolver = TrustChainResolver(
-            httpClient = httpClient,
-            maxChainLength = maxChainLength,
-        )
+        val resolver =
+            TrustChainResolver(
+                httpClient = httpClient,
+                maxChainLength = maxChainLength,
+                trustedAnchorKeys =
+                    (options["trustedAnchorKeys"] as? Map<*, *>)?.entries?.associate { (id, keys) ->
+                        require(id is String && keys is org.trustweave.credential.federation.FederationJwkSet) {
+                            "trustedAnchorKeys must map entity identifiers to FederationJwkSet values"
+                        }
+                        id to keys
+                    } ?: emptyMap(),
+            )
 
         return FederationExchangeProtocol(
             resolver = resolver,

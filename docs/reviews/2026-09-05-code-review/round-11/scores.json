@@ -1,0 +1,79 @@
+{
+  "round": 11,
+  "kind": "remediation-check-and-fresh-pass",
+  "assessment": "All six round-10 findings that were targeted are closed, two of them more thoroughly than recommended: the Verifiable Intent constraint fix also hardened malformed-constraint handling, and the SaaS schema fix added a Testcontainers migration test that derives its guard from @Table annotations and already caught three tables with no CREATE anywhere. The fresh pass over changed code found three new findings, led by a cross-tenant role-model gap that predates both rounds: the SaaS has one flat Keycloak realm 'admin' role serving both tenant administrators and platform operators, and role administration never consults the organizationId the data model already carries. The SDK gains 0.6; the SaaS is nearly flat because real correctness and testing gains are offset by a HIGH finding neither round had opened.",
+  "rubric": {
+    "security": 10,
+    "correctness": 10,
+    "architecture": 10,
+    "testing": 10,
+    "supply_chain_and_ci": 10
+  },
+  "trustweave": {
+    "security": 9.0,
+    "correctness": 8.5,
+    "architecture": 7.5,
+    "testing": 7.0,
+    "supply_chain_and_ci": 6.0,
+    "overall": 7.6
+  },
+  "trustweave-saas": {
+    "security": 6.5,
+    "correctness": 8.5,
+    "architecture": 6.5,
+    "testing": 8.0,
+    "supply_chain_and_ci": 5.5,
+    "overall": 7.0
+  },
+  "previous": {
+    "trustweave": 7.0,
+    "trustweave-saas": 6.9
+  },
+  "delta": {
+    "trustweave": 0.6,
+    "trustweave-saas": 0.1
+  },
+  "closed_this_round": [
+    "TW-R10-01 constraint enforcement now shared across both L3 branches (ChainVerifier.kt:245,264,286); also hardened beyond the ask, missing/non-array/malformed constraints fail closed",
+    "TW-R10-02 requireReplayProtection=true rejects at entry when aud or nonce is absent (ChainVerifier.kt:58,64-67)",
+    "TW-R10-03 temporalShape requires non-negative integer iat/exp, rejects string-encoded numerics and exp<=iat; L3 always required (ChainVerifier.kt:68-73,305,380)",
+    "TW-R10-04 payment_instrument cross-check fails when the L2 mandate has no authorized instrument (ChainVerifier.kt:440)",
+    "SA-R10-01 default profile now ddl-auto:validate + flyway.enabled:true; new FlywayMigrationTest runs the whole set against an empty PostgreSQL and derives expected tables from @Table annotations",
+    "SA-R10-06 datasource credential defaults removed from the default profile (partially: see SA-R11-02)",
+    "Not requested: CI SDK source verification now pins the reviewed revision explicitly (--revision)"
+  ],
+  "carried_forward": {
+    "TW-R10-05": "21 modules with production code and no tests",
+    "TW-R10-06": "no explicitApi, no binary-compatibility validator",
+    "TW-R10-07": "108 exceptions swallowed with no log line",
+    "TW-R10-08": "coverage measured on 3 of 106 modules",
+    "TW-R10-09": "32,692 baselined ktlint violations",
+    "TW-R10-10": "no artifact signing, SBOM, or provenance",
+    "TW-R10-11": "test dependencies invert module layering in 2 modules",
+    "SA-R10-02": "no ktlint, detekt, or spotless on the backend",
+    "SA-R10-03": "no Dependabot, no npm audit in CI",
+    "SA-R10-04": "tenant isolation by convention; SA-R11-01 is what that looks like unfollowed",
+    "SA-R10-05": "11 of 63 repository methods unused, several unscoped"
+  },
+  "deductions": {
+    "trustweave": [
+      "Security -1.0: both HIGH Verifiable Intent findings closed with tests and stricter defaults than requested. Remaining deduction is artifact provenance (no signing, SBOM or attestation) on a published trust library, and the plugin's youth.",
+      "Correctness -1.5: temporal handling now rejects what it previously passed; 108 unlogged exception swallows remain, concentrated in the anchor plugins where they mask network failures as clean negatives.",
+      "Architecture -2.5: extracting checkConstraints removed the asymmetry structurally rather than patching one branch. No explicitApi or binary-compatibility validation across 106 published modules; two test-dependency inversions.",
+      "Testing -3.0: substantial new adversarial VI cases including a test pinning the checkout-side fail-closed behaviour. 21 modules still have no tests and coverage is measured on 3 of 106.",
+      "Supply chain -4.0: unchanged from round 10."
+    ],
+    "trustweave-saas": [
+      "Security -3.5: SA-R11-01 is a cross-tenant privilege-escalation and data-exposure path -- one realm role for two tiers, unscoped role assignment, realm-wide user listing and search. SA-R11-02 leaves a default Keycloak admin credential that compounds it.",
+      "Correctness -1.5: one schema authority across all profiles, and the migration set now proven to build from an empty database.",
+      "Architecture -3.5: the role model is the gap -- Role.organizationId exists and the paths that matter never read it. Tenant isolation still rests on per-controller convention.",
+      "Testing -2.0: FlywayMigrationTest is the durable kind, deriving its guard from the source tree rather than a hand-maintained list. No test covers the role/user scoping in SA-R11-01.",
+      "Supply chain -4.5: explicit revision pinning tightened a control that was already the strongest in either repo; still no static analysis, Dependabot, or npm audit."
+    ]
+  },
+  "notes": [
+    "Because ConstraintChecker fails closed on line_items for open mandates, enforcing checkout constraints means an autonomous L3 checkout cannot currently verify at all. This is the correct trade and is pinned by two tests, but should be tracked as a product limitation until line-item matching is implemented.",
+    "SA-R11-01 was traced through the authorization code path and not confirmed against a running Keycloak. The realm role a customer administrator actually receives in a deployed environment should be checked before sizing the exposure."
+  ],
+  "method": "Static analysis of both working trees against the round-10 baseline (trustweave a41d482a, trustweave-saas f31dfeb), reading every changed security-relevant file in full. No Gradle build or test run was executed. Both trees carry uncommitted modifications; this reflects the working tree, not HEAD."
+}

@@ -1,0 +1,76 @@
+[
+  {
+    "id": "TW-R6-01",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Verified, atomic credential backup restoration",
+    "detail": "Added a home-page export/restore flow for the same holder identity and existing device key. Restore checks every issuer signature and holder binding, rebuilds labels/disclosure choices from verified content, bounds input, and commits one merged collection only after all records validate. Existing credentials win duplicates.",
+    "evidence": "33 wallet unit tests and 10 production Chromium tests passed, including wrong-wallet and forged-signature rejection, no partial writes, ignored forged labels, input limits, production upload, duplicate suppression and key-free export.",
+    "files": [
+      "reference-wallet/components/CredentialBackup.tsx",
+      "reference-wallet/lib/wallet.ts",
+      "reference-wallet/app/page.tsx",
+      "reference-wallet/tests/custody.test.ts",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "limit": "Version 2 credential backups only, at most 5 MB/500 records. Exports contain sensitive credential details. Signing keys remain non-extractable; this does not recover a lost key or transfer holder-bound credentials to another identity."
+  },
+  {
+    "id": "SA-R6-01",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Platform-admin recovery inventory without payload exposure",
+    "detail": "Added a bounded, oldest-first recovery API and Team Administration tab. Database projection selects only event ID, failure reason and first/latest failure times. Admin access is enforced by both request authorization and method security. The UI provides pagination, refresh and explicit failure/retry states.",
+    "evidence": "15 targeted backend tests passed, including anonymous/user denial, admin reads, ordering, pagination bounds and payload exclusion. All 294 frontend tests passed, including recovery navigation and retry. Lint, TypeScript, production build and the initial bundle budget passed.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryController.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/FailedWebhookStore.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryIntegrationTest.kt",
+      "frontend/src/components/admin/WebhookRecoveryPanel.tsx",
+      "frontend/src/components/admin/WebhookRecoveryPanel.test.tsx",
+      "frontend/src/api/webhookRecovery.ts",
+      "frontend/src/pages/Admin.tsx"
+    ],
+    "limit": "This is a platform-wide admin inventory. Redelivery stays with Stripe; no unsigned replay or payload-view endpoint exists. Hosted alert delivery and Accountly/legacy billing cutover remain unvalidated."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Published exact-pair Linux/staging validation",
+    "detail": "The SDK is now committed and pinned locally. Publication, exact-pair remote Linux CI and designated staging validation remain pending.",
+    "evidence": "No publication or staging execution is claimed.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "A matching local fingerprint cannot substitute for a reviewed, published and tested immutable pair."
+  },
+  {
+    "id": "PROVIDER-CUSTODY",
+    "repo": "trustweave",
+    "status": "remaining",
+    "title": "Provider maturity and production wallet custody",
+    "detail": "Most plugin capabilities remain unassessed. The reference wallet has no hardware/user-presence signing or recoverable holder-key service; supported issuer and disclosure profiles remain limited.",
+    "evidence": "Full local JVM suite passed with 15 optional/template tests skipped; live provider environments and hardware-backed custody remain unvalidated.",
+    "files": [
+      "docs/api-reference/assessed-capabilities.md",
+      "reference-wallet/lib/key-store.ts"
+    ],
+    "limit": "A complete product/profile definition and supported provider matrix are needed before these deductions can be closed."
+  },
+  {
+    "id": "BILLING-OPERATIONS",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Live billing workflow and hosted alert delivery",
+    "detail": "Two Accountly live-contract tests require a separately configured Accountly/PSP stand-in. Legacy Stripe invoice handlers remain logging-only for settlement/notification purposes.",
+    "evidence": "Local signed-webhook recovery and aggregate monitoring are tested; hosted alert delivery and live Accountly flow are not.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyLiveContractTest.kt",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "The supported Accountly cutover/legacy Stripe workflow needs to be defined and exercised before claiming completeness."
+  }
+]

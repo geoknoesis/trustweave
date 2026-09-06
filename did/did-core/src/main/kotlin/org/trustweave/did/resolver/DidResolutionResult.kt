@@ -25,7 +25,6 @@ import org.trustweave.did.model.DidDocumentMetadata
  * ```
  */
 sealed class DidResolutionResult {
-
     /**
      * Resolution succeeded.
      *
@@ -36,7 +35,7 @@ sealed class DidResolutionResult {
     data class Success(
         val document: DidDocument,
         val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(),
-        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata()
+        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(),
     ) : DidResolutionResult()
 
     /**
@@ -49,7 +48,7 @@ sealed class DidResolutionResult {
     data class Deactivated(
         val did: Did,
         val documentMetadata: DidDocumentMetadata = DidDocumentMetadata(deactivated = true),
-        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata()
+        val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(),
     ) : DidResolutionResult() {
         init {
             require(documentMetadata.deactivated) {
@@ -69,14 +68,14 @@ sealed class DidResolutionResult {
      * uninitialized value if it tried to read an override from here instead.
      */
     sealed class Failure : DidResolutionResult() {
-
         /** §4.4: the DID does not exist. */
         data class NotFound(
             val did: Did,
             val reason: String? = null,
-            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.notFound(reason ?: "DID not found: ${did.value}")
-            )
+            val resolutionMetadata: DidResolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.notFound(reason ?: "DID not found: ${did.value}"),
+                ),
         ) : Failure() {
             init {
                 require(resolutionMetadata.error != null) {
@@ -89,9 +88,10 @@ sealed class DidResolutionResult {
         data class InvalidFormat(
             val did: String,
             val reason: String,
-            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.invalidDid(reason)
-            )
+            val resolutionMetadata: DidResolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.invalidDid(reason),
+                ),
         ) : Failure() {
             init {
                 require(resolutionMetadata.error != null) {
@@ -104,9 +104,10 @@ sealed class DidResolutionResult {
         data class MethodNotRegistered(
             val method: String,
             val availableMethods: List<String> = emptyList(),
-            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.methodNotSupported("DID method '$method' is not registered")
-            )
+            val resolutionMetadata: DidResolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.methodNotSupported("DID method '$method' is not registered"),
+                ),
         ) : Failure() {
             init {
                 require(resolutionMetadata.error != null) {
@@ -120,9 +121,10 @@ sealed class DidResolutionResult {
             val did: Did,
             val reason: String,
             val cause: Throwable? = null,
-            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.internalError(reason)
-            )
+            val resolutionMetadata: DidResolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.internalError(reason),
+                ),
         ) : Failure() {
             init {
                 require(resolutionMetadata.error != null) {
@@ -142,9 +144,10 @@ sealed class DidResolutionResult {
             val did: Did?,
             val reason: String,
             val errorType: String = DidErrorType.FEATURE_NOT_SUPPORTED,
-            val resolutionMetadata: DidResolutionMetadata = DidResolutionMetadata(
-                error = DidResolutionError.of(errorType, reason)
-            )
+            val resolutionMetadata: DidResolutionMetadata =
+                DidResolutionMetadata(
+                    error = DidResolutionError.of(errorType, reason),
+                ),
         ) : Failure() {
             init {
                 require(resolutionMetadata.error != null) {

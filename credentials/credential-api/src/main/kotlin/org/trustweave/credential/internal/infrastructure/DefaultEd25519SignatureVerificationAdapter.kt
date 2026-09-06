@@ -1,10 +1,10 @@
 package org.trustweave.credential.internal.infrastructure
 
+import org.slf4j.LoggerFactory
 import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.credential.spi.proof.SignatureVerificationPort
 import org.trustweave.did.model.VerificationMethod
-import org.slf4j.LoggerFactory
 
 /**
  * Default implementation of [SignatureVerificationPort] for Ed25519Signature2020 proofs.
@@ -14,14 +14,13 @@ import org.slf4j.LoggerFactory
  * [ProofEngineUtils.extractPublicKey].
  */
 internal class DefaultEd25519SignatureVerificationAdapter : SignatureVerificationPort {
-
     private val logger = LoggerFactory.getLogger(DefaultEd25519SignatureVerificationAdapter::class.java)
 
     override fun verify(
         documentBytes: ByteArray,
         signatureBytes: ByteArray,
         verificationMethod: VerificationMethod,
-        proofType: String
+        proofType: String,
     ): Boolean {
         if (proofType != CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020) {
             logger.warn("Unsupported proof type: {}", proofType)
@@ -32,7 +31,7 @@ internal class DefaultEd25519SignatureVerificationAdapter : SignatureVerificatio
         if (publicKey == null) {
             logger.warn(
                 "Failed to extract public key from verification method: {}",
-                verificationMethod.id.value
+                verificationMethod.id.value,
             )
             return false
         }
@@ -45,7 +44,7 @@ internal class DefaultEd25519SignatureVerificationAdapter : SignatureVerificatio
             logger.debug(
                 "Ed25519 verification result: isValid={}, verificationMethod={}",
                 result,
-                verificationMethod.id.value
+                verificationMethod.id.value,
             )
             result
         } catch (e: Exception) {

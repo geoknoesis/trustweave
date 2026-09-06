@@ -27,6 +27,7 @@ Rotating signing keys keeps verifiable credential ecosystems resilient: compromi
 **Prerequisites:** Build your `TrustWeave` instance from a `TrustWeaveConfig` so you retain direct access to the underlying KMS and DID registry.
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY

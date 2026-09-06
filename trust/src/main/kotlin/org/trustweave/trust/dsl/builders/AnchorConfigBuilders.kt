@@ -9,7 +9,10 @@ import org.trustweave.trust.dsl.TrustWeaveDsl
 class AnchorConfigBuilder {
     val chains = mutableMapOf<String, AnchorConfig>()
 
-    fun chain(chainId: String, block: AnchorChainConfigBuilder.() -> Unit) {
+    fun chain(
+        chainId: String,
+        block: AnchorChainConfigBuilder.() -> Unit,
+    ) {
         chains[chainId] = AnchorChainConfigBuilder().apply(block).build()
     }
 }
@@ -19,7 +22,7 @@ class AnchorConfigBuilder {
  */
 data class AnchorConfig(
     val provider: String? = null,
-    val options: Map<String, Any?> = emptyMap()
+    val options: Map<String, Any?> = emptyMap(),
 )
 
 /**

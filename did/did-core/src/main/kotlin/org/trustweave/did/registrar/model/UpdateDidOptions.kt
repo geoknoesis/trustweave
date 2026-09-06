@@ -19,7 +19,6 @@ data class UpdateDidOptions(
      * - Method-specific authorization material
      */
     val secret: Secret? = null,
-
     /**
      * Method-specific options.
      *
@@ -28,6 +27,5 @@ data class UpdateDidOptions(
      * - Priority/urgency
      * - Method-specific configuration
      */
-    val methodSpecificOptions: Map<String, JsonElement> = emptyMap()
+    val methodSpecificOptions: Map<String, JsonElement> = emptyMap(),
 )
-

@@ -1,0 +1,89 @@
+[
+  {
+    "id": "TW-R7-01",
+    "repo": "trustweave",
+    "status": "verified",
+    "title": "Lost-key replacement preserves credentials and requires issuer reissuance",
+    "detail": "A specifically missing device key enables an explicitly confirmed replacement identity. Existing credentials are retained and labelled for reissuance. Healthy keys, malformed identity data and storage errors do not trigger automatic rotation. The page explains issuer contact, identity checking and revocation/reissuance steps. Presentation rejects old-holder credentials.",
+    "evidence": "37 wallet unit tests and 11 production Chromium tests passed. New checks cover old-record retention, rejection of old-holder presentation, new-holder issuance/presentation, healthy-key refusal, failed metadata commit, competing replacement attempts and the real recovery UI.",
+    "files": [
+      "reference-wallet/lib/key-store.ts",
+      "reference-wallet/lib/wallet.ts",
+      "reference-wallet/components/WalletRecovery.tsx",
+      "reference-wallet/components/CredentialLibraryCard.tsx",
+      "reference-wallet/app/page.tsx",
+      "reference-wallet/tests/custody.test.ts",
+      "reference-wallet/tests/browser/wallet.spec.ts"
+    ],
+    "limit": "This creates a new identity; it does not reconstruct the missing private key, recover encrypted claims, or revoke old credentials. Issuers must independently verify and reissue. An interrupted metadata commit may leave an unused IndexedDB key; old identity and credential data remain intact."
+  },
+  {
+    "id": "SA-R7-01",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Real deployed Accountly and Kill Bill contract",
+    "detail": "Added and executed an opt-in contract against the running local Accountly service using real Keycloak authentication and real Kill Bill. It creates a temporary application, provisions a dedicated tenant twice safely, provisions a subscriber, reads plans/payment metadata, verifies the cardholder-data guard and deletes the application.",
+    "evidence": "The deployed-provider test passed in a 13-test run with client/catalog regressions. The broader Accountly suite also passed: 94 tests reported, 91 passed and three opt-in skips. The deployed-provider test is among those skips in the separate environment-free run but was executed successfully with credentials in the dedicated run.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyDeploymentContractTest.kt",
+      "docs/round-7-operations.md"
+    ],
+    "limit": "Local deployed services, not hosted staging. The run uses an owner JWT, not production service-token acquisition. No PSP configuration, card collection, paid subscription or payment occurs. Kill Bill can retain closed account/tenant metadata after Accountly application cleanup."
+  },
+  {
+    "id": "SA-R7-02",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Dedicated billing tenant before catalog writes",
+    "detail": "The initial real-provider attempt exposed fallback to the shared Kill Bill tenant. SaaS now checks/provisions a dedicated application tenant before reconciling plans. A conflict is accepted only if a fresh status read confirms a dedicated tenant; a shared-tenant migration refusal stops catalog writes.",
+    "evidence": "Actual dedicated-tenant provisioning and repeat-call safety passed. Unit regressions cover already-dedicated status, provisioning, refusing shared responses, and preventing catalog writes after a migration conflict.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingClient.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyDtos.kt",
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/CatalogReconciler.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/CatalogReconcilerTest.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingClientTest.kt"
+    ],
+    "limit": "Existing applications with linked shared-tenant subscribers need an explicit migration. Configure the dedicated catalog, PSP and notifications before paid tiers. The initial subscriber request exceeded 20 seconds; the passing retry is not a latency SLA."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Published exact-pair Linux/staging validation",
+    "detail": "The SDK is now committed and pinned locally. Publication, exact-pair remote Linux CI and designated staging validation remain pending.",
+    "evidence": "No publication or staging execution is claimed.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "A matching local fingerprint cannot substitute for a reviewed, published and tested immutable pair."
+  },
+  {
+    "id": "PROVIDER-CUSTODY",
+    "repo": "trustweave",
+    "status": "remaining",
+    "title": "Provider maturity and production wallet custody",
+    "detail": "Issuer-assisted replacement now has a tested workflow. Missing private keys cannot be reconstructed; hardware/user-presence signing and most non-Accountly provider profiles remain unassessed.",
+    "evidence": "37 wallet unit and 11 browser tests passed in Round 7. No hardware or external cloud validation is claimed.",
+    "files": [
+      "docs/api-reference/assessed-capabilities.md",
+      "reference-wallet/lib/key-store.ts"
+    ],
+    "limit": "A complete product/profile definition and supported provider matrix are needed before these deductions can be closed."
+  },
+  {
+    "id": "BILLING-OPERATIONS",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Live billing workflow and hosted alert delivery",
+    "detail": "Real local Accountly/Kill Bill application, tenant, subscriber and payment-metadata behavior is now verified. External PSP setup/collection, settlement, service-account authentication, hosted alerts and the supported legacy Stripe cutover still require validation.",
+    "evidence": "Dedicated deployed contract passed. Original two Accountly tests requiring the PSP stand-in remain unexecuted in this pass.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyLiveContractTest.kt",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "The supported Accountly cutover/legacy Stripe workflow needs to be defined and exercised before claiming completeness."
+  }
+]

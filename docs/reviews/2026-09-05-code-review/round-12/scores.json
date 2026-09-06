@@ -1,0 +1,17 @@
+{
+  "security": 9.0,
+  "correctness": 8.5,
+  "architecture": 8.5,
+  "testing": 7.5,
+  "supply_chain_and_ci": 7.0,
+  "overall": 8.1,
+  "maximum": 10,
+  "status": "provisional engineering assessment, not an independent audit or certification",
+  "rationale": {
+    "security": "Fail-closed parsing and full delegation-key comparison verified; checkout and release evidence still limit confidence.",
+    "correctness": "Existing exception-handling audit remains incomplete.",
+    "architecture": "Repository ABI validation and dependency cleanup verified; broader API design and stability review still needed.",
+    "testing": "888 targeted tests verified and coverage enabled across Kotlin projects; numerous modules remain untested and a complete merged run is pending.",
+    "supply_chain_and_ci": "Per-module SBOM verified and release controls configured; aggregate inventory and actual signed/attested release remain unverified."
+  }
+}

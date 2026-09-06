@@ -75,4 +75,3 @@ interface UniversalResolver {
      */
     suspend fun getSupportedMethods(): List<String>?
 }
-

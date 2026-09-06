@@ -1,10 +1,20 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.trust.dsl.credential.*
+import org.junit.jupiter.api.Test
 import org.trustweave.credential.model.CredentialTypes
 import org.trustweave.credential.model.ProofTypes
-import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.trust.dsl.credential.AnchorProviders
+import org.trustweave.trust.dsl.credential.DidMethods
+import org.trustweave.trust.dsl.credential.KeyAlgorithms
+import org.trustweave.trust.dsl.credential.KmsProviders
+import org.trustweave.trust.dsl.credential.ProofPurposes
+import org.trustweave.trust.dsl.credential.RevocationProviders
+import org.trustweave.trust.dsl.credential.SchemaValidatorTypes
+import org.trustweave.trust.dsl.credential.ServiceTypes
+import org.trustweave.trust.dsl.credential.StatusPurposes
+import org.trustweave.trust.dsl.credential.TrustProviders
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 /**
  * Unit tests for TypeSafeHelpers.kt
@@ -12,7 +22,6 @@ import kotlin.test.*
  * Tests all type-safe constants to ensure they are correct and accessible.
  */
 class TypeSafeHelpersTest {
-
     @Test
     fun `test CredentialTypes constants`() {
         assertEquals("EducationCredential", CredentialTypes.EDUCATION.value)
@@ -142,4 +151,3 @@ class TypeSafeHelpersTest {
         assertNotNull(RevocationProviders)
     }
 }
-

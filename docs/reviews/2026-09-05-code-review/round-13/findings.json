@@ -1,0 +1,79 @@
+[
+  {
+    "id": "TW-R13-01",
+    "severity": "High",
+    "title": "Budget constraints are reported as checked without enforcement evidence",
+    "file": "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt",
+    "line": 84,
+    "evidence": "Budget, recurrence, agent_recurrence and reference share a branch that appends to checked. A focused runtime probe supplied a budget max of 10 and an amount of 1000; satisfied was true. ChainVerifier maps these entries into checksPerformed and constraints_satisfied.",
+    "impact": "A caller relying on SDK verification alone can mistake a structurally valid payment for budget-authorized spending. Payment networks are responsible for cumulative state, but the SDK accepts no state or enforcement result here. This does not demonstrate an exploit against a deployed payment network.",
+    "recommendation": "Distinguish externally required checks from completed checks. Require a stateful authorization callback or explicit external enforcement evidence for budget authorization; enforce local amount/currency/minimum checks too. Add concurrency and repeated-payment tests at the enforcement boundary.",
+    "validation": "Runtime-confirmed at the public ConstraintChecker boundary; no deployed network tested."
+  },
+  {
+    "id": "TW-R13-02",
+    "severity": "Medium",
+    "title": "Payment amount and currency schema validation remains permissive",
+    "file": "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt",
+    "line": 109,
+    "evidence": "Three runtime probes returned satisfied=true: amount=-1 under a max-only range, amount encoded as the JSON string \"50\", and an amount_range missing currency. Constraint.parse defaults missing currency to USD; numeric helpers accept string primitives.",
+    "impact": "Malformed signed inputs can be classified as valid. The chain requires the L3 currency field, so the missing-currency probe specifically targets L2 constraint parsing; it is not a claim that the chain accepts an absent L3 currency.",
+    "recommendation": "Require numeric, non-negative L3 amounts and string currency fields; reject missing/invalid L2 currency and string-encoded bounds. Add boundary and malformed-type regressions.",
+    "validation": "Three runtime-confirmed public-checker cases; relevant chain field guards inspected."
+  },
+  {
+    "id": "TW-R13-03",
+    "severity": "Medium",
+    "title": "Status-list HTTP errors expose exception messages",
+    "file": "credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutes.kt",
+    "line": 63,
+    "evidence": "Both routes serialize e.message into INTERNAL_ERROR responses at lines 66 and 104. They catch broad Exception, which also includes cancellation.",
+    "impact": "Public status-list clients may receive database, signing-provider or internal implementation details when the backend fails. Actual exposed text depends on the provider exception.",
+    "recommendation": "Return a stable generic error and correlation ID, retain appropriate diagnostics on the server, and rethrow cancellation. Test controlled backend failures and assert sensitive details are absent.",
+    "validation": "Static finding; no sensitive-data disclosure was induced against a live endpoint."
+  },
+  {
+    "id": "TW-R13-04",
+    "severity": "Medium",
+    "title": "Checkout support and constraint documentation still overstate completeness",
+    "file": "credentials/plugins/verifiable-intent/README.md",
+    "line": 95,
+    "evidence": "The README describes 8-type constraint enforcement while line_items is explicitly unsupported and budget/recurrence are acknowledged rather than evaluated. The checker reads merchant from the fulfillment object; the chain passes the final mandate rather than extracting merchant identity from checkout_jwt.",
+    "impact": "Integrators need a precise capability boundary. Autonomous checkout currently fails closed; that protection must remain until item matching and trusted merchant-token verification are implemented together.",
+    "recommendation": "Publish a per-constraint enforcement matrix. Separate local checks, external obligations and unsupported operations; implement signed merchant extraction and item/quantity matching before enabling checkout.",
+    "validation": "Static trace and prior passing checkout-rejection regression tests. No current checkout bypass is claimed."
+  },
+  {
+    "id": "TW-R13-05",
+    "severity": "Medium",
+    "title": "Complete regression and merged coverage evidence is still missing",
+    "file": ".github/workflows/ci.yml",
+    "line": 51,
+    "evidence": "Kover is enabled across Kotlin projects, but the repository-wide retry log ends during anchor tests without BUILD SUCCESSFUL or a final merged report. Sixteen included modules with src/main Kotlin still have no src/test Kotlin files.",
+    "impact": "Configuration coverage is not test coverage. The prior interrupted run cannot establish repository-wide correctness or a coverage floor.",
+    "recommendation": "Complete the CI coverage run, record skips separately, add meaningful provider/protocol tests, and adopt measured coverage floors for security-critical modules.",
+    "validation": "Current source inventory and preserved execution log; module-source inventory excludes multiplatform source sets."
+  },
+  {
+    "id": "TW-R13-06",
+    "severity": "Medium",
+    "title": "Lint and exception-handling debt remain substantial",
+    "file": "build.gradle.kts",
+    "line": 90,
+    "evidence": "The configured baselines contain 32,692 entries. The prior broad exception-swallow finding has not been fully re-audited. The Indy cancellation case is fixed and its 36-test module suite passes.",
+    "impact": "Baselines can hide maintainability problems; network failures and cancellation need case-specific semantics. Baseline entries are not a count of currently active violations.",
+    "recommendation": "Shrink baselines through verified formatting and manual fixes. Classify exception paths and preserve cancellation/fatal errors without indiscriminately logging sensitive data.",
+    "validation": "Baseline XML count refreshed; no claim that every prior exception site was re-reviewed."
+  },
+  {
+    "id": "TW-R13-07",
+    "severity": "Medium",
+    "title": "Release and hosted-provider evidence is incomplete",
+    "file": ".github/workflows/release-evidence.yml",
+    "line": 29,
+    "evidence": "Signing guards, SHA-pinned actions, a release-attestation workflow and module SBOMs now exist. A module SBOM was generated and its artifact identity corrected. The aggregate attempt was stopped during Maven metadata resolution; no actual signed publication or hosted attestation was verified.",
+    "impact": "The delivery controls are implemented but not yet proven end to end. Placeholder rejection tests do not demonstrate production provider maturity.",
+    "recommendation": "Validate the aggregate dependency inventory, run a controlled signed release and verify its attestation, and retain hosted-provider conformance evidence for each supported production claim.",
+    "validation": "Configuration review plus prior module-SBOM evidence; no publication or hosted-provider test performed this round."
+  }
+]

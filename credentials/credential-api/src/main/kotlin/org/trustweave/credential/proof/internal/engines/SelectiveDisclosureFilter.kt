@@ -11,7 +11,6 @@ import org.trustweave.credential.model.vc.VerifiableCredential
  * different cryptographic approach.
  */
 internal object SelectiveDisclosureFilter {
-
     /**
      * Return a copy of [credential] that only contains the [disclosedClaims].
      *
@@ -24,18 +23,22 @@ internal object SelectiveDisclosureFilter {
      *   `credentialSubject.<name>` prefixed forms)
      * @return A credential with filtered claims and no proof
      */
-    fun filter(credential: VerifiableCredential, disclosedClaims: Set<String>): VerifiableCredential {
+    fun filter(
+        credential: VerifiableCredential,
+        disclosedClaims: Set<String>,
+    ): VerifiableCredential {
         if (disclosedClaims.isEmpty()) return credential
 
         val subject = credential.credentialSubject
-        val filteredClaims = subject.claims.filterKeys { claimName ->
-            disclosedClaims.contains(claimName) ||
-            disclosedClaims.contains("credentialSubject.$claimName")
-        }
+        val filteredClaims =
+            subject.claims.filterKeys { claimName ->
+                disclosedClaims.contains(claimName) ||
+                    disclosedClaims.contains("credentialSubject.$claimName")
+            }
 
         return credential.copy(
             credentialSubject = subject.copy(claims = filteredClaims),
-            proof = null
+            proof = null,
         )
     }
 }

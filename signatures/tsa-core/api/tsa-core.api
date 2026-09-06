@@ -1,0 +1,84 @@
+public final class org/trustweave/signatures/tsa/BouncyCastleTsaClient : org/trustweave/signatures/tsa/TsaClient {
+	public static final field Companion Lorg/trustweave/signatures/tsa/BouncyCastleTsaClient$Companion;
+	public fun <init> (Lorg/trustweave/signatures/tsa/TsaConfig;Lokhttp3/OkHttpClient;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/tsa/TsaConfig;Lokhttp3/OkHttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun requestTimeStamp ([BLorg/trustweave/signatures/tsa/TsaHashAlgorithm;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/tsa/BouncyCastleTsaClient$Companion {
+	public final fun defaultHttpClient (Lorg/trustweave/signatures/tsa/TsaConfig;)Lokhttp3/OkHttpClient;
+}
+
+public final class org/trustweave/signatures/tsa/TimeStampToken {
+	public fun <init> ([BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)V
+	public final fun component1 ()[B
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public final fun component5 ()[B
+	public final fun component6 ()[B
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy ([BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)Lorg/trustweave/signatures/tsa/TimeStampToken;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/tsa/TimeStampToken;[BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/tsa/TimeStampToken;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEncoded ()[B
+	public final fun getGenTime ()Lkotlinx/datetime/Instant;
+	public final fun getMessageImprint ()[B
+	public final fun getMessageImprintAlgorithm ()Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public final fun getPolicyOid ()Ljava/lang/String;
+	public final fun getSerialNumber ()[B
+	public final fun getTsaSubject ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/signatures/tsa/TsaClient {
+	public abstract fun requestTimeStamp ([BLorg/trustweave/signatures/tsa/TsaHashAlgorithm;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun requestTimeStamp$default (Lorg/trustweave/signatures/tsa/TsaClient;[BLorg/trustweave/signatures/tsa/TsaHashAlgorithm;[BLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/tsa/TsaClient$DefaultImpls {
+	public static synthetic fun requestTimeStamp$default (Lorg/trustweave/signatures/tsa/TsaClient;[BLorg/trustweave/signatures/tsa/TsaHashAlgorithm;[BLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/signatures/tsa/TsaConfig {
+	public fun <init> (Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Z
+	public final fun copy (Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)Lorg/trustweave/signatures/tsa/TsaConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/tsa/TsaConfig;Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILjava/lang/Object;)Lorg/trustweave/signatures/tsa/TsaConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndpointUrl ()Ljava/lang/String;
+	public final fun getExpectedPolicyOid ()Ljava/lang/String;
+	public final fun getIncludeNonce ()Z
+	public final fun getPassword ()Ljava/lang/String;
+	public final fun getRequestTimeoutMs ()J
+	public final fun getTrustedSignerCertificates ()Ljava/util/List;
+	public final fun getUsername ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/tsa/TsaException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/signatures/tsa/TsaHashAlgorithm : java/lang/Enum {
+	public static final field SHA_256 Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public static final field SHA_384 Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public static final field SHA_512 Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public final fun getDigestSizeBytes ()I
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getJcaName ()Ljava/lang/String;
+	public final fun getOid ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+	public static fun values ()[Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
+}
+

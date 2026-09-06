@@ -31,7 +31,7 @@ sealed class TrustPolicy {
      * @param registry The trust registry to check against
      */
     data class RequireTrustAnchor(
-        val registry: TrustRegistry
+        val registry: TrustRegistry,
     ) : TrustPolicy()
 
     /**
@@ -47,11 +47,10 @@ sealed class TrustPolicy {
     data class RequireTrustPath(
         val maxPathLength: Int = 3,
         val registry: TrustRegistry,
-        val credentialType: CredentialType? = null
+        val credentialType: CredentialType? = null,
     ) : TrustPolicy() {
         init {
             require(maxPathLength > 0) { "maxPathLength must be positive" }
         }
     }
 }
-

@@ -11,12 +11,14 @@ import org.trustweave.ensdid.EnsDidMethod
  * SPI provider for did:ens method.
  */
 class EnsDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "ens"
 
     override val supportedMethods: List<String> = listOf("ens")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "ens") return null
         val config = createConfig(options)
         return EnsDidMethod(resolveKms(options), getOrCreateAnchorClient(options, config), config)
@@ -36,19 +38,20 @@ class EnsDidMethodProvider : AbstractDidMethodProvider() {
 
     private fun getOrCreateAnchorClient(
         options: DidCreationOptions,
-        config: EnsDidConfig
+        config: EnsDidConfig,
     ): BlockchainAnchorClient {
         val providedClient = options.additionalProperties["anchorClient"] as? BlockchainAnchorClient
         if (providedClient != null) {
             return providedClient
         }
 
-        val anchorOptions = buildMap<String, Any?> {
-            put("rpcUrl", config.rpcUrl)
-            if (config.privateKey != null) {
-                put("privateKey", config.privateKey)
+        val anchorOptions =
+            buildMap<String, Any?> {
+                put("rpcUrl", config.rpcUrl)
+                if (config.privateKey != null) {
+                    put("privateKey", config.privateKey)
+                }
             }
-        }
 
         return try {
             val polygonClientClass = Class.forName("org.trustweave.polygon.PolygonBlockchainAnchorClient")
@@ -58,10 +61,9 @@ class EnsDidMethodProvider : AbstractDidMethodProvider() {
         } catch (e: Exception) {
             throw IllegalStateException(
                 "BlockchainAnchorClient is required for did:ens. " +
-                "Provide 'anchorClient' in options or add TrustWeave-polygon dependency. " +
-                "Error: ${e.message}"
+                    "Provide 'anchorClient' in options or add TrustWeave-polygon dependency. " +
+                    "Error: ${e.message}",
             )
         }
     }
 }
-

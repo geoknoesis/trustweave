@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustWeave runnable examples and documentation follow-up</title>
+<style>body{margin:0;background:#f2f5f8;color:#193247;font:17px/1.65 system-ui,sans-serif}main{max-width:1060px;margin:auto;padding:48px 24px}h1,h2{line-height:1.2}h1{font-size:2.5rem}a{color:#075ca6}section{background:white;border:1px solid #d9e1e9;border-radius:12px;padding:24px;margin:24px 0}table{width:100%;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid #d9e1e9}pre{overflow:auto}code{font-size:.87em;overflow-wrap:anywhere}.pass{color:#14623a;font-weight:650}.muted{color:#536a7a}.facts{display:flex;gap:18px;flex-wrap:wrap}.facts div{background:#e6f3ec;padding:18px;border-radius:10px;flex:1;min-width:150px}.facts strong{font-size:2rem;display:block}li{margin:9px 0}@media(max-width:650px){main{padding:24px 16px}h1{font-size:2rem}th,td{padding:8px}}</style></head>
+<body><main><p class="muted">5 September 2026 ? Documentation follow-up ? Local working tree</p>
+<h1>Runnable scenarios with checked source and READMEs</h1>
+<p>The nine scenario placeholders have been replaced with small working programs. Every runnable entry point now has a README, is registered with Gradle and is included in the aggregate execution check. The examples-module lint debt is resolved.</p>
+<div class="facts"><div><strong>24</strong>runnable entry points</div><div><strong>9</strong>new domain scenarios</div><div><strong>350</strong>Markdown files checked</div></div>
+<section><h2>Start with the scenario folder</h2><p><a href="../../../../distribution/examples/scenarios/README.md">Open the scenario examples</a> or browse the <a href="../../../../distribution/examples/README.md">complete examples catalog</a>.</p>
+<p>Each new scenario directory contains its Kotlin program and a README explaining its purpose, run command, expected result and limits. Gradle compiles these sources directly; the READMEs link to source rather than duplicate it.</p>
+<table><thead><tr><th>Scenario</th><th>Signed claim demonstrated</th></tr></thead><tbody>
+<tr><td><a href="../../../../distribution/examples/scenarios/proof-of-location/README.md">Proof of location</a></td><td>Observer's location attestation</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/digital-workflow/README.md">Digital workflow</a></td><td>Approval of a specific workflow revision</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/news-industry/README.md">News provenance</a></td><td>Article revision and author attribution</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/data-catalog/README.md">Data catalog</a></td><td>Dataset identifier, version and license metadata</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/healthcare/README.md">Healthcare</a></td><td>Synthetic clinic encounter record</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/government/README.md">Government identity</a></td><td>Fictional municipal residence claim</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/supply-chain/README.md">Supply chain</a></td><td>Shipment batch and destination</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/financial-services/README.md">Financial services</a></td><td>Synthetic identity-review outcome</td></tr>
+<tr><td><a href="../../../../distribution/examples/scenarios/iot-device/README.md">IoT device</a></td><td>Device registration and firmware revision</td></tr>
+</tbody></table><p>All nine assert successful issuance, exact JSON round-trip, signature verification and rejection of an altered claim. The vocabulary is defined explicitly and resolved locally. No hosted accounts or secrets are needed.</p></section>
+<section><h2>Remaining example gaps addressed</h2><ul>
+<li><strong>Credential lifecycle:</strong> replaced the unfinished comprehensive demo with issuance, wallet storage/retrieval, verification, revocation and rejection checks.</li>
+<li><strong>Delegation:</strong> now verifies a multi-hop chain and rejects an undelegated employee.</li>
+<li><strong>Professional identity:</strong> performs real schema validation instead of printing a skipped step.</li>
+<li><strong>Execution coverage:</strong> registered the previously unregistered academic DSL and web-of-trust programs. All 24 entry points are part of one Gradle aggregate.</li>
+<li><strong>Lint:</strong> formatted the examples and tests, replaced wildcard imports, removed unused imports and the academic sample's impossible KMS cast.</li>
+<li><strong>Test descriptions:</strong> replaced the old placeholder-test base with a local scenario execution test and timeout. The small examples carry positive and tampering assertions in their runner.</li>
+</ul></section>
+<section><h2>SDK bugs found by executing the examples</h2><table><thead><tr><th>Bug</th><th>Fix and coverage</th></tr></thead><tbody>
+<tr><td>Issuance could create revocable credentials, but the configured manager was not passed to verification.</td><td>The factory now passes the same revocation manager into both built-in credential-service construction paths. Regression tests verify a credential before revocation and reject it afterward.</td></tr>
+<tr><td>Default schema registration and validation created separate registries, losing registered schemas.</td><td>One registry is shared by the built facade and credential service. Direct-config facades retain a stable fallback registry. Tests register a schema, validate good claims, reject malformed claims and verify through the facade.</td></tr>
+</tbody></table><p>The two new tests cover default KMS signing and an explicit signer. Caller-injected credential services remain caller-configured; the factory does not replace them.</p></section>
+<section><h2>Validation</h2><table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>
+<tr><td>All Kotlin example sources and test sources</td><td class="pass">Compiled</td></tr>
+<tr><td>Aggregate example execution</td><td class="pass">24 programs passed</td></tr>
+<tr><td>Examples-module tests</td><td class="pass">28 tests passed</td></tr>
+<tr><td>Targeted SDK tests</td><td class="pass">21 passed: 2 configuration regressions, 10 revocation DSL and 9 schema DSL tests</td></tr>
+<tr><td>Examples-module ktlint</td><td class="pass">Passed for source, tests and Gradle script</td></tr>
+<tr><td>Documentation checker</td><td class="pass">350 Markdown files; 24 documented/registered entry points; 3 exact source-backed quick-start blocks; zero reported errors</td></tr>
+<tr><td>Checker regression tests</td><td class="pass">8 passed, including missing README and unregistered entry-point cases</td></tr>
+<tr><td>Other documentation checks</td><td class="pass">Generated capability docs, legacy snippet rules and diff whitespace checks passed</td></tr>
+</tbody></table><p><a href="inventory.json">Machine-readable inventory</a>. Local execution evidence: <code>scenarios-final.log</code>; final test-wrapper/lint check: <code>scenarios-tests-final.log</code>. The SDK/SaaS local source fingerprint was refreshed for these reviewed changes; no commit or deployment was performed.</p>
+<pre><code>./gradlew :distribution:examples:checkDocumentationExamples   :distribution:examples:test :distribution:examples:ktlintCheck
+python scripts/check-documentation.py
+python -m unittest discover -s scripts -p test_check_documentation.py</code></pre>
+<p>Use <code>.\gradlew.bat</code> on Windows and JDK 21.</p></section>
+<section><h2>What this validation does not claim</h2><p>The 2,390 inventoried Kotlin blocks include narrative fragments and historical designs. They have not all been independently compiled; use the source-linked example catalog for runnable programs. Larger examples have varying assertion coverage.</p><p>The examples demonstrate local SDK behavior with synthetic data. They do not establish institutional authority, truth of claims, external standard conformance, hosted-provider maturity, physical wallet custody or production recovery. External URL availability and Markdown anchor targets are outside the current checker.</p><p>No new production-readiness score is assigned by this documentation follow-up.</p></section>
+<p><a href="initial-pass.html">Initial documentation review (historical snapshot)</a> ? <a href="../round-9/index.html">Previous repository code review</a></p>
+</main></body></html>

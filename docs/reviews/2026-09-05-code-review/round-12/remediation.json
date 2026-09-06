@@ -1,0 +1,65 @@
+{
+  "scope": "TrustWeave SDK working tree; SaaS excluded. Follow-up to round 11.",
+  "score": {
+    "security": 9.0,
+    "correctness": 8.5,
+    "architecture": 8.5,
+    "testing": 7.5,
+    "supply_chain_and_ci": 7.0,
+    "overall": 8.1,
+    "maximum": 10,
+    "status": "provisional engineering assessment, not an independent audit or certification"
+  },
+  "verified": {
+    "credential_api_tests": 400,
+    "did_core_tests": 453,
+    "verifiable_intent_tests": 33,
+    "status_list_server_tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "abi_reference_files": 105,
+    "abi_check": "passed",
+    "documentation_markdown_files": 351,
+    "documentation_errors": 0,
+    "workflow_yaml": "parsed",
+    "docker_server": "29.4.1 responding",
+    "targeted_line_coverage": {
+      "verifiable_intent": {
+        "covered": 724,
+        "total": 852,
+        "percent": 85.0
+      },
+      "status_list_server": {
+        "covered": 22,
+        "total": 64,
+        "percent": 34.4
+      }
+    },
+    "sbom": "Corrected Maven artifact ID verified; CycloneDX 1.6, 23 dependency components"
+  },
+  "changes": [
+    "Reject empty/invalid allowlists and malformed list/type shapes without silently dropping constraints.",
+    "Require every open mandate to carry an agent delegation key; compare kty, crv, x and y.",
+    "Enable Kotlin ABI validation and store public ABI references.",
+    "Remove unused upper-layer test dependencies from credential-api and did-core.",
+    "Enable Kover in Kotlin modules and add merged CI reporting.",
+    "Configure per-module CycloneDX SBOM attachments and remote-publication signing requirements.",
+    "Add a release-evidence workflow and pin actions in the changed workflows to verified commit SHAs.",
+    "Add status-list HTTP error-path tests and release-validation guidance.",
+    "Remove the obsolete examples-module Kover ordering rule that created a test/koverFindJar cycle."
+  ],
+  "pending_validation": [
+    "Repository-wide coverage retry did not complete; see round-13 for current validation.",
+    "Aggregate SBOM generation was stopped during Maven metadata downloads; module SBOM passed.",
+    "Actual signed publication and hosted provenance attestation remain unverified."
+  ],
+  "remaining": [
+    "19 included JVM-source modules still have no src/test Kotlin files; this inventory includes experimental/stub modules and is not a behavioral coverage measure.",
+    "32,692 existing lint-baseline entries remain; formatting this change does not remove the repository backlog.",
+    "The prior exception-swallow finding needs a full case-by-case audit, including cancellation and network-error semantics.",
+    "Autonomous checkout line-item enforcement and merchant-signed checkout verification remain incomplete; fail-closed behavior is retained.",
+    "Hosted provider conformance, full regression/coverage validation, and actual release signing/provenance evidence remain required.",
+    "Gradle reports deprecations that require attention before Gradle 10."
+  ]
+}

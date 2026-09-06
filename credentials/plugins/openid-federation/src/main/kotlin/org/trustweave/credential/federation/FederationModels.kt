@@ -50,7 +50,9 @@ data class EntityStatement(
 
 /** JWK Set as used within OpenID Federation Entity Statements. */
 @Serializable
-data class FederationJwkSet(val keys: List<FederationJwk>)
+data class FederationJwkSet(
+    val keys: List<FederationJwk>,
+)
 
 /**
  * A single JSON Web Key (JWK) as represented in federation entity statements.
@@ -233,7 +235,10 @@ sealed class TrustChainResolutionResult {
      * @param chain The resolved trust chain.
      * @param verifiedAt Epoch seconds at which the chain was verified.
      */
-    data class Success(val chain: TrustChain, val verifiedAt: Long) : TrustChainResolutionResult()
+    data class Success(
+        val chain: TrustChain,
+        val verifiedAt: Long,
+    ) : TrustChainResolutionResult()
 
     /**
      * Trust chain resolution failed.
@@ -241,5 +246,8 @@ sealed class TrustChainResolutionResult {
      * @param reason Human-readable description of the failure.
      * @param entityId The entity identifier for which resolution was attempted.
      */
-    data class Failure(val reason: String, val entityId: String) : TrustChainResolutionResult()
+    data class Failure(
+        val reason: String,
+        val entityId: String,
+    ) : TrustChainResolutionResult()
 }

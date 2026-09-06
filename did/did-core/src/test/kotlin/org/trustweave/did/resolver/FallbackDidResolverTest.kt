@@ -1,12 +1,12 @@
 package org.trustweave.did.resolver
 
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Test
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolution.ResolutionOptions
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -19,134 +19,144 @@ import kotlin.test.assertTrue
  * registered method are authoritative and must be returned as-is.
  */
 class FallbackDidResolverTest {
-
     private class RecordingResolver(
-        private val handler: (Did) -> DidResolutionResult
+        private val handler: (Did) -> DidResolutionResult,
     ) : DidResolver {
         var calls = 0
+
         override suspend fun resolve(did: Did): DidResolutionResult {
             calls++
             return handler(did)
         }
     }
 
-    private fun success(did: Did): DidResolutionResult.Success =
-        DidResolutionResult.Success(document = DidDocument(id = did))
+    private fun success(did: Did): DidResolutionResult.Success = DidResolutionResult.Success(document = DidDocument(id = did))
 
     private fun methodNotRegistered(did: Did): DidResolutionResult =
         DidResolutionResult.Failure.MethodNotRegistered(
             method = did.method,
-            availableMethods = listOf("key", "web")
+            availableMethods = listOf("key", "web"),
         )
 
     // ─── Trigger cases ───
 
     @Test
-    fun `method not registered on primary triggers fallback`() = runBlocking<Unit> {
-        val did = Did("did:ion:EiDexample")
-        val fallbackResult = success(did)
-        val primary = RecordingResolver { methodNotRegistered(it) }
-        val fallback = RecordingResolver { fallbackResult }
+    fun `method not registered on primary triggers fallback`() =
+        runBlocking<Unit> {
+            val did = Did("did:ion:EiDexample")
+            val fallbackResult = success(did)
+            val primary = RecordingResolver { methodNotRegistered(it) }
+            val fallback = RecordingResolver { fallbackResult }
 
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
 
-        assertEquals(1, primary.calls)
-        assertEquals(1, fallback.calls, "fallback must be consulted for an unregistered method")
-        assertSame(fallbackResult, result)
-    }
-
-    @Test
-    fun `fallback failure is returned when both resolvers fail`() = runBlocking<Unit> {
-        val did = Did("did:ion:EiDexample")
-        val primary = RecordingResolver { methodNotRegistered(it) }
-        val fallback = RecordingResolver {
-            DidResolutionResult.Failure.NotFound(did = it, reason = "unknown upstream")
+            assertEquals(1, primary.calls)
+            assertEquals(1, fallback.calls, "fallback must be consulted for an unregistered method")
+            assertSame(fallbackResult, result)
         }
 
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
+    @Test
+    fun `fallback failure is returned when both resolvers fail`() =
+        runBlocking<Unit> {
+            val did = Did("did:ion:EiDexample")
+            val primary = RecordingResolver { methodNotRegistered(it) }
+            val fallback =
+                RecordingResolver {
+                    DidResolutionResult.Failure.NotFound(did = it, reason = "unknown upstream")
+                }
 
-        assertEquals(1, fallback.calls)
-        assertTrue(result is DidResolutionResult.Failure.NotFound)
-        assertEquals("unknown upstream", (result as DidResolutionResult.Failure.NotFound).reason)
-    }
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
+
+            assertEquals(1, fallback.calls)
+            assertTrue(result is DidResolutionResult.Failure.NotFound)
+            assertEquals("unknown upstream", (result as DidResolutionResult.Failure.NotFound).reason)
+        }
 
     // ─── Non-trigger cases ───
 
     @Test
-    fun `primary success does not consult fallback`() = runBlocking<Unit> {
-        val did = Did("did:key:z6Mkexample")
-        val primaryResult = success(did)
-        val primary = RecordingResolver { primaryResult }
-        val fallback = RecordingResolver { success(it) }
+    fun `primary success does not consult fallback`() =
+        runBlocking<Unit> {
+            val did = Did("did:key:z6Mkexample")
+            val primaryResult = success(did)
+            val primary = RecordingResolver { primaryResult }
+            val fallback = RecordingResolver { success(it) }
 
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
 
-        assertEquals(0, fallback.calls, "fallback must not run when primary succeeds")
-        assertSame(primaryResult, result)
-    }
+            assertEquals(0, fallback.calls, "fallback must not run when primary succeeds")
+            assertSame(primaryResult, result)
+        }
 
     @Test
-    fun `not found from a registered method does not trigger fallback`() = runBlocking<Unit> {
-        // The primary's method driver authoritatively said the DID does not exist;
-        // silently asking another source could resurrect deleted DIDs.
-        val did = Did("did:key:z6Mkmissing")
-        val primary = RecordingResolver {
-            DidResolutionResult.Failure.NotFound(did = it, reason = "not found locally")
+    fun `not found from a registered method does not trigger fallback`() =
+        runBlocking<Unit> {
+            // The primary's method driver authoritatively said the DID does not exist;
+            // silently asking another source could resurrect deleted DIDs.
+            val did = Did("did:key:z6Mkmissing")
+            val primary =
+                RecordingResolver {
+                    DidResolutionResult.Failure.NotFound(did = it, reason = "not found locally")
+                }
+            val fallback = RecordingResolver { success(it) }
+
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
+
+            assertEquals(0, fallback.calls, "NotFound is authoritative — no fallback")
+            assertTrue(result is DidResolutionResult.Failure.NotFound)
         }
-        val fallback = RecordingResolver { success(it) }
-
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
-
-        assertEquals(0, fallback.calls, "NotFound is authoritative — no fallback")
-        assertTrue(result is DidResolutionResult.Failure.NotFound)
-    }
 
     @Test
-    fun `invalid format does not trigger fallback`() = runBlocking<Unit> {
-        val did = Did("did:key:z6Mkexample")
-        val primary = RecordingResolver {
-            DidResolutionResult.Failure.InvalidFormat(did = it.value, reason = "malformed identifier")
+    fun `invalid format does not trigger fallback`() =
+        runBlocking<Unit> {
+            val did = Did("did:key:z6Mkexample")
+            val primary =
+                RecordingResolver {
+                    DidResolutionResult.Failure.InvalidFormat(did = it.value, reason = "malformed identifier")
+                }
+            val fallback = RecordingResolver { success(it) }
+
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
+
+            assertEquals(0, fallback.calls, "a malformed DID is malformed everywhere — no fallback")
+            assertTrue(result is DidResolutionResult.Failure.InvalidFormat)
         }
-        val fallback = RecordingResolver { success(it) }
-
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
-
-        assertEquals(0, fallback.calls, "a malformed DID is malformed everywhere — no fallback")
-        assertTrue(result is DidResolutionResult.Failure.InvalidFormat)
-    }
 
     @Test
-    fun `resolution error from a registered method does not trigger fallback`() = runBlocking<Unit> {
-        val did = Did("did:web:example.com")
-        val primary = RecordingResolver {
-            DidResolutionResult.Failure.ResolutionError(did = it, reason = "driver timeout")
+    fun `resolution error from a registered method does not trigger fallback`() =
+        runBlocking<Unit> {
+            val did = Did("did:web:example.com")
+            val primary =
+                RecordingResolver {
+                    DidResolutionResult.Failure.ResolutionError(did = it, reason = "driver timeout")
+                }
+            val fallback = RecordingResolver { success(it) }
+
+            val result = FallbackDidResolver(primary, fallback).resolve(did)
+
+            assertEquals(0, fallback.calls, "operational errors must surface, not be masked by fallback")
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
         }
-        val fallback = RecordingResolver { success(it) }
-
-        val result = FallbackDidResolver(primary, fallback).resolve(did)
-
-        assertEquals(0, fallback.calls, "operational errors must surface, not be masked by fallback")
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-    }
 
     // ─── Composition ───
 
     @Test
-    fun `composes with CachingDidResolver`() = runBlocking<Unit> {
-        // CachingDidResolver(FallbackDidResolver(registry, universal)) — the documented
-        // composition: fallback results are cached like any other success.
-        val did = Did("did:ion:EiDexample")
-        val primary = RecordingResolver { methodNotRegistered(it) }
-        val fallback = RecordingResolver { success(it) }
-        val resolver = CachingDidResolver(FallbackDidResolver(primary, fallback))
+    fun `composes with CachingDidResolver`() =
+        runBlocking<Unit> {
+            // CachingDidResolver(FallbackDidResolver(registry, universal)) — the documented
+            // composition: fallback results are cached like any other success.
+            val did = Did("did:ion:EiDexample")
+            val primary = RecordingResolver { methodNotRegistered(it) }
+            val fallback = RecordingResolver { success(it) }
+            val resolver = CachingDidResolver(FallbackDidResolver(primary, fallback))
 
-        val first = resolver.resolve(did)
-        val second = resolver.resolve(did)
+            val first = resolver.resolve(did)
+            val second = resolver.resolve(did)
 
-        assertTrue(first is DidResolutionResult.Success)
-        assertSame(first, second)
-        assertEquals(1, fallback.calls, "fallback success must be served from cache afterwards")
-    }
+            assertTrue(first is DidResolutionResult.Success)
+            assertSame(first, second)
+            assertEquals(1, fallback.calls, "fallback success must be served from cache afterwards")
+        }
 
     // ─── asDidResolver() DidException mapping ───
     //
@@ -157,47 +167,52 @@ class FallbackDidResolverTest {
     private fun throwingUniversalResolver(exception: DidException): UniversalResolver =
         object : UniversalResolver {
             override val baseUrl: String = "https://resolver.example"
+
             override suspend fun resolveDid(did: String): DidResolutionResult = throw exception
+
             override suspend fun getSupportedMethods(): List<String>? = null
         }
 
     @Test
-    fun `asDidResolver surfaces NOT_FOUND for DidException DidNotFound`() = runBlocking<Unit> {
-        val did = Did("did:test:missing")
-        val resolver = throwingUniversalResolver(DidException.DidNotFound(did = did)).asDidResolver()
+    fun `asDidResolver surfaces NOT_FOUND for DidException DidNotFound`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:missing")
+            val resolver = throwingUniversalResolver(DidException.DidNotFound(did = did)).asDidResolver()
 
-        val result = resolver.resolve(did)
+            val result = resolver.resolve(did)
 
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
-    }
-
-    @Test
-    fun `asDidResolver surfaces INVALID_DID for DidException InvalidDidFormat`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val exception = DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier")
-        val resolver = throwingUniversalResolver(exception).asDidResolver()
-
-        val result = resolver.resolve(did)
-
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
-    }
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.NOT_FOUND, metadata.error?.type)
+        }
 
     @Test
-    fun `asDidResolver surfaces METHOD_NOT_SUPPORTED for DidException DidMethodNotRegistered`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val exception = DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
-        val resolver = throwingUniversalResolver(exception).asDidResolver()
+    fun `asDidResolver surfaces INVALID_DID for DidException InvalidDidFormat`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val exception = DidException.InvalidDidFormat(did = did.value, reason = "malformed identifier")
+            val resolver = throwingUniversalResolver(exception).asDidResolver()
 
-        val result = resolver.resolve(did)
+            val result = resolver.resolve(did)
 
-        assertTrue(result is DidResolutionResult.Failure.ResolutionError)
-        val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
-        assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
-    }
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.INVALID_DID, metadata.error?.type)
+        }
+
+    @Test
+    fun `asDidResolver surfaces METHOD_NOT_SUPPORTED for DidException DidMethodNotRegistered`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val exception = DidException.DidMethodNotRegistered(method = "test", availableMethods = listOf("key"))
+            val resolver = throwingUniversalResolver(exception).asDidResolver()
+
+            val result = resolver.resolve(did)
+
+            assertTrue(result is DidResolutionResult.Failure.ResolutionError)
+            val metadata = (result as DidResolutionResult.Failure.ResolutionError).resolutionMetadata
+            assertEquals(DidErrorType.METHOD_NOT_SUPPORTED, metadata.error?.type)
+        }
 
     // ─── asDidResolver() §4.4 defence-in-depth normalization ───
     //
@@ -207,66 +222,76 @@ class FallbackDidResolverTest {
     // Success carrying a revoked document — using a non-null document alongside the deactivated
     // flag, per the review that flagged every prior deactivation test for using a null document.
 
-    private fun deactivatingUniversalResolver(): UniversalResolver = object : UniversalResolver {
-        override val baseUrl: String = "https://resolver.example"
-        override suspend fun resolveDid(did: String): DidResolutionResult = DidResolutionResult.Success(
-            document = DidDocument(id = Did(did)),
-            documentMetadata = DidDocumentMetadata(deactivated = true)
-        )
-        override suspend fun getSupportedMethods(): List<String>? = null
-    }
+    private fun deactivatingUniversalResolver(): UniversalResolver =
+        object : UniversalResolver {
+            override val baseUrl: String = "https://resolver.example"
+
+            override suspend fun resolveDid(did: String): DidResolutionResult =
+                DidResolutionResult.Success(
+                    document = DidDocument(id = Did(did)),
+                    documentMetadata = DidDocumentMetadata(deactivated = true),
+                )
+
+            override suspend fun getSupportedMethods(): List<String>? = null
+        }
 
     @Test
-    fun `asDidResolver normalizes a Success with deactivated true to Deactivated`() = runBlocking<Unit> {
-        val did = Did("did:test:still-live")
-        val resolver = deactivatingUniversalResolver().asDidResolver()
+    fun `asDidResolver normalizes a Success with deactivated true to Deactivated`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:still-live")
+            val resolver = deactivatingUniversalResolver().asDidResolver()
 
-        val result = resolver.resolve(did)
+            val result = resolver.resolve(did)
 
-        assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
-        assertTrue(result.documentMetadata.deactivated)
-    }
+            assertTrue(result is DidResolutionResult.Deactivated, "expected Deactivated, got $result")
+            assertTrue(result.documentMetadata.deactivated)
+        }
 
     // ─── ResolutionOptions forwarding (finding I1) ───
 
     private class RecordingOptionsResolver(
-        private val handler: (Did) -> DidResolutionResult
+        private val handler: (Did) -> DidResolutionResult,
     ) : DidResolver {
         val optionCalls = mutableListOf<ResolutionOptions>()
 
         override suspend fun resolve(did: Did): DidResolutionResult = handler(did)
 
-        override suspend fun resolve(did: Did, options: ResolutionOptions): DidResolutionResult {
+        override suspend fun resolve(
+            did: Did,
+            options: ResolutionOptions,
+        ): DidResolutionResult {
             optionCalls.add(options)
             return handler(did)
         }
     }
 
     @Test
-    fun `resolve with options forwards them to primary`() = runBlocking<Unit> {
-        val did = Did("did:key:z6Mkexample")
-        val options = ResolutionOptions(accept = "application/did+ld+json")
-        val primary = RecordingOptionsResolver { success(it) }
-        val fallback = RecordingOptionsResolver { success(it) }
+    fun `resolve with options forwards them to primary`() =
+        runBlocking<Unit> {
+            val did = Did("did:key:z6Mkexample")
+            val options = ResolutionOptions(accept = "application/did+ld+json")
+            val primary = RecordingOptionsResolver { success(it) }
+            val fallback = RecordingOptionsResolver { success(it) }
 
-        FallbackDidResolver(primary, fallback).resolve(did, options)
+            FallbackDidResolver(primary, fallback).resolve(did, options)
 
-        assertEquals(listOf(options), primary.optionCalls)
-        assertEquals(emptyList<ResolutionOptions>(), fallback.optionCalls, "fallback must not run when primary succeeds")
-    }
+            assertEquals(listOf(options), primary.optionCalls)
+            assertEquals(emptyList<ResolutionOptions>(), fallback.optionCalls, "fallback must not run when primary succeeds")
+        }
 
     @Test
-    fun `resolve with options forwards them to fallback when primary lacks the method`() = runBlocking<Unit> {
-        val did = Did("did:ion:EiDexample")
-        val options = ResolutionOptions(accept = "application/did+ld+json")
-        val primary = RecordingOptionsResolver { methodNotRegistered(it) }
-        val fallback = RecordingOptionsResolver { success(it) }
+    fun `resolve with options forwards them to fallback when primary lacks the method`() =
+        runBlocking<Unit> {
+            val did = Did("did:ion:EiDexample")
+            val options = ResolutionOptions(accept = "application/did+ld+json")
+            val primary = RecordingOptionsResolver { methodNotRegistered(it) }
+            val fallback = RecordingOptionsResolver { success(it) }
 
-        FallbackDidResolver(primary, fallback).resolve(did, options)
+            FallbackDidResolver(primary, fallback).resolve(did, options)
 
-        assertEquals(listOf(options), primary.optionCalls)
-        assertEquals(listOf(options), fallback.optionCalls)
-    }
+            assertEquals(listOf(options), primary.optionCalls)
+            assertEquals(listOf(options), fallback.optionCalls)
+        }
 
     // ─── F1: `accept` must not be silently dropped on the universal-fallback leg ───
     //
@@ -276,24 +301,28 @@ class FallbackDidResolverTest {
     // slip through as Success instead of failing with REPRESENTATION_NOT_SUPPORTED (§4.4 step 3).
 
     @Test
-    fun `asDidResolver two-arg resolve rejects an unsupported accept`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val universal = object : UniversalResolver {
-            override val baseUrl: String = "https://resolver.example"
-            override suspend fun resolveDid(did: String): DidResolutionResult =
-                DidResolutionResult.Success(document = DidDocument(id = Did(did)))
-            override suspend fun getSupportedMethods(): List<String>? = null
+    fun `asDidResolver two-arg resolve rejects an unsupported accept`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val universal =
+                object : UniversalResolver {
+                    override val baseUrl: String = "https://resolver.example"
+
+                    override suspend fun resolveDid(did: String): DidResolutionResult =
+                        DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+
+                    override suspend fun getSupportedMethods(): List<String>? = null
+                }
+            val resolver = universal.asDidResolver()
+
+            val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
+
+            assertTrue(result is DidResolutionResult.Failure.OptionsError, "expected OptionsError, got $result")
+            assertEquals(
+                DidErrorType.REPRESENTATION_NOT_SUPPORTED,
+                (result as DidResolutionResult.Failure.OptionsError).errorType,
+            )
         }
-        val resolver = universal.asDidResolver()
-
-        val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
-
-        assertTrue(result is DidResolutionResult.Failure.OptionsError, "expected OptionsError, got $result")
-        assertEquals(
-            DidErrorType.REPRESENTATION_NOT_SUPPORTED,
-            (result as DidResolutionResult.Failure.OptionsError).errorType
-        )
-    }
 
     @Test
     fun `unsupported accept survives CachingDidResolver over FallbackDidResolver to the universal leg`() =
@@ -303,12 +332,15 @@ class FallbackDidResolverTest {
             // reaches the universal-resolver adapter, which must still honor `accept`.
             val did = Did("did:ion:EiDexample")
             val registry = RecordingOptionsResolver { methodNotRegistered(it) }
-            val universal = object : UniversalResolver {
-                override val baseUrl: String = "https://resolver.example"
-                override suspend fun resolveDid(did: String): DidResolutionResult =
-                    DidResolutionResult.Success(document = DidDocument(id = Did(did)))
-                override suspend fun getSupportedMethods(): List<String>? = null
-            }
+            val universal =
+                object : UniversalResolver {
+                    override val baseUrl: String = "https://resolver.example"
+
+                    override suspend fun resolveDid(did: String): DidResolutionResult =
+                        DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+
+                    override suspend fun getSupportedMethods(): List<String>? = null
+                }
             val resolver = CachingDidResolver(FallbackDidResolver(registry, universal.asDidResolver()))
 
             val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+cbor"))
@@ -316,23 +348,27 @@ class FallbackDidResolverTest {
             assertTrue(result is DidResolutionResult.Failure.OptionsError, "expected OptionsError, got $result")
             assertEquals(
                 DidErrorType.REPRESENTATION_NOT_SUPPORTED,
-                (result as DidResolutionResult.Failure.OptionsError).errorType
+                (result as DidResolutionResult.Failure.OptionsError).errorType,
             )
         }
 
     @Test
-    fun `asDidResolver two-arg resolve still succeeds for a supported accept`() = runBlocking<Unit> {
-        val did = Did("did:test:example")
-        val universal = object : UniversalResolver {
-            override val baseUrl: String = "https://resolver.example"
-            override suspend fun resolveDid(did: String): DidResolutionResult =
-                DidResolutionResult.Success(document = DidDocument(id = Did(did)))
-            override suspend fun getSupportedMethods(): List<String>? = null
+    fun `asDidResolver two-arg resolve still succeeds for a supported accept`() =
+        runBlocking<Unit> {
+            val did = Did("did:test:example")
+            val universal =
+                object : UniversalResolver {
+                    override val baseUrl: String = "https://resolver.example"
+
+                    override suspend fun resolveDid(did: String): DidResolutionResult =
+                        DidResolutionResult.Success(document = DidDocument(id = Did(did)))
+
+                    override suspend fun getSupportedMethods(): List<String>? = null
+                }
+            val resolver = universal.asDidResolver()
+
+            val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+ld+json"))
+
+            assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
         }
-        val resolver = universal.asDidResolver()
-
-        val result = resolver.resolve(did, ResolutionOptions(accept = "application/did+ld+json"))
-
-        assertTrue(result is DidResolutionResult.Success, "expected Success, got $result")
-    }
 }

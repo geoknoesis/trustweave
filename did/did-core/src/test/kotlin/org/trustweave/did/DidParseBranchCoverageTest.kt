@@ -8,7 +8,6 @@ import kotlin.test.*
  * Tests all conditional branches in validation logic.
  */
 class DidParseBranchCoverageTest {
-
     @Test
     fun `test branch parse with valid DID`() {
         val did = Did("did:web:example.com")
@@ -112,4 +111,3 @@ class DidParseBranchCoverageTest {
 
     // toString is tested implicitly through value property access in other tests
 }
-

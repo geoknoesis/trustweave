@@ -1,8 +1,8 @@
 package org.trustweave.credential
 
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 
@@ -18,16 +18,17 @@ import org.trustweave.did.resolver.DidResolver
 suspend fun exampleAllowlistTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential,
-    trustedIssuers: Set<Did>
+    trustedIssuers: Set<Did>,
 ) {
     val service = credentialService(didResolver)
 
     val evaluator = TrustEvaluator.allowlist(trustedIssuers = trustedIssuers)
 
-    val result = service.verify(
-        credential = credential,
-        trustPolicy = evaluator
-    )
+    val result =
+        service.verify(
+            credential = credential,
+            trustPolicy = evaluator,
+        )
 
     when (result) {
         is VerificationResult.Valid -> {
@@ -50,16 +51,17 @@ suspend fun exampleAllowlistTrustEvaluator(
 suspend fun exampleBlocklistTrustEvaluator(
     didResolver: DidResolver,
     credential: VerifiableCredential,
-    blockedIssuers: Set<Did>
+    blockedIssuers: Set<Did>,
 ) {
     val service = credentialService(didResolver)
 
     val evaluator = TrustEvaluator.blocklist(blockedIssuers = blockedIssuers)
 
-    val result = service.verify(
-        credential = credential,
-        trustPolicy = evaluator
-    )
+    val result =
+        service.verify(
+            credential = credential,
+            trustPolicy = evaluator,
+        )
 
     when (result) {
         is VerificationResult.Valid -> {
@@ -81,14 +83,15 @@ suspend fun exampleBlocklistTrustEvaluator(
  */
 suspend fun exampleNoTrustEvaluator(
     didResolver: DidResolver,
-    credential: VerifiableCredential
+    credential: VerifiableCredential,
 ) {
     val service = credentialService(didResolver)
 
-    val result = service.verify(
-        credential = credential,
-        trustPolicy = null  // or TrustEvaluator.acceptAll()
-    )
+    val result =
+        service.verify(
+            credential = credential,
+            trustPolicy = null, // or TrustEvaluator.acceptAll()
+        )
 
     when (result) {
         is VerificationResult.Valid -> {
@@ -108,16 +111,17 @@ suspend fun exampleNoTrustEvaluator(
  */
 suspend fun exampleAcceptAllTrustEvaluator(
     didResolver: DidResolver,
-    credential: VerifiableCredential
+    credential: VerifiableCredential,
 ) {
     val service = credentialService(didResolver)
 
     val evaluator = TrustEvaluator.acceptAll()
 
-    val result = service.verify(
-        credential = credential,
-        trustPolicy = evaluator
-    )
+    val result =
+        service.verify(
+            credential = credential,
+            trustPolicy = evaluator,
+        )
 
     // Same behavior as no trust policy
     when (result) {

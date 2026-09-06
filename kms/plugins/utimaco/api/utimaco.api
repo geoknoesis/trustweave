@@ -1,0 +1,59 @@
+public final class org/trustweave/kms/utimaco/UtimacoKeyManagementService : org/trustweave/kms/KeyManagementService {
+	public static final field Companion Lorg/trustweave/kms/utimaco/UtimacoKeyManagementService$Companion;
+	public fun <init> (Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;)V
+	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getPublicKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSupportedAlgorithms (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sign-9aKg9HM (Ljava/lang/String;[BLorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/kms/utimaco/UtimacoKeyManagementService$Companion {
+	public final fun getSUPPORTED_ALGORITHMS ()Ljava/util/Set;
+}
+
+public final class org/trustweave/kms/utimaco/UtimacoKeyManagementServiceProvider : org/trustweave/kms/spi/KeyManagementServiceProvider {
+	public fun <init> ()V
+	public fun create (Ljava/util/Map;)Lorg/trustweave/kms/KeyManagementService;
+	public fun create (Lorg/trustweave/kms/KmsCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedAlgorithms ()Ljava/util/Set;
+	public fun hasRequiredEnvironmentVariables ()Z
+	public fun supportsAlgorithm (Ljava/lang/String;)Z
+	public fun supportsAlgorithm (Lorg/trustweave/kms/Algorithm;)Z
+}
+
+public final class org/trustweave/kms/utimaco/UtimacoKmsConfig {
+	public static final field Companion Lorg/trustweave/kms/utimaco/UtimacoKmsConfig$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHsmAddress ()Ljava/lang/String;
+	public final fun getPartitionId ()Ljava/lang/String;
+	public final fun getPartitionPassword ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/kms/utimaco/UtimacoKmsConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;
+	public final fun hsmAddress (Ljava/lang/String;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig$Builder;
+	public final fun partitionId (Ljava/lang/String;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig$Builder;
+	public final fun partitionPassword (Ljava/lang/String;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig$Builder;
+}
+
+public final class org/trustweave/kms/utimaco/UtimacoKmsConfig$Companion {
+	public final fun builder ()Lorg/trustweave/kms/utimaco/UtimacoKmsConfig$Builder;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/kms/utimaco/UtimacoKmsConfig;
+}
+

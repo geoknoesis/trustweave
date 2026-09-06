@@ -6,7 +6,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DidMediaTypesTest {
-
     @Test
     fun `spec media types have their CR values`() {
         assertEquals("application/did", DidMediaTypes.DID)

@@ -1,14 +1,14 @@
 package org.trustweave.trust.dsl.credential
 
-import org.trustweave.trust.TrustWeave
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.revocation.RevocationStatus
-import org.trustweave.credential.revocation.StatusListMetadata
-import org.trustweave.credential.revocation.CredentialRevocationManager
-import org.trustweave.credential.model.StatusPurpose
-import org.trustweave.credential.identifiers.StatusListId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.revocation.RevocationStatus
+import org.trustweave.credential.revocation.StatusListMetadata
+import org.trustweave.trust.TrustWeave
 
 /**
  * Revocation Builder DSL.
@@ -36,7 +36,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class RevocationBuilder(
-    private val revocationManager: CredentialRevocationManager?
+    private val revocationManager: CredentialRevocationManager?,
 ) {
     private var issuerDid: String? = null
     private var credentialId: String? = null
@@ -84,60 +84,67 @@ class RevocationBuilder(
      *
      * @throws IllegalStateException if revocation manager is not configured
      */
-    private fun getRevocationManager(): CredentialRevocationManager {
-        return revocationManager
+    private fun getRevocationManager(): CredentialRevocationManager =
+        revocationManager
             ?: throw IllegalStateException(
-                "CredentialRevocationManager is required for revocation operations."
+                "CredentialRevocationManager is required for revocation operations.",
             )
-    }
 
     /**
      * Create a new status list.
      *
      * @return Status list ID
      */
-    suspend fun createStatusList(): StatusListId = withContext(Dispatchers.IO) {
-        val issuer = issuerDid ?: throw IllegalStateException(
-            "Issuer DID is required. Use forIssuer(\"did:key:...\")"
-        )
+    suspend fun createStatusList(): StatusListId =
+        withContext(Dispatchers.IO) {
+            val issuer =
+                issuerDid ?: throw IllegalStateException(
+                    "Issuer DID is required. Use forIssuer(\"did:key:...\")",
+                )
 
-        val manager = getRevocationManager()
-        manager.createStatusList(issuer, purpose, size)
-    }
+            val manager = getRevocationManager()
+            manager.createStatusList(issuer, purpose, size)
+        }
 
     /**
      * Revoke a credential.
      *
      * @return true if revocation succeeded
      */
-    suspend fun revoke(): Boolean = withContext(Dispatchers.IO) {
-        val credId = credentialId ?: throw IllegalStateException(
-            "Credential ID is required. Use credential(\"cred-123\")"
-        )
-        val listId = statusListId ?: throw IllegalStateException(
-            "Status list ID is required. Use statusList(\"list-id\")"
-        )
+    suspend fun revoke(): Boolean =
+        withContext(Dispatchers.IO) {
+            val credId =
+                credentialId ?: throw IllegalStateException(
+                    "Credential ID is required. Use credential(\"cred-123\")",
+                )
+            val listId =
+                statusListId ?: throw IllegalStateException(
+                    "Status list ID is required. Use statusList(\"list-id\")",
+                )
 
-        val manager = getRevocationManager()
-        manager.revokeCredential(credId, StatusListId(listId))
-    }
+            val manager = getRevocationManager()
+            manager.revokeCredential(credId, StatusListId(listId))
+        }
 
     /**
      * Suspend a credential.
      *
      * @return true if suspension succeeded
      */
-    suspend fun suspend(): Boolean = withContext(Dispatchers.IO) {
-        val credId = credentialId ?: throw IllegalStateException(
-            "Credential ID is required. Use credential(\"cred-123\")"
-        )
-        val listId = statusListId ?: throw IllegalStateException(
-            "Status list ID is required. Use statusList(\"list-id\")"
-        )
+    suspend fun suspend(): Boolean =
+        withContext(Dispatchers.IO) {
+            val credId =
+                credentialId ?: throw IllegalStateException(
+                    "Credential ID is required. Use credential(\"cred-123\")",
+                )
+            val listId =
+                statusListId ?: throw IllegalStateException(
+                    "Status list ID is required. Use statusList(\"list-id\")",
+                )
 
-        val manager = getRevocationManager()
-        manager.suspendCredential(credId, StatusListId(listId))
-    }
+            val manager = getRevocationManager()
+            manager.suspendCredential(credId, StatusListId(listId))
+        }
 
     /**
      * Check revocation status of a credential.
@@ -145,29 +152,30 @@ class RevocationBuilder(
      * @param credential Credential to check
      * @return Revocation status
      */
-    suspend fun check(credential: VerifiableCredential): RevocationStatus = withContext(Dispatchers.IO) {
-        val manager = getRevocationManager()
-        manager.checkRevocationStatus(credential)
-    }
+    suspend fun check(credential: VerifiableCredential): RevocationStatus =
+        withContext(Dispatchers.IO) {
+            val manager = getRevocationManager()
+            manager.checkRevocationStatus(credential)
+        }
 
     /**
      * Get status list by ID.
      *
      * @return Status list metadata, or null if not found
      */
-    suspend fun getStatusList(): StatusListMetadata? = withContext(Dispatchers.IO) {
-        val listId = statusListId ?: throw IllegalStateException(
-            "Status list ID is required. Use statusList(\"list-id\")"
-        )
+    suspend fun getStatusList(): StatusListMetadata? =
+        withContext(Dispatchers.IO) {
+            val listId =
+                statusListId ?: throw IllegalStateException(
+                    "Status list ID is required. Use statusList(\"list-id\")",
+                )
 
-        val manager = getRevocationManager()
-        manager.getStatusList(StatusListId(listId))
-    }
+            val manager = getRevocationManager()
+            manager.getStatusList(StatusListId(listId))
+        }
 }
 
 /**
  * Extension function to access revocation operations using TrustWeave.
  */
-fun TrustWeave.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder {
-    return RevocationBuilder(getRevocationManager()).apply(block)
-}
+fun TrustWeave.revocation(block: RevocationBuilder.() -> Unit): RevocationBuilder = RevocationBuilder(getRevocationManager()).apply(block)

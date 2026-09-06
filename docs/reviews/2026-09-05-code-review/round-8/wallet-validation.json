@@ -1,0 +1,18 @@
+{
+  "unit": {
+    "command": "npm test",
+    "passed": 42,
+    "failed": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "result": "passed including TypeScript"
+  },
+  "browser": {
+    "command": "npx playwright test",
+    "passed": 11,
+    "failed": 0,
+    "scope": "Chromium production Next app plus Vite browser harness"
+  },
+  "initial_regression": "New retry test exposed null IndexedDB error; fixed abort error propagation before final passing run."
+}

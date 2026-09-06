@@ -1,0 +1,17 @@
+public final class org/trustweave/anchor/ganache/GanacheBlockchainAnchorClient : org/trustweave/anchor/evm/AbstractEvmAnchorClient {
+	public static final field Companion Lorg/trustweave/anchor/ganache/GanacheBlockchainAnchorClient$Companion;
+	public static final field LOCAL Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/anchor/options/GanacheOptions;)V
+}
+
+public final class org/trustweave/anchor/ganache/GanacheBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/ganache/GanacheIntegration {
+	public static final field INSTANCE Lorg/trustweave/anchor/ganache/GanacheIntegration;
+	public final fun setup (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/anchor/ganache/GanacheBlockchainAnchorClient;
+	public static synthetic fun setup$default (Lorg/trustweave/anchor/ganache/GanacheIntegration;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/anchor/ganache/GanacheBlockchainAnchorClient;
+}
+

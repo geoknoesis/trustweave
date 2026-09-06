@@ -16,7 +16,6 @@ import org.trustweave.credential.vi.model.Vct
  * `email` selectively disclosable. Signs through [Es256Signer] (the issuer's P-256 key).
  */
 public object ViIssuer {
-
     public suspend fun createLayer1(
         credential: IssuerCredential,
         signer: Es256Signer,
@@ -30,25 +29,27 @@ public object ViIssuer {
             sd += made.hash
         }
 
-        val payload = buildJsonObject {
-            put("iss", credential.iss)
-            put("sub", credential.sub)
-            put("iat", credential.iat)
-            put("exp", credential.exp)
-            put("vct", credential.vct)
-            put("cnf", buildJsonObject { put("jwk", credential.userCnfJwk) })
-            credential.aud?.let { put("aud", it) }
-            put("pan_last_four", credential.panLastFour)
-            put("scheme", credential.scheme)
-            credential.cardId?.let { put("card_id", it) }
-            put("_sd", JsonArray(sd.map { JsonPrimitive(it) }))
-            put("_sd_alg", Vct.SD_ALG)
-        }
-        val header = buildJsonObject {
-            put("alg", Vct.ALG)
-            put("typ", Vct.Typ.L1)
-            put("kid", issuerKid)
-        }
+        val payload =
+            buildJsonObject {
+                put("iss", credential.iss)
+                put("sub", credential.sub)
+                put("iat", credential.iat)
+                put("exp", credential.exp)
+                put("vct", credential.vct)
+                put("cnf", buildJsonObject { put("jwk", credential.userCnfJwk) })
+                credential.aud?.let { put("aud", it) }
+                put("pan_last_four", credential.panLastFour)
+                put("scheme", credential.scheme)
+                credential.cardId?.let { put("card_id", it) }
+                put("_sd", JsonArray(sd.map { JsonPrimitive(it) }))
+                put("_sd_alg", Vct.SD_ALG)
+            }
+        val header =
+            buildJsonObject {
+                put("alg", Vct.ALG)
+                put("typ", Vct.Typ.L1)
+                put("kid", issuerKid)
+            }
         return serializeSdJwt(Jws.sign(header, payload, signer), disclosures)
     }
 }

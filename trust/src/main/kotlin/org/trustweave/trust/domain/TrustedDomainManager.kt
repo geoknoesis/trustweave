@@ -42,7 +42,6 @@ class TrustedDomainManager(
     private val registry: BlockchainAnchorRegistry,
     private val eventSink: DomainEventSink = NoopDomainEventSink,
 ) {
-
     /**
      * Anchor [payload] on [chainId] paid for by this domain's treasury (by
      * default). Returns the [AnchorResult] from the underlying plugin; the
@@ -64,37 +63,40 @@ class TrustedDomainManager(
         mediaType: String = "application/json",
     ): AnchorResult {
         val client = clientFor(chainId)
-        val op = OperationDescriptor(
-            kind = operationKind,
-            chainId = chainId,
-            payload = payload,
-        )
+        val op =
+            OperationDescriptor(
+                kind = operationKind,
+                chainId = chainId,
+                payload = payload,
+            )
         val estimate = client.estimate(op)
 
-        val ctx = PaymentContext(
-            domainId = domainId.value,
-            payerDid = payerDid,
-            chainId = chainId,
-            feeStrategy = feeStrategy,
-            maxFee = maxFee,
-            correlationId = UUID.randomUUID().toString(),
-        )
+        val ctx =
+            PaymentContext(
+                domainId = domainId.value,
+                payerDid = payerDid,
+                chainId = chainId,
+                feeStrategy = feeStrategy,
+                maxFee = maxFee,
+                correlationId = UUID.randomUUID().toString(),
+            )
 
         val reservation = treasury.reserve(ctx, estimate)
-        val result = try {
-            client.writePayload(payload, ctx, mediaType)
-        } catch (e: Throwable) {
-            emitSafely(
-                DomainEvent.OnChainSpendFailed(
-                    domainId = domainId,
-                    chainId = chainId,
-                    correlationId = ctx.correlationId,
-                    reason = e.message ?: e::class.simpleName ?: "unknown",
-                ),
-            )
-            treasury.cancel(reservation)
-            throw e
-        }
+        val result =
+            try {
+                client.writePayload(payload, ctx, mediaType)
+            } catch (e: Throwable) {
+                emitSafely(
+                    DomainEvent.OnChainSpendFailed(
+                        domainId = domainId,
+                        chainId = chainId,
+                        correlationId = ctx.correlationId,
+                        reason = e.message ?: e::class.simpleName ?: "unknown",
+                    ),
+                )
+                treasury.cancel(reservation)
+                throw e
+            }
         treasury.settle(reservation, result, success = true)
         return result
     }
@@ -110,11 +112,10 @@ class TrustedDomainManager(
     /** Direct access to the underlying treasury — for inspection / dashboards. */
     fun treasury(): DomainTreasury = treasury
 
-    private fun clientFor(chainId: String): BlockchainAnchorClient {
-        return registry.get(chainId)
+    private fun clientFor(chainId: String): BlockchainAnchorClient =
+        registry.get(chainId)
             ?: throw BlockchainException.ChainNotRegistered(
                 chainId = chainId,
                 availableChains = registry.getAllChainIds(),
             )
-    }
 }

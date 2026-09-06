@@ -21,8 +21,8 @@ if (-not (Test-Path $docsDir)) {
 }
 
 if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
-    Write-Warning "ripgrep (rg) not on PATH; skipping check-doc-snippets (install: https://github.com/BurntSushi/ripgrep)"
-    exit 0
+    Write-Error "ripgrep (rg) is required to validate documentation snippets"
+    exit 1
 }
 
 $failed = $false
@@ -35,8 +35,12 @@ function Invoke-DocCheck {
         $output | ForEach-Object { Write-Host $_ }
         $script:failed = $true
     }
-    else {
+    elseif ($code -eq 1) {
         Write-Host "OK: $Label" -ForegroundColor Green
+    }
+    else {
+        Write-Host "FAILED: $Label (ripgrep exit $code)" -ForegroundColor Red
+        $script:failed = $true
     }
 }
 
@@ -50,6 +54,7 @@ Invoke-DocCheck "No verificationMethod...substringAfter(`"#`")" @(
 # Non-existent API
 Invoke-DocCheck "No IssuerIdentity.from" @(
     '-n', '--glob', '*.md',
+    '-g', '!**/code-example-style-guide.md',
     'IssuerIdentity\.from'
 )
 

@@ -1,7 +1,10 @@
 package org.trustweave.trust.dsl
 
+import org.slf4j.LoggerFactory
 import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.spi.BlockchainAnchorClientProvider
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.did.DidMethod
@@ -18,15 +21,12 @@ import org.trustweave.trust.domain.TrustedDomainManager
 import org.trustweave.trust.domain.treasury.ChainAccount
 import org.trustweave.trust.domain.treasury.InMemoryChainAccount
 import org.trustweave.trust.domain.treasury.InMemoryDomainTreasury
-import org.trustweave.core.exception.ConfigException
 import org.trustweave.trust.dsl.builders.AnchorConfig
 import org.trustweave.trust.dsl.builders.DidMethodConfig
 import org.trustweave.trust.dsl.builders.DomainConfig
 import org.trustweave.trust.services.DefaultKmsService
 import org.trustweave.trust.services.DefaultTrustRegistryFactory
 import org.trustweave.trust.services.TrustRegistryFactory
-import org.trustweave.anchor.BlockchainAnchorRegistry
-import org.slf4j.LoggerFactory
 import java.util.ServiceConfigurationError
 import java.util.ServiceLoader
 
@@ -44,17 +44,19 @@ internal object TrustWeaveFactory {
      * Build a [TrustWeaveConfig] from the provided builder state.
      */
     suspend fun build(state: TrustWeaveConfig.BuilderState): TrustWeaveConfig {
-        val (resolvedKms, resolvedSigner) = if (state.kms != null) {
-            val kmsRef = requireNotNull(state.kms)
-            val signer = state.kmsSigner ?: createSignerFromKms(kmsRef, extractKeyId = true)
-            Pair(kmsRef, signer)
-        } else {
-            resolveKms(state.kmsProvider ?: "inMemory", state.kmsAlgorithm)
-        }
+        val (resolvedKms, resolvedSigner) =
+            if (state.kms != null) {
+                val kmsRef = requireNotNull(state.kms)
+                val signer = state.kmsSigner ?: createSignerFromKms(kmsRef, extractKeyId = true)
+                Pair(kmsRef, signer)
+            } else {
+                resolveKms(state.kmsProvider ?: "inMemory", state.kmsAlgorithm)
+            }
 
-        val nonNullKms = requireNotNull(resolvedKms) {
-            "KMS cannot be null. Provide a custom KMS or ensure a provider is configured."
-        }
+        val nonNullKms =
+            requireNotNull(resolvedKms) {
+                "KMS cannot be null. Provide a custom KMS or ensure a provider is configured."
+            }
         val finalSigner = resolvedSigner ?: createSignerFromKms(nonNullKms, extractKeyId = false)
 
         val didRegistry = state.didRegistry
@@ -80,12 +82,13 @@ internal object TrustWeaveFactory {
 
         var defaultDidMethod = state.defaultDidMethod
         if (state.didMethodConfigs.isEmpty() && didRegistry.getAllMethodNames().isEmpty()) {
-            val defaultMethod = resolveDidMethod(
-                "key",
-                DidMethodConfig(algorithm = KeyAlgorithm.ED25519),
-                nonNullKms,
-                didRegistry
-            )
+            val defaultMethod =
+                resolveDidMethod(
+                    "key",
+                    DidMethodConfig(algorithm = KeyAlgorithm.ED25519),
+                    nonNullKms,
+                    didRegistry,
+                )
             didRegistry.register(defaultMethod)
             defaultDidMethod = "key"
         }
@@ -96,37 +99,46 @@ internal object TrustWeaveFactory {
             blockchainRegistry.register(chainId, client)
         }
 
-        val resolvedRevocationManager = state.revocationProvider?.let {
-            resolveRevocationManager(it)
-        }
+        val resolvedRevocationManager =
+            state.revocationProvider?.let {
+                resolveRevocationManager(it)
+            }
 
-        val resolvedTrustRegistry = state.trustProvider?.let {
-            resolveTrustRegistry(it, state.trustRegistryFactory)
-        }
+        val resolvedTrustRegistry =
+            state.trustProvider?.let {
+                resolveTrustRegistry(it, state.trustRegistryFactory)
+            }
 
         val didResolver = DidResolver { did -> didRegistry.resolve(did.value) }
 
+        val resolvedSchemaRegistry =
+            org.trustweave.credential.schema.SchemaRegistries
+                .default()
+
         val resolvedCredentialService =
-            resolveCredentialService(state, didResolver, finalSigner, nonNullKms)
+            resolveCredentialService(state, didResolver, finalSigner, nonNullKms, resolvedRevocationManager, resolvedSchemaRegistry)
 
         val snapshotRegistry = blockchainRegistry.snapshot()
-        val trustedDomainManager = state.domainConfig?.let {
-            buildTrustedDomainManager(it, snapshotRegistry, nonNullKms)
-        }
+        val trustedDomainManager =
+            state.domainConfig?.let {
+                buildTrustedDomainManager(it, snapshotRegistry, nonNullKms)
+            }
 
         return TrustWeaveConfig(
             name = state.name,
             kms = nonNullKms,
             didRegistry = didRegistry,
             blockchainRegistry = snapshotRegistry,
-            credentialConfig = TrustWeaveConfig.CredentialConfig(
-                defaultProofType = state.defaultProofType,
-                autoAnchor = state.autoAnchor,
-                defaultChain = state.defaultChain
-            ),
+            credentialConfig =
+                TrustWeaveConfig.CredentialConfig(
+                    defaultProofType = state.defaultProofType,
+                    autoAnchor = state.autoAnchor,
+                    defaultChain = state.defaultChain,
+                ),
             credentialService = resolvedCredentialService,
             didResolver = didResolver,
             revocationManager = resolvedRevocationManager,
+            schemaRegistry = resolvedSchemaRegistry,
             trustRegistry = resolvedTrustRegistry,
             walletFactory = state.walletFactory,
             // Derive the KmsService adapter from the same KMS the keys { } block resolved,
@@ -138,17 +150,19 @@ internal object TrustWeaveFactory {
             trustedDomainManager = trustedDomainManager,
             // Ownership drives TrustWeave.close(): only components this factory created
             // are closed by the facade; caller-injected ones remain caller-owned.
-            ownership = ComponentOwnership(
-                ownsKms = state.kms == null,
-                ownsCredentialService = state.credentialService == null &&
-                    resolvedCredentialService != null,
-                ownsRevocationManager = resolvedRevocationManager != null,
-                ownsTrustRegistry = resolvedTrustRegistry != null,
-                // Every method present at this point was created during this build
-                // (SPI auto-registration or did { method(...) } resolution); methods the
-                // caller registers later via getDidRegistry() are not snapshotted here.
-                ownedDidMethods = didRegistry.getAllMethods().values.toList(),
-            ),
+            ownership =
+                ComponentOwnership(
+                    ownsKms = state.kms == null,
+                    ownsCredentialService =
+                        state.credentialService == null &&
+                            resolvedCredentialService != null,
+                    ownsRevocationManager = resolvedRevocationManager != null,
+                    ownsTrustRegistry = resolvedTrustRegistry != null,
+                    // Every method present at this point was created during this build
+                    // (SPI auto-registration or did { method(...) } resolution); methods the
+                    // caller registers later via getDidRegistry() are not snapshotted here.
+                    ownedDidMethods = didRegistry.getAllMethods().values.toList(),
+                ),
         )
     }
 
@@ -157,25 +171,29 @@ internal object TrustWeaveFactory {
         registry: BlockchainAnchorRegistry,
         kms: KeyManagementService,
     ): TrustedDomainManager {
-        val accounts: Map<String, ChainAccount> = config.accounts.associate { acc ->
-            val client = registry.get(acc.chainId)
-                ?: throw IllegalStateException(
-                    "domain { chainAccount(\"${acc.chainId}\") } references a chain " +
-                        "that is not registered. Configure anchor { chain(\"${acc.chainId}\") { ... } } first.",
-                )
-            acc.chainId to InMemoryChainAccount(
-                chainId = acc.chainId,
-                address = acc.address,
-                keyRef = acc.keyRef,
-                anchorClient = client,
-                kms = kms,
+        val accounts: Map<String, ChainAccount> =
+            config.accounts.associate { acc ->
+                val client =
+                    registry.get(acc.chainId)
+                        ?: throw IllegalStateException(
+                            "domain { chainAccount(\"${acc.chainId}\") } references a chain " +
+                                "that is not registered. Configure anchor { chain(\"${acc.chainId}\") { ... } } first.",
+                        )
+                acc.chainId to
+                    InMemoryChainAccount(
+                        chainId = acc.chainId,
+                        address = acc.address,
+                        keyRef = acc.keyRef,
+                        anchorClient = client,
+                        kms = kms,
+                    )
+            }
+        val treasury =
+            InMemoryDomainTreasury(
+                domainId = config.domainId,
+                accounts = accounts,
+                spendPolicy = config.spendPolicy,
             )
-        }
-        val treasury = InMemoryDomainTreasury(
-            domainId = config.domainId,
-            accounts = accounts,
-            spendPolicy = config.spendPolicy,
-        )
         return TrustedDomainManager(
             domainId = config.domainId,
             payerDid = config.payerDid,
@@ -189,37 +207,52 @@ internal object TrustWeaveFactory {
         didResolver: DidResolver,
         finalSigner: suspend (ByteArray, String) -> ByteArray,
         nonNullKms: KeyManagementService,
+        revocationManager: CredentialRevocationManager?,
+        schemaRegistry: org.trustweave.credential.schema.SchemaRegistry,
     ): CredentialService? =
         state.credentialService ?: if (state.kmsSigner != null) {
             org.trustweave.credential.credentialService(
                 didResolver = didResolver,
                 signer = finalSigner,
+                revocationManager = revocationManager,
+                schemaRegistry = schemaRegistry,
             )
         } else {
             org.trustweave.credential.CredentialServices.createCredentialService(
                 kms = nonNullKms,
                 didResolver = didResolver,
+                revocationManager = revocationManager,
+                schemaRegistry = schemaRegistry,
             )
         }
 
     private suspend fun resolveKms(
         providerName: String,
-        algorithm: String
+        algorithm: String,
     ): Pair<KeyManagementService, (suspend (ByteArray, String) -> ByteArray)?> {
-        val kms = try {
-            KeyManagementServices.create(providerName, mapOf("algorithm" to algorithm))
-        } catch (e: IllegalArgumentException) {
-            throw ConfigException.UnsupportedValue(
-                field = "keys.provider",
-                value = providerName,
-                reason = "KMS provider not found. " +
-                    "Available providers: ${KeyManagementServices.availableProviders()}. " +
-                    "Ensure the provider is on the classpath.",
-                cause = e
-            )
-        }
+        val kms =
+            try {
+                KeyManagementServices.create(providerName, mapOf("algorithm" to algorithm))
+            } catch (e: IllegalArgumentException) {
+                throw ConfigException.UnsupportedValue(
+                    field = "keys.provider",
+                    value = providerName,
+                    reason =
+                        "KMS provider not found. " +
+                            "Available providers: ${KeyManagementServices.availableProviders()}. " +
+                            "Ensure the provider is on the classpath.",
+                    cause = e,
+                )
+            }
         val signer: suspend (ByteArray, String) -> ByteArray = { data, keyId ->
-            when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
+            when (
+                val result =
+                    kms.sign(
+                        org.trustweave.core.identifiers
+                            .KeyId(keyId),
+                        data,
+                    )
+            ) {
                 is SignResult.Success -> result.signature
                 is SignResult.Failure.KeyNotFound ->
                     throw IllegalStateException("Signing failed: Key not found: ${result.keyId.value}")
@@ -236,78 +269,87 @@ internal object TrustWeaveFactory {
         methodName: String,
         config: DidMethodConfig,
         kms: KeyManagementService,
-        didRegistry: DidMethodRegistry
+        didRegistry: DidMethodRegistry,
     ): DidMethod {
         val existing = didRegistry[methodName]
         if (existing != null) return existing
 
         for (provider in loadProvidersIsolated(DidMethodProvider::class.java)) {
-            val method = try {
-                if (methodName in provider.supportedMethods && provider.hasRequiredEnvironmentVariables()) {
-                    provider.create(methodName, config.toOptions(kms))
-                } else {
+            val method =
+                try {
+                    if (methodName in provider.supportedMethods && provider.hasRequiredEnvironmentVariables()) {
+                        provider.create(methodName, config.toOptions(kms))
+                    } else {
+                        null
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // One broken provider must not prevent the remaining providers from being
+                    // tried (mirrors DidMethodRegistry.autoRegister's collecting behavior).
+                    logger.warn(
+                        "DidMethodProvider {} failed for method '{}': {} — skipping",
+                        provider::class.java.name,
+                        methodName,
+                        e.message ?: e::class.java.simpleName,
+                        e,
+                    )
                     null
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // One broken provider must not prevent the remaining providers from being
-                // tried (mirrors DidMethodRegistry.autoRegister's collecting behavior).
-                logger.warn(
-                    "DidMethodProvider {} failed for method '{}': {} — skipping",
-                    provider::class.java.name, methodName, e.message ?: e::class.java.simpleName, e
-                )
-                null
-            }
             if (method != null) return method
         }
 
         throw IllegalStateException(
             "DID method '$methodName' not found. " +
-            "Ensure appropriate DID method provider is on classpath."
+                "Ensure appropriate DID method provider is on classpath.",
         )
     }
 
     private suspend fun resolveAnchorClient(
         chainId: String,
-        config: AnchorConfig
+        config: AnchorConfig,
     ): BlockchainAnchorClient {
         val providerName = config.provider ?: chainId.substringBefore(":")
 
         var sawMatchingProvider = false
         for (provider in loadProvidersIsolated(BlockchainAnchorClientProvider::class.java)) {
-            val client = try {
-                val matches = provider.name == providerName &&
-                    (chainId in provider.supportedChains || provider.supportedChains.isEmpty()) &&
-                    provider.hasRequiredEnvironmentVariables()
-                if (matches) {
-                    sawMatchingProvider = true
-                    provider.create(chainId, config.options)
-                } else {
+            val client =
+                try {
+                    val matches =
+                        provider.name == providerName &&
+                            (chainId in provider.supportedChains || provider.supportedChains.isEmpty()) &&
+                            provider.hasRequiredEnvironmentVariables()
+                    if (matches) {
+                        sawMatchingProvider = true
+                        provider.create(chainId, config.options)
+                    } else {
+                        null
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Skip broken providers so one bad SPI registration is not fatal.
+                    logger.warn(
+                        "BlockchainAnchorClientProvider {} failed for chain '{}': {} — skipping",
+                        provider::class.java.name,
+                        chainId,
+                        e.message ?: e::class.java.simpleName,
+                        e,
+                    )
                     null
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // Skip broken providers so one bad SPI registration is not fatal.
-                logger.warn(
-                    "BlockchainAnchorClientProvider {} failed for chain '{}': {} — skipping",
-                    provider::class.java.name, chainId, e.message ?: e::class.java.simpleName, e
-                )
-                null
-            }
             if (client != null) return client
         }
 
         if (sawMatchingProvider) {
             throw IllegalStateException(
                 "Provider '$providerName' does not support chain '$chainId' " +
-                "(create returned null or failed for every matching provider)."
+                    "(create returned null or failed for every matching provider).",
             )
         }
         throw IllegalStateException(
             "Anchor provider '$providerName' not found for chain '$chainId'. " +
-            "Ensure the provider is on the classpath."
+                "Ensure the provider is on the classpath.",
         )
     }
 
@@ -322,79 +364,97 @@ internal object TrustWeaveFactory {
         val providers = mutableListOf<T>()
         val iterator = ServiceLoader.load(serviceClass).iterator()
         while (true) {
-            val hasNext = try {
-                iterator.hasNext()
-            } catch (e: ServiceConfigurationError) {
-                logger.warn(
-                    "SPI discovery for {} aborted after {} provider(s): {}",
-                    serviceClass.simpleName, providers.size, e.message, e
-                )
-                false
-            }
+            val hasNext =
+                try {
+                    iterator.hasNext()
+                } catch (e: ServiceConfigurationError) {
+                    logger.warn(
+                        "SPI discovery for {} aborted after {} provider(s): {}",
+                        serviceClass.simpleName,
+                        providers.size,
+                        e.message,
+                        e,
+                    )
+                    false
+                }
             if (!hasNext) break
             try {
                 providers += iterator.next()
             } catch (e: ServiceConfigurationError) {
                 logger.warn(
                     "Skipping broken {} SPI provider: {}",
-                    serviceClass.simpleName, e.message, e
+                    serviceClass.simpleName,
+                    e.message,
+                    e,
                 )
             }
         }
         return providers
     }
 
-    private fun resolveRevocationManager(
-        providerName: String
-    ): CredentialRevocationManager = when (providerName) {
-        "inMemory", "in-memory", "default" ->
-            org.trustweave.credential.revocation.RevocationManagers.default()
-        else -> throw ConfigException.UnsupportedValue(
-            field = "revocation.provider",
-            value = providerName,
-            reason = "Named revocation providers are not yet supported. " +
-                "Use \"inMemory\" for the default in-memory manager, or wire a custom " +
-                "CredentialRevocationManager programmatically."
-        )
-    }
+    private fun resolveRevocationManager(providerName: String): CredentialRevocationManager =
+        when (providerName) {
+            "inMemory", "in-memory", "default" ->
+                org.trustweave.credential.revocation.RevocationManagers
+                    .default()
+            else -> throw ConfigException.UnsupportedValue(
+                field = "revocation.provider",
+                value = providerName,
+                reason =
+                    "Named revocation providers are not yet supported. " +
+                        "Use \"inMemory\" for the default in-memory manager, or wire a custom " +
+                        "CredentialRevocationManager programmatically.",
+            )
+        }
 
     private suspend fun resolveTrustRegistry(
         providerName: String,
-        factory: TrustRegistryFactory?
+        factory: TrustRegistryFactory?,
     ): TrustRegistry {
         // No factory supplied: fall back to the built-in in-memory registry for the
         // in-memory provider names so `TrustWeave.quickStart()` works out of the box.
-        val f = factory ?: when (providerName) {
-            in DefaultTrustRegistryFactory.IN_MEMORY_PROVIDERS -> DefaultTrustRegistryFactory
-            else -> throw IllegalStateException(
-                "TrustRegistry factory is required for provider '$providerName'. " +
-                    "Provide it via Builder.factories(trustRegistryFactory = ...)"
-            )
-        }
+        val f =
+            factory ?: when (providerName) {
+                in DefaultTrustRegistryFactory.IN_MEMORY_PROVIDERS -> DefaultTrustRegistryFactory
+                else -> throw IllegalStateException(
+                    "TrustRegistry factory is required for provider '$providerName'. " +
+                        "Provide it via Builder.factories(trustRegistryFactory = ...)",
+                )
+            }
         return f.create(providerName)
     }
 
     internal fun createSignerFromKms(
         kms: KeyManagementService,
-        extractKeyId: Boolean = false
-    ): suspend (ByteArray, String) -> ByteArray = { data: ByteArray, keyId: String ->
-        val actualKeyId = if (extractKeyId && keyId.contains("#")) {
-            keyId.substringAfter("#")
-        } else {
-            keyId
-        }
-        when (val result = kms.sign(org.trustweave.core.identifiers.KeyId(actualKeyId), data)) {
-            is SignResult.Success -> result.signature
-            is SignResult.Failure -> {
-                val reason = when (result) {
-                    is SignResult.Failure.KeyNotFound -> result.reason ?: "Key not found: ${result.keyId.value}"
-                    is SignResult.Failure.UnsupportedAlgorithm -> result.reason ?: "Unsupported algorithm"
-                    is SignResult.Failure.Error -> result.reason
+        extractKeyId: Boolean = false,
+    ): suspend (ByteArray, String) -> ByteArray =
+        { data: ByteArray, keyId: String ->
+            val actualKeyId =
+                if (extractKeyId && keyId.contains("#")) {
+                    keyId.substringAfter("#")
+                } else {
+                    keyId
                 }
-                throw IllegalStateException("Signing failed: $reason")
+            when (
+                val result =
+                    kms.sign(
+                        org.trustweave.core.identifiers
+                            .KeyId(actualKeyId),
+                        data,
+                    )
+            ) {
+                is SignResult.Success -> result.signature
+                is SignResult.Failure -> {
+                    val reason =
+                        when (result) {
+                            is SignResult.Failure.KeyNotFound -> result.reason ?: "Key not found: ${result.keyId.value}"
+                            is SignResult.Failure.UnsupportedAlgorithm -> result.reason ?: "Unsupported algorithm"
+                            is SignResult.Failure.Error -> result.reason
+                        }
+                    throw IllegalStateException("Signing failed: $reason")
+                }
             }
         }
-    }
 
     private fun logDidMethodAutoRegisterFailure(failure: DidMethodAutoRegisterFailure) {
         val msg = "DidMethod SPI auto-register [{}]: {}"

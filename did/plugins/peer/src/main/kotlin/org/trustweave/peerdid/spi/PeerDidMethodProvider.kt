@@ -12,12 +12,14 @@ import org.trustweave.peerdid.PeerDidMethod
  * Automatically discovers did:peer method when this module is on the classpath.
  */
 class PeerDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "peer"
 
     override val supportedMethods: List<String> = listOf("peer")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "peer") return null
         return PeerDidMethod(resolveKms(options), createConfig(options))
     }
@@ -32,4 +34,3 @@ class PeerDidMethodProvider : AbstractDidMethodProvider() {
         return PeerDidConfig.fromMap(configMap)
     }
 }
-

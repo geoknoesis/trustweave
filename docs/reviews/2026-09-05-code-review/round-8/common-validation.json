@@ -1,0 +1,12 @@
+{
+  "command": ".\\gradlew.bat :common:test :common:ktlintCheck --max-workers=2",
+  "result": "BUILD SUCCESSFUL",
+  "classes": 25,
+  "totals": {
+    "tests": 430,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "scope": "Entire common module; not full SDK or SaaS suites."
+}

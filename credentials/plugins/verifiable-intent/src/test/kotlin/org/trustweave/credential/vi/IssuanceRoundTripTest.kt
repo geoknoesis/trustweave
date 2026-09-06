@@ -3,7 +3,6 @@ package org.trustweave.credential.vi
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain as stringShouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -22,6 +21,7 @@ import org.trustweave.credential.vi.verification.ChainVerificationResult
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.inmemory.InMemoryKeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
+import io.kotest.matchers.string.shouldContain as stringShouldContain
 
 /**
  * End-to-end round trip entirely in Kotlin: mint L1/L2/L3 through the **real in-memory KMS** and the
@@ -30,16 +30,28 @@ import org.trustweave.kms.results.GenerateKeyResult
  * reference-binding injection, ES256-via-KMS) that the external-vector test cannot reach.
  */
 class IssuanceRoundTripTest {
+    @Test
+    fun `every open mandate must bind the complete agent public key`() =
+        runBlocking<Unit> {
+            val missing = runAutonomous(20_000, "card-1", omitCheckoutKey = true)
+            missing.valid shouldBe false
+            val different = runAutonomous(20_000, "card-1", alterCheckoutKeyY = true)
+            different.valid shouldBe false
+        }
 
     private val kms = InMemoryKeyManagementService()
 
-    private fun jwk(map: Map<String, Any?>, kid: String?): JsonObject = buildJsonObject {
-        put("kty", map["kty"] as String)
-        put("crv", map["crv"] as String)
-        put("x", map["x"] as String)
-        put("y", map["y"] as String)
-        kid?.let { put("kid", it) }
-    }
+    private fun jwk(
+        map: Map<String, Any?>,
+        kid: String?,
+    ): JsonObject =
+        buildJsonObject {
+            put("kty", map["kty"] as String)
+            put("crv", map["crv"] as String)
+            put("x", map["x"] as String)
+            put("y", map["y"] as String)
+            kid?.let { put("kid", it) }
+        }
 
     private suspend fun generate() = (kms.generateKey(Algorithm.P256) as GenerateKeyResult.Success).keyHandle
 
@@ -51,6 +63,11 @@ class IssuanceRoundTripTest {
         amount: Int,
         cardId: String?,
         withholdPaymentMandateFromL2: Boolean = false,
+        includeCheckout: Boolean = false,
+        omitL3Claim: String? = null,
+        omitInstrument: Boolean = false,
+        omitCheckoutKey: Boolean = false,
+        alterCheckoutKeyY: Boolean = false,
     ): ChainVerificationResult {
         val issuer = generate()
         val user = generate()
@@ -65,115 +82,201 @@ class IssuanceRoundTripTest {
         val agentJwk = jwk(agent.publicKeyJwk!!, "agent-key-1")
 
         val now = 1_780_000_000L
-        val paymentInstrument = buildJsonObject {
-            put("type", "mastercard.srcDigitalCard")
-            put("id", "pi-1")
-            put("description", "Mastercard ****1234")
-        }
+        val paymentInstrument =
+            buildJsonObject {
+                put("type", "mastercard.srcDigitalCard")
+                put("id", "pi-1")
+                put("description", "Mastercard ****1234")
+            }
 
-        val l1 = ViIssuer.createLayer1(
-            IssuerCredential(
-                iss = "https://issuer.example", sub = "user-1", iat = now, exp = now + 86_400,
-                userCnfJwk = userJwk, panLastFour = "1234", scheme = "Mastercard", cardId = cardId,
-                email = "alice@example.com",
-            ),
-            issuerSigner, issuerKid = "issuer-key-1",
-        )
+        val l1 =
+            ViIssuer.createLayer1(
+                IssuerCredential(
+                    iss = "https://issuer.example",
+                    sub = "user-1",
+                    iat = now,
+                    exp = now + 86_400,
+                    userCnfJwk = userJwk,
+                    panLastFour = "1234",
+                    scheme = "Mastercard",
+                    cardId = cardId,
+                    email = "alice@example.com",
+                ),
+                issuerSigner,
+                issuerKid = "issuer-key-1",
+            )
 
-        val checkoutMandate = buildJsonObject {
-            put("vct", Vct.CHECKOUT_OPEN)
-            put("cnf", buildJsonObject { put("jwk", agentJwk) })
-            put(
-                "constraints",
-                JsonArray(
-                    listOf(
-                        buildJsonObject {
-                            put("type", "mandate.checkout.line_items")
-                            put(
-                                "items",
-                                JsonArray(
-                                    listOf(
-                                        buildJsonObject {
-                                            put("id", "li-1")
-                                            put("acceptable_items", JsonArray(emptyList()))
-                                            put("quantity", 1)
-                                        },
+        val checkoutMandate =
+            buildJsonObject {
+                put("vct", Vct.CHECKOUT_OPEN)
+                if (!omitCheckoutKey) {
+                    val checkoutKey =
+                        if (alterCheckoutKeyY) {
+                            JsonObject(agentJwk + ("y" to kotlinx.serialization.json.JsonPrimitive("different-coordinate")))
+                        } else {
+                            agentJwk
+                        }
+                    put("cnf", buildJsonObject { put("jwk", checkoutKey) })
+                }
+                put(
+                    "constraints",
+                    JsonArray(
+                        listOf(
+                            buildJsonObject {
+                                put("type", "mandate.checkout.line_items")
+                                put(
+                                    "items",
+                                    JsonArray(
+                                        listOf(
+                                            buildJsonObject {
+                                                put("id", "li-1")
+                                                put("acceptable_items", JsonArray(emptyList()))
+                                                put("quantity", 1)
+                                            },
+                                        ),
                                     ),
-                                ),
-                            )
-                            put("match_mode", "minimum")
-                        },
+                                )
+                                put("match_mode", "minimum")
+                            },
+                        ),
                     ),
-                ),
-            )
-        }
-        val paymentMandate = buildJsonObject {
-            put("vct", Vct.PAYMENT_OPEN)
-            put("cnf", buildJsonObject { put("jwk", agentJwk) })
-            put("payment_instrument", paymentInstrument)
-            put(
-                "constraints",
-                JsonArray(
-                    listOf(
-                        buildJsonObject {
-                            put("type", "mandate.payment.amount_range")
-                            put("currency", "USD"); put("min", 10_000); put("max", 40_000)
-                        },
-                        buildJsonObject { put("type", "mandate.payment.reference"); put("conditional_transaction_id", "") },
+                )
+            }
+        val paymentMandate =
+            buildJsonObject {
+                put("vct", Vct.PAYMENT_OPEN)
+                put("cnf", buildJsonObject { put("jwk", agentJwk) })
+                if (!omitInstrument) put("payment_instrument", paymentInstrument)
+                put(
+                    "constraints",
+                    JsonArray(
+                        listOf(
+                            buildJsonObject {
+                                put("type", "mandate.payment.amount_range")
+                                put("currency", "USD")
+                                put("min", 10_000)
+                                put("max", 40_000)
+                            },
+                            buildJsonObject {
+                                put("type", "mandate.payment.reference")
+                                put("conditional_transaction_id", "")
+                            },
+                        ),
                     ),
-                ),
+                )
+            }
+        val l2 =
+            ViUser.createLayer2Autonomous(
+                l1Compact = l1,
+                checkoutMandate = checkoutMandate,
+                paymentMandate = paymentMandate,
+                nonce = "l2-nonce",
+                aud = "https://agent.example",
+                iat = now,
+                exp = now + 86_400,
+                iss = "https://wallet.example",
+                signer = userSigner,
+                kid = "user-key-1",
             )
-        }
-        val l2 = ViUser.createLayer2Autonomous(
-            l1Compact = l1, checkoutMandate = checkoutMandate, paymentMandate = paymentMandate,
-            nonce = "l2-nonce", aud = "https://agent.example", iat = now, exp = now + 86_400,
-            iss = "https://wallet.example", signer = userSigner, kid = "user-key-1",
-        )
 
         // The agent transacts at a merchant; L3a (payment) and L3b (checkout) share the txn id.
         val checkoutJwt = "eyJtZXJjaGFudCI6ImNoZWNrb3V0LXRva2VuIn0"
         val checkoutHash = sha256B64Url(checkoutJwt.toByteArray(Charsets.US_ASCII))
 
-        val finalPayment = buildJsonObject {
-            put("vct", Vct.PAYMENT_FINAL)
-            put("transaction_id", checkoutHash)
-            put("payee", buildJsonObject { put("id", "m-1"); put("name", "Tennis Warehouse"); put("website", "https://tw.example") })
-            put("payment_amount", buildJsonObject { put("currency", "USD"); put("amount", amount) })
-            put("payment_instrument", paymentInstrument)
-        }
-        val l3a = ViAgent.createLayer3Payment(
-            finalPayment = finalPayment, l2BaseJwt = l2.baseJwt,
-            routedL2Disclosures = listOf(l2.paymentDiscB64!!),
-            nonce = "l3-nonce", aud = "https://network.example", iat = now, exp = now + 300,
-            iss = "https://agent.example", signer = agentSigner, agentKid = "agent-key-1",
-        )
+        val finalPayment =
+            buildJsonObject {
+                put("vct", Vct.PAYMENT_FINAL)
+                put("transaction_id", checkoutHash)
+                put(
+                    "payee",
+                    buildJsonObject {
+                        put("id", "m-1")
+                        put("name", "Tennis Warehouse")
+                        put("website", "https://tw.example")
+                    },
+                )
+                put(
+                    "payment_amount",
+                    buildJsonObject {
+                        put("currency", "USD")
+                        put("amount", amount)
+                    },
+                )
+                put("payment_instrument", paymentInstrument)
+            }
+        val l3a =
+            ViAgent.createLayer3Payment(
+                finalPayment = finalPayment,
+                l2BaseJwt = l2.baseJwt,
+                routedL2Disclosures = listOf(l2.paymentDiscB64!!),
+                nonce = "l3-nonce",
+                aud = "https://network.example",
+                iat = now,
+                exp = now + 300,
+                iss = "https://agent.example",
+                signer = agentSigner,
+                agentKid = "agent-key-1",
+            )
 
-        val finalCheckout = buildJsonObject {
-            put("vct", Vct.CHECKOUT_FINAL)
-            put("checkout_jwt", checkoutJwt)
-            put("checkout_hash", checkoutHash)
-        }
-        val l3b = ViAgent.createLayer3Checkout(
-            finalCheckout = finalCheckout, l2BaseJwt = l2.baseJwt,
-            routedL2Disclosures = listOf(l2.checkoutDiscB64!!),
-            nonce = "l3-nonce", aud = "https://merchant.example", iat = now, exp = now + 300,
-            iss = "https://agent.example", signer = agentSigner, agentKid = "agent-key-1",
-        )
+        val finalCheckout =
+            buildJsonObject {
+                put("vct", Vct.CHECKOUT_FINAL)
+                put("checkout_jwt", checkoutJwt)
+                put("checkout_hash", checkoutHash)
+            }
+        val l3b =
+            ViAgent.createLayer3Checkout(
+                finalCheckout = finalCheckout,
+                l2BaseJwt = l2.baseJwt,
+                routedL2Disclosures = listOf(l2.checkoutDiscB64!!),
+                nonce = "l3-nonce",
+                aud = "https://merchant.example",
+                iat = now,
+                exp = now + 300,
+                iss = "https://agent.example",
+                signer = agentSigner,
+                agentKid = "agent-key-1",
+            )
 
         // An honest holder presents the full L2 (both mandates). A malicious agent can instead
         // selectively present only the checkout mandate — withholding the payment-open mandate that
         // carries the amount/payee constraints — while still routing the payment disclosure into L3a.
-        val presentedL2 = if (withholdPaymentMandateFromL2) {
-            selectivePresentation(l2.baseJwt, listOf(checkNotNull(l2.checkoutDiscB64)))
-        } else {
-            l2.compact
-        }
+        val presentedL2 =
+            if (withholdPaymentMandateFromL2) {
+                selectivePresentation(l2.baseJwt, listOf(checkNotNull(l2.checkoutDiscB64)))
+            } else {
+                l2.compact
+            }
+
+        val paymentToken =
+            if (omitL3Claim != null) {
+                val parsed =
+                    org.trustweave.credential.vi.crypto.ViSdJwt
+                        .parse(l3a.compact)
+                val jwt =
+                    org.trustweave.credential.vi.crypto.Jws
+                        .sign(parsed.header, JsonObject(parsed.payload - omitL3Claim), agentSigner)
+                org.trustweave.credential.vi.crypto
+                    .serializeSdJwt(jwt, parsed.disclosures)
+            } else {
+                l3a.compact
+            }
 
         return VerifiableIntent.verifyChain(
-            l1 = l1, l2 = presentedL2, issuerJwk = issuerJwk,
-            l3Payment = l3a.compact, l2RoutedForPayment = l3a.routedL2,
-            l3Checkout = l3b.compact, l2RoutedForCheckout = l3b.routedL2,
+            l1 = l1,
+            l2 = presentedL2,
+            issuerJwk = issuerJwk,
+            l3Payment = paymentToken,
+            expectedL3PaymentAud = "https://network.example",
+            expectedL3PaymentNonce = "l3-nonce",
+            expectedL3CheckoutAud = "https://merchant.example",
+            expectedL3CheckoutNonce = "l3-nonce",
+            l2RoutedForPayment = l3a.routedL2,
+            l3Checkout = if (includeCheckout) l3b.compact else null,
+            l2RoutedForCheckout = l3b.routedL2,
             now = now + 60,
+            expectedL2Aud = "https://agent.example",
+            expectedL2Nonce = "l2-nonce",
         )
     }
 
@@ -185,7 +288,6 @@ class IssuanceRoundTripTest {
             result.valid shouldBe true
             result.checksPerformed shouldContain "constraints_satisfied"
             result.checksPerformed shouldContain "l2_reference_binding"
-            result.checksPerformed shouldContain "l3_cross_reference"
             result.checksPerformed shouldContain "l1_card_id_cross_check"
         }
     }
@@ -224,42 +326,110 @@ class IssuanceRoundTripTest {
             val userJwk = jwk(user.publicKeyJwk!!, null)
             val now = 1_780_000_000L
 
-            val l1 = ViIssuer.createLayer1(
-                IssuerCredential(
-                    iss = "https://issuer.example", sub = "user-1", iat = now, exp = now + 86_400,
-                    userCnfJwk = userJwk, panLastFour = "1234", scheme = "Mastercard",
-                ),
-                issuerSigner, issuerKid = "issuer-key-1",
-            )
+            val l1 =
+                ViIssuer.createLayer1(
+                    IssuerCredential(
+                        iss = "https://issuer.example",
+                        sub = "user-1",
+                        iat = now,
+                        exp = now + 86_400,
+                        userCnfJwk = userJwk,
+                        panLastFour = "1234",
+                        scheme = "Mastercard",
+                    ),
+                    issuerSigner,
+                    issuerKid = "issuer-key-1",
+                )
 
             // Immediate: finalized mandates; transaction_id == checkout_hash == SHA-256(checkout_jwt)
             val checkoutJwt = "eyJtZXJjaGFudCI6ImNoZWNrb3V0LXRva2VuIn0"
             val checkoutHash = sha256B64Url(checkoutJwt.toByteArray(Charsets.US_ASCII))
-            val checkoutMandate = buildJsonObject {
-                put("vct", Vct.CHECKOUT_FINAL)
-                put("checkout_jwt", checkoutJwt)
-                put("checkout_hash", checkoutHash)
-            }
-            val paymentMandate = buildJsonObject {
-                put("vct", Vct.PAYMENT_FINAL)
-                put("transaction_id", checkoutHash)
-                put("payee", buildJsonObject { put("id", "m-1"); put("name", "Tennis Warehouse"); put("website", "https://tw.example") })
-                put("payment_amount", buildJsonObject { put("currency", "USD"); put("amount", 27_999) })
-                put("payment_instrument", buildJsonObject { put("type", "mastercard.srcDigitalCard"); put("id", "pi-1") })
-            }
-            val l2 = ViUser.createLayer2Immediate(
-                l1Compact = l1, checkoutMandate = checkoutMandate, paymentMandate = paymentMandate,
-                nonce = "l2-nonce", aud = "https://merchant.example", iat = now, exp = now + 900,
-                iss = "https://wallet.example", signer = userSigner, kid = "user-key-1",
-            )
+            val checkoutMandate =
+                buildJsonObject {
+                    put("vct", Vct.CHECKOUT_FINAL)
+                    put("checkout_jwt", checkoutJwt)
+                    put("checkout_hash", checkoutHash)
+                }
+            val paymentMandate =
+                buildJsonObject {
+                    put("vct", Vct.PAYMENT_FINAL)
+                    put("transaction_id", checkoutHash)
+                    put(
+                        "payee",
+                        buildJsonObject {
+                            put("id", "m-1")
+                            put("name", "Tennis Warehouse")
+                            put("website", "https://tw.example")
+                        },
+                    )
+                    put(
+                        "payment_amount",
+                        buildJsonObject {
+                            put("currency", "USD")
+                            put("amount", 27_999)
+                        },
+                    )
+                    put(
+                        "payment_instrument",
+                        buildJsonObject {
+                            put("type", "mastercard.srcDigitalCard")
+                            put("id", "pi-1")
+                        },
+                    )
+                }
+            val l2 =
+                ViUser.createLayer2Immediate(
+                    l1Compact = l1,
+                    checkoutMandate = checkoutMandate,
+                    paymentMandate = paymentMandate,
+                    nonce = "l2-nonce",
+                    aud = "https://merchant.example",
+                    iat = now,
+                    exp = now + 900,
+                    iss = "https://wallet.example",
+                    signer = userSigner,
+                    kid = "user-key-1",
+                )
 
-            val result = VerifiableIntent.verifyChain(
-                l1 = l1, l2 = l2.compact, issuerJwk = issuerJwk, now = now + 60,
-            )
+            val result =
+                VerifiableIntent.verifyChain(
+                    l1 = l1,
+                    l2 = l2.compact,
+                    issuerJwk = issuerJwk,
+                    now = now + 60,
+                    expectedL2Aud = "https://merchant.example",
+                    expectedL2Nonce = "l2-nonce",
+                )
 
             result.errors.shouldBeEmpty()
             result.valid shouldBe true
             result.checksPerformed shouldContain "l2_checkout_payment_binding"
         }
     }
+
+    @Test
+    fun `both fulfilments cannot bypass checkout constraints`() =
+        runBlocking<Unit> {
+            val result = runAutonomous(27_999, "pi-1", includeCheckout = true)
+            result.valid shouldBe false
+            result.errors.joinToString() stringShouldContain "line-item matching is not implemented"
+        }
+
+    @Test
+    fun `signed L3 without expiration or issued time is rejected`() =
+        runBlocking<Unit> {
+            for (claim in listOf("iat", "exp")) {
+                val result = runAutonomous(27_999, "pi-1", omitL3Claim = claim)
+                result.valid shouldBe false
+                result.errors.joinToString() stringShouldContain "integer $claim claim"
+            }
+        }
+
+    @Test
+    fun `payment instrument must be authorized by L2`() =
+        runBlocking<Unit> {
+            val result = runAutonomous(27_999, null, omitInstrument = true)
+            result.valid shouldBe false
+            result.errors.joinToString() stringShouldContain "missing authorized payment_instrument"
+        }
 }

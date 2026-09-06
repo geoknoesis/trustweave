@@ -13,7 +13,6 @@ package org.trustweave.credential.federation
  * Spec: https://openid.net/specs/openid-federation-1_0.html §4.3
  */
 object EntityConfigurationEndpoint {
-
     /**
      * Well-known path appended to an entity identifier to form the
      * Entity Configuration URL.

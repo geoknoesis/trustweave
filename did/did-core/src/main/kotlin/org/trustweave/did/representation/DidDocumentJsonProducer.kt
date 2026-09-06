@@ -1,11 +1,20 @@
 package org.trustweave.did.representation
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.serviceEndpointToJsonElement
 import org.trustweave.did.model.toServiceTypeJsonElement
-import kotlinx.serialization.json.*
 
 /**
  * Media type for DID documents per DID 1.1 / IANA registration.
@@ -13,7 +22,7 @@ import kotlinx.serialization.json.*
  */
 @Deprecated(
     "Use DidMediaTypes.DID",
-    ReplaceWith("DidMediaTypes.DID", "org.trustweave.did.representation.DidMediaTypes")
+    ReplaceWith("DidMediaTypes.DID", "org.trustweave.did.representation.DidMediaTypes"),
 )
 const val APPLICATION_DID_MEDIA_TYPE: String = DidMediaTypes.DID
 
@@ -34,7 +43,6 @@ const val DID_1_0_CONTEXT: String = "https://www.w3.org/ns/did/v1"
  * should use this for consistent, spec-aligned output.
  */
 object DidDocumentJsonProducer {
-
     /**
      * Produces a JSON object for the DID document.
      *
@@ -42,17 +50,25 @@ object DidDocumentJsonProducer {
      * @param useV1_1Context If true, use [DID_1_1_CONTEXT] as first @context entry (DID 1.1 §6.2.3); otherwise use document's context or v1
      * @return JsonObject suitable for HTTP body or embedding
      */
-    fun toJsonObject(document: DidDocument, useV1_1Context: Boolean = true): JsonObject {
-        val contextList = when {
-            useV1_1Context -> {
-                val rest = document.context.filter { it != DID_1_1_CONTEXT && it != DID_1_0_CONTEXT }
-                listOf(DID_1_1_CONTEXT) + rest
+    fun toJsonObject(
+        document: DidDocument,
+        useV1_1Context: Boolean = true,
+    ): JsonObject {
+        val contextList =
+            when {
+                useV1_1Context -> {
+                    val rest = document.context.filter { it != DID_1_1_CONTEXT && it != DID_1_0_CONTEXT }
+                    listOf(DID_1_1_CONTEXT) + rest
+                }
+                document.context.isNotEmpty() -> document.context
+                else -> listOf(DID_1_0_CONTEXT)
             }
-            document.context.isNotEmpty() -> document.context
-            else -> listOf(DID_1_0_CONTEXT)
-        }
-        val contextEl = if (contextList.size == 1) JsonPrimitive(contextList[0])
-        else JsonArray(contextList.map { JsonPrimitive(it) })
+        val contextEl =
+            if (contextList.size == 1) {
+                JsonPrimitive(contextList[0])
+            } else {
+                JsonArray(contextList.map { JsonPrimitive(it) })
+            }
 
         return buildJsonObject {
             put("@context", contextEl)
@@ -76,12 +92,18 @@ object DidDocumentJsonProducer {
      * @param useV1_1Context If true, use v1.1 @context
      * @return Pair of (utf-8 bytes, [DidMediaTypes.DID])
      */
-    fun toBytesWithMediaType(document: DidDocument, useV1_1Context: Boolean = true): Pair<ByteArray, String> {
+    fun toBytesWithMediaType(
+        document: DidDocument,
+        useV1_1Context: Boolean = true,
+    ): Pair<ByteArray, String> {
         val json = toJsonObject(document, useV1_1Context)
         return json.toString().toByteArray(Charsets.UTF_8) to DidMediaTypes.DID
     }
 
-    private fun putController(builder: JsonObjectBuilder, document: DidDocument) {
+    private fun putController(
+        builder: JsonObjectBuilder,
+        document: DidDocument,
+    ) {
         if (document.controller.isEmpty()) return
         if (document.controller.size == 1) {
             builder.put("controller", JsonPrimitive(document.controller[0].value))
@@ -90,14 +112,20 @@ object DidDocumentJsonProducer {
         }
     }
 
-    private fun putAlsoKnownAs(builder: JsonObjectBuilder, document: DidDocument) {
+    private fun putAlsoKnownAs(
+        builder: JsonObjectBuilder,
+        document: DidDocument,
+    ) {
         if (document.alsoKnownAs.isEmpty()) return
         builder.putJsonArray("alsoKnownAs") {
             document.alsoKnownAs.forEach { add(JsonPrimitive(it.toStringValue())) }
         }
     }
 
-    private fun putVerificationMethod(builder: JsonObjectBuilder, document: DidDocument) {
+    private fun putVerificationMethod(
+        builder: JsonObjectBuilder,
+        document: DidDocument,
+    ) {
         if (document.verificationMethod.isEmpty()) return
         builder.putJsonArray("verificationMethod") {
             document.verificationMethod.forEach { vm ->
@@ -106,8 +134,8 @@ object DidDocumentJsonProducer {
         }
     }
 
-    private fun vmToJsonObject(vm: VerificationMethod): JsonObject {
-        return buildJsonObject {
+    private fun vmToJsonObject(vm: VerificationMethod): JsonObject =
+        buildJsonObject {
             put("id", JsonPrimitive(vm.id.value))
             put("type", JsonPrimitive(vm.type))
             put("controller", JsonPrimitive(vm.controller.value))
@@ -116,14 +144,20 @@ object DidDocumentJsonProducer {
             }
             vm.publicKeyMultibase?.let { put("publicKeyMultibase", JsonPrimitive(it)) }
         }
-    }
 
-    private fun putRelationship(builder: JsonObjectBuilder, name: String, values: List<String>) {
+    private fun putRelationship(
+        builder: JsonObjectBuilder,
+        name: String,
+        values: List<String>,
+    ) {
         if (values.isEmpty()) return
         builder.put(name, JsonArray(values.map { JsonPrimitive(it) }))
     }
 
-    private fun putService(builder: JsonObjectBuilder, document: DidDocument) {
+    private fun putService(
+        builder: JsonObjectBuilder,
+        document: DidDocument,
+    ) {
         if (document.service.isEmpty()) return
         builder.putJsonArray("service") {
             document.service.forEach { s ->
@@ -132,24 +166,22 @@ object DidDocumentJsonProducer {
         }
     }
 
-    private fun serviceToJsonObject(s: DidService): JsonObject {
-        return buildJsonObject {
+    private fun serviceToJsonObject(s: DidService): JsonObject =
+        buildJsonObject {
             put("id", JsonPrimitive(s.id))
             put("type", s.type.toServiceTypeJsonElement())
             put("serviceEndpoint", serviceEndpointToJsonElement(s.serviceEndpoint))
         }
-    }
 
-    private fun mapToJsonObject(map: Map<String, Any?>): JsonObject {
-        return buildJsonObject {
+    private fun mapToJsonObject(map: Map<String, Any?>): JsonObject =
+        buildJsonObject {
             map.forEach { (key, value) ->
                 put(key, anyToJsonElement(value))
             }
         }
-    }
 
-    private fun anyToJsonElement(value: Any?): JsonElement {
-        return when (value) {
+    private fun anyToJsonElement(value: Any?): JsonElement =
+        when (value) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
             is Number -> JsonPrimitive(value.toDouble())
@@ -158,5 +190,4 @@ object DidDocumentJsonProducer {
             is List<*> -> JsonArray(value.map { anyToJsonElement(it) })
             else -> JsonPrimitive(value.toString())
         }
-    }
 }

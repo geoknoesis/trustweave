@@ -1,0 +1,84 @@
+[
+  {
+    "id": "SA-R5-01",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Require the reviewed SDK commit as well as its fingerprint",
+    "detail": "Updated the SaaS pin to the committed round-4 SDK and added exact HEAD validation. CI passes its explicitly selected immutable revision into the same guard.",
+    "evidence": "Two Python regressions pass, including rejection of branch names, abbreviated SHAs and a mismatched full SHA. The actual SDK checkout passes revision and fingerprint validation.",
+    "files": [
+      ".trustweave-revision",
+      "scripts/verify-sdk-source.py",
+      "scripts/test_verify_sdk_source.py",
+      ".github/workflows/ci.yml"
+    ],
+    "limit": "The commit exists locally; publication and remote CI remain unverified."
+  },
+  {
+    "id": "SA-R5-02",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Repeated webhook failures no longer reset backlog age",
+    "detail": "Preserve first_failed_at with a PostgreSQL atomic upsert, while updating latest failure details. The oldest-failure metric uses the original failure time. Flyway V25 backfills existing rows and permits inserts from older application versions.",
+    "evidence": "All 14 targeted tests passed: five Flyway migration tests, four PostgreSQL webhook recovery/access tests, three Stripe controller tests and two monitor tests. This includes preserved first-failure age after retry and V25 backfill/older-version insert compatibility.",
+    "files": [
+      "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/FailedWebhookStore.kt",
+      "server/src/main/resources/db/saas-migration/V25__webhook_first_failure.sql",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryIntegrationTest.kt",
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/migration/FlywayMigrationTest.kt"
+    ],
+    "limit": "Pre-migration first-failure history cannot be reconstructed. Hosted alert delivery remains untested."
+  },
+  {
+    "id": "SA13",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Published exact-pair Linux/staging validation",
+    "detail": "The SDK is now committed and pinned locally. Publication, exact-pair remote Linux CI and designated staging validation remain pending.",
+    "evidence": "No publication or staging execution is claimed.",
+    "files": [
+      ".trustweave-revision",
+      ".github/workflows/ci.yml",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "A matching local fingerprint cannot substitute for a reviewed, published and tested immutable pair."
+  },
+  {
+    "id": "PROVIDER-CUSTODY",
+    "repo": "trustweave",
+    "status": "remaining",
+    "title": "Provider maturity and production wallet custody",
+    "detail": "Most plugin capabilities remain unassessed. The reference wallet has no hardware/user-presence signing or recoverable holder-key service; supported issuer and disclosure profiles remain limited.",
+    "evidence": "Full local JVM suite passed with 15 optional/template tests skipped; live provider environments and hardware-backed custody remain unvalidated.",
+    "files": [
+      "docs/api-reference/assessed-capabilities.md",
+      "reference-wallet/lib/key-store.ts"
+    ],
+    "limit": "A complete product/profile definition and supported provider matrix are needed before these deductions can be closed."
+  },
+  {
+    "id": "BILLING-OPERATIONS",
+    "repo": "trustweave-saas",
+    "status": "remaining",
+    "title": "Live billing workflow and hosted alert delivery",
+    "detail": "Two Accountly live-contract tests require a separately configured Accountly/PSP stand-in. Legacy Stripe invoice handlers remain logging-only for settlement/notification purposes.",
+    "evidence": "Local signed-webhook recovery and aggregate monitoring are tested; hosted alert delivery and live Accountly flow are not.",
+    "files": [
+      "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyLiveContractTest.kt",
+      "docs/round-4-operations.md"
+    ],
+    "limit": "The supported Accountly cutover/legacy Stripe workflow needs to be defined and exercised before claiming completeness."
+  },
+  {
+    "id": "LOCAL-VALIDATION",
+    "repo": "trustweave-saas",
+    "status": "verified",
+    "title": "Docker recovered; database-backed validation completed",
+    "detail": "After Docker became available again, its engine responded with version 29.4.1 and the blocked test selection was rerun successfully.",
+    "evidence": "Gradle BUILD SUCCESSFUL in 3m 14s; 14 tests, zero failures, errors or skips. Per-suite results are recorded in backend-validation.json.",
+    "files": [
+      "docs/round-5-operations.md"
+    ],
+    "limit": "This was a targeted regression run, not a new full-server coverage run or hosted staging validation."
+  }
+]

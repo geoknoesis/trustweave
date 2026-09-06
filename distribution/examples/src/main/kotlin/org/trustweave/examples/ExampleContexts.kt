@@ -26,7 +26,6 @@ import org.trustweave.credential.jsonld.JsonLdContexts
  * of a catch-all `@vocab`.
  */
 object ExampleContexts {
-
     /** Proof-option key under which the `@context` URL list is declared at issuance. */
     const val OPTION_KEY: String = JsonLdContexts.CONTEXTS_PROOF_OPTION
 

@@ -8,9 +8,10 @@ interface Props {
   cred: StoredCredential
   onSelect: () => void
   selected?: boolean
+  needsReissue?: boolean
 }
 
-export function CredentialLibraryCard({ cred, onSelect, selected }: Props) {
+export function CredentialLibraryCard({ cred, onSelect, selected, needsReissue }: Props) {
   const s = credentialSummary(cred)
   return (
     <button
@@ -23,7 +24,7 @@ export function CredentialLibraryCard({ cred, onSelect, selected }: Props) {
       <div className="library-card-body">
         <div className="library-card-top">
           <div className="library-card-title">{s.title}</div>
-          <span className="library-badge">Stored</span>
+          <span className="library-badge">{needsReissue ? 'Reissue needed' : 'Stored'}</span>
         </div>
         {s.subtitle && <div className="library-card-subtitle">{s.subtitle}</div>}
         <div className="library-card-meta">{s.issuer} · Added {s.added}</div>

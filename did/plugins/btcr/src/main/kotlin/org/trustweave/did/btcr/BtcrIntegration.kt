@@ -17,7 +17,10 @@ class BtcrIntegration : AbstractDidMethodProvider() {
 
     override val supportedMethods: List<String> = listOf("btcr")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName != "btcr") return null
         ModuleCapabilities.requireOperations("did:plugins:btcr", setOf("create"))
         return BtcrDidMethod(resolveKms(options))

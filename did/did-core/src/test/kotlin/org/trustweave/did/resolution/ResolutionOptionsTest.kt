@@ -11,7 +11,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ResolutionOptionsTest {
-
     @Test
     fun `EMPTY is empty`() {
         assertTrue(ResolutionOptions.EMPTY.isEmpty())
@@ -35,17 +34,18 @@ class ResolutionOptionsTest {
         assertEquals(setOf("versionId"), ResolutionOptions(versionId = "3").methodSpecificOptions())
         assertEquals(
             setOf("versionTime"),
-            ResolutionOptions(versionTime = Instant.parse("2021-05-10T17:00:00Z")).methodSpecificOptions()
+            ResolutionOptions(versionTime = Instant.parse("2021-05-10T17:00:00Z")).methodSpecificOptions(),
         )
         assertEquals(setOf("noCache"), ResolutionOptions(noCache = true).methodSpecificOptions())
     }
 
     @Test
     fun `versionId and versionTime are mutually exclusive`() {
-        val error = ResolutionOptions(
-            versionId = "3",
-            versionTime = Instant.parse("2021-05-10T17:00:00Z")
-        ).validate()
+        val error =
+            ResolutionOptions(
+                versionId = "3",
+                versionTime = Instant.parse("2021-05-10T17:00:00Z"),
+            ).validate()
         assertEquals(DidErrorType.INVALID_OPTIONS, error?.type)
     }
 
@@ -62,14 +62,15 @@ class ResolutionOptionsTest {
 
     @Test
     fun `fromQueryParameters reads the spec-defined options`() {
-        val options = ResolutionOptions.fromQueryParameters(
-            mapOf(
-                "versionId" to "3",
-                "expandRelativeUrls" to "true",
-                "noCache" to "true",
-                "blockHeight" to "9001"
+        val options =
+            ResolutionOptions.fromQueryParameters(
+                mapOf(
+                    "versionId" to "3",
+                    "expandRelativeUrls" to "true",
+                    "noCache" to "true",
+                    "blockHeight" to "9001",
+                ),
             )
-        )
         assertEquals("3", options.versionId)
         assertTrue(options.expandRelativeUrls)
         assertTrue(options.noCache)
@@ -84,9 +85,10 @@ class ResolutionOptionsTest {
 
     @Test
     fun `noCache and expandRelativeUrls parse case-insensitively`() {
-        val options = ResolutionOptions.fromQueryParameters(
-            mapOf("expandRelativeUrls" to "TRUE", "noCache" to "True")
-        )
+        val options =
+            ResolutionOptions.fromQueryParameters(
+                mapOf("expandRelativeUrls" to "TRUE", "noCache" to "True"),
+            )
         assertTrue(options.expandRelativeUrls)
         assertTrue(options.noCache)
         assertNull(options.validate())
@@ -110,11 +112,12 @@ class ResolutionOptionsTest {
 
     @Test
     fun `fromJson round-trips a well-formed options object`() {
-        val json = buildJsonObject {
-            put("accept", "application/did")
-            put("expandRelativeUrls", "true")
-            put("versionId", "3")
-        }
+        val json =
+            buildJsonObject {
+                put("accept", "application/did")
+                put("expandRelativeUrls", "true")
+                put("versionId", "3")
+            }
         val options = ResolutionOptions.fromJson(json)
         assertEquals("application/did", options.accept)
         assertTrue(options.expandRelativeUrls)

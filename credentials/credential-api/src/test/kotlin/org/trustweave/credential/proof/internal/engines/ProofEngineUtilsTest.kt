@@ -2,19 +2,19 @@
 
 package org.trustweave.credential.proof.internal.engines
 
-import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
+import com.nimbusds.jose.JWSAlgorithm
+import kotlinx.coroutines.runBlocking
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.encodeBase58
+import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.core.util.encodeBase58
+import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.util.EcdsaSignatureCodec
-import com.nimbusds.jose.JWSAlgorithm
-import kotlinx.coroutines.runBlocking
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.Signature
@@ -24,263 +24,280 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
  * Tests for ProofEngineUtils utility functions.
  */
 class ProofEngineUtilsTest {
-    
     @Test
     fun `test extractKeyId with full verification method ID`() {
         val verificationMethodId = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#key-1"
         val keyId = ProofEngineUtils.extractKeyId(verificationMethodId)
-        
+
         assertEquals("key-1", keyId, "Should extract key ID from full verification method ID")
     }
-    
+
     @Test
     fun `test extractKeyId with fragment only`() {
         val verificationMethodId = "key-1"
         val keyId = ProofEngineUtils.extractKeyId(verificationMethodId)
-        
+
         assertEquals("key-1", keyId, "Should return fragment as-is when no # separator")
     }
-    
+
     @Test
     fun `test extractKeyId with null`() {
         val keyId = ProofEngineUtils.extractKeyId(null)
-        
+
         assertNull(keyId, "Should return null for null input")
     }
-    
+
     @Test
     fun `test extractKeyId with multiple hash separators`() {
         val verificationMethodId = "did:key:test#key#1"
         val keyId = ProofEngineUtils.extractKeyId(verificationMethodId)
-        
+
         assertEquals("key#1", keyId, "Should extract everything after first #")
     }
-    
+
     @Test
-    fun `test resolveVerificationMethod with valid DID and resolver`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        val verificationMethodId = "did:key:test#key-1"
-        
-        val verificationMethod = VerificationMethod(
-            id = VerificationMethodId(issuerDid, KeyId("key-1")),
-            type = "Ed25519VerificationKey2020",
-            controller = issuerDid,
-            publicKeyJwk = null,
-            publicKeyMultibase = null
-        )
-        
-        val didDocument = DidDocument(
-            id = issuerDid,
-            verificationMethod = listOf(verificationMethod),
-            assertionMethod = emptyList(),
-            authentication = emptyList()
-        )
-        
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                return if (did.value == issuerDid.value) {
-                    DidResolutionResult.Success(didDocument)
-                } else {
-                    DidResolutionResult.Failure.NotFound(did, "Not found")
+    fun `test resolveVerificationMethod with valid DID and resolver`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+            val verificationMethodId = "did:key:test#key-1"
+
+            val verificationMethod =
+                VerificationMethod(
+                    id = VerificationMethodId(issuerDid, KeyId("key-1")),
+                    type = "Ed25519VerificationKey2020",
+                    controller = issuerDid,
+                    publicKeyJwk = null,
+                    publicKeyMultibase = null,
+                )
+
+            val didDocument =
+                DidDocument(
+                    id = issuerDid,
+                    verificationMethod = listOf(verificationMethod),
+                    assertionMethod = emptyList(),
+                    authentication = emptyList(),
+                )
+
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult =
+                        if (did.value == issuerDid.value) {
+                            DidResolutionResult.Success(didDocument)
+                        } else {
+                            DidResolutionResult.Failure.NotFound(did, "Not found")
+                        }
                 }
-            }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = verificationMethodId,
+                    didResolver = didResolver,
+                )
+
+            assertNotNull(result, "Should resolve verification method")
+            assertEquals(verificationMethod.id, result?.id)
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = verificationMethodId,
-            didResolver = didResolver
-        )
-        
-        assertNotNull(result, "Should resolve verification method")
-        assertEquals(verificationMethod.id, result?.id)
-    }
-    
+
     @Test
-    fun `test resolveVerificationMethod with non-DID IRI`() = runBlocking<Unit> {
-        val issuerIri = Iri("https://example.com/issuer")
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                throw NotImplementedError()
-            }
+    fun `test resolveVerificationMethod with non-DID IRI`() =
+        runBlocking<Unit> {
+            val issuerIri = Iri("https://example.com/issuer")
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = throw NotImplementedError()
+                }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = "key-1",
+                    didResolver = didResolver,
+                )
+
+            assertNull(result, "Should return null for non-DID IRI")
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = "key-1",
-            didResolver = didResolver
-        )
-        
-        assertNull(result, "Should return null for non-DID IRI")
-    }
-    
+
     @Test
-    fun `test resolveVerificationMethod with null resolver`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = "key-1",
-            didResolver = null
-        )
-        
-        assertNull(result, "Should return null when resolver is null")
-    }
-    
-    @Test
-    fun `test resolveVerificationMethod with DID resolution failure`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                return DidResolutionResult.Failure.NotFound(did, "Not found")
-            }
+    fun `test resolveVerificationMethod with null resolver`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = "key-1",
+                    didResolver = null,
+                )
+
+            assertNull(result, "Should return null when resolver is null")
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = "key-1",
-            didResolver = didResolver
-        )
-        
-        assertNull(result, "Should return null when DID resolution fails")
-    }
-    
+
     @Test
-    fun `test resolveVerificationMethod with null verification method ID uses first assertion method`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        
-        val verificationMethod = VerificationMethod(
-            id = VerificationMethodId(issuerDid, KeyId("key-1")),
-            type = "Ed25519VerificationKey2020",
-            controller = issuerDid,
-            publicKeyJwk = null,
-            publicKeyMultibase = null
-        )
-        
-        val didDocument = DidDocument(
-            id = issuerDid,
-            verificationMethod = listOf(verificationMethod),
-            assertionMethod = listOf(verificationMethod.id),
-            authentication = emptyList()
-        )
-        
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                return DidResolutionResult.Success(didDocument)
-            }
+    fun `test resolveVerificationMethod with DID resolution failure`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = DidResolutionResult.Failure.NotFound(did, "Not found")
+                }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = "key-1",
+                    didResolver = didResolver,
+                )
+
+            assertNull(result, "Should return null when DID resolution fails")
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = null,
-            didResolver = didResolver
-        )
-        
-        assertNotNull(result, "Should use first assertion method when verification method ID is null")
-        assertEquals(verificationMethod.id, result?.id)
-    }
-    
+
     @Test
-    fun `test resolveVerificationMethod with null verification method ID uses first verification method if no assertion method`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        
-        val verificationMethod = VerificationMethod(
-            id = VerificationMethodId(issuerDid, KeyId("key-1")),
-            type = "Ed25519VerificationKey2020",
-            controller = issuerDid,
-            publicKeyJwk = null,
-            publicKeyMultibase = null
-        )
-        
-        val didDocument = DidDocument(
-            id = issuerDid,
-            verificationMethod = listOf(verificationMethod),
-            assertionMethod = emptyList(),
-            authentication = emptyList()
-        )
-        
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                return DidResolutionResult.Success(didDocument)
-            }
+    fun `test resolveVerificationMethod with null verification method ID uses first assertion method`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+
+            val verificationMethod =
+                VerificationMethod(
+                    id = VerificationMethodId(issuerDid, KeyId("key-1")),
+                    type = "Ed25519VerificationKey2020",
+                    controller = issuerDid,
+                    publicKeyJwk = null,
+                    publicKeyMultibase = null,
+                )
+
+            val didDocument =
+                DidDocument(
+                    id = issuerDid,
+                    verificationMethod = listOf(verificationMethod),
+                    assertionMethod = listOf(verificationMethod.id),
+                    authentication = emptyList(),
+                )
+
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = DidResolutionResult.Success(didDocument)
+                }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = null,
+                    didResolver = didResolver,
+                )
+
+            assertNotNull(result, "Should use first assertion method when verification method ID is null")
+            assertEquals(verificationMethod.id, result?.id)
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = null,
-            didResolver = didResolver
-        )
-        
-        assertNotNull(result, "Should use first verification method when no assertion method")
-        assertEquals(verificationMethod.id, result?.id)
-    }
-    
+
     @Test
-    fun `test resolveVerificationMethod with null verification method ID returns null if no methods`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:test")
-        val issuerIri = Iri(issuerDid.value)
-        
-        val didDocument = DidDocument(
-            id = issuerDid,
-            verificationMethod = emptyList(),
-            assertionMethod = emptyList(),
-            authentication = emptyList()
-        )
-        
-        val didResolver = object : DidResolver {
-            override suspend fun resolve(did: Did): DidResolutionResult {
-                return DidResolutionResult.Success(didDocument)
-            }
+    fun `test resolveVerificationMethod with null verification method ID uses first verification method if no assertion method`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+
+            val verificationMethod =
+                VerificationMethod(
+                    id = VerificationMethodId(issuerDid, KeyId("key-1")),
+                    type = "Ed25519VerificationKey2020",
+                    controller = issuerDid,
+                    publicKeyJwk = null,
+                    publicKeyMultibase = null,
+                )
+
+            val didDocument =
+                DidDocument(
+                    id = issuerDid,
+                    verificationMethod = listOf(verificationMethod),
+                    assertionMethod = emptyList(),
+                    authentication = emptyList(),
+                )
+
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = DidResolutionResult.Success(didDocument)
+                }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = null,
+                    didResolver = didResolver,
+                )
+
+            assertNotNull(result, "Should use first verification method when no assertion method")
+            assertEquals(verificationMethod.id, result?.id)
         }
-        
-        val result = ProofEngineUtils.resolveVerificationMethod(
-            issuerIri = issuerIri,
-            verificationMethodId = null,
-            didResolver = didResolver
-        )
-        
-        assertNull(result, "Should return null when no verification methods available")
-    }
-    
+
+    @Test
+    fun `test resolveVerificationMethod with null verification method ID returns null if no methods`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:test")
+            val issuerIri = Iri(issuerDid.value)
+
+            val didDocument =
+                DidDocument(
+                    id = issuerDid,
+                    verificationMethod = emptyList(),
+                    assertionMethod = emptyList(),
+                    authentication = emptyList(),
+                )
+
+            val didResolver =
+                object : DidResolver {
+                    override suspend fun resolve(did: Did): DidResolutionResult = DidResolutionResult.Success(didDocument)
+                }
+
+            val result =
+                ProofEngineUtils.resolveVerificationMethod(
+                    issuerIri = issuerIri,
+                    verificationMethodId = null,
+                    didResolver = didResolver,
+                )
+
+            assertNull(result, "Should return null when no verification methods available")
+        }
+
     @Test
     fun `test extractPublicKey with JWK`() {
         // Note: This test would require actual JWK data and public key extraction
         // For now, we test the null case and basic structure
-        val verificationMethod = VerificationMethod(
-            id = VerificationMethodId(Did("did:key:test"), KeyId("key-1")),
-            type = "Ed25519VerificationKey2020",
-            controller = Did("did:key:test"),
-            publicKeyJwk = null,
-            publicKeyMultibase = null
-        )
-        
+        val verificationMethod =
+            VerificationMethod(
+                id = VerificationMethodId(Did("did:key:test"), KeyId("key-1")),
+                type = "Ed25519VerificationKey2020",
+                controller = Did("did:key:test"),
+                publicKeyJwk = null,
+                publicKeyMultibase = null,
+            )
+
         val result = ProofEngineUtils.extractPublicKey(verificationMethod)
-        
+
         // Without JWK or multibase, should return null
         assertNull(result, "Should return null when no public key data available")
     }
-    
+
     @Test
     fun `test extractPublicKey with known did-key multibase value`() {
         // z6Mk... values are base58btc(0xED 0x01 || raw 32-byte Ed25519 key) — the format
         // used by did:key and Ed25519VerificationKey2020 documents.
-        val verificationMethod = multibaseVerificationMethod(
-            "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-        )
+        val verificationMethod =
+            multibaseVerificationMethod(
+                "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            )
 
         val result = ProofEngineUtils.extractPublicKey(verificationMethod)
 
@@ -288,7 +305,7 @@ class ProofEngineUtilsTest {
         assertTrue(
             result.algorithm.equals("Ed25519", ignoreCase = true) ||
                 result.algorithm.equals("EdDSA", ignoreCase = true),
-            "Extracted key must be Ed25519, got ${result.algorithm}"
+            "Extracted key must be Ed25519, got ${result.algorithm}",
         )
     }
 
@@ -301,14 +318,20 @@ class ProofEngineUtilsTest {
         assertNotNull(publicKey, "Multicodec-prefixed base58btc key must be extracted")
 
         val data = "multibase-test-payload".toByteArray()
-        val signature = Signature.getInstance("Ed25519").apply {
-            initSign(keyPair.private)
-            update(data)
-        }.sign()
-        val verified = Signature.getInstance("Ed25519").apply {
-            initVerify(publicKey)
-            update(data)
-        }.verify(signature)
+        val signature =
+            Signature
+                .getInstance("Ed25519")
+                .apply {
+                    initSign(keyPair.private)
+                    update(data)
+                }.sign()
+        val verified =
+            Signature
+                .getInstance("Ed25519")
+                .apply {
+                    initVerify(publicKey)
+                    update(data)
+                }.verify(signature)
         assertTrue(verified, "Key extracted from publicKeyMultibase must verify a genuine signature")
     }
 
@@ -325,8 +348,12 @@ class ProofEngineUtilsTest {
     @Test
     fun `extractPublicKey from base64url multibase`() {
         val (_, rawPublicKey) = generateEd25519KeyPair()
-        val multibase = "u" + Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(byteArrayOf(0xED.toByte(), 0x01) + rawPublicKey)
+        val multibase =
+            "u" +
+                Base64
+                    .getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(byteArrayOf(0xED.toByte(), 0x01) + rawPublicKey)
 
         val publicKey = ProofEngineUtils.extractPublicKey(multibaseVerificationMethod(multibase))
 
@@ -346,9 +373,10 @@ class ProofEngineUtilsTest {
 
     @Test
     fun `extractPublicKey rejects unsupported multibase prefix`() {
-        val publicKey = ProofEngineUtils.extractPublicKey(
-            multibaseVerificationMethod("fdeadbeefdeadbeef")
-        )
+        val publicKey =
+            ProofEngineUtils.extractPublicKey(
+                multibaseVerificationMethod("fdeadbeefdeadbeef"),
+            )
 
         assertNull(publicKey, "Unsupported multibase prefixes must be rejected")
     }
@@ -356,9 +384,10 @@ class ProofEngineUtilsTest {
     @Test
     fun `extractPublicKey rejects malformed base58 payload`() {
         // '0', 'O', 'I' and 'l' are not in the base58btc alphabet.
-        val publicKey = ProofEngineUtils.extractPublicKey(
-            multibaseVerificationMethod("z0OIl0OIl0OIl")
-        )
+        val publicKey =
+            ProofEngineUtils.extractPublicKey(
+                multibaseVerificationMethod("z0OIl0OIl0OIl"),
+            )
 
         assertNull(publicKey, "Malformed base58 must be rejected, not throw")
     }
@@ -373,20 +402,26 @@ class ProofEngineUtilsTest {
 
         val data = "der-transcode-payload".toByteArray()
         // JCA emits ASN.1 DER for ECDSA.
-        val derSignature = Signature.getInstance("SHA256withECDSA").apply {
-            initSign(keyPair.private)
-            update(data)
-        }.sign()
+        val derSignature =
+            Signature
+                .getInstance("SHA256withECDSA")
+                .apply {
+                    initSign(keyPair.private)
+                    update(data)
+                }.sign()
         assertEquals(0x30, derSignature[0].toInt() and 0xFF, "JCA ECDSA signatures are DER SEQUENCEs")
 
         val p1363 = ProofEngineUtils.ensureP1363EcdsaJwsSignature(derSignature, JWSAlgorithm.ES256)
 
         assertEquals(64, p1363.size, "ES256 JWS signatures must be 64-byte P1363 r||s")
         // Transcoding must preserve (r, s): converting back to DER must still verify.
-        val verified = Signature.getInstance("SHA256withECDSA").apply {
-            initVerify(keyPair.public)
-            update(data)
-        }.verify(EcdsaSignatureCodec.p1363ToDer(p1363))
+        val verified =
+            Signature
+                .getInstance("SHA256withECDSA")
+                .apply {
+                    initVerify(keyPair.public)
+                    update(data)
+                }.verify(EcdsaSignatureCodec.p1363ToDer(p1363))
         assertTrue(verified, "DER -> P1363 -> DER round-trip must preserve the signature")
     }
 
@@ -432,12 +467,14 @@ class ProofEngineUtilsTest {
         val b64 = Base64.getUrlEncoder().withoutPadding().encodeToString(signature)
 
         assertContentEquals(
-            signature, ProofEngineUtils.decodeEd25519ProofValue("u$b64"),
-            "Multibase 'u' (base64url) must be accepted at 64 bytes"
+            signature,
+            ProofEngineUtils.decodeEd25519ProofValue("u$b64"),
+            "Multibase 'u' (base64url) must be accepted at 64 bytes",
         )
         assertContentEquals(
-            signature, ProofEngineUtils.decodeEd25519ProofValue(b64),
-            "Legacy raw base64url must be accepted at 64 bytes"
+            signature,
+            ProofEngineUtils.decodeEd25519ProofValue(b64),
+            "Legacy raw base64url must be accepted at 64 bytes",
         )
     }
 
@@ -448,17 +485,17 @@ class ProofEngineUtilsTest {
             val bytes = ByteArray(length) { 0x11 }
             assertNull(
                 ProofEngineUtils.decodeEd25519ProofValue("z" + bytes.encodeBase58()),
-                "multibase z decoding of $length bytes must be rejected (not 64)"
+                "multibase z decoding of $length bytes must be rejected (not 64)",
             )
             assertNull(
                 ProofEngineUtils.decodeEd25519ProofValue("u" + b64.encodeToString(bytes)),
-                "multibase u decoding of $length bytes must be rejected (not 64)"
+                "multibase u decoding of $length bytes must be rejected (not 64)",
             )
             // Avoid raw values that coincidentally start with the multibase prefixes:
             // 0x11-filled arrays encode to base64url starting with 'E'.
             assertNull(
                 ProofEngineUtils.decodeEd25519ProofValue(b64.encodeToString(bytes)),
-                "legacy raw base64url decoding of $length bytes must be rejected (not 64)"
+                "legacy raw base64url decoding of $length bytes must be rejected (not 64)",
             )
         }
     }
@@ -477,7 +514,7 @@ class ProofEngineUtilsTest {
             type = "Ed25519VerificationKey2020",
             controller = Did("did:key:test"),
             publicKeyJwk = null,
-            publicKeyMultibase = multibase
+            publicKeyMultibase = multibase,
         )
 
     private fun generateEd25519KeyPair(): Pair<KeyPair, ByteArray> {
@@ -487,4 +524,3 @@ class ProofEngineUtilsTest {
         return keyPair to encoded.copyOfRange(encoded.size - 32, encoded.size)
     }
 }
-

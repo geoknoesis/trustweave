@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-06",
+  "repository": "trustweave",
+  "scope": "Current uncommitted working tree; SaaS excluded",
+  "head": "a41d482a96dcdd3962c2a0a95fd1da469f310fa9",
+  "rubric": "Five equally weighted categories; engineering judgment, not certification",
+  "security": 8.5,
+  "correctness": 8.0,
+  "architecture": 8.5,
+  "testing": 7.5,
+  "supply_chain_and_ci": 7.0,
+  "overall": 7.9,
+  "previous_independent_round_11": 7.6,
+  "previous_provisional_round_12": 8.1,
+  "rationale": "ABI and delivery-control improvements remain credited. Newly reproduced validation defects reduce security and correctness relative to the provisional round-12 estimate. Untested modules and incomplete end-to-end evidence prevent 10/10."
+}

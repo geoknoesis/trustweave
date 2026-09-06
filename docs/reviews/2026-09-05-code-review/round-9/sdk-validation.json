@@ -1,0 +1,58 @@
+{
+  "result": "BUILD SUCCESSFUL",
+  "modules": [
+    {
+      "module": "wallet:plugins:file",
+      "task": "test",
+      "classes": 2,
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet:plugins:database",
+      "task": "test",
+      "classes": 4,
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet:plugins:cloud",
+      "task": "test",
+      "classes": 7,
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet:wallet-core",
+      "task": "test",
+      "classes": 3,
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "wallet:wallet-core-mp",
+      "task": "jvmTest",
+      "classes": 1,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 104,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": "All five targeted modules passed ktlintCheck against existing baselines. Unrelated formatter churn removed; no new baseline entries added.",
+  "scope": "Not a full SDK or SaaS test rerun."
+}

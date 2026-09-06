@@ -1,5 +1,9 @@
 package org.trustweave.credential.proof.internal.engines
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
@@ -20,10 +24,6 @@ import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -42,7 +42,6 @@ import kotlin.test.assertTrue
  * context the engine keeps its VC 1.1 behaviour unchanged.
  */
 class VcLdProofEngineVc20Test {
-
     companion object {
         private const val TEST_CONTEXT_URL = "https://trustweave.example/contexts/vc20-claims/v1"
 
@@ -55,7 +54,7 @@ class VcLdProofEngineVc20Test {
                     "name": "https://schema.org/name"
                   }
                 }
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
     }
@@ -64,116 +63,130 @@ class VcLdProofEngineVc20Test {
         val kms: KeyManagementService = InMemoryKeyManagementService()
         val didMethod = DidKeyMockMethod(kms)
         val issuerDocument: DidDocument = runBlocking { didMethod.createDid() }
-        val engine = VcLdProofEngine(
-            config = ProofEngineConfig(
-                properties = mapOf("kms" to kms),
-                didResolver = object : DidResolver {
-                    override suspend fun resolve(did: Did): DidResolutionResult = didMethod.resolveDid(did)
-                }
+        val engine =
+            VcLdProofEngine(
+                config =
+                    ProofEngineConfig(
+                        properties = mapOf("kms" to kms),
+                        didResolver =
+                            object : DidResolver {
+                                override suspend fun resolve(did: Did): DidResolutionResult = didMethod.resolveDid(did)
+                            },
+                    ),
             )
-        )
 
         fun issuanceRequest(
             contexts: List<String>,
             issuedAt: Instant = Clock.System.now(),
-            validUntil: Instant? = null
-        ): IssuanceRequest = IssuanceRequest(
-            format = ProofSuiteId.VC_LD,
-            issuer = Issuer.IriIssuer(Iri(issuerDocument.id.value)),
-            issuerKeyId = issuerDocument.verificationMethod.first().id,
-            credentialSubject = CredentialSubject(
-                id = Iri("did:example:holder"),
-                claims = mapOf("name" to JsonPrimitive("Alice"))
-            ),
-            type = listOf(CredentialType.fromString("VerifiableCredential")),
-            issuedAt = issuedAt,
-            validUntil = validUntil,
-            proofOptions = proofOptions {
-                option(JsonLdDocumentBuilder.CONTEXTS_OPTION, contexts)
-            }
-        )
-    }
-
-    @Test
-    fun `issuing with the v2 base context emits a VC 2_0 credential that verifies`() = runBlocking<Unit> {
-        val rig = TestRig()
-        val issuedAt = Clock.System.now()
-        val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
-
-        val credential = rig.engine.issue(
-            rig.issuanceRequest(
-                contexts = listOf(CredentialConstants.VcContexts.VC_2_0, TEST_CONTEXT_URL),
+            validUntil: Instant? = null,
+        ): IssuanceRequest =
+            IssuanceRequest(
+                format = ProofSuiteId.VC_LD,
+                issuer = Issuer.IriIssuer(Iri(issuerDocument.id.value)),
+                issuerKeyId = issuerDocument.verificationMethod.first().id,
+                credentialSubject =
+                    CredentialSubject(
+                        id = Iri("did:example:holder"),
+                        claims = mapOf("name" to JsonPrimitive("Alice")),
+                    ),
+                type = listOf(CredentialType.fromString("VerifiableCredential")),
                 issuedAt = issuedAt,
-                validUntil = validUntil
+                validUntil = validUntil,
+                proofOptions =
+                    proofOptions {
+                        option(JsonLdDocumentBuilder.CONTEXTS_OPTION, contexts)
+                    },
             )
-        )
-
-        assertEquals(
-            CredentialConstants.VcContexts.VC_2_0, credential.context.first(),
-            "The VC 2.0 base context must be the first @context entry"
-        )
-        assertFalse(
-            CredentialConstants.VcContexts.VC_1_1 in credential.context,
-            "A pure VC 2.0 credential must not also carry the VC 1.1 context"
-        )
-        assertNull(credential.issuanceDate, "VC 2.0 does not define issuanceDate")
-        assertNull(credential.expirationDate, "VC 2.0 does not define expirationDate")
-        assertEquals(issuedAt, credential.validFrom, "validFrom must default to issuedAt for VC 2.0")
-        assertEquals(validUntil, credential.validUntil, "validUntil must carry the requested expiry")
-
-        val result = rig.engine.verify(credential, VerificationOptions())
-        assertTrue(
-            result is VerificationResult.Valid,
-            "VC 2.0 issue -> verify round-trip must succeed, got ${result::class.simpleName}: " +
-                ((result as? VerificationResult.Invalid)?.errors ?: emptyList<String>())
-        )
     }
 
     @Test
-    fun `v2 base context is hoisted to the first context position`() = runBlocking<Unit> {
-        val rig = TestRig()
+    fun `issuing with the v2 base context emits a VC 2_0 credential that verifies`() =
+        runBlocking<Unit> {
+            val rig = TestRig()
+            val issuedAt = Clock.System.now()
+            val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
 
-        // Declared with the claims context first — the base context must still end up first.
-        val credential = rig.engine.issue(
-            rig.issuanceRequest(contexts = listOf(TEST_CONTEXT_URL, CredentialConstants.VcContexts.VC_2_0))
-        )
+            val credential =
+                rig.engine.issue(
+                    rig.issuanceRequest(
+                        contexts = listOf(CredentialConstants.VcContexts.VC_2_0, TEST_CONTEXT_URL),
+                        issuedAt = issuedAt,
+                        validUntil = validUntil,
+                    ),
+                )
 
-        assertEquals(CredentialConstants.VcContexts.VC_2_0, credential.context.first())
-        assertTrue(TEST_CONTEXT_URL in credential.context, "Declared claim contexts must be preserved")
+            assertEquals(
+                CredentialConstants.VcContexts.VC_2_0,
+                credential.context.first(),
+                "The VC 2.0 base context must be the first @context entry",
+            )
+            assertFalse(
+                CredentialConstants.VcContexts.VC_1_1 in credential.context,
+                "A pure VC 2.0 credential must not also carry the VC 1.1 context",
+            )
+            assertNull(credential.issuanceDate, "VC 2.0 does not define issuanceDate")
+            assertNull(credential.expirationDate, "VC 2.0 does not define expirationDate")
+            assertEquals(issuedAt, credential.validFrom, "validFrom must default to issuedAt for VC 2.0")
+            assertEquals(validUntil, credential.validUntil, "validUntil must carry the requested expiry")
 
-        val result = rig.engine.verify(credential, VerificationOptions())
-        assertTrue(result is VerificationResult.Valid)
-    }
+            val result = rig.engine.verify(credential, VerificationOptions())
+            assertTrue(
+                result is VerificationResult.Valid,
+                "VC 2.0 issue -> verify round-trip must succeed, got ${result::class.simpleName}: " +
+                    ((result as? VerificationResult.Invalid)?.errors ?: emptyList<String>()),
+            )
+        }
 
     @Test
-    fun `default issuance remains VC 1_1 with issuanceDate and expirationDate`() = runBlocking<Unit> {
-        val rig = TestRig()
-        val issuedAt = Clock.System.now()
-        val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
+    fun `v2 base context is hoisted to the first context position`() =
+        runBlocking<Unit> {
+            val rig = TestRig()
 
-        val credential = rig.engine.issue(
-            rig.issuanceRequest(
-                contexts = listOf(TEST_CONTEXT_URL),
-                issuedAt = issuedAt,
-                validUntil = validUntil
+            // Declared with the claims context first — the base context must still end up first.
+            val credential =
+                rig.engine.issue(
+                    rig.issuanceRequest(contexts = listOf(TEST_CONTEXT_URL, CredentialConstants.VcContexts.VC_2_0)),
+                )
+
+            assertEquals(CredentialConstants.VcContexts.VC_2_0, credential.context.first())
+            assertTrue(TEST_CONTEXT_URL in credential.context, "Declared claim contexts must be preserved")
+
+            val result = rig.engine.verify(credential, VerificationOptions())
+            assertTrue(result is VerificationResult.Valid)
+        }
+
+    @Test
+    fun `default issuance remains VC 1_1 with issuanceDate and expirationDate`() =
+        runBlocking<Unit> {
+            val rig = TestRig()
+            val issuedAt = Clock.System.now()
+            val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P365D"))
+
+            val credential =
+                rig.engine.issue(
+                    rig.issuanceRequest(
+                        contexts = listOf(TEST_CONTEXT_URL),
+                        issuedAt = issuedAt,
+                        validUntil = validUntil,
+                    ),
+                )
+
+            assertEquals(
+                CredentialConstants.VcContexts.VC_1_1,
+                credential.context.first(),
+                "Without a declared v2 context the credential must remain VC 1.1",
             )
-        )
+            assertNotNull(credential.issuanceDate, "VC 1.1 credentials carry issuanceDate")
+            assertEquals(validUntil, credential.expirationDate, "VC 1.1 expiry maps to expirationDate")
+            assertNull(credential.validUntil, "VC 1.1 credentials must not carry the v2 validUntil field")
 
-        assertEquals(
-            CredentialConstants.VcContexts.VC_1_1, credential.context.first(),
-            "Without a declared v2 context the credential must remain VC 1.1"
-        )
-        assertNotNull(credential.issuanceDate, "VC 1.1 credentials carry issuanceDate")
-        assertEquals(validUntil, credential.expirationDate, "VC 1.1 expiry maps to expirationDate")
-        assertNull(credential.validUntil, "VC 1.1 credentials must not carry the v2 validUntil field")
-
-        val result = rig.engine.verify(credential, VerificationOptions())
-        assertTrue(
-            result is VerificationResult.Valid,
-            "VC 1.1 issue -> verify round-trip must stay green, got ${result::class.simpleName}: " +
-                ((result as? VerificationResult.Invalid)?.errors ?: emptyList<String>())
-        )
-    }
+            val result = rig.engine.verify(credential, VerificationOptions())
+            assertTrue(
+                result is VerificationResult.Valid,
+                "VC 1.1 issue -> verify round-trip must stay green, got ${result::class.simpleName}: " +
+                    ((result as? VerificationResult.Invalid)?.errors ?: emptyList<String>()),
+            )
+        }
 
     // --- Dual-context credentials (both VC 1.1 and VC 2.0 base contexts) ---------------
 
@@ -186,10 +199,10 @@ class VcLdProofEngineVc20Test {
             JsonLdDocumentBuilder.isPureVc2(
                 listOf(
                     CredentialConstants.VcContexts.VC_1_1,
-                    CredentialConstants.VcContexts.VC_2_0
-                )
+                    CredentialConstants.VcContexts.VC_2_0,
+                ),
             ),
-            "A credential declaring BOTH base contexts must use the VC 1.1 field mapping"
+            "A credential declaring BOTH base contexts must use the VC 1.1 field mapping",
         )
     }
 
@@ -204,45 +217,50 @@ class VcLdProofEngineVc20Test {
             // plain-JSON fallback), so issuance throws instead of signing bytes that no
             // conformant verifier could ever reproduce.
             val rig = TestRig()
-            val exception = assertFailsWith<SerializationException> {
-                rig.engine.issue(
-                    rig.issuanceRequest(
-                        contexts = listOf(
-                            CredentialConstants.VcContexts.VC_1_1,
-                            CredentialConstants.VcContexts.VC_2_0,
-                            TEST_CONTEXT_URL
-                        )
+            val exception =
+                assertFailsWith<SerializationException> {
+                    rig.engine.issue(
+                        rig.issuanceRequest(
+                            contexts =
+                                listOf(
+                                    CredentialConstants.VcContexts.VC_1_1,
+                                    CredentialConstants.VcContexts.VC_2_0,
+                                    TEST_CONTEXT_URL,
+                                ),
+                        ),
                     )
-                )
-            }
+                }
             assertTrue(
                 exception.message?.contains("canonicalization", ignoreCase = true) == true,
-                "Failure must be a fail-closed canonicalization error, got: ${exception.message}"
+                "Failure must be a fail-closed canonicalization error, got: ${exception.message}",
             )
         }
 
     @Test
-    fun `tampering with validUntil on a VC 2_0 credential fails verification`() = runBlocking<Unit> {
-        val rig = TestRig()
-        val issuedAt = Clock.System.now()
-        val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P30D"))
+    fun `tampering with validUntil on a VC 2_0 credential fails verification`() =
+        runBlocking<Unit> {
+            val rig = TestRig()
+            val issuedAt = Clock.System.now()
+            val validUntil = issuedAt.plus(kotlin.time.Duration.parse("P30D"))
 
-        val credential = rig.engine.issue(
-            rig.issuanceRequest(
-                contexts = listOf(CredentialConstants.VcContexts.VC_2_0, TEST_CONTEXT_URL),
-                issuedAt = issuedAt,
-                validUntil = validUntil
+            val credential =
+                rig.engine.issue(
+                    rig.issuanceRequest(
+                        contexts = listOf(CredentialConstants.VcContexts.VC_2_0, TEST_CONTEXT_URL),
+                        issuedAt = issuedAt,
+                        validUntil = validUntil,
+                    ),
+                )
+
+            val tampered =
+                credential.copy(
+                    validUntil = validUntil.plus(kotlin.time.Duration.parse("P3650D")),
+                )
+
+            val result = rig.engine.verify(tampered, VerificationOptions())
+            assertTrue(
+                result is VerificationResult.Invalid,
+                "validUntil must be covered by the signature — extending it must invalidate the proof",
             )
-        )
-
-        val tampered = credential.copy(
-            validUntil = validUntil.plus(kotlin.time.Duration.parse("P3650D"))
-        )
-
-        val result = rig.engine.verify(tampered, VerificationOptions())
-        assertTrue(
-            result is VerificationResult.Invalid,
-            "validUntil must be covered by the signature — extending it must invalidate the proof"
-        )
-    }
+        }
 }

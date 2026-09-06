@@ -1,0 +1,48 @@
+{
+  "assessment": "Round 9 adds production-policy enforcement inside three storage factories, fixes ignored typed encryption configuration and wallet path traversal, and shares strict credential validation between import and verification. Both requested custody models have experimental adapters and adversarial tests. They are not activated production wallet profiles. The SDK correctness score gains 0.5 for the bounded profile and storage fixes; no hardware-custody credit is awarded. SaaS retains its prior score and validation scope.",
+  "rubric": {
+    "security": 30,
+    "correctness": 25,
+    "architecture": 20,
+    "testing": 15,
+    "experience": 10
+  },
+  "trustweave": [
+    29,
+    24.5,
+    19.5,
+    15,
+    10
+  ],
+  "totals": {
+    "trustweave": 98,
+    "trustweave-saas": 96
+  },
+  "previous": {
+    "trustweave": 97.5,
+    "trustweave-saas": 96
+  },
+  "trustweave-saas": [
+    29,
+    24.5,
+    19,
+    14,
+    9.5
+  ],
+  "deductions": {
+    "trustweave": [
+      "Security -1: current wallet enrollment/presentation still uses browser keys. Passkey and managed-KMS adapters require application enrollment, durable authorization/recovery, issuer/verifier integration and actual hardware/service qualification. Attestation-none WebAuthn does not prove hardware provenance.",
+      "Correctness -0.5: bounded import/verifier profiles are stricter and tested; hosted-provider authentication, recovery and operational behavior remain unqualified.",
+      "Architecture -0.5: file/database/cloud factories now enforce typed deployment policy before resources are opened. Other providers/direct constructors remain outside that integration, and no catalog provider has sufficient evidence for supported maturity.",
+      "Experience retains prior credit for replacement/reissuance UX; corruption remains distinct from missing keys and cannot silently rotate identity.",
+      "Testing receives full local-validation credit for the full JVM suite, lint, database/HTTP contracts and production browser regressions. This does not certify optional hosted providers; those limitations remain in correctness/architecture."
+    ],
+    "trustweave-saas": [
+      "Security -1: the reviewed local SDK fingerprint changed with this patch. The immutable pin still points to the earlier commit; a new coordinated commit/pin/publication and exact-pair remote Linux/staging validation remain required.",
+      "Correctness -0.5: application/tenant/subscriber/payment-metadata contracts passed against real Accountly/Kill Bill; PSP setup, paid subscriptions, settlement and production service-account authentication remain unvalidated.",
+      "Architecture -1: release coupling and hosted recovery/alert integration remain outstanding.",
+      "Testing -1: two live-contract skips and no exact-pair remote Linux/staging evidence.",
+      "Experience -0.5: admins can inspect and page through recovery events without database/payload access; live provider redelivery still requires manual operations, and supported credential formats remain limited."
+    ]
+  }
+}

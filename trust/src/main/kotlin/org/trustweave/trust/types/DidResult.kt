@@ -12,7 +12,7 @@ sealed class DidCreationResult {
      */
     data class Success(
         val did: Did,
-        val document: DidDocument
+        val document: DidDocument,
     ) : DidCreationResult()
 
     /**
@@ -24,21 +24,21 @@ sealed class DidCreationResult {
          */
         data class MethodNotRegistered(
             val method: String,
-            val availableMethods: List<String>
+            val availableMethods: List<String>,
         ) : Failure()
 
         /**
          * Key generation failed.
          */
         data class KeyGenerationFailed(
-            val reason: String
+            val reason: String,
         ) : Failure()
 
         /**
          * Document creation failed.
          */
         data class DocumentCreationFailed(
-            val reason: String
+            val reason: String,
         ) : Failure()
 
         /**
@@ -46,7 +46,7 @@ sealed class DidCreationResult {
          */
         data class InvalidConfiguration(
             val reason: String,
-            val details: Map<String, Any?> = emptyMap()
+            val details: Map<String, Any?> = emptyMap(),
         ) : Failure()
 
         /**
@@ -54,7 +54,7 @@ sealed class DidCreationResult {
          */
         data class Other(
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
     }
 }
@@ -65,14 +65,16 @@ sealed class DidCreationResult {
 sealed class DidCreationWithKeyResult {
     data class Success(
         val did: Did,
-        val keyId: String
+        val keyId: String,
     ) : DidCreationWithKeyResult()
 
     sealed class Failure : DidCreationWithKeyResult() {
         /**
          * Underlying [DidCreationResult] did not succeed.
          */
-        data class FromCreation(val failure: DidCreationResult.Failure) : Failure()
+        data class FromCreation(
+            val failure: DidCreationResult.Failure,
+        ) : Failure()
 
         /**
          * DID was created but key id could not be read from the document (e.g. resolution or VM shape).
@@ -80,7 +82,7 @@ sealed class DidCreationWithKeyResult {
         data class KeyExtractionFailed(
             val did: Did,
             val reason: String,
-            val cause: Throwable? = null
+            val cause: Throwable? = null,
         ) : Failure()
     }
 }
@@ -88,15 +90,16 @@ sealed class DidCreationWithKeyResult {
 /**
  * Extract [Did] and key id or throw with contextual [IllegalStateException] (convenience for examples/tests).
  */
-fun DidCreationWithKeyResult.getOrThrow(): Pair<Did, String> {
-    return when (this) {
+fun DidCreationWithKeyResult.getOrThrow(): Pair<Did, String> =
+    when (this) {
         is DidCreationWithKeyResult.Success -> did to keyId
         is DidCreationWithKeyResult.Failure.FromCreation -> {
             val f = failure
             throw when (f) {
-                is DidCreationResult.Failure.MethodNotRegistered -> IllegalStateException(
-                    "DID method '${f.method}' not registered. Available: ${f.availableMethods.joinToString()}"
-                )
+                is DidCreationResult.Failure.MethodNotRegistered ->
+                    IllegalStateException(
+                        "DID method '${f.method}' not registered. Available: ${f.availableMethods.joinToString()}",
+                    )
                 is DidCreationResult.Failure.KeyGenerationFailed -> IllegalStateException("Key generation failed: ${f.reason}")
                 is DidCreationResult.Failure.DocumentCreationFailed -> IllegalStateException("Document creation failed: ${f.reason}")
                 is DidCreationResult.Failure.InvalidConfiguration -> IllegalStateException("Invalid configuration: ${f.reason}")
@@ -107,5 +110,3 @@ fun DidCreationWithKeyResult.getOrThrow(): Pair<Did, String> {
             throw IllegalStateException("Key extraction failed for ${did.value}: $reason", cause)
         }
     }
-}
-

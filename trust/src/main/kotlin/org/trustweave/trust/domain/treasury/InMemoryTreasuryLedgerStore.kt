@@ -31,17 +31,22 @@ class InMemoryTreasuryLedgerStore : TreasuryLedgerStore {
         txHash: String?,
     ) {
         mutex.withLock {
-            val prev = entries[correlationId]
-                ?: error("No entry for correlationId=$correlationId")
-            entries[correlationId] = prev.copy(
-                status = status,
-                actualFeeAmount = actualFee.amount.toString(),
-                txHash = txHash ?: prev.txHash,
-            )
+            val prev =
+                entries[correlationId]
+                    ?: error("No entry for correlationId=$correlationId")
+            entries[correlationId] =
+                prev.copy(
+                    status = status,
+                    actualFeeAmount = actualFee.amount.toString(),
+                    txHash = txHash ?: prev.txHash,
+                )
         }
     }
 
-    override suspend fun entries(domainId: DomainId, chainId: String?): List<TreasuryLedgerEntry> =
+    override suspend fun entries(
+        domainId: DomainId,
+        chainId: String?,
+    ): List<TreasuryLedgerEntry> =
         mutex.withLock {
             entries.values
                 .filter { it.domainId == domainId.value }
@@ -49,23 +54,24 @@ class InMemoryTreasuryLedgerStore : TreasuryLedgerStore {
                 .toList()
         }
 
-    override suspend fun get(correlationId: String): TreasuryLedgerEntry? =
-        mutex.withLock { entries[correlationId] }
+    override suspend fun get(correlationId: String): TreasuryLedgerEntry? = mutex.withLock { entries[correlationId] }
 
     override suspend fun spentSince(
         domainId: DomainId,
         chainId: String,
         since: Instant,
-    ): TokenAmount = mutex.withLock {
-        val sinceMs = since.toEpochMilliseconds()
-        val total = entries.values
-            .asSequence()
-            .filter { it.domainId == domainId.value }
-            .filter { it.chainId == chainId }
-            .filter { it.status == SettlementStatus.SETTLED || it.status == SettlementStatus.FAILED }
-            .filter { it.atEpochMillis >= sinceMs }
-            .map { BigInteger(it.actualFeeAmount) }
-            .fold(BigInteger.ZERO, BigInteger::add)
-        TokenAmount(chainId, AssetRef.Native, total)
-    }
+    ): TokenAmount =
+        mutex.withLock {
+            val sinceMs = since.toEpochMilliseconds()
+            val total =
+                entries.values
+                    .asSequence()
+                    .filter { it.domainId == domainId.value }
+                    .filter { it.chainId == chainId }
+                    .filter { it.status == SettlementStatus.SETTLED || it.status == SettlementStatus.FAILED }
+                    .filter { it.atEpochMillis >= sinceMs }
+                    .map { BigInteger(it.actualFeeAmount) }
+                    .fold(BigInteger.ZERO, BigInteger::add)
+            TokenAmount(chainId, AssetRef.Native, total)
+        }
 }

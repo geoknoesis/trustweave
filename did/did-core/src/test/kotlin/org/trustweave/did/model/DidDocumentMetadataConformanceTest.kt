@@ -10,7 +10,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DidDocumentMetadataConformanceTest {
-
     @Test
     fun `nextVersionId is a document metadata property`() {
         val metadata = DidDocumentMetadata(versionId = "3", nextVersionId = "4")
@@ -19,10 +18,11 @@ class DidDocumentMetadataConformanceTest {
 
     @Test
     fun `timestamps serialize without sub-second precision`() {
-        val metadata = DidDocumentMetadata(
-            created = Instant.parse("2019-03-23T06:35:22.512Z"),
-            updated = Instant.parse("2023-08-10T13:40:06.001Z")
-        )
+        val metadata =
+            DidDocumentMetadata(
+                created = Instant.parse("2019-03-23T06:35:22.512Z"),
+                updated = Instant.parse("2023-08-10T13:40:06.001Z"),
+            )
         val json = metadata.toJson()
         assertEquals(JsonPrimitive("2019-03-23T06:35:22Z"), json["created"])
         assertEquals(JsonPrimitive("2023-08-10T13:40:06Z"), json["updated"])

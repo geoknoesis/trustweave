@@ -1,0 +1,2113 @@
+public final class org/trustweave/did/DidCreationOptions {
+	public static final field Companion Lorg/trustweave/did/DidCreationOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/KeyAlgorithm;Ljava/util/List;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/trustweave/did/KeyAlgorithm;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/KeyAlgorithm;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lorg/trustweave/did/KeyAlgorithm;Ljava/util/List;Ljava/util/Map;)Lorg/trustweave/did/DidCreationOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/DidCreationOptions;Lorg/trustweave/did/KeyAlgorithm;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/DidCreationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getAlgorithm ()Lorg/trustweave/did/KeyAlgorithm;
+	public final fun getPurposes ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/DidCreationOptions$Companion {
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/did/DidCreationOptions;
+}
+
+public final class org/trustweave/did/DidCreationOptionsBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/did/DidCreationOptions;
+	public final fun forAssertion ()V
+	public final fun forAuthentication ()V
+	public final fun forCapabilityDelegation ()V
+	public final fun forCapabilityInvocation ()V
+	public final fun forKeyAgreement ()V
+	public final fun getAlgorithm ()Lorg/trustweave/did/KeyAlgorithm;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun purpose (Lorg/trustweave/did/KeyPurpose;)V
+	public final fun purposes ([Lorg/trustweave/did/KeyPurpose;)V
+	public final fun setAlgorithm (Lorg/trustweave/did/KeyAlgorithm;)V
+}
+
+public final class org/trustweave/did/DidCreationOptionsKt {
+	public static final fun asMap (Lorg/trustweave/did/DidCreationOptions;)Ljava/util/Map;
+	public static final fun createDid (Lorg/trustweave/did/DidMethod;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun didCreationOptions (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/did/DidCreationOptions;
+}
+
+public abstract interface class org/trustweave/did/DidMethod : org/trustweave/did/DidMethodResolver {
+	public abstract fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDid$default (Lorg/trustweave/did/DidMethod;Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	public abstract fun getMethod ()Ljava/lang/String;
+	public abstract fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/DidMethod$DefaultImpls {
+	public static synthetic fun createDid$default (Lorg/trustweave/did/DidMethod;Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun getCapabilities (Lorg/trustweave/did/DidMethod;)Lorg/trustweave/did/model/MethodCapabilities;
+	public static fun resolveDid (Lorg/trustweave/did/DidMethod;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/did/DidMethodResolver {
+	public abstract fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/DidMethodResolver$DefaultImpls {
+	public static fun resolveDid (Lorg/trustweave/did/DidMethodResolver;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/KeyAlgorithm : java/lang/Enum {
+	public static final field Companion Lorg/trustweave/did/KeyAlgorithm$Companion;
+	public static final field ED25519 Lorg/trustweave/did/KeyAlgorithm;
+	public static final field P256 Lorg/trustweave/did/KeyAlgorithm;
+	public static final field P384 Lorg/trustweave/did/KeyAlgorithm;
+	public static final field P521 Lorg/trustweave/did/KeyAlgorithm;
+	public static final field SECP256K1 Lorg/trustweave/did/KeyAlgorithm;
+	public final fun getAlgorithmName ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/did/KeyAlgorithm;
+	public static fun values ()[Lorg/trustweave/did/KeyAlgorithm;
+}
+
+public final class org/trustweave/did/KeyAlgorithm$Companion {
+	public final fun fromName (Ljava/lang/String;)Lorg/trustweave/did/KeyAlgorithm;
+}
+
+public final class org/trustweave/did/KeyPurpose : java/lang/Enum {
+	public static final field ASSERTION Lorg/trustweave/did/KeyPurpose;
+	public static final field AUTHENTICATION Lorg/trustweave/did/KeyPurpose;
+	public static final field CAPABILITY_DELEGATION Lorg/trustweave/did/KeyPurpose;
+	public static final field CAPABILITY_INVOCATION Lorg/trustweave/did/KeyPurpose;
+	public static final field Companion Lorg/trustweave/did/KeyPurpose$Companion;
+	public static final field KEY_AGREEMENT Lorg/trustweave/did/KeyPurpose;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getPurposeName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/did/KeyPurpose;
+	public static fun values ()[Lorg/trustweave/did/KeyPurpose;
+}
+
+public final class org/trustweave/did/KeyPurpose$Companion {
+	public final fun fromName (Ljava/lang/String;)Lorg/trustweave/did/KeyPurpose;
+}
+
+public abstract interface class org/trustweave/did/batch/BatchOperationsService {
+	public abstract fun resolveBatch (Ljava/util/List;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resolveBatch$default (Lorg/trustweave/did/batch/BatchOperationsService;Ljava/util/List;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun verifyBatch (Ljava/util/List;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyBatch$default (Lorg/trustweave/did/batch/BatchOperationsService;Ljava/util/List;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/batch/BatchOperationsService$DefaultImpls {
+	public static synthetic fun resolveBatch$default (Lorg/trustweave/did/batch/BatchOperationsService;Ljava/util/List;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun verifyBatch$default (Lorg/trustweave/did/batch/BatchOperationsService;Ljava/util/List;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/batch/DefaultBatchOperationsService : org/trustweave/did/batch/BatchOperationsService {
+	public fun <init> (Lorg/trustweave/did/resolver/DidResolver;)V
+	public fun resolveBatch (Ljava/util/List;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyBatch (Ljava/util/List;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/discovery/DefaultDidMethodDiscoveryService : org/trustweave/did/discovery/DidMethodDiscoveryService {
+	public fun <init> (Lorg/trustweave/did/registry/DidMethodRegistry;)V
+	public fun discoverAvailableMethods (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun discoverFromUniversalResolver (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getMethodCapabilities (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isMethodSupported (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/did/discovery/DidMethodDiscoveryService {
+	public abstract fun discoverAvailableMethods (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun discoverFromUniversalResolver (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getMethodCapabilities (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isMethodSupported (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/dsl/DidExtensionsKt {
+	public static final fun resolveOrDefault (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun resolveOrNull (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolver/DidResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun resolveOrThrow (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolver/DidResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun resolveWith (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolver/DidResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun resolveWith (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolver/DidResolver;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/dsl/DidMethodExtensionsKt {
+	public static final fun createDidWith (Lorg/trustweave/did/DidMethod;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/dsl/ResolverExtensionsKt {
+	public static final fun resolveOrNull (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun resolveOrThrow (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/dsl/RetryConfigBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/did/resolver/RetryConfig;
+	public final fun getInitialDelayMs ()J
+	public final fun getMaxDelayMs ()J
+	public final fun getMaxRetries ()I
+	public final fun getRetryableStatusCodes ()Ljava/util/Set;
+	public final fun setInitialDelayMs (J)V
+	public final fun setMaxDelayMs (J)V
+	public final fun setMaxRetries (I)V
+	public final fun setRetryableStatusCodes (Ljava/util/Set;)V
+}
+
+public final class org/trustweave/did/dsl/UniversalResolverBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun build ()Lorg/trustweave/did/resolver/DefaultUniversalResolver;
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getProtocolAdapter ()Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;
+	public final fun getTimeout ()I
+	public final fun retry (Lkotlin/jvm/functions/Function1;)V
+	public final fun setApiKey (Ljava/lang/String;)V
+	public final fun setProtocolAdapter (Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;)V
+	public final fun setTimeout (I)V
+}
+
+public final class org/trustweave/did/dsl/UniversalResolverBuilderKt {
+	public static final fun universalResolver (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/trustweave/did/resolver/DefaultUniversalResolver;
+	public static synthetic fun universalResolver$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DefaultUniversalResolver;
+}
+
+public abstract interface annotation class org/trustweave/did/dsl/UniversalResolverDsl : java/lang/annotation/Annotation {
+}
+
+public final class org/trustweave/did/events/DefaultDidEventBus : org/trustweave/did/events/DidEventBus {
+	public fun <init> ()V
+	public fun getEvents ()Lkotlinx/coroutines/flow/Flow;
+	public fun publish (Lorg/trustweave/did/events/DidEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun subscribe (Ljava/lang/Class;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract class org/trustweave/did/events/DidEvent {
+	public abstract fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public abstract fun getTimestamp ()Lkotlinx/datetime/Instant;
+}
+
+public final class org/trustweave/did/events/DidEvent$Created : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Created;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Created;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Created;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$Deactivated : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Deactivated;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Deactivated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Deactivated;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$ServiceAdded : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getServiceId ()Ljava/lang/String;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$ServiceRemoved : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getServiceId ()Ljava/lang/String;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$Updated : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component3 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Updated;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Updated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Updated;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getPreviousDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public final fun getUpdatedDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$VerificationMethodAdded : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getMethodId ()Ljava/lang/String;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/events/DidEvent$VerificationMethodRemoved : org/trustweave/did/events/DidEvent {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getMethodId ()Ljava/lang/String;
+	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/did/events/DidEventBus {
+	public abstract fun getEvents ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun publish (Lorg/trustweave/did/events/DidEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun subscribe (Ljava/lang/Class;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract class org/trustweave/did/exception/DidException : org/trustweave/core/exception/TrustWeaveException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getCode ()Ljava/lang/String;
+	public fun getContext ()Ljava/util/Map;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidCreationFailed : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/did/exception/DidException$DidCreationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidCreationFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidCreationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidDeactivationFailed : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/did/exception/DidException$DidDeactivationFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidDeactivationFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidDeactivationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidMethodNotRegistered : org/trustweave/did/exception/DidException {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/trustweave/did/exception/DidException$DidMethodNotRegistered;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidMethodNotRegistered;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidMethodNotRegistered;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableMethods ()Ljava/util/List;
+	public final fun getMethod ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidNotFound : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;)Lorg/trustweave/did/exception/DidException$DidNotFound;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidNotFound;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableMethods ()Ljava/util/List;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidResolutionFailed : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/did/exception/DidException$DidResolutionFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidResolutionFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidResolutionFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$DidUpdateFailed : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/did/exception/DidException$DidUpdateFailed;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$DidUpdateFailed;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$DidUpdateFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$InvalidDidFormat : org/trustweave/did/exception/DidException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/exception/DidException$InvalidDidFormat;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$InvalidDidFormat;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$InvalidDidFormat;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidException$RequiresAction : org/trustweave/did/exception/DidException {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/registrar/model/Action;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;)Lorg/trustweave/did/exception/DidException$RequiresAction;
+	public static synthetic fun copy$default (Lorg/trustweave/did/exception/DidException$RequiresAction;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/exception/DidException$RequiresAction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAction ()Lorg/trustweave/did/registrar/model/Action;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/exception/DidExceptionsKt {
+	public static final fun toDidException (Ljava/lang/Throwable;)Lorg/trustweave/did/exception/DidException;
+}
+
+public final class org/trustweave/did/identifiers/DidIdentifiersExtensionsKt {
+	public static final fun asDidOrNull (Lorg/trustweave/core/identifiers/Iri;)Lorg/trustweave/did/identifiers/Did;
+	public static final fun extractKeyId (Lorg/trustweave/did/identifiers/VerificationMethodId;)Ljava/lang/String;
+	public static final fun extractKeyId (Lorg/trustweave/did/model/VerificationMethod;)Ljava/lang/String;
+	public static final fun requireDid (Lorg/trustweave/core/identifiers/Iri;)Lorg/trustweave/did/identifiers/Did;
+	public static final fun toDidOrNull (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+	public static final fun toVerificationMethodIdOrNull (Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/identifiers/VerificationMethodId;
+	public static synthetic fun toVerificationMethodIdOrNull$default (Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;ILjava/lang/Object;)Lorg/trustweave/did/identifiers/VerificationMethodId;
+}
+
+public final class org/trustweave/did/model/DidDocument {
+	public static final field Companion Lorg/trustweave/did/model/DidDocument$Companion;
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/did/model/DidDocument;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/DidDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlsoKnownAs ()Ljava/util/List;
+	public final fun getAssertionMethod ()Ljava/util/List;
+	public final fun getAuthentication ()Ljava/util/List;
+	public final fun getCapabilityDelegation ()Ljava/util/List;
+	public final fun getCapabilityInvocation ()Ljava/util/List;
+	public final fun getContext ()Ljava/util/List;
+	public final fun getController ()Ljava/util/List;
+	public final fun getId ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getKeyAgreement ()Ljava/util/List;
+	public final fun getService ()Ljava/util/List;
+	public final fun getVerificationMethod ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/model/DidDocument$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/DidDocument$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/DidDocument;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/DidDocument;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/DidDocument$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/DidDocumentMetadata {
+	public static final field Companion Lorg/trustweave/did/model/DidDocumentMetadata$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlinx/datetime/Instant;
+	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCanonicalId ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getCreated ()Lkotlinx/datetime/Instant;
+	public final fun getDeactivated ()Z
+	public final fun getEquivalentId ()Ljava/util/List;
+	public final fun getNextUpdate ()Lkotlinx/datetime/Instant;
+	public final fun getNextVersionId ()Ljava/lang/String;
+	public final fun getProof ()Ljava/util/List;
+	public final fun getUpdated ()Lkotlinx/datetime/Instant;
+	public final fun getVersionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lkotlinx/serialization/json/JsonObject;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/model/DidDocumentMetadata$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/DidDocumentMetadata$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/DidDocumentMetadata;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/DidDocumentMetadata$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class org/trustweave/did/model/DidOrUrl {
+	public static final field Companion Lorg/trustweave/did/model/DidOrUrl$Companion;
+	public final fun toStringValue ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/DidOrUrl$AsDid : org/trustweave/did/model/DidOrUrl {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/model/DidOrUrl$AsDid;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidOrUrl$AsDid;Lorg/trustweave/did/identifiers/Did;ILjava/lang/Object;)Lorg/trustweave/did/model/DidOrUrl$AsDid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/DidOrUrl$AsUrl : org/trustweave/did/model/DidOrUrl {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/did/model/DidOrUrl$AsUrl;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidOrUrl$AsUrl;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/model/DidOrUrl$AsUrl;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/DidOrUrl$Companion {
+	public final fun parse (Ljava/lang/String;)Lorg/trustweave/did/model/DidOrUrl;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public final fun tryParse (Ljava/lang/String;)Lorg/trustweave/did/model/DidOrUrl;
+}
+
+public final class org/trustweave/did/model/DidOrUrlSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/DidOrUrlSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/DidOrUrl;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/DidOrUrl;)V
+}
+
+public final class org/trustweave/did/model/DidService {
+	public static final field Companion Lorg/trustweave/did/model/DidService$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/model/ServiceEndpoint;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lorg/trustweave/did/model/ServiceEndpoint;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/model/ServiceEndpoint;)Lorg/trustweave/did/model/DidService;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidService;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/model/ServiceEndpoint;ILjava/lang/Object;)Lorg/trustweave/did/model/DidService;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getServiceEndpoint ()Lorg/trustweave/did/model/ServiceEndpoint;
+	public final fun getType ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/model/DidService$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/DidService$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/DidService;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/DidService;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/DidService$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/MethodCapabilities {
+	public static final field Companion Lorg/trustweave/did/model/MethodCapabilities$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZZZZLjava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;ZZZZLjava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;ZZZZLjava/util/List;Ljava/util/List;)Lorg/trustweave/did/model/MethodCapabilities;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/MethodCapabilities;Ljava/lang/String;ZZZZLjava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/MethodCapabilities;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreate ()Z
+	public final fun getDeactivate ()Z
+	public final fun getFeatures ()Ljava/util/List;
+	public final fun getKeyTypes ()Ljava/util/List;
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getResolve ()Z
+	public final fun getUpdate ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/model/MethodCapabilities$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/MethodCapabilities$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/MethodCapabilities;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/MethodCapabilities;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/MethodCapabilities$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/RelativeUrlExpansionKt {
+	public static final fun expandRelativeDidUrls (Lorg/trustweave/did/model/DidDocument;)Lorg/trustweave/did/model/DidDocument;
+}
+
+public abstract class org/trustweave/did/model/ServiceEndpoint {
+	public static final field Companion Lorg/trustweave/did/model/ServiceEndpoint$Companion;
+}
+
+public final class org/trustweave/did/model/ServiceEndpoint$ArrayEndpoint : org/trustweave/did/model/ServiceEndpoint {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/trustweave/did/model/ServiceEndpoint$ArrayEndpoint;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/ServiceEndpoint$ArrayEndpoint;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/ServiceEndpoint$ArrayEndpoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndpoints ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/ServiceEndpoint$Companion {
+	public final fun of (Ljava/lang/Object;)Lorg/trustweave/did/model/ServiceEndpoint;
+	public final fun ofOrNull (Ljava/lang/Object;)Lorg/trustweave/did/model/ServiceEndpoint;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/ServiceEndpoint$ObjectEndpoint : org/trustweave/did/model/ServiceEndpoint {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/trustweave/did/model/ServiceEndpoint$ObjectEndpoint;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/ServiceEndpoint$ObjectEndpoint;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/model/ServiceEndpoint$ObjectEndpoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/ServiceEndpoint$Url : org/trustweave/did/model/ServiceEndpoint {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/did/model/ServiceEndpoint$Url;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/ServiceEndpoint$Url;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/model/ServiceEndpoint$Url;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/model/ServiceEndpointExtensionsKt {
+	public static final fun parseServiceTypesFromJson (Lkotlinx/serialization/json/JsonElement;)Ljava/util/List;
+	public static final fun serviceEndpointAsArray (Lorg/trustweave/did/model/DidService;)Ljava/util/List;
+	public static final fun serviceEndpointAsObject (Lorg/trustweave/did/model/DidService;)Ljava/util/Map;
+	public static final fun serviceEndpointAsUrl (Lorg/trustweave/did/model/DidService;)Ljava/lang/String;
+	public static final fun serviceEndpointFromJsonElement (Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/did/model/ServiceEndpoint;
+	public static final fun serviceEndpointToJsonElement (Lorg/trustweave/did/model/ServiceEndpoint;)Lkotlinx/serialization/json/JsonElement;
+	public static final fun serviceEndpointTyped (Lorg/trustweave/did/model/DidService;)Lorg/trustweave/did/model/ServiceEndpoint;
+	public static final fun toAny (Lorg/trustweave/did/model/ServiceEndpoint;)Ljava/lang/Object;
+	public static final fun toServiceTypeJsonElement (Ljava/util/List;)Lkotlinx/serialization/json/JsonElement;
+}
+
+public final class org/trustweave/did/model/ServiceEndpointSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/ServiceEndpointSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/ServiceEndpoint;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/ServiceEndpoint;)V
+}
+
+public final class org/trustweave/did/model/VerificationMethod {
+	public static final field Companion Lorg/trustweave/did/model/VerificationMethod$Companion;
+	public fun <init> (Lorg/trustweave/did/identifiers/VerificationMethodId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/VerificationMethodId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/VerificationMethodId;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/identifiers/VerificationMethodId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/did/model/VerificationMethod;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/VerificationMethod;Lorg/trustweave/did/identifiers/VerificationMethodId;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/model/VerificationMethod;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getController ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getId ()Lorg/trustweave/did/identifiers/VerificationMethodId;
+	public final fun getPublicKeyJwk ()Ljava/util/Map;
+	public final fun getPublicKeyMultibase ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/model/VerificationMethod$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/model/VerificationMethod$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/model/VerificationMethod;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/model/VerificationMethod;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/model/VerificationMethod$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class org/trustweave/did/negotiation/ContentNegotiationService {
+	public abstract fun deserializeDocument ([BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun negotiateContentType (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun negotiateContentType$default (Lorg/trustweave/did/negotiation/ContentNegotiationService;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun serializeDocument (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/negotiation/ContentNegotiationService$DefaultImpls {
+	public static synthetic fun negotiateContentType$default (Lorg/trustweave/did/negotiation/ContentNegotiationService;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/negotiation/DefaultContentNegotiationService : org/trustweave/did/negotiation/ContentNegotiationService {
+	public static final field Companion Lorg/trustweave/did/negotiation/DefaultContentNegotiationService$Companion;
+	public fun <init> ()V
+	public fun deserializeDocument ([BLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun negotiateContentType (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun serializeDocument (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/negotiation/DefaultContentNegotiationService$Companion {
+	public final fun getSUPPORTED_TYPES ()Ljava/util/List;
+}
+
+public final class org/trustweave/did/negotiation/UnsupportedContentTypeException : java/lang/IllegalArgumentException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/trustweave/did/parser/DidDocumentJsonParser {
+	public static final field INSTANCE Lorg/trustweave/did/parser/DidDocumentJsonParser;
+	public final fun parse (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/model/DidDocument;
+}
+
+public abstract interface class org/trustweave/did/registrar/DidRegistrar {
+	public abstract fun createDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deactivateDid$default (Lorg/trustweave/did/registrar/DidRegistrar;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun updateDid (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateDid$default (Lorg/trustweave/did/registrar/DidRegistrar;Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/registrar/DidRegistrar$DefaultImpls {
+	public static synthetic fun deactivateDid$default (Lorg/trustweave/did/registrar/DidRegistrar;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun updateDid$default (Lorg/trustweave/did/registrar/DidRegistrar;Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/did/registrar/PollableRegistrar {
+	public abstract fun getOperationStatus (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun waitForCompletion (Lorg/trustweave/did/registrar/model/DidRegistrationResponse;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/registrar/model/Action {
+	public static final field Companion Lorg/trustweave/did/registrar/model/Action$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/did/registrar/model/Action;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/Action;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/util/Map;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/Action$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/Action$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/Action;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/Action;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/Action$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/CreateDidOptions {
+	public static final field Companion Lorg/trustweave/did/registrar/model/CreateDidOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/registrar/model/KeyManagementMode;ZZLorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/model/KeyManagementMode;ZZLorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registrar/model/KeyManagementMode;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun component5 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Lorg/trustweave/did/registrar/model/KeyManagementMode;ZZLorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/CreateDidOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/CreateDidOptions;Lorg/trustweave/did/registrar/model/KeyManagementMode;ZZLorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/CreateDidOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidDocument ()Lorg/trustweave/did/model/DidDocument;
+	public final fun getKeyManagementMode ()Lorg/trustweave/did/registrar/model/KeyManagementMode;
+	public final fun getMethodSpecificOptions ()Ljava/util/Map;
+	public final fun getReturnSecrets ()Z
+	public final fun getSecret ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun getStoreSecrets ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/CreateDidOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/CreateDidOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/CreateDidOptions;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/CreateDidOptions;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/CreateDidOptions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DeactivateDidOptions {
+	public static final field Companion Lorg/trustweave/did/registrar/model/DeactivateDidOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/DeactivateDidOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/DeactivateDidOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMethodSpecificOptions ()Ljava/util/Map;
+	public final fun getSecret ()Lorg/trustweave/did/registrar/model/Secret;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/DeactivateDidOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/DeactivateDidOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/DeactivateDidOptions;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DeactivateDidOptions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DidRegistrationResponse {
+	public static final field Companion Lorg/trustweave/did/registrar/model/DidRegistrationResponse$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/did/registrar/model/DidState;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;)Lorg/trustweave/did/registrar/model/DidRegistrationResponse;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/DidRegistrationResponse;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DidState;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/DidRegistrationResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDidState ()Lorg/trustweave/did/registrar/model/DidState;
+	public final fun getJobId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isComplete ()Z
+	public final fun isWaiting ()Z
+	public final fun requiresAction ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/DidRegistrationResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/DidRegistrationResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/DidRegistrationResponse;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/DidRegistrationResponse;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DidRegistrationResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DidState {
+	public static final field Companion Lorg/trustweave/did/registrar/model/DidState$Companion;
+	public fun <init> (Lorg/trustweave/did/registrar/model/OperationState;Ljava/lang/String;Lorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/model/OperationState;Ljava/lang/String;Lorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registrar/model/OperationState;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun component4 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component5 ()Lorg/trustweave/did/registrar/model/Action;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/did/registrar/model/OperationState;Ljava/lang/String;Lorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;)Lorg/trustweave/did/registrar/model/DidState;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/DidState;Lorg/trustweave/did/registrar/model/OperationState;Ljava/lang/String;Lorg/trustweave/did/registrar/model/Secret;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/Action;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/DidState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAction ()Lorg/trustweave/did/registrar/model/Action;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getDidDocument ()Lorg/trustweave/did/model/DidDocument;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getSecret ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun getState ()Lorg/trustweave/did/registrar/model/OperationState;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/DidState$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/DidState$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/DidState;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/DidState;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/DidState$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/KeyManagementMode : java/lang/Enum {
+	public static final field Companion Lorg/trustweave/did/registrar/model/KeyManagementMode$Companion;
+	public static final field EXTERNAL_SECRET Lorg/trustweave/did/registrar/model/KeyManagementMode;
+	public static final field INTERNAL_SECRET Lorg/trustweave/did/registrar/model/KeyManagementMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/did/registrar/model/KeyManagementMode;
+	public static fun values ()[Lorg/trustweave/did/registrar/model/KeyManagementMode;
+}
+
+public final class org/trustweave/did/registrar/model/KeyManagementMode$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/KeyMaterial {
+	public static final field Companion Lorg/trustweave/did/registrar/model/KeyMaterial$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/KeyMaterial;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/KeyMaterial;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/KeyMaterial;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getPrivateKeyJwk ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getPrivateKeyMultibase ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/KeyMaterial$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/KeyMaterial$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/KeyMaterial;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/KeyMaterial;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/KeyMaterial$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/OperationState : java/lang/Enum {
+	public static final field ACTION Lorg/trustweave/did/registrar/model/OperationState;
+	public static final field Companion Lorg/trustweave/did/registrar/model/OperationState$Companion;
+	public static final field FAILED Lorg/trustweave/did/registrar/model/OperationState;
+	public static final field FINISHED Lorg/trustweave/did/registrar/model/OperationState;
+	public static final field WAIT Lorg/trustweave/did/registrar/model/OperationState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/did/registrar/model/OperationState;
+	public static fun values ()[Lorg/trustweave/did/registrar/model/OperationState;
+}
+
+public final class org/trustweave/did/registrar/model/OperationState$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/RegistrarError {
+	public static final field Companion Lorg/trustweave/did/registrar/model/RegistrarError$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/RegistrarError;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/RegistrarError;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/RegistrarError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getDetails ()Ljava/util/Map;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/RegistrarError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/RegistrarError$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/RegistrarError;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/RegistrarError;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/RegistrarError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/Secret {
+	public static final field Companion Lorg/trustweave/did/registrar/model/Secret$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/Secret;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/Secret;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeys ()Ljava/util/List;
+	public final fun getMethodSpecificSecrets ()Ljava/util/Map;
+	public final fun getRecoveryKey ()Ljava/lang/String;
+	public final fun getUpdateKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/Secret$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/Secret$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/Secret;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/Secret;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/Secret$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/UpdateDidOptions {
+	public static final field Companion Lorg/trustweave/did/registrar/model/UpdateDidOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/registrar/model/Secret;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;)Lorg/trustweave/did/registrar/model/UpdateDidOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lorg/trustweave/did/registrar/model/Secret;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registrar/model/UpdateDidOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMethodSpecificOptions ()Ljava/util/Map;
+	public final fun getSecret ()Lorg/trustweave/did/registrar/model/Secret;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registrar/model/UpdateDidOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registrar/model/UpdateDidOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registrar/model/UpdateDidOptions;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registrar/model/UpdateDidOptions;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registrar/model/UpdateDidOptions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/ContactInfo {
+	public static final field Companion Lorg/trustweave/did/registration/model/ContactInfo$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/registration/model/ContactInfo;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registration/model/ContactInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/registration/model/ContactInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmail ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registration/model/ContactInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/ContactInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registration/model/ContactInfo;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registration/model/ContactInfo;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/ContactInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DidMethodRegistryEntry {
+	public static final field Companion Lorg/trustweave/did/registration/model/DidMethodRegistryEntry$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Ljava/util/List;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/did/registration/model/ContactInfo;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Ljava/util/List;Ljava/util/Map;)Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getContact ()Lorg/trustweave/did/registration/model/ContactInfo;
+	public final fun getImplementations ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSpecification ()Ljava/lang/String;
+	public final fun getStatus ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registration/model/DidMethodRegistryEntry$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/DidMethodRegistryEntry$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DidMethodRegistryEntry$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DidMethodRegistryEntryParser {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/DidMethodRegistryEntryParser;
+	public final fun parse (Ljava/lang/String;)Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;
+	public final fun parse (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/registration/model/DidMethodRegistryEntry;
+}
+
+public final class org/trustweave/did/registration/model/DidRegistrationSpec {
+	public static final field Companion Lorg/trustweave/did/registration/model/DidRegistrationSpec$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Lorg/trustweave/did/registration/model/DriverConfig;Lorg/trustweave/did/model/MethodCapabilities;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Lorg/trustweave/did/registration/model/DriverConfig;Lorg/trustweave/did/model/MethodCapabilities;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/did/registration/model/ContactInfo;
+	public final fun component5 ()Lorg/trustweave/did/registration/model/DriverConfig;
+	public final fun component6 ()Lorg/trustweave/did/model/MethodCapabilities;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Lorg/trustweave/did/registration/model/DriverConfig;Lorg/trustweave/did/model/MethodCapabilities;Ljava/util/Map;)Lorg/trustweave/did/registration/model/DidRegistrationSpec;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registration/model/DidRegistrationSpec;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registration/model/ContactInfo;Lorg/trustweave/did/registration/model/DriverConfig;Lorg/trustweave/did/model/MethodCapabilities;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registration/model/DidRegistrationSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	public final fun getContact ()Lorg/trustweave/did/registration/model/ContactInfo;
+	public final fun getDriver ()Lorg/trustweave/did/registration/model/DriverConfig;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSpecification ()Ljava/lang/String;
+	public final fun getStatus ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registration/model/DidRegistrationSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/DidRegistrationSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registration/model/DidRegistrationSpec;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registration/model/DidRegistrationSpec;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DidRegistrationSpec$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DidRegistrationSpecParser {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/DidRegistrationSpecParser;
+	public final fun parse (Ljava/lang/String;)Lorg/trustweave/did/registration/model/DidRegistrationSpec;
+	public final fun parse (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/registration/model/DidRegistrationSpec;
+}
+
+public final class org/trustweave/did/registration/model/DriverConfig {
+	public static final field Companion Lorg/trustweave/did/registration/model/DriverConfig$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Integer;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/util/Map;)Lorg/trustweave/did/registration/model/DriverConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registration/model/DriverConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registration/model/DriverConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getConfig ()Ljava/util/Map;
+	public final fun getProtocolAdapter ()Ljava/lang/String;
+	public final fun getRegistrarUrl ()Ljava/lang/String;
+	public final fun getTimeout ()Ljava/lang/Integer;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registration/model/DriverConfig$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/DriverConfig$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registration/model/DriverConfig;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registration/model/DriverConfig;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/DriverConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/MethodImplementation {
+	public static final field Companion Lorg/trustweave/did/registration/model/MethodImplementation$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Boolean;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Map;)Lorg/trustweave/did/registration/model/MethodImplementation;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registration/model/MethodImplementation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/registration/model/MethodImplementation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getDriverUrl ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRegistrarUrl ()Ljava/lang/String;
+	public final fun getTestNet ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/registration/model/MethodImplementation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/registration/model/MethodImplementation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/registration/model/MethodImplementation;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/registration/model/MethodImplementation;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registration/model/MethodImplementation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/registry/DidMethodAutoRegisterFailure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/did/registry/DidMethodAutoRegisterFailure;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registry/DidMethodAutoRegisterFailure;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/did/registry/DidMethodAutoRegisterFailure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getPhase ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/registry/DidMethodRegistry {
+	public static final field Companion Lorg/trustweave/did/registry/DidMethodRegistry$Companion;
+	public fun <init> ()V
+	public final fun clear ()V
+	public final fun contains (Ljava/lang/String;)Z
+	public final fun get (Ljava/lang/String;)Lorg/trustweave/did/DidMethod;
+	public final fun getAllMethodNames ()Ljava/util/List;
+	public final fun getAllMethods ()Ljava/util/Map;
+	public final fun has (Ljava/lang/String;)Z
+	public final fun register (Lorg/trustweave/did/DidMethod;)V
+	public final fun registerAll ([Lorg/trustweave/did/DidMethod;)V
+	public final fun resolve (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun set (Ljava/lang/String;Lorg/trustweave/did/DidMethod;)V
+	public final fun size ()I
+	public final fun unregister (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/did/registry/DidMethodRegistry$Companion {
+	public final fun autoRegister (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun autoRegister$default (Lorg/trustweave/did/registry/DidMethodRegistry$Companion;Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun of ([Lorg/trustweave/did/DidMethod;)Lorg/trustweave/did/registry/DidMethodRegistry;
+}
+
+public final class org/trustweave/did/registry/DidMethodRegistryAutoRegisterResult {
+	public fun <init> (Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;)V
+	public final fun component1 ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;)Lorg/trustweave/did/registry/DidMethodRegistryAutoRegisterResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/registry/DidMethodRegistryAutoRegisterResult;Lorg/trustweave/did/registry/DidMethodRegistry;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/registry/DidMethodRegistryAutoRegisterResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFailures ()Ljava/util/List;
+	public final fun getHasFailures ()Z
+	public final fun getRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/registry/RegistryBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/did/registry/DidMethodRegistry;
+	public final fun register (Lorg/trustweave/did/DidMethod;)V
+	public final fun registerAll (Ljava/util/Collection;)V
+	public final fun registerAll ([Lorg/trustweave/did/DidMethod;)V
+}
+
+public final class org/trustweave/did/registry/RegistryBuilderKt {
+	public static final fun didMethodRegistry (Lkotlin/jvm/functions/Function1;)Lorg/trustweave/did/registry/DidMethodRegistry;
+	public static synthetic fun didMethodRegistry$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/trustweave/did/registry/DidMethodRegistry;
+}
+
+public abstract interface annotation class org/trustweave/did/registry/RegistryDsl : java/lang/annotation/Annotation {
+}
+
+public final class org/trustweave/did/representation/DidDocumentJsonProducer {
+	public static final field INSTANCE Lorg/trustweave/did/representation/DidDocumentJsonProducer;
+	public final fun toBytesWithMediaType (Lorg/trustweave/did/model/DidDocument;Z)Lkotlin/Pair;
+	public static synthetic fun toBytesWithMediaType$default (Lorg/trustweave/did/representation/DidDocumentJsonProducer;Lorg/trustweave/did/model/DidDocument;ZILjava/lang/Object;)Lkotlin/Pair;
+	public final fun toJsonObject (Lorg/trustweave/did/model/DidDocument;Z)Lkotlinx/serialization/json/JsonObject;
+	public static synthetic fun toJsonObject$default (Lorg/trustweave/did/representation/DidDocumentJsonProducer;Lorg/trustweave/did/model/DidDocument;ZILjava/lang/Object;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class org/trustweave/did/representation/DidDocumentJsonProducerKt {
+	public static final field APPLICATION_DID_MEDIA_TYPE Ljava/lang/String;
+	public static final field DID_1_0_CONTEXT Ljava/lang/String;
+	public static final field DID_1_1_CONTEXT Ljava/lang/String;
+}
+
+public final class org/trustweave/did/representation/DidMediaTypes {
+	public static final field DID Ljava/lang/String;
+	public static final field DID_JSON Ljava/lang/String;
+	public static final field DID_LD_JSON Ljava/lang/String;
+	public static final field DID_RESOLUTION Ljava/lang/String;
+	public static final field DID_URL_DEREFERENCING Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/did/representation/DidMediaTypes;
+	public static final field JSON Ljava/lang/String;
+	public final fun getSUPPORTED_DOCUMENT_TYPES ()Ljava/util/List;
+	public final fun isSupportedDocumentType (Ljava/lang/String;)Z
+	public final fun normalize (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolution/DidResolutionResultJson {
+	public static final field INSTANCE Lorg/trustweave/did/resolution/DidResolutionResultJson;
+	public static final field MEDIA_TYPE Ljava/lang/String;
+	public final fun toJson (Lorg/trustweave/did/resolver/DidResolutionResult;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class org/trustweave/did/resolution/ResolutionOptions {
+	public static final field Companion Lorg/trustweave/did/resolution/ResolutionOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolution/ResolutionOptions;Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccept ()Ljava/lang/String;
+	public final fun getAdditional ()Ljava/util/Map;
+	public final fun getExpandRelativeUrls ()Z
+	public final fun getNoCache ()Z
+	public final fun getVersionId ()Ljava/lang/String;
+	public final fun getVersionTime ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public final fun isEmpty ()Z
+	public final fun methodSpecificOptions ()Ljava/util/Set;
+	public fun toString ()Ljava/lang/String;
+	public final fun validate ()Lorg/trustweave/did/resolver/DidResolutionError;
+}
+
+public final synthetic class org/trustweave/did/resolution/ResolutionOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/resolution/ResolutionOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/resolution/ResolutionOptions;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/resolution/ResolutionOptions$Companion {
+	public final fun fromJson (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public final fun fromQueryParameters (Ljava/util/Map;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public final fun getEMPTY ()Lorg/trustweave/did/resolution/ResolutionOptions;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/resolver/CachingDidResolver : org/trustweave/did/resolver/DidResolver {
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlinx/datetime/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlinx/datetime/Clock;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public final fun getSize ()I
+	public final fun invalidate (Lorg/trustweave/did/identifiers/Did;)V
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/DecentralizedResolutionStrategy : org/trustweave/did/resolver/DidResolver {
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/resolver/DidResolver;Ljava/util/Map;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/resolver/DidResolver;Ljava/util/Map;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/DefaultUniversalResolver : org/trustweave/did/resolver/UniversalResolver {
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;Lorg/trustweave/did/resolver/RetryConfig;Ljava/net/http/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/String;Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;Lorg/trustweave/did/resolver/RetryConfig;Ljava/net/http/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBaseUrl ()Ljava/lang/String;
+	public fun getSupportedMethods (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/DidErrorType {
+	public static final field BASE Ljava/lang/String;
+	public static final field FEATURE_NOT_SUPPORTED Ljava/lang/String;
+	public static final field INSTANCE Lorg/trustweave/did/resolver/DidErrorType;
+	public static final field INTERNAL_ERROR Ljava/lang/String;
+	public static final field INVALID_DID Ljava/lang/String;
+	public static final field INVALID_DID_DOCUMENT Ljava/lang/String;
+	public static final field INVALID_DID_URL Ljava/lang/String;
+	public static final field INVALID_OPTIONS Ljava/lang/String;
+	public static final field METHOD_NOT_SUPPORTED Ljava/lang/String;
+	public static final field NOT_FOUND Ljava/lang/String;
+	public static final field REPRESENTATION_NOT_SUPPORTED Ljava/lang/String;
+	public final fun fromLegacyCode (Ljava/lang/String;)Ljava/lang/String;
+	public final fun httpStatus (Ljava/lang/String;)I
+	public final fun title (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionError {
+	public static final field Companion Lorg/trustweave/did/resolver/DidResolutionError$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionError;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetail ()Ljava/lang/String;
+	public final fun getHttpStatus ()I
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lkotlinx/serialization/json/JsonObject;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/resolver/DidResolutionError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/resolver/DidResolutionError$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/resolver/DidResolutionError;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionError$Companion {
+	public final fun featureNotSupported (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun fromJson (Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun internalError (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun invalidDid (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun invalidDidDocument (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun invalidDidUrl (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun invalidOptions (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun methodNotSupported (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun notFound (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun of (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public static synthetic fun of$default (Lorg/trustweave/did/resolver/DidResolutionError$Companion;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun representationNotSupported (Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionMetadata {
+	public static final field Companion Lorg/trustweave/did/resolver/DidResolutionMetadata$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Long;
+	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component8 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getDriverUrl ()Ljava/lang/String;
+	public final fun getDuration ()Ljava/lang/Long;
+	public final fun getError ()Lorg/trustweave/did/resolver/DidResolutionError;
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public final fun getPattern ()Ljava/lang/String;
+	public final fun getProof ()Ljava/util/List;
+	public final fun getProperties ()Ljava/util/Map;
+	public final fun getRetrieved ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public final fun toJson ()Lkotlinx/serialization/json/JsonObject;
+	public final fun toMap ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/did/resolver/DidResolutionMetadata$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/resolver/DidResolutionMetadata$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionMetadata$Companion {
+	public final fun fromJson (Lkotlinx/serialization/json/JsonObject;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class org/trustweave/did/resolver/DidResolutionResult {
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Deactivated : org/trustweave/did/resolver/DidResolutionResult {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun component3 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Deactivated;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Deactivated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Deactivated;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getDocumentMetadata ()Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/did/resolver/DidResolutionResult$Failure : org/trustweave/did/resolver/DidResolutionResult {
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Failure$InvalidFormat : org/trustweave/did/resolver/DidResolutionResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$InvalidFormat;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Failure$InvalidFormat;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$InvalidFormat;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Failure$MethodNotRegistered : org/trustweave/did/resolver/DidResolutionResult$Failure {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$MethodNotRegistered;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Failure$MethodNotRegistered;Ljava/lang/String;Ljava/util/List;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$MethodNotRegistered;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableMethods ()Ljava/util/List;
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Failure$NotFound : org/trustweave/did/resolver/DidResolutionResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$NotFound;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Failure$NotFound;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$NotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Failure$OptionsError : org/trustweave/did/resolver/DidResolutionResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$OptionsError;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Failure$OptionsError;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$OptionsError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getErrorType ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Failure$ResolutionError : org/trustweave/did/resolver/DidResolutionResult$Failure {
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Throwable;
+	public final fun component4 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$ResolutionError;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Failure$ResolutionError;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Ljava/lang/Throwable;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Failure$ResolutionError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResult$Success : org/trustweave/did/resolver/DidResolutionResult {
+	public fun <init> (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;)V
+	public synthetic fun <init> (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun component3 ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;)Lorg/trustweave/did/resolver/DidResolutionResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionResult$Success;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lorg/trustweave/did/resolver/DidResolutionMetadata;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
+	public final fun getDocumentMetadata ()Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun getResolutionMetadata ()Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/DidResolutionResultExtensionsKt {
+	public static final fun getDocumentMetadata (Lorg/trustweave/did/resolver/DidResolutionResult;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public static final fun getDocumentOrNull (Lorg/trustweave/did/resolver/DidResolutionResult;)Lorg/trustweave/did/model/DidDocument;
+	public static final fun getError (Lorg/trustweave/did/resolver/DidResolutionResult;)Lorg/trustweave/did/resolver/DidResolutionError;
+	public static final fun getErrorMessage (Lorg/trustweave/did/resolver/DidResolutionResult;)Ljava/lang/String;
+	public static final fun getErrorType (Lorg/trustweave/did/resolver/DidResolutionResult;)Ljava/lang/String;
+	public static final fun getHasError (Lorg/trustweave/did/resolver/DidResolutionResult;)Z
+	public static final fun getOrThrow (Lorg/trustweave/did/resolver/DidResolutionResult;)Lorg/trustweave/did/model/DidDocument;
+	public static final fun getResolutionMetadata (Lorg/trustweave/did/resolver/DidResolutionResult;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public static final fun isDeactivated (Lorg/trustweave/did/resolver/DidResolutionResult;)Z
+	public static final fun isNotFound (Lorg/trustweave/did/resolver/DidResolutionResult;)Z
+	public static final fun isSuccess (Lorg/trustweave/did/resolver/DidResolutionResult;)Z
+}
+
+public abstract interface class org/trustweave/did/resolver/DidResolver {
+	public abstract fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/DidResolver$DefaultImpls {
+	public static fun resolve (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/FallbackDidResolver : org/trustweave/did/resolver/DidResolver {
+	public fun <init> (Lorg/trustweave/did/resolver/DidResolver;Lorg/trustweave/did/resolver/DidResolver;)V
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/FallbackDidResolverKt {
+	public static final fun asDidResolver (Lorg/trustweave/did/resolver/UniversalResolver;)Lorg/trustweave/did/resolver/DidResolver;
+}
+
+public final class org/trustweave/did/resolver/RegistryBasedResolver : org/trustweave/did/resolver/DidResolver {
+	public fun <init> (Lorg/trustweave/did/registry/DidMethodRegistry;)V
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/RegistryBasedResolverKt {
+	public static final fun asResolver (Lorg/trustweave/did/registry/DidMethodRegistry;)Lorg/trustweave/did/resolver/DidResolver;
+}
+
+public final class org/trustweave/did/resolver/ResolutionFallbackStrategy : org/trustweave/did/resolver/DidResolver {
+	public fun <init> (Ljava/util/List;)V
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/resolver/RetryConfig {
+	public static final field Companion Lorg/trustweave/did/resolver/RetryConfig$Companion;
+	public fun <init> ()V
+	public fun <init> (IJJLjava/util/Set;Ljava/util/Set;Ljava/util/List;)V
+	public synthetic fun <init> (IJJLjava/util/Set;Ljava/util/Set;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/util/Set;
+	public final fun component5 ()Ljava/util/Set;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (IJJLjava/util/Set;Ljava/util/Set;Ljava/util/List;)Lorg/trustweave/did/resolver/RetryConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/RetryConfig;IJJLjava/util/Set;Ljava/util/Set;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/resolver/RetryConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun executeWithRetry (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getInitialDelayMs ()J
+	public final fun getMaxDelayMs ()J
+	public final fun getMaxRetries ()I
+	public final fun getNonRetryableExceptions ()Ljava/util/List;
+	public final fun getRetryableExceptions ()Ljava/util/Set;
+	public final fun getRetryableStatusCodes ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/resolver/RetryConfig$Companion {
+	public final fun aggressive ()Lorg/trustweave/did/resolver/RetryConfig;
+	public final fun default ()Lorg/trustweave/did/resolver/RetryConfig;
+	public final fun noRetry ()Lorg/trustweave/did/resolver/RetryConfig;
+}
+
+public final class org/trustweave/did/resolver/StandardUniversalResolverAdapter : org/trustweave/did/resolver/UniversalResolverProtocolAdapter {
+	public fun <init> ()V
+	public fun buildMethodsUrl (Ljava/lang/String;)Ljava/lang/String;
+	public fun buildResolveUrl (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun configureAuth (Ljava/net/http/HttpRequest$Builder;Ljava/lang/String;)V
+	public fun extractDidDocument (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun extractDocumentMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun extractResolutionMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public fun getProviderName ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/did/resolver/UniversalResolver {
+	public abstract fun getBaseUrl ()Ljava/lang/String;
+	public abstract fun getSupportedMethods (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/did/resolver/UniversalResolverProtocolAdapter {
+	public abstract fun buildMethodsUrl (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun buildResolveUrl (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun configureAuth (Ljava/net/http/HttpRequest$Builder;Ljava/lang/String;)V
+	public abstract fun extractDidDocument (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public abstract fun extractDocumentMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public abstract fun extractResolutionMetadata (Lkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public abstract fun getProviderName ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/rotation/DefaultDidRotationService : org/trustweave/did/rotation/DidRotationService {
+	public fun <init> (Lorg/trustweave/did/registrar/DidRegistrar;Lorg/trustweave/did/resolver/DidResolver;)V
+	public fun rotateController (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun rotateDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/NewDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun rotateVerificationMethod (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/model/VerificationMethod;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/rotation/DidRotationResult {
+	public fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component3 ()Lorg/trustweave/did/identifiers/Did;
+	public final fun component4 ()Lorg/trustweave/did/rotation/MigrationGuide;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lkotlinx/datetime/Instant;
+	public final fun copy (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/rotation/DidRotationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/DidRotationResult;ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/DidRotationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getMigrationGuide ()Lorg/trustweave/did/rotation/MigrationGuide;
+	public final fun getNewDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getOldDid ()Lorg/trustweave/did/identifiers/Did;
+	public final fun getRotatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/did/rotation/DidRotationService {
+	public abstract fun rotateController (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rotateDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/NewDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rotateVerificationMethod (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lorg/trustweave/did/model/VerificationMethod;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/rotation/MigrationGuide {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/did/rotation/MigrationGuide;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/MigrationGuide;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/rotation/MigrationGuide;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentialsToUpdate ()Ljava/util/List;
+	public final fun getRelationshipsToUpdate ()Ljava/util/List;
+	public final fun getServicesToUpdate ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/rotation/NewDidOptions {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/did/rotation/NewDidOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/NewDidOptions;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/rotation/NewDidOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getOptions ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/rotation/RotationResult {
+	public fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun copy (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/rotation/RotationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/RotationResult;ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/RotationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getRotatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getSuccess ()Z
+	public final fun getUpdatedDocument ()Lorg/trustweave/did/model/DidDocument;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/trustweave/did/spi/DidMethodProvider {
+	public abstract fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public static synthetic fun create$default (Lorg/trustweave/did/spi/DidMethodProvider;Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/did/DidMethod;
+	public abstract fun getName ()Ljava/lang/String;
+	public fun getPriority ()I
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public abstract fun getSupportedMethods ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/did/spi/DidMethodProvider$DefaultImpls {
+	public static synthetic fun create$default (Lorg/trustweave/did/spi/DidMethodProvider;Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/did/DidMethod;
+	public static fun getPriority (Lorg/trustweave/did/spi/DidMethodProvider;)I
+	public static fun getRequiredEnvironmentVariables (Lorg/trustweave/did/spi/DidMethodProvider;)Ljava/util/List;
+	public static fun hasRequiredEnvironmentVariables (Lorg/trustweave/did/spi/DidMethodProvider;)Z
+}
+
+public abstract interface class org/trustweave/did/storage/DidDocumentStorage {
+	public abstract fun deactivate (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun delete (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun exists (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun get (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getBackend ()Lorg/trustweave/did/storage/StorageBackend;
+	public abstract fun store (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun store$default (Lorg/trustweave/did/storage/DidDocumentStorage;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun update (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/storage/DidDocumentStorage$DefaultImpls {
+	public static synthetic fun store$default (Lorg/trustweave/did/storage/DidDocumentStorage;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/storage/InMemoryDocumentStorage : org/trustweave/did/storage/DidDocumentStorage {
+	public fun <init> ()V
+	public final fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivate (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun delete (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getBackend ()Lorg/trustweave/did/storage/StorageBackend;
+	public final fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun update (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/storage/StorageBackend : java/lang/Enum {
+	public static final field BLOCKCHAIN Lorg/trustweave/did/storage/StorageBackend;
+	public static final field DATABASE Lorg/trustweave/did/storage/StorageBackend;
+	public static final field HYBRID Lorg/trustweave/did/storage/StorageBackend;
+	public static final field IN_MEMORY Lorg/trustweave/did/storage/StorageBackend;
+	public static final field IPFS Lorg/trustweave/did/storage/StorageBackend;
+	public static final field REDIS Lorg/trustweave/did/storage/StorageBackend;
+	public static final field S3 Lorg/trustweave/did/storage/StorageBackend;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/did/storage/StorageBackend;
+	public static fun values ()[Lorg/trustweave/did/storage/StorageBackend;
+}
+
+public final class org/trustweave/did/util/DidUtilsKt {
+	public static final fun extractAllVerificationMethodIds (Lorg/trustweave/did/model/DidDocument;)Ljava/util/Set;
+	public static final fun findVerificationMethod (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/VerificationMethodId;)Lorg/trustweave/did/model/VerificationMethod;
+	public static final fun getServicesByType (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;)Ljava/util/List;
+	public static final fun hasServiceType (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;)Z
+	public static final fun hasVerificationMethod (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/VerificationMethodId;)Z
+	public static final fun normalizeKeyId (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun parseDidOrNull (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+	public static final fun validateDid (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/did/util/XmlDateTimeKt {
+	public static final fun toXmlDateTime (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+}
+
+public final class org/trustweave/did/util/XmlDateTimeSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/trustweave/did/util/XmlDateTimeSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/datetime/Instant;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/datetime/Instant;)V
+}
+
+public final class org/trustweave/did/verification/DefaultDidDocumentVerificationService : org/trustweave/did/verification/DidDocumentVerificationService {
+	public fun <init> (Lorg/trustweave/did/verification/DidDocumentCanonicalizationService;)V
+	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyVerificationMethod (Lorg/trustweave/did/model/VerificationMethod;Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/did/verification/DidDocumentCanonicalizationService {
+	public abstract fun canonicalize (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun computeDigest (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isConformant ()Z
+	public abstract fun normalize (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/verification/DidDocumentCanonicalizationService$DefaultImpls {
+	public static fun isConformant (Lorg/trustweave/did/verification/DidDocumentCanonicalizationService;)Z
+}
+
+public abstract interface class org/trustweave/did/verification/DidDocumentVerificationService {
+	public abstract fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun verifyVerificationMethod (Lorg/trustweave/did/model/VerificationMethod;Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/verification/JsonLdCanonicalizationService : org/trustweave/did/verification/DidDocumentCanonicalizationService {
+	public fun <init> ()V
+	public fun canonicalize (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun computeDigest (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isConformant ()Z
+	public fun normalize (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/verification/VerificationResult {
+	public fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;)V
+	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;)Lorg/trustweave/did/verification/VerificationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/verification/VerificationResult;ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/verification/VerificationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrors ()Ljava/util/List;
+	public final fun getValid ()Z
+	public final fun getVerificationMethod ()Ljava/lang/String;
+	public final fun getVerifiedAt ()Lkotlinx/datetime/Instant;
+	public final fun getWarnings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/verifier/DelegationChainResult {
+	public fun <init> (ZLjava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (ZLjava/util/List;Ljava/util/List;)Lorg/trustweave/did/verifier/DelegationChainResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/verifier/DelegationChainResult;ZLjava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/verifier/DelegationChainResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrors ()Ljava/util/List;
+	public final fun getPath ()Ljava/util/List;
+	public final fun getValid ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/did/verifier/DidDocumentDelegationVerifier {
+	public fun <init> (Lorg/trustweave/did/resolver/DidResolver;)V
+	public final fun verify (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun verifyChain (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

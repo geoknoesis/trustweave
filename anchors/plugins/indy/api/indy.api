@@ -1,0 +1,44 @@
+public final class org/trustweave/anchor/indy/IndyBlockchainAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient {
+	public static final field BCOVRIN_TESTNET Ljava/lang/String;
+	public static final field Companion Lorg/trustweave/anchor/indy/IndyBlockchainAnchorClient$Companion;
+	public static final field SOVRIN_MAINNET Ljava/lang/String;
+	public static final field SOVRIN_STAGING Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/anchor/options/IndyOptions;)V
+	public final fun close ()V
+}
+
+public final class org/trustweave/anchor/indy/IndyBlockchainAnchorClient$Companion {
+}
+
+public final class org/trustweave/anchor/indy/IndyBlockchainAnchorClientProvider : org/trustweave/anchor/spi/BlockchainAnchorClientProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Ljava/util/Map;)Lorg/trustweave/anchor/BlockchainAnchorClient;
+	public fun getName ()Ljava/lang/String;
+	public fun getRequiredEnvironmentVariables ()Ljava/util/List;
+	public fun getSupportedChains ()Ljava/util/List;
+	public fun hasRequiredEnvironmentVariables ()Z
+}
+
+public final class org/trustweave/anchor/indy/IndyIntegration {
+	public static final field INSTANCE Lorg/trustweave/anchor/indy/IndyIntegration;
+	public final fun discoverAndRegister (Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+	public static synthetic fun discoverAndRegister$default (Lorg/trustweave/anchor/indy/IndyIntegration;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+	public final fun setup (Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+	public static synthetic fun setup$default (Lorg/trustweave/anchor/indy/IndyIntegration;Ljava/util/List;Ljava/util/Map;Lorg/trustweave/anchor/BlockchainAnchorRegistry;ILjava/lang/Object;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+}
+
+public final class org/trustweave/anchor/indy/IndyIntegrationResult {
+	public fun <init> (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)V
+	public final fun component1 ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/anchor/indy/IndyIntegrationResult;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/anchor/indy/IndyIntegrationResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegisteredChains ()Ljava/util/List;
+	public final fun getRegistry ()Lorg/trustweave/anchor/BlockchainAnchorRegistry;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

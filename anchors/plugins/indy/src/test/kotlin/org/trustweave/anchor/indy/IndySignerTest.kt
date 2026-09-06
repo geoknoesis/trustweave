@@ -8,7 +8,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class IndySignerTest {
-
     /** RFC-style deterministic seed for repeatable tests. */
     private val seed: ByteArray = ByteArray(32) { it.toByte() }
 
@@ -18,10 +17,12 @@ class IndySignerTest {
         val payload = "indy-attrib-payload".toByteArray()
         val produced = Base58.decode(signer.signBase58(payload))
 
-        val expected = Ed25519Signer().apply {
-            init(true, Ed25519PrivateKeyParameters(seed, 0))
-            update(payload, 0, payload.size)
-        }.generateSignature()
+        val expected =
+            Ed25519Signer()
+                .apply {
+                    init(true, Ed25519PrivateKeyParameters(seed, 0))
+                    update(payload, 0, payload.size)
+                }.generateSignature()
 
         assertEquals(expected.size, produced.size, "signature length must match")
         assertEquals(64, produced.size, "Ed25519 signatures are 64 bytes")

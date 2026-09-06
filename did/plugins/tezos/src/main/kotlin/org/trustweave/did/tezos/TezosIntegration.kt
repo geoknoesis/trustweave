@@ -17,7 +17,10 @@ class TezosIntegration : AbstractDidMethodProvider() {
 
     override val supportedMethods: List<String> = listOf("tz")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName != "tz") return null
         ModuleCapabilities.requireOperations("did:plugins:tezos", setOf("create"))
         return TezosDidMethod(resolveKms(options))

@@ -12,12 +12,14 @@ import org.trustweave.iondid.IonDidMethod
  * Automatically discovers did:ion method when this module is on the classpath.
  */
 class IonDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "ion"
 
     override val supportedMethods: List<String> = listOf("ion")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "ion") return null
         return IonDidMethod(resolveKms(options), createConfig(options))
     }
@@ -35,4 +37,3 @@ class IonDidMethodProvider : AbstractDidMethodProvider() {
         return IonDidConfig.fromMap(configMap)
     }
 }
-

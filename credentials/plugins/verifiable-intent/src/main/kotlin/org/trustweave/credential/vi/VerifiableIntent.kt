@@ -11,10 +11,9 @@ import org.trustweave.credential.vi.verification.StrictnessMode
  * network or merchant) calls to validate an agent's delegation chain.
  *
  * Issuance (minting L1 and signing L2/L3 via [org.trustweave.credential.vi.crypto.KmsEs256Signer])
- * lives in `org.trustweave.credential.vi.issuance` and is forthcoming.
+ * lives in `org.trustweave.credential.vi.issuance`.
  */
 public object VerifiableIntent {
-
     /**
      * Verifies a VI delegation chain (mode inferred from the L2 mandate `vct`) from compact SD-JWT
      * strings. For immediate mode pass only [l1] + [l2]; for autonomous mode add the L3(s) and the
@@ -23,7 +22,12 @@ public object VerifiableIntent {
      * @param issuerJwk the issuer's EC P-256 public key (JWK) used to verify L1.
      * @param l2RoutedForPayment / [l2RoutedForCheckout] the exact L2 selective presentations each L3
      *        recipient received — required to verify the corresponding L3 `sd_hash`.
-     * @param now verification time as epoch seconds.
+     * @param now trusted verification time as epoch seconds; defaults to the host clock.
+     * @param requireReplayProtection requires verifier-supplied audience and nonce expectations for L2 and each presented L3.
+     * Set false only for offline auditing, never for authorizing a live request. The caller must
+     * issue fresh nonces and atomically consume them; equality checking is not a replay cache.
+     * @param allowMissingTemporalClaims offline compatibility policy for absent L1/L2 timestamps.
+     * L3 always requires integer iat/exp and a lifetime of at most one hour.
      */
     public fun verifyChain(
         l1: String,
@@ -33,23 +37,36 @@ public object VerifiableIntent {
         l3Checkout: String? = null,
         l2RoutedForPayment: String? = null,
         l2RoutedForCheckout: String? = null,
-        now: Long,
+        now: Long = System.currentTimeMillis() / 1000,
         clockSkewSeconds: Long = 300,
         expectedL2Aud: String? = null,
         expectedL2Nonce: String? = null,
         strictness: StrictnessMode = StrictnessMode.PERMISSIVE,
-    ): ChainVerificationResult = ChainVerifier.verify(
-        l1 = ViSdJwt.parse(l1),
-        l2 = ViSdJwt.parse(l2),
-        issuerJwk = issuerJwk,
-        l3Payment = l3Payment?.let { ViSdJwt.parse(it) },
-        l3Checkout = l3Checkout?.let { ViSdJwt.parse(it) },
-        l2RoutedForPayment = l2RoutedForPayment,
-        l2RoutedForCheckout = l2RoutedForCheckout,
-        now = now,
-        clockSkewSeconds = clockSkewSeconds,
-        expectedL2Aud = expectedL2Aud,
-        expectedL2Nonce = expectedL2Nonce,
-        strictness = strictness,
-    )
+        requireReplayProtection: Boolean = true,
+        allowMissingTemporalClaims: Boolean = false,
+        expectedL3PaymentAud: String? = null,
+        expectedL3PaymentNonce: String? = null,
+        expectedL3CheckoutAud: String? = null,
+        expectedL3CheckoutNonce: String? = null,
+    ): ChainVerificationResult =
+        ChainVerifier.verify(
+            l1 = ViSdJwt.parse(l1),
+            l2 = ViSdJwt.parse(l2),
+            issuerJwk = issuerJwk,
+            l3Payment = l3Payment?.let { ViSdJwt.parse(it) },
+            l3Checkout = l3Checkout?.let { ViSdJwt.parse(it) },
+            l2RoutedForPayment = l2RoutedForPayment,
+            l2RoutedForCheckout = l2RoutedForCheckout,
+            now = now,
+            clockSkewSeconds = clockSkewSeconds,
+            expectedL2Aud = expectedL2Aud,
+            expectedL2Nonce = expectedL2Nonce,
+            strictness = strictness,
+            requireReplayProtection = requireReplayProtection,
+            allowMissingTemporalClaims = allowMissingTemporalClaims,
+            expectedL3PaymentAud = expectedL3PaymentAud,
+            expectedL3PaymentNonce = expectedL3PaymentNonce,
+            expectedL3CheckoutAud = expectedL3CheckoutAud,
+            expectedL3CheckoutNonce = expectedL3CheckoutNonce,
+        )
 }

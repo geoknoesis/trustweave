@@ -1,16 +1,16 @@
 package org.trustweave.did.rotation
 
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.model.CreateDidOptions
 import org.trustweave.did.registrar.model.KeyManagementMode
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
+import org.trustweave.did.resolver.DidResolver
 
 /**
  * DID Rotation Service.
@@ -56,9 +56,9 @@ interface DidRotationService {
     suspend fun rotateVerificationMethod(
         did: Did,
         oldKeyId: String,
-        newKey: VerificationMethod
+        newKey: VerificationMethod,
     ): RotationResult
-    
+
     /**
      * Rotate the entire DID (create new DID and migrate).
      *
@@ -68,9 +68,9 @@ interface DidRotationService {
      */
     suspend fun rotateDid(
         oldDid: Did,
-        newDidOptions: NewDidOptions
+        newDidOptions: NewDidOptions,
     ): DidRotationResult
-    
+
     /**
      * Update controller of a DID.
      *
@@ -80,7 +80,7 @@ interface DidRotationService {
      */
     suspend fun rotateController(
         did: Did,
-        newController: Did
+        newController: Did,
     ): RotationResult
 }
 
@@ -89,7 +89,7 @@ interface DidRotationService {
  */
 data class NewDidOptions(
     val method: String,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -99,7 +99,7 @@ data class RotationResult(
     val success: Boolean,
     val updatedDocument: DidDocument? = null,
     val error: String? = null,
-    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now()
+    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now(),
 )
 
 /**
@@ -111,7 +111,7 @@ data class DidRotationResult(
     val newDid: Did? = null,
     val migrationGuide: MigrationGuide? = null,
     val error: String? = null,
-    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now()
+    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now(),
 )
 
 /**
@@ -120,7 +120,7 @@ data class DidRotationResult(
 data class MigrationGuide(
     val relationshipsToUpdate: List<String> = emptyList(),
     val servicesToUpdate: List<String> = emptyList(),
-    val credentialsToUpdate: List<String> = emptyList()
+    val credentialsToUpdate: List<String> = emptyList(),
 )
 
 /**
@@ -128,183 +128,203 @@ data class MigrationGuide(
  */
 class DefaultDidRotationService(
     private val registrar: DidRegistrar,
-    private val resolver: DidResolver
+    private val resolver: DidResolver,
 ) : DidRotationService {
-    
     override suspend fun rotateVerificationMethod(
         did: Did,
         oldKeyId: String,
-        newKey: VerificationMethod
+        newKey: VerificationMethod,
     ): RotationResult {
         // 1. Resolve current document
         val resolutionResult = resolver.resolve(did)
-        val currentDocument = when (resolutionResult) {
-            is DidResolutionResult.Success -> resolutionResult.document
-            else -> return RotationResult(
-                success = false,
-                error = "Failed to resolve DID: ${(resolutionResult as? DidResolutionResult.Failure)?.let {
-                    when (it) {
-                        is DidResolutionResult.Failure.NotFound -> "DID not found"
-                        is DidResolutionResult.Failure.ResolutionError -> it.reason
-                        else -> "Unknown error"
-                    }
-                }}"
-            )
-        }
-        
-        // 2. Verify old key exists
-        val oldKey = currentDocument.verificationMethod.find { it.id.value == oldKeyId }
-            ?: return RotationResult(
-                success = false,
-                error = "Verification method not found: $oldKeyId"
-            )
-        
-        // 3. Create updated document
-        val updatedVerificationMethods = currentDocument.verificationMethod
-            .filter { it.id.value != oldKeyId }
-            .plus(newKey)
-        
-        // 4. Update references in relationship arrays
-        val updatedDocument = currentDocument.copy(
-            verificationMethod = updatedVerificationMethods,
-            authentication = currentDocument.authentication.map { ref ->
-                if (ref.value == oldKeyId) {
-                    org.trustweave.did.identifiers.VerificationMethodId(
-                        did = did,
-                        keyId = org.trustweave.core.identifiers.KeyId(
-                            newKey.id.value.substringAfter("#")
-                        )
-                    )
-                } else {
-                    ref
-                }
-            },
-            assertionMethod = currentDocument.assertionMethod.map { ref ->
-                if (ref.value == oldKeyId) {
-                    org.trustweave.did.identifiers.VerificationMethodId(
-                        did = did,
-                        keyId = org.trustweave.core.identifiers.KeyId(
-                            newKey.id.value.substringAfter("#")
-                        )
-                    )
-                } else {
-                    ref
-                }
+        val currentDocument =
+            when (resolutionResult) {
+                is DidResolutionResult.Success -> resolutionResult.document
+                else -> return RotationResult(
+                    success = false,
+                    error = "Failed to resolve DID: ${(resolutionResult as? DidResolutionResult.Failure)?.let {
+                        when (it) {
+                            is DidResolutionResult.Failure.NotFound -> "DID not found"
+                            is DidResolutionResult.Failure.ResolutionError -> it.reason
+                            else -> "Unknown error"
+                        }
+                    }}",
+                )
             }
-            // Similar updates for other relationship arrays...
-        )
-        
+
+        // 2. Verify old key exists
+        val oldKey =
+            currentDocument.verificationMethod.find { it.id.value == oldKeyId }
+                ?: return RotationResult(
+                    success = false,
+                    error = "Verification method not found: $oldKeyId",
+                )
+
+        // 3. Create updated document
+        val updatedVerificationMethods =
+            currentDocument.verificationMethod
+                .filter { it.id.value != oldKeyId }
+                .plus(newKey)
+
+        // 4. Update references in relationship arrays
+        val updatedDocument =
+            currentDocument.copy(
+                verificationMethod = updatedVerificationMethods,
+                authentication =
+                    currentDocument.authentication.map { ref ->
+                        if (ref.value == oldKeyId) {
+                            org.trustweave.did.identifiers.VerificationMethodId(
+                                did = did,
+                                keyId =
+                                    org.trustweave.core.identifiers.KeyId(
+                                        newKey.id.value.substringAfter("#"),
+                                    ),
+                            )
+                        } else {
+                            ref
+                        }
+                    },
+                assertionMethod =
+                    currentDocument.assertionMethod.map { ref ->
+                        if (ref.value == oldKeyId) {
+                            org.trustweave.did.identifiers.VerificationMethodId(
+                                did = did,
+                                keyId =
+                                    org.trustweave.core.identifiers.KeyId(
+                                        newKey.id.value.substringAfter("#"),
+                                    ),
+                            )
+                        } else {
+                            ref
+                        }
+                    },
+                // Similar updates for other relationship arrays...
+            )
+
         // 5. Update via registrar
         return try {
-            val updateResult = registrar.updateDid(
-                did = did.value,
-                document = updatedDocument
-            )
-            
+            val updateResult =
+                registrar.updateDid(
+                    did = did.value,
+                    document = updatedDocument,
+                )
+
             RotationResult(
                 success = updateResult.didState.state == org.trustweave.did.registrar.model.OperationState.FINISHED,
-                updatedDocument = updatedDocument
+                updatedDocument = updatedDocument,
             )
         } catch (e: Exception) {
             RotationResult(
                 success = false,
-                error = "Failed to update DID: ${e.message}"
+                error = "Failed to update DID: ${e.message}",
             )
         }
     }
-    
+
     override suspend fun rotateDid(
         oldDid: Did,
-        newDidOptions: NewDidOptions
+        newDidOptions: NewDidOptions,
     ): DidRotationResult {
         // 1. Resolve old DID
         val oldResolution = resolver.resolve(oldDid)
-        val oldDocument = when (oldResolution) {
-            is DidResolutionResult.Success -> oldResolution.document
-            else -> return DidRotationResult(
-                success = false,
-                oldDid = oldDid,
-                error = "Failed to resolve old DID"
-            )
-        }
-        
-        // 2. Create new DID
-        val createResult = registrar.createDid(
-            method = newDidOptions.method,
-            options = CreateDidOptions(
-                keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
-                methodSpecificOptions = newDidOptions.options.mapValues { 
-                    kotlinx.serialization.json.JsonPrimitive(it.value.toString()) 
-                }
-            )
-        )
-        
-        val newDid = when (val state = createResult.didState.state) {
-            org.trustweave.did.registrar.model.OperationState.FINISHED -> {
-                createResult.didState.did?.let { org.trustweave.did.identifiers.Did(it) }
+        val oldDocument =
+            when (oldResolution) {
+                is DidResolutionResult.Success -> oldResolution.document
+                else -> return DidRotationResult(
+                    success = false,
+                    oldDid = oldDid,
+                    error = "Failed to resolve old DID",
+                )
             }
-            else -> return DidRotationResult(
+
+        // 2. Create new DID
+        val createResult =
+            registrar.createDid(
+                method = newDidOptions.method,
+                options =
+                    CreateDidOptions(
+                        keyManagementMode = KeyManagementMode.INTERNAL_SECRET,
+                        methodSpecificOptions =
+                            newDidOptions.options.mapValues {
+                                kotlinx.serialization.json.JsonPrimitive(it.value.toString())
+                            },
+                    ),
+            )
+
+        val newDid =
+            when (val state = createResult.didState.state) {
+                org.trustweave.did.registrar.model.OperationState.FINISHED -> {
+                    createResult.didState.did?.let {
+                        org.trustweave.did.identifiers
+                            .Did(it)
+                    }
+                }
+                else -> return DidRotationResult(
+                    success = false,
+                    oldDid = oldDid,
+                    error = "Failed to create new DID: state is $state",
+                )
+            } ?: return DidRotationResult(
                 success = false,
                 oldDid = oldDid,
-                error = "Failed to create new DID: state is $state"
+                error = "Failed to create new DID: no DID returned",
             )
-        } ?: return DidRotationResult(
-            success = false,
-            oldDid = oldDid,
-            error = "Failed to create new DID: no DID returned"
-        )
-        
+
         // 3. Generate migration guide
-        val migrationGuide = MigrationGuide(
-            relationshipsToUpdate = oldDocument.authentication.map { it.value } +
-                oldDocument.assertionMethod.map { it.value },
-            servicesToUpdate = oldDocument.service.map { it.id }
-        )
-        
+        val migrationGuide =
+            MigrationGuide(
+                relationshipsToUpdate =
+                    oldDocument.authentication.map { it.value } +
+                        oldDocument.assertionMethod.map { it.value },
+                servicesToUpdate = oldDocument.service.map { it.id },
+            )
+
         return DidRotationResult(
             success = true,
             oldDid = oldDid,
             newDid = newDid,
-            migrationGuide = migrationGuide
+            migrationGuide = migrationGuide,
         )
     }
-    
+
     override suspend fun rotateController(
         did: Did,
-        newController: Did
+        newController: Did,
     ): RotationResult {
         // 1. Resolve current document
         val resolutionResult = resolver.resolve(did)
-        val currentDocument = when (resolutionResult) {
-            is DidResolutionResult.Success -> resolutionResult.document
-            else -> return RotationResult(
-                success = false,
-                error = "Failed to resolve DID"
-            )
-        }
-        
+        val currentDocument =
+            when (resolutionResult) {
+                is DidResolutionResult.Success -> resolutionResult.document
+                else -> return RotationResult(
+                    success = false,
+                    error = "Failed to resolve DID",
+                )
+            }
+
         // 2. Update controller
-        val updatedDocument = currentDocument.copy(
-            controller = listOf(newController)
-        )
-        
+        val updatedDocument =
+            currentDocument.copy(
+                controller = listOf(newController),
+            )
+
         // 3. Update via registrar
         return try {
-            val updateResult = registrar.updateDid(
-                did = did.value,
-                document = updatedDocument
-            )
-            
+            val updateResult =
+                registrar.updateDid(
+                    did = did.value,
+                    document = updatedDocument,
+                )
+
             RotationResult(
                 success = updateResult.didState.state == org.trustweave.did.registrar.model.OperationState.FINISHED,
-                updatedDocument = updatedDocument
+                updatedDocument = updatedDocument,
             )
         } catch (e: Exception) {
             RotationResult(
                 success = false,
-                error = "Failed to update controller: ${e.message}"
+                error = "Failed to update controller: ${e.message}",
             )
         }
     }
 }
-

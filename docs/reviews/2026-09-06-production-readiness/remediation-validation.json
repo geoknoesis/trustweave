@@ -1,0 +1,717 @@
+{
+  "command": ".\\gradlew.bat ktlintCheck test checkKotlinAbi --continue --max-workers=2",
+  "result": "BUILD SUCCESSFUL",
+  "duration": "1m 31s",
+  "head": "a41d482a96dcdd3962c2a0a95fd1da469f310fa9",
+  "scope": "Uncommitted SDK working tree; local Gradle test tasks including up-to-date results; separate integrationTest tasks and hosted CI not executed",
+  "test_report_modules": 86,
+  "totals": {
+    "tests": 3769,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 15
+  },
+  "modules": [
+    {
+      "module": ":anchors:anchor-core",
+      "tests": 115,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:algorand",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:arbitrum",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:base",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:bitcoin",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:cardano",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":anchors:plugins:ethereum",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:evm-base",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:ganache",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:indy",
+      "tests": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:optimism",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:polygon",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":anchors:plugins:zksync",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":common",
+      "tests": 430,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":contract",
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:avp-authorization-server",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:credential-api",
+      "tests": 400,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:oidc4vci-server",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:avp-micro",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:didcomm",
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:eudiw",
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:jades",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:mdl",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:oidc4vci",
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:oidc4vp",
+      "tests": 38,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:openid-federation",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:platforms:entra",
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:presentation-exchange",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:siop",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:bitstring",
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:publishing",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:server",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:token",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:verifiable-intent",
+      "tests": 38,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:vc-api-server",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:did-core",
+      "tests": 453,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:base",
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:btcr",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ebsi",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ethr",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:godiddy",
+      "tests": 103,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:jwk",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:key",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:orb",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:peer",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:sidetree-core",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:tezos",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:threebox",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:web",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:registrar",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":distribution:examples",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:kms-core",
+      "tests": 257,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:aws",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:azure",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3
+    },
+    {
+      "module": ":kms:plugins:cyberark",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:entrust",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:fortanix",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:google",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":kms:plugins:hashicorp",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:ibm",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:inmemory",
+      "tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    },
+    {
+      "module": ":kms:plugins:thales",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:thales-luna",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:utimaco",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:waltid",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:cades",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:etsi-validation",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:jades",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:pades",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:trust-lists",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:tsa-core",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:xades",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":testkit",
+      "tests": 250,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3
+    },
+    {
+      "module": ":trust",
+      "tests": 351,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":trust-registry:plugins:database",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":trust-registry:trust-registry-core",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":trust-registry:trust-registry-server",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:cloud",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:database",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:file",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:wallet-core",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:credential-models-mp",
+      "task": "jvmTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:did-identifiers-mp",
+      "task": "jvmTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:wallet-core-mp",
+      "task": "jvmTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "skips": [
+    {
+      "module": ":anchors:plugins:cardano",
+      "class": "org.trustweave.anchor.cardano.CardanoBlockfrostIntegrationTest",
+      "test": "anchor and read back round-trip on Preview()"
+    },
+    {
+      "module": ":anchors:plugins:polygon",
+      "class": "org.trustweave.anchor.polygon.PolygonBlockchainAnchorClientTest",
+      "test": "should throw NotFoundException for non-existent transaction()"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "test": "requireClusterActive does not throw()"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "test": "cluster is ACTIVE()"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "test": "generateKey sign and deleteKey round-trip on the HSM()"
+    },
+    {
+      "module": ":kms:plugins:google",
+      "class": "org.trustweave.googlekms.GoogleKmsProviderTest",
+      "test": "test create with valid options()"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "test": "generateKey(P256) returns a handle and getPublicKey round-trips it()"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "test": "sign(P256) produces a signature that verifies with JCA SHA256withECDSA()"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "test": "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)()"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "test": "generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)()"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "test": "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound()"
+    },
+    {
+      "module": ":testkit",
+      "class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "test": "example test requiring multiple plugins()"
+    },
+    {
+      "module": ":testkit",
+      "class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "test": "example test requiring Google Cloud KMS()"
+    },
+    {
+      "module": ":testkit",
+      "class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "test": "example test requiring AWS KMS()"
+    },
+    {
+      "module": ":trust",
+      "class": "org.trustweave.integration.InMemoryTrustWeaveIntegrationTest",
+      "test": "test with external services template()"
+    }
+  ],
+  "abi_check_tasks": 105,
+  "lint_baseline_changed": false,
+  "source_hashes": {
+    "credentials/plugins/openid-federation/src/main/kotlin/org/trustweave/credential/federation/TrustChainResolver.kt": "404d836f88a664b97fee2bdc4dd2f1ae3708bd0d76db3b5237e7eeaa2c5af9db",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt": "ed61f0dfa95d0572eb3b440e408a9d0a1aa445c6aeaad54843726f9454ba1a19",
+    "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt": "f57a90d430e90e679b69e692533be3168e7fe1e13e2a3e0513c4352d8e5e2251"
+  },
+  "additional_validation": {
+    "command": ".\\gradlew.bat jvmTest --max-workers=2",
+    "result": "BUILD SUCCESSFUL",
+    "duration": "10s",
+    "documentation": "352 Markdown files checked; 0 errors",
+    "diff_check": "passed"
+  },
+  "excluded_stale_reports": {
+    "module": "credentials/plugins/bbs",
+    "tests": 34,
+    "reason": "No module in current source/settings and no matching task in this run; old output is not validation evidence."
+  }
+}

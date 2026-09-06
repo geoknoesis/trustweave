@@ -22,16 +22,15 @@ import kotlin.test.assertTrue
  * already covers the sign+verify round-trip.
  */
 class JadesVerificationExtensionsTest {
+    private fun newBuilder(): VerificationBuilder = VerificationBuilder(credentialService = createTestCredentialService())
 
-    private fun newBuilder(): VerificationBuilder =
-        VerificationBuilder(credentialService = createTestCredentialService())
-
-    private val stubResolver = object : TrustAnchorResolver {
-        override fun resolve(
-            signerCert: X509Certificate,
-            chain: List<X509Certificate>,
-        ): TrustAnchorMatch = TrustAnchorMatch.NotTrusted
-    }
+    private val stubResolver =
+        object : TrustAnchorResolver {
+            override fun resolve(
+                signerCert: X509Certificate,
+                chain: List<X509Certificate>,
+            ): TrustAnchorMatch = TrustAnchorMatch.NotTrusted
+        }
 
     @Test
     fun `requireJadesProfile B_B populates profile and resolver`() {
@@ -85,13 +84,14 @@ class JadesVerificationExtensionsTest {
     @Test
     fun `requireJadesProfile rejects an empty acceptedAlgorithms set`() {
         val builder = newBuilder()
-        val ex = assertFailsWith<IllegalArgumentException> {
-            builder.requireJadesProfile(
-                profile = JadesProfile.B_B,
-                trustAnchorResolver = stubResolver,
-                acceptedAlgorithms = emptySet(),
-            )
-        }
+        val ex =
+            assertFailsWith<IllegalArgumentException> {
+                builder.requireJadesProfile(
+                    profile = JadesProfile.B_B,
+                    trustAnchorResolver = stubResolver,
+                    acceptedAlgorithms = emptySet(),
+                )
+            }
         assertTrue(ex.message!!.contains("acceptedAlgorithms"))
     }
 

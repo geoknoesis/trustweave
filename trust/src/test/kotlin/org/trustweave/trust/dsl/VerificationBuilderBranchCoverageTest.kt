@@ -1,516 +1,581 @@
 package org.trustweave.trust.dsl
 
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.credential as buildCredential
-import org.trustweave.trust.dsl.credential.DidMethods
-import org.trustweave.trust.dsl.credential.KeyAlgorithms
-import org.trustweave.credential.model.ProofType
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import kotlin.test.*
+import org.trustweave.credential.model.ProofType
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.trust.TrustWeave
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import org.trustweave.trust.dsl.credential.credential as buildCredential
 
 /**
  * Comprehensive branch coverage tests for VerificationBuilder DSL.
  * Tests all conditional branches, error paths, and edge cases.
  */
 class VerificationBuilderBranchCoverageTest {
-
     private lateinit var trustWeave: TrustWeave
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
-    fun setUp() = runBlocking {
-        kms = InMemoryKeyManagementService()
-        val kmsRef = kms
-        trustWeave = TrustWeave.build {
-            keys {
-                custom(kmsRef)
-                signer { data, keyId ->
-                    when (val result = kmsRef.sign(org.trustweave.core.identifiers.KeyId(keyId), data)) {
-                        is org.trustweave.kms.results.SignResult.Success -> result.signature
-                        else -> throw IllegalStateException("Signing failed: $result")
+    fun setUp() =
+        runBlocking {
+            kms = InMemoryKeyManagementService()
+            val kmsRef = kms
+            trustWeave =
+                TrustWeave.build {
+                    keys {
+                        custom(kmsRef)
+                        signer { data, keyId ->
+                            when (
+                                val result =
+                                    kmsRef.sign(
+                                        org.trustweave.core.identifiers
+                                            .KeyId(keyId),
+                                        data,
+                                    )
+                            ) {
+                                is org.trustweave.kms.results.SignResult.Success -> result.signature
+                                else -> throw IllegalStateException("Signing failed: $result")
+                            }
+                        }
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        defaultChain("algorand:testnet")
                     }
                 }
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                defaultChain("algorand:testnet")
-            }
         }
-    }
 
     // ========== Credential Required Branches ==========
 
     @Test
-    fun `test branch credential required error`() = runBlocking<Unit> {
-        assertFailsWith<IllegalStateException> {
-            trustWeave.verify {
-                // Missing credential
-                checkRevocation()
+    fun `test branch credential required error`() =
+        runBlocking<Unit> {
+            assertFailsWith<IllegalStateException> {
+                trustWeave.verify {
+                    // Missing credential
+                    checkRevocation()
+                }
             }
         }
-    }
 
     @Test
-    fun `test branch credential provided`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch credential provided`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     // ========== Revocation Check Branches ==========
 
     @Test
-    fun `test branch revocation check enabled by default`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch revocation check enabled by default`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            // checkRevocation defaults to true
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    // checkRevocation defaults to true
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch revocation check explicitly enabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch revocation check explicitly enabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            checkRevocation()
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    checkRevocation()
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch revocation check disabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch revocation check disabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            skipRevocation()
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    skipRevocation()
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch revocation check toggle multiple times`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch revocation check toggle multiple times`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            checkRevocation()
-            skipRevocation() // Last call wins
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    checkRevocation()
+                    skipRevocation() // Last call wins
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     // ========== Expiration Check Branches ==========
 
     @Test
-    fun `test branch expiration check enabled by default`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch expiration check enabled by default`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            // checkExpiration defaults to true
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    // checkExpiration defaults to true
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch expiration check explicitly enabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch expiration check explicitly enabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            checkExpiration()
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    checkExpiration()
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch expiration check disabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch expiration check disabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            skipExpiration()
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    skipExpiration()
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch expiration check toggle multiple times`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch expiration check toggle multiple times`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            checkExpiration()
-            skipExpiration() // Last call wins
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    checkExpiration()
+                    skipExpiration() // Last call wins
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     // ========== Schema Validation Branches ==========
 
     @Test
-    fun `test branch schema validation disabled by default`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch schema validation disabled by default`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            // Schema validation defaults to false
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    // Schema validation defaults to false
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch schema validation enabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch schema validation enabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            validateSchema("https://example.com/schemas/person.json")
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    validateSchema("https://example.com/schemas/person.json")
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch schema validation disabled after enabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch schema validation disabled after enabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            validateSchema("https://example.com/schemas/person.json")
-            skipSchema()
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    validateSchema("https://example.com/schemas/person.json")
+                    skipSchema()
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch schema validation with schema ID`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch schema validation with schema ID`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            validateSchema("https://example.com/schemas/person.json")
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    validateSchema("https://example.com/schemas/person.json")
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     // ========== Anchor Verification Branches ==========
 
     @Test
-    fun `test branch anchor verification disabled by default`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
-
-        val result = trustWeave.verify {
-            credential(credential)
-            // Anchor verification defaults to false
-        }
-
-        assertNotNull(result)
-    }
-
-    @Test
-    fun `test branch anchor verification enabled without chain ID`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch anchor verification disabled by default`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
                 }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                defaultChain("algorand:testnet")
-            }
-        }
 
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
-
-        // Note: verifyAnchor() not available in VerificationBuilder
-        val result = trustWeaveWithAnchor.verify {
-            credential(credential)
-        }
-
-        assertNotNull(result)
-    }
-
-    @Test
-    fun `test branch anchor verification enabled with explicit chain ID`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    // Anchor verification defaults to false
                 }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-            }
-        }
 
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
+            assertNotNull(result)
         }
-
-        // Note: verifyAnchor() not available in VerificationBuilder
-        val result = trustWeaveWithAnchor.verify {
-            credential(credential)
-        }
-
-        assertNotNull(result)
-    }
 
     @Test
-    fun `test branch anchor verification error when no chain ID`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveNoAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                // No defaultChain
-            }
+    fun `test branch anchor verification enabled without chain ID`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        defaultChain("algorand:testnet")
+                    }
+                }
+
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
+
+            // Note: verifyAnchor() not available in VerificationBuilder
+            val result =
+                trustWeaveWithAnchor.verify {
+                    credential(credential)
+                }
+
+            assertNotNull(result)
         }
 
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
+    @Test
+    fun `test branch anchor verification enabled with explicit chain ID`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                    }
+                }
+
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
+
+            // Note: verifyAnchor() not available in VerificationBuilder
+            val result =
+                trustWeaveWithAnchor.verify {
+                    credential(credential)
+                }
+
+            assertNotNull(result)
         }
 
-        // Note: verifyAnchor() not available in VerificationBuilder
-        val result = trustWeaveNoAnchor.verify {
-            credential(credential)
-        }
+    @Test
+    fun `test branch anchor verification error when no chain ID`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveNoAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        // No defaultChain
+                    }
+                }
 
-        assertNotNull(result)
-    }
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
+
+            // Note: verifyAnchor() not available in VerificationBuilder
+            val result =
+                trustWeaveNoAnchor.verify {
+                    credential(credential)
+                }
+
+            assertNotNull(result)
+        }
 
     // ========== Combined Options Branches ==========
 
     @Test
-    fun `test branch all verification options enabled`() = runBlocking<Unit> {
-        val kmsRef = kms
-        val trustWeaveWithAnchor = TrustWeave.build {
-            // DID methods auto-discovered via SPI
-            keys {
-                custom(kmsRef)
-            }
-            did {
-                method("key") {}
-            }
-            anchor {
-                chain("algorand:testnet") {
-                    inMemory()
+    fun `test branch all verification options enabled`() =
+        runBlocking<Unit> {
+            val kmsRef = kms
+            val trustWeaveWithAnchor =
+                TrustWeave.build {
+                    // DID methods auto-discovered via SPI
+                    keys {
+                        custom(kmsRef)
+                    }
+                    did {
+                        method("key") {}
+                    }
+                    anchor {
+                        chain("algorand:testnet") {
+                            inMemory()
+                        }
+                    }
+                    credentials {
+                        defaultProofType(ProofType.Ed25519Signature2020)
+                        defaultChain("algorand:testnet")
+                    }
                 }
-            }
-            credentials {
-                defaultProofType(ProofType.Ed25519Signature2020)
-                defaultChain("algorand:testnet")
-            }
-        }
 
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        // Note: verifyAnchor() not available in VerificationBuilder
-        val result = trustWeaveWithAnchor.verify {
-            credential(credential)
-            checkRevocation()
-            checkExpiration()
-            validateSchema("https://example.com/schemas/person.json")
-        }
+            // Note: verifyAnchor() not available in VerificationBuilder
+            val result =
+                trustWeaveWithAnchor.verify {
+                    credential(credential)
+                    checkRevocation()
+                    checkExpiration()
+                    validateSchema("https://example.com/schemas/person.json")
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 
     @Test
-    fun `test branch all verification options disabled`() = runBlocking<Unit> {
-        val credential = buildCredential {
-            type("PersonCredential")
-            issuer("did:key:issuer")
-            subject {
-                id("did:key:subject")
-            }
-            issued(Clock.System.now())
-        }
+    fun `test branch all verification options disabled`() =
+        runBlocking<Unit> {
+            val credential =
+                buildCredential {
+                    type("PersonCredential")
+                    issuer("did:key:issuer")
+                    subject {
+                        id("did:key:subject")
+                    }
+                    issued(Clock.System.now())
+                }
 
-        val result = trustWeave.verify {
-            credential(credential)
-            skipRevocation()
-            skipExpiration()
-            skipSchema()
-            // Anchor verification already disabled by default
-        }
+            val result =
+                trustWeave.verify {
+                    credential(credential)
+                    skipRevocation()
+                    skipExpiration()
+                    skipSchema()
+                    // Anchor verification already disabled by default
+                }
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 }
-
-

@@ -51,7 +51,10 @@ class DomainConfigBuilder {
         payerDid = did
     }
 
-    fun chainAccount(chainId: String, block: ChainAccountBuilder.() -> Unit) {
+    fun chainAccount(
+        chainId: String,
+        block: ChainAccountBuilder.() -> Unit,
+    ) {
         val builder = ChainAccountBuilder(chainId).apply(block)
         accounts += builder.build()
     }
@@ -77,7 +80,9 @@ class DomainConfigBuilder {
  * Builder for a single per-chain account inside a `domain { ... }` block.
  */
 @TrustWeaveDsl
-class ChainAccountBuilder(private val chainId: String) {
+class ChainAccountBuilder(
+    private val chainId: String,
+) {
     var keyRef: KmsKeyRef? = null
     var address: String? = null
 

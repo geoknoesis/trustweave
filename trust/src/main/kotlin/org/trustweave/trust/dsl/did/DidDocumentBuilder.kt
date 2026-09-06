@@ -1,15 +1,15 @@
 package org.trustweave.trust.dsl.did
 
-import org.trustweave.did.model.DidDocument
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.did.DidMethod
+import org.trustweave.did.identifiers.Did
+import org.trustweave.did.identifiers.VerificationMethodId
+import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.identifiers.Did
-import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.trust.context.DidDslContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * DID Document Builder DSL.
@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DidDocumentBuilder(
-    private val didContext: DidDslContext
+    private val didContext: DidDslContext,
 ) {
     private var did: String? = null
     private var method: String? = null
@@ -138,98 +138,130 @@ class DidDocumentBuilder(
      *
      * @return Updated DID document
      */
-    suspend fun update(): DidDocument = withContext(Dispatchers.IO) {
-        val targetDid = did ?: throw IllegalStateException(
-            "DID is required. Use did(\"did:key:...\")"
-        )
+    suspend fun update(): DidDocument =
+        withContext(Dispatchers.IO) {
+            val targetDid =
+                did ?: throw IllegalStateException(
+                    "DID is required. Use did(\"did:key:...\")",
+                )
 
-        // Detect method from DID if not provided
-        val methodName = method ?: run {
-            if (targetDid.startsWith("did:")) {
-                val parts = targetDid.substring(4).split(":", limit = 2)
-                if (parts.isNotEmpty()) parts[0] else null
-            } else null
-        } ?: throw IllegalStateException(
-            "Could not determine DID method. Use method(\"key\") or provide a valid DID"
-        )
+            // Detect method from DID if not provided
+            val methodName =
+                method ?: run {
+                    if (targetDid.startsWith("did:")) {
+                        val parts = targetDid.substring(4).split(":", limit = 2)
+                        if (parts.isNotEmpty()) parts[0] else null
+                    } else {
+                        null
+                    }
+                } ?: throw IllegalStateException(
+                    "Could not determine DID method. Use method(\"key\") or provide a valid DID",
+                )
 
-        // Get DID method from provider
-        val didMethod = didContext.getDidMethod(methodName) as? DidMethod
-            ?: throw IllegalStateException(
-                "DID method '$methodName' is not configured. " +
-                "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }"
-            )
+            // Get DID method from provider
+            val didMethod =
+                didContext.getDidMethod(methodName) as? DidMethod
+                    ?: throw IllegalStateException(
+                        "DID method '$methodName' is not configured. " +
+                            "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }",
+                    )
 
-        // Update DID document using proper types
-        val targetDidObj = Did(targetDid)
-        val updatedDoc = didMethod.updateDid(targetDidObj) { currentDoc ->
-            updateDocument(currentDoc, targetDidObj)
+            // Update DID document using proper types
+            val targetDidObj = Did(targetDid)
+            val updatedDoc =
+                didMethod.updateDid(targetDidObj) { currentDoc ->
+                    updateDocument(currentDoc, targetDidObj)
+                }
+
+            updatedDoc
         }
-
-        updatedDoc
-    }
 
     /**
      * Update document using proper types (no reflection).
      */
-    private fun updateDocument(currentDoc: DidDocument, targetDid: Did): DidDocument {
+    private fun updateDocument(
+        currentDoc: DidDocument,
+        targetDid: Did,
+    ): DidDocument {
         // Filter out removed verification methods
-        val filteredVm = currentDoc.verificationMethod.filter { vm ->
-            !removedVerificationMethods.any { removed -> vm.id.value.contains(removed) }
-        }
+        val filteredVm =
+            currentDoc.verificationMethod.filter { vm ->
+                !removedVerificationMethods.any { removed -> vm.id.value.contains(removed) }
+            }
 
         // Create new verification method objects
-        val newVmObjects = newVerificationMethods.map { vmData ->
-            VerificationMethod(
-                id = VerificationMethodId.parse(vmData.id, targetDid),
-                type = vmData.type,
-                controller = Did(vmData.controller),
-                publicKeyJwk = vmData.publicKeyJwk,
-                publicKeyMultibase = vmData.publicKeyMultibase
-            )
-        }
+        val newVmObjects =
+            newVerificationMethods.map { vmData ->
+                VerificationMethod(
+                    id = VerificationMethodId.parse(vmData.id, targetDid),
+                    type = vmData.type,
+                    controller = Did(vmData.controller),
+                    publicKeyJwk = vmData.publicKeyJwk,
+                    publicKeyMultibase = vmData.publicKeyMultibase,
+                )
+            }
 
         // Filter out removed services
-        val filteredServices = currentDoc.service.filter { service ->
-            !removedServices.contains(service.id)
-        }
+        val filteredServices =
+            currentDoc.service.filter { service ->
+                !removedServices.contains(service.id)
+            }
 
         // Create new service objects
-        val newServiceObjects = newServices.map { serviceData ->
-            DidService(
-                id = serviceData.id,
-                type = listOf(serviceData.type),
-                serviceEndpoint = ServiceEndpoint.of(serviceData.endpoint)
-            )
-        }
+        val newServiceObjects =
+            newServices.map { serviceData ->
+                DidService(
+                    id = serviceData.id,
+                    type = listOf(serviceData.type),
+                    serviceEndpoint = ServiceEndpoint.of(serviceData.endpoint),
+                )
+            }
 
         // Update authentication and assertion method lists
-        val filteredAuth = currentDoc.authentication.filter { auth ->
-            val authStr = auth.value
-            !removedVerificationMethods.any { removed -> authStr.contains(removed) }
-        }.plus(newVerificationMethods.map { 
-            org.trustweave.did.identifiers.VerificationMethodId.parse(it.id, targetDid)
-        })
+        val filteredAuth =
+            currentDoc.authentication
+                .filter { auth ->
+                    val authStr = auth.value
+                    !removedVerificationMethods.any { removed -> authStr.contains(removed) }
+                }.plus(
+                    newVerificationMethods.map {
+                        org.trustweave.did.identifiers.VerificationMethodId
+                            .parse(it.id, targetDid)
+                    },
+                )
 
-        val filteredAssertion = currentDoc.assertionMethod.filter { assertion ->
-            val assertionStr = assertion.value
-            !removedVerificationMethods.any { removed -> assertionStr.contains(removed) }
-        }.plus(newVerificationMethods.map { 
-            org.trustweave.did.identifiers.VerificationMethodId.parse(it.id, targetDid)
-        })
+        val filteredAssertion =
+            currentDoc.assertionMethod
+                .filter { assertion ->
+                    val assertionStr = assertion.value
+                    !removedVerificationMethods.any { removed -> assertionStr.contains(removed) }
+                }.plus(
+                    newVerificationMethods.map {
+                        org.trustweave.did.identifiers.VerificationMethodId
+                            .parse(it.id, targetDid)
+                    },
+                )
 
         // Update capability invocation and delegation
-        val updatedCapabilityInvocation = currentDoc.capabilityInvocation
-            .filter { !removedCapabilityInvocation.contains(it.value) }
-            .plus(addedCapabilityInvocation.map { 
-                org.trustweave.did.identifiers.VerificationMethodId.parse(it, targetDid)
-            })
+        val updatedCapabilityInvocation =
+            currentDoc.capabilityInvocation
+                .filter { !removedCapabilityInvocation.contains(it.value) }
+                .plus(
+                    addedCapabilityInvocation.map {
+                        org.trustweave.did.identifiers.VerificationMethodId
+                            .parse(it, targetDid)
+                    },
+                )
 
-        val updatedCapabilityDelegation = currentDoc.capabilityDelegation
-            .filter { !removedCapabilityDelegation.contains(it.value) }
-            .plus(addedCapabilityDelegation.map { 
-                org.trustweave.did.identifiers.VerificationMethodId.parse(it, targetDid)
-            })
+        val updatedCapabilityDelegation =
+            currentDoc.capabilityDelegation
+                .filter { !removedCapabilityDelegation.contains(it.value) }
+                .plus(
+                    addedCapabilityDelegation.map {
+                        org.trustweave.did.identifiers.VerificationMethodId
+                            .parse(it, targetDid)
+                    },
+                )
 
         // Use context from builder or keep current
         val updatedContext = contextValues ?: currentDoc.context
@@ -247,14 +279,16 @@ class DidDocumentBuilder(
             assertionMethod = filteredAssertion,
             capabilityInvocation = updatedCapabilityInvocation,
             capabilityDelegation = updatedCapabilityDelegation,
-            service = updatedServices
+            service = updatedServices,
         )
     }
 
     /**
      * Verification method builder.
      */
-    inner class VerificationMethodBuilder(private val controllerDid: String) {
+    inner class VerificationMethodBuilder(
+        private val controllerDid: String,
+    ) {
         private var id: String? = null
         private var type: String = "Ed25519VerificationKey2020"
         private var publicKeyJwk: Map<String, Any?>? = null
@@ -298,7 +332,7 @@ class DidDocumentBuilder(
                 type = type,
                 controller = controllerDid,
                 publicKeyJwk = publicKeyJwk,
-                publicKeyMultibase = publicKeyMultibase
+                publicKeyMultibase = publicKeyMultibase,
             )
         }
     }
@@ -343,7 +377,7 @@ class DidDocumentBuilder(
             return ServiceData(
                 id = serviceId,
                 type = serviceType,
-                endpoint = serviceEndpoint
+                endpoint = serviceEndpoint,
             )
         }
     }
@@ -356,7 +390,7 @@ class DidDocumentBuilder(
         val type: String,
         val controller: String,
         val publicKeyJwk: Map<String, Any?>?,
-        val publicKeyMultibase: String?
+        val publicKeyMultibase: String?,
     )
 
     /**
@@ -365,7 +399,6 @@ class DidDocumentBuilder(
     internal data class ServiceData(
         val id: String,
         val type: String,
-        val endpoint: Any
+        val endpoint: Any,
     )
 }
-

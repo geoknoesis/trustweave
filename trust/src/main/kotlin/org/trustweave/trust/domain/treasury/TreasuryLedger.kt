@@ -32,18 +32,17 @@ data class TreasuryLedgerEntry(
     val status: SettlementStatus,
     val atEpochMillis: Long,
 ) {
-    fun estimatedFee(): TokenAmount =
-        TokenAmount(chainId, parseAsset(asset), java.math.BigInteger(estimatedFeeAmount))
+    fun estimatedFee(): TokenAmount = TokenAmount(chainId, parseAsset(asset), java.math.BigInteger(estimatedFeeAmount))
 
-    fun actualFee(): TokenAmount =
-        TokenAmount(chainId, parseAsset(asset), java.math.BigInteger(actualFeeAmount))
+    fun actualFee(): TokenAmount = TokenAmount(chainId, parseAsset(asset), java.math.BigInteger(actualFeeAmount))
 
     companion object {
-        internal fun assetTag(asset: AssetRef): String = when (asset) {
-            is AssetRef.Native -> "native"
-            is AssetRef.Token -> "token:${asset.symbol}:${asset.contract}"
-            is AssetRef.OperatorCredit -> "credit:${asset.operatorId}"
-        }
+        internal fun assetTag(asset: AssetRef): String =
+            when (asset) {
+                is AssetRef.Native -> "native"
+                is AssetRef.Token -> "token:${asset.symbol}:${asset.contract}"
+                is AssetRef.OperatorCredit -> "credit:${asset.operatorId}"
+            }
 
         internal fun parseAsset(tag: String): AssetRef {
             val parts = tag.split(":")
@@ -64,10 +63,26 @@ data class TreasuryLedgerEntry(
  */
 interface TreasuryLedgerStore {
     suspend fun append(entry: TreasuryLedgerEntry)
-    suspend fun update(correlationId: String, status: SettlementStatus, actualFee: TokenAmount, txHash: String?)
-    suspend fun entries(domainId: DomainId, chainId: String? = null): List<TreasuryLedgerEntry>
+
+    suspend fun update(
+        correlationId: String,
+        status: SettlementStatus,
+        actualFee: TokenAmount,
+        txHash: String?,
+    )
+
+    suspend fun entries(
+        domainId: DomainId,
+        chainId: String? = null,
+    ): List<TreasuryLedgerEntry>
+
     suspend fun get(correlationId: String): TreasuryLedgerEntry?
-    suspend fun spentSince(domainId: DomainId, chainId: String, since: Instant): TokenAmount
+
+    suspend fun spentSince(
+        domainId: DomainId,
+        chainId: String,
+        since: Instant,
+    ): TokenAmount
 }
 
 /**
@@ -78,12 +93,15 @@ class TreasuryLedger internal constructor(
     private val domainId: DomainId,
     private val store: TreasuryLedgerStore,
 ) {
-    suspend fun all(chainId: String? = null): List<TreasuryLedgerEntry> =
-        store.entries(domainId, chainId)
+    suspend fun all(chainId: String? = null): List<TreasuryLedgerEntry> = store.entries(domainId, chainId)
 
     suspend fun get(correlationId: String): TreasuryLedgerEntry? = store.get(correlationId)
 
-    suspend fun windowState(chainId: String, window: Duration, now: Instant): SpendPolicy.WindowState {
+    suspend fun windowState(
+        chainId: String,
+        window: Duration,
+        now: Instant,
+    ): SpendPolicy.WindowState {
         val since = Instant.fromEpochMilliseconds(now.toEpochMilliseconds() - window.inWholeMilliseconds)
         val spent = store.spentSince(domainId, chainId, since)
         return SpendPolicy.WindowState(chainId, window, spent)

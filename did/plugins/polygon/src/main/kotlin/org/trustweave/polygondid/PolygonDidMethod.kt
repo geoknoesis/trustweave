@@ -1,18 +1,18 @@
 package org.trustweave.polygondid
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
-import org.trustweave.did.*
+import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.base.AbstractBlockchainDidMethod
+import org.trustweave.did.base.DidMethodUtils
+import org.trustweave.did.createDid
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolutionMetadata
-import org.trustweave.did.base.AbstractBlockchainDidMethod
-import org.trustweave.did.base.DidMethodUtils
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.kms.KeyManagementService
 import org.trustweave.ethrdid.EthrDidMethod
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import org.trustweave.kms.KeyManagementService
 
 /**
  * Implementation of did:polygon method for Polygon blockchain.
@@ -44,37 +44,31 @@ import kotlinx.coroutines.withContext
 class PolygonDidMethod(
     kms: KeyManagementService,
     private val anchorClient: BlockchainAnchorClient,
-    private val config: PolygonDidConfig
+    private val config: PolygonDidConfig,
 ) : AbstractBlockchainDidMethod("polygon", kms) {
-
     // Delegate to EthrDidMethod for implementation since Polygon is EVM-compatible
     private val delegate: EthrDidMethod
 
     init {
         // Convert PolygonDidConfig to EthrDidConfig for delegation
-        val ethrConfig = org.trustweave.ethrdid.EthrDidConfig(
-            rpcUrl = config.rpcUrl,
-            chainId = config.chainId,
-            registryAddress = config.registryAddress,
-            privateKey = config.privateKey,
-            network = config.network ?: "polygon",
-            additionalProperties = config.additionalProperties
-        )
+        val ethrConfig =
+            org.trustweave.ethrdid.EthrDidConfig(
+                rpcUrl = config.rpcUrl,
+                chainId = config.chainId,
+                registryAddress = config.registryAddress,
+                privateKey = config.privateKey,
+                network = config.network ?: "polygon",
+                additionalProperties = config.additionalProperties,
+            )
 
         delegate = EthrDidMethod(kms, anchorClient, ethrConfig)
     }
 
-    override fun getBlockchainAnchorClient(): BlockchainAnchorClient {
-        return anchorClient
-    }
+    override fun getBlockchainAnchorClient(): BlockchainAnchorClient = anchorClient
 
-    override fun getChainId(): String {
-        return config.chainId
-    }
+    override fun getChainId(): String = config.chainId
 
-    override suspend fun canSubmitTransaction(): Boolean {
-        return config.privateKey != null
-    }
+    override suspend fun canSubmitTransaction(): Boolean = config.privateKey != null
 
     override suspend fun findDocumentTxHash(did: String): String? {
         // Convert did:polygon to did:ethr and resolve via stored document
@@ -88,30 +82,31 @@ class PolygonDidMethod(
         }
     }
 
-    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            // Use delegate but convert DID format from ethr to polygon
-            val ethrDocument = delegate.createDid(options)
+    override suspend fun createDid(options: DidCreationOptions): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                // Use delegate but convert DID format from ethr to polygon
+                val ethrDocument = delegate.createDid(options)
 
-            // Convert did:ethr to did:polygon
-            val polygonDidString = ethrDocument.id.value.replace("did:ethr:", "did:polygon:")
-            val polygonDid = Did(polygonDidString)
+                // Convert did:ethr to did:polygon
+                val polygonDidString = ethrDocument.id.value.replace("did:ethr:", "did:polygon:")
+                val polygonDid = Did(polygonDidString)
 
-            // Rebuild document with polygon DID
-            val polygonDocument = ethrDocument.copy(id = polygonDid)
+                // Rebuild document with polygon DID
+                val polygonDocument = ethrDocument.copy(id = polygonDid)
 
-            // Store locally
-            storeDocument(polygonDocument.id, polygonDocument)
+                // Store locally
+                storeDocument(polygonDocument.id, polygonDocument)
 
-            polygonDocument
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "CREATE_FAILED",
-                message = "Failed to create did:polygon: ${e.message}",
-                cause = e
-            )
+                polygonDocument
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "CREATE_FAILED",
+                    message = "Failed to create did:polygon: ${e.message}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     override suspend fun resolveDid(did: Did): DidResolutionResult =
         withContext(Dispatchers.IO) {
@@ -130,9 +125,10 @@ class PolygonDidMethod(
                 return@withContext when (ethrResult) {
                     is DidResolutionResult.Success -> {
                         val ethrDoc = ethrResult.document
-                        val polygonDocument = ethrDoc.copy(
-                            id = did
-                        )
+                        val polygonDocument =
+                            ethrDoc.copy(
+                                id = did,
+                            )
 
                         storeDocument(polygonDocument.id.value, polygonDocument)
 
@@ -148,30 +144,33 @@ class PolygonDidMethod(
                         DidResolutionResult.Failure.NotFound(
                             did = did,
                             reason = ethrResult.reason,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                     is DidResolutionResult.Failure.InvalidFormat -> {
                         DidResolutionResult.Failure.InvalidFormat(
                             did = didString,
                             reason = ethrResult.reason,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                     is DidResolutionResult.Failure.MethodNotRegistered -> {
                         DidResolutionResult.Failure.MethodNotRegistered(
                             method = method,
                             availableMethods = ethrResult.availableMethods,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                     is DidResolutionResult.Failure.ResolutionError -> {
@@ -179,10 +178,11 @@ class PolygonDidMethod(
                             did = did,
                             reason = ethrResult.reason,
                             cause = ethrResult.cause,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                     is DidResolutionResult.Failure.OptionsError -> {
@@ -190,20 +190,22 @@ class PolygonDidMethod(
                             did = did,
                             reason = ethrResult.reason,
                             errorType = ethrResult.errorType,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                     is DidResolutionResult.Deactivated -> {
                         DidResolutionResult.Deactivated(
                             did = did,
                             documentMetadata = ethrResult.documentMetadata,
-                            resolutionMetadata = ethrResult.resolutionMetadata.copy(
-                                pattern = method,
-                                properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method)
-                            )
+                            resolutionMetadata =
+                                ethrResult.resolutionMetadata.copy(
+                                    pattern = method,
+                                    properties = ethrResult.resolutionMetadata.properties + mapOf("method" to method),
+                                ),
                         )
                     }
                 }
@@ -212,67 +214,69 @@ class PolygonDidMethod(
                     "invalidDid",
                     e.message,
                     method,
-                    did.value
+                    did.value,
                 )
             }
         }
 
     override suspend fun updateDid(
         did: Did,
-        updater: (DidDocument) -> DidDocument
-    ): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+        updater: (DidDocument) -> DidDocument,
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val didString = did.value
-            // Convert did:polygon to did:ethr for update
-            val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
-            val ethrDid = Did(ethrDidString)
+                val didString = did.value
+                // Convert did:polygon to did:ethr for update
+                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDid = Did(ethrDidString)
 
-            // Update using delegate
-            val ethrUpdated = delegate.updateDid(ethrDid) { ethrDoc ->
-                // Apply updater with polygon DID
-                val polygonDoc = ethrDoc.copy(id = did)
-                updater(polygonDoc)
+                // Update using delegate
+                val ethrUpdated =
+                    delegate.updateDid(ethrDid) { ethrDoc ->
+                        // Apply updater with polygon DID
+                        val polygonDoc = ethrDoc.copy(id = did)
+                        updater(polygonDoc)
+                    }
+
+                // Convert back to polygon format
+                val polygonUpdated = ethrUpdated.copy(id = did)
+                storeDocument(polygonUpdated.id.value, polygonUpdated)
+
+                polygonUpdated
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "UPDATE_FAILED",
+                    message = "Failed to update did:polygon: ${e.message}",
+                    cause = e,
+                )
             }
-
-            // Convert back to polygon format
-            val polygonUpdated = ethrUpdated.copy(id = did)
-            storeDocument(polygonUpdated.id.value, polygonUpdated)
-
-            polygonUpdated
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "UPDATE_FAILED",
-                message = "Failed to update did:polygon: ${e.message}",
-                cause = e
-            )
         }
-    }
 
-    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    override suspend fun deactivateDid(did: Did): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val didString = did.value
-            // Convert did:polygon to did:ethr for deactivation
-            val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
-            val ethrDid = Did(ethrDidString)
+                val didString = did.value
+                // Convert did:polygon to did:ethr for deactivation
+                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDid = Did(ethrDidString)
 
-            val deactivated = delegate.deactivateDid(ethrDid)
+                val deactivated = delegate.deactivateDid(ethrDid)
 
-            if (deactivated) {
-                removeStoredDocument(didString)
+                if (deactivated) {
+                    removeStoredDocument(didString)
+                }
+
+                deactivated
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "DEACTIVATE_FAILED",
+                    message = "Failed to deactivate did:polygon: ${e.message}",
+                    cause = e,
+                )
             }
-
-            deactivated
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "DEACTIVATE_FAILED",
-                message = "Failed to deactivate did:polygon: ${e.message}",
-                cause = e
-            )
         }
-    }
 }
-

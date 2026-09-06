@@ -1,12 +1,12 @@
 package org.trustweave.did.verifier
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.serviceEndpointAsObject
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Verifies DID document delegation relationships and chains.
@@ -31,9 +31,8 @@ import kotlinx.coroutines.withContext
  * ```
  */
 class DidDocumentDelegationVerifier(
-    private val didResolver: DidResolver
+    private val didResolver: DidResolver,
 ) {
-
     /**
      * Verifies a DID document delegation relationship between a delegator and delegate.
      *
@@ -46,89 +45,97 @@ class DidDocumentDelegationVerifier(
      */
     suspend fun verify(
         delegatorDid: Did,
-        delegateDid: Did
-    ): DelegationChainResult = withContext(Dispatchers.IO) {
-        val path = mutableListOf<String>()
+        delegateDid: Did,
+    ): DelegationChainResult =
+        withContext(Dispatchers.IO) {
+            val path = mutableListOf<String>()
 
-        // Resolve delegator DID document
-        val delegatorResult = didResolver.resolve(delegatorDid)
-        val delegatorDoc = when (delegatorResult) {
-            is DidResolutionResult.Success -> delegatorResult.document
-            else -> {
-                return@withContext DelegationChainResult(
-                    valid = false,
-                    path = emptyList(),
-                    errors = listOf("Failed to resolve delegator DID: ${delegatorDid.value}")
-                )
-            }
-        }
-        path.add(delegatorDid.value)
+            // Resolve delegator DID document
+            val delegatorResult = didResolver.resolve(delegatorDid)
+            val delegatorDoc =
+                when (delegatorResult) {
+                    is DidResolutionResult.Success -> delegatorResult.document
+                    else -> {
+                        return@withContext DelegationChainResult(
+                            valid = false,
+                            path = emptyList(),
+                            errors = listOf("Failed to resolve delegator DID: ${delegatorDid.value}"),
+                        )
+                    }
+                }
+            path.add(delegatorDid.value)
 
-        // Check if delegator has capabilityDelegation relationships
-        val capabilityDelegation = delegatorDoc.capabilityDelegation
+            // Check if delegator has capabilityDelegation relationships
+            val capabilityDelegation = delegatorDoc.capabilityDelegation
 
-        if (capabilityDelegation.isEmpty()) {
-            return@withContext DelegationChainResult(
-                valid = false,
-                path = path,
-                errors = listOf("Delegator '${delegatorDid.value}' has no capabilityDelegation relationships")
-            )
-        }
-
-        // Resolve delegate DID document
-        val delegateResult = didResolver.resolve(delegateDid)
-        val delegateDoc = when (delegateResult) {
-            is DidResolutionResult.Success -> delegateResult.document
-            else -> {
+            if (capabilityDelegation.isEmpty()) {
                 return@withContext DelegationChainResult(
                     valid = false,
                     path = path,
-                    errors = listOf("Failed to resolve delegate DID: ${delegateDid.value}")
+                    errors = listOf("Delegator '${delegatorDid.value}' has no capabilityDelegation relationships"),
                 )
             }
-        }
-        path.add(delegateDid.value)
 
-        // Check if delegate is in delegator's capabilityDelegation list
-        val isDelegated = capabilityDelegation.any { ref ->
-            ref.value == delegateDid.value ||
-            ref.value.startsWith("${delegateDid.value}#") ||
-            // Check if any verification method matches
-            delegateDoc.verificationMethod.any { vm ->
-                vm.id == ref && vm.controller.value == delegateDid.value
+            // Resolve delegate DID document
+            val delegateResult = didResolver.resolve(delegateDid)
+            val delegateDoc =
+                when (delegateResult) {
+                    is DidResolutionResult.Success -> delegateResult.document
+                    else -> {
+                        return@withContext DelegationChainResult(
+                            valid = false,
+                            path = path,
+                            errors = listOf("Failed to resolve delegate DID: ${delegateDid.value}"),
+                        )
+                    }
+                }
+            path.add(delegateDid.value)
+
+            // Check if delegate is in delegator's capabilityDelegation list
+            val isDelegated =
+                capabilityDelegation.any { ref ->
+                    ref.value == delegateDid.value ||
+                        ref.value.startsWith("${delegateDid.value}#") ||
+                        // Check if any verification method matches
+                        delegateDoc.verificationMethod.any { vm ->
+                            vm.id == ref && vm.controller.value == delegateDid.value
+                        }
+                }
+
+            if (!isDelegated) {
+                return@withContext DelegationChainResult(
+                    valid = false,
+                    path = path,
+                    errors =
+                        listOf(
+                            "Delegate '${delegateDid.value}' is not in delegator '${delegatorDid.value}' capabilityDelegation list",
+                        ),
+                )
             }
-        }
 
-        if (!isDelegated) {
-            return@withContext DelegationChainResult(
-                valid = false,
+            // Verify delegation credential/proof if present
+            // Check for delegation credentials in DID document services
+            val delegationCredentialValid =
+                verifyDelegationCredential(
+                    delegatorDoc = delegatorDoc,
+                    delegateDid = delegateDid,
+                )
+
+            if (!delegationCredentialValid && hasDelegationCredential(delegatorDoc)) {
+                // If delegation credentials exist but verification failed, return error
+                return@withContext DelegationChainResult(
+                    valid = false,
+                    path = path,
+                    errors = listOf("Delegation credential verification failed for ${delegatorDid.value} -> ${delegateDid.value}"),
+                )
+            }
+
+            DelegationChainResult(
+                valid = true,
                 path = path,
-                errors = listOf("Delegate '${delegateDid.value}' is not in delegator '${delegatorDid.value}' capabilityDelegation list")
+                errors = emptyList(),
             )
         }
-
-        // Verify delegation credential/proof if present
-        // Check for delegation credentials in DID document services
-        val delegationCredentialValid = verifyDelegationCredential(
-            delegatorDoc = delegatorDoc,
-            delegateDid = delegateDid
-        )
-
-        if (!delegationCredentialValid && hasDelegationCredential(delegatorDoc)) {
-            // If delegation credentials exist but verification failed, return error
-            return@withContext DelegationChainResult(
-                valid = false,
-                path = path,
-                errors = listOf("Delegation credential verification failed for ${delegatorDid.value} -> ${delegateDid.value}")
-            )
-        }
-
-        DelegationChainResult(
-            valid = true,
-            path = path,
-            errors = emptyList()
-        )
-    }
 
     /**
      * Verifies a multi-hop DID document delegation chain.
@@ -139,61 +146,59 @@ class DidDocumentDelegationVerifier(
      * @param chain List of type-safe DIDs forming the delegation chain (first is delegator, last is delegate)
      * @return DelegationChainResult with validity and path information
      */
-    suspend fun verifyChain(
-        chain: List<Did>
-    ): DelegationChainResult = withContext(Dispatchers.IO) {
-        if (chain.size < 2) {
-            return@withContext DelegationChainResult(
-                valid = false,
-                path = chain.map { it.value },
-                errors = listOf("Delegation chain must have at least 2 DIDs")
-            )
-        }
-
-        val errors = mutableListOf<String>()
-        val path = mutableListOf<String>()
-
-        // Verify each link in the chain
-        for (i in 0 until chain.size - 1) {
-            val delegator = chain[i]
-            val delegate = chain[i + 1]
-
-            val linkResult = verify(delegator, delegate)
-            if (!linkResult.valid) {
-                errors.addAll(linkResult.errors)
-                errors.add("Failed delegation link: ${delegator.value} -> ${delegate.value}")
+    suspend fun verifyChain(chain: List<Did>): DelegationChainResult =
+        withContext(Dispatchers.IO) {
+            if (chain.size < 2) {
                 return@withContext DelegationChainResult(
                     valid = false,
                     path = chain.map { it.value },
-                    errors = errors
+                    errors = listOf("Delegation chain must have at least 2 DIDs"),
                 )
             }
 
-            if (i == 0) {
-                path.addAll(linkResult.path)
-            } else {
-                path.add(delegate.value)
-            }
-        }
+            val errors = mutableListOf<String>()
+            val path = mutableListOf<String>()
 
-        DelegationChainResult(
-            valid = true,
-            path = path,
-            errors = emptyList()
-        )
-    }
+            // Verify each link in the chain
+            for (i in 0 until chain.size - 1) {
+                val delegator = chain[i]
+                val delegate = chain[i + 1]
+
+                val linkResult = verify(delegator, delegate)
+                if (!linkResult.valid) {
+                    errors.addAll(linkResult.errors)
+                    errors.add("Failed delegation link: ${delegator.value} -> ${delegate.value}")
+                    return@withContext DelegationChainResult(
+                        valid = false,
+                        path = chain.map { it.value },
+                        errors = errors,
+                    )
+                }
+
+                if (i == 0) {
+                    path.addAll(linkResult.path)
+                } else {
+                    path.add(delegate.value)
+                }
+            }
+
+            DelegationChainResult(
+                valid = true,
+                path = path,
+                errors = emptyList(),
+            )
+        }
 
     /**
      * Check if DID document has delegation credentials in services.
      */
-    private fun hasDelegationCredential(doc: DidDocument): Boolean {
-        return doc.service.any { service ->
+    private fun hasDelegationCredential(doc: DidDocument): Boolean =
+        doc.service.any { service ->
             service.type.any { t ->
                 t.contains("DelegationCredential", ignoreCase = true) ||
-                t.contains("VerifiableCredential", ignoreCase = true)
+                    t.contains("VerifiableCredential", ignoreCase = true)
             }
         }
-    }
 
     /**
      * Verify delegation credential if present.
@@ -207,43 +212,47 @@ class DidDocumentDelegationVerifier(
      */
     private suspend fun verifyDelegationCredential(
         delegatorDoc: DidDocument,
-        delegateDid: Did
-    ): Boolean = withContext(Dispatchers.IO) {
-        val delegationServices = delegatorDoc.service.filter { service ->
-            service.type.any { t ->
-                t.contains("DelegationCredential", ignoreCase = true) ||
-                t.contains("VerifiableCredential", ignoreCase = true)
+        delegateDid: Did,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            val delegationServices =
+                delegatorDoc.service.filter { service ->
+                    service.type.any { t ->
+                        t.contains("DelegationCredential", ignoreCase = true) ||
+                            t.contains("VerifiableCredential", ignoreCase = true)
+                    }
+                }
+
+            if (delegationServices.isEmpty()) {
+                // No delegation credentials present - this is optional, so return true
+                return@withContext true
             }
-        }
 
-        if (delegationServices.isEmpty()) {
-            // No delegation credentials present - this is optional, so return true
-            return@withContext true
-        }
+            // For each delegation credential service, verify it
+            for (service in delegationServices) {
+                // The embedded credential must be an object (JSON structure) to be
+                // structurally verifiable. Non-object endpoints (e.g. a plain URL
+                // string) cannot be validated here, so treat them as failing the
+                // content check — matching the previous behaviour for non-Map endpoints.
+                // Note: This is a structural check only. Full verification requires CredentialVerifier.
+                val endpointObject =
+                    service.serviceEndpointAsObject()
+                        ?: return@withContext false
 
-        // For each delegation credential service, verify it
-        for (service in delegationServices) {
-            // The embedded credential must be an object (JSON structure) to be
-            // structurally verifiable. Non-object endpoints (e.g. a plain URL
-            // string) cannot be validated here, so treat them as failing the
-            // content check — matching the previous behaviour for non-Map endpoints.
-            // Note: This is a structural check only. Full verification requires CredentialVerifier.
-            val endpointObject = service.serviceEndpointAsObject()
-                ?: return@withContext false
+                val credentialValid =
+                    verifyDelegationCredentialContent(
+                        credential = EmbeddedDelegationCredential.fromEndpointObject(endpointObject),
+                        delegatorDid = delegatorDoc.id.value,
+                        delegateDid = delegateDid.value,
+                    )
 
-            val credentialValid = verifyDelegationCredentialContent(
-                credential = EmbeddedDelegationCredential.fromEndpointObject(endpointObject),
-                delegatorDid = delegatorDoc.id.value,
-                delegateDid = delegateDid.value
-            )
-
-            if (!credentialValid) {
-                return@withContext false
+                if (!credentialValid) {
+                    return@withContext false
+                }
             }
-        }
 
-        true
-    }
+            true
+        }
 
     /**
      * Verify the structural content of a delegation credential embedded in a DID
@@ -261,7 +270,7 @@ class DidDocumentDelegationVerifier(
     private fun verifyDelegationCredentialContent(
         credential: EmbeddedDelegationCredential,
         delegatorDid: String,
-        delegateDid: String
+        delegateDid: String,
     ): Boolean {
         // Issuer must be the delegator
         if (credential.issuer != delegatorDid) return false
@@ -285,7 +294,7 @@ class DidDocumentDelegationVerifier(
 data class DelegationChainResult(
     val valid: Boolean,
     val path: List<String>,
-    val errors: List<String> = emptyList()
+    val errors: List<String> = emptyList(),
 )
 
 /**
@@ -301,7 +310,7 @@ data class DelegationChainResult(
 internal data class EmbeddedDelegationCredential(
     val issuer: String?,
     val subjectId: String?,
-    val hasProof: Boolean
+    val hasProof: Boolean,
 ) {
     companion object {
         /**
@@ -310,17 +319,17 @@ internal data class EmbeddedDelegationCredential(
          * throwing.
          */
         fun fromEndpointObject(endpoint: Map<String, Any?>): EmbeddedDelegationCredential {
-            val subjectId = when (val subject = endpoint["credentialSubject"]) {
-                is Map<*, *> -> subject["id"] as? String
-                is String -> subject
-                else -> null
-            }
+            val subjectId =
+                when (val subject = endpoint["credentialSubject"]) {
+                    is Map<*, *> -> subject["id"] as? String
+                    is String -> subject
+                    else -> null
+                }
             return EmbeddedDelegationCredential(
                 issuer = endpoint["issuer"] as? String,
                 subjectId = subjectId,
-                hasProof = endpoint["proof"] != null
+                hasProof = endpoint["proof"] != null,
             )
         }
     }
 }
-

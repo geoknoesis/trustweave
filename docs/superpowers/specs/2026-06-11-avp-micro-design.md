@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-11
 **Spec source:** https://geoknoesis.github.io/avp-micro-spec/
-**Status:** Design — approved, pending implementation plan
+**Status:** Design — approved, pending implementation plan. Securing suite tracks the spec MTI: `ecdsa-jcs-2022` (P-256), via deterministic ECDSA (RFC 6979) with canonical low-s.
 
 ## 1. Overview
 
@@ -56,20 +56,25 @@ additive change to the existing Verifiable Intent plugin.
 Use TrustWeave's existing VC machinery for what **is** a W3C Verifiable Credential, and a
 thin standalone layer for what is **not**:
 
-- `SpendingAuthorizationCredential` **is** a W3C VC 2.0 → issued/verified through the
-  existing `VcLdProofEngine` (already implements `eddsa-jcs-2022`) and revoked through the
-  existing `BitstringStatusListManager`.
+- `SpendingAuthorizationCredential` **is** a W3C VC 2.0 → secured with the spec's
+  mandatory `ecdsa-jcs-2022` (P-256) Data Integrity proof from the one audited
+  `EcdsaJcs2022` object (§6), and revoked through the existing `BitstringStatusListManager`.
 - `PaymentQuote` / `PaymentAuthorization` / `PaymentReceipt` are **protocol messages, not
   credentials** → plain `@Serializable` data classes signed via a thin internal
-  `eddsa-jcs-2022` utility. Forcing these through the VC issuance pipeline would be a
+  `ecdsa-jcs-2022` utility. Forcing these through the VC issuance pipeline would be a
   category error (no `@context` / `credentialSubject` envelope).
 
-The shared primitive between the two paths is *JCS-canonicalize → hash → Ed25519 sign*,
-isolated in one auditable `EddsaJcs2022` object.
+The shared primitive behind both paths is *JCS-canonicalize → hash → deterministic P-256
+ECDSA sign (RFC 6979, canonical low-s, raw R‖S)*, isolated in one auditable `EcdsaJcs2022`
+object.
 
 Rejected alternatives:
-- **Fully standalone** (VI pattern) — would duplicate JCS + Data Integrity logic that
-  `VcLdProofEngine` already implements for the credential.
+- **Route the credential through `VcLdProofEngine`** — that engine secures VCs with
+  `Ed25519Signature2020` / `JsonWebSignature2020` over JSON-LD canonicalization, not the
+  spec's JCS-based `ecdsa-jcs-2022`; reusing it would mean adding a second cryptosuite
+  implementation when one `EcdsaJcs2022` object already secures both paths. It builds
+  instead on the P-256 primitives trustweave already ships (KMS `Algorithm.P256`,
+  `EcdsaSignatureCodec`, the P-256–capable `did:key` resolver).
 - **Fully integrated** — would force the non-VC protocol objects through the VC pipeline.
 
 ## 4. Module Structure
@@ -79,7 +84,7 @@ credentials/plugins/avp-micro/
   src/main/kotlin/org/trustweave/credential/avpmicro/
     model/          SpendingAuthorizationCredential, PaymentQuote,
                     PaymentAuthorization, PaymentReceipt, Amount, DataIntegrityProof
-    crypto/         EddsaJcs2022 (JCS canon + Ed25519 sign/verify, internal)
+    crypto/         EcdsaJcs2022 (JCS canon + deterministic P-256 ECDSA sign/verify, internal)
     issuance/       DsaIssuer + SpendingAuthorityBuilder DSL
     verification/   PaymentVerifier (+ PaymentVerificationResult, VerificationFailure)
     agent/          AgentSigning.authorize(...)
@@ -96,7 +101,7 @@ credentials/plugins/avp-micro-interop/
 
 | Module | Depends on |
 |---|---|
-| `avp-micro` | `credential-api` (`VcLdProofEngine`, `BitstringStatusListManager`), `did-core`, `kms-core`, `common`, Bouncy Castle (Ed25519), kotlinx-serialization-json, kotlinx-datetime |
+| `avp-micro` | `credential-api` (`BitstringStatusListManager`, VC 2.0 models), `did-core` (P-256 `did:key`), `kms-core` (`Algorithm.P256`, `EcdsaSignatureCodec`), `common`, Bouncy Castle (P-256 ECDSA), kotlinx-serialization-json, kotlinx-datetime |
 | `avp-micro-interop` | `avp-micro`, `verifiable-intent` (public facade only), `kms-core`, nimbus-jose-jwt |
 
 Both new modules added to `settings.gradle.kts`. Facades follow the stateless `object`
@@ -128,16 +133,16 @@ Amount(value: BigDecimal, currency: String)   // validated on construction
 ```
 PaymentQuote
   quoteId, agentDid, payeeDid, amount: Amount, expiresAt: Instant
-  proof: DataIntegrityProof   // eddsa-jcs-2022, merchant key
+  proof: DataIntegrityProof   // ecdsa-jcs-2022, merchant key
 
 PaymentAuthorization
   authorizationId, credentialId, credentialDigest (SHA-256 of canonical credential),
   quoteId, authorizedAt: Instant
-  proof: DataIntegrityProof   // eddsa-jcs-2022, agent key
+  proof: DataIntegrityProof   // ecdsa-jcs-2022, agent key
 
 PaymentReceipt
   authorizationId, settledAt: Instant
-  proof: DataIntegrityProof   // eddsa-jcs-2022, merchant key
+  proof: DataIntegrityProof   // ecdsa-jcs-2022, merchant key
 ```
 
 ### Interop
@@ -154,7 +159,7 @@ SdJwtSpendingAuthority
 
 ## 6. Crypto Layer
 
-`crypto/EddsaJcs2022` (internal object) — the single audited implementation of the spec's
+`crypto/EcdsaJcs2022` (internal object) — the single audited implementation of the spec's
 mandatory-to-implement securing mechanism:
 
 ```
@@ -163,22 +168,25 @@ sign(payload, kms, keyRef): DataIntegrityProof
   2. JCS-canonicalize (RFC 8785) the payload
   3. JCS-canonicalize the proof config (without proofValue)
   4. hashData = sha256(proofConfig) || sha256(payload)
-  5. Ed25519 sign hashData via KMS
-  6. DataIntegrityProof{ type=DataIntegrityProof, cryptosuite=eddsa-jcs-2022,
+  5. deterministic P-256 ECDSA sign hashData via KMS (RFC 6979, canonical low-s; raw R‖S)
+  6. DataIntegrityProof{ type=DataIntegrityProof, cryptosuite=ecdsa-jcs-2022,
                          verificationMethod, proofPurpose, proofValue=multibase(sig) }
 
 verify(payload, proof, publicKeyMultibase): Boolean   // reverse
 ```
 
-- **DID method:** `did:key` with Ed25519 Multikey (spec mandatory-to-implement), resolved
-  via the existing `did-core` `did:key` resolver. No new resolver.
+- **DID method:** `did:key` with P-256 Multikey (multicodec `p256-pub`; spec
+  mandatory-to-implement), resolved via the existing `did-core` `did:key` resolver, which
+  already supports P-256. No new resolver.
 - **Conformance:** validated against the spec's signed test vectors (from its Python
   harness, `avp_crypto.py`) as known-answer tests — the same approach as VI's
   `ChainVerifierKnownAnswerTest`. Byte-exact JCS + `hashData` ordering is the single most
   important correctness gate.
-- The `SpendingAuthorizationCredential` (a real VC) is signed/verified through
-  `VcLdProofEngine`, not this utility. This utility serves the protocol objects (and is
-  reused by interop verification of the embedded credential).
+- The `SpendingAuthorizationCredential` (a real VC) is secured by this same
+  `EcdsaJcs2022` object — one cryptosuite implementation for the credential and the
+  protocol objects alike, reused by interop verification of the embedded credential.
+  Status/revocation still flows through `BitstringStatusListManager`, which is independent
+  of the proof suite.
 
 ## 7. Flows
 
@@ -249,7 +257,7 @@ val authorization = AvpMicro.authorize(credential, quote, kms, agentKeyRef)
 ```
 
 Computes the credential digest, builds the `PaymentAuthorization`, signs it
-`eddsa-jcs-2022` with the agent's key. **No decision logic** — the caller decides whether
+`ecdsa-jcs-2022` with the agent's key. **No decision logic** — the caller decides whether
 to authorize; this produces the valid signed object once they have.
 
 ## 8. Interop Bridge
@@ -259,12 +267,14 @@ val bridged = AvpMicroInterop.bridge(credential, mode, kms, bridgeKeyRef)
 ```
 
 The spec is explicit: **JCS and JOSE serialize differently → signature migration is
-impossible**. You cannot re-sign the same bytes. This drives the three modes:
+impossible**. Even though both sides now sign with the same P-256 curve, the signed bytes
+differ (JCS `hashData` vs the JWS signing input), so you cannot reuse one signature as the
+other. This drives the three modes:
 
 | Mode | Behavior | Trust cost |
 |---|---|---|
 | **PROOF_PRESERVING** (default) | Wrap claims into an SD-JWT body and embed the original Data Integrity credential verbatim. Verifier checks both envelopes. | None — original issuer remains trust root |
-| **CO_ISSUED** | Issuer natively signed both forms at creation; the bridge assembles the pre-existing JOSE signature alongside the VC and validates they describe the same claims. | None — issuer signed both |
+| **CO_ISSUED** | Issuer natively signed both forms at creation **with the same P-256 key** (the `ecdsa-jcs-2022` Data Integrity proof and the `ES256` SD-JWT); the bridge assembles the pre-existing JOSE signature alongside the VC and validates they describe the same claims. | None — issuer signed both |
 | **ATTESTED** | A named bridge entity re-signs the claims in ES256 SD-JWT; its DID becomes the JOSE trust anchor. Records `bridgeIssuerDid`. | Bridge becomes trust root |
 
 ```kotlin
@@ -273,8 +283,8 @@ val result = AvpMicroInterop.verifyBridged(
 )
 ```
 
-- PROOF_PRESERVING / CO_ISSUED → verify the embedded `eddsa-jcs-2022` credential (reuse
-  `avp-micro`'s `EddsaJcs2022.verify`) and that the SD-JWT claims match. Trust → original
+- PROOF_PRESERVING / CO_ISSUED → verify the embedded `ecdsa-jcs-2022` credential (reuse
+  `avp-micro`'s `EcdsaJcs2022.verify`) and that the SD-JWT claims match. Trust → original
   issuer.
 - ATTESTED → verify the ES256 SD-JWT against the bridge DID. Trust → bridge.
 
@@ -302,8 +312,9 @@ ES256 implementation in the codebase.
 
 ## 9. Testing
 
-- **Known-answer tests** against the spec's signed test vectors for `EddsaJcs2022`
-  (byte-exact JCS + `hashData` ordering) — primary correctness gate.
+- **Known-answer tests** against the spec's signed test vectors for `EcdsaJcs2022`
+  (byte-exact JCS + `hashData` ordering, deterministic RFC 6979 nonces, canonical low-s) —
+  primary correctness gate.
 - **Issuance round-trip** — issue → verify a `SpendingAuthorizationCredential`.
 - **Verifier matrix** — one test per `VerificationFailure` case plus the happy path.
 - **Constraint tests** — amount/currency/payee/expiry boundaries; optional daily-cap with

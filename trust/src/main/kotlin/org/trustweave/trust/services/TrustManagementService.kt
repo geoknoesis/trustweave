@@ -1,11 +1,11 @@
 package org.trustweave.trust.services
 
+import kotlinx.coroutines.withTimeout
 import org.trustweave.trust.TrustRegistry
 import org.trustweave.trust.dsl.TrustBuilder
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * responsibility into a focused service class.
  */
 class TrustManagementService(
-    private val trustRegistry: TrustRegistry
+    private val trustRegistry: TrustRegistry,
 ) {
     /**
      * Find a trust path between a verifier and an issuer.
@@ -29,10 +29,11 @@ class TrustManagementService(
     suspend fun findTrustPath(
         verifier: VerifierIdentity,
         issuer: IssuerIdentity,
-        timeout: Duration = 10.seconds
-    ): TrustPath = withTimeout(timeout) {
-        trustRegistry.findTrustPath(verifier, issuer)
-    }
+        timeout: Duration = 10.seconds,
+    ): TrustPath =
+        withTimeout(timeout) {
+            trustRegistry.findTrustPath(verifier, issuer)
+        }
 
     /**
      * Perform trust operations using the trust DSL.

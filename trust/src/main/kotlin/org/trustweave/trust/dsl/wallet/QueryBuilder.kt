@@ -1,11 +1,11 @@
 package org.trustweave.trust.dsl.wallet
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.CredentialQueryBuilder
 import org.trustweave.wallet.Wallet
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Wallet Query DSL.
@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
  * Query builder that supports organization features.
  */
 class QueryBuilder(
-    private val wallet: Wallet
+    private val wallet: Wallet,
 ) {
     private val queryBuilder = CredentialQueryBuilder()
     private var tagFilter: String? = null
@@ -36,21 +36,21 @@ class QueryBuilder(
 
     /**
      * Filter by issuer DID.
-     * 
+     *
      * @param issuerDid Must be a valid DID starting with "did:"
      * @throws IllegalArgumentException if issuerDid is blank or doesn't start with "did:"
      */
     fun issuer(issuerDid: String) {
         require(issuerDid.isNotBlank()) { "Issuer DID cannot be blank" }
-        require(issuerDid.startsWith("did:")) { 
-            "Issuer DID must start with 'did:'. Got: $issuerDid" 
+        require(issuerDid.startsWith("did:")) {
+            "Issuer DID must start with 'did:'. Got: $issuerDid"
         }
         queryBuilder.byIssuer(issuerDid)
     }
 
     /**
      * Filter by credential type.
-     * 
+     *
      * @param type Credential type string (e.g., "PersonCredential", "EducationCredential")
      * @throws IllegalArgumentException if type is blank
      */
@@ -68,14 +68,14 @@ class QueryBuilder(
 
     /**
      * Filter by subject ID.
-     * 
+     *
      * @param subjectId Must be a valid DID starting with "did:" or a valid URI
      * @throws IllegalArgumentException if subjectId is blank or doesn't match DID/URI format
      */
     fun subject(subjectId: String) {
         require(subjectId.isNotBlank()) { "Subject ID cannot be blank" }
-        require(subjectId.startsWith("did:") || subjectId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) { 
-            "Subject ID must be a valid DID (starting with 'did:') or URI. Got: $subjectId" 
+        require(subjectId.startsWith("did:") || subjectId.matches(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:.*"))) {
+            "Subject ID must be a valid DID (starting with 'did:') or URI. Got: $subjectId"
         }
         queryBuilder.bySubject(subjectId)
     }
@@ -134,35 +134,39 @@ class QueryBuilder(
      *
      * @return List of matching credentials
      */
-    suspend fun execute(): List<VerifiableCredential> = withContext(Dispatchers.IO) {
-        val predicate = queryBuilder.toPredicate()
-        val allCredentials = wallet.list()
+    suspend fun execute(): List<VerifiableCredential> =
+        withContext(Dispatchers.IO) {
+            val predicate = queryBuilder.toPredicate()
+            val allCredentials = wallet.list()
 
-        // Apply base predicate filter
-        val baseResults = allCredentials.filter(predicate)
+            // Apply base predicate filter
+            val baseResults = allCredentials.filter(predicate)
 
-        // Apply tag filter if specified and wallet supports organization
-        val tagFiltered = tagFilter
-            ?.takeIf { wallet is CredentialOrganization }
-            ?.let { tag ->
-                val taggedCredIds = (wallet as CredentialOrganization)
-                    .findByTag(tag)
-                    .mapTo(mutableSetOf()) { it.id }
-                baseResults.filter { it.id in taggedCredIds }
-            }
-            ?: baseResults
+            // Apply tag filter if specified and wallet supports organization
+            val tagFiltered =
+                tagFilter
+                    ?.takeIf { wallet is CredentialOrganization }
+                    ?.let { tag ->
+                        val taggedCredIds =
+                            (wallet as CredentialOrganization)
+                                .findByTag(tag)
+                                .mapTo(mutableSetOf()) { it.id }
+                        baseResults.filter { it.id in taggedCredIds }
+                    }
+                    ?: baseResults
 
-        // Apply collection filter if specified and wallet supports organization
-        collectionFilter
-            ?.takeIf { wallet is CredentialOrganization }
-            ?.let { collectionId ->
-                val collectionCredIds = (wallet as CredentialOrganization)
-                    .getCredentialsInCollection(collectionId)
-                    .mapTo(mutableSetOf()) { it.id }
-                tagFiltered.filter { it.id in collectionCredIds }
-            }
-            ?: tagFiltered
-    }
+            // Apply collection filter if specified and wallet supports organization
+            collectionFilter
+                ?.takeIf { wallet is CredentialOrganization }
+                ?.let { collectionId ->
+                    val collectionCredIds =
+                        (wallet as CredentialOrganization)
+                            .getCredentialsInCollection(collectionId)
+                            .mapTo(mutableSetOf()) { it.id }
+                    tagFiltered.filter { it.id in collectionCredIds }
+                }
+                ?: tagFiltered
+        }
 }
 
 /**
@@ -173,5 +177,3 @@ suspend fun Wallet.query(block: QueryBuilder.() -> Unit): List<VerifiableCredent
     builder.block()
     return builder.execute()
 }
-
-

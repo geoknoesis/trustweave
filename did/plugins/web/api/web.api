@@ -1,0 +1,62 @@
+public final class org/trustweave/webdid/WebDidConfig {
+	public static final field Companion Lorg/trustweave/webdid/WebDidConfig$Companion;
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/String;IZLjava/util/Map;)V
+	public synthetic fun <init> (ZLjava/lang/String;IZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()I
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (ZLjava/lang/String;IZLjava/util/Map;)Lorg/trustweave/webdid/WebDidConfig;
+	public static synthetic fun copy$default (Lorg/trustweave/webdid/WebDidConfig;ZLjava/lang/String;IZLjava/util/Map;ILjava/lang/Object;)Lorg/trustweave/webdid/WebDidConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/util/Map;
+	public final fun getDocumentPath ()Ljava/lang/String;
+	public final fun getFollowRedirects ()Z
+	public final fun getRequireHttps ()Z
+	public final fun getTimeoutSeconds ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/webdid/WebDidConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/trustweave/webdid/WebDidConfig;
+	public final fun documentPath (Ljava/lang/String;)Lorg/trustweave/webdid/WebDidConfig$Builder;
+	public final fun followRedirects (Z)Lorg/trustweave/webdid/WebDidConfig$Builder;
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)Lorg/trustweave/webdid/WebDidConfig$Builder;
+	public final fun requireHttps (Z)Lorg/trustweave/webdid/WebDidConfig$Builder;
+	public final fun timeoutSeconds (I)Lorg/trustweave/webdid/WebDidConfig$Builder;
+}
+
+public final class org/trustweave/webdid/WebDidConfig$Companion {
+	public final fun builder ()Lorg/trustweave/webdid/WebDidConfig$Builder;
+	public final fun default ()Lorg/trustweave/webdid/WebDidConfig;
+	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/webdid/WebDidConfig;
+}
+
+public final class org/trustweave/webdid/WebDidMethod : org/trustweave/did/base/AbstractWebDidMethod {
+	public static final field Companion Lorg/trustweave/webdid/WebDidMethod$Companion;
+	public static final field DEFAULT_DOCUMENT_PATH Ljava/lang/String;
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;Lorg/trustweave/webdid/WebDidConfig;)V
+	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;Lorg/trustweave/webdid/WebDidConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDocumentUrl (Ljava/lang/String;)Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/webdid/WebDidMethod$Companion {
+	public final fun create (Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;)Lorg/trustweave/webdid/WebDidMethod;
+	public static synthetic fun create$default (Lorg/trustweave/webdid/WebDidMethod$Companion;Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;ILjava/lang/Object;)Lorg/trustweave/webdid/WebDidMethod;
+}
+
+public final class org/trustweave/webdid/spi/WebDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
+	public fun <init> ()V
+	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
+	public fun getName ()Ljava/lang/String;
+	public fun getSupportedMethods ()Ljava/util/List;
+}
+

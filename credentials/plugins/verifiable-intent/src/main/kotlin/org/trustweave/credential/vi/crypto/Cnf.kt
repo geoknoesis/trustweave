@@ -11,8 +11,7 @@ import kotlinx.serialization.json.JsonObject
  */
 internal object Cnf {
     /** Extracts `cnf.jwk` (an EC P-256 JWK) from a JWT payload, or null if absent/malformed. */
-    fun jwk(payload: JsonObject): JsonObject? =
-        (payload["cnf"] as? JsonObject)?.get("jwk") as? JsonObject
+    fun jwk(payload: JsonObject): JsonObject? = (payload["cnf"] as? JsonObject)?.get("jwk") as? JsonObject
 
     /** Extracts the `kid` from a `cnf.jwk` object, or null. */
     fun kid(jwk: JsonObject): String? = jwk["kid"]?.contentOrNull()

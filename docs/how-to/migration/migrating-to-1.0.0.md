@@ -124,6 +124,7 @@ try {
 `TrustWeave.createDid(...)` is a `suspend` method that returns the sealed `DidCreationResult`. Pattern-match instead of calling `.fold` on a `Result<T>`:
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import org.trustweave.trust.types.DidCreationResult
 
 val trustWeave = TrustWeave.quickStart()
@@ -151,6 +152,7 @@ val trustWeave = TrustWeave.quickStart()
 ### After
 
 ```kotlin
+import org.trustweave.trust.quickStart
 import kotlinx.coroutines.runBlocking
 import org.trustweave.trust.TrustWeave
 

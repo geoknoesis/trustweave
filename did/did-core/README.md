@@ -1,6 +1,6 @@
 # DID Core Module
 
-> **Note:** This is a minimal README. For complete documentation, see [Module Documentation](../../docs/modules/trustweave-did.md).
+> **Note:** This is a minimal README. For complete documentation, see [Module Documentation](../../docs/api-reference/modules/trustweave-did.md).
 
 The `did-core` module provides a complete implementation of the W3C DID Core specification, including DID identifiers, documents, resolution, and registration.
 
@@ -297,8 +297,8 @@ This module follows the W3C DID Core specification:
 ## Documentation
 
 For comprehensive documentation, see:
-- **[Module Documentation](../../docs/modules/trustweave-did.md)** - Complete module reference
-- **[Idiomatic Kotlin API Guide](../../docs/modules/did-core-idiomatic-api.md)** - Guide to idiomatic Kotlin features (DSLs, extensions, operators)
+- **[Module Documentation](../../docs/api-reference/modules/trustweave-did.md)** - Complete module reference
+- **[Idiomatic Kotlin API Guide](../../docs/api-reference/modules/did-core-idiomatic-api.md)** - Guide to idiomatic Kotlin features (DSLs, extensions, operators)
 
 ## License
 

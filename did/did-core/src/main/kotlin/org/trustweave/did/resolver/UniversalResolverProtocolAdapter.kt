@@ -1,7 +1,7 @@
 package org.trustweave.did.resolver
 
-import java.net.http.HttpRequest
 import kotlinx.serialization.json.JsonObject
+import java.net.http.HttpRequest
 
 /**
  * Protocol adapter for Universal Resolver implementations.
@@ -36,7 +36,10 @@ interface UniversalResolverProtocolAdapter {
      * @param did The DID to resolve (should be URL-encoded if needed)
      * @return Complete URL for the resolution request
      */
-    fun buildResolveUrl(baseUrl: String, did: String): String
+    fun buildResolveUrl(
+        baseUrl: String,
+        did: String,
+    ): String
 
     /**
      * Builds the URL for querying supported methods.
@@ -52,7 +55,10 @@ interface UniversalResolverProtocolAdapter {
      * @param requestBuilder HTTP request builder to configure
      * @param apiKey Optional API key for authentication
      */
-    fun configureAuth(requestBuilder: HttpRequest.Builder, apiKey: String?)
+    fun configureAuth(
+        requestBuilder: HttpRequest.Builder,
+        apiKey: String?,
+    )
 
     /**
      * Extracts the DID document from the response.
@@ -88,4 +94,3 @@ interface UniversalResolverProtocolAdapter {
      */
     val providerName: String
 }
-

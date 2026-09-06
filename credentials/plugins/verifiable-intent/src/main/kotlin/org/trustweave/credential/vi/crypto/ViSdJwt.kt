@@ -52,10 +52,11 @@ internal class ViSdJwt private constructor(
         val dp = payload["delegate_payload"] as? JsonArray
         if (dp != null) {
             val byHash: Map<String, Disclosure> = parsedDisclosures.associateBy { Disclosures.hash(it.b64) }
-            val resolved = dp.map { item ->
-                val refHash = (item as? JsonObject)?.get("...")?.contentOrNull()
-                if (refHash != null) byHash[refHash]?.value ?: item else item
-            }
+            val resolved =
+                dp.map { item ->
+                    val refHash = (item as? JsonObject)?.get("...")?.contentOrNull()
+                    if (refHash != null) byHash[refHash]?.value ?: item else item
+                }
             result["delegate_payload"] = JsonArray(resolved)
         }
         return JsonObject(result)
@@ -67,9 +68,11 @@ internal class ViSdJwt private constructor(
         /** Parses a compact SD-JWT; throws [IllegalArgumentException] on malformed structure. */
         fun parse(compact: String): ViSdJwt {
             val parts = compact.split("~")
-            val jwt = parts.firstOrNull()
-                ?.takeIf { it.count { c -> c == '.' } == 2 }
-                ?: throw IllegalArgumentException("Malformed SD-JWT: first segment is not a JWT")
+            val jwt =
+                parts
+                    .firstOrNull()
+                    ?.takeIf { it.count { c -> c == '.' } == 2 }
+                    ?: throw IllegalArgumentException("Malformed SD-JWT: first segment is not a JWT")
             val segs = jwt.split(".")
             val header = decodeSegment(segs[0]) ?: throw IllegalArgumentException("Malformed SD-JWT header")
             val payload = decodeSegment(segs[1]) ?: throw IllegalArgumentException("Malformed SD-JWT payload")
@@ -77,9 +80,10 @@ internal class ViSdJwt private constructor(
             return ViSdJwt(compact, jwt, header, payload, disclosures)
         }
 
-        private fun decodeSegment(seg: String): JsonObject? = runCatching {
-            json.parseToJsonElement(String(B64.decode(seg), Charsets.UTF_8)).jsonObject
-        }.getOrNull()
+        private fun decodeSegment(seg: String): JsonObject? =
+            runCatching {
+                json.parseToJsonElement(String(B64.decode(seg), Charsets.UTF_8)).jsonObject
+            }.getOrNull()
     }
 }
 

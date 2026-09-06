@@ -22,7 +22,9 @@ public data class ChainVerificationResult(
     val checksSkipped: List<String> = emptyList(),
 ) {
     public companion object {
-        internal fun failure(error: String, performed: List<String> = emptyList()): ChainVerificationResult =
-            ChainVerificationResult(valid = false, errors = listOf(error), checksPerformed = performed)
+        internal fun failure(
+            error: String,
+            performed: List<String> = emptyList(),
+        ): ChainVerificationResult = ChainVerificationResult(valid = false, errors = listOf(error), checksPerformed = performed)
     }
 }

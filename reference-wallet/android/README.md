@@ -4,7 +4,16 @@ Phase 2 of the [Reference Wallet design](../../docs/.internal/reference-wallet-d
 Native Android (Kotlin + Compose) wallet that mirrors the [Phase 1 web wallet](../README.md)
 and talks to the same in-repo demo backend.
 
-## What works (Phase 2 walking skeleton)
+## Current implementation and validation
+
+The implementation now routes signing through `lib/HolderKey.kt`, with an Android
+Keystore path and a software fallback. `lib/Wallet.kt` also has SD-JWT handling.
+Check the selected backend on the actual device; API level or Keystore membership
+alone does not establish hardware provenance. This documentation pass did not build
+or run the Android app. The phase notes below describe the original baseline and
+are not a current feature-completeness or production-custody guarantee.
+
+## Original Phase 2 baseline
 
 - **First-run bootstrap.** Generates a `did:key` Ed25519 holder identity; stored in
   EncryptedSharedPreferences.
@@ -14,7 +23,7 @@ and talks to the same in-repo demo backend.
 - **Present** a credential to the demo verifier, sign a Verifiable Presentation, and
   see the verifier's 8-step checklist + claim-by-claim disclosure breakdown.
 
-## What's deliberately NOT here (yet)
+## Original Phase 2 follow-up plan (historical)
 
 - **Holder key in Android Keystore.** Phase 2 baseline uses EncryptedSharedPreferences
   (wrapping key is Keystore-bound, but the Ed25519 seed itself lives in encrypted prefs).
@@ -106,4 +115,4 @@ becomes a thin wrapper rather than an implementation.
 
 ## License
 
-Apache 2.0 — fork, rebrand, submit under your own developer account.
+See the repository [LICENSE](../../LICENSE) and [commercial license terms](../../LICENSE-COMMERCIAL.md).

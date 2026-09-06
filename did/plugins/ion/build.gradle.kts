@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.okhttp)
 
     // JSON processing
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.14.0")
 
     // Test dependencies
     testImplementation(project(":testkit"))

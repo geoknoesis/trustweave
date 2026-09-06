@@ -34,7 +34,9 @@ import java.util.UUID
  * )
  * ```
  */
-class FileWalletFactory : WalletFactory {
+class FileWalletFactory(
+    private val statusResolver: org.trustweave.wallet.WalletStatusResolver? = null,
+) : WalletFactory {
     override suspend fun create(
         providerName: String,
         walletId: String?,
@@ -79,6 +81,7 @@ class FileWalletFactory : WalletFactory {
             holderDid = finalHolderDid,
             walletDir = walletDir,
             encryptionKey = encryptionKey,
+            statusResolver = statusResolver,
         )
     }
 }

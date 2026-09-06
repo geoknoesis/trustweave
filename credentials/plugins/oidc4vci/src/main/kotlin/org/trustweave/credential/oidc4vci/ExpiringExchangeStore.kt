@@ -37,7 +37,12 @@ internal class ExpiringExchangeStore<T>(
     ) {
         check(!closed) { "Exchange store closed" }
         purge()
-        check(key in entries || entries.size < capacity) { "Too many pending credential exchanges" }
+        if (key !in entries &&
+            entries.size >= capacity
+        ) {
+            throw org.trustweave.credential.oidc4vci.exception.Oidc4VciException
+                .CapacityExceeded(capacity)
+        }
         entries[key] = Entry(value, entries[key]?.expires ?: (clock.millis() + ttlMillis))
     }
 

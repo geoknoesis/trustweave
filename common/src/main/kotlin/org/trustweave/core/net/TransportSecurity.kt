@@ -28,11 +28,16 @@ public object TransportSecurity {
         url: String,
         what: String,
     ): String {
-        if (!url.startsWith("http://", ignoreCase = true)) return url
-
-        val host =
-            runCatching { java.net.URI(url).host }.getOrNull()
-                ?: throw IllegalArgumentException("Could not parse the host from the configured endpoint: $url")
+        val endpoint =
+            runCatching { java.net.URI(url).toURL() }.getOrNull()
+                ?: throw IllegalArgumentException("Invalid configured HTTP endpoint")
+        require(endpoint.protocol.lowercase() in setOf("http", "https") && endpoint.host.isNotBlank()) {
+            "Configured endpoint must use HTTP or HTTPS with a host"
+        }
+        require(endpoint.userInfo == null) { "Credentials must not be embedded in endpoint URLs" }
+        if (endpoint.protocol.equals("https", ignoreCase = true)) return url
+        // URL.host accepts DNS labels containing underscores, including container service names.
+        val host = endpoint.host
 
         // Plaintext is allowed only where the host is *positively established* as local. Note this
         // deliberately does NOT use PrivateNetworkGuard.rejectionReason: that returns a reason both

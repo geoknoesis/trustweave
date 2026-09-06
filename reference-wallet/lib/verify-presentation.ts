@@ -1,3 +1,4 @@
+import { decryptDisclosedClaims } from '@/lib/claim-jwe'
 /**
  * Shared presentation verification for demo verifier and airspace gate endpoints.
  */
@@ -34,7 +35,7 @@ export interface VerifyPresentationInput {
   expectedNonce?: string
 }
 
-export function verifyPresentation(input: VerifyPresentationInput): VerificationResponse {
+export async function verifyPresentation(input: VerifyPresentationInput): Promise<VerificationResponse> {
   const checks: VerificationCheck[] = []
   const recordCheck = (step: string, passed: boolean, detail?: string) => {
     checks.push({ step, passed, detail })
@@ -49,12 +50,12 @@ export function verifyPresentation(input: VerifyPresentationInput): Verification
   return verifyVpJwt(input.presentation, input.expectedNonce, checks, recordCheck)
 }
 
-function verifySdJwtVc(
+async function verifySdJwtVc(
   sdJwtVc: string,
   expectedNonce: string | undefined,
   checks: VerificationCheck[],
   recordCheck: (s: string, p: boolean, d?: string) => void,
-): VerificationResponse {
+): Promise<VerificationResponse> {
   let decoded: ReturnType<typeof decodeSdJwtVc>
   try {
     decoded = decodeSdJwtVc(sdJwtVc)
@@ -87,7 +88,7 @@ function verifySdJwtVc(
   }
 
   const issuerSdHashes = (decoded.issuerPayload._sd ?? []) as string[]
-  const disclosedClaims: Record<string, unknown> = {}
+  let disclosedClaims: Record<string, unknown> = {}
   for (const d of decoded.disclosures) {
     if (!issuerSdHashes.includes(d.hash)) {
       recordCheck(`Disclosure '${d.name}' hash in _sd`, false, `expected hash ${d.hash} not found`)
@@ -148,6 +149,11 @@ function verifySdJwtVc(
     kbPayload.sd_hash === expectedSdHash,
     kbPayload.sd_hash === expectedSdHash ? undefined : 'KB-JWT sd_hash does not match the presented disclosure set',
   )
+
+  if (checks.every(c => c.passed)) {
+    try { disclosedClaims = await decryptDisclosedClaims(decoded.disclosures, kbPayload) }
+    catch { recordCheck('Decrypt authenticated claim disclosures', false, 'Encrypted claim disclosure could not be verified'); return { valid: false, checks } }
+  }
 
   const totalDisclosable = issuerSdHashes.length
   const presented = decoded.disclosures.length

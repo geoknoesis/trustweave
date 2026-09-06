@@ -159,5 +159,5 @@ export function exportWalletData(): string {
   const raw = window.localStorage.getItem(HOLDER_KEY)
   let holder: Partial<HolderIdentity> = {}
   try { const parsed = JSON.parse(raw ?? '{}'); holder = { did: parsed.did, publicKey: parsed.publicKey, createdAt: parsed.createdAt } } catch { /* preserve credential data even if identity metadata is corrupt */ }
-  return JSON.stringify({ version: window.localStorage.getItem(VERSION_KEY), holder, credentials: window.localStorage.getItem(CREDENTIALS_KEY) }, null, 2)
+  return JSON.stringify({ version: window.localStorage.getItem(VERSION_KEY), holder, credentials: window.localStorage.getItem(CREDENTIALS_KEY) ?? '[]' }, null, 2)
 }

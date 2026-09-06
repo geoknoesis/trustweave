@@ -130,14 +130,14 @@ abstract class CloudWallet(
             listKeys("$credentialsPath/")
                 .filter { it.endsWith(".json") }
                 .sorted()
-                .map { key ->
+                .mapNotNull { key ->
                     readRecord(key)
                 }.filter { filter == null || matchesFilter(it.credential, filter) }
         }
 
-    private suspend fun readRecord(key: String): StoredCredentialRecord {
+    private suspend fun readRecord(key: String): StoredCredentialRecord? {
         require(key.startsWith("$credentialsPath/") && key.endsWith(".json")) { "Unexpected credential key" }
-        val content = download(key) ?: error("Credential disappeared during listing")
+        val content = download(key) ?: return null // Concurrent deletion is a normal object-store race.
         val credential = json.decodeFromString(VerifiableCredential.serializer(), String(content, Charsets.UTF_8))
         return StoredCredentialRecord(key.removePrefix("$credentialsPath/").removeSuffix(".json"), credential)
     }
@@ -148,7 +148,7 @@ abstract class CloudWallet(
             val failures = mutableListOf<CredentialReadFailure>()
             for (key in listKeys("$credentialsPath/").filter { it.endsWith(".json") }.sorted()) {
                 try {
-                    records.add(readRecord(key))
+                    readRecord(key)?.let { records.add(it) }
                 } catch (
                     error: kotlinx.coroutines.CancellationException,
                 ) {
@@ -224,41 +224,38 @@ abstract class CloudWallet(
     }
 
     /**
-     * Get wallet statistics.
+     * Scan one object at a time. Remote status remains UNKNOWN without a resolver.
+     * Object listing is a point-in-time key set; concurrent deletions are skipped.
      */
     override suspend fun getStatistics(): WalletStatistics =
         withContext(Dispatchers.IO) {
-            val allCredentials = list(null)
             val now = Clock.System.now()
-
+            var total = 0
+            var valid = 0
+            var expired = 0
+            var unknown = 0
+            for (key in listKeys("$credentialsPath/").filter { it.endsWith(".json") }) {
+                val credential = readRecord(key)?.credential ?: continue
+                total++
+                val expiry =
+                    if (credential.isVc2 &&
+                        !credential.isVc1
+                    ) {
+                        credential.validUntil
+                    } else {
+                        credential.validUntil ?: credential.expirationDate
+                    }
+                val isExpired = expiry?.let { it <= now } == true
+                if (isExpired) expired++
+                if (credential.credentialStatus != null) unknown++
+                if (credential.proof != null && credential.credentialStatus == null && !isExpired) valid++
+            }
             WalletStatistics(
-                totalCredentials = allCredentials.size,
-                validCredentials =
-                    allCredentials.count { credential ->
-                        credential.proof != null &&
-                            (
-                                credential.expirationDate?.let { expirationDate ->
-                                    try {
-                                        val expiration = expirationDate
-                                        now < expiration
-                                    } catch (e: Exception) {
-                                        false
-                                    }
-                                } ?: true
-                            ) &&
-                            credential.credentialStatus == null
-                    },
-                expiredCredentials =
-                    allCredentials.count { credential ->
-                        credential.expirationDate?.let { expirationDate ->
-                            now > expirationDate
-                        } ?: false
-                    },
+                totalCredentials = total,
+                validCredentials = valid,
+                expiredCredentials = expired,
                 revokedCredentials = 0,
-                unknownStatusCredentials = allCredentials.count { it.credentialStatus != null },
-                collectionsCount = 0, // Would require collection implementation
-                tagsCount = 0, // Would require tag implementation
-                archivedCount = 0, // Would require archive implementation
+                unknownStatusCredentials = unknown,
             )
         }
 }

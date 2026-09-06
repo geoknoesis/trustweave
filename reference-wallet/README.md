@@ -97,9 +97,8 @@ endpoints. Do not assume that every sibling supports every current web flow.
 | [iOS](ios/README.md) | SwiftUI/CryptoKit/Keychain scaffold; requires macOS/Xcode validation. |
 | [Expo](expo/README.md) | React Native demo; stored seed material is loaded into the app for signing. Check its own package/runtime requirements. |
 
-Native build/device execution is not covered by the web test results. Historical
-phase notes in [the original design](../docs/.internal/reference-wallet-design.md)
-explain intent, not current production guarantees.
+Native build/device execution is not covered by the web test results. The [custody contract](CUSTODY.md)
+describes the implemented adapters and their validation limits.
 
 ## License
 

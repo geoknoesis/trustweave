@@ -1,7 +1,7 @@
 package org.trustweave.did.registrar.server.spring.dto
 
-import org.trustweave.did.registrar.model.DidState
 import kotlinx.serialization.Serializable
+import org.trustweave.did.registrar.model.DidState
 
 /**
  * Structured error response for API errors.
@@ -26,45 +26,51 @@ data class ErrorResponse(
      * Human-readable error message.
      */
     val error: String,
-
     /**
      * Machine-readable error code for programmatic handling.
      */
     val errorCode: String? = null,
-
     /**
      * DID state indicating the operation failure details.
      */
-    val didState: DidState? = null
+    val didState: DidState? = null,
 ) {
     companion object {
         /**
          * Creates an error response from a message.
          */
-        fun fromMessage(message: String, errorCode: String? = null): ErrorResponse {
-            return ErrorResponse(
+        fun fromMessage(
+            message: String,
+            errorCode: String? = null,
+        ): ErrorResponse =
+            ErrorResponse(
                 error = message,
                 errorCode = errorCode,
-                didState = DidState(
-                    state = org.trustweave.did.registrar.model.OperationState.FAILED,
-                    reason = message
-                )
+                didState =
+                    DidState(
+                        state = org.trustweave.did.registrar.model.OperationState.FAILED,
+                        reason = message,
+                    ),
             )
-        }
 
         /**
          * Creates an error response from an exception.
          */
-        fun fromException(e: Throwable, errorCode: String? = null): ErrorResponse {
+        fun fromException(
+            e: Throwable,
+            errorCode: String? = null,
+        ): ErrorResponse {
+            if (e is java.util.concurrent.CancellationException) throw e
+            val message = if (errorCode == "INVALID_REQUEST") "Invalid registrar request" else "Unable to complete registrar operation"
             return ErrorResponse(
-                error = e.message ?: "Unknown error",
+                error = message,
                 errorCode = errorCode,
-                didState = DidState(
-                    state = org.trustweave.did.registrar.model.OperationState.FAILED,
-                    reason = e.message ?: "Unknown error"
-                )
+                didState =
+                    DidState(
+                        state = org.trustweave.did.registrar.model.OperationState.FAILED,
+                        reason = message,
+                    ),
             )
         }
     }
 }
-

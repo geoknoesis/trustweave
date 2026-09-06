@@ -1,8 +1,8 @@
 [
   {
     "id": "PR2-B1",
-    "status": "Local lint corrected; hosted CI open",
-    "details": "Formatted the affected modules and replaced exposed wildcard imports without changing the lint baseline. A green hosted run of this revision is still required."
+    "status": "Hosted validation open",
+    "details": "The prior pushed revision passed hosted lint but failed Indy integration. The replacement fixture uses four local validators and native VDR; CI requires execution. The corrected tree still needs a green hosted run."
   },
   {
     "id": "PR2-B2",
@@ -26,57 +26,72 @@
   },
   {
     "id": "PR2-B6",
-    "status": "Open",
-    "details": "No commit, push, tag, published release or attestation was produced. The intentional federation/VI ABI changes are documented and snapshots updated, but hosted release evidence is still absent."
+    "status": "Partially addressed",
+    "details": "Prior remediation was committed and pushed as 38a27f24. This follow-up remains uncommitted; no new release or attestation is claimed."
   },
   {
     "id": "PR2-N3",
-    "status": "Code corrected; limited validation",
-    "details": "Public status-list failures use a generic message and cancellation propagates. Existing route tests pass; fault-injection coverage has not been added."
+    "status": "Implemented; fault-injection tests passed",
+    "details": "Generic public errors, cancellation propagation and safe status-list failure events. Database/configuration failure tests and registrar error DTO tests passed."
   },
   {
     "id": "PR2-N5",
-    "status": "Partially addressed",
-    "details": "Federation traversal now has a shared 64-edge budget and cycle guard, with cancellation propagation. Sibling protocol session-store issues remain open."
+    "status": "Implemented; SDK validation passed",
+    "details": "Bounded fixed-TTL OID4VP/SIOP stores; stateless CHAPI; typed OID4VCI capacity rejection. Federation traversal limits remain enforced."
   },
   {
     "id": "PR2-N9",
-    "status": "Partially addressed",
-    "details": "Documentation workflow actions are pinned to the same SHAs as CI and receive read-only contents permission. Restoring the module-name gate remains open."
+    "status": "Implemented; checks passed",
+    "details": "Pinned actions retained; module-name and shipped-file link gates restored. Ten checker tests and 354 Markdown files pass."
   },
   {
     "id": "PR2-N1",
-    "status": "Open; not remediated in this pass",
-    "details": "revoked filter throws mid-iteration"
+    "status": "Implemented; targeted tests passed",
+    "details": "Unknown status matches neither revoked filter without aborting listing. File and database factories accept WalletStatusResolver."
   },
   {
     "id": "PR2-N2",
-    "status": "Open; not remediated in this pass",
-    "details": "Cloud listing aborts on concurrent delete; statistics paths are O(N)"
+    "status": "Implemented; targeted tests passed",
+    "details": "Cloud listing skips concurrent deletion. Statistics decode one cloud credential at a time or bounded database pages. countCredentials uses SQL COUNT. Full live statistics remain advisory O(N) scans."
   },
   {
     "id": "PR2-N4",
-    "status": "Open; not remediated in this pass",
-    "details": "Transport gate applied inconsistently across anchors and KMS clients"
+    "status": "Implemented; targeted tests passed",
+    "details": "HTTPS gates cover Algorand, Cardano, Indy, Vault and Thales. Algorand retains its HTTPS scheme. Bitcoin uses a typed configuration error."
   },
   {
     "id": "PR2-N6",
-    "status": "Open; not remediated in this pass",
-    "details": "Observability unchanged"
+    "status": "Improved; application instrumentation required",
+    "details": "Added safe status-list logging and operations guidance for correlation, coroutine context, metrics and alerts. Hosting applications still own tracing and metrics export; not every SDK path emits telemetry."
   },
   {
     "id": "PR2-N7",
-    "status": "Open; not remediated in this pass",
-    "details": "26 modules with main code and no test source"
+    "status": "Initial gaps addressed; broader coverage remains limited",
+    "details": "All 16 previously untested SDK modules have passing contracts, all 24 documentation examples executed, and the Android app compiled with two passing tests. Android shared code compiled but has no test source. Merged SDK coverage is 56.4% of lines and 38.5% of branches; provider conformance and broader test depth remain qualification work."
   },
   {
     "id": "PR2-N8",
-    "status": "Open; not remediated in this pass",
-    "details": "Reference wallet flows broken by this diff (demo scope)"
+    "status": "Implemented; web validation passed",
+    "details": "Verified encrypted disclosures, required airspace claims, prior backup versions, partial-reset reporting and backup-eligible passkeys. Typecheck, 80 unit tests, production build and 13 browser tests passed."
   },
   {
     "id": "PR2-N10",
-    "status": "Open; not remediated in this pass",
-    "details": "Deployment policy has a bypass and cannot admit any wallet"
+    "status": "Bypass fixed; qualification restrictions retained",
+    "details": "Testkit factories reject strict deployment policies. No wallet is promoted to supported and unassessed plugins remain rejected. Qualification boundaries are documented."
+  },
+  {
+    "id": "PR2-A1",
+    "status": "Fixed; test passed",
+    "details": "Credential anchoring compares actual ledger payload and respects generated evidence/proof inclusion. Valid, tampered and missing-anchor cases tested."
+  },
+  {
+    "id": "PR2-A2",
+    "status": "Fixed; regression passed",
+    "details": "Status checks reject missing/out-of-range entries. Portable locked allocation replaces PostgreSQL-only upserts, bounds capacity and preserves existing assignments."
+  },
+  {
+    "id": "PR2-A3",
+    "status": "Fixed; live local ledger test passed",
+    "details": "Indy ATTRIB signing hashes raw JSON, wraps the named attribute and rejects outdated references. Request IDs remain monotonic past counter rollover. Four validators completed write/read/replacement and rejected the old reference; one integration test, zero skips."
   }
 ]

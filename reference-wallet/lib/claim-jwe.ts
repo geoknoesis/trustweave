@@ -80,3 +80,30 @@ export async function unwrapClaimKey(jwe: ClaimJwePayload, holderDid: string): P
     return cek
   } finally { shared.fill(0); wrapKey.fill(0) }
 }
+
+/** Only call after issuer/holder signatures, audience, nonce and sd_hash checks have passed. */
+export async function decryptDisclosedClaims(
+  disclosures: { raw: string; hash: string; name: string; value: unknown }[],
+  kbPayload: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const rawKeys = kbPayload.trustweave_claim_keys
+  if (rawKeys !== undefined && (!rawKeys || typeof rawKeys !== 'object' || Array.isArray(rawKeys))) throw new Error('Invalid encrypted claim keys')
+  const keys = (rawKeys ?? {}) as Record<string, unknown>
+  const encrypted = disclosures.filter(d => isClaimJwePayload(d.value))
+  if (Object.keys(keys).some(hash => !encrypted.some(d => d.hash === hash))) throw new Error('Key for an undisclosed or unencrypted claim')
+  const result: Record<string, unknown> = Object.create(null)
+  for (const d of disclosures) {
+    if (Object.hasOwn(result, d.name)) throw new Error('Duplicate disclosed claim name')
+    if (!isClaimJwePayload(d.value)) { result[d.name] = d.value; continue }
+    const encoded = keys[d.hash]
+    if (typeof encoded !== 'string') throw new Error('Missing encrypted claim key')
+    const key = b64uDecode(encoded)
+    try {
+      if (key.length !== 32 || b64uDecode(d.value.iv).length !== 12 || b64uDecode(d.value.tag).length !== 16) throw new Error('Invalid encrypted claim parameters')
+      result[d.name] = new TextDecoder('utf-8', { fatal: true }).decode(await aesGcmDecrypt(
+        b64uDecode(d.value.ciphertext), b64uDecode(d.value.tag), key, b64uDecode(d.value.iv),
+      ))
+    } finally { key.fill(0) }
+  }
+  return result
+}

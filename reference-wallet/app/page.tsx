@@ -44,7 +44,8 @@ export default function HomePage() {
   const onReset = async () => {
     if (!confirm('Reset your wallet? This removes all credentials and your digital identity.')) return
     try {
-      await resetWallet()
+      const reset = await resetWallet()
+      if (!reset.keysCleared) window.alert("Wallet records were cleared, but browser key storage was unavailable. Clear this site's browser data to remove any remaining keys.")
       setDetailCred(null)
       setState(await bootstrap())
     } catch (error) { setBootError(String(error)) }

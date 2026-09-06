@@ -2,14 +2,31 @@ package org.trustweave.anchor.bitcoin
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import okhttp3.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonUnquotedLiteral
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.bitcoinj.core.*
+import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.Utils
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.params.TestNet3Params
-import org.trustweave.anchor.*
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
+import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
 import java.nio.charset.StandardCharsets
@@ -84,10 +101,19 @@ class BitcoinBlockchainAnchorClient(
         // plaintext - that is the documented local-node setup.
         rpcUrl =
             (options["rpcUrl"] as? String)?.let {
-                org.trustweave.core.net.TransportSecurity.requireSecureForPublicHosts(
-                    it,
-                    "Bitcoin RPC credentials and signed transactions",
-                )
+                try {
+                    org.trustweave.core.net.TransportSecurity.requireSecureForPublicHosts(
+                        it,
+                        "Bitcoin RPC credentials and signed transactions",
+                    )
+                } catch (failure: IllegalArgumentException) {
+                    throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        configKey = "rpcUrl",
+                        reason = "Bitcoin RPC requires HTTPS for public hosts and forbids embedded credentials",
+                        cause = failure,
+                    )
+                }
             }
         rpcUser = options["rpcUser"] as? String
         rpcPassword = options["rpcPassword"] as? String

@@ -1,14 +1,22 @@
 package org.trustweave.credential.chapi
 
-import org.trustweave.credential.chapi.models.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
+import org.trustweave.credential.chapi.models.ChapiOffer
+import org.trustweave.credential.chapi.models.ChapiPresentationResult
+import org.trustweave.credential.chapi.models.ChapiProofRequest
+import org.trustweave.credential.chapi.models.ChapiStoreResult
 import org.trustweave.credential.exchange.model.CredentialPreview
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.util.UUID
 
 /**
  * CHAPI (Credential Handler API) service.
@@ -40,8 +48,7 @@ import java.util.concurrent.ConcurrentHashMap
  * ```
  */
 class ChapiService {
-    private val offers = ConcurrentHashMap<String, ChapiOffer>()
-    private val proofRequests = ConcurrentHashMap<String, ChapiProofRequest>()
+    // Message construction is stateless; retaining returned messages served no lookup or replay check.
 
     /**
      * Creates a CHAPI credential offer.
@@ -54,60 +61,78 @@ class ChapiService {
      */
     suspend fun createCredentialOffer(
         issuerDid: String,
-        credentialPreview: CredentialPreview
-    ): ChapiOffer = withContext(Dispatchers.IO) {
-        val offerId = UUID.randomUUID().toString()
+        credentialPreview: CredentialPreview,
+    ): ChapiOffer =
+        withContext(Dispatchers.IO) {
+            val offerId = UUID.randomUUID().toString()
 
-        // Create CHAPI-compatible credential request
-        // Format: https://w3c.github.io/webappsec-credential-management/#credential
-        val chapiMessage = buildJsonObject {
-            put("@context", JsonArray(listOf(
-                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
-                JsonPrimitive("https://w3id.org/credential-handler/v1")
-            )))
-            put("type", JsonArray(listOf(
-                JsonPrimitive("VerifiableCredential"),
-                JsonPrimitive("CredentialOffer")
-            )))
-            put("credentialPreview", buildJsonObject {
-                put("@type", "https://didcomm.org/issue-credential/3.0/credential-preview")
-                put("attributes", JsonArray(
-                    credentialPreview.attributes.map { attr ->
+            // Create CHAPI-compatible credential request
+            // Format: https://w3c.github.io/webappsec-credential-management/#credential
+            val chapiMessage =
+                buildJsonObject {
+                    put(
+                        "@context",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                                JsonPrimitive("https://w3id.org/credential-handler/v1"),
+                            ),
+                        ),
+                    )
+                    put(
+                        "type",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("VerifiableCredential"),
+                                JsonPrimitive("CredentialOffer"),
+                            ),
+                        ),
+                    )
+                    put(
+                        "credentialPreview",
                         buildJsonObject {
-                            put("name", attr.name)
-                            put("mime-type", attr.mimeType ?: "text/plain")
-                            put("value", attr.value)
+                            put("@type", "https://didcomm.org/issue-credential/3.0/credential-preview")
+                            put(
+                                "attributes",
+                                JsonArray(
+                                    credentialPreview.attributes.map { attr ->
+                                        buildJsonObject {
+                                            put("name", attr.name)
+                                            put("mime-type", attr.mimeType ?: "text/plain")
+                                            put("value", attr.value)
+                                        }
+                                    },
+                                ),
+                            )
+                        },
+                    )
+                    put("issuer", issuerDid)
+                    credentialPreview.options.metadata["goalCode"]?.let {
+                        if (it is kotlinx.serialization.json.JsonPrimitive) {
+                            put("goalCode", it.content)
+                        } else {
+                            put("goalCode", it)
                         }
                     }
-                ))
-            })
-            put("issuer", issuerDid)
-            credentialPreview.options.metadata["goalCode"]?.let { 
-                if (it is kotlinx.serialization.json.JsonPrimitive) {
-                    put("goalCode", it.content)
-                } else {
-                    put("goalCode", it)
+                    credentialPreview.options.metadata["replacementId"]?.let {
+                        if (it is kotlinx.serialization.json.JsonPrimitive) {
+                            put("replacementId", it.content)
+                        } else {
+                            put("replacementId", it)
+                        }
+                    }
                 }
-            }
-            credentialPreview.options.metadata["replacementId"]?.let { 
-                if (it is kotlinx.serialization.json.JsonPrimitive) {
-                    put("replacementId", it.content)
-                } else {
-                    put("replacementId", it)
-                }
-            }
+
+            val offer =
+                ChapiOffer(
+                    offerId = offerId,
+                    issuerDid = issuerDid,
+                    credentialPreview = credentialPreview,
+                    chapiMessage = chapiMessage,
+                )
+
+            offer
         }
-
-        val offer = ChapiOffer(
-            offerId = offerId,
-            issuerDid = issuerDid,
-            credentialPreview = credentialPreview,
-            chapiMessage = chapiMessage
-        )
-
-        offers[offerId] = offer
-        offer
-    }
 
     /**
      * Stores a credential via CHAPI.
@@ -120,33 +145,45 @@ class ChapiService {
      */
     suspend fun storeCredential(
         credential: VerifiableCredential,
-        holderDid: String
-    ): ChapiStoreResult = withContext(Dispatchers.IO) {
-        val credentialId = credential.id?.value ?: UUID.randomUUID().toString()
+        holderDid: String,
+    ): ChapiStoreResult =
+        withContext(Dispatchers.IO) {
+            val credentialId = credential.id?.value ?: UUID.randomUUID().toString()
 
-        // Create CHAPI-compatible credential
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val credentialJson = json.encodeToJsonElement(
-            VerifiableCredential.serializer(),
-            credential
-        )
+            // Create CHAPI-compatible credential
+            val json =
+                Json {
+                    prettyPrint = false
+                    encodeDefaults = false
+                }
+            val credentialJson =
+                json.encodeToJsonElement(
+                    VerifiableCredential.serializer(),
+                    credential,
+                )
 
-        val chapiMessage = buildJsonObject {
-            put("@context", JsonArray(listOf(
-                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
-                JsonPrimitive("https://w3id.org/credential-handler/v1")
-            )))
-            put("type", JsonArray(listOf(JsonPrimitive("VerifiableCredential"))))
-            put("credential", credentialJson)
+            val chapiMessage =
+                buildJsonObject {
+                    put(
+                        "@context",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                                JsonPrimitive("https://w3id.org/credential-handler/v1"),
+                            ),
+                        ),
+                    )
+                    put("type", JsonArray(listOf(JsonPrimitive("VerifiableCredential"))))
+                    put("credential", credentialJson)
+                }
+
+            ChapiStoreResult(
+                credentialId = credentialId,
+                holderDid = holderDid,
+                credential = credential,
+                chapiMessage = chapiMessage,
+            )
         }
-
-        ChapiStoreResult(
-            credentialId = credentialId,
-            holderDid = holderDid,
-            credential = credential,
-            chapiMessage = chapiMessage
-        )
-    }
 
     /**
      * Creates a CHAPI proof request.
@@ -161,68 +198,87 @@ class ChapiService {
     suspend fun createProofRequest(
         verifierDid: String,
         requestedAttributes: Map<String, org.trustweave.credential.exchange.request.AttributeRequest>,
-        requestedPredicates: Map<String, org.trustweave.credential.exchange.request.AttributeRequest>
-    ): ChapiProofRequest = withContext(Dispatchers.IO) {
-        val requestId = UUID.randomUUID().toString()
+        requestedPredicates: Map<String, org.trustweave.credential.exchange.request.AttributeRequest>,
+    ): ChapiProofRequest =
+        withContext(Dispatchers.IO) {
+            val requestId = UUID.randomUUID().toString()
 
-        // Create CHAPI-compatible proof request
-        val chapiMessage = buildJsonObject {
-            put("@context", JsonArray(listOf(
-                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
-                JsonPrimitive("https://w3id.org/credential-handler/v1")
-            )))
-            put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentationRequest"))))
-            put("verifier", verifierDid)
-            put("requestedAttributes", JsonObject(
-                requestedAttributes.mapValues { (_, attr) ->
-                    buildJsonObject {
-                        put("name", attr.name)
-                        put("restrictions", JsonArray(
-                            attr.restrictions.map { restriction ->
+            // Create CHAPI-compatible proof request
+            val chapiMessage =
+                buildJsonObject {
+                    put(
+                        "@context",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                                JsonPrimitive("https://w3id.org/credential-handler/v1"),
+                            ),
+                        ),
+                    )
+                    put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentationRequest"))))
+                    put("verifier", verifierDid)
+                    put(
+                        "requestedAttributes",
+                        JsonObject(
+                            requestedAttributes.mapValues { (_, attr) ->
                                 buildJsonObject {
-                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
-                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
-                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
+                                    put("name", attr.name)
+                                    put(
+                                        "restrictions",
+                                        JsonArray(
+                                            attr.restrictions.map { restriction ->
+                                                buildJsonObject {
+                                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
+                                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
+                                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
+                                                }
+                                            },
+                                        ),
+                                    )
                                 }
-                            }
-                        ))
-                    }
-                }
-            ))
-            put("requestedPredicates", JsonObject(
-                requestedPredicates.mapValues { (_, pred) ->
-                    buildJsonObject {
-                        put("name", pred.name)
-                        // Predicate type and value should be in restrictions metadata
-                        pred.restrictions.firstOrNull()?.let { restriction ->
-                            restriction.metadata["p_type"]?.let { put("p_type", it) }
-                            restriction.metadata["p_value"]?.let { put("p_value", it) }
-                        }
-                        put("restrictions", JsonArray(
-                            pred.restrictions.map { restriction ->
+                            },
+                        ),
+                    )
+                    put(
+                        "requestedPredicates",
+                        JsonObject(
+                            requestedPredicates.mapValues { (_, pred) ->
                                 buildJsonObject {
-                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
-                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
-                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
+                                    put("name", pred.name)
+                                    // Predicate type and value should be in restrictions metadata
+                                    pred.restrictions.firstOrNull()?.let { restriction ->
+                                        restriction.metadata["p_type"]?.let { put("p_type", it) }
+                                        restriction.metadata["p_value"]?.let { put("p_value", it) }
+                                    }
+                                    put(
+                                        "restrictions",
+                                        JsonArray(
+                                            pred.restrictions.map { restriction ->
+                                                buildJsonObject {
+                                                    restriction.issuerDid?.let { put("issuer", JsonPrimitive(it.toString())) }
+                                                    restriction.schemaId?.let { put("schema_id", JsonPrimitive(it.toString())) }
+                                                    restriction.metadata["credentialDefinitionId"]?.let { put("cred_def_id", it) }
+                                                }
+                                            },
+                                        ),
+                                    )
                                 }
-                            }
-                        ))
-                    }
+                            },
+                        ),
+                    )
                 }
-            ))
+
+            val proofRequest =
+                ChapiProofRequest(
+                    requestId = requestId,
+                    verifierDid = verifierDid,
+                    requestedAttributes = requestedAttributes,
+                    requestedPredicates = requestedPredicates,
+                    chapiMessage = chapiMessage,
+                )
+
+            proofRequest
         }
-
-        val proofRequest = ChapiProofRequest(
-            requestId = requestId,
-            verifierDid = verifierDid,
-            requestedAttributes = requestedAttributes,
-            requestedPredicates = requestedPredicates,
-            chapiMessage = chapiMessage
-        )
-
-        proofRequests[requestId] = proofRequest
-        proofRequest
-    }
 
     /**
      * Presents a proof via CHAPI.
@@ -235,33 +291,44 @@ class ChapiService {
      */
     suspend fun presentProof(
         presentation: VerifiablePresentation,
-        verifierDid: String
-    ): ChapiPresentationResult = withContext(Dispatchers.IO) {
-        val presentationId = UUID.randomUUID().toString()
+        verifierDid: String,
+    ): ChapiPresentationResult =
+        withContext(Dispatchers.IO) {
+            val presentationId = UUID.randomUUID().toString()
 
-        // Create CHAPI-compatible presentation
-        val json = Json { prettyPrint = false; encodeDefaults = false }
-        val presentationJson = json.encodeToJsonElement(
-            VerifiablePresentation.serializer(),
-            presentation
-        )
+            // Create CHAPI-compatible presentation
+            val json =
+                Json {
+                    prettyPrint = false
+                    encodeDefaults = false
+                }
+            val presentationJson =
+                json.encodeToJsonElement(
+                    VerifiablePresentation.serializer(),
+                    presentation,
+                )
 
-        val chapiMessage = buildJsonObject {
-            put("@context", JsonArray(listOf(
-                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
-                JsonPrimitive("https://w3id.org/credential-handler/v1")
-            )))
-            put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentation"))))
-            put("presentation", presentationJson)
-            put("verifier", verifierDid)
+            val chapiMessage =
+                buildJsonObject {
+                    put(
+                        "@context",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("https://www.w3.org/2018/credentials/v1"),
+                                JsonPrimitive("https://w3id.org/credential-handler/v1"),
+                            ),
+                        ),
+                    )
+                    put("type", JsonArray(listOf(JsonPrimitive("VerifiablePresentation"))))
+                    put("presentation", presentationJson)
+                    put("verifier", verifierDid)
+                }
+
+            ChapiPresentationResult(
+                presentationId = presentationId,
+                presentation = presentation,
+                verifierDid = verifierDid,
+                chapiMessage = chapiMessage,
+            )
         }
-
-        ChapiPresentationResult(
-            presentationId = presentationId,
-            presentation = presentation,
-            verifierDid = verifierDid,
-            chapiMessage = chapiMessage
-        )
-    }
 }
-

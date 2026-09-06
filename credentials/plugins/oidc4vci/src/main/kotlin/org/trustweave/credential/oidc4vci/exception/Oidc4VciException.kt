@@ -13,6 +13,14 @@ sealed class Oidc4VciException(
     override val context: Map<String, Any?> = emptyMap(),
     override val cause: Throwable? = null,
 ) : TrustWeaveException(code, message, context, cause) {
+    class CapacityExceeded(
+        val capacity: Int,
+    ) : Oidc4VciException(
+            code = "OIDC4VCI_CAPACITY_EXCEEDED",
+            message = "Too many pending credential exchanges",
+            context = mapOf("capacity" to capacity),
+        )
+
     /**
      * Exception thrown when an OIDC4VCI HTTP request fails.
      *

@@ -34,7 +34,7 @@ export function CredentialBackup({ onRestored }: { onRestored: () => Promise<voi
     <summary>Back up and restore credentials</summary>
     <p>Keep this file private: it contains your credential details. It does not contain signing keys. Restore works only with the same wallet identity and its existing device key.</p>
     <button type="button" className="btn secondary" onClick={download} disabled={busy}>Export credentials</button>
-    <button type="button" className="btn secondary" onClick={() => input.current?.click()} disabled={busy}>{busy ? 'Restoring?' : 'Restore credentials'}</button>
+    <button type="button" className="btn secondary" onClick={() => input.current?.click()} disabled={busy}>{busy ? 'Restoring…' : 'Restore credentials'}</button>
     <input ref={input} type="file" accept="application/json,.json" aria-label="Credential backup file" hidden onChange={event => {
       const file = event.target.files?.[0]; event.target.value = ''; if (file) void restore(file)
     }} />

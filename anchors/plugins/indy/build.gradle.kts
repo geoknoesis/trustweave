@@ -10,7 +10,6 @@ group = "org.trustweave.chains"
 sourceSets {
     create("integrationTest") {
         kotlin.srcDir("src/integrationTest/kotlin")
-        resources.srcDir("src/integrationTest/resources")
         compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
         runtimeClasspath += output + compileClasspath
     }
@@ -44,7 +43,7 @@ dependencies {
 }
 
 val integrationTest by tasks.registering(Test::class) {
-    description = "Runs integration tests that hit a real Hyperledger Indy pool via TestContainers."
+    description = "Runs a real local Indy ledger round trip through native VDR."
     group = "verification"
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath

@@ -6,7 +6,18 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import org.slf4j.LoggerFactory
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialCollection
@@ -1166,7 +1177,7 @@ class DatabaseWallet(
         if (filter.hasStatusEntry != null && (credential.credentialStatus != null) != filter.hasStatusEntry) return false
         if (filter.revoked != null) {
             val status = resolveStoredStatus(credential, statusResolver)
-            check(status != StoredCredentialStatus.UNKNOWN) { "Revocation status is unknown; configure a WalletStatusResolver" }
+            if (status == StoredCredentialStatus.UNKNOWN) return false
             if ((status == StoredCredentialStatus.REVOKED) != filter.revoked) return false
         }
         return true
@@ -1278,36 +1289,73 @@ class DatabaseWallet(
             records
         }
 
+    /** Count in SQL without deserializing credentials or resolving remote status. */
+    suspend fun countCredentials(includeArchived: Boolean = true): Int =
+        withContext(Dispatchers.IO) {
+            dataSource.connection.use { connection ->
+                val condition = if (includeArchived) "" else " AND archived = FALSE"
+                connection.prepareStatement("SELECT COUNT(*) FROM credentials WHERE wallet_id = ?$condition").use { statement ->
+                    statement.setString(1, walletId)
+                    statement.executeQuery().use { rows ->
+                        rows.next()
+                        rows.getInt(1)
+                    }
+                }
+            }
+        }
+
+    /** Live statistics scan bounded pages; use countCredentials for a cheap storage count. */
     override suspend fun getStatistics(): WalletStatistics =
         withContext(Dispatchers.IO) {
-            val credentials = list(null)
-            val statuses = credentials.map { resolveStoredStatus(it, statusResolver) }
-            val now = Clock.System.now()
-            val archived =
+            val (total, activeCount) =
                 dataSource.connection.use { connection ->
                     connection
                         .prepareStatement(
-                            "SELECT COUNT(*) FROM credentials WHERE wallet_id = ? AND archived = TRUE",
+                            "SELECT COUNT(*), COALESCE(SUM(CASE WHEN archived = FALSE THEN 1 ELSE 0 END), 0) FROM credentials WHERE wallet_id = ?",
                         ).use { statement ->
                             statement.setString(1, walletId)
                             statement.executeQuery().use { rows ->
                                 rows.next()
-                                rows.getInt(1)
+                                rows.getInt(1) to rows.getInt(2)
                             }
                         }
                 }
+            var valid = 0
+            var expired = 0
+            var revoked = 0
+            var unknown = 0
+            val now = Clock.System.now()
+            var cursor: String? = null
+            var remaining = activeCount
+            do {
+                val page = pageRecords(limit = minOf(500, remaining.coerceAtLeast(1)), after = cursor)
+                for (record in page.records) {
+                    val credential = record.credential
+                    val status = resolveStoredStatus(credential, statusResolver)
+                    val expiry =
+                        if (credential.isVc2 &&
+                            !credential.isVc1
+                        ) {
+                            credential.validUntil
+                        } else {
+                            credential.validUntil ?: credential.expirationDate
+                        }
+                    val isExpired = expiry?.let { it <= now } == true
+                    if (isExpired) expired++
+                    if (status == StoredCredentialStatus.REVOKED) revoked++
+                    if (status == StoredCredentialStatus.UNKNOWN) unknown++
+                    if (credential.proof != null && status == StoredCredentialStatus.ACTIVE && !isExpired) valid++
+                }
+                remaining -= page.records.size
+                cursor = page.nextCursor
+            } while (cursor != null && remaining > 0)
             WalletStatistics(
-                totalCredentials = credentials.size + archived,
-                archivedCount = archived,
-                validCredentials =
-                    credentials.indices.count { i ->
-                        credentials[i].proof != null &&
-                            statuses[i] == StoredCredentialStatus.ACTIVE &&
-                            (credentials[i].expirationDate ?: credentials[i].validUntil)?.let { it > now } != false
-                    },
-                expiredCredentials = credentials.count { (it.expirationDate ?: it.validUntil)?.let { expiry -> expiry <= now } == true },
-                revokedCredentials = statuses.count { it == StoredCredentialStatus.REVOKED },
-                unknownStatusCredentials = statuses.count { it == StoredCredentialStatus.UNKNOWN },
+                totalCredentials = total,
+                archivedCount = total - activeCount,
+                validCredentials = valid,
+                expiredCredentials = expired,
+                revokedCredentials = revoked,
+                unknownStatusCredentials = unknown,
             )
         }
 

@@ -11,7 +11,10 @@ package org.trustweave.anchor.cardano
  * The Blockfrost project id must be issued for the corresponding network — the prefix
  * (`mainnet...`, `preview...`, `preprod...`) is validated by Blockfrost, not by this client.
  */
-enum class CardanoNetwork(val chainId: String, val blockfrostBaseUrl: String) {
+enum class CardanoNetwork(
+    val chainId: String,
+    val blockfrostBaseUrl: String,
+) {
     Mainnet("cardano:mainnet", "https://cardano-mainnet.blockfrost.io/api/v0"),
     Preview("cardano:preview", "https://cardano-preview.blockfrost.io/api/v0"),
     Preprod("cardano:preprod", "https://cardano-preprod.blockfrost.io/api/v0"),
@@ -49,8 +52,9 @@ data class CardanoAnchorConfig(
     val blockfrostBaseUrlOverride: String? = null,
     val confirmationTimeoutSeconds: Long = 90,
 ) {
-
     init {
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(blockfrostBaseUrl(), "Blockfrost credentials")
         require(blockfrostProjectId.isNotBlank()) { "blockfrostProjectId must not be blank" }
         require(metadataLabel in 0..MAX_METADATA_LABEL) {
             "metadataLabel out of range [0, $MAX_METADATA_LABEL]: $metadataLabel"
@@ -64,15 +68,16 @@ data class CardanoAnchorConfig(
     /** Returns the Blockfrost base URL — override if set, otherwise the network default. */
     fun blockfrostBaseUrl(): String = blockfrostBaseUrlOverride ?: network.blockfrostBaseUrl
 
-    fun toMap(): Map<String, Any?> = mapOf(
-        KEY_PROJECT_ID to blockfrostProjectId,
-        KEY_NETWORK to network.name,
-        KEY_MNEMONIC to submitterMnemonic,
-        KEY_SECRET_KEY to submitterSecretKey,
-        KEY_LABEL to metadataLabel,
-        KEY_BASE_URL to blockfrostBaseUrlOverride,
-        KEY_CONFIRMATION_TIMEOUT to confirmationTimeoutSeconds,
-    )
+    fun toMap(): Map<String, Any?> =
+        mapOf(
+            KEY_PROJECT_ID to blockfrostProjectId,
+            KEY_NETWORK to network.name,
+            KEY_MNEMONIC to submitterMnemonic,
+            KEY_SECRET_KEY to submitterSecretKey,
+            KEY_LABEL to metadataLabel,
+            KEY_BASE_URL to blockfrostBaseUrlOverride,
+            KEY_CONFIRMATION_TIMEOUT to confirmationTimeoutSeconds,
+        )
 
     companion object {
         /** CIP-20 transaction-message metadata label. */
@@ -90,12 +95,16 @@ data class CardanoAnchorConfig(
         const val KEY_BASE_URL = "blockfrostBaseUrl"
         const val KEY_CONFIRMATION_TIMEOUT = "confirmationTimeoutSeconds"
 
-        fun fromMap(chainId: String, map: Map<String, Any?>): CardanoAnchorConfig {
-            val network = CardanoNetwork.fromChainId(chainId)
-                ?: (map[KEY_NETWORK] as? String)?.let { runCatching { CardanoNetwork.valueOf(it) }.getOrNull() }
-                ?: throw IllegalArgumentException(
-                    "Cannot derive Cardano network from chainId=$chainId or options[$KEY_NETWORK]",
-                )
+        fun fromMap(
+            chainId: String,
+            map: Map<String, Any?>,
+        ): CardanoAnchorConfig {
+            val network =
+                CardanoNetwork.fromChainId(chainId)
+                    ?: (map[KEY_NETWORK] as? String)?.let { runCatching { CardanoNetwork.valueOf(it) }.getOrNull() }
+                    ?: throw IllegalArgumentException(
+                        "Cannot derive Cardano network from chainId=$chainId or options[$KEY_NETWORK]",
+                    )
             return CardanoAnchorConfig(
                 blockfrostProjectId = (map[KEY_PROJECT_ID] as? String).orEmpty(),
                 network = network,

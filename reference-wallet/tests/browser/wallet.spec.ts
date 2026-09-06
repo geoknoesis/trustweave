@@ -190,3 +190,22 @@ test('key loss offers replacement while preserving old credentials for reissuanc
   expect(await page.evaluate(() => localStorage.getItem('trustweave-wallet-credentials'))).toBe(before)
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!).did)).not.toBe(holder.did)
 })
+
+
+test('airspace request names the required claims and the gate accepts their signed disclosure', async ({ page, request }) => {
+  await page.goto('/tests/browser/')
+  await page.waitForFunction(() => !!(window as any).walletTest)
+  const did = await page.evaluate(async () => (await (window as any).walletTest.wallet.bootstrap()).holder.did)
+  const issued = await (await request.get('http://127.0.0.1:4175/api/demo-issuer/spatial/credential', { params: { subject: did, droneId: 'DRONE-001' } })).json()
+  const challenge = await (await request.post('http://127.0.0.1:4175/api/demo-airspace/gate/request', { data: { activityType: 'data-collection', lat: 37.7749, lon: -122.4194 } })).json()
+  expect(challenge.requiredClaims).toEqual(['trustDomainId', 'activityType'])
+  const presentation = await page.evaluate(async ({ issued, challenge }) => {
+    const wallet = (window as any).walletTest.wallet
+    const record = (await wallet.store(issued.credential, issued.format)).credential
+    return wallet.createPresentation([record.id], challenge.audience, challenge.nonce, challenge.requiredClaims)
+  }, { issued, challenge })
+  const verdict = await (await request.post('http://127.0.0.1:4175/api/demo-airspace/gate/verify', {
+    data: { presentation, format: issued.format, expectedNonce: challenge.nonce },
+  })).json()
+  expect(verdict.valid, JSON.stringify(verdict.checks)).toBe(true)
+})

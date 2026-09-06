@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const cryptoResult = verifyPresentation({
+  const cryptoResult = await verifyPresentation({
     presentation,
     format: body.format,
     expectedNonce: body.expectedNonce,

@@ -104,7 +104,32 @@ internal object IndyRequestCodec {
      */
     fun signingPayload(request: JsonObject): ByteArray {
         val builder = StringBuilder()
-        appendSorted(builder, request)
+        // ATTRIB signs the SHA-256 of raw JSON, while the original raw JSON stays on the wire.
+        val operation = request["operation"] as? JsonObject
+        val normalized =
+            if (operation?.get("type")?.jsonPrimitive?.content == IndyTxnTypes.ATTRIB) {
+                val raw = operation["raw"]?.jsonPrimitive?.content
+                if (raw == null) {
+                    request
+                } else {
+                    JsonObject(
+                        request + (
+                            "operation" to
+                                JsonObject(
+                                    operation + (
+                                        "raw" to
+                                            JsonPrimitive(
+                                                sha256Hex(raw.toByteArray(Charsets.UTF_8)),
+                                            )
+                                    ),
+                                )
+                        ),
+                    )
+                }
+            } else {
+                request
+            }
+        appendSorted(builder, normalized)
         return builder.toString().toByteArray(Charsets.UTF_8)
     }
 
@@ -236,13 +261,12 @@ internal object IndyRequestCodec {
     }
 
     /**
-     * Monotonic, second-precision request id. Indy nodes reject duplicate reqIds so we
-     * combine epoch millis with a per-VM counter to stay unique under high request rates.
+     * Monotonic request id. Indy nodes reject duplicate reqIds so we
+     * advance a per-VM counter past both its previous value and the current clock.
      */
     fun nextReqId(): Long {
-        val now = System.currentTimeMillis()
-        val ctr = counter.incrementAndGet() and 0xFFFF
-        return now * 1_000 + ctr
+        val epochMicros = System.currentTimeMillis() * 1_000
+        return counter.updateAndGet { previous -> maxOf(epochMicros, previous + 1) }
     }
 
     private val counter =

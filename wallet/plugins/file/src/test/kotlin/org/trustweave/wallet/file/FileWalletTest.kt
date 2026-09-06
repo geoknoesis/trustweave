@@ -125,7 +125,8 @@ class FileWalletTest {
             unresolved.store(original)
             assertEquals(0, unresolved.getStatistics().revokedCredentials)
             assertEquals(1, unresolved.getStatistics().unknownStatusCredentials)
-            assertFailsWith<IllegalStateException> { unresolved.list(org.trustweave.wallet.CredentialFilter(revoked = true)) }
+            assertEquals(0, unresolved.list(org.trustweave.wallet.CredentialFilter(revoked = true)).size)
+            assertEquals(0, unresolved.list(org.trustweave.wallet.CredentialFilter(revoked = false)).size)
             val active =
                 FileWallet(
                     "wallet-test",

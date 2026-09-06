@@ -24,6 +24,19 @@ class DocumentationCheckTest(unittest.TestCase):
     def errors(self):
         return documentation.inspect(self.root)['errors']
 
+    def test_ignored_local_file_cannot_hide_a_broken_link(self):
+        self.write('.gitignore', 'local.md\n')
+        self.write('local.md', 'Only on this machine')
+        self.write('README.md', '[design](local.md)\n')
+        self.assertTrue(any('missing relative link' in error for error in self.errors()))
+
+    def test_unknown_module_is_rejected(self):
+        self.write('settings.gradle.kts', 'include("common")\n')
+        self.write('README.md', '```kotlin\nimplementation(project(":missing"))\n```\n')
+        self.assertTrue(any('unknown Gradle module' in error for error in self.errors()))
+        self.write('README.md', '```kotlin\nimplementation(project(":common"))\n```\n')
+        self.assertEqual([], self.errors())
+
     def test_source_drift_is_detected(self):
         self.write('Example.kt', 'fun main() = println("ok")\n')
         self.write('README.md', '<!-- example-source: Example.kt -->\n```kotlin\nfun main() = println("old")\n```\n')

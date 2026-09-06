@@ -19,6 +19,9 @@ def inspect(root):
     names = subprocess.check_output(
         ['git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']
     ).decode().split('\0')
+    available = {(root / name).resolve() for name in names if name}
+    settings = root / 'settings.gradle.kts'
+    modules = set(re.findall(r'^include\("([^"]+)"\)', settings.read_text(encoding='utf-8'), re.M)) if settings.exists() else None
     paths = sorted({Path(name) for name in names if name.endswith('.md') and
                     not {'node_modules', '_site', 'build', '.next'}.intersection(Path(name).parts)})
     errors, snippets, source_examples = [], [], []
@@ -38,6 +41,10 @@ def inspect(root):
                 errors.append(f'{relative}: source-backed example drift: {match[1]}')
         if historical:
             continue
+        if modules is not None:
+            for module in re.findall(r'project\(\s*["\'](:[^"\']+)["\']\s*\)', content):
+                if module.lstrip(':') not in modules:
+                    errors.append(f'{relative}: unknown Gradle module: {module}')
         fence = None
         prose_lines = []
         for line_number, line in enumerate(content.splitlines(), 1):
@@ -67,7 +74,9 @@ def inspect(root):
             target = target.strip('<>').split('#')[0].split('?')[0]
             if not target or re.match(r'\w+:|//|/|\{', target):
                 continue
-            if not (path.parent / unquote(target)).exists():
+            resolved = (path.parent / unquote(target)).resolve()
+            shipped = resolved in available or (resolved.is_dir() and any(resolved in item.parents for item in available))
+            if not resolved.exists() or not shipped:
                 errors.append(f'{relative}: missing relative link: {target}')
     example_build = root / 'distribution/examples/build.gradle.kts'
     executable_examples = []

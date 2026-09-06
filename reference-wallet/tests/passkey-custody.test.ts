@@ -19,6 +19,18 @@ async function fixture(flags = 5, origin = 'https://wallet.example') {
   return { identity, challenge, proof, envelope: { profile: 'passkey' as const, payload, proof } }
 }
 describe('passkey verifier policy', () => {
+  it.each([13, 29])('accepts a synced passkey only when enrollment recorded backup eligibility (%i)', async flags => {
+    const f = await fixture(flags)
+    f.identity.backupEligible = true
+    await expect(verifyPasskeyProof(f.identity, f.proof, f.challenge)).resolves.toBeDefined()
+  })
+  it('rejects backup-state without eligibility and a changed eligibility flag', async () => {
+    for (const flags of [21, 5]) {
+      const f = await fixture(flags)
+      f.identity.backupEligible = true
+      await expect(verifyPasskeyProof(f.identity, f.proof, f.challenge)).rejects.toThrow()
+    }
+  })
   it.each([0, 1, 4, 13, 29])('rejects signed flags %i without UV/UP or with backup eligibility', async flags => {
     const f = await fixture(flags)
     await expect(verifyPasskeyProof(f.identity, f.proof, f.challenge)).rejects.toThrow()

@@ -8,7 +8,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
 
-
     // HTTP client for Venafi API
     implementation(libs.okhttp)
 
@@ -17,5 +16,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.kotlinx.coroutines.core)
 }
-

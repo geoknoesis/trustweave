@@ -11,8 +11,10 @@ import com.algorand.algosdk.v2.client.model.PendingTransactionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import org.trustweave.anchor.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import org.trustweave.anchor.AbstractBlockchainAnchorClient
+import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.anchor.exceptions.TreasuryException
 import org.trustweave.anchor.options.AlgorandOptions
@@ -100,6 +102,8 @@ class AlgorandBlockchainAnchorClient(
                 else -> throw IllegalArgumentException("Unsupported chain: $chainId")
             }
 
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(algodUrl, "Algod credentials")
         val algodToken = options["algodToken"] as? String ?: ""
         // AlgodClient constructor: (host: String, port: Int, token: String)
         val url =
@@ -107,17 +111,19 @@ class AlgorandBlockchainAnchorClient(
                 .create(algodUrl)
                 .toURL()
         val port = url.port.takeIf { it != -1 } ?: url.defaultPort
-        algodClient = AlgodClient(url.host, port, algodToken)
+        algodClient = AlgodClient(algodUrl, port, algodToken)
 
         // Optional Indexer client for historical reads.
         indexerClient =
             (options["indexerUrl"] as? String)?.let { indexerUrl ->
+                org.trustweave.core.net.TransportSecurity
+                    .requireSecureForPublicHosts(indexerUrl, "Indexer credentials")
                 val indexer =
                     java.net.URI
                         .create(indexerUrl)
                         .toURL()
                 val indexerPort = indexer.port.takeIf { it != -1 } ?: indexer.defaultPort
-                IndexerClient(indexer.host, indexerPort, options["indexerToken"] as? String ?: "")
+                IndexerClient(indexerUrl, indexerPort, options["indexerToken"] as? String ?: "")
             }
 
         // Initialize account if private key is provided.

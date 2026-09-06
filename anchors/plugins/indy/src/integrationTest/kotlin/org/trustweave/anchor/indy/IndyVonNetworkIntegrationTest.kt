@@ -1,15 +1,8 @@
 package org.trustweave.anchor.indy
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -20,22 +13,13 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.DockerClientFactory
+import org.trustweave.core.exception.TrustWeaveException
 import java.security.MessageDigest
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-/**
- * Integration test that round-trips an ATTRIB through a live Hyperledger Indy pool
- * (von-network running in a Docker container) and asserts the digest stored on-ledger
- * matches what the client wrote.
- *
- * Skips cleanly when Docker is unavailable so the test compiles and runs in CI
- * without bringing down the build. Run explicitly with:
- *
- * ```
- * ./gradlew :anchors:plugins:indy:integrationTest
- * ```
- */
+/** Exercises actual ATTRIB consensus and GET_ATTRIB using the disposable local test ledger. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IndyVonNetworkIntegrationTest {
     private val container = VonNetworkContainer()
@@ -43,7 +27,12 @@ class IndyVonNetworkIntegrationTest {
 
     @BeforeAll
     fun setUp() {
-        assumeTrue(DockerClientFactory.instance().isDockerAvailable, "Docker not available; skipping")
+        val available = DockerClientFactory.instance().isDockerAvailable
+        if (System.getProperty("trustweave.indy.integration") == "required") {
+            check(available) { "Docker is required for live Indy validation" }
+        } else {
+            assumeTrue(available, "Docker unavailable; no live Indy evidence produced")
+        }
         container.start()
         httpClient = HttpClient(CIO)
     }
@@ -56,14 +45,15 @@ class IndyVonNetworkIntegrationTest {
 
     @Test
     fun `anchor digest round trip via ATTRIB and GET_ATTRIB`() =
-        runBlocking {
-            val nym = registerNym()
+        runBlocking<Unit> {
+            // Public genesis trustee key, valid only in this newly created disposable ledger.
+            val nym = RegisteredNym("V4SGRU86Z58d6TV7PBUe6f", encodeBase58("000000000000000000000000Trustee1".toByteArray()))
             val client =
                 IndyBlockchainAnchorClient(
                     chainId = IndyBlockchainAnchorClient.BCOVRIN_TESTNET,
                     options =
                         mapOf(
-                            "poolEndpoint" to container.browserUrl(),
+                            "poolEndpoint" to container.proxyUrl(),
                             "did" to nym.did,
                             "signingKeySeed" to nym.seedBase58,
                         ),
@@ -88,35 +78,12 @@ class IndyVonNetworkIntegrationTest {
             val readObj = read.payload.jsonObject
             assertEquals(payload["vcId"]!!.jsonPrimitive.content, readObj["vcId"]!!.jsonPrimitive.content)
             assertEquals(payload["digest"]!!.jsonPrimitive.content, readObj["digest"]!!.jsonPrimitive.content)
-        }
 
-    /**
-     * Calls von-network's self-serve `/register` endpoint to bootstrap a Steward DID
-     * with write permissions on the ledger. Returns the DID and its raw Ed25519 seed.
-     */
-    private suspend fun registerNym(): RegisteredNym {
-        val seed = "0".repeat(32) // deterministic test seed
-        val response =
-            httpClient.post("${container.browserUrl()}/register") {
-                contentType(ContentType.Application.Json)
-                setBody(
-                    buildJsonObject {
-                        put("seed", JsonPrimitive(seed))
-                        put("role", JsonPrimitive("ENDORSER"))
-                    }.toString(),
-                )
-            }
-        val body = response.bodyAsText()
-        val parsed = Json.parseToJsonElement(body).jsonObject
-        val did =
-            parsed["did"]?.jsonPrimitive?.content
-                ?: error("von-network /register did not return a DID: $body")
-        // The Indy ledger expects a raw 32-byte seed. We re-use the same string the
-        // /register call consumed; the client encodes it to Base58 before signing.
-        val seedBytes = seed.toByteArray()
-        val seedBase58 = encodeBase58(seedBytes)
-        return RegisteredNym(did = did, seedBase58 = seedBase58)
-    }
+            val replacement = buildJsonObject { put("vcId", JsonPrimitive("urn:uuid:replacement")) }
+            val newer = client.writePayload(replacement)
+            assertEquals(replacement, client.readPayload(newer.ref).payload)
+            assertFailsWith<TrustWeaveException.NotFound> { client.readPayload(written.ref) }
+        }
 
     /** Tiny inlined Base58 encoder so this test does not reach into the plugin's internal helper. */
     private fun encodeBase58(input: ByteArray): String {

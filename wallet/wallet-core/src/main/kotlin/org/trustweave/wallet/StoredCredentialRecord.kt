@@ -37,7 +37,7 @@ fun matchesOfflineStatusFilter(
 ): Boolean {
     if (filter.hasStatusEntry != null && (credential.credentialStatus != null) != filter.hasStatusEntry) return false
     if (filter.revoked == null) return true
-    check(credential.credentialStatus == null) { "Revocation status is unknown; use a status-aware wallet with a WalletStatusResolver" }
+    if (credential.credentialStatus != null) return false // Unknown matches neither revoked=true nor revoked=false.
     return filter.revoked == false
 }
 

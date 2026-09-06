@@ -23,9 +23,11 @@ data class VaultKmsConfig(
     val appRolePath: String? = null,
     val roleId: String? = null,
     val secretId: String? = null,
-    val engineVersion: Int = 2
+    val engineVersion: Int = 2,
 ) {
     init {
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(address, "Vault credentials")
         require(address.isNotBlank()) { "Vault address must be specified" }
         require(transitPath.isNotBlank()) { "Transit path must be specified" }
     }
@@ -66,8 +68,9 @@ data class VaultKmsConfig(
          * @throws IllegalArgumentException if address is not provided
          */
         fun fromMap(options: Map<String, Any?>): VaultKmsConfig {
-            val address = options["address"] as? String
-                ?: throw IllegalArgumentException("Vault address must be specified in options")
+            val address =
+                options["address"] as? String
+                    ?: throw IllegalArgumentException("Vault address must be specified in options")
 
             return Builder()
                 .address(address)
@@ -145,9 +148,8 @@ data class VaultKmsConfig(
                 appRolePath = appRolePath,
                 roleId = roleId,
                 secretId = secretId,
-                engineVersion = engineVersion
+                engineVersion = engineVersion,
             )
         }
     }
 }
-

@@ -17,7 +17,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.trustweave.core.exception.TrustWeaveException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -87,7 +89,7 @@ class IndyBlockchainAnchorClientWireTest {
     @Test
     fun `read payload decodes inline raw payload`() =
         runBlocking<Unit> {
-            val rawJsonString = """{"digest":"abc123","mediaType":"application/json","payload":{"foo":"bar"}}"""
+            val rawJsonString = """{"trustweaveAnchor":{"digest":"abc123","mediaType":"application/json","payload":{"foo":"bar"}}}"""
             val escaped = rawJsonString.replace("\"", "\\\"")
             wireMock.stubFor(
                 post(urlPathEqualTo("/submit"))
@@ -125,6 +127,9 @@ class IndyBlockchainAnchorClientWireTest {
             val payloadObj = read.payload.jsonObject
             assertEquals("bar", payloadObj["foo"]!!.jsonPrimitive.content)
             assertNotNull(read.timestamp)
+            assertFailsWith<TrustWeaveException.NotFound> {
+                client.readPayload(read.ref.copy(txHash = "16"))
+            }
             Unit
         }
 

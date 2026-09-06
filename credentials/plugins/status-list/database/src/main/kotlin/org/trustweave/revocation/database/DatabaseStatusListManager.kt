@@ -301,21 +301,14 @@ class DatabaseStatusListManager(
 
             val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
 
+            val explicitIndex = credentialStatus.statusListIndex
             val index =
-                credentialStatus.statusListIndex?.toIntOrNull()
-                    ?: getCredentialIndex(
-                        credential.id?.toString() ?: return@withContext RevocationStatus(
-                            revoked = false,
-                            suspended = false,
-                            statusListId = statusListId,
-                        ),
-                        statusListId,
-                    )
-                    ?: return@withContext RevocationStatus(
-                        revoked = false,
-                        suspended = false,
-                        statusListId = statusListId,
-                    )
+                if (explicitIndex != null) {
+                    requireNotNull(explicitIndex.toIntOrNull()) { "Invalid status list index" }
+                } else {
+                    val credentialId = requireNotNull(credential.id) { "Status-bearing credential has no index or identifier" }
+                    requireNotNull(getCredentialIndex(credentialId.toString(), statusListId)) { "Credential status index is unknown" }
+                }
 
             checkStatusByIndex(statusListId, index)
         }
@@ -325,12 +318,9 @@ class DatabaseStatusListManager(
         index: Int,
     ): RevocationStatus =
         withContext(Dispatchers.IO) {
-            val statusListJson =
-                getStatusListFromDb(statusListId.toString()) ?: return@withContext RevocationStatus(
-                    revoked = false,
-                    suspended = false,
-                    statusListId = statusListId,
-                )
+            val metadata = requireNotNull(getStatusList(statusListId)) { "Status list is unknown" }
+            require(index >= 0 && index < metadata.size) { "Status list index is out of bounds" }
+            val statusListJson = requireNotNull(getStatusListFromDb(statusListId.toString())) { "Status list is unknown" }
 
             val encodedList = extractEncodedList(statusListJson)
             val bitSet = decodeBitSet(encodedList)
@@ -350,13 +340,7 @@ class DatabaseStatusListManager(
         statusListId: StatusListId,
     ): RevocationStatus =
         withContext(Dispatchers.IO) {
-            val index =
-                getCredentialIndex(credentialId, statusListId)
-                    ?: return@withContext RevocationStatus(
-                        revoked = false,
-                        suspended = false,
-                        statusListId = statusListId,
-                    )
+            val index = requireNotNull(getCredentialIndex(credentialId, statusListId)) { "Credential status index is unknown" }
 
             checkStatusByIndex(statusListId, index)
         }
@@ -394,41 +378,43 @@ class DatabaseStatusListManager(
             dataSource.connection.use { conn ->
                 conn.autoCommit = false
                 try {
-                    val assignedIndex =
-                        if (index != null) {
-                            // Check if index is already assigned
-                            val checkStmt =
-                                conn.prepareStatement(
-                                    """
-                        SELECT COUNT(*) as count FROM credential_indices
-                        WHERE status_list_id = ? AND index_value = ?
-                    """,
-                                )
-                            checkStmt.setString(1, statusListId.toString())
-                            checkStmt.setInt(2, index)
-                            val rs = checkStmt.executeQuery()
-                            if (rs.next() && rs.getInt("count") > 0) {
-                                throw IllegalArgumentException("Index $index is already assigned in status list $statusListId")
+                    val size = lockStatusList(statusListId.toString(), conn)
+                    val existing =
+                        conn
+                            .prepareStatement(
+                                "SELECT index_value FROM credential_indices WHERE credential_id = ? AND status_list_id = ?",
+                            ).use { statement ->
+                                statement.setString(1, credentialId)
+                                statement.setString(2, statusListId.toString())
+                                statement.executeQuery().use { rows -> if (rows.next()) rows.getInt(1) else null }
                             }
-                            index
-                        } else {
-                            // Auto-assign next available index
-                            getNextAvailableIndex(statusListId.toString(), conn)
+                    if (existing != null) {
+                        require(index == null || index == existing) { "Credential already has a different status index" }
+                        conn.commit()
+                        return@withContext existing
+                    }
+                    val assignedIndex = index ?: getNextAvailableIndex(statusListId.toString(), conn)
+                    require(assignedIndex in 0 until size) { "Status index is outside the list" }
+                    conn
+                        .prepareStatement(
+                            "SELECT COUNT(*) FROM credential_indices WHERE status_list_id = ? AND index_value = ?",
+                        ).use { statement ->
+                            statement.setString(1, statusListId.toString())
+                            statement.setInt(2, assignedIndex)
+                            statement.executeQuery().use { rows ->
+                                check(rows.next())
+                                require(rows.getInt(1) == 0) { "Status index is already assigned" }
+                            }
                         }
-
-                    val insertStmt =
-                        conn.prepareStatement(
-                            """
-                    INSERT INTO credential_indices (credential_id, status_list_id, index_value)
-                    VALUES (?, ?, ?)
-                    ON CONFLICT (credential_id, status_list_id) DO UPDATE SET index_value = ?
-                """,
-                        )
-                    insertStmt.setString(1, credentialId)
-                    insertStmt.setString(2, statusListId.toString())
-                    insertStmt.setInt(3, assignedIndex)
-                    insertStmt.setInt(4, assignedIndex)
-                    insertStmt.executeUpdate()
+                    conn
+                        .prepareStatement(
+                            "INSERT INTO credential_indices (credential_id, status_list_id, index_value) VALUES (?, ?, ?)",
+                        ).use { statement ->
+                            statement.setString(1, credentialId)
+                            statement.setString(2, statusListId.toString())
+                            statement.setInt(3, assignedIndex)
+                            statement.executeUpdate()
+                        }
 
                     conn.commit()
                     assignedIndex
@@ -794,6 +780,7 @@ class DatabaseStatusListManager(
         statusListId: String,
         conn: java.sql.Connection,
     ): Int {
+        lockStatusList(statusListId, conn)
         // Try to get existing index
         val getStmt =
             conn.prepareStatement(
@@ -825,10 +812,23 @@ class DatabaseStatusListManager(
         }
     }
 
+    private fun lockStatusList(
+        statusListId: String,
+        conn: java.sql.Connection,
+    ): Int =
+        conn.prepareStatement("SELECT size FROM status_lists WHERE id = ? FOR UPDATE").use { statement ->
+            statement.setString(1, statusListId)
+            statement.executeQuery().use { rows ->
+                require(rows.next()) { "Status list not found" }
+                rows.getInt(1)
+            }
+        }
+
     private fun getNextAvailableIndex(
         statusListId: String,
         conn: java.sql.Connection,
     ): Int {
+        val size = lockStatusList(statusListId, conn)
         // Get current next index
         val getStmt =
             conn.prepareStatement(
@@ -847,7 +847,7 @@ class DatabaseStatusListManager(
             }
 
         // Find next available index (skip already assigned ones)
-        while (true) {
+        while (next < size) {
             val checkStmt =
                 conn.prepareStatement(
                     """
@@ -864,19 +864,15 @@ class DatabaseStatusListManager(
             next++
         }
 
-        // Update next index
-        val updateStmt =
-            conn.prepareStatement(
-                """
-            INSERT INTO status_list_next_index (status_list_id, next_index)
-            VALUES (?, ?)
-            ON CONFLICT (status_list_id) DO UPDATE SET next_index = ?
-        """,
-            )
-        updateStmt.setString(1, statusListId)
-        updateStmt.setInt(2, next + 1)
-        updateStmt.setInt(3, next + 1)
-        updateStmt.executeUpdate()
+        require(next in 0 until size) { "Status list is full" }
+        conn
+            .prepareStatement(
+                "UPDATE status_list_next_index SET next_index = ? WHERE status_list_id = ?",
+            ).use { statement ->
+                statement.setInt(1, next + 1)
+                statement.setString(2, statusListId)
+                check(statement.executeUpdate() == 1) { "Status list allocation state is missing" }
+            }
 
         return next
     }

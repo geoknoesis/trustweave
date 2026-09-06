@@ -25,6 +25,7 @@ export interface PresentationRequestParams {
   audience: string
   nonce: string
   acceptedTypes: string[]
+  requiredClaims?: string[]
 }
 
 export function buildPresentationRequestUrl(verifierUrl: string, path = '/verifier'): string {

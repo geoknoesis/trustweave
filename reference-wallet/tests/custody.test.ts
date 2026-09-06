@@ -4,7 +4,7 @@ import 'fake-indexeddb/auto'
 import { generateEd25519KeyPair, publicKeyToDidKey, b64uEncode, verifyJws, signJws } from '../lib/crypto'
 import { clearHolderKeys, importHolderKeys, loadHolderKeys, signHolderJws } from '../lib/key-store'
 import { loadCredentials, loadHolder, exportWalletData } from '../lib/storage'
-import { bootstrap, store, createPresentation, restoreCredentials, canReplaceLostKey, replaceLostKey } from '../lib/wallet'
+import { bootstrap, store, createPresentation, restoreCredentials, canReplaceLostKey, replaceLostKey, resetWallet } from '../lib/wallet'
 
 class MemoryStorage {
   values = new Map<string, string>()
@@ -25,6 +25,25 @@ beforeEach(async () => {
 })
 
 describe('holder custody and recovery', () => {
+  it('clears local wallet records even when IndexedDB is unavailable and reports incomplete key erasure', async () => {
+    await bootstrap()
+    storage.setItem('trustweave-wallet-credentials', 'corrupt recovery data')
+    const open = vi.spyOn(indexedDB, 'open').mockImplementation(() => { throw new Error('storage unavailable') })
+    try {
+      expect(await resetWallet()).toEqual({ keysCleared: false })
+      expect(storage.getItem('trustweave-wallet-holder')).toBeNull()
+      expect(storage.getItem('trustweave-wallet-credentials')).toBeNull()
+    } finally { open.mockRestore() }
+  })
+
+  it.each([null, '1', '2'])('restores credential exports from schema %s without replacing custody', async version => {
+    const holder = (await bootstrap()).holder
+    const exported = JSON.parse(exportWalletData())
+    exported.version = version
+    expect(await restoreCredentials(JSON.stringify(exported))).toEqual({ added: 0, skipped: 0 })
+    expect(loadHolder()?.did).toBe(holder.did)
+  })
+
   async function replaceStoredKeys(did: string, keys: unknown) {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open('trustweave-holder-keys', 1)

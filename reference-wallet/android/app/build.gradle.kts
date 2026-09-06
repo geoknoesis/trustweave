@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "org.trustweave.referencewallet"
-        minSdk = 29  // Android 10 — covers >97% of devices, allows StrongBox-aware key storage
+        minSdk = 29 // Android 10 — covers >97% of devices, allows StrongBox-aware key storage
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
@@ -53,6 +53,7 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
 

@@ -646,12 +646,33 @@ public final class org/trustweave/core/util/DigestUtils {
 	public final fun sha256DigestMultibase (Lkotlinx/serialization/json/JsonElement;)Ljava/lang/String;
 }
 
+public final class org/trustweave/core/util/ExpiringStore : java/lang/AutoCloseable {
+	public static final field Companion Lorg/trustweave/core/util/ExpiringStore$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/time/Clock;JI)V
+	public synthetic fun <init> (Ljava/time/Clock;JIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun get (Ljava/lang/String;)Ljava/lang/Object;
+	public final fun purge ()V
+	public final fun remove (Ljava/lang/String;)V
+	public final fun set (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun size ()I
+}
+
+public final class org/trustweave/core/util/ExpiringStore$Companion {
+}
+
 public final class org/trustweave/core/util/ResultExtensionsKt {
 	public static final fun combine (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun getOrThrowException (Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun mapError (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun mapSequential (Ljava/util/List;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun trustweaveCatching (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/core/util/SessionCapacityExceededException : java/lang/IllegalStateException {
+	public fun <init> (I)V
+	public final fun getCapacity ()I
 }
 
 public final class org/trustweave/core/util/ValidationExtensionsKt {

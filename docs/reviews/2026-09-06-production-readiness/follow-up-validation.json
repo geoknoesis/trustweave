@@ -1,0 +1,1088 @@
+{
+  "date": "2026-09-06",
+  "base_commit": "38a27f24b1bb8ec9e531dda2463147e4689639b8",
+  "scope": "SDK working tree; local execution including valid cached/up-to-date tasks; scratch investigation excluded",
+  "command": ".\\gradlew.bat build ktlintCheck jvmTest checkKotlinAbi :distribution:examples:checkDocumentationExamples koverXmlReport koverHtmlReport cyclonedxBom --continue --max-workers=2 -Ptrustweave.windowsInRepoBuild=true --project-cache-dir .gradle/readiness-validation",
+  "result": "BUILD SUCCESSFUL",
+  "duration": "6m 55s",
+  "sdk_totals": {
+    "tests": 3796,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 15
+  },
+  "test_tasks_with_reports": 103,
+  "modules": [
+    {
+      "module": ":anchors:anchor-core",
+      "task": "test",
+      "tests": 115,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:algorand",
+      "task": "test",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:arbitrum",
+      "task": "test",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:base",
+      "task": "test",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:bitcoin",
+      "task": "test",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:cardano",
+      "task": "test",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":anchors:plugins:ethereum",
+      "task": "test",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:evm-base",
+      "task": "test",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:ganache",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:indy",
+      "task": "integrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:indy",
+      "task": "test",
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:optimism",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:polygon",
+      "task": "test",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":anchors:plugins:starknet",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":anchors:plugins:zksync",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":common",
+      "task": "test",
+      "tests": 434,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":contract",
+      "task": "test",
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:avp-authorization-server",
+      "task": "test",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:credential-api",
+      "task": "test",
+      "tests": 399,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:credential-models-mp",
+      "task": "jvmTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:oidc4vci-server",
+      "task": "test",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:anchor",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:avp-micro",
+      "task": "test",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:chapi",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:didcomm",
+      "task": "test",
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:eudiw",
+      "task": "test",
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:jades",
+      "task": "test",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:mdl",
+      "task": "test",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:oidc4vci",
+      "task": "test",
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:oidc4vp",
+      "task": "test",
+      "tests": 39,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:openid-federation",
+      "task": "test",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:platforms:entra",
+      "task": "test",
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:platforms:salesforce",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:platforms:servicenow",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:presentation-exchange",
+      "task": "test",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:siop",
+      "task": "test",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:bitstring",
+      "task": "test",
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:database",
+      "task": "test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:publishing",
+      "task": "test",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:server",
+      "task": "test",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:status-list:token",
+      "task": "test",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:plugins:verifiable-intent",
+      "task": "test",
+      "tests": 38,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":credentials:vc-api-server",
+      "task": "test",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:did-core",
+      "task": "test",
+      "tests": 453,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:did-identifiers-mp",
+      "task": "jvmTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:base",
+      "task": "test",
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:btcr",
+      "task": "test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:cheqd",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ebsi",
+      "task": "test",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ens",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ethr",
+      "task": "test",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:godiddy",
+      "task": "test",
+      "tests": 103,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:ion",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:jwk",
+      "task": "test",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:key",
+      "task": "test",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:orb",
+      "task": "test",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:peer",
+      "task": "test",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:plc",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:polygon",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:sidetree-core",
+      "task": "test",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:sol",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:tezos",
+      "task": "test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:threebox",
+      "task": "test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:plugins:web",
+      "task": "test",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:registrar",
+      "task": "test",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:registrar-server-ktor",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":did:registrar-server-spring",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":distribution:examples",
+      "task": "test",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:kms-core",
+      "task": "test",
+      "tests": 257,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:aws",
+      "task": "test",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:azure",
+      "task": "test",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "task": "test",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3
+    },
+    {
+      "module": ":kms:plugins:cyberark",
+      "task": "test",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:entrust",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:fortanix",
+      "task": "test",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:google",
+      "task": "test",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":kms:plugins:hashicorp",
+      "task": "test",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:ibm",
+      "task": "test",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:inmemory",
+      "task": "test",
+      "tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    },
+    {
+      "module": ":kms:plugins:thales",
+      "task": "test",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:thales-luna",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:utimaco",
+      "task": "test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:venafi",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":kms:plugins:waltid",
+      "task": "test",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:cades",
+      "task": "test",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:etsi-validation",
+      "task": "test",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:jades",
+      "task": "test",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:pades",
+      "task": "test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:trust-lists",
+      "task": "test",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:tsa-core",
+      "task": "test",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":signatures:xades",
+      "task": "test",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":testkit",
+      "task": "test",
+      "tests": 251,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3
+    },
+    {
+      "module": ":trust",
+      "task": "test",
+      "tests": 351,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "module": ":trust-registry:plugins:database",
+      "task": "test",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":trust-registry:trust-registry-core",
+      "task": "test",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":trust-registry:trust-registry-server",
+      "task": "test",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:cloud",
+      "task": "test",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:database",
+      "task": "test",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:plugins:file",
+      "task": "test",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:wallet-core",
+      "task": "test",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:wallet-core-mp",
+      "task": "jvmTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": ":wallet:wallet-services",
+      "task": "test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "skipped_tests": [
+    {
+      "module": ":anchors:plugins:cardano",
+      "task": "test",
+      "name": "anchor and read back round-trip on Preview()",
+      "test_class": "org.trustweave.anchor.cardano.CardanoBlockfrostIntegrationTest"
+    },
+    {
+      "module": ":anchors:plugins:polygon",
+      "task": "test",
+      "name": "should throw NotFoundException for non-existent transaction()",
+      "test_class": "org.trustweave.anchor.polygon.PolygonBlockchainAnchorClientTest"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "task": "test",
+      "name": "requireClusterActive does not throw()",
+      "test_class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "task": "test",
+      "name": "cluster is ACTIVE()",
+      "test_class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:cloudhsm",
+      "task": "test",
+      "name": "generateKey sign and deleteKey round-trip on the HSM()",
+      "test_class": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:google",
+      "task": "test",
+      "name": "test create with valid options()",
+      "test_class": "org.trustweave.googlekms.GoogleKmsProviderTest"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "name": "generateKey(P256) returns a handle and getPublicKey round-trips it()",
+      "test_class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "name": "sign(P256) produces a signature that verifies with JCA SHA256withECDSA()",
+      "test_class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "name": "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)()",
+      "test_class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "name": "generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)()",
+      "test_class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":kms:plugins:pkcs11",
+      "task": "test",
+      "name": "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound()",
+      "test_class": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest"
+    },
+    {
+      "module": ":testkit",
+      "task": "test",
+      "name": "example test requiring multiple plugins()",
+      "test_class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest"
+    },
+    {
+      "module": ":testkit",
+      "task": "test",
+      "name": "example test requiring Google Cloud KMS()",
+      "test_class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest"
+    },
+    {
+      "module": ":testkit",
+      "task": "test",
+      "name": "example test requiring AWS KMS()",
+      "test_class": "org.trustweave.testkit.annotations.RequiresPluginExampleTest"
+    },
+    {
+      "module": ":trust",
+      "task": "test",
+      "name": "test with external services template()",
+      "test_class": "org.trustweave.integration.InMemoryTrustWeaveIntegrationTest"
+    }
+  ],
+  "excluded": [
+    {
+      "file": "build\\credentials\\credential-api\\test-results\\test\\TEST-org.trustweave.credential.internal.ScratchUriEquivalenceTest.xml",
+      "reason": "Pre-existing untracked scratch investigation; not part of this remediation"
+    }
+  ],
+  "coverage": [
+    {
+      "type": "INSTRUCTION",
+      "missed": "151189",
+      "covered": "183159"
+    },
+    {
+      "type": "BRANCH",
+      "missed": "16600",
+      "covered": "10405"
+    },
+    {
+      "type": "LINE",
+      "missed": "20906",
+      "covered": "27024"
+    },
+    {
+      "type": "METHOD",
+      "missed": "3106",
+      "covered": "4651"
+    },
+    {
+      "type": "CLASS",
+      "missed": "951",
+      "covered": "1870"
+    }
+  ],
+  "sbom": {
+    "spec_version": "1.6",
+    "components": 971,
+    "sha256": "27f77beab08195d1b4be42a906e55b7b0cdca0054246130cf0fbf7e267a65649"
+  },
+  "web_wallet": {
+    "typecheck": "passed",
+    "production_build": "passed",
+    "unit_tests": 80,
+    "browser_tests": 13
+  },
+  "android": {
+    "command": ".\\gradlew.bat :app:testDebugUnitTest :shared:jvmTest --max-workers=2 --no-configuration-cache --project-cache-dir .gradle/readiness-validation",
+    "result": "BUILD SUCCESSFUL",
+    "duration": "2m 22s",
+    "app_tests": 2,
+    "failures": 0,
+    "skipped": 0,
+    "shared": "compiled; jvmTest NO-SOURCE",
+    "device_validation": "not performed"
+  },
+  "hosted_ci": "pending for this revision",
+  "release_attestation": "not produced",
+  "source_hashes": {
+    ".github/workflows/ci.yml": "7d17ddf05fe79b4a2cbe2627638dda1294a622b93828065435051327343396b9",
+    ".github/workflows/release-evidence.yml": "a4dc66eba5b75e811658aac10557d98f1b458d324e35f304a25dcc650101ad3b",
+    "anchors/plugins/algorand/src/main/kotlin/org/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient.kt": "88a700505dce7498606a820144e38c1ce3cfa28fe689021a7ebd9ba9886f5f19",
+    "anchors/plugins/algorand/src/test/kotlin/org/trustweave/anchor/algorand/AlgorandTransportTest.kt": "f0e3501253ecb480886ff388c66776edb0db5cbe15d39e7e8be58dfbde6762a1",
+    "anchors/plugins/bitcoin/src/main/kotlin/org/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient.kt": "221c2559a7c41a2ca8414934356cf9508bece7b44c3322c21be8b6db33187d6c",
+    "anchors/plugins/bitcoin/src/test/kotlin/org/trustweave/anchor/bitcoin/BitcoinRpcTransportSecurityTest.kt": "f750c1aed85668c49ffd518fa7c1557a06781369eb88ea7a36c9f902f5294453",
+    "anchors/plugins/cardano/src/main/kotlin/org/trustweave/anchor/cardano/CardanoAnchorConfig.kt": "2707b0c7c7f39c9e388c42f2a2658a4ceedc75d1d9f2621efead01e7c3abae0a",
+    "anchors/plugins/indy/build.gradle.kts": "6c4bca3dc5bb8a73a0260fdca7dfd1ed90adce4ef725643345242e5035c6d441",
+    "anchors/plugins/indy/src/integrationTest/kotlin/org/trustweave/anchor/indy/IndyVonNetworkIntegrationTest.kt": "020bb3016d1b2afe2c236092a654e8a10f1f65a21e016e66bcd66b6ae58f4305",
+    "anchors/plugins/indy/src/integrationTest/kotlin/org/trustweave/anchor/indy/VonNetworkContainer.kt": "e4faf027d120d1bd6fce0bbbc412c2f59912ca80ce86573a68a5357fdde92d18",
+    "anchors/plugins/indy/src/integrationTest/resources/indy/gateway.py": "3724638a13ec4612e27c78611fffdc7f1b64976f96fdc20b337bc208de49a472",
+    "anchors/plugins/indy/src/integrationTest/resources/indy/indy_config.py": "4099a82dff68068160e5e4f8478b293b48fd2e20971aced73b584c3cbe4c8bec",
+    "anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndyBlockchainAnchorClient.kt": "3d71a196ee04a4683b757c0cffd28b7bfcd2b107be46cd2fb6f4425ae8ef748a",
+    "anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndyRequestCodec.kt": "b906db7adb037b9fe9e403d2d4009ebf1a9c4018d065851af6797cae1c47b1d4",
+    "anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndyVdrProxyTransport.kt": "a698a52b3231f6fd471c1aed0a579b27087003bd6d009f876d42a3cd01df21e1",
+    "anchors/plugins/indy/src/test/kotlin/org/trustweave/anchor/indy/IndyBlockchainAnchorClientWireTest.kt": "fec59ec6471f364b633b946cad6c42f4a99caf3195a0c10a5a246c878a92636d",
+    "anchors/plugins/indy/src/test/kotlin/org/trustweave/anchor/indy/IndyRequestCodecTest.kt": "4d71c4e3253014b62e8d4d2bbc15e49e9b7475d811dfa5823fcdeafaf8815051",
+    "anchors/plugins/starknet/src/test/kotlin/org/trustweave/anchor/starknet/StarknetSafetyTest.kt": "de11efcd3327a8c158e6cb71523adeeb78452f644cd9424dc021fd1cc228dec2",
+    "common/api/common.api": "d9846ceb5cc4e453686e3d4d77dc7722b8764d48f282c31fc983655c1122ed39",
+    "common/src/main/kotlin/org/trustweave/core/net/TransportSecurity.kt": "cfaf96d0ee48b755cbd432489b7844d93cae7394eab49c8b3ce49938ddc97c08",
+    "common/src/main/kotlin/org/trustweave/core/util/ExpiringStore.kt": "cde96ae892896ac64ba4e8dac8a7b799d882b061b8a2b5be6b4a417dd6c0c62c",
+    "common/src/test/kotlin/org/trustweave/core/net/TransportSecurityTest.kt": "72bc52e1fbaa61ffd113e744d94231a9b495a3f19e5959ce8f7dff5fe72e6c9c",
+    "common/src/test/kotlin/org/trustweave/core/util/ExpiringStoreTest.kt": "47d78419d73d34a88e8a4dd04e57a9b1e0208b05c3849d532a8a260f5463432f",
+    "credentials/plugins/anchor/build.gradle.kts": "cba0310438b9bdfce05c0b6f6543b6c533b02c2c19e0073c02bf388359ab4e41",
+    "credentials/plugins/anchor/src/main/kotlin/org/trustweave/credential/anchor/CredentialAnchorService.kt": "54fa492d99d73ad437aac30e981bd9d069be67ba2b39382bdfb4995d17b12e11",
+    "credentials/plugins/anchor/src/test/kotlin/org/trustweave/credential/anchor/CredentialAnchorServiceTest.kt": "1129961782db7355cf85fd05e30bd2c0c1bb63600c857c84ef9951a4284a4343",
+    "credentials/plugins/chapi/src/main/kotlin/org/trustweave/credential/chapi/ChapiService.kt": "780d5d126e9892108da7fcd9c1ab5ab45fe061bfb9403f2dec1f75d3b3b8ce84",
+    "credentials/plugins/chapi/src/test/kotlin/org/trustweave/credential/chapi/ChapiServiceTest.kt": "4e9ae3afd3fa67b94485950e7dfb46d3e197c232b6eabc68b2c837a46cfd3fe1",
+    "credentials/plugins/oidc4vci/api/oidc4vci.api": "f414aafd1818d78940e4cfb91820eccf07cb13127ad8bba95a9e1e477c0bc33b",
+    "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/ExpiringExchangeStore.kt": "560269d8d25cc275eafd8fe720855d3e65e850a0c81823ace8cef6fd8ecbe517",
+    "credentials/plugins/oidc4vci/src/main/kotlin/org/trustweave/credential/oidc4vci/exception/Oidc4VciException.kt": "2316949a5cd6e1dfa1a5721a0dc5d6099212f5927b881e69e879997775064d79",
+    "credentials/plugins/oidc4vci/src/test/kotlin/org/trustweave/credential/oidc4vci/ExpiringExchangeStoreTest.kt": "57026e308cf630ddb5adf4cc3e79a88994ce4222e6b0709e1a21a7e2a798a790",
+    "credentials/plugins/oidc4vp/api/oidc4vp.api": "43b491803bdfd20e7c8c8f9299efa7604644da03967b1893a1ade19edcf602c1",
+    "credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/session/SessionStore.kt": "702839a0a8265e675252a14fba14a468103a2f2ecde09daf94713cf4ba847909",
+    "credentials/plugins/oidc4vp/src/test/kotlin/org/trustweave/credential/oidc4vp/session/SessionStoreTest.kt": "2572998956d7aa4edf37c785707c8f6a78619956d26585a1df3a8e3130ca39d3",
+    "credentials/plugins/platforms/salesforce/build.gradle.kts": "edbe957028ad7194e25c115aa040770265055db988c59dc76ed41384efcc9021",
+    "credentials/plugins/platforms/salesforce/src/test/kotlin/org/trustweave/integrations/salesforce/UnsupportedProviderTest.kt": "40bf959f99b3695a3d8b261889cc5cfeef8343ead4f9d502c3ebfe9dce06b93a",
+    "credentials/plugins/platforms/servicenow/build.gradle.kts": "073b557d8a6373bff4b3eb477df5ffec1e539e158128a1d382c2029768c5c018",
+    "credentials/plugins/platforms/servicenow/src/test/kotlin/org/trustweave/integrations/servicenow/UnsupportedProviderTest.kt": "e30f920975b8bc91bb262cd0ba2aa7cc2a82712c1a8a60df83a7bdf1a18c7038",
+    "credentials/plugins/siop/src/main/kotlin/org/trustweave/credential/siop/SiopV2Service.kt": "088b8df2655f5059da89f41badaa6a0ce3cbc7cb91bf542d423639d38896a254",
+    "credentials/plugins/status-list/database/src/main/kotlin/org/trustweave/revocation/database/DatabaseStatusListManager.kt": "34789f15219093cd7d1e360c2ea242fe97ff64621f069d32d77e0cf3accb7c86",
+    "credentials/plugins/status-list/database/src/test/kotlin/org/trustweave/revocation/database/DatabaseStatusListManagerTest.kt": "80f5095ed85822f890217808d6e37c79270068168278a8e371376c3e7f6f9510",
+    "credentials/plugins/status-list/server/build.gradle.kts": "f21cda325814e99f8c8f131aab85a8d2aeb82253694a2b59bcd6bc0afca5aa12",
+    "credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutes.kt": "2d861519757946acf0f7e3e587c3eb2326972bdfdb7e3ec44f66da759f9c0c7a",
+    "credentials/plugins/status-list/server/src/test/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutesTest.kt": "ab01adf7400e26483d863af9e342a05e06681a238dfd7e626eca46691a29ffc5",
+    "did/plugins/cheqd/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "9347919af8749f1a24b1d23a18472c4270fabc5aed9a4f2a4cfb2d3e35866ca8",
+    "did/plugins/ens/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "77f74b0c322d9f485ec88f1db4636ad5da508f01700f21f933d9194978d40722",
+    "did/plugins/ion/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "7830e29de260aa66ac3f43663855676ab6e16e794e815f404cb1dbfc728e1b45",
+    "did/plugins/plc/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "58aa8043f212a30843a0514173bf96690c59a0616e9dbe5c7f30196752b595ee",
+    "did/plugins/polygon/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "1cc4f900f0e9068131c8692cfbf9b8f12580150619d41a9e73027174a97096ce",
+    "did/plugins/sol/src/test/kotlin/org/trustweave/provider/ProviderDiscoveryTest.kt": "2e1f69f07594aba3adae8cfae0ee5248f5d37aa8cb2be4a85308b62f83719a4c",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/ErrorResponse.kt": "2bd79cd8ec47894ed34b44f4f1414e7e0ab6178ae353933565d91b5b714fe079",
+    "did/registrar-server-ktor/src/test/kotlin/org/trustweave/did/registrar/server/RegistrarErrorResponseTest.kt": "ca26dc16ec029b2fe130d8e00fb9c536132d330e05027a3f3da5851950c9e805",
+    "did/registrar-server-spring/src/main/kotlin/org/trustweave/did/registrar/server/spring/dto/ErrorResponse.kt": "60423e5c12be3c65c6796cc16bd7ca63f58419ac45c6caabf0c8ccbc8decb4bf",
+    "did/registrar-server-spring/src/test/kotlin/org/trustweave/did/registrar/server/spring/RegistrarErrorResponseTest.kt": "d65355ad807236cda856d14201bfb20b50fb9c46447b92b0d85f9474f7c8d02c",
+    "kms/plugins/hashicorp/src/main/kotlin/org/trustweave/hashicorpkms/VaultKmsConfig.kt": "a73a167c4d2a2a3b679caeac695fd05dd7d4441a2d21875f2f1338af52c8cb04",
+    "kms/plugins/hashicorp/src/test/kotlin/org/trustweave/hashicorpkms/VaultKmsConfigTest.kt": "9dd6e8f262c9b4382ac4b597f2aa77e89e8ffd0f3158282357ffe9f0383ac796",
+    "kms/plugins/thales/src/main/kotlin/org/trustweave/kms/thales/ThalesKmsConfig.kt": "53f86229630b3a50e17ab0e5d7da2c55402998de47f9f19750b21d9248c32f7c",
+    "kms/plugins/venafi/build.gradle.kts": "be911c6c2b482114f63846aa258be1e3700dadfb372f505abaa27b471916badf",
+    "kms/plugins/venafi/src/test/kotlin/org/trustweave/integrations/venafi/UnsupportedProviderTest.kt": "c9121c1f08612d3b4bb2796fb15e4d6dc7b037f25f3a23ca5def93fae8172598",
+    "reference-wallet/android/app/build.gradle.kts": "2c2bdfcf0610f4c4e0c510706a0906a216a1b98d83395700e3e39969c0675b3c",
+    "reference-wallet/android/app/src/test/kotlin/org/trustweave/referencewallet/lib/Base58Test.kt": "2a453677d207d1521db91f88018ef0b249ef7d699f09a2f3eaf3f4337b7f3b40",
+    "reference-wallet/android/build.gradle.kts": "3e275c7bd9c861948989199ca974f6f3714dbb1f4f9cbc5d497c045095cd4165",
+    "reference-wallet/app/api/demo-airspace/gate/request/route.ts": "31436df5e1b6ec86bb6b84d308135d3ca313cce170372dffa6e3a7ab89614059",
+    "reference-wallet/app/api/demo-airspace/gate/verify/route.ts": "a51c97de38e2e21dcee2748d1fa2ef6caf3f5933aa4f0bebef3818c1e087db6b",
+    "reference-wallet/app/api/demo-verifier/verify/route.ts": "e76879b38259c35b2da86ef560c76e3d2dd3caeb2fced2bb8eab4c7143334538",
+    "reference-wallet/app/page.tsx": "6bb319358585279610cdee353fb79bf68783c45ada1a364cc1d07f6e2396ba0e",
+    "reference-wallet/app/present/page.tsx": "57bb28f5d1a0a9eb0347b3951dce4aaec088f32ea9f1d06fb4a296c5f555423c",
+    "reference-wallet/components/CredentialBackup.tsx": "24697f8a0b8c1d6309d2f6032f9f1fb3ec482854f5ed7a6e52d12ae79b28bed5",
+    "reference-wallet/components/WalletRecovery.tsx": "091ae8d032d5f1ae6beea3e47d9d8db9bd8c9e554c10416e8b0e202d97372380",
+    "reference-wallet/lib/claim-jwe.ts": "8ca9a793c859d9c7855df5ff96ad88590cc6b47b69d53031afff3ef9e3fb2399",
+    "reference-wallet/lib/custody/passkey.ts": "046a759bf8f0d2bd53ec2a3467da169afc1f4b046fd21ce3f788b5cd71793e98",
+    "reference-wallet/lib/presentation-request-qr.ts": "84362f92c7dad0e4cd75997fb74b31e7692c745ab1d323a227ef8b1ef7da575e",
+    "reference-wallet/lib/storage.ts": "a27beb5308af7b83f694e351b7f3d24c109e18df23acd6295af81e99dde9c536",
+    "reference-wallet/lib/verify-presentation.ts": "79325c2457747214c1c70d0bf127d137fd1a2d530187ef532fc8dd4b77b97987",
+    "reference-wallet/lib/wallet.ts": "8979ea8fe518d2507f0dbd9bd0a48217f6fc8b0845157d48613bf3b7c80f64a2",
+    "reference-wallet/tests/browser/wallet.spec.ts": "eea77f3a619c6482d1c98c8e0dffcf711568baf829f86b0236ade5b44234c27f",
+    "reference-wallet/tests/claim-jwe.test.ts": "babc99b197f70083755f98d77074a9488fa86eab52880df43cd972248d9076ef",
+    "reference-wallet/tests/custody.test.ts": "25bfe6de6d2055c57e116879da6b833e29f4f7011cb96b16264c25617d2da625",
+    "reference-wallet/tests/passkey-custody.test.ts": "fed2d0f915f3cc6237d23f873f8bb6aa94f813b0d35e37d00205af32de84c188",
+    "scripts/check-documentation.py": "3a4c9b838ccba25368137e6dd738b53a463e307f001cfcd5849ab0b4548c601f",
+    "scripts/test_check_documentation.py": "643aed6d996caf25b3bb728cc6d408decc1aaef9d2c17ea75f38631ded895339",
+    "testkit/src/main/kotlin/org/trustweave/testkit/services/TestkitWalletFactory.kt": "c1ae60aa09dc76d829bb9a1eefa185459e3973471651e3df8d58f729a12bd8ae",
+    "testkit/src/test/kotlin/org/trustweave/testkit/services/TestkitWalletDeploymentTest.kt": "7bac8ec451140939eb2d4b2c3c19558e86a809fc5dc540c9cbe6ab94b925ce9a",
+    "wallet/plugins/cloud/src/main/kotlin/org/trustweave/wallet/cloud/CloudWallet.kt": "d5052fecc873edc405dda22f037d86da846e878096ee1d9f75552a3c38131f46",
+    "wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/CloudRecoveryTest.kt": "307db0455a3766af1c66e355b6233d46cb1da52953d4b6dd880fd8a787ceffce",
+    "wallet/plugins/database/api/database.api": "7a0ff905b08e8efa0eb117798327de4e8c125177b475d85c5efad20effa258ea",
+    "wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWallet.kt": "21cbe9f761011f6bc9c964589911b6f9650e102e31b7a87cf0b3895191dc7fd2",
+    "wallet/plugins/database/src/main/kotlin/org/trustweave/wallet/database/DatabaseWalletFactory.kt": "d399374cf0d8e40b8b1a6ba1610fc33df9e63d9a229567eed21ec190b9ae82d2",
+    "wallet/plugins/database/src/test/kotlin/org/trustweave/wallet/database/DatabaseWalletTest.kt": "87d04caf829647dc06dceaf11e13ca10f501997f36f719109edfb15dbc33f8e8",
+    "wallet/plugins/file/api/file.api": "0ee33fb8264deb216f8e63005a9ee4aceebaddbf2a88ec0fa9bf8edb37bf0c65",
+    "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWallet.kt": "b2342455492f78ce28fb43f32ad8374aa2a98d687842bb27f6085d04f4fc94f9",
+    "wallet/plugins/file/src/main/kotlin/org/trustweave/wallet/file/FileWalletFactory.kt": "5e18443177026941e9e6ec7a6b73d80815d8d90e28b2fdfa34edb027f2827e79",
+    "wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletTest.kt": "436a9fef438155a211be2d6f8d1eae946d42364db9fa9606a13574d80b6f7f9d",
+    "wallet/wallet-core/src/main/kotlin/org/trustweave/wallet/StoredCredentialRecord.kt": "c1f817ed22ed6b06f9c076f5bd4829ac8272feea73023095da3b32a27802f8bd",
+    "wallet/wallet-services/build.gradle.kts": "b2d7fb9c2febabda89078032ceb718d650a2f7f7638d88e2a3e853ec75fa059a",
+    "wallet/wallet-services/src/test/kotlin/org/trustweave/wallet/holder/WalletHolderTest.kt": "4e3188fc10c4cf80a19d0ecafd22cc17da54dbcb50e293f1c04fe32eb14a2bc2"
+  }
+}

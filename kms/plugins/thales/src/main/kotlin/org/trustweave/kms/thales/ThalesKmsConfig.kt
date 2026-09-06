@@ -22,15 +22,17 @@ data class ThalesKmsConfig(
     val clientId: String? = null,
     val clientSecret: String? = null,
     val accessToken: String? = null,
-    val scope: String? = null
+    val scope: String? = null,
 ) {
     init {
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(baseUrl, "Thales credentials")
         require(baseUrl.isNotBlank()) { "Thales CipherTrust base URL must be specified" }
         require(
             apiKey != null ||
-            (username != null && password != null) ||
-            (clientId != null && clientSecret != null) ||
-            accessToken != null
+                (username != null && password != null) ||
+                (clientId != null && clientSecret != null) ||
+                accessToken != null,
         ) { "Thales CipherTrust authentication credentials must be provided" }
     }
 
@@ -52,8 +54,9 @@ data class ThalesKmsConfig(
         }
 
         fun fromMap(options: Map<String, Any?>): ThalesKmsConfig {
-            val baseUrl = options["baseUrl"] as? String
-                ?: throw IllegalArgumentException("Thales CipherTrust baseUrl must be specified")
+            val baseUrl =
+                options["baseUrl"] as? String
+                    ?: throw IllegalArgumentException("Thales CipherTrust baseUrl must be specified")
 
             return Builder()
                 .baseUrl(baseUrl)
@@ -127,9 +130,8 @@ data class ThalesKmsConfig(
                 clientId = clientId,
                 clientSecret = clientSecret,
                 accessToken = accessToken,
-                scope = scope
+                scope = scope,
             )
         }
     }
 }
-

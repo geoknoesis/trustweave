@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     audience: verifier.did,
     nonce: session.nonce,
     acceptedTypes: demoSfAirspaceAcceptedTypes(),
+    requiredClaims: ['trustDomainId', 'activityType'],
     activityType: session.activityType,
     lat: session.lat,
     lon: session.lon,

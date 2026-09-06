@@ -1,5 +1,6 @@
 package org.trustweave.anchor.indy
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -8,7 +9,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -19,6 +19,22 @@ import kotlin.test.assertTrue
  * refactor cannot silently drift away from the on-the-wire contract.
  */
 class IndyRequestCodecTest {
+    @Test
+    fun `ATTRIB signing input matches native Indy VDR known answer`() {
+        val request =
+            IndyRequestCodec.buildAttribRequest(
+                "V4SGRU86Z58d6TV7PBUe6f",
+                "V4SGRU86Z58d6TV7PBUe6f",
+                Json.parseToJsonElement("{\"trustweave\":{\"digest\":\"abc\"}}").jsonObject,
+                reqId = 1,
+            )
+        // Captured from native indy-vdr 0.3.4 Request.signature_input, with reqId normalized to 1.
+        assertEquals(
+            "identifier:V4SGRU86Z58d6TV7PBUe6f|operation:dest:V4SGRU86Z58d6TV7PBUe6f|raw:1c33659376ce67d22ac6cd5e9930655f54392cfc365d46b0af746a79ee12e9de|type:100|protocolVersion:2|reqId:1",
+            IndyRequestCodec.signingPayload(request).toString(Charsets.UTF_8),
+        )
+    }
+
     private val submitter = "V4SGRU86Z58d6TV7PBUe6f"
     private val target = "V4SGRU86Z58d6TV7PBUe6f"
 
@@ -196,10 +212,10 @@ class IndyRequestCodecTest {
 
     @Test
     fun `nextReqId is monotonic under tight loops`() {
-        val ids = (0 until 50).map { IndyRequestCodec.nextReqId() }
+        val ids = (0 until 70_000).map { IndyRequestCodec.nextReqId() }
         val distinct = ids.toSet()
         assertEquals(ids.size, distinct.size, "request ids must be unique")
-        assertNotNull(ids.first())
+        assertTrue(ids.zipWithNext().all { (previous, next) -> next > previous })
     }
 
     @Test

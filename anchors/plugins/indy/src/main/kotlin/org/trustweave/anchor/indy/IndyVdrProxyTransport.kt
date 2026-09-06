@@ -41,6 +41,8 @@ internal class IndyVdrProxyTransport(
     private val timeoutMillis: Long = DEFAULT_TIMEOUT_MILLIS,
 ) {
     init {
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(baseUrl, "Indy requests")
         require(baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
             "Indy vdr-proxy baseUrl must include scheme: $baseUrl"
         }

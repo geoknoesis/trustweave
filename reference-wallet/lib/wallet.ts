@@ -183,8 +183,8 @@ export async function store(
 export async function restoreCredentials(backup: string): Promise<{ added: number; skipped: number }> {
   if (new TextEncoder().encode(backup).byteLength > 5 * 1024 * 1024) throw new Error('Backup exceeds the 5 MB limit')
   const data = JSON.parse(backup)
-  if (!data || data.version !== '2' || typeof data.credentials !== 'string' || typeof data.holder?.did !== 'string') {
-    throw new Error('Unsupported backup. Use a version 2 credential export from this wallet.')
+  if (!data || ![null, '1', '2'].includes(data.version) || typeof data.credentials !== 'string' || typeof data.holder?.did !== 'string') {
+    throw new Error('Unsupported backup. Use a supported credential export from this wallet.')
   }
   const records: unknown = JSON.parse(data.credentials)
   if (!Array.isArray(records) || records.length > 500) throw new Error('A backup must contain at most 500 credentials')
@@ -196,7 +196,8 @@ export async function restoreCredentials(backup: string): Promise<{ added: numbe
     const seen = new Set(existing.map(credentialDedupKey))
     const additions: StoredCredential[] = []
     let skipped = 0
-    for (const record of records) {
+    for (const raw of records) {
+      const record = raw && typeof raw === 'object' ? { ...raw, credential: raw.credential ?? raw.vcJwt, format: raw.format ?? 'vc+jwt' } : raw;
       if (!record || typeof record.credential !== 'string' || !['vc+jwt', 'vc+sd-jwt'].includes(record.format)) throw new Error('Invalid credential in backup. Nothing was restored.')
       // Never trust labels, holder fields or disclosure hints from the backup envelope.
       verifyImportedCredential(record.credential, record.format)
@@ -240,10 +241,12 @@ export async function deleteCredential(id: string): Promise<void> {
   await withWalletLock(() => deleteCredFromStorage(id))
 }
 
-export async function resetWallet(): Promise<void> {
-  await withWalletLock(async () => {
-    await clearHolderKeys()
+export async function resetWallet(): Promise<{ keysCleared: boolean }> {
+  return withWalletLock(async () => {
+    let keysCleared = true
+    try { await clearHolderKeys() } catch { keysCleared = false }
     resetWalletStorage()
+    return { keysCleared }
   })
 }
 

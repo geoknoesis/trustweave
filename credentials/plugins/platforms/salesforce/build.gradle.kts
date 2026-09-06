@@ -8,7 +8,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
 
-
     // HTTP client for Salesforce REST API
     // Note: Salesforce SDK dependencies may not be available in public Maven repositories
     // This implementation uses HTTP client directly. For production use, add Salesforce SDK
@@ -20,5 +19,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.kotlinx.coroutines.core)
 }
-

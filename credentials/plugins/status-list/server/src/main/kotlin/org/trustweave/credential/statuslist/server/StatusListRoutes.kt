@@ -1,9 +1,12 @@
 package org.trustweave.credential.statuslist.server
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.get
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -12,6 +15,8 @@ import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.revocation.bitstring.BitstringStatusListManager
 import org.trustweave.revocation.token.TokenStatusListManager
+
+private val logger = org.slf4j.LoggerFactory.getLogger("org.trustweave.credential.statuslist.server")
 
 private val json =
     Json {
@@ -64,6 +69,7 @@ fun Routing.configureStatusListRoutes(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            logger.warn("event=status_list_failure operation=read error_type={}", e.javaClass.simpleName)
             call.respond(
                 HttpStatusCode.InternalServerError,
                 ErrorResponse("INTERNAL_ERROR", "Unable to retrieve status list"),
@@ -104,6 +110,7 @@ fun Routing.configureStatusListRoutes(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            logger.warn("event=status_list_failure operation=read error_type={}", e.javaClass.simpleName)
             call.respond(
                 HttpStatusCode.InternalServerError,
                 ErrorResponse("INTERNAL_ERROR", "Unable to retrieve status list"),

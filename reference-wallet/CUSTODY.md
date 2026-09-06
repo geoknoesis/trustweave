@@ -12,14 +12,18 @@ failures reject; there is no fallback to the browser Ed25519 key.
 
 | Profile | Implemented proof | Verification and operational boundary |
 |---|---|---|
-| `passkey` | ES256 WebAuthn assertion over SHA-256 of the exact JSON payload | Exact RP/origin, UP and UV flags, device-only backup policy, key and challenge binding. This is an application proof envelope, not an SD-JWT KB-JWT or ordinary JWT. |
+| `passkey` | ES256 WebAuthn assertion over SHA-256 of the exact JSON payload | Exact RP/origin, UP and UV flags, enrolled backup-eligibility policy, key and challenge binding. This is an application proof envelope, not an SD-JWT KB-JWT or ordinary JWT. |
 | `managed-kms` | EdDSA or ES256 compact JWS returned by an authenticated HTTPS service | Exact payload, algorithm, key ID and pinned public-key verification; bounded response, timeout and no redirects/retries. The client cannot attest that the service actually uses an HSM. |
 
 ## Passkey integration
 
 Call `enrollPasskey(displayName)` from a user action. Enrollment creates a resident
 P-256 credential, requires user verification and confirms key possession with an
-assertion. The current bounded policy rejects backup-eligible/syncable credentials.
+assertion. Enrollment records whether the credential is backup-eligible. Synced
+passkeys are accepted with that explicit identity policy; verification rejects a
+changed eligibility flag and backup-state without eligibility. Legacy identities
+without this field retain the device-only policy. Sync-provider account recovery
+is part of the trust boundary for backup-eligible credentials.
 It accepts an exact HTTPS origin/RP hostname, with HTTP localhost for development.
 Attestation is `none`: vendor/device provenance is not established. A virtual or
 software authenticator can pass these protocol checks.

@@ -1,10 +1,10 @@
 package org.trustweave.testkit.services
 
-import org.trustweave.wallet.services.WalletFactory
-import org.trustweave.wallet.services.WalletCreationOptions
-import org.trustweave.wallet.Wallet
-import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.credential.BasicWallet
+import org.trustweave.testkit.credential.InMemoryWallet
+import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.services.WalletCreationOptions
+import org.trustweave.wallet.services.WalletFactory
 import java.util.UUID
 
 /**
@@ -19,15 +19,19 @@ class TestkitWalletFactory : WalletFactory {
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: WalletCreationOptions
+        options: WalletCreationOptions,
     ): Wallet {
+        require(options.deploymentPolicy == org.trustweave.wallet.services.WalletDeploymentPolicy.LEGACY) {
+            "Testkit wallets are test doubles and are not assessed production or experimental storage providers"
+        }
         return when (providerName.lowercase()) {
             "inmemory", "in_memory", "in-memory" -> {
                 val finalWalletId = walletId ?: UUID.randomUUID().toString()
                 val finalWalletDid = walletDid ?: "did:key:test-wallet-$finalWalletId"
-                val finalHolderDid = holderDid ?: throw IllegalArgumentException(
-                    "holderDid is required for InMemoryWallet"
-                )
+                val finalHolderDid =
+                    holderDid ?: throw IllegalArgumentException(
+                        "holderDid is required for InMemoryWallet",
+                    )
                 InMemoryWallet(finalWalletId, finalWalletDid, finalHolderDid)
             }
             "basic" -> {
@@ -37,8 +41,8 @@ class TestkitWalletFactory : WalletFactory {
             else -> {
                 throw IllegalStateException(
                     "Wallet provider '$providerName' not found. " +
-                    "Supported providers: 'inMemory', 'basic'. " +
-                    "Ensure appropriate wallet implementation is on classpath."
+                        "Supported providers: 'inMemory', 'basic'. " +
+                        "Ensure appropriate wallet implementation is on classpath.",
                 )
             }
         }
@@ -48,9 +52,6 @@ class TestkitWalletFactory : WalletFactory {
         walletId: String?,
         walletDid: String?,
         holderDid: String?,
-        options: WalletCreationOptions
-    ): Wallet {
-        return create("inMemory", walletId, walletDid, holderDid, options)
-    }
+        options: WalletCreationOptions,
+    ): Wallet = create("inMemory", walletId, walletDid, holderDid, options)
 }
-

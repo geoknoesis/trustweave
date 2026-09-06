@@ -39,7 +39,9 @@ import java.util.UUID
  * }
  * ```
  */
-class DatabaseWalletFactory : WalletFactory {
+class DatabaseWalletFactory(
+    private val statusResolver: org.trustweave.wallet.WalletStatusResolver? = null,
+) : WalletFactory {
     override suspend fun create(
         providerName: String,
         walletId: String?,
@@ -76,6 +78,7 @@ class DatabaseWalletFactory : WalletFactory {
                 holderDid = finalHolderDid,
                 dataSource = dataSource,
                 ownsDataSource = true,
+                statusResolver = statusResolver,
             )
         } catch (e: Throwable) {
             // The wallet was never handed to the caller — close the pool here or it leaks.

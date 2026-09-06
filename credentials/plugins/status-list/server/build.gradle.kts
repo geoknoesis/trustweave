@@ -16,6 +16,8 @@ dependencies {
     implementation(libs.bundles.ktor.server)
 
     testImplementation(project(":testkit"))
+    testImplementation(libs.h2)
+    testImplementation(project(":kms:kms-core"))
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlinx.coroutines.test)
 }

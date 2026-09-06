@@ -23,6 +23,26 @@ class CloudRecoveryTest {
             override suspend fun listKeys(prefix: String) = listOf("wallet/credentials/known.json")
         }
 
+    @Test fun `concurrent deletion does not abort listing or recovery`() =
+        runBlocking<Unit> {
+            val wallet =
+                object : CloudWallet("id", "did:key:w", "did:key:h", "bucket", "wallet") {
+                    override suspend fun upload(
+                        key: String,
+                        data: ByteArray,
+                    ) {}
+
+                    override suspend fun download(key: String): ByteArray? = null
+
+                    override suspend fun deleteFromStorage(key: String) = false
+
+                    override suspend fun listKeys(prefix: String) = listOf("wallet/credentials/deleted.json")
+                }
+            assertTrue(wallet.list().isEmpty())
+            assertTrue(wallet.recoverRecords().complete)
+            assertEquals(0, wallet.getStatistics().totalCredentials)
+        }
+
     @Test fun `strict listing reports storage failure and recovery identifies the failed record`() =
         runBlocking {
             val wallet = unavailable(IllegalStateException("Storage unavailable"))

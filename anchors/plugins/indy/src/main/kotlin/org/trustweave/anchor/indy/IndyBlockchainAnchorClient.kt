@@ -3,6 +3,7 @@ package org.trustweave.anchor.indy
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -26,7 +27,8 @@ import java.nio.charset.StandardCharsets
  * submitter DID. The on-ledger `raw` field carries a small JSON object containing
  * the SHA-256 digest of the payload, the original media type and (where it fits) the
  * payload itself, so [readPayload] can return the original content via GET_ATTRIB
- * without an external store.
+ * without an external store. Only the current attribute version is readable; after
+ * another write for the same DID, reads of older references fail closed.
  *
  * Chain ID format: `indy:<network>:<pool-name>` (e.g. `indy:testnet:bcovrin`).
  *
@@ -163,7 +165,7 @@ class IndyBlockchainAnchorClient(
                 IndyRequestCodec.buildAttribRequest(
                     submitterDid = submitter,
                     targetDid = dest,
-                    rawPayload = rawObject,
+                    rawPayload = buildJsonObject { put(IndyAttribFields.ATTRIB_NAME, rawObject) },
                 )
             val signingPayload = IndyRequestCodec.signingPayload(unsigned)
             val signatureBase58 = keypair.signBase58(signingPayload)
@@ -172,6 +174,8 @@ class IndyBlockchainAnchorClient(
             val reply =
                 try {
                     transport.submit(signed)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: BlockchainException) {
                     throw e
                 } catch (t: Throwable) {
@@ -203,6 +207,8 @@ class IndyBlockchainAnchorClient(
             val reply =
                 try {
                     transport.submit(getRequest)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: BlockchainException) {
                     throw e
                 } catch (t: Throwable) {
@@ -215,8 +221,12 @@ class IndyBlockchainAnchorClient(
                 }
 
             val parsed = IndyRequestCodec.parseGetAttribResponse(reply)
+            // GET_ATTRIB returns only the latest value. Never substitute it for an older reference.
+            if (parsed.seqNo?.toString() != txHash) {
+                throw TrustWeaveException.NotFound(resource = "Anchor $txHash on $chainId is not the current attribute version")
+            }
             val raw =
-                parsed.raw
+                parsed.raw?.get(IndyAttribFields.ATTRIB_NAME) as? JsonObject
                     ?: throw TrustWeaveException.NotFound(
                         resource = "Anchor $txHash on $chainId (ATTRIB has no raw payload)",
                     )

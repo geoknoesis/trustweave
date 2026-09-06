@@ -21,7 +21,8 @@ export function WalletRecovery({ message }: { message: string }) {
     try {
       setBusy(true)
       setResetError(null)
-      await resetWallet()
+      const reset = await resetWallet()
+      if (!reset.keysCleared) window.alert("Wallet records were cleared, but browser key storage was unavailable. Clear this site's browser data to remove any remaining keys.")
       window.location.reload()
     } catch (error) { setResetError(String(error)) }
     finally { setBusy(false) }

@@ -7,6 +7,7 @@ group = "org.trustweave"
 
 dependencies {
     api(project(":wallet:wallet-core"))
+    testImplementation(project(":testkit"))
     implementation(project(":common"))
     implementation(project(":credentials:credential-api"))
     implementation(project(":did:did-core"))

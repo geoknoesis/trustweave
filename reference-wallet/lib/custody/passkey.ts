@@ -4,6 +4,7 @@ import { b64uDecode, b64uEncode } from '../crypto'
 
 export interface PasskeyIdentity {
   profile: 'passkey'
+  backupEligible?: boolean
   credentialId: string
   publicKeySpki: string
   rpId: string
@@ -24,11 +25,12 @@ function checkOrigin(origin: string, rpId: string) {
       url.hostname !== rpId) throw new Error('Passkey profile requires an exact secure RP origin')
 }
 
-async function validateAuthenticator(data: Uint8Array, rpId: string) {
+async function validateAuthenticator(data: Uint8Array, rpId: string, allowBackupEligible = false) {
   if (data.length < 37 || !equal(data.slice(0, 32), await hash(new TextEncoder().encode(rpId)))) throw new Error('Invalid authenticator RP binding')
   const flags = data[32]
   if ((flags & 0x05) !== 0x05) throw new Error('User presence and verification are required')
-  if (flags & 0x18) throw new Error('This profile requires a non-backup-eligible device credential')
+  if ((flags & 0x10) && !(flags & 0x08)) throw new Error('Invalid authenticator backup flags')
+  if ((flags & 0x08) && !allowBackupEligible) throw new Error('This identity requires a non-backup-eligible device credential')
 }
 
 /** Verifiers must supply an issued, unexpired one-use challenge and atomically consume it. */
@@ -42,7 +44,8 @@ export async function verifyPasskeyProof(identity: PasskeyIdentity, proof: Passk
   if (client.type !== 'webauthn.get' || client.origin !== identity.origin || (client.crossOrigin !== undefined && client.crossOrigin !== false) || client.topOrigin !== undefined ||
       client.challenge !== b64uEncode(challenge)) throw new Error('Invalid passkey client binding')
   const auth = b64uDecode(proof.authenticatorData)
-  await validateAuthenticator(auth, identity.rpId)
+  await validateAuthenticator(auth, identity.rpId, identity.backupEligible === true)
+  if (Boolean(auth[32] & 0x08) !== (identity.backupEligible === true)) throw new Error('Authenticator backup eligibility changed')
   // This bounded assertion profile does not negotiate authenticator extensions.
   if (auth.length !== 37 || (auth[32] & 0xc0)) throw new Error('Unsupported authenticator assertion extensions')
   const input = new Uint8Array(auth.length + 32)
@@ -91,8 +94,9 @@ export async function enrollPasskey(displayName: string): Promise<PasskeyIdentit
   if (!spki || response.getPublicKeyAlgorithm() !== -7) throw new Error('Only ES256 passkeys are supported')
   const client = JSON.parse(new TextDecoder().decode(response.clientDataJSON))
   if (client.type !== 'webauthn.create' || client.challenge !== b64uEncode(challenge) || client.origin !== origin || (client.crossOrigin !== undefined && client.crossOrigin !== false) || client.topOrigin !== undefined) throw new Error('Invalid registration binding')
-  await validateAuthenticator(new Uint8Array(response.getAuthenticatorData()), rpId)
-  const identity: PasskeyIdentity = { profile: 'passkey', credentialId: b64uEncode(new Uint8Array(result.rawId)), publicKeySpki: b64uEncode(new Uint8Array(spki)), rpId, origin }
+  const authData = new Uint8Array(response.getAuthenticatorData())
+  await validateAuthenticator(authData, rpId, true)
+  const identity: PasskeyIdentity = { profile: 'passkey', backupEligible: Boolean(authData[32] & 0x08), credentialId: b64uEncode(new Uint8Array(result.rawId)), publicKeySpki: b64uEncode(new Uint8Array(spki)), rpId, origin }
   await signWithPasskey(identity, crypto.getRandomValues(new Uint8Array(32)))
   return identity
 }

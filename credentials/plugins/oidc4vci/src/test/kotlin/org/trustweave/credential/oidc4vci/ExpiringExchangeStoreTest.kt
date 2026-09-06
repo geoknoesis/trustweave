@@ -25,7 +25,7 @@ class ExpiringExchangeStoreTest {
         val clock = TestClock()
         val store = ExpiringExchangeStore<String>(clock, 1000, 1)
         store["one"] = "secret"
-        assertFailsWith<IllegalStateException> { store["two"] = "another" }
+        assertFailsWith<org.trustweave.credential.oidc4vci.exception.Oidc4VciException.CapacityExceeded> { store["two"] = "another" }
         clock.now = Instant.EPOCH.plusMillis(999)
         assertEquals("secret", store["one"])
         clock.now = Instant.EPOCH.plusMillis(1000)

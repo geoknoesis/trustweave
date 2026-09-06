@@ -1,3 +1,4 @@
+import { decryptDisclosedClaims } from '@/lib/claim-jwe'
 /**
  * Demo verifier verification endpoint — handles both VC-JWT (legacy Phase 1) and
  * SD-JWT VC (Phase 2.5) presentations.
@@ -146,7 +147,7 @@ async function verifySdJwtVc(
     recordCheck('Disclosure hash binding', false, 'issuer JWT has no _sd array')
     return { valid: false, checks }
   }
-  const disclosedClaims: Record<string, unknown> = {}
+  let disclosedClaims: Record<string, unknown> = {}
   for (const d of decoded.disclosures) {
     if (!issuerSdHashes.includes(d.hash)) {
       recordCheck(`Disclosure '${d.name}' hash in _sd`, false, `expected hash ${d.hash} not found`)
@@ -213,6 +214,11 @@ async function verifySdJwtVc(
   // We can't know the full set of disclosable claim names from the issuer JWT alone
   // (only their hashes), so we report a count rather than names. The wallet UI knows
   // the names because it stored them at receipt time.
+  if (checks.every(c => c.passed)) {
+    try { disclosedClaims = await decryptDisclosedClaims(decoded.disclosures, kbPayload) }
+    catch { recordCheck('Decrypt authenticated claim disclosures', false, 'Encrypted claim disclosure could not be verified'); return { valid: false, checks } }
+  }
+
   const totalDisclosable = issuerSdHashes.length
   const presented = decoded.disclosures.length
   const withheldCount = totalDisclosable - presented

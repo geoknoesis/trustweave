@@ -1,6 +1,7 @@
 # TrustWeave Reference Wallet — Android
 
-Phase 2 of the [Reference Wallet design](../../docs/.internal/reference-wallet-design.md).
+Android reference wallet. See the [custody contract](../CUSTODY.md) for shared
+integration boundaries and validation limits.
 Native Android (Kotlin + Compose) wallet that mirrors the [Phase 1 web wallet](../README.md)
 and talks to the same in-repo demo backend.
 
@@ -9,9 +10,18 @@ and talks to the same in-repo demo backend.
 The implementation now routes signing through `lib/HolderKey.kt`, with an Android
 Keystore path and a software fallback. `lib/Wallet.kt` also has SD-JWT handling.
 Check the selected backend on the actual device; API level or Keystore membership
-alone does not establish hardware provenance. This documentation pass did not build
-or run the Android app. The phase notes below describe the original baseline and
-are not a current feature-completeness or production-custody guarantee.
+alone does not establish hardware provenance. On 2026-09-06, the Android app compiled
+and its two Base58 unit tests passed with JDK 17 and the Gradle 8.9 wrapper. The
+shared module compiled; it currently has no test source. No emulator, physical-device
+or hardware-custody validation was performed. CI runs the same app tests and shared
+compilation. The phase notes below describe the original baseline and are not a
+current feature-completeness or production-custody guarantee.
+
+Run the automated checks from this directory:
+
+```sh
+./gradlew :app:testDebugUnitTest :shared:compileKotlinJvm --max-workers=2
+```
 
 ## Original Phase 2 baseline
 

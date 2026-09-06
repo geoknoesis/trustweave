@@ -50,9 +50,9 @@ export default function PresentPage() {
     const cred = credentials.find((c) => c.id === selectedId)
     if (!cred) return
     const initial: Record<string, boolean> = {}
-    for (const name of cred.selectivelyDisclosable) initial[name] = false
+    for (const name of cred.selectivelyDisclosable) initial[name] = Array.isArray(request?.requiredClaims) && request.requiredClaims.includes(name)
     setDisclose(initial)
-  }, [selectedId, credentials])
+  }, [selectedId, credentials, request])
 
   useEffect(() => {
     if (phase !== 'consent' || !state) return
@@ -189,7 +189,8 @@ export default function PresentPage() {
       )
     : credentials.filter((c) => isCredentialBoundToHolder(c, state.holder.did))
   const selectedCred = matchingCreds.find((c) => c.id === selectedId)
-  const canShare = Boolean(selectedCred && isCredentialBoundToHolder(selectedCred, state.holder.did))
+  const missingRequired = (Array.isArray(request?.requiredClaims) ? request.requiredClaims : []).filter(name => selectedCred?.selectivelyDisclosable.includes(name) && !disclose[name])
+  const canShare = Boolean(selectedCred && isCredentialBoundToHolder(selectedCred, state.holder.did) && missingRequired.length === 0)
   const inFlight = status.kind === 'building-vp' || status.kind === 'submitting' || status.kind === 'loading-request'
 
   if (phase === 'scan') {
@@ -281,6 +282,7 @@ export default function PresentPage() {
               <div style={{ marginTop: '0.25rem' }}>{status.message}</div>
             </div>
           )}
+          {missingRequired.length > 0 && <p role="status">Select the claims required for this request: {missingRequired.join(', ')}. You can cancel instead.</p>}
           <button onClick={onShare} disabled={!canShare || inFlight}>
             {inFlight ? statusLabel(status) : 'Share with verifier'}
           </button>

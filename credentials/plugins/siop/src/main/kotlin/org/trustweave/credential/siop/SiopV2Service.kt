@@ -29,6 +29,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.ExpiringStore
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.pex.PresentationDefinition
@@ -48,7 +49,6 @@ import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 /** Raw Ed25519 public key length in bytes (RFC 8032). */
 private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
@@ -97,7 +97,7 @@ class SiopV2Service(
      */
     private val didResolver: DidResolver? = null,
 ) {
-    private val sessions = ConcurrentHashMap<String, SiopV2Session>()
+    private val sessions = ExpiringStore<SiopV2Session>()
 
     /** Creates a SIOPv2 authorization request. Returns the session ID and request object. */
     suspend fun createAuthorizationRequest(

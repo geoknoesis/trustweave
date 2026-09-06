@@ -27,10 +27,15 @@ class BitcoinRpcTransportSecurityTest {
 
     @Test
     fun `plaintext rpc to a public host is refused`() {
-        val error = assertFailsWith<IllegalArgumentException> { client("http://node.example.com:8332") }
+        val error =
+            assertFailsWith<org.trustweave.anchor.exceptions.BlockchainException.ConfigurationFailed> {
+                client(
+                    "http://node.example.com:8332",
+                )
+            }
 
         assertTrue(
-            error.message!!.contains("plaintext", ignoreCase = true),
+            error.message!!.contains("HTTPS", ignoreCase = true),
             "expected the refusal to name the problem, got: ${error.message}",
         )
     }
@@ -52,7 +57,11 @@ class BitcoinRpcTransportSecurityTest {
         // PrivateNetworkGuard.rejectionReason() reports a reason both for a private host and for one
         // that cannot be resolved. Reading "has a reason" as "is local" would allow plaintext to an
         // unresolvable public host — failing open on exactly the DNS failure an attacker can induce.
-        assertFailsWith<IllegalArgumentException> { client("http://no-such-host.invalid:8332") }
+        assertFailsWith<org.trustweave.anchor.exceptions.BlockchainException.ConfigurationFailed> {
+            client(
+                "http://no-such-host.invalid:8332",
+            )
+        }
     }
 
     @Test

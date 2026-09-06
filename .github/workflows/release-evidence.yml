@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TRUSTWEAVE_INDY_INTEGRATION: required
+
 jobs:
   evidence:
     runs-on: ubuntu-latest

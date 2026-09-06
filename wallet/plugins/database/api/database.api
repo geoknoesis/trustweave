@@ -5,6 +5,8 @@ public final class org/trustweave/wallet/database/DatabaseWallet : org/trustweav
 	public fun addMetadata (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun addToCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun close ()V
+	public final fun countCredentials (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun countCredentials$default (Lorg/trustweave/wallet/database/DatabaseWallet;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public fun createCollection (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteCollection (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -39,6 +41,8 @@ public final class org/trustweave/wallet/database/DatabaseWallet$Companion {
 
 public final class org/trustweave/wallet/database/DatabaseWalletFactory : org/trustweave/wallet/services/WalletFactory {
 	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/wallet/WalletStatusResolver;)V
+	public synthetic fun <init> (Lorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun createInMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/wallet/services/WalletCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

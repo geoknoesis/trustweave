@@ -327,7 +327,7 @@ class FileWallet(
         if (filter.hasStatusEntry != null && (credential.credentialStatus != null) != filter.hasStatusEntry) return false
         if (filter.revoked != null) {
             val status = resolveStoredStatus(credential, statusResolver)
-            check(status != StoredCredentialStatus.UNKNOWN) { "Revocation status is unknown; configure a WalletStatusResolver" }
+            if (status == StoredCredentialStatus.UNKNOWN) return false
             if ((status == StoredCredentialStatus.REVOKED) != filter.revoked) return false
         }
         return true

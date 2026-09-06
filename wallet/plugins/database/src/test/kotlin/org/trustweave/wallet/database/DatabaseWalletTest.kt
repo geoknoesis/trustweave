@@ -71,6 +71,8 @@ class DatabaseWalletTest {
                 repeat(1001) { wallet.store(credential("cred-%04d".format(it))) }
                 wallet.store(credential("zz-match", "RareCredential"))
                 assertEquals(1002, wallet.list().size)
+                assertEquals(1002, wallet.countCredentials())
+                assertEquals(1002, wallet.getStatistics().totalCredentials)
                 val allIds = mutableSetOf<String>()
                 var cursor: String? = null
                 do {

@@ -972,7 +972,8 @@
     "typecheck": "passed",
     "production_build": "passed",
     "unit_tests": 80,
-    "browser_tests": 13
+    "browser_tests": 13,
+    "hosted_result": "success"
   },
   "android": {
     "command": ".\\gradlew.bat :app:testDebugUnitTest :shared:jvmTest --max-workers=2 --no-configuration-cache --project-cache-dir .gradle/readiness-validation",
@@ -982,10 +983,33 @@
     "failures": 0,
     "skipped": 0,
     "shared": "compiled; jvmTest NO-SOURCE",
-    "device_validation": "not performed"
+    "device_validation": "not performed",
+    "hosted_result": "success"
   },
-  "hosted_ci": "pending for this revision",
-  "release_attestation": "not produced",
+  "hosted_ci": {
+    "result": "success",
+    "run": "https://github.com/geoknoesis/trustweave/actions/runs/34040026445",
+    "commit": "36fe0a2ca434c7ac3297f63870fb09cf4f7db568",
+    "jobs": [
+      "Build and test",
+      "Reference wallet contracts",
+      "Android app tests and shared compilation"
+    ]
+  },
+  "release_attestation": {
+    "result": "verified",
+    "run": "https://github.com/geoknoesis/trustweave/actions/runs/34040031593",
+    "artifact": "common/libs/common-0.7.0.jar",
+    "sha256": "bc6576a4ac768575ff34423f1765149a891db7a2cfaf973e3d283d491fc5dc1d",
+    "repository": "geoknoesis/trustweave",
+    "signer_workflow": "geoknoesis/trustweave/.github/workflows/release-evidence.yml",
+    "source_digest": "36fe0a2ca434c7ac3297f63870fb09cf4f7db568",
+    "source_ref": "refs/heads/main",
+    "self_hosted_runners_denied": true,
+    "verification_exit_code": 0,
+    "verification_output": "release-attestation-verification.json",
+    "scope": "Manually dispatched build artifacts; no new tag or Maven package publication"
+  },
   "source_hashes": {
     ".github/workflows/ci.yml": "7d17ddf05fe79b4a2cbe2627638dda1294a622b93828065435051327343396b9",
     ".github/workflows/release-evidence.yml": "a4dc66eba5b75e811658aac10557d98f1b458d324e35f304a25dcc650101ad3b",
@@ -1084,5 +1108,22 @@
     "wallet/wallet-core/src/main/kotlin/org/trustweave/wallet/StoredCredentialRecord.kt": "c1f817ed22ed6b06f9c076f5bd4829ac8272feea73023095da3b32a27802f8bd",
     "wallet/wallet-services/build.gradle.kts": "b2d7fb9c2febabda89078032ceb718d650a2f7f7638d88e2a3e853ec75fa059a",
     "wallet/wallet-services/src/test/kotlin/org/trustweave/wallet/holder/WalletHolderTest.kt": "4e3188fc10c4cf80a19d0ecafd22cc17da54dbcb50e293f1c04fe32eb14a2bc2"
+  },
+  "validated_commit": "36fe0a2ca434c7ac3297f63870fb09cf4f7db568",
+  "documentation": {
+    "checker_tests": 10,
+    "markdown_files": 354,
+    "errors": 0,
+    "hosted_result": "success",
+    "run": "https://github.com/geoknoesis/trustweave/actions/runs/34040026486"
+  },
+  "abi_check_tasks": 105,
+  "documentation_examples": 24,
+  "report_render_check": {
+    "desktop_width": 1280,
+    "mobile_width": 390,
+    "mobile_scroll_width": 390,
+    "findings": 19,
+    "result": "passed"
   }
 }

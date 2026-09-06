@@ -1,8 +1,8 @@
 [
   {
     "id": "PR2-B1",
-    "status": "Hosted validation open",
-    "details": "The prior pushed revision passed hosted lint but failed Indy integration. The replacement fixture uses four local validators and native VDR; CI requires execution. The corrected tree still needs a green hosted run."
+    "status": "Closed; hosted CI passed",
+    "details": "Commit 36fe0a2c passed hosted SDK build, lint, ABI, coverage and dependency inventory checks, plus web and Android jobs. The real local Indy ledger fixture runs in required mode in CI and release validation."
   },
   {
     "id": "PR2-B2",
@@ -26,8 +26,8 @@
   },
   {
     "id": "PR2-B6",
-    "status": "Partially addressed",
-    "details": "Prior remediation was committed and pushed as 38a27f24. This follow-up remains uncommitted; no new release or attestation is claimed."
+    "status": "Validated code pushed; provenance verified",
+    "details": "Commit 36fe0a2c is pushed. Release evidence workflow 34040031593 succeeded. Downloaded common-0.7.0.jar passed attestation verification against the expected repository, workflow, source commit and GitHub-hosted runner. This produced build artifacts; no new tag or Maven package release was published."
   },
   {
     "id": "PR2-N3",
@@ -42,7 +42,7 @@
   {
     "id": "PR2-N9",
     "status": "Implemented; checks passed",
-    "details": "Pinned actions retained; module-name and shipped-file link gates restored. Ten checker tests and 354 Markdown files pass."
+    "details": "Pinned actions retained; module-name and shipped-file link gates restored. Ten checker tests and 354 Markdown files pass. Hosted documentation workflow 34040026486 passed."
   },
   {
     "id": "PR2-N1",

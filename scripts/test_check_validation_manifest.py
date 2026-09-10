@@ -87,5 +87,12 @@ class ManifestTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'duplicate'):
             manifest.collect(self.root,self.build,skip_policy=policy)
 
+    def test_skip_identity_uses_classname_not_junit_display_name(self):
+        self.xml.write_text('<testsuite name="Human-readable display name" tests="1" failures="0" errors="0" skipped="1"><testcase classname="demo" name="disabled"><skipped/></testcase></testsuite>')
+        policy={'allowed':[dict(suite='demo',name='disabled',reason='External service required')]}
+        result=manifest.collect(self.root,self.build,skip_policy=policy)
+        self.assertEqual('demo',result['skipped'][0]['suite'])
+        self.assertEqual('Human-readable display name',result['skipped'][0]['display_suite'])
+
 if __name__=='__main__':
     unittest.main()

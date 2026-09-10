@@ -34,7 +34,8 @@ def collect(root, build_root, allow_dirty=False, coverage_report=None, skip_poli
             totals[key]+=value
         for case in suite.findall('testcase'):
             if case.find('skipped') is not None:
-                skipped.append(dict(suite=suite.attrib['name'],name=case.attrib['name']))
+                skipped.append(dict(suite=case.attrib.get('classname',suite.attrib['name']),
+                                    display_suite=suite.attrib['name'],name=case.attrib['name']))
         artifacts[path.relative_to(build_root).as_posix()]=hashlib.sha256(path.read_bytes()).hexdigest()
     if skip_policy is not None:
         approved={}

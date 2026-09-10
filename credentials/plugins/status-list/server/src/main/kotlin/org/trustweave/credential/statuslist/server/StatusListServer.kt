@@ -1,13 +1,17 @@
 package org.trustweave.credential.statuslist.server
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.observability.HostKind
+import org.trustweave.observability.HostObservability
 import org.trustweave.revocation.bitstring.BitstringStatusListManager
 import org.trustweave.revocation.token.TokenStatusListManager
 
@@ -44,6 +48,14 @@ class StatusListServer(
     private val tokenManager: TokenStatusListManager? = null,
 ) {
     private var server: NettyApplicationEngine? = null
+    private var observability: HostObservability? = null
+
+    /** Configure tracing, protected metrics and optional admission limits before starting. */
+    fun withObservability(configuration: HostObservability): StatusListServer {
+        check(server == null) { "Configure observability before starting the server" }
+        observability = configuration
+        return this
+    }
 
     fun start(wait: Boolean = false) {
         server =
@@ -58,6 +70,7 @@ class StatusListServer(
     }
 
     private fun Application.configureApplication() {
+        observability?.install(this, HostKind.STATUS_LIST)
         install(ContentNegotiation) {
             json(
                 Json {

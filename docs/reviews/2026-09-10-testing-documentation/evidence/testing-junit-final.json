@@ -1,0 +1,6 @@
+{
+  "classes_scanned": 3088,
+  "test_methods": 3783,
+  "failures": [],
+  "limits": "Direct JVM JUnit annotations only; execution and custom/dynamic test discovery require separate evidence."
+}

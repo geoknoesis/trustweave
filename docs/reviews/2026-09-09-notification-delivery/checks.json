@@ -1,0 +1,149 @@
+{
+  "recorded_utc": "2026-09-10T03:47:19.132235+00:00",
+  "notification_result": "passed",
+  "scenarios": 3,
+  "harness_unit_tests": {
+    "tests": 3,
+    "result": "passed",
+    "scope": "failure evidence, cancellation and corrupt cached archive"
+  },
+  "previous_runtime_source_files_unchanged": 46,
+  "previous_module_tests": "96 passed in the preceding review; not rerun for this tooling/docs change",
+  "alert_rule_assertions": 37,
+  "alert_rules_result": "passed using native Prometheus 3.5.0 promtool",
+  "documentation": {
+    "executable_examples": [
+      {
+        "source": "distribution/examples/scenarios/data-catalog/src/main/kotlin/DataCatalogExample.kt",
+        "entry_point": "org.trustweave.examples.dcat.DataCatalogExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/digital-workflow/src/main/kotlin/DigitalWorkflowExample.kt",
+        "entry_point": "org.trustweave.examples.workflow.DigitalWorkflowExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/financial-services/src/main/kotlin/FinancialServicesExample.kt",
+        "entry_point": "org.trustweave.examples.financial.FinancialServicesExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/government/src/main/kotlin/GovernmentIdentityExample.kt",
+        "entry_point": "org.trustweave.examples.government.GovernmentIdentityExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/healthcare/src/main/kotlin/HealthcareExample.kt",
+        "entry_point": "org.trustweave.examples.healthcare.HealthcareExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/iot-device/src/main/kotlin/IoTDeviceExample.kt",
+        "entry_point": "org.trustweave.examples.iot.IoTDeviceExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/news-industry/src/main/kotlin/NewsIndustryExample.kt",
+        "entry_point": "org.trustweave.examples.news.NewsIndustryExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/proof-of-location/src/main/kotlin/ProofOfLocationExample.kt",
+        "entry_point": "org.trustweave.examples.location.ProofOfLocationExampleKt"
+      },
+      {
+        "source": "distribution/examples/scenarios/supply-chain/src/main/kotlin/SupplyChainExample.kt",
+        "entry_point": "org.trustweave.examples.supplychain.SupplyChainExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/academic/AcademicCredentialsDslExample.kt",
+        "entry_point": "org.trustweave.examples.academic.AcademicCredentialsDslExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/academic/AcademicCredentialsExample.kt",
+        "entry_point": "org.trustweave.examples.academic.AcademicCredentialsExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/blockchain/BlockchainAnchoringExample.kt",
+        "entry_point": "org.trustweave.examples.blockchain.BlockchainAnchoringExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/comprehensive/ComprehensiveDslExample.kt",
+        "entry_point": "org.trustweave.examples.comprehensive.ComprehensiveDslExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/delegation/DelegationChainExample.kt",
+        "entry_point": "org.trustweave.examples.delegation.DelegationChainExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/did-jwk/JwkDidExample.kt",
+        "entry_point": "org.trustweave.examples.did_jwk.JwkDidExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/did-key/KeyDidExample.kt",
+        "entry_point": "org.trustweave.examples.did_key.KeyDidExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt",
+        "entry_point": "org.trustweave.examples.documentation.DocumentationQuickStartKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/eo/EarthObservationExample.kt",
+        "entry_point": "org.trustweave.examples.eo.EarthObservationExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/indy/IndyIntegrationExample.kt",
+        "entry_point": "org.trustweave.examples.indy.IndyIntegrationExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/national/NationalEducationExample.kt",
+        "entry_point": "org.trustweave.examples.national.NationalEducationExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/professional/ProfessionalIdentityExample.kt",
+        "entry_point": "org.trustweave.examples.professional.ProfessionalIdentityExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/quickstart/QuickStartSample.kt",
+        "entry_point": "org.trustweave.examples.quickstart.QuickStartSampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/spatial/SpatialWebExample.kt",
+        "entry_point": "org.trustweave.examples.spatial.SpatialWebExampleKt"
+      },
+      {
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/trust/WebOfTrustExample.kt",
+        "entry_point": "org.trustweave.examples.trust.WebOfTrustExampleKt"
+      }
+    ],
+    "markdown_files": 360,
+    "kotlin_blocks": 2390,
+    "main_blocks": 153,
+    "historical_blocks": 206,
+    "source_examples": [
+      {
+        "document": "docs/getting-started/quick-start.md",
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+      },
+      {
+        "document": "docs/README.md",
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+      },
+      {
+        "document": "README.md",
+        "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+      }
+    ],
+    "errors": [],
+    "limits": "Relative path existence and exact source synchronization only. External URLs, anchors, partial snippets, historical designs and provider behavior are not certified by this check."
+  },
+  "limits": [
+    "Executed on Windows amd64; Linux CI path is configured but has not run in hosted CI",
+    "Synthetic metrics transitions replay a recorded runtime scrape; no new database outage",
+    "No production endpoint, pager, distributed trace or full SDK test run"
+  ],
+  "source_sha256": {
+    "scripts/intent-notification-exercise.py": "d0613aebcc2468f0ed9acea89ba382c62d0bd41c7b2850502b52a755c9dbb266",
+    "scripts/test_intent_notification_exercise.py": "aa88d3fd609a31c515b5a0dd6ca017820362ea3f0bcab3a2575cbd53853b9e5c",
+    ".github/workflows/ci.yml": "ef06a6ee94b7142e664bab0aebc9cd15ab4f2ded503153dd91ee8f1afd787156",
+    ".github/workflows/release-evidence.yml": "dec1f9cea31f4f41060f9681b210ece9c893f014524f7f23c3f90d15a5d78081",
+    "docs/operations/intent/README.md": "028eda626c404fb49a70a72f68741de530949a628851b1f72e4169c2a552432f",
+    "docs/operations/observability.md": "ae2b02e58142678d31d2364f60c81bc4d8da5079aa4776f5d7babfe1dcb59172",
+    "docs/operations/intent/alerts.yml": "61b952bf602cf449822b9eabe9e0f39de453b188b0a3fc21e9e7b6f9d621557a",
+    "docs/operations/intent/alerts.test.yml": "fa9e9f325dd5ecdc27a6e4222fbea9e35bc38c2b98e7b58b0e5765ec1bbc28a4"
+  }
+}

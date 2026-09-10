@@ -1,0 +1,123 @@
+[
+  {
+    "id": "TW-FU-01",
+    "severity": "High",
+    "title": "Concurrent revocations can erase each other",
+    "validation": "Runtime confirmed",
+    "path": "credentials/plugins/status-list/database/src/main/kotlin/org/trustweave/revocation/database/DatabaseStatusListManager.kt",
+    "line": 248,
+    "impact": "Status JSON is read on another connection before the allocation lock. Two writers read the same bitmap, then overwrite each other despite serialized allocation. Batch paths at lines 432 and 608 share the stale-snapshot pattern. The fresh H2 probe completed both calls but observed a=true, b=false. A previously revoked credential can become active.",
+    "remediation": "Lock the list row before reading, using the same transaction for read, allocation and bitmap write across every mutation path.",
+    "acceptance": "Deterministic two-manager tests retain every committed revocation. Cover batch/single overlap, suspension, rollback and PostgreSQL."
+  },
+  {
+    "id": "TW-FU-02",
+    "severity": "Medium",
+    "title": "Expansion uses BitSet capacity instead of declared size",
+    "validation": "Runtime confirmed",
+    "path": "credentials/plugins/status-list/database/src/main/kotlin/org/trustweave/revocation/database/DatabaseStatusListManager.kt",
+    "line": 652,
+    "impact": "A declared 16-entry list expanded by 8 becomes 72 because BitSet rounds storage to machine words. The fresh test expected 24 and got 72. Bitmap and metadata writes also use separate transactions; invalid growth and overflow are not explicitly rejected.",
+    "remediation": "Use locked metadata size, validate positive growth and safe arithmetic, and update bitmap and metadata atomically.",
+    "acceptance": "Test non-word-aligned sizes, negative growth, overflow and injected failure between updates."
+  },
+  {
+    "id": "TW-FU-03",
+    "severity": "Medium",
+    "title": "Batch updates bypass declared index bounds",
+    "validation": "Source confirmed",
+    "path": "credentials/plugins/status-list/database/src/main/kotlin/org/trustweave/revocation/database/DatabaseStatusListManager.kt",
+    "line": 440,
+    "impact": "BitSet.set accepts indices beyond the declared list size. This grows the bitmap without updating metadata; a very large index can allocate substantial memory. Remote exploitability depends on whether an application exposes these inputs. Purpose-incompatible updates are silently ignored.",
+    "remediation": "Validate all indices and operation/purpose compatibility before any write; reject an invalid batch atomically.",
+    "acceptance": "Reject -1, size and Int.MAX_VALUE without mutation; mixed valid/invalid batches leave all bits unchanged."
+  },
+  {
+    "id": "TW-FU-04",
+    "severity": "Medium",
+    "title": "Credential service cannot verify digest-mode anchors",
+    "validation": "Source confirmed",
+    "path": "credentials/plugins/anchor/src/main/kotlin/org/trustweave/credential/anchor/CredentialAnchorService.kt",
+    "line": 162,
+    "impact": "Digest-mode clients intentionally return an envelope on read (AbstractBlockchainAnchorClient lines 75-83 and 314). CredentialAnchorService compares that envelope to the full credential, so a successful digest-mode write cannot round-trip through this verifier.",
+    "remediation": "Verify envelopes using the anchor digest contract while retaining reference/evidence binding; retain full-payload equality for full mode.",
+    "acceptance": "Positive and tampering tests pass for both modes, includeProof choices, wrong references and altered envelope digests."
+  },
+  {
+    "id": "TW-FU-05",
+    "severity": "Medium",
+    "title": "Shared anchor handlers convert cancellation into transaction failure",
+    "validation": "Source confirmed",
+    "path": "anchors/anchor-core/src/main/kotlin/org/trustweave/anchor/AbstractBlockchainAnchorClient.kt",
+    "line": 328,
+    "impact": "Write catches Exception and read does likewise at line 346. Provider-thrown CancellationException can become TransactionFailed; test mode can consult fallback storage. Parent-job cancellation may still propagate from withContext, so this is not a claim that all cancellation is suppressed.",
+    "remediation": "Rethrow CancellationException before generic handlers on both shared paths.",
+    "acceptance": "A fake provider throwing cancellation preserves that exception type for read/write, including test mode; timeouts are not misclassified for retry."
+  },
+  {
+    "id": "TW-FU-06",
+    "severity": "Medium",
+    "title": "Indy transport deadline and response limits are incomplete",
+    "validation": "Source confirmed",
+    "path": "anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndyVdrProxyTransport.kt",
+    "line": 41,
+    "impact": "timeoutMillis is unused. The owned client has a timeout, but injected clients need not. bodyAsText at line 89 consumes the entire response; errors embed raw provider bodies at lines 94 and 104. Endpoint configuration is trusted, which limits the threat boundary.",
+    "remediation": "Apply an operation deadline independently of client construction, bound response reads and redact provider error bodies.",
+    "acceptance": "Stalled injected clients time out; oversized bodies fail within a bound; secret-bearing bodies never appear in exception messages."
+  },
+  {
+    "id": "TW-FU-07",
+    "severity": "Low",
+    "title": "Shared Android JWS header interpolates unescaped input",
+    "validation": "Source confirmed",
+    "path": "reference-wallet/android/shared/src/commonMain/kotlin/org/trustweave/referencewallet/shared/SdJwtVc.kt",
+    "line": 106,
+    "impact": "Public kid/typ arguments containing quotes or backslashes can produce malformed JSON or inject header members. Normal generated did:key inputs avoid the trigger. This is a helper correctness defect, not a demonstrated signature forgery.",
+    "remediation": "Serialize the protected header with buildJsonObject.",
+    "acceptance": "Round-trip quotes, backslashes and Unicode; exactly one alg member remains EdDSA. Add shared-module tests."
+  },
+  {
+    "id": "TW-FU-08",
+    "severity": "High",
+    "title": "Production custody is not yet an end-to-end qualified wallet",
+    "validation": "Qualification gap",
+    "path": "reference-wallet/CUSTODY.md",
+    "line": 40,
+    "impact": "Documentation explicitly says managed authorization/persistence and passkey enrollment/recovery remain integration work; neither profile is wired into the reference UI. Virtual authenticators and local fixtures do not establish HSM, hosted IAM or physical-device recovery assurance. SUPPORTED_ONLY admits no wallet. This is a scope limitation, not evidence that adapters are insecure.",
+    "remediation": "Keep the release explicitly experimental for these features, or complete service, UI, recovery and provider qualification before claiming production custody.",
+    "acceptance": "Use authorized managed-custody test resources for integration, key loss/rotation/recovery, tenant/key authorization and durable one-use authorization. Retain physical/provider evidence and promote only qualified capabilities."
+  },
+  {
+    "id": "TW-FU-09",
+    "severity": "Medium",
+    "title": "Autonomous checkout and stateful intent enforcement remain unavailable",
+    "validation": "Capability gap",
+    "path": "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt",
+    "line": 71,
+    "impact": "Fail-closed line-item handling blocks autonomous checkout. Budget/recurrence require external state. Audience/nonce comparison is not an atomic consumed-challenge store. The previous fail-open bypass is closed; these are remaining capability limits.",
+    "remediation": "Implement supported line-item matching and durable enforcement integration, or constrain advertised use cases.",
+    "acceptance": "Positive checkout vectors pass, mismatched items fail, and concurrent replay/cumulative-spend tests reject duplicate or over-budget operations."
+  },
+  {
+    "id": "TW-FU-10",
+    "severity": "Medium",
+    "title": "Risk-based coverage and provider conformance need strengthening",
+    "validation": "Assurance gap",
+    "path": ".github/workflows/ci.yml",
+    "line": 84,
+    "impact": "Merged coverage is 56.4% lines and 38.5% branches. First-contract tests broaden module reach but did not cover concurrent revocation. Android shared compiled with no test source. This CI job generates reports without enforcing a repository-wide regression budget. Coverage alone is not security proof.",
+    "remediation": "Add concurrent, negative, fault-injection and interoperability tests for high-risk paths; enforce reviewed module/regression gates and qualify supported providers.",
+    "acceptance": "Permanent regressions cover every defect, shared Android has meaningful tests, and real-provider conformance evidence exists for support claims."
+  },
+  {
+    "id": "TW-FU-11",
+    "severity": "Medium",
+    "title": "Operational and final-release assurance remains incomplete",
+    "validation": "Assurance gap",
+    "path": "docs/operations/observability.md",
+    "line": 3,
+    "impact": "Guidance and safe status-list events exist; they do not establish an instrumented host, SLO/load or restore exercises. A verified manual-workflow artifact is not a newly published consumer release. CycloneDX is an inventory, not a vulnerability triage result.",
+    "remediation": "Demonstrate a host telemetry integration, load/failure/recovery exercises, dependency triage and signed versioned publication for the intended release.",
+    "acceptance": "Verify safe coroutine correlation/metrics, bounded behavior under load, restore exercises and provenance of downloaded published artifacts."
+  }
+]

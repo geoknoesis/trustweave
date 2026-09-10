@@ -6,7 +6,7 @@ plugins {
 group = "org.trustweave.credentials"
 dependencies {
     implementation(project(":credentials:credential-api"))
-    implementation(project(":common"))  // Needed for Iri access
+    implementation(project(":common")) // Needed for Iri access
     // StatusListManagerFactory is in this module
 
     // Kotlin Coroutines
@@ -26,5 +26,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation("org.testcontainers:postgresql:1.21.4")
 }
-

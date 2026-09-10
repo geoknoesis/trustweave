@@ -1,0 +1,76 @@
+[
+  {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_check_*.py"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ".......................................\n----------------------------------------------------------------------\nRan 39 tests in 17.549s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python",
+      "scripts/check-documentation.py",
+      "--report",
+      ".gradle/testing-documentation.json"
+    ],
+    "exit_code": 0,
+    "stdout": "Checked 363 Markdown files; 2359 Kotlin blocks inventoried; 5 source-backed examples; 0 errors\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python",
+      "scripts/generate-capability-docs.py",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python",
+      "scripts/check-coverage-policy.py",
+      "C:/Users/steph/AppData/Local/TrustWeave/gradle-build/trustweave/observability/reports/kover/report.xml",
+      "--policy",
+      "config/host-coverage-policy.json"
+    ],
+    "exit_code": 0,
+    "stdout": "Coverage policy passed\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python",
+      "scripts/check-junit-contract.py",
+      "--build-root",
+      "C:/Users/steph/AppData/Local/TrustWeave/gradle-build/trustweave",
+      "--report",
+      ".gradle/testing-junit-final.json"
+    ],
+    "exit_code": 0,
+    "stdout": "Scanned 3088 classes and 3783 JUnit methods; 0 invalid methods/evidence\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python",
+      "scripts/check-test-evidence.py",
+      "--build-root",
+      "C:/Users/steph/AppData/Local/TrustWeave/gradle-build/trustweave",
+      "--report",
+      ".gradle/testing-required-results.json"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"requirements\": 12,\n  \"verified_tests\": [\n    {\n      \"id\": \"DISCOVERY-01\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"test parseAuthorizationUrl with missing request_uri throws exception\"\n    },\n    {\n      \"id\": \"DISCOVERY-02\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"test parseAuthorizationUrl with invalid URL format throws exception\"\n    },\n    {\n      \"id\": \"DISCOVERY-03\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"test parseAuthorizationUrl with HTTP error response throws exception\"\n    },\n    {\n      \"id\": \"DISCOVERY-04\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"test fetchVerifierMetadata with HTTP error throws exception\"\n    },\n    {\n      \"id\": \"DISCOVERY-05\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"unsigned request object with alg none is rejected\"\n    },\n    {\n      \"id\": \"DISCOVERY-06\",\n      \"suite\": \"org.trustweave.credential.oidc4vp.Oidc4VpServiceTest\",\n      \"test\": \"request object signed with key not matching client_metadata jwks is rejected\"\n    },\n    {\n      \"id\": \"DISCOVERY-07\",\n      \"suite\": \"org.trustweave.wallet.cloud.CloudRecoveryTest\",\n      \"test\": \"recovery does not swallow cancellation\"\n    },\n    {\n      \"id\": \"DISCOVERY-08\",\n      \"suite\": \"org.trustweave.wallet.file.FileWalletFactoryTest\",\n      \"test\": \"typed encryption key is validated rather than silently ignored\"\n    },\n    {\n      \"id\": \"DOC-FIXTURE\",\n      \"suite\": \"org.trustweave.testkit.DocumentationExampleTest\",\n      \"test\": \"fixtures isolate registries and close releases registrations\"\n    },\n    {\n      \"id\": \"DOC-HOST\",\n      \"suite\": \"org.trustweave.observability.HostDocumentationExampleTest\",\n      \"test\": \"documented host setup serves requests and protects metrics\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"all hosts classify client and server responses and bound unknown HTTP methods\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"admitted waiter runs after release and timed out waiter never runs\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"request errors and callback failure preserve identity and release capacity\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"cancelled phase ends its span without counting a provider failure\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"credentialed acquisition returns the original connection and preserves rollback\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"absent uninitialized and closed pools omit unavailable connection gauges\"\n    },\n    {\n      \"id\": \"HOST-EDGE\",\n      \"suite\": \"org.trustweave.observability.HostTelemetryEdgeTest\",\n      \"test\": \"noop tracing omits trace header and metrics authentication rejects oversized values\"\n    },\n    {\n      \"id\": \"HOST-EXPORT\",\n      \"suite\": \"org.trustweave.observability.HostExportIntegrationTest\",\n      \"test\": \"two real HTTP hosts export correlated traces through authenticated OTLP protobuf\"\n    },\n    {\n      \"id\": \"HOST-EXPORT\",\n      \"suite\": \"org.trustweave.observability.HostExportIntegrationTest\",\n      \"test\": \"blocked exporter uses a bounded queue and does not block application work\"\n    }\n  ],\n  \"failures\": []\n}\n",
+    "stderr": ""
+  }
+]

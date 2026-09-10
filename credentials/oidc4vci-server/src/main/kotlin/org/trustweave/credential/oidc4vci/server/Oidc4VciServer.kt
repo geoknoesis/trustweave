@@ -1,13 +1,17 @@
 ﻿package org.trustweave.credential.oidc4vci.server
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.observability.HostKind
+import org.trustweave.observability.HostObservability
 
 /**
  * Standalone OID4VCI issuer server.
@@ -22,6 +26,14 @@ class Oidc4VciServer(
     private val host: String = "127.0.0.1",
 ) {
     private var server: NettyApplicationEngine? = null
+    private var observability: HostObservability? = null
+
+    /** Configure tracing, protected metrics and optional admission limits before starting. */
+    fun withObservability(configuration: HostObservability): Oidc4VciServer {
+        check(server == null) { "Configure observability before starting the server" }
+        observability = configuration
+        return this
+    }
 
     fun start(wait: Boolean = false) {
         server =
@@ -36,6 +48,7 @@ class Oidc4VciServer(
     }
 
     internal fun Application.configureApplication() {
+        observability?.install(this, HostKind.OID4VCI)
         install(ContentNegotiation) {
             json(
                 Json {

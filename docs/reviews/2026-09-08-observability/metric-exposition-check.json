@@ -1,0 +1,18 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "-i",
+    "--network",
+    "none",
+    "--entrypoint",
+    "promtool",
+    "prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996",
+    "check",
+    "metrics"
+  ],
+  "exit_code": 0,
+  "input_sha256": "eeec81715d8aeda4f381ef417b3c09670366e3647493db264775dc69178ee125",
+  "output": ""
+}

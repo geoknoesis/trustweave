@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.wallet.cloud.CloudRecoveryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:41:01.546Z" hostname="THEMATRIX" time="0.943">
+  <properties/>
+  <testcase name="concurrent deletion does not abort listing or recovery()" classname="org.trustweave.wallet.cloud.CloudRecoveryTest" time="0.557"/>
+  <testcase name="recovery does not swallow cancellation()" classname="org.trustweave.wallet.cloud.CloudRecoveryTest" time="0.325"/>
+  <testcase name="strict listing reports storage failure and recovery identifies the failed record()" classname="org.trustweave.wallet.cloud.CloudRecoveryTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

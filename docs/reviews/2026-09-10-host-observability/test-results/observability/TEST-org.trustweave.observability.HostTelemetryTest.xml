@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.observability.HostTelemetryTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-10T04:19:39.954Z" hostname="THEMATRIX" time="4.275">
+  <properties/>
+  <testcase name="real connection pool wait time failure and recovery are visible without replacing connections()" classname="org.trustweave.observability.HostTelemetryTest" time="1.18"/>
+  <testcase name="bounded counters retain constant series for large workloads and preserve failures()" classname="org.trustweave.observability.HostTelemetryTest" time="0.146"/>
+  <testcase name="metrics remain available during saturation and queued cancellation releases capacity()" classname="org.trustweave.observability.HostTelemetryTest" time="0.041"/>
+  <testcase name="queue timeouts and cancellation races do not leak permits()" classname="org.trustweave.observability.HostTelemetryTest" time="1.533"/>
+  <testcase name="request and child span correlation survive coroutine dispatch without sensitive fields()" classname="org.trustweave.observability.HostTelemetryTest" time="1.35"/>
+  <testcase name="trusted remote parent is explicit and baggage and malformed parents are not retained()" classname="org.trustweave.observability.HostTelemetryTest" time="0.017"/>
+  <testcase name="invalid settings and weak metrics secrets are rejected()" classname="org.trustweave.observability.HostTelemetryTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-06",
+  "assessment": "Recurrence and reference-host operations reassessment",
+  "repository": "trustweave",
+  "scope": "Uncommitted tree; current source hashes and commands in recurrence-operations-validation.json",
+  "overall": 8.7,
+  "previous_overall": 8.4,
+  "target": "greater than 9.0",
+  "target_achieved": false,
+  "rubric": "Same six equally weighted categories. Sum 52, mean 8.6667, half-up rounded to 8.7. Engineering judgment, not certification.",
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 8,
+      "reason": "Reference HTTP host emits bounded metrics; storage failure and backlog signals fire. Prometheus storage, backlog and latency rule firing/recovery tests pass. Production instrumentation and pager delivery remain open."
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9,
+      "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified."
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities."
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Local tests, lint, ABI and alert gates pass and are wired into workflows. Changes remain uncommitted; hosted validation and a release for this tree are still outstanding."
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 8.5,
+      "reason": "50 intent tests, expanded conformance profile, real PostgreSQL restore and nine Prometheus evaluations pass. Full cross-stack conformance and wider SDK branch coverage remain incomplete."
+    }
+  ],
+  "previous_displayed_overall": 8.4,
+  "arithmetic_correction": "Historical pre-budget HTML displayed 8.3 although its categories averaged 8.1667 (8.2). The subsequent 8.4 assessment and current 8.7 use directly computed means."
+}

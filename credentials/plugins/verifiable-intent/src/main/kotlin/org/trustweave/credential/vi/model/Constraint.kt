@@ -162,7 +162,12 @@ public sealed class Constraint {
             }
             return when (type) {
                 AllowedMerchants.TYPE -> AllowedMerchants(obj, obj.objectList("allowed"))
-                LineItems.TYPE -> LineItems(obj, obj.objectList("items"), obj.string("match_mode") ?: "minimum")
+                LineItems.TYPE ->
+                    if ("match_mode" in obj && obj.string("match_mode") == null) {
+                        Malformed(obj, type, "match_mode must be a string")
+                    } else {
+                        LineItems(obj, obj.objectList("items"), obj.string("match_mode") ?: "minimum")
+                    }
                 AllowedPayees.TYPE -> AllowedPayees(obj, obj.objectList("allowed"))
                 AmountRange.TYPE -> parseAmountRange(obj, type)
                 Budget.TYPE -> parseBudget(obj, type)

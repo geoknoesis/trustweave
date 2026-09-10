@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.credential.vi.PaymentSchemaValidationTest" tests="36" skipped="0" failures="26" errors="0" timestamp="2026-09-08T03:39:38.067Z" hostname="THEMATRIX" time="2.889">
+  <properties/>
+  <testcase name="immediate: zero" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="1.954"/>
+  <testcase name="immediate: positive" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009"/>
+  <testcase name="immediate: maximum integer" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009"/>
+  <testcase name="immediate: negative" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.014">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: quoted integer" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: fraction" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: integer overflow" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: null amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.012">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: boolean amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.012">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: object amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: array amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: missing amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009"/>
+  <testcase name="immediate: numeric currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: null currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: lowercase currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: long currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: blank currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="immediate: missing currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008"/>
+  <testcase name="autonomous: zero" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.038"/>
+  <testcase name="autonomous: positive" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009"/>
+  <testcase name="autonomous: maximum integer" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01"/>
+  <testcase name="autonomous: negative" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.011">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: quoted integer" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.012">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: fraction" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: integer overflow" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: null amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: boolean amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: object amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.009">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: array amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: missing amount" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01"/>
+  <testcase name="autonomous: numeric currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.021">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: null currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.007">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: lowercase currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: long currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: blank currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.01">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;false&gt; but was: &lt;true&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at org.trustweave.credential.vi.PaymentSchemaValidationTest.payment_schema_is_enforced_for_immediate_and_unconstrained_autonomous_chains$lambda$3$0$0(PaymentSchemaValidationTest.kt:59)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="autonomous: missing currency" classname="org.trustweave.credential.vi.PaymentSchemaValidationTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

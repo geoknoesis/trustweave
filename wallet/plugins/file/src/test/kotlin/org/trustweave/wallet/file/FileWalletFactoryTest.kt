@@ -53,7 +53,7 @@ class FileWalletFactoryTest {
         }
 
     @Test
-    fun `typed encryption key is validated rather than silently ignored`() =
+    fun `typed encryption key is validated rather than silently ignored`(): Unit =
         runBlocking {
             assertFailsWith<WalletException.WalletCreationFailed> {
                 FileWalletFactory().create(

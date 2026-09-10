@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.registry.server.TrustRegistryServerTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-09-10T04:20:26.949Z" hostname="THEMATRIX" time="3.852">
+  <properties/>
+  <testcase name="GET registry-issuers-did returns 404 for unknown()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="3.132"/>
+  <testcase name="read routes stay open when no token configured()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.369"/>
+  <testcase name="POST registry-issuers registers and returns 201()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.094"/>
+  <testcase name="POST registry-issuers-did-revoke revokes issuer()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.025"/>
+  <testcase name="verifier update with wrong token returns 401()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.043"/>
+  <testcase name="GET registry-status-did returns UNKNOWN for unregistered DID()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.013"/>
+  <testcase name="POST registry-verifiers registers verifier()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.014"/>
+  <testcase name="mutating route without token returns 401()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.014"/>
+  <testcase name="mutating route with wrong token returns 401()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.011"/>
+  <testcase name="mutating routes return 503 when no token configured()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.026"/>
+  <testcase name="GET registry-issuers returns list()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.031"/>
+  <testcase name="revoke without token returns 401 and does not revoke()" classname="org.trustweave.registry.server.TrustRegistryServerTest" time="0.026"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

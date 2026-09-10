@@ -1,0 +1,15 @@
+{
+  "source_hashes_verified": 174,
+  "artifact_hashes_verified": 35,
+  "html_sha256": "693bd4b646e8c842a5af22d0dbd851ccc78d8398bedc950173a90b84ee70f7e3",
+  "scoped_diff_check": "passed",
+  "workflow_yaml": "parsed",
+  "browser": {
+    "desktop_width": 1280,
+    "mobile_width": 390,
+    "local_links": "passed",
+    "horizontal_overflow": "none",
+    "javascript_errors": 0,
+    "visual_review": "Desktop and mobile verified; mobile row labels retained"
+  }
+}

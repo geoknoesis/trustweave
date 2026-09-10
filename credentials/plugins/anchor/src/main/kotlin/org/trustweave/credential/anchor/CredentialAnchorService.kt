@@ -155,11 +155,24 @@ class CredentialAnchorService(
                         evidence = credential.evidence?.filterNot { it === anchorEvidence }?.takeIf { it.isNotEmpty() },
                     )
                 val expected = json.encodeToJsonElement(candidate)
-                val actualDigest = DigestUtils.sha256DigestMultibase(json.encodeToString(JsonElement.serializer(), anchored.payload))
+                val expectedBytes = json.encodeToString(JsonElement.serializer(), expected)
+                val actualDigest = DigestUtils.sha256DigestMultibase(expectedBytes)
+                val payloadMatches =
+                    if (org.trustweave.anchor.AnchorDigest
+                            .isEnvelope(anchored.payload)
+                    ) {
+                        org.trustweave.anchor.AnchorDigest
+                            .matches(anchored.payload.jsonObject, expectedBytes.toByteArray(Charsets.UTF_8)) &&
+                            anchored.payload.jsonObject["mediaType"]
+                                ?.jsonPrimitive
+                                ?.content == "application/vc+json"
+                    } else {
+                        anchored.payload == expected
+                    }
                 anchored.ref.chainId == chainId &&
                     anchored.ref.txHash == txHash &&
                     anchored.ref.contract == contract &&
-                    anchored.payload == expected &&
+                    payloadMatches &&
                     actualDigest == evidenceDoc["digest"]?.jsonPrimitive?.content
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled

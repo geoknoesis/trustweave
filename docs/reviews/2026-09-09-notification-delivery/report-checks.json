@@ -1,0 +1,10 @@
+{
+  "local_links": "passed",
+  "desktop_width": 1280,
+  "mobile_width": 390,
+  "horizontal_page_overflow": false,
+  "javascript_errors": [],
+  "visual_review": "Desktop report and mobile scenario cards inspected; passed",
+  "html_sha256": "5797270d040c5fd9d1079230f6ba975856f150eadbbaca100dd869f8a646a5e1",
+  "source_hashes": "all current"
+}

@@ -15,6 +15,8 @@ dependencies {
     implementation(libs.slf4j.api)
 
     testImplementation(project(":testkit"))
+    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation("org.postgresql:postgresql:42.7.1")
     testImplementation(project(":kms:plugins:inmemory"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)

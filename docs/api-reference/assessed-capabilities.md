@@ -100,6 +100,7 @@ No capability guarantee is made for these modules. Application requirements fail
 - `kms:plugins:utimaco`
 - `kms:plugins:venafi`
 - `kms:plugins:waltid`
+- `observability`
 - `reference-wallet:android`
 - `reference-wallet:android:app`
 - `reference-wallet:android:shared`

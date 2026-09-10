@@ -1,0 +1,162 @@
+{
+  "description": "Named regression and executable-documentation contract. Add critical tests; do not remove requirements to bypass failures. This scoped contract is not full SDK conformance.",
+  "requirements": [
+    {
+      "id": "DISCOVERY-01",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "test parseAuthorizationUrl with missing request_uri throws exception"
+      ]
+    },
+    {
+      "id": "DISCOVERY-02",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "test parseAuthorizationUrl with invalid URL format throws exception"
+      ]
+    },
+    {
+      "id": "DISCOVERY-03",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "test parseAuthorizationUrl with HTTP error response throws exception"
+      ]
+    },
+    {
+      "id": "DISCOVERY-04",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "test fetchVerifierMetadata with HTTP error throws exception"
+      ]
+    },
+    {
+      "id": "DISCOVERY-05",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "unsigned request object with alg none is rejected"
+      ]
+    },
+    {
+      "id": "DISCOVERY-06",
+      "module": "credentials/plugins/oidc4vp",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "tests": [
+        "request object signed with key not matching client_metadata jwks is rejected"
+      ]
+    },
+    {
+      "id": "DISCOVERY-07",
+      "module": "wallet/plugins/cloud",
+      "suite": "org.trustweave.wallet.cloud.CloudRecoveryTest",
+      "tests": [
+        "recovery does not swallow cancellation"
+      ]
+    },
+    {
+      "id": "DISCOVERY-08",
+      "module": "wallet/plugins/file",
+      "suite": "org.trustweave.wallet.file.FileWalletFactoryTest",
+      "tests": [
+        "typed encryption key is validated rather than silently ignored"
+      ]
+    },
+    {
+      "id": "DOC-FIXTURE",
+      "module": "testkit",
+      "suite": "org.trustweave.testkit.DocumentationExampleTest",
+      "tests": [
+        "fixtures isolate registries and close releases registrations"
+      ]
+    },
+    {
+      "id": "DOC-HOST",
+      "module": "observability",
+      "suite": "org.trustweave.observability.HostDocumentationExampleTest",
+      "tests": [
+        "documented host setup serves requests and protects metrics"
+      ]
+    },
+    {
+      "id": "HOST-EDGE",
+      "module": "observability",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "tests": [
+        "all hosts classify client and server responses and bound unknown HTTP methods",
+        "admitted waiter runs after release and timed out waiter never runs",
+        "request errors and callback failure preserve identity and release capacity",
+        "cancelled phase ends its span without counting a provider failure",
+        "credentialed acquisition returns the original connection and preserves rollback",
+        "absent uninitialized and closed pools omit unavailable connection gauges",
+        "noop tracing omits trace header and metrics authentication rejects oversized values"
+      ]
+    },
+    {
+      "id": "HOST-EXPORT",
+      "module": "observability",
+      "suite": "org.trustweave.observability.HostExportIntegrationTest",
+      "tests": [
+        "two real HTTP hosts export correlated traces through authenticated OTLP protobuf",
+        "blocked exporter uses a bounded queue and does not block application work"
+      ]
+    },
+    {
+      "id": "VI-LEDGER-MODEL",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.CrossLanguageLedgerModelTest",
+      "tests": [
+        "PostgreSQL agrees with Python model through 214 reserve and settlement transitions"
+      ]
+    },
+    {
+      "id": "DOC-LEDGER-MIGRATION",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.LedgerMigrationDocumentationTest",
+      "tests": [
+        "documented schema upgrade is idempotent and preserves legacy reservations"
+      ]
+    },
+    {
+      "id": "DOC-MERCHANT-AUTH",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.CheckoutTrustTest",
+      "tests": [
+        "authenticated cart and merchant replace absent agent assertions",
+        "signed tokens with invalid challenge or lifetime fail closed",
+        "wrong key hash and agent shadow cart are rejected"
+      ]
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "tests": [
+        "Python issued immediate positive and adversarial vectors agree",
+        "python-autonomous-payment",
+        "autonomous-aud",
+        "autonomous-nonce",
+        "autonomous-paymentAud",
+        "autonomous-paymentNonce",
+        "autonomous-routedL2",
+        "autonomous-now",
+        "autonomous-reordered-disclosures",
+        "autonomous-withheld-payment",
+        "autonomous-amount-1",
+        "autonomous-amount-200",
+        "autonomous-amount-0",
+        "autonomous-amount-201",
+        "autonomous-currency",
+        "python-autonomous-checkout",
+        "checkout-checkoutAud",
+        "checkout-checkoutNonce",
+        "checkout-routedCheckout",
+        "cart-over-quantity",
+        "merchant-wrong-audience"
+      ]
+    }
+  ]
+}

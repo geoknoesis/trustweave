@@ -73,7 +73,7 @@ class ChainVerifierKnownAnswerTest {
             )
 
         result.valid shouldBe false
-        result.errors.joinToString() stringShouldContain "line-item matching is not implemented"
+        result.errors.joinToString() stringShouldContain "authenticated cart binding"
         result.checksPerformed shouldContain "open_checkout_contains_line_items"
     }
 

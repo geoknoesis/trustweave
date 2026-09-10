@@ -23,7 +23,7 @@ import org.trustweave.credential.vi.model.Vct
  * L3 pair-identity binding, temporal checks (incl. L3 `exp − iat ≤ 1h`), payment required-fields and
  * the L2↔L3 `payment_instrument` cross-check, and constraint enforcement on both fulfilment sides.
  *
- * Multi-pair L2 and checkout line-item matching are not implemented and fail closed.
+ * Multi-pair L2 fails closed. Autonomous checkout requires a verifier-provisioned CheckoutTrust policy.
  * Immediate mode, card-id matching and L3 cross-references are implemented within this profile.
  */
 internal object ChainVerifier {
@@ -61,8 +61,14 @@ internal object ChainVerifier {
         expectedL3PaymentNonce: String? = null,
         expectedL3CheckoutAud: String? = null,
         expectedL3CheckoutNonce: String? = null,
+        checkoutTrust: CheckoutTrust? = null,
+        budgetLedger: PostgresIntentLedger? = null,
     ): ChainVerificationResult {
+        val pendingBudgets = if (budgetLedger != null) mutableListOf<BudgetReservation>() else null
         val performed = mutableListOf<String>()
+        if (budgetLedger != null && (!requireReplayProtection || allowMissingTemporalClaims || l3Payment == null)) {
+            return fail("Budget authorization requires a payment and strict replay and temporal checks", performed)
+        }
         val skipped = mutableListOf<String>()
         if (now < 0 || clockSkewSeconds < 0) return fail("Verification time and skew must be non-negative", performed)
         if (requireReplayProtection && (expectedL2Aud.isNullOrBlank() || expectedL2Nonce.isNullOrBlank())) {
@@ -262,8 +268,18 @@ internal object ChainVerifier {
             )?.let { return fail(it, performed) }
             val resolved = l3Payment.resolve()
             l3PaymentResolved = resolved
-            checkConstraints(checkNotNull(payment).resolved, resolved, Vct.PAYMENT_FINAL, strictness, discByHash, performed)
-                ?.let { return fail(it, performed) }
+            checkConstraints(
+                checkNotNull(payment).resolved,
+                resolved,
+                Vct.PAYMENT_FINAL,
+                strictness,
+                discByHash,
+                performed,
+                checkoutTrust,
+                now,
+                clockSkewSeconds,
+                pendingBudgets,
+            )?.let { return fail(it, performed) }
         }
         if (l3Checkout != null) {
             val routed = l2RoutedForCheckout ?: return fail("l2RoutedForCheckout required to verify L3b", performed)
@@ -281,14 +297,65 @@ internal object ChainVerifier {
                 performed = performed,
             )?.let { return fail(it, performed) }
             l3CheckoutResolved = l3Checkout.resolve()
-            checkConstraints(checkNotNull(checkout).resolved, l3CheckoutResolved, Vct.CHECKOUT_FINAL, strictness, discByHash, performed)
-                ?.let { return fail(it, performed) }
+            checkConstraints(
+                checkNotNull(checkout).resolved,
+                l3CheckoutResolved,
+                Vct.CHECKOUT_FINAL,
+                strictness,
+                discByHash,
+                performed,
+                checkoutTrust,
+                now,
+                clockSkewSeconds,
+                pendingBudgets,
+            )?.let { return fail(it, performed) }
         }
         // When both L3s are presented together, they must agree on the cross-reference value.
         if (l3PaymentResolved != null && l3CheckoutResolved != null) {
             val (ok, err) = IntegrityChecker.l3CrossReference(l3PaymentResolved, l3CheckoutResolved)
             if (!ok) return fail("L3 cross-reference check failed: $err", performed)
             performed += "l3_cross_reference"
+        }
+
+        if (budgetLedger != null) {
+            val budget = pendingBudgets?.singleOrNull() ?: return fail("Exactly one supported payment budget is required", performed)
+            val paymentFinal =
+                finalMandate(checkNotNull(l3PaymentResolved), Vct.PAYMENT_FINAL)
+                    ?: return fail("Missing payment fulfillment", performed)
+            budget.merchantRecurrence?.let { terms ->
+                val cart =
+                    l3CheckoutResolved?.let { finalMandate(it, Vct.CHECKOUT_FINAL) }
+                        ?: return fail("Merchant recurrence requires authenticated checkout metadata", performed)
+                try {
+                    val authenticated = checkoutTrust?.authenticatedFulfillment(cart, now, clockSkewSeconds)
+                    val metadata =
+                        authenticated?.get("merchant_recurrence") as? JsonObject
+                            ?: return fail("Missing signed merchant recurrence metadata", performed)
+                    RecurrenceRules.merchant(terms, metadata)
+                } catch (invalid: IllegalArgumentException) {
+                    return fail(invalid.message ?: "Invalid merchant recurrence", performed)
+                }
+                performed += "authenticated_merchant_recurrence"
+            }
+            val transaction =
+                (paymentFinal["transaction_id"] as? JsonPrimitive)
+                    ?.takeIf { it.isString }
+                    ?.content
+                    ?.takeIf { it.isNotBlank() } ?: return fail("Payment transaction ID is required", performed)
+            val challenge = JsonArray(listOf(JsonPrimitive(expectedL3PaymentAud), JsonPrimitive(expectedL3PaymentNonce))).toString()
+            val reserved =
+                try {
+                    budgetLedger.reserve(
+                        sha256B64Url(l2.jwt.toByteArray(Charsets.US_ASCII)),
+                        sha256B64Url(transaction.toByteArray(Charsets.UTF_8)),
+                        sha256B64Url(challenge.toByteArray(Charsets.UTF_8)),
+                        budget,
+                    )
+                } catch (failure: java.sql.SQLException) {
+                    return fail("Budget authorization storage unavailable or commit outcome uncertain", performed)
+                }
+            if (!reserved) return fail("Budget exhausted or transaction/challenge already consumed", performed)
+            performed += "durable_budget_and_challenge_reserved"
         }
 
         return ChainVerificationResult(
@@ -310,12 +377,61 @@ internal object ChainVerifier {
         strictness: StrictnessMode,
         disclosures: Map<String, String>,
         performed: MutableList<String>,
+        checkoutTrust: CheckoutTrust?,
+        now: Long,
+        clockSkewSeconds: Long,
+        pendingBudgets: MutableList<BudgetReservation>?,
     ): String? {
         val raw = mandate["constraints"] as? JsonArray ?: return "Mandate constraints must be an array"
         if (raw.any { it !is JsonObject }) return "Malformed mandate constraint entry"
         val constraints = raw.map { Constraint.parse(it as JsonObject) }
-        val fulfillment = finalMandate(resolved, vct) ?: return "L3 missing final mandate: $vct"
-        val result = ConstraintChecker.check(constraints, fulfillment, strictness, isOpenMandate = true, disclosuresByHash = disclosures)
+        var fulfillment = finalMandate(resolved, vct) ?: return "L3 missing final mandate: $vct"
+        if (vct == Vct.CHECKOUT_FINAL) {
+            val policy = checkoutTrust ?: return "Checkout requires authenticated cart binding policy"
+            fulfillment =
+                try {
+                    policy.authenticatedFulfillment(fulfillment, now, clockSkewSeconds)
+                } catch (invalid: IllegalArgumentException) {
+                    return invalid.message ?: "Invalid authenticated checkout"
+                }
+            performed += "authenticated_checkout_cart"
+        }
+        val budgets = constraints.filterIsInstance<Constraint.Budget>()
+        if (pendingBudgets != null && budgets.isNotEmpty()) {
+            if (vct != Vct.PAYMENT_FINAL || budgets.size != 1) return "Only one payment budget is supported"
+            val budget = budgets.single()
+            if (budget.min != null && budget.min <= 0L) return "Budget minimum must be positive"
+            if (budget.raw.keys.any { it !in setOf("type", "currency", "max", "min") }) return "Unsupported budget fields"
+            val amount = fulfillment["payment_amount"] as? JsonObject ?: return "Missing budget payment amount"
+            val value =
+                (amount["amount"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull
+                    ?: return "Invalid budget payment amount"
+            val currency = (amount["currency"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+            if (value < 0 || currency != budget.currency) return "Budget amount or currency mismatch"
+            if (budget.min != null && value < budget.min) return "Payment below budget minimum"
+            val agentRules = constraints.filterIsInstance<Constraint.AgentRecurrence>()
+            val merchantRules = constraints.filterIsInstance<Constraint.Recurrence>()
+            if (agentRules.size + merchantRules.size > 1) return "Only one recurrence mode is supported"
+            val maximumOccurrences =
+                if (agentRules.isNotEmpty()) {
+                    if (constraints.none { it is Constraint.AmountRange }) return "Agent recurrence requires amount_range"
+                    try {
+                        RecurrenceRules.agent(agentRules.single().raw, now)
+                    } catch (invalid: IllegalArgumentException) {
+                        return invalid.message ?: "Invalid agent recurrence"
+                    }
+                } else {
+                    1L
+                }
+            pendingBudgets += BudgetReservation(budget.currency, budget.max, value, maximumOccurrences, merchantRules.singleOrNull()?.raw)
+        }
+        val evaluated =
+            if (pendingBudgets != null && budgets.isNotEmpty()) {
+                constraints.filterNot { it is Constraint.Budget || it is Constraint.AgentRecurrence || it is Constraint.Recurrence }
+            } else {
+                constraints
+            }
+        val result = ConstraintChecker.check(evaluated, fulfillment, strictness, isOpenMandate = true, disclosuresByHash = disclosures)
         performed += result.checked.map { "constraint:$it" }
         if (!result.satisfied) return "Constraints not satisfied: ${result.violations}"
         performed += "constraints_satisfied"
@@ -443,8 +559,15 @@ internal object ChainVerifier {
         if (payee["name"]?.contentOrNull().isNullOrEmpty()) return "$label payee missing name"
         if (payee["website"]?.contentOrNull().isNullOrEmpty()) return "$label payee missing website"
         val pa = m["payment_amount"] as? JsonObject ?: return "$label missing payment_amount"
-        if (pa["currency"]?.contentOrNull().isNullOrEmpty()) return "$label payment_amount missing currency"
-        if (pa["amount"] == null) return "$label payment_amount missing amount"
+        // Schema checks must apply even in immediate mode or without an amount_range constraint.
+        val currency = (pa["currency"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        if (currency == null || !Regex("[A-Z]{3}").matches(currency)) {
+            return "$label payment_amount currency must be an uppercase three-letter string"
+        }
+        val amount = (pa["amount"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull
+        if (amount == null || amount < 0) {
+            return "$label payment_amount amount must be a non-negative integer in signed 64-bit range"
+        }
         val pi = m["payment_instrument"] as? JsonObject ?: return "$label missing payment_instrument"
         if (pi["id"]?.contentOrNull().isNullOrEmpty() || pi["type"]?.contentOrNull().isNullOrEmpty()) {
             return "$label payment_instrument requires id and type"

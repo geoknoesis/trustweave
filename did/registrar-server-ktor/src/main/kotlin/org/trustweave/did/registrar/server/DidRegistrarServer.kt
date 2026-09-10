@@ -1,15 +1,19 @@
 package org.trustweave.did.registrar.server
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.storage.InMemoryJobStorage
 import org.trustweave.did.registrar.storage.JobStorage
+import org.trustweave.observability.HostKind
+import org.trustweave.observability.HostObservability
 
 /**
  * DID Registrar Server implementation.
@@ -45,6 +49,14 @@ class DidRegistrarServer(
     private val jobStorage: JobStorage = InMemoryJobStorage(),
 ) {
     private var server: NettyApplicationEngine? = null
+    private var observability: HostObservability? = null
+
+    /** Configure tracing, protected metrics and optional admission limits before starting. */
+    fun withObservability(configuration: HostObservability): DidRegistrarServer {
+        check(server == null) { "Configure observability before starting the server" }
+        observability = configuration
+        return this
+    }
 
     /**
      * Starts the DID Registrar server.
@@ -70,6 +82,7 @@ class DidRegistrarServer(
      * Configures the Ktor application with routing and serialization.
      */
     private fun Application.configureApplication() {
+        observability?.install(this, HostKind.DID_REGISTRAR)
         // Configure JSON serialization
         install(ContentNegotiation) {
             json(

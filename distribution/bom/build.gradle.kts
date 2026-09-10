@@ -19,6 +19,7 @@ dependencies {
     constraints {
         // Core
         api(project(":common"))
+        api(project(":observability"))
         api(project(":trust"))
         api(project(":contract"))
         api(project(":distribution:all"))

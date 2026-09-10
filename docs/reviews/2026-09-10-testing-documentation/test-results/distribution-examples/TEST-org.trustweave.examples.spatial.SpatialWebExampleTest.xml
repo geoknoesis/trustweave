@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.spatial.SpatialWebExampleTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:20.629Z" hostname="THEMATRIX" time="0.274">
+  <properties/>
+  <testcase name="drone outside domain boundary is denied()" classname="org.trustweave.examples.spatial.SpatialWebExampleTest" time="0.127"/>
+  <testcase name="wrong activity type is denied()" classname="org.trustweave.examples.spatial.SpatialWebExampleTest" time="0.073"/>
+  <testcase name="drone receives authorization and passes domain policy check()" classname="org.trustweave.examples.spatial.SpatialWebExampleTest" time="0.071"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,376 @@
+{
+  "recorded_utc": "2026-09-10T04:26:07.229311+00:00",
+  "head": "e0a4464fc6cafa339b94121fd56f33812c6601e4",
+  "scope": "Local uncommitted SDK tree; seven module test suites, lint and ABI checks. No full SDK, SaaS or hosted deployment validation.",
+  "tests": {
+    "tests": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "modules": [
+    {
+      "module": "observability",
+      "tests": 9
+    },
+    {
+      "module": "credentials/plugins/status-list/server",
+      "tests": 5
+    },
+    {
+      "module": "credentials/vc-api-server",
+      "tests": 7
+    },
+    {
+      "module": "credentials/oidc4vci-server",
+      "tests": 14
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "tests": 16
+    },
+    {
+      "module": "did/registrar-server-ktor",
+      "tests": 1
+    },
+    {
+      "module": "trust-registry/trust-registry-server",
+      "tests": 12
+    }
+  ],
+  "suites": [
+    {
+      "module": "observability",
+      "name": "org.trustweave.observability.HostExportIntegrationTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "observability",
+      "name": "org.trustweave.observability.HostTelemetryTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/plugins/status-list/server",
+      "name": "org.trustweave.credential.statuslist.server.StatusListObservabilityTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/plugins/status-list/server",
+      "name": "org.trustweave.credential.statuslist.server.StatusListRoutesTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/vc-api-server",
+      "name": "org.trustweave.credential.vcapi.VcApiRoutesTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/oidc4vci-server",
+      "name": "org.trustweave.credential.oidc4vci.server.Oidc4VciServerTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "name": "org.trustweave.credential.avpauth.engine.AuthorizationEngineTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "name": "org.trustweave.credential.avpauth.HttpTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "name": "org.trustweave.credential.avpauth.ModuleSmokeTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "name": "org.trustweave.credential.avpauth.ParityTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "name": "org.trustweave.credential.avpauth.state.StoresTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "did/registrar-server-ktor",
+      "name": "org.trustweave.did.registrar.server.RegistrarErrorResponseTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "trust-registry/trust-registry-server",
+      "name": "org.trustweave.registry.server.TrustRegistryServerTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "abi": [
+    {
+      "module": "credentials/plugins/status-list/server",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/credential/statuslist/server/StatusListServer;"
+      ]
+    },
+    {
+      "module": "credentials/vc-api-server",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/credential/vcapi/VcApiServer;"
+      ]
+    },
+    {
+      "module": "credentials/oidc4vci-server",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/credential/oidc4vci/server/Oidc4VciServer;"
+      ]
+    },
+    {
+      "module": "credentials/avp-authorization-server",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/credential/avpauth/AvpAuthorizationServer;"
+      ]
+    },
+    {
+      "module": "did/registrar-server-ktor",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/did/registrar/server/DidRegistrarServer;"
+      ]
+    },
+    {
+      "module": "trust-registry/trust-registry-server",
+      "removed": 0,
+      "added": [
+        "\tpublic final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/registry/server/TrustRegistryServer;"
+      ]
+    }
+  ],
+  "lint": "Seven affected modules and BOM passed without baseline expansion",
+  "promtool": {
+    "host_rules": {
+      "exit_code": 0,
+      "stdout": "  SUCCESS\n\n",
+      "stderr": "",
+      "assertions": 32
+    },
+    "host_metrics": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "sha256": "4568937ca104d55af88c3328f3b95dc738683e7098ac1a64d00b9709c0fe9e7b"
+    }
+  },
+  "otlp": {
+    "hosts": 2,
+    "requests": 10,
+    "traces": 10,
+    "spans": 40,
+    "transport": "OTLP HTTP/protobuf",
+    "authenticated": true,
+    "redaction": "passed"
+  },
+  "bounded_metrics": {
+    "requests": 20000,
+    "workers": 8,
+    "series_growth": 0
+  },
+  "cancellation": {
+    "contenders": 1000,
+    "cycles": 100,
+    "result": "no leaked permits"
+  },
+  "exporter": {
+    "phase_operations": 10001,
+    "queue_capacity": 32,
+    "result": "blocked export drops excess spans; application work completes"
+  },
+  "source_sha256": {
+    ".github/workflows/ci.yml": "4ea73a14d5ee587d0060e979e4aa6cbec20848d8cf9a9e24eb1e5aeba51d8a52",
+    ".github/workflows/release-evidence.yml": "79ad9c1565f41388b9c7a75817cb997ca4e0953d47711a5cf2ebbe73605f8f86",
+    "credentials/avp-authorization-server/api/avp-authorization-server.api": "f951bf0d9713bf4f98fa1414bb6972f62a254ded7615954113d3fcbd3445000c",
+    "credentials/avp-authorization-server/build.gradle.kts": "c29532b89770e36e99d1200bea2ae372e89773c1ab940e98204e10619d11e916",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/AvpAuthorizationRoutes.kt": "fe206958a6e0e98c9167784ff87da0e91ba65a402376ff64483335ca4c086fb4",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/AvpAuthorizationServer.kt": "07d87c846b50ea97e11a264919054a8fb2c48440810fb09f0165e090ccb1890c",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/dto/AvpAuthorizationDtos.kt": "1c8d8913d05d70a443290c1535a4310db5e51562047a6886e33c860e5ca28bb9",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/engine/AuthorizationEngine.kt": "7c3a6bdecf3eb9e675a1fda10adf9f9d676837ef3b0bf796baabbec9d128009b",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/Placeholder.kt": "405d355d057c26b6438763420911915eeef6abedb67c0e1ecf91715a087a087f",
+    "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/state/Stores.kt": "2249b18ed203ee2fefc3861dfc3e6da01bc64fca5a0c0fd746ad9052719628a3",
+    "credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/engine/AuthorizationEngineTest.kt": "54002b5d235d315b43451701a6b90de1e6f879cc96f9335f05590902d1604e27",
+    "credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/HttpTest.kt": "373f4709b17f77b2776fa779d9c8434d8b5fadd7fb9846f80111601cb4970ed2",
+    "credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/ModuleSmokeTest.kt": "e4331a817bffed45e17dd53604d5b75882c72bbb9d6cb885a1f84d395a52b3cd",
+    "credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/ParityTest.kt": "c9893959fe323b16b2926ba42dabbc3d90c9657415eb6d272a34adab2981bd12",
+    "credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/state/StoresTest.kt": "d7ce4f83a1538ccc504bf32ae0b6e89f9549bd75c703663afddd600bd2816171",
+    "credentials/avp-authorization-server/src/test/resources/vectors/01-payment-quote.json": "5f7ddcca3a3adb67a5f27eb00e08f162c6a39e7048a470d9bb4170bf43951c90",
+    "credentials/avp-authorization-server/src/test/resources/vectors/02-payment-authorization.json": "8e3ecaa75f94ecdb772a85bb3481597c158ce6a4e94d997eab36a5f91e83c909",
+    "credentials/oidc4vci-server/api/oidc4vci-server.api": "19b0ce69819ec50ce10cc89bd8ec726f912066efd32cfc8dea936de5d69b38d5",
+    "credentials/oidc4vci-server/build.gradle.kts": "1f9cef614d6a45daf7c987128888bdc0b05eabe95943d7e91f8aae26b555fce8",
+    "credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciIssuerService.kt": "989e02e6704f1a44a3562e76a1e208dcebf24842e9c3b6d93c8b326b5250e75e",
+    "credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServer.kt": "347a8a10c5dae1f07ba77d7ea3090b05feeb1e9b287fa3fbcd13d9b3f0294a00",
+    "credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServerRoutes.kt": "53dbf35566a5a495d235e67d13801d19aa4fd05da3d927a981c390cce05d4f6b",
+    "credentials/oidc4vci-server/src/test/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServerTest.kt": "d7cd842ccb2a56bed3bd5e386bca2936fcaf493aafdbb2e061d0b2856baa393c",
+    "credentials/plugins/status-list/server/api/server.api": "24dbf8e3cbfe743eb96a04420888d6537a9867ac411a6f14b255b8eea4276dbd",
+    "credentials/plugins/status-list/server/build.gradle.kts": "f0e5144cdee5ce45a4882d06625ca903dc1aeda0b797be5a33a5fb95f228fd42",
+    "credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutes.kt": "7b5e9f9f8d128cc0f7fd786589100ccb4d56c07151ec801cc06a8a6dcae72376",
+    "credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListServer.kt": "b57b0a37e78142ce14e0ae9e2c1e8fa475895e257614bff336562d30ec756391",
+    "credentials/plugins/status-list/server/src/test/kotlin/org/trustweave/credential/statuslist/server/StatusListObservabilityTest.kt": "73597ad9715ed74e6e30cc058f6bf365301ac79213256870a5824a5d3f31a3b9",
+    "credentials/plugins/status-list/server/src/test/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutesTest.kt": "3a8eec4ee4b9aac89fabf7cb9663198952fc9491a97a40cc1e9b39eeb06fd2b1",
+    "credentials/plugins/status-list/server/src/test/resources/simplelogger.properties": "d96903f9bd62ba031d87266c1032424ac27aa3493a0eedd236019f6fae5d4150",
+    "credentials/vc-api-server/api/vc-api-server.api": "2454e5a15caa38a5d1e2cc7fa7b5169dd2716c9e903ba72a262fc9047b5640d1",
+    "credentials/vc-api-server/build.gradle.kts": "4f96fe90c4ef6a04109be95fb93bddd98bfac4d45225c6651f070b0d2535e005",
+    "credentials/vc-api-server/src/main/kotlin/org/trustweave/credential/vcapi/dto/VcApiDtos.kt": "478feb8d4441bc0bf052ca4bd399bf2fdd7679750dc5fcb874bd6399213f7476",
+    "credentials/vc-api-server/src/main/kotlin/org/trustweave/credential/vcapi/VcApiRoutes.kt": "bdb955cf16003297b78083b1b601ef5f2b6dc1d6deb8a5076ed1d3a0b9ec33bb",
+    "credentials/vc-api-server/src/main/kotlin/org/trustweave/credential/vcapi/VcApiServer.kt": "38b7641d0571ef8f243e764ea5390f4ae51f323653fc42c9cee73911f84a6112",
+    "credentials/vc-api-server/src/test/kotlin/org/trustweave/credential/vcapi/VcApiRoutesTest.kt": "144487055c02a7b6092944fca7c4cf22b04213d9b8a903dacef01a8f969fc926",
+    "did/registrar-server-ktor/api/registrar-server-ktor.api": "68c1a0fe6b03492cee7c15835f4f1d2c4ae38116042ce5d4893e0bb91026bbc6",
+    "did/registrar-server-ktor/build.gradle.kts": "49385c8fbe23418dcba54866b3bd6d94995b80e301d6b0aed449f979ae1f7ee2",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/DidRegistrarRoutes.kt": "0f09c1ff46315bfc1d1fc6eab19af55571416bcdb10bd95a774219ed86e47106",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/DidRegistrarServer.kt": "821d94b866e8c69f232d67e4b58881cce1e9ff0a0a6b2f3a08f06075521f6fd3",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/CreateDidRequest.kt": "be5e994966105cd3361376b44047c9098ba77bb06c1bf134fdc511df1a4ea6cd",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/DeactivateDidRequest.kt": "dadd0b1f37fa2c9274b2d9350b820e5aaaefc7b24e5d38cc6d085a276ca6f4a5",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/ErrorResponse.kt": "2bd79cd8ec47894ed34b44f4f1414e7e0ab6178ae353933565d91b5b714fe079",
+    "did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/UpdateDidRequest.kt": "96d81ddb5171dcda3e85cfa5c18a51617a4cccfeafc3a7194a0570e0cf2cba84",
+    "did/registrar-server-ktor/src/test/kotlin/org/trustweave/did/registrar/server/RegistrarErrorResponseTest.kt": "ca26dc16ec029b2fe130d8e00fb9c536132d330e05027a3f3da5851950c9e805",
+    "distribution/bom/build.gradle.kts": "73b12169bb62ca35bf03ad9ee2e1c5d946307814970478d38f0a0c394520af28",
+    "docs/api-reference/assessed-capabilities.md": "8b25d7390b73abbf2d5ebec1e5f1a36fcac82f9d9c99af91447273e69129c628",
+    "docs/operations/host/alerts.test.yml": "c003fcee6634571aa98e5d201287a900ac0d550bc825cf36c596e583de00bdfd",
+    "docs/operations/host/alerts.yml": "cf66feaa127aea9c51da3572502332041cf54e44ee872998f6bbdd3662ee47ef",
+    "docs/operations/host/README.md": "98f87d46e579a511ac99456fc0755c49c4ed45a8023be99bc2709765e20e7d47",
+    "docs/operations/host/slo.json": "64c4e6e1ea7e23bfe06a38c6ec33b957ac3bf106ac4cd091c85afb80afee7819",
+    "docs/operations/observability.md": "b952a6e165f628f97de4afd1c18813321f00ce4b69d50efb869a31d1b53557f1",
+    "observability/api/observability.api": "c2646950d08258538741449620a3052f4997be8a65b6f275e9cc11906c2ec3fe",
+    "observability/build.gradle.kts": "b488e73edbe1067c7111f07a70b1bce09694c246b00177032d4ab5db65da57fc",
+    "observability/src/main/kotlin/org/trustweave/observability/HostObservability.kt": "11138cf8986f32d5c0ba39bb0d0482dc4fe289931133501f30b256cccb6f9c20",
+    "observability/src/main/kotlin/org/trustweave/observability/HostTelemetry.kt": "c6fd854372a350e1f6f106a183e777cfde4aa735d94b6483c4c4ab9998fb7ba5",
+    "observability/src/test/kotlin/org/trustweave/observability/HostExportIntegrationTest.kt": "d79a1056ffd9783088641fb4b764eaa8a1ca5d0491c1632ff690df35c0b41a7d",
+    "observability/src/test/kotlin/org/trustweave/observability/HostTelemetryTest.kt": "31d6464d3f0b3e098a674b61c8ef3f9b14aab7ad7236b7195f010dc86c91857f",
+    "settings.gradle.kts": "43f0d2409580e88593d75c54c24d7bb65f84eccb034629070783dde72a5bd9e7",
+    "trust-registry/trust-registry-server/api/trust-registry-server.api": "5f7c0e6429e76257e56f19e61eee21689f08e517f7172a9eb78cfddacbaf3ce0",
+    "trust-registry/trust-registry-server/build.gradle.kts": "4b07d6eeca0dff5a8c33d0eec25036c307b87e56c259bf9470bdf830beffb961",
+    "trust-registry/trust-registry-server/src/main/kotlin/org/trustweave/registry/server/TrustRegistryRoutes.kt": "69e289cea46bee447fbb947b8dd5b9ef8d17437fd1f08ebbf7177bd638c717f7",
+    "trust-registry/trust-registry-server/src/main/kotlin/org/trustweave/registry/server/TrustRegistryServer.kt": "511060a2ec6d2ad579688974dbc2c7a296e28bea2b1a7d58db771583b2fd70f9",
+    "trust-registry/trust-registry-server/src/test/kotlin/org/trustweave/registry/server/TrustRegistryServerTest.kt": "afa159cdb8d762cadef8d5505a208dd9297dd3d386b85b7c407fffbb17868463"
+  },
+  "artifact_sha256": {
+    "evidence/alerts.test.yml": "c003fcee6634571aa98e5d201287a900ac0d550bc825cf36c596e583de00bdfd",
+    "evidence/alerts.yml": "cf66feaa127aea9c51da3572502332041cf54e44ee872998f6bbdd3662ee47ef",
+    "evidence/host-export-backpressure.txt": "513c80ea8f96d58a3724b8f84d229e81437c70193a0282b084e91aceebd0f3ac",
+    "evidence/host-metrics.prom": "4568937ca104d55af88c3328f3b95dc738683e7098ac1a64d00b9709c0fe9e7b",
+    "evidence/host-otlp/batch-0.pb": "4496cc7dc3ee44a6a56bc34dc041b7e5b67bc005d51f03c8cc94ee79052ef0c6",
+    "evidence/host-otlp/batch-1.pb": "a5f9cd2c343036f6591e461753b37332686013fd9dbb791729f7d64aa04dd682",
+    "evidence/host-otlp/batch-2.pb": "070bad2c187731765677db946d0a5ad20dde6e03f4d076c97317dda0136dbd00",
+    "evidence/host-otlp/summary.json": "ed1fa92818f2a4879b9ff99243b9e6d5ffbe2409893c19eb3bc32a2b1c4b1e21",
+    "evidence/host-otlp/traces.txt": "33411ac87ce4d04dd1dbc8c5f84fa17cac691e5bba53ee8be8bd73a714ab102f",
+    "evidence/host-traces.txt": "420f3a662c03e1bc8539ffc00dceb152a81bee1be50c695a2e9b83ddcfd077e1",
+    "evidence/promtool-checks.json": "8ae13970addbc018c4af653a23c51a08ad0b09e812f586ffebe90bec50237557",
+    "evidence/slo.json": "64c4e6e1ea7e23bfe06a38c6ec33b957ac3bf106ac4cd091c85afb80afee7819",
+    "evidence/validation.log": "7a52d98d7f406cd14ad55ddaa8076d5d902e31f1720fa65e422d72a9eefbcb4f"
+  },
+  "scores": {
+    "previous_overall": 8.8,
+    "overall": 8.9,
+    "categories": [
+      {
+        "name": "Security and access control",
+        "score": 9,
+        "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+        "previous": 9,
+        "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+      },
+      {
+        "name": "Observability and diagnosability",
+        "score": 9.6,
+        "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+        "previous": 9
+      },
+      {
+        "name": "Reliability and scale",
+        "score": 9,
+        "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified.",
+        "previous": 9,
+        "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+      },
+      {
+        "name": "Configuration and data",
+        "score": 9,
+        "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+        "previous": 9,
+        "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+      },
+      {
+        "name": "Deployment and release",
+        "score": 8.5,
+        "reason": "Local tests, lint, ABI and alert gates pass and are wired into workflows. Changes remain uncommitted; hosted validation and a release for this tree are still outstanding.",
+        "previous": 8.5,
+        "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+      },
+      {
+        "name": "Testing and documentation",
+        "score": 8.5,
+        "reason": "50 intent tests, expanded conformance profile, real PostgreSQL restore and nine Prometheus evaluations pass. Full cross-stack conformance and wider SDK branch coverage remain incomplete.",
+        "previous": 8.5,
+        "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+      }
+    ],
+    "rubric": "Same six equally weighted categories; only observability reassessed. Engineering judgment, not certification.",
+    "arithmetic": "53.6 / 6 = 8.9333, rounded half-up to 8.9",
+    "scope": "SDK instrumentation and local operability engineering assessment, not a deployed-service certification or a measurement of achieved SLOs",
+    "reassessment_basis": [
+      "The former generic host tracing gap is now backed by an implemented shared adapter and real HTTP/OTLP parent-child verification.",
+      "Host queue and pool visibility is now implemented and exercised under saturation, cancellation and connection failure.",
+      "Protected metrics remain available under overload; generated request IDs join response, log and span without private payload fields.",
+      "Bounded asynchronous export and six host alert rules have executable evidence and CI gates.",
+      "The remaining 0.4 deduction retains deployment qualification, wider provider/SaaS coverage and operational policy limitations; no production-readiness claim is made."
+    ]
+  },
+  "limits": [
+    "SDK host integration is opt-in; no application exporter or global SDK is installed automatically",
+    "Application admission timing excludes proxy/network/Netty queues before the Monitoring phase",
+    "Database timing uses a real Hikari/H2 pool locally; no new PostgreSQL outage or production-load claim",
+    "SLO and retention settings are proposals, not deployment-owner approval or implemented backend guarantees",
+    "Wider provider internals, the Spring SaaS host and actual on-call delivery remain separate qualification work",
+    "New module remains unassessed by the runtime capability catalog; existing deployment maturity policies remain unchanged"
+  ]
+}

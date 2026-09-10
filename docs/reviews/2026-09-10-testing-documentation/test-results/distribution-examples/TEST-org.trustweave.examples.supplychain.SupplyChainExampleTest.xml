@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.supplychain.SupplyChainExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:20.905Z" hostname="THEMATRIX" time="0.063">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.supplychain.SupplyChainExampleTest" time="0.062"/>
+  <system-out><![CDATA[supply-chain: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -63,9 +63,30 @@ All layers require numeric `iat` and `exp`, with `exp > iat`. The explicit
 `allowMissingTemporalClaims = true` audit policy permits absent L1/L2 timestamps only; L3 always
 requires both and a lifetime of at most one hour.
 
-Checkout fulfilments currently fail closed because line-item matching is not implemented. Passing
-a payment-side verification does not authorize a checkout. This is a deliberate limitation, not
-full VI conformance.
+`ConstraintChecker` can match a normalized cart against line-item requirements. It checks
+integer quantities, permitted products, disclosure hashes and per-requirement capacity;
+`exact` mode assigns at least one unit to every requirement. Overlapping alternatives
+cannot reuse the same capacity. Empty acceptable-item arrays explicitly permit any product.
+The matcher supports at most 128 requirements, 128 cart entries and 128 alternatives per
+requirement; aggregate quantity is bounded to one quarter of Long.MAX_VALUE for safe arithmetic.
+
+Autonomous checkout can be verified with `VerifiableIntent.verifyChainWithCheckout` and a
+verifier-owned `CheckoutTrust`. Configure the merchant issuer, public P-256 JWK and merchant
+identity from trusted configuration, and supply the expected audience and a fresh nonce.
+Never derive that policy from an agent request or the token being verified. The original
+`verifyChain` remains fail-closed for autonomous checkout without this policy.
+
+The supported merchant JWT profile requires ES256, `typ: JWT`, a single string `aud`,
+`nonce`, integer `iat`/`exp` with a maximum one-hour lifetime, and `cart.items`. The verifier
+checks the compact JWT hash and pinned signature before matching the signed cart against
+L2 line-item constraints. Conflicting agent-supplied cart or merchant fields are rejected.
+The provisioned merchant identity is used for allowlists. This is a narrow integration
+profile, not a claim of general merchant interoperability or full VI conformance.
+
+The host must atomically consume the challenge before executing the authorized action.
+Signature verification does not itself prevent a second execution of the same purchase.
+The stateless APIs continue to reject budget and recurrence constraints. The PostgreSQL-backed
+budget API below supports cumulative spending, per-payment minimums and the recurrence profiles below.
 
 ## Issue (KMS-backed)
 
@@ -101,12 +122,85 @@ parsing a constraint does not mean the verifier can enforce it. Issuance covers 
 
 ## Deliberate scope boundaries (TODO)
 
-- **Multi-pair L2** (one mandate authorizing several distinct purchases) — needs a list-based L3 API.
-- **`line_items` deep matching** (acceptable-id + quantity caps) — not implemented; checkout fulfilments are rejected instead of accepted without evaluation.
+- **Multi-pair L2** (several mandate pairs in one credential) requires a list-based API.
+- **Full interoperability** across merchant checkout formats and multiple recurrence constraints remains unqualified.
 - Return TrustWeave's core `Result<T>` instead of the local `ChainVerificationResult`.
 - Wire as a discoverable plugin (`PluginMetadata`/SPI) once the integration surface is decided.
 
 > Status: draft, tracking VI spec v0.1. Not a conformance-certified implementation.
 
-Budget, recurrence and agent-recurrence constraints fail closed for open mandates.
-Checkout verification also remains unsupported pending line-item matching.
+Stateless budget and recurrence checks fail closed for open mandates; stateful profiles require the ledger API.
+Autonomous checkout requires the explicitly configured merchant trust policy described above.
+
+## Durable budget authorization (PostgreSQL)
+
+Use `VerifiableIntent.verifyAndReserveBudget` with a shared `PostgresIntentLedger` when
+an autonomous payment mandate declares one `mandate.payment.budget` constraint. The
+supported profile is `currency` plus non-negative integer `max`, with optional positive
+`min` applied to each payment and no additional budget fields. This corrects the earlier
+description of `min` as cumulative: it is per-transaction. Stateless APIs keep their behavior.
+
+Create the ledger from an application-managed JDBC `DataSource`. Run `initializeSchema()`
+once during deployment with DDL privileges. Runtime connections need SELECT/INSERT/UPDATE
+on `vi_budget_accounts` and `vi_budget_reservations`; they do not need schema privileges.
+All authorizing replicas must share the same database. Configure pool, connection and
+socket timeouts; statements have a ten-second timeout. This API performs blocking JDBC
+work, so coroutine applications should invoke it on their blocking-I/O dispatcher.
+
+After signatures, disclosures, constraints and cross-references pass, one database
+transaction locks the signed L2 budget account, verifies remaining funds, records the
+signed payment transaction ID and expected audience/nonce, and increments reserved
+spending. Hashes identify mandates, transactions and challenges; raw tokens are not
+stored. A duplicate transaction within the mandate or reused audience/nonce in the
+ledger is rejected. Issue high-entropy unique verifier nonces bound to the authenticated
+requesting account and operation. Changing an L2 selective
+presentation does not create a new budget because the account binds to its signed JWT.
+
+`valid = true` with `durable_budget_and_challenge_reserved` means the reservation committed.
+It does **not** mean payment executed. Execute downstream payments with the signed
+transaction ID as an idempotency key. A database error, including an uncertain commit,
+returns failure: do not execute the payment or create a fresh authorization to retry it.
+Reservations are conservative and never automatically refunded. Use privileged `reconcile`
+only after verifying the authoritative payment journal: `SETTLED` keeps the debit; `RELEASED`
+requires confirmed non-execution and returns the amount once. Unknown outcomes and timeouts
+must remain reserved. Repeated identical evidence is idempotent; conflicting terminal outcomes
+or evidence are rejected. Store the actual evidence durably outside the ledger; its reference
+is hashed in the ledger. This method is for a trusted host, never an untrusted presenter API.
+Challenge, transaction and occurrence consumption remain after release.
+
+Retain ledger records for every still-valid mandate and challenge, including during
+backup/restore. Restoring an older ledger can resurrect spent authority: stop authorization
+and reconcile against the authoritative payment journal before resuming. This module does
+not authenticate a payment-provider journal, issue refunds or implement multi-region consensus.
+Protect reconciliation with the host's authorization, backup and audit controls.
+
+Validation includes real PostgreSQL concurrent writers, restart persistence, duplicate
+transactions/challenges, overflow boundaries, injected rollback failures and full signed
+chain authorization. These are local integration tests, not production load qualification.
+
+See the compiled [signed-chain budget example](src/test/kotlin/org/trustweave/credential/vi/IssuanceRoundTripTest.kt)
+and [PostgreSQL failure/concurrency tests](src/test/kotlin/org/trustweave/credential/vi/PostgresIntentLedgerTest.kt)
+for complete executable setups.
+
+## Recurrence profiles
+
+The ledger API supports one recurrence constraint alongside one budget. Agent recurrence also
+requires an amount-range constraint. UTC start/end dates are inclusive; the occurrence ceiling
+and cumulative budget are checked under the same account lock. Without agent recurrence, the
+mandate is single-use even if budget remains. Released reservations still count as occurrences.
+Frequency codes describe suggested timing in the draft; they do not impose a strict interval
+or run a scheduler. The hosting agent must schedule new purchases and obtain fresh challenges.
+
+Merchant recurrence is one subscription setup, not authorization for later charges through
+this SDK. This stricter profile requires bounded `frequency`, `start_date`, `end_date` and
+`number` terms, plus a verified checkout JWT containing the same four fields in a `recurrence`
+object. Frequency/start must match, and merchant end/count cannot exceed consent. Missing
+signed metadata, unknown fields, unsupported codes, mixed recurrence modes and duplicate
+recurrence constraints fail closed. Later merchant billing is outside the VI chain.
+
+See the [conformance profile](CONFORMANCE.md) for supported cases and deliberate differences
+from the [draft constraint specification](https://www.verifiableintent.dev/spec/constraints/).
+`healthSnapshot()` provides aggregate pending/settled/released counts and oldest pending time
+for host monitoring, without emitting token or customer identifiers. Run the
+[operations exercise](src/test/kotlin/org/trustweave/credential/vi/IntentOperationsExerciseTest.kt)
+for a loopback HTTP host, metrics, alerts, database failure and a separate-database restore.

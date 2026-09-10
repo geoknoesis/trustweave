@@ -1,0 +1,55 @@
+groups:
+- name: trustweave-host
+  rules:
+  - alert: HostAvailabilityBudgetFastBurn
+    expr: |
+      (sum by (job, instance) (rate(trustweave_host_requests_total{outcome=~"server_error|rejected"}[5m]))
+       / clamp_min(sum by (job, instance) (rate(trustweave_host_requests_total{outcome!="cancelled"}[5m])), 1e-9) > 0.0144)
+      and on (job, instance)
+      (sum by (job, instance) (rate(trustweave_host_requests_total{outcome=~"server_error|rejected"}[1h]))
+       / clamp_min(sum by (job, instance) (rate(trustweave_host_requests_total{outcome!="cancelled"}[1h])), 1e-9) > 0.0144)
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/host/README.md#availability-and-admission
+  - alert: HostAvailabilityBudgetSlowBurn
+    expr: |
+      (sum by (job, instance) (rate(trustweave_host_requests_total{outcome=~"server_error|rejected"}[30m]))
+       / clamp_min(sum by (job, instance) (rate(trustweave_host_requests_total{outcome!="cancelled"}[30m])), 1e-9) > 0.006)
+      and on (job, instance)
+      (sum by (job, instance) (rate(trustweave_host_requests_total{outcome=~"server_error|rejected"}[6h]))
+       / clamp_min(sum by (job, instance) (rate(trustweave_host_requests_total{outcome!="cancelled"}[6h])), 1e-9) > 0.006)
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/host/README.md#availability-and-admission
+  - alert: HostAdmissionQueueLatency
+    expr: histogram_quantile(0.95, sum by (job, instance, le) (rate(trustweave_host_queue_seconds_bucket[5m]))) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - alert: HostPoolSaturation
+    expr: trustweave_host_pool_waiting > 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - alert: HostExpectedPoolUnavailable
+    expr: trustweave_host_pool_available{expects_pool="true"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - alert: HostTelemetryMissing
+    expr: (up{job="trustweave-host"} == 1) unless on (job, instance) trustweave_host_active_requests
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/host/README.md#protected-scraping

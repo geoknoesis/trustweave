@@ -150,4 +150,30 @@ class IndyVdrProxyTransportTest {
             }
         }
     }
+
+    @Test
+    fun `injected client still obeys operation deadline`() =
+        runBlocking<Unit> {
+            wireMock.stubFor(post(urlPathEqualTo("/submit")).willReturn(aResponse().withFixedDelay(1000).withBody("{}")))
+            val bounded = IndyVdrProxyTransport("http://localhost:${wireMock.port()}", httpClient, 50)
+            assertFailsWith<kotlinx.coroutines.TimeoutCancellationException> { bounded.submit(buildJsonObject {}) }
+        }
+
+    @Test
+    fun `oversized responses fail and provider error details stay private`() =
+        runBlocking<Unit> {
+            wireMock.stubFor(
+                post(urlPathEqualTo("/submit")).willReturn(
+                    aResponse().withBody(
+                        "x".repeat(
+                            IndyVdrProxyTransport.MAX_RESPONSE_BYTES + 1,
+                        ),
+                    ),
+                ),
+            )
+            assertFailsWith<IllegalArgumentException> { transport().submit(buildJsonObject {}) }
+            wireMock.stubFor(post(urlPathEqualTo("/submit")).willReturn(aResponse().withStatus(500).withBody("secret-token")))
+            val failure = assertFailsWith<BlockchainException.ConnectionFailed> { transport().submit(buildJsonObject {}) }
+            kotlin.test.assertFalse(failure.message.orEmpty().contains("secret-token"))
+        }
 }

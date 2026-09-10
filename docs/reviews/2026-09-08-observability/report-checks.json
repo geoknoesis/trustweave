@@ -1,0 +1,10 @@
+{
+  "source_hashes_verified": 52,
+  "documentation": {
+    "markdown_files": 360,
+    "kotlin_blocks": 2390,
+    "errors": []
+  },
+  "workflows": "YAML parsed; hosted execution not performed",
+  "report": "Desktop/mobile rendered and inspected; local links, overflow and page-error checks passed"
+}

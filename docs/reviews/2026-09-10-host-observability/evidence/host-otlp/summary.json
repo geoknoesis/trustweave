@@ -1,0 +1,2 @@
+{"hosts":2,"requests":10,"traces":10,"spans":40,
+                                "transport":"OTLP HTTP/protobuf","authenticated":true,"redaction":"passed"}

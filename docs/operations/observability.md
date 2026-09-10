@@ -1,7 +1,9 @@
 # Operating TrustWeave services
 
-TrustWeave is a library. The hosting application owns request tracing, durable audit
-records, metrics export and HTTP error mapping. Configure an SLF4J backend in the
+TrustWeave is a library. The hosting application owns telemetry destinations, durable audit
+records and deployment policy. The [shared SDK host integration](host/README.md) adds
+request tracing, protected metrics, admission timing and pool diagnostics to six Ktor
+servers through explicit `withObservability` configuration. Configure an SLF4J backend in the
 application; the SDK does not install one or configure your log destinations.
 
 ## Correlating requests safely
@@ -17,8 +19,14 @@ Record fixed fields: `event`, `operation`, `provider`, `outcome`, `error_code`,
 available and an allowlisted exception type otherwise. Do not serialize arbitrary
 exception context or log provider response bodies, connection strings, credentials,
 key material, presentations or raw exception messages. Status-list server failures
-emit `event=status_list_failure` and the exception type, while anonymous callers
-receive a generic error. Cancellation propagates and is not an operational failure.
+emit `event=status_list_failure`, a fixed `error_code` and a random `request_id`.
+Both status-list routes return their generated ID in `X-Request-ID` and in the
+`requestId` field of error bodies. Incoming request IDs are ignored. The ID is
+passed explicitly through the request coroutine rather than stored in thread-local
+MDC. Match it to the server log; no status-list ID or provider message is logged.
+Error codes are `TIMEOUT`, `STORAGE_FAILURE`, `CONFIGURATION_FAILURE`, or `INTERNAL_FAILURE`. Anonymous
+callers receive generic errors. Cancellation propagates and is not logged as an
+operational failure. A host SLF4J backend and retention policy remain required.
 
 ## Metrics and alerts
 
@@ -64,3 +72,50 @@ A local test pass is not hosted CI or live-provider evidence. Preserve the commi
 SHA, commands, test counts, skipped tests and workflow run links. Run the actual
 release-evidence workflow and retain its attested artifacts before claiming a
 qualified release. Keep provider qualification separate from mock transport tests.
+
+## Status-list write integrity
+
+Database status-list mutations lock the parent row before reading the bitmap.
+Single changes, batches, allocation and expansion use the same transaction;
+failed batches roll back both allocation and bitmap changes. Monitor database
+lock waits and pool saturation when many writers target one list. Parallelize
+across lists rather than bypassing the row lock. Expansion uses declared list
+size, not bitmap storage capacity. Invalid batch indices fail before mutation.
+
+## Coverage gates
+
+CI enforces `config/coverage-policy.json` against the merged Kover XML using
+`scripts/check-coverage-policy.py`. Missing scopes, absent counters and empty
+reports fail. Current floors preserve the measured baseline; they are not a
+claim of adequate security coverage. Raise them as meaningful regression and
+conformance tests land. Do not lower them solely to make a build green.
+
+## Intent authorization host exercise
+
+See [the executable host and recovery runbook](intent/README.md) for bounded metrics,
+Prometheus alert tests, durable settlement reconciliation and separate-database restore.
+The fixture reports measured local results; production acceptance requires repeating the
+runbook with the deployed host, payment journal, backup system and pager route.
+
+The runtime `PostgresIntentLedger` now instruments schema initialization,
+reservation, reconciliation and health reads through `IntentLedgerDiagnostics`.
+Counts distinguish success, policy rejection, invalid input, SQL failure,
+unexpected failure and cancellation. Duration includes connection acquisition and
+transaction completion. No callbacks or log backends participate in the
+authorization decision; metrics retain only fixed counters and histogram buckets.
+The host exports `ledger.diagnostics.prometheus()` on a protected metrics route.
+That method never accesses the database and continues working during an outage.
+
+Poll `healthSnapshot()` periodically using a monitoring connection; share one
+diagnostics instance with the authorization ledger for that database. Scraping
+only reads the latest measured health. Failed polling withdraws pending/age gauges;
+the latest successful timestamp remains visible so a stopped polling job cannot
+look healthy indefinitely. Legacy unknown ages remain unknown. The runbook includes
+scrape, stale-poll, missing-telemetry and age alerts with tested firing/recovery.
+
+The [notification delivery exercise](intent/README.md#notification-delivery-exercise)
+uses checksum-pinned Prometheus and Alertmanager binaries to verify pending, firing,
+retry after a receiver HTTP 503, and resolved webhook delivery on loopback. CI retains
+the notification payloads, configuration checks and process logs, including on failure.
+The shared host module now provides local queue/pool/trace instrumentation and tests.
+Deployment-wide coverage and the actual on-call route remain acceptance work.

@@ -39,6 +39,124 @@ class IssuanceRoundTripTest {
             different.valid shouldBe false
         }
 
+    @Test
+    fun `merchant authenticated autonomous checkout verifies and enforces signed quantities`() =
+        runBlocking<Unit> {
+            val valid = runAutonomous(20_000, "pi-1", includeCheckout = true, authenticatedCheckout = true)
+            valid.errors.shouldBeEmpty()
+            valid.valid shouldBe true
+            valid.checksPerformed shouldContain "authenticated_checkout_cart"
+            val invalid =
+                runAutonomous(
+                    20_000,
+                    "pi-1",
+                    includeCheckout = true,
+                    authenticatedCheckout = true,
+                    merchantQuantity = 2,
+                )
+            invalid.valid shouldBe false
+        }
+
+    @Test
+    fun `chain budget reservation rejects excess and replay without spending on invalid chains`() =
+        runBlocking<Unit> {
+            org.testcontainers.containers.PostgreSQLContainer<Nothing>("postgres:16-alpine").use { container ->
+                container.start()
+                val source =
+                    org.postgresql.ds.PGSimpleDataSource().apply {
+                        setURL(container.jdbcUrl)
+                        user = container.username
+                        password = container.password
+                    }
+                val ledger =
+                    org.trustweave.credential.vi.verification
+                        .PostgresIntentLedger(source)
+                ledger.initializeSchema()
+                val excess = runAutonomous(35_000, "pi-1", budgetLedger = ledger)
+                excess.valid shouldBe false
+                val invalid = runAutonomous(20_000, "pi-1", includeCheckout = true, budgetLedger = ledger)
+                invalid.valid shouldBe false
+                source.connection.use { connection ->
+                    connection.createStatement().use { statement ->
+                        statement.executeQuery("SELECT count(*) FROM vi_budget_accounts").use { rows ->
+                            rows.next()
+                            rows.getInt(1) shouldBe 0
+                        }
+                    }
+                }
+                val replay =
+                    runAutonomous(
+                        20_000,
+                        "pi-1",
+                        budgetLedger = ledger,
+                        replayBudget = true,
+                        includeCheckout = true,
+                        authenticatedCheckout = true,
+                    )
+                replay.valid shouldBe false
+                replay.errors.joinToString() stringShouldContain "already consumed"
+                source.connection.use { connection ->
+                    connection.createStatement().use { statement ->
+                        statement.executeQuery("SELECT sum(spent) FROM vi_budget_accounts").use { rows ->
+                            rows.next()
+                            rows.getLong(1) shouldBe 20_000L
+                        }
+                    }
+                }
+                val agentRules =
+                    buildJsonObject {
+                        put("type", "mandate.payment.agent_recurrence")
+                        put("frequency", "WEEK")
+                        put("start_date", "2020-01-01")
+                        put("end_date", "2030-01-01")
+                        put("max_occurrences", 2)
+                    }
+                runAutonomous(
+                    20_000,
+                    "pi-1",
+                    budgetLedger = ledger,
+                    recurrence = agentRules,
+                    budgetMinimum = 25_000,
+                    paymentNonce = "minimum",
+                ).valid shouldBe false
+                runAutonomous(
+                    20_000,
+                    "pi-1",
+                    budgetLedger = ledger,
+                    recurrence = agentRules,
+                    budgetMinimum = 10_000,
+                    paymentNonce = "agent",
+                ).valid shouldBe true
+                val terms =
+                    buildJsonObject {
+                        put("frequency", "MNTH")
+                        put("start_date", "2026-03-01")
+                        put("end_date", "2027-03-01")
+                        put("number", 12)
+                    }
+                val subscription = JsonObject(terms + ("type" to kotlinx.serialization.json.JsonPrimitive("mandate.payment.recurrence")))
+                runAutonomous(
+                    20_000,
+                    "pi-1",
+                    budgetLedger = ledger,
+                    recurrence = subscription,
+                    includeCheckout = true,
+                    authenticatedCheckout = true,
+                    merchantRecurrence = terms,
+                    paymentNonce = "merchant",
+                ).valid shouldBe true
+                runAutonomous(
+                    20_000,
+                    "pi-1",
+                    budgetLedger = ledger,
+                    recurrence = subscription,
+                    includeCheckout = true,
+                    authenticatedCheckout = true,
+                    paymentNonce = "missing-metadata",
+                ).valid shouldBe false
+            }
+        }
+
     private val kms = InMemoryKeyManagementService()
 
     private fun jwk(
@@ -68,6 +186,14 @@ class IssuanceRoundTripTest {
         omitInstrument: Boolean = false,
         omitCheckoutKey: Boolean = false,
         alterCheckoutKeyY: Boolean = false,
+        authenticatedCheckout: Boolean = false,
+        merchantQuantity: Int = 1,
+        budgetLedger: org.trustweave.credential.vi.verification.PostgresIntentLedger? = null,
+        replayBudget: Boolean = false,
+        recurrence: JsonObject? = null,
+        merchantRecurrence: JsonObject? = null,
+        budgetMinimum: Long? = null,
+        paymentNonce: String = "l3-nonce",
     ): ChainVerificationResult {
         val issuer = generate()
         val user = generate()
@@ -142,7 +268,7 @@ class IssuanceRoundTripTest {
                     ),
                 )
             }
-        val paymentMandate =
+        val basePaymentMandate =
             buildJsonObject {
                 put("vct", Vct.PAYMENT_OPEN)
                 put("cnf", buildJsonObject { put("jwk", agentJwk) })
@@ -161,8 +287,28 @@ class IssuanceRoundTripTest {
                                 put("type", "mandate.payment.reference")
                                 put("conditional_transaction_id", "")
                             },
-                        ),
+                        ) +
+                            if (budgetLedger != null) {
+                                listOf(
+                                    buildJsonObject {
+                                        put("type", "mandate.payment.budget")
+                                        put("currency", "USD")
+                                        put("max", 30_000)
+                                        budgetMinimum?.let { put("min", it) }
+                                    },
+                                )
+                            } else {
+                                emptyList()
+                            },
                     ),
+                )
+            }
+        val paymentMandate =
+            if (recurrence == null) {
+                basePaymentMandate
+            } else {
+                JsonObject(
+                    basePaymentMandate + ("constraints" to JsonArray((basePaymentMandate["constraints"] as JsonArray) + recurrence)),
                 )
             }
         val l2 =
@@ -180,7 +326,51 @@ class IssuanceRoundTripTest {
             )
 
         // The agent transacts at a merchant; L3a (payment) and L3b (checkout) share the txn id.
-        val checkoutJwt = "eyJtZXJjaGFudCI6ImNoZWNrb3V0LXRva2VuIn0"
+        val merchantKey = generate()
+        val checkoutTrust =
+            org.trustweave.credential.vi.verification.CheckoutTrust(
+                "https://merchant.example",
+                "checkout-verifier",
+                "merchant-challenge",
+                jwk(merchantKey.publicKeyJwk!!, null),
+                buildJsonObject { put("id", "m-1") },
+            )
+        val checkoutJwt =
+            if (authenticatedCheckout) {
+                org.trustweave.credential.vi.crypto.Jws.sign(
+                    buildJsonObject {
+                        put("alg", "ES256")
+                        put("typ", "JWT")
+                    },
+                    buildJsonObject {
+                        put("iss", "https://merchant.example")
+                        put("aud", "checkout-verifier")
+                        put("nonce", "merchant-challenge")
+                        merchantRecurrence?.let { put("recurrence", it) }
+                        put("iat", now)
+                        put("exp", now + 300)
+                        put(
+                            "cart",
+                            buildJsonObject {
+                                put(
+                                    "items",
+                                    JsonArray(
+                                        listOf(
+                                            buildJsonObject {
+                                                put("id", "product-1")
+                                                put("quantity", merchantQuantity)
+                                            },
+                                        ),
+                                    ),
+                                )
+                            },
+                        )
+                    },
+                    KmsEs256Signer(kms, merchantKey.id),
+                )
+            } else {
+                "eyJtZXJjaGFudCI6ImNoZWNrb3V0LXRva2VuIn0"
+            }
         val checkoutHash = sha256B64Url(checkoutJwt.toByteArray(Charsets.US_ASCII))
 
         val finalPayment =
@@ -209,7 +399,7 @@ class IssuanceRoundTripTest {
                 finalPayment = finalPayment,
                 l2BaseJwt = l2.baseJwt,
                 routedL2Disclosures = listOf(l2.paymentDiscB64!!),
-                nonce = "l3-nonce",
+                nonce = paymentNonce,
                 aud = "https://network.example",
                 iat = now,
                 exp = now + 300,
@@ -229,7 +419,7 @@ class IssuanceRoundTripTest {
                 finalCheckout = finalCheckout,
                 l2BaseJwt = l2.baseJwt,
                 routedL2Disclosures = listOf(l2.checkoutDiscB64!!),
-                nonce = "l3-nonce",
+                nonce = paymentNonce,
                 aud = "https://merchant.example",
                 iat = now,
                 exp = now + 300,
@@ -262,15 +452,140 @@ class IssuanceRoundTripTest {
                 l3a.compact
             }
 
+        if (amount == 27_999 &&
+            cardId == "pi-1" &&
+            !includeCheckout &&
+            omitL3Claim == null &&
+            !omitInstrument &&
+            budgetLedger == null &&
+            !withholdPaymentMandateFromL2 &&
+            !omitCheckoutKey &&
+            !alterCheckoutKeyY &&
+            recurrence == null &&
+            merchantRecurrence == null
+        ) {
+            val export =
+                buildJsonObject {
+                    put(
+                        "cases",
+                        JsonArray(
+                            listOf(
+                                buildJsonObject {
+                                    put("name", "kotlin-autonomous-payment")
+                                    put("profile", "autonomous-payment")
+                                    put("l1", l1)
+                                    put("l2", presentedL2)
+                                    put("l3Payment", paymentToken)
+                                    put("routedL2", l3a.routedL2)
+                                    put("issuerJwk", issuerJwk)
+                                    put("now", now + 60)
+                                    put("aud", "https://agent.example")
+                                    put("nonce", "l2-nonce")
+                                    put("paymentAud", "https://network.example")
+                                    put("paymentNonce", paymentNonce)
+                                    put("expected", true)
+                                },
+                            ),
+                        ),
+                    )
+                }
+            val output =
+                java.nio.file.Path
+                    .of("build/reports/vi-kotlin-autonomous.json")
+            java.nio.file.Files
+                .createDirectories(output.parent)
+            java.nio.file.Files
+                .writeString(output, export.toString())
+        }
+        if (authenticatedCheckout && includeCheckout && merchantQuantity == 1 && budgetLedger == null && recurrence == null) {
+            val export =
+                buildJsonObject {
+                    put(
+                        "cases",
+                        JsonArray(
+                            listOf(
+                                buildJsonObject {
+                                    put("name", "kotlin-autonomous-checkout")
+                                    put("profile", "authenticated-checkout")
+                                    put("l1", l1)
+                                    put("l2", presentedL2)
+                                    put("l3Payment", paymentToken)
+                                    put("routedL2", l3a.routedL2)
+                                    put("l3Checkout", l3b.compact)
+                                    put("routedCheckout", l3b.routedL2)
+                                    put("issuerJwk", issuerJwk)
+                                    put("now", now + 60)
+                                    put("aud", "https://agent.example")
+                                    put("nonce", "l2-nonce")
+                                    put("paymentAud", "https://network.example")
+                                    put("paymentNonce", paymentNonce)
+                                    put("checkoutAud", "https://merchant.example")
+                                    put("checkoutNonce", paymentNonce)
+                                    put("expected", true)
+                                },
+                            ),
+                        ),
+                    )
+                }
+            val output =
+                java.nio.file.Path
+                    .of("build/reports/vi-kotlin-checkout.json")
+            java.nio.file.Files
+                .createDirectories(output.parent)
+            java.nio.file.Files
+                .writeString(output, export.toString())
+        }
+        if (authenticatedCheckout && budgetLedger == null) {
+            return VerifiableIntent.verifyChainWithCheckout(
+                checkoutTrust = checkoutTrust,
+                l1 = l1,
+                l2 = presentedL2,
+                issuerJwk = issuerJwk,
+                l3Payment = paymentToken,
+                expectedL3PaymentAud = "https://network.example",
+                expectedL3PaymentNonce = paymentNonce,
+                expectedL3CheckoutAud = "https://merchant.example",
+                expectedL3CheckoutNonce = paymentNonce,
+                l2RoutedForPayment = l3a.routedL2,
+                l3Checkout = if (includeCheckout) l3b.compact else null,
+                l2RoutedForCheckout = l3b.routedL2,
+                now = now + 60,
+                expectedL2Aud = "https://agent.example",
+                expectedL2Nonce = "l2-nonce",
+            )
+        }
+        if (budgetLedger != null) {
+            fun authorize() =
+                VerifiableIntent.verifyAndReserveBudget(
+                    budgetLedger = budgetLedger,
+                    checkoutTrust = if (authenticatedCheckout) checkoutTrust else null,
+                    l1 = l1,
+                    l2 = presentedL2,
+                    issuerJwk = issuerJwk,
+                    l3Payment = paymentToken,
+                    expectedL3PaymentAud = "https://network.example",
+                    expectedL3PaymentNonce = paymentNonce,
+                    expectedL3CheckoutAud = "https://merchant.example",
+                    expectedL3CheckoutNonce = paymentNonce,
+                    l2RoutedForPayment = l3a.routedL2,
+                    l3Checkout = if (includeCheckout) l3b.compact else null,
+                    l2RoutedForCheckout = l3b.routedL2,
+                    now = now + 60,
+                    expectedL2Aud = "https://agent.example",
+                    expectedL2Nonce = "l2-nonce",
+                )
+            if (replayBudget) authorize().valid shouldBe true
+            return authorize()
+        }
         return VerifiableIntent.verifyChain(
             l1 = l1,
             l2 = presentedL2,
             issuerJwk = issuerJwk,
             l3Payment = paymentToken,
             expectedL3PaymentAud = "https://network.example",
-            expectedL3PaymentNonce = "l3-nonce",
+            expectedL3PaymentNonce = paymentNonce,
             expectedL3CheckoutAud = "https://merchant.example",
-            expectedL3CheckoutNonce = "l3-nonce",
+            expectedL3CheckoutNonce = paymentNonce,
             l2RoutedForPayment = l3a.routedL2,
             l3Checkout = if (includeCheckout) l3b.compact else null,
             l2RoutedForCheckout = l3b.routedL2,
@@ -404,6 +719,33 @@ class IssuanceRoundTripTest {
             result.errors.shouldBeEmpty()
             result.valid shouldBe true
             result.checksPerformed shouldContain "l2_checkout_payment_binding"
+            val export =
+                buildJsonObject {
+                    put(
+                        "cases",
+                        JsonArray(
+                            listOf(
+                                buildJsonObject {
+                                    put("name", "kotlin-immediate")
+                                    put("l1", l1)
+                                    put("l2", l2.compact)
+                                    put("issuerJwk", issuerJwk)
+                                    put("now", now + 60)
+                                    put("aud", "https://merchant.example")
+                                    put("nonce", "l2-nonce")
+                                    put("expected", true)
+                                },
+                            ),
+                        ),
+                    )
+                }
+            val output =
+                java.nio.file.Path
+                    .of("build/reports/vi-kotlin-immediate.json")
+            java.nio.file.Files
+                .createDirectories(output.parent)
+            java.nio.file.Files
+                .writeString(output, export.toString())
         }
     }
 
@@ -412,7 +754,7 @@ class IssuanceRoundTripTest {
         runBlocking<Unit> {
             val result = runAutonomous(27_999, "pi-1", includeCheckout = true)
             result.valid shouldBe false
-            result.errors.joinToString() stringShouldContain "line-item matching is not implemented"
+            result.errors.joinToString() stringShouldContain "authenticated cart binding"
         }
 
     @Test

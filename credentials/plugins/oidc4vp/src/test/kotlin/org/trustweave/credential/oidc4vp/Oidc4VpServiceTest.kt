@@ -104,7 +104,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `test parseAuthorizationUrl with missing request_uri throws exception`() =
+    fun `test parseAuthorizationUrl with missing request_uri throws exception`(): Unit =
         runBlocking {
             val authorizationUrl = "openid4vp://authorize?client_id=test-client"
 
@@ -114,7 +114,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `test parseAuthorizationUrl with invalid URL format throws exception`() =
+    fun `test parseAuthorizationUrl with invalid URL format throws exception`(): Unit =
         runBlocking {
             val invalidUrl = "not-a-valid-url"
 
@@ -124,7 +124,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `test parseAuthorizationUrl with HTTP error response throws exception`() =
+    fun `test parseAuthorizationUrl with HTTP error response throws exception`(): Unit =
         runBlocking {
             val requestUri = "${mockWebServer.url("/request")}"
 
@@ -405,7 +405,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `test fetchVerifierMetadata with HTTP error throws exception`() =
+    fun `test fetchVerifierMetadata with HTTP error throws exception`(): Unit =
         runBlocking {
             val verifierUrl = "${mockWebServer.url("")}"
 
@@ -735,7 +735,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `unsigned request object with alg none is rejected`() =
+    fun `unsigned request object with alg none is rejected`(): Unit =
         runBlocking {
             val claims =
                 JWTClaimsSet
@@ -759,7 +759,7 @@ class Oidc4VpServiceTest {
         }
 
     @Test
-    fun `request object signed with key not matching client_metadata jwks is rejected`() =
+    fun `request object signed with key not matching client_metadata jwks is rejected`(): Unit =
         runBlocking {
             val signingKey = ECKeyGenerator(Curve.P_256).keyID("verifier-key").generate()
             val otherKey = ECKeyGenerator(Curve.P_256).keyID("verifier-key").generate()

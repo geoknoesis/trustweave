@@ -6,349 +6,152 @@ nav_order: 60
 
 # Testing Guidelines
 
-This guide outlines testing guidelines and best practices for TrustWeave.
+Run tests against the exact working tree you intend to ship. Keep local doubles,
+real component integrations, interoperability checks and deployment qualification
+separate in the results. A successful build with zero discovered tests is not
+validation; a caught exception followed by a normal return is not a recorded skip.
 
-## Overview
+## Prerequisites and commands
 
-TrustWeave testing strategy includes:
+Use the checked-in Gradle wrapper and JDK 21. Python checks use Python 3.11 or newer;
+the JUnit checker tests also compile Java fixtures using the JDK. Run from the SDK
+repository root. PowerShell users replace `./gradlew` with `./gradlew.bat` and quote
+Gradle properties containing dots, for example `'-Pkotlin.compiler.execution.strategy=in-process'`.
 
-- **Unit Tests** – test individual components in isolation
-- **Integration Tests** – test component interactions
-- **End-to-End Tests** – test complete workflows
-- **Test Utilities** – `trustweave-testkit` for in-memory implementations
+| Purpose | Command | Environment |
+| --- | --- | --- |
+| Fixture examples | `./gradlew :testkit:test --tests '*DocumentationExampleTest'` | Local JVM |
+| Shared host regression suite | `./gradlew :observability:test :observability:koverXmlReport` | Local HTTP, OTLP and H2; no Docker |
+| All implemented documentation examples | `./gradlew :distribution:examples:checkDocumentationExamples :distribution:examples:test` | Local doubles and loopback services |
+| Full SDK tests and compilation | `./gradlew build` | Docker and module-specific integration prerequisites |
+| Merged coverage | `./gradlew koverXmlReport koverHtmlReport` | Same prerequisites as the full suite |
+| Lint and API compatibility | `./gradlew ktlintCheck checkKotlinAbi` | JDK 21 |
+| Validation-tool regressions | `python -m unittest discover -s scripts -p 'test_check_*.py'` | Python and JDK |
+| Documentation drift and links | `python scripts/check-documentation.py --report build/reports/documentation.json` | Python, Git |
 
-## Testing Principles
+The [integration guide](testing/integration-testing.md) explains prerequisite failures,
+provider qualification and cleanup. The [VI guide](../operations/vi-cross-stack.md)
+records the pinned independent implementation and unsupported profiles.
 
-### Test Isolation
+## Test isolation
 
-Each test should be independent:
+This complete example is compiled and executed by `:testkit:test`. It checks registry
+isolation, independently generated issuer identifiers and cleanup. The fixture uses
+local doubles; this test does not establish interoperability of a real DID provider.
 
+<!-- example-source: testkit/src/test/kotlin/org/trustweave/testkit/DocumentationExampleTest.kt -->
 ```kotlin
-@Test
-fun testIsolated() = runBlocking {
-    // Each test gets its own fixture
-    val fixture = TrustWeaveTestFixture.builder().build().use { fixture ->
-        // Test code
-    }
-}
-```
+package org.trustweave.testkit
 
-### Test Naming
-
-Use descriptive test names:
-
-```kotlin
-@Test
-fun testCreateDidWithEd25519Algorithm() = runBlocking {
-    // ...
-}
-```
-
-### Test Organization
-
-Organize tests by functionality:
-
-```kotlin
-class DidMethodTest {
-    @Test
-    fun testCreateDid() = runBlocking {
-        // ...
-    }
-
-    @Test
-    fun testResolveDid() = runBlocking {
-        // ...
-    }
-}
-```
-
-## Unit Testing
-
-### Testing DID Methods
-
-```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.did.*
-import kotlin.test.Test
-import kotlin.test.assertNotNull
-
-class DidMethodTest {
-    @Test
-    fun testCreateDid() = runBlocking {
-        val kms = InMemoryKeyManagementService()
-        val method = DidKeyMockMethod(kms)
-
-        val options = didCreationOptions {
-            algorithm = KeyAlgorithm.ED25519
-        }
-
-        val didDoc = method.createDid(options)
-        assertNotNull(didDoc)
-        // DidDocument.id is a Did value class; use `.value` for the raw string.
-        assert(didDoc.id.value.startsWith("did:key:"))
-    }
-}
-```
-
-### Testing Key Management
-
-```kotlin
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.kms.*
-import kotlin.test.Test
-
-class KmsTest {
-    @Test
-    fun testGenerateAndSign() = runBlocking {
-        val kms = InMemoryKeyManagementService()
-
-        // generateKey/sign return sealed Result types — destructure or pattern-match.
-        val key = (kms.generateKey(Algorithm.Ed25519) as GenerateKeyResult.Success).keyHandle
-        assertNotNull(key)
-
-        val data = "Hello, TrustWeave!".toByteArray()
-        val signature = (kms.sign(key.id, data) as SignResult.Success).signature
-
-        assertNotNull(signature)
-        assertEquals(64, signature.size) // Ed25519 signature size
-    }
-}
-```
-
-## Integration Testing
-
-### Testing Credential Workflows
-
-```kotlin
 import kotlinx.coroutines.runBlocking
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.dsl.credential.*
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.credential.results.getOrThrow
-import org.trustweave.trust.types.getOrThrowDid
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class CredentialWorkflowTest {
+class DocumentationExampleTest {
     @Test
-    fun testCredentialIssuanceAndVerification() = runBlocking {
-        val trustWeave = TrustWeave.build {
-            keys { provider(KmsProviders.IN_MEMORY); algorithm(KeyAlgorithms.ED25519) }
-            did { method(DidMethods.KEY) { algorithm(KeyAlgorithms.ED25519) } }
-        }
-        val issuerDid = trustWeave.createDid { }.getOrThrowDid()
-        val credential = trustWeave.issue {
-            credential {
-                type("VerifiableCredential", "PersonCredential")
-                issuer(issuerDid)
-                subject {
-                    id("did:key:subject")
-                    "name" to "Alice"
+    fun `fixtures isolate registries and close releases registrations`(): Unit =
+        runBlocking {
+            val first = TrustWeaveTestFixture.builder().withInMemoryBlockchainClient("eip155:1337").build()
+            first.use {
+                TrustWeaveTestFixture.builder().build().use { second ->
+                    assertNotNull(first.getBlockchainClient("eip155:1337"))
+                    assertNull(second.getBlockchainClient("eip155:1337"))
+                    val issuer = first.createIssuerDid()
+                    val other = second.createIssuerDid()
+                    assertTrue(issuer.id.value.startsWith("did:key:"))
+                    assertNotEquals(issuer.id, other.id)
+                    assertEquals(1, issuer.verificationMethod.size)
                 }
             }
-            signedBy(issuerDid, "key-1")
-        }.getOrThrow()
-        val verification = trustWeave.verify(credential)
-        assertTrue(verification is VerificationResult.Valid, verification.toString())
-    }
+            assertNull(first.getDidRegistry().get("key"))
+            assertNull(first.getBlockchainRegistry().get("eip155:1337"))
+        }
 }
 ```
 
-## End-to-End Testing
+## Assertions and coroutine tests
 
-### EO Integration Tests
+Use `kotlin.test` or JUnit assertions. JVM `assert(...)` can be disabled and is unsuitable
+for test expectations. Check semantic results, error categories, persisted state and
+cleanup; test counts and line coverage do not establish those properties.
 
-```kotlin
-import org.trustweave.testkit.eo.BaseEoIntegrationTest
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.anchor.*
-import kotlin.test.Test
+Give expression-body coroutine tests an explicit `Unit` result, as above. An
+`assertFailsWith` call returns the exception, so an inferred test return type can make
+JUnit ignore the method. The compiled-class gate detects non-void, private and static
+direct JUnit test methods. It reads actual JVM descriptors rather than guessing from
+Kotlin source. It does not validate custom composed annotations or dynamic test contents.
 
-class MyEoIntegrationTest : BaseEoIntegrationTest() {
-    override fun createAnchorClient(
-        chainId: String,
-        options: Map<String, Any?>
-    ): BlockchainAnchorClient {
-        return InMemoryBlockchainAnchorClient(chainId)
-    }
+Preserve cancellation and fatal errors. Assert exception type and identity where the
+API promises it. Coroutine debug stack recovery can copy standard exception classes and
+retain the original as the cause; account for that behavior without disabling diagnostics.
+Use deterministic barriers to establish concurrent ordering, bounded timeouts to prevent
+hangs and cleanup in `use` or `finally`. Avoid sleeps as proof of ordering.
 
-    @Test
-    fun testEoScenario() = runBlocking {
-        val result = runEoTestScenario()
-        // runEoTestScenario returns EoTestResult whose verificationResult is an
-        // IntegrityVerificationResult (not VerificationResult). Check `.valid`.
-        assert(result.verificationResult.valid)
-    }
-}
+## Regression and requirement evidence
+
+[The versioned test contract](../../config/testing-contract.json) names critical discovery,
+host behavior and documentation tests. After a successful build, run:
+
+```text
+python scripts/check-junit-contract.py --report build/reports/junit-contract.json
+python scripts/check-test-evidence.py --report build/reports/test-evidence.json
+python scripts/check-coverage-policy.py
 ```
 
-## Test Utilities
+On Windows the SDK centralizes Gradle output under
+`%LOCALAPPDATA%/TrustWeave/gradle-build/trustweave`; pass that directory as
+`--build-root` to the first two commands, and its `reports/kover/report.xml` to the
+coverage checker. `observability/build/reports` contains additional explicit exercise
+artifacts, separate from Gradle's centralized XML output.
 
-### TrustWeaveTestFixture
+The result gate requires each named test to appear exactly once and pass without a skip.
+It rejects missing suites, zero tests, inconsistent XML counters and failing suites.
+It does not prove freshness by itself: generate results from a successful current-tree
+build before consuming them. CI runs it after Gradle, preserving the build and XML artifacts.
+Do not combine old XML from unrelated runs and call it a new full-suite pass.
 
-Use test fixtures for setup:
+## Coverage policy
 
-```kotlin
-import org.trustweave.testkit.*
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import kotlin.test.Test
+[Coverage floors](../../config/coverage-policy.json) apply to measured Kover LINE and
+BRANCH counters. Missing packages, missing counters, zero-denominator evidence,
+duplicate counters, empty policies and invalid/non-finite percentages fail the check.
+Module-specific local measurement uses the corresponding scoped policy.
 
-class FixtureTest {
-    @Test
-    fun testWithFixture() = runBlocking {
-        TrustWeaveTestFixture.builder()
-            .withKms(InMemoryKeyManagementService())
-            .withDidMethod("key")
-            .withBlockchainClient(
-                "algorand:testnet",
-                InMemoryBlockchainAnchorClient("algorand:testnet")
-            )
-            .build()
-            .use { fixture ->
-                val issuerDoc = fixture.createIssuerDid()
-                assertNotNull(issuerDoc)
-            }
-    }
-}
-```
+Raise a floor only after meaningful tests pass and the resulting report supports it.
+Do not remove a scope or lower a floor to get a green build. Coverage is structural
+evidence: unsupported inputs, authorization, state transitions, retry and recovery need
+explicit assertions even when existing tests already execute those lines.
 
-## Error Testing
+## Documentation contract
 
-### Testing Error Cases
+A `example-source` marker binds the immediately following Kotlin block to a shipped
+`.kt` file in this repository. The checker rejects missing/ignored/external sources,
+wrong fence languages and drift. The [required example inventory](../../config/documentation-contract.json)
+also rejects a removed or duplicated source marker. Keep executable examples in normal source/test sets
+and register their execution in CI. Update the source first, run it, then copy the exact
+source into the documentation.
 
-```kotlin
-@Test
-fun testErrorHandling() = runBlocking {
-    val kms = InMemoryKeyManagementService()
+Other snippets are examples or fragments, not implicitly certified compilable programs.
+The checker inventories them; it does not compile every Markdown block or verify every
+external link. The [host example](../operations/host/example.md) demonstrates a second
+complete compiled test. Generated [capability documentation](../api-reference/assessed-capabilities.md)
+must also pass `python scripts/generate-capability-docs.py --check`.
 
-    // KMS operations return sealed Result types — pattern-match, do not .fold().
-    val result = kms.sign(KeyId("nonexistent-key"), "data".toByteArray())
-    assertTrue(result is SignResult.Failure.KeyNotFound)
-}
-```
+## Release acceptance
 
-### Testing Validation
-
-```kotlin
-@Test
-fun testInvalidInput() = runBlocking {
-    val method = DidKeyMockMethod(InMemoryKeyManagementService())
-
-    // resolveDid takes a Did value class and returns DidResolutionResult.
-    val result = method.resolveDid(Did("did:key:unknown"))
-    assertTrue(result is DidResolutionResult.Failure.NotFound)
-}
-```
-
-## Best Practices
-
-### Resource Cleanup
-
-Always use `use {}` for cleanup:
-
-```kotlin
-fixture.use { fixture ->
-    // Test code
-    // Automatic cleanup on exit
-}
-```
-
-### Test Data
-
-Use meaningful test data:
-
-```kotlin
-val issuerDid = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-val subjectDid = "did:key:z6MkhbXBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
-```
-
-### Assertions
-
-Use descriptive assertions:
-
-```kotlin
-// Good
-assertNotNull(didDoc, "DID document should not be null")
-// DidDocument.id is a Did value class — use `.value` for the raw string.
-assertEquals("did:key:", didDoc.id.value.substring(0, 8), "DID should start with did:key:")
-
-// Less clear
-assert(didDoc != null)
-assert(didDoc.id.value.startsWith("did:key:"))
-```
-
-## Test Coverage
-
-### Coverage Goals
-
-Aim for:
-
-- **Unit Tests** – 80%+ coverage
-- **Integration Tests** – cover critical paths
-- **End-to-End Tests** – cover main workflows
-
-### Measuring Coverage
-
-Coverage tooling is **not** wired into the build today. The root `build.gradle.kts`
-applies neither JaCoCo nor Kover, so `./gradlew tasks` will not list a
-`jacocoTestReport` (or `koverReport`) target — running it fails with
-`Task 'jacocoTestReport' not found`.
-
-To collect coverage locally, apply a plugin in your fork and re-run tests, for
-example:
-
-```kotlin
-// settings.gradle.kts or root build.gradle.kts
-plugins {
-    id("org.jetbrains.kotlinx.kover") version "0.7.6"
-}
-```
-```bash
-./gradlew test koverHtmlReport
-```
-
-Wiring coverage into the upstream build is tracked as a separate workstream — open
-an issue if you want it adopted project-wide.
-
-## Running Tests
-
-### All Tests
-
-```bash
-./gradlew test
-```
-
-### Specific Module
-
-```bash
-./gradlew :common:test
-```
-
-### Specific Test Class
-
-```bash
-./gradlew :common:test --tests "DidMethodTest"
-```
-
-### With Verbose Output
-
-```bash
-./gradlew test --info
-```
-
-## Next Steps
-
-- Review [trustweave-testkit Module](../api-reference/modules/trustweave-testkit.md) for testing utilities
-- See [Testing Strategies](../api-reference/advanced/testing-strategies.md) for advanced patterns
-- Check [Development Setup](development-setup.md) for environment setup
-- Explore existing tests in TrustWeave modules for examples
+Testing/documentation reaches a complete assessment only when the agreed supported
+surface has fresh test and coverage evidence, every documented supported profile has
+positive and adversarial interoperability vectors, examples execute, prerequisite failures
+are visible, and the exact release candidate passes hosted CI. Local host coverage alone
+cannot justify a perfect repository-wide score. Track remaining work in the
+[testing acceptance checklist](testing/acceptance.md).
 
 ## References
 
-- [trustweave-testkit Module](../api-reference/modules/trustweave-testkit.md)
-- [Testing Strategies](../api-reference/advanced/testing-strategies.md)
-- [Kotlin Test Documentation](https://kotlinlang.org/api/latest/kotlin.test/)
-
-
+JUnit documents the [test method return/visibility contract](https://docs.junit.org/5.11.1/user-guide/index.html#writing-tests-classes-and-methods).
+Kotlin documents [coroutine stacktrace recovery and exception copying](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/topics/debugging.md#stacktrace-recovery).
+These explain the validation rules; the regression evidence comes from this repository's executed tests.

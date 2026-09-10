@@ -1,0 +1,9 @@
+{
+  "source_hashes": "passed",
+  "documentation": {
+    "markdown_files": 360,
+    "kotlin_blocks": 2390,
+    "errors": []
+  },
+  "html": "Desktop and mobile rendered and visually inspected; local links and horizontal overflow checks passed"
+}

@@ -1,14 +1,15 @@
 package org.trustweave.anchor
 
-import org.trustweave.anchor.exceptions.BlockchainException
-import org.trustweave.core.exception.TrustWeaveException as CoreTrustWeaveException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import org.trustweave.anchor.exceptions.BlockchainException
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import org.trustweave.core.exception.TrustWeaveException as CoreTrustWeaveException
 
 /**
  * Abstract base class for blockchain anchor client implementations.
@@ -36,9 +37,8 @@ import java.util.concurrent.atomic.AtomicLong
  */
 abstract class AbstractBlockchainAnchorClient(
     protected val chainId: String,
-    protected val options: Map<String, Any?>
+    protected val options: Map<String, Any?>,
 ) : BlockchainAnchorClient {
-
     companion object {
         /**
          * Options key that explicitly enables the in-memory test fallback.
@@ -124,7 +124,10 @@ abstract class AbstractBlockchainAnchorClient(
     protected val confirmationPollIntervalMs: Long =
         longOption(OPTION_CONFIRMATION_POLL_INTERVAL_MS, DEFAULT_CONFIRMATION_POLL_INTERVAL_MS)
 
-    private fun longOption(key: String, default: Long): Long =
+    private fun longOption(
+        key: String,
+        default: Long,
+    ): Long =
         when (val value = options[key]) {
             is Number -> value.toLong()
             is String -> value.toLongOrNull() ?: default
@@ -142,9 +145,10 @@ abstract class AbstractBlockchainAnchorClient(
             else -> throw BlockchainException.ConfigurationFailed(
                 chainId = chainId,
                 configKey = OPTION_PAYLOAD_MODE,
-                reason = "Unsupported payload mode '$value'; use '$PAYLOAD_MODE_FULL' " +
-                    "(anchor the full payload JSON) or '$PAYLOAD_MODE_DIGEST' " +
-                    "(anchor only a SHA-256 digest envelope)."
+                reason =
+                    "Unsupported payload mode '$value'; use '$PAYLOAD_MODE_FULL' " +
+                        "(anchor the full payload JSON) or '$PAYLOAD_MODE_DIGEST' " +
+                        "(anchor only a SHA-256 digest envelope).",
             )
         }
 
@@ -158,11 +162,17 @@ abstract class AbstractBlockchainAnchorClient(
      * [writePayload]) must route payload serialization through this helper so all
      * write paths honour [OPTION_PAYLOAD_MODE].
      */
-    protected fun encodeAnchoredBytes(payload: JsonElement, mediaType: String): ByteArray {
-        val payloadBytes = Json.encodeToString(JsonElement.serializer(), payload)
-            .toByteArray(StandardCharsets.UTF_8)
+    protected fun encodeAnchoredBytes(
+        payload: JsonElement,
+        mediaType: String,
+    ): ByteArray {
+        val payloadBytes =
+            Json
+                .encodeToString(JsonElement.serializer(), payload)
+                .toByteArray(StandardCharsets.UTF_8)
         if (!digestPayloadMode) return payloadBytes
-        return Json.encodeToString(JsonElement.serializer(), AnchorDigest.envelope(payloadBytes, mediaType))
+        return Json
+            .encodeToString(JsonElement.serializer(), AnchorDigest.envelope(payloadBytes, mediaType))
             .toByteArray(StandardCharsets.UTF_8)
     }
 
@@ -212,10 +222,9 @@ abstract class AbstractBlockchainAnchorClient(
      * Gets the contract address from options (if applicable).
      * Returns null if no contract is configured.
      */
-    protected open fun getContractAddress(): String? {
-        return options["contractAddress"] as? String
+    protected open fun getContractAddress(): String? =
+        options["contractAddress"] as? String
             ?: options["appId"] as? String
-    }
 
     /**
      * Builds extra metadata for AnchorRef.
@@ -224,9 +233,7 @@ abstract class AbstractBlockchainAnchorClient(
      * @param mediaType The media type of the payload
      * @return Map of extra metadata
      */
-    protected open fun buildExtraMetadata(mediaType: String): Map<String, String> {
-        return mapOf("mediaType" to mediaType)
-    }
+    protected open fun buildExtraMetadata(mediaType: String): Map<String, String> = mapOf("mediaType" to mediaType)
 
     /**
      * Generates a test transaction hash for the opt-in in-memory test mode.
@@ -254,8 +261,9 @@ abstract class AbstractBlockchainAnchorClient(
     protected fun uniqueTestHashHex(length: Int = 64): String {
         require(length >= 16) { "length must be >= 16 to preserve the uniqueness counter" }
         val counterHex = TEST_TX_HASH_COUNTER.incrementAndGet().toString(16).padStart(16, '0')
-        val entropy = UUID.randomUUID().toString().replace("-", "") +
-            UUID.randomUUID().toString().replace("-", "")
+        val entropy =
+            UUID.randomUUID().toString().replace("-", "") +
+                UUID.randomUUID().toString().replace("-", "")
         return (counterHex + entropy).take(length).padEnd(length, '0')
     }
 
@@ -266,112 +274,126 @@ abstract class AbstractBlockchainAnchorClient(
 
     override suspend fun writePayload(
         payload: JsonElement,
-        mediaType: String
-    ): AnchorResult = withContext(Dispatchers.IO) {
-        val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
-        val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
-        // In digest mode the on-chain data is the compact digest envelope, never the
-        // payload itself. The digest is computed over the exact bytes the full-payload
-        // path would have anchored (UTF-8 of the serialized payload JSON above).
-        val envelope: JsonElement? =
-            if (digestPayloadMode) AnchorDigest.envelope(payloadBytes, mediaType) else null
-        val submittedBytes = envelope
-            ?.let { Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8) }
-            ?: payloadBytes
+        mediaType: String,
+    ): AnchorResult =
+        withContext(Dispatchers.IO) {
+            val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
+            val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
+            // In digest mode the on-chain data is the compact digest envelope, never the
+            // payload itself. The digest is computed over the exact bytes the full-payload
+            // path would have anchored (UTF-8 of the serialized payload JSON above).
+            val envelope: JsonElement? =
+                if (digestPayloadMode) AnchorDigest.envelope(payloadBytes, mediaType) else null
+            val submittedBytes =
+                envelope
+                    ?.let { Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8) }
+                    ?: payloadBytes
 
-        try {
-            when {
-                canSubmitTransaction() -> {
-                    val txHash = submitTransactionToBlockchain(submittedBytes)
-                    AnchorResult(
-                        ref = buildAnchorRef(
-                            txHash = txHash,
-                            contract = getContractAddress(),
-                            extra = anchorExtraMetadata(mediaType)
-                        ),
-                        payload = payload,
-                        mediaType = mediaType,
-                        timestamp = System.currentTimeMillis() / 1000
+            try {
+                when {
+                    canSubmitTransaction() -> {
+                        val txHash = submitTransactionToBlockchain(submittedBytes)
+                        AnchorResult(
+                            ref =
+                                buildAnchorRef(
+                                    txHash = txHash,
+                                    contract = getContractAddress(),
+                                    extra = anchorExtraMetadata(mediaType),
+                                ),
+                            payload = payload,
+                            mediaType = mediaType,
+                            timestamp = System.currentTimeMillis() / 1000,
+                        )
+                    }
+                    inMemoryTestMode -> {
+                        // Opt-in in-memory storage for testing without credentials.
+                        // References are marked so they are never mistaken for real anchors.
+                        val hash = generateTestTxHash()
+                        val result =
+                            AnchorResult(
+                                ref =
+                                    buildAnchorRef(
+                                        txHash = hash,
+                                        contract = getContractAddress(),
+                                        extra =
+                                            anchorExtraMetadata(mediaType) +
+                                                (OPTION_IN_MEMORY_TEST_MODE to "true"),
+                                    ),
+                                payload = payload,
+                                mediaType = mediaType,
+                                timestamp = System.currentTimeMillis() / 1000,
+                            )
+                        // The stored copy mirrors what a real chain read would return: in
+                        // digest mode only the envelope is recoverable from the chain.
+                        storage[hash] = if (envelope != null) result.copy(payload = envelope) else result
+                        result
+                    }
+                    else -> throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        reason =
+                            "No usable ${getBlockchainName()} credentials/connection configured " +
+                                "for $chainId; refusing to fabricate an anchor. Provide chain credentials " +
+                                "in options, or explicitly opt in to the in-memory test fallback with " +
+                                "'$OPTION_IN_MEMORY_TEST_MODE' = true (tests/demos only — payloads are " +
+                                "NOT anchored on-chain).",
                     )
                 }
-                inMemoryTestMode -> {
-                    // Opt-in in-memory storage for testing without credentials.
-                    // References are marked so they are never mistaken for real anchors.
-                    val hash = generateTestTxHash()
-                    val result = AnchorResult(
-                        ref = buildAnchorRef(
-                            txHash = hash,
-                            contract = getContractAddress(),
-                            extra = anchorExtraMetadata(mediaType) +
-                                (OPTION_IN_MEMORY_TEST_MODE to "true")
-                        ),
-                        payload = payload,
-                        mediaType = mediaType,
-                        timestamp = System.currentTimeMillis() / 1000
-                    )
-                    // The stored copy mirrors what a real chain read would return: in
-                    // digest mode only the envelope is recoverable from the chain.
-                    storage[hash] = if (envelope != null) result.copy(payload = envelope) else result
-                    result
-                }
-                else -> throw BlockchainException.ConfigurationFailed(
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (e: CoreTrustWeaveException) {
+                throw e
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
                     chainId = chainId,
-                    reason = "No usable ${getBlockchainName()} credentials/connection configured " +
-                        "for $chainId; refusing to fabricate an anchor. Provide chain credentials " +
-                        "in options, or explicitly opt in to the in-memory test fallback with " +
-                        "'$OPTION_IN_MEMORY_TEST_MODE' = true (tests/demos only — payloads are " +
-                        "NOT anchored on-chain)."
-                )
-            }
-        } catch (e: CoreTrustWeaveException) {
-            throw e
-        } catch (e: Exception) {
-            throw BlockchainException.TransactionFailed(
-                chainId = chainId,
-                operation = "writePayload",
-                payloadSize = submittedBytes.size.toLong(),
-                reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
-        }
-    }
-
-    override suspend fun readPayload(ref: AnchorRef): AnchorResult = withContext(Dispatchers.IO) {
-        validateChainId(ref.chainId)
-
-        // Read from the blockchain; the in-memory storage is consulted ONLY when the
-        // opt-in test mode is enabled, so chain errors are never masked in production.
-        val result = try {
-            readTransactionFromBlockchain(ref.txHash)
-        } catch (e: Exception) {
-            val fromTestStorage = if (inMemoryTestMode) storage[ref.txHash] else null
-            fromTestStorage ?: when (e) {
-                is CoreTrustWeaveException -> throw e
-                else -> throw BlockchainException.TransactionFailed(
-                    chainId = chainId,
-                    txHash = ref.txHash,
-                    operation = "readPayload",
-                    reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    operation = "writePayload",
+                    payloadSize = submittedBytes.size.toLong(),
+                    reason = "Failed to anchor payload to ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
+                    cause = e,
                 )
             }
         }
 
-        // Digest-mode anchors cannot recover the original payload — the result carries
-        // the envelope. Mark the reference so callers can tell the two modes apart
-        // (chain reads rebuild the ref from scratch, losing the write-time marker).
-        if (AnchorDigest.isEnvelope(result.payload) &&
-            result.ref.extra[OPTION_PAYLOAD_MODE] != PAYLOAD_MODE_DIGEST
-        ) {
-            result.copy(
-                ref = result.ref.copy(
-                    extra = result.ref.extra + (OPTION_PAYLOAD_MODE to PAYLOAD_MODE_DIGEST)
+    override suspend fun readPayload(ref: AnchorRef): AnchorResult =
+        withContext(Dispatchers.IO) {
+            validateChainId(ref.chainId)
+
+            // Read from the blockchain; the in-memory storage is consulted ONLY when the
+            // opt-in test mode is enabled, so chain errors are never masked in production.
+            val result =
+                try {
+                    readTransactionFromBlockchain(ref.txHash)
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (e: Exception) {
+                    val fromTestStorage = if (inMemoryTestMode) storage[ref.txHash] else null
+                    fromTestStorage ?: when (e) {
+                        is CoreTrustWeaveException -> throw e
+                        else -> throw BlockchainException.TransactionFailed(
+                            chainId = chainId,
+                            txHash = ref.txHash,
+                            operation = "readPayload",
+                            reason = "Failed to read payload from ${getBlockchainName()}: ${e.message ?: "Unknown error"}",
+                            cause = e,
+                        )
+                    }
+                }
+
+            // Digest-mode anchors cannot recover the original payload — the result carries
+            // the envelope. Mark the reference so callers can tell the two modes apart
+            // (chain reads rebuild the ref from scratch, losing the write-time marker).
+            if (AnchorDigest.isEnvelope(result.payload) &&
+                result.ref.extra[OPTION_PAYLOAD_MODE] != PAYLOAD_MODE_DIGEST
+            ) {
+                result.copy(
+                    ref =
+                        result.ref.copy(
+                            extra = result.ref.extra + (OPTION_PAYLOAD_MODE to PAYLOAD_MODE_DIGEST),
+                        ),
                 )
-            )
-        } else {
-            result
+            } else {
+                result
+            }
         }
-    }
 
     /**
      * Validates that the chain ID matches this client's chain ID.
@@ -388,14 +410,12 @@ abstract class AbstractBlockchainAnchorClient(
     protected fun buildAnchorRef(
         txHash: String,
         contract: String? = null,
-        extra: Map<String, String> = emptyMap()
-    ): AnchorRef {
-        return AnchorRef(
+        extra: Map<String, String> = emptyMap(),
+    ): AnchorRef =
+        AnchorRef(
             chainId = chainId,
             txHash = txHash,
             contract = contract,
-            extra = extra
+            extra = extra,
         )
-    }
 }
-

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.location.ProofOfLocationExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.780Z" hostname="THEMATRIX" time="0.093">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.location.ProofOfLocationExampleTest" time="0.09"/>
+  <system-out><![CDATA[proof-of-location: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

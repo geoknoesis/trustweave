@@ -21,6 +21,7 @@ rootProject.name = "trustweave"
 
 // Core modules
 include("common")
+include("observability")
 include("common-mp")
 include("trust")
 include("testkit")

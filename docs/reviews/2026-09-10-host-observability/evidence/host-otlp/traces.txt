@@ -1,0 +1,1054 @@
+resource_spans {
+  resource {
+    attributes {
+      key: "service.name"
+      value {
+        string_value: "unknown_service:java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.language"
+      value {
+        string_value: "java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.name"
+      value {
+        string_value: "opentelemetry"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.version"
+      value {
+        string_value: "1.65.0"
+      }
+    }
+  }
+  scope_spans {
+    scope {
+      name: "org.trustweave.host"
+      version: "0.7.0"
+    }
+    spans {
+      trace_id: "G\\W\357Jm]\372\366\344\234\360\300y\344\003"
+      span_id: "0_\303\343\203Z&A"
+      parent_span_id: "\177\312\vn\377I^\267"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978518496000
+      end_time_unix_nano: 1789013978557598600
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "-\274\261\223\256\3676\234\262\343\"xa\f6\206"
+      span_id: "\001\222<\241+\323\365\216"
+      parent_span_id: "Gk\v\237A\357\326\345"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978519035600
+      end_time_unix_nano: 1789013978557483700
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "$n\331\270~\"ao\327W-TN0\224\250"
+      span_id: "\374\342#\023\252\254=\246"
+      parent_span_id: "d3\256L4{\211\200"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978518484800
+      end_time_unix_nano: 1789013978557647800
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\323\271Rg\234\2069:\240Z3\345\355\037\355\244"
+      span_id: "\372\260\302\204@\240\322\305"
+      parent_span_id: "\243\004Ko\314\263\247\344"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978522225500
+      end_time_unix_nano: 1789013978557755700
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\333u\322z\332\340h\260h5\264\027[\367\254z"
+      span_id: "\225\353\242\002i\210\320\350"
+      parent_span_id: "S&\024W\234\317\036\177"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978518495500
+      end_time_unix_nano: 1789013978557587600
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\323\271Rg\234\2069:\240Z3\345\355\037\355\244"
+      span_id: "\243\004Ko\314\263\247\344"
+      parent_span_id: "\243\365~\312\002\264\r\271"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978521823000
+      end_time_unix_nano: 1789013978562517400
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "35a4501e-7407-4217-b42d-9a5da1204a0f"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "$n\331\270~\"ao\327W-TN0\224\250"
+      span_id: "d3\256L4{\211\200"
+      parent_span_id: "\346\371\207D\210\224\'\313"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978516779100
+      end_time_unix_nano: 1789013978562388700
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "6e8b5e82-3a1e-470c-b315-dae42c5e1339"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "-\274\261\223\256\3676\234\262\343\"xa\f6\206"
+      span_id: "Gk\v\237A\357\326\345"
+      parent_span_id: "\022\321q\003\354$\277\345"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978518564600
+      end_time_unix_nano: 1789013978562280900
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "ea001d31-bb23-4f05-a833-4ea390dda7a9"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "\243\023\230\002O\321\300\374\362\261\325\211\2647.r"
+      span_id: "\2675\226\035\320\323\354\270"
+      parent_span_id: ".\324\216\032\3540\213\256"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978518512500
+      end_time_unix_nano: 1789013978557480700
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\333u\322z\332\340h\260h5\264\027[\367\254z"
+      span_id: "S&\024W\234\317\036\177"
+      parent_span_id: "\217]\321\374\035J9\212"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978515939900
+      end_time_unix_nano: 1789013978562437700
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "0eb077ec-07cc-44dd-aa1d-7e24996fdec8"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "G\\W\357Jm]\372\366\344\234\360\300y\344\003"
+      span_id: "\177\312\vn\377I^\267"
+      parent_span_id: "m:\025\313\020\353\361O"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978515939900
+      end_time_unix_nano: 1789013978562455900
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "5db4cf05-6c76-4bdf-a0e0-6e06198d92d6"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "\243\023\230\002O\321\300\374\362\261\325\211\2647.r"
+      span_id: ".\324\216\032\3540\213\256"
+      parent_span_id: "\254z\000\247\b\v\222\v"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978517469600
+      end_time_unix_nano: 1789013978562387100
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "33179067-30a4-45bc-85fd-d589a9da0ad5"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "q\355\206qI\313\347\034\245\234p\362\v\bM\222"
+      span_id: "\210\353\315\224\240x\036\327"
+      parent_span_id: "/|R\344\240\235_P"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978523279900
+      end_time_unix_nano: 1789013978557963200
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "q\355\206qI\313\347\034\245\234p\362\v\bM\222"
+      span_id: "/|R\344\240\235_P"
+      parent_span_id: "I\375\3658D\tj\245"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978522907100
+      end_time_unix_nano: 1789013978562873600
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "52c883be-fa1f-4301-8861-1f744331723b"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "t\375\325\031\343\005\275\026\337\265cx;\334\310\213"
+      span_id: "\260\233#.\322\264!c"
+      parent_span_id: "\331A\3737`\212f\330"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978522226500
+      end_time_unix_nano: 1789013978557855000
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\352\023q5\340Y\026oD\357\033D\326l\337\275"
+      span_id: "X\313\261\027\033\364M\231"
+      parent_span_id: "=:\363Y\357|\246\347"
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978522286100
+      end_time_unix_nano: 1789013978557779000
+      status {
+      }
+      flags: 259
+    }
+  }
+}
+
+resource_spans {
+  resource {
+    attributes {
+      key: "service.name"
+      value {
+        string_value: "unknown_service:java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.language"
+      value {
+        string_value: "java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.name"
+      value {
+        string_value: "opentelemetry"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.version"
+      value {
+        string_value: "1.65.0"
+      }
+    }
+  }
+  scope_spans {
+    scope {
+      name: "org.trustweave.host"
+      version: "0.7.0"
+    }
+    spans {
+      trace_id: "\344!\327lP\323\005bp\356\215\264\3548\"\345"
+      span_id: "\373\230\212Q\3753^\304"
+      parent_span_id: "\210\321P\305E\225\302 "
+      name: "trustweave.verify"
+      kind: SPAN_KIND_INTERNAL
+      start_time_unix_nano: 1789013978518409800
+      end_time_unix_nano: 1789013978557628800
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "t\375\325\031\343\005\275\026\337\265cx;\334\310\213"
+      span_id: "\331A\3737`\212f\330"
+      parent_span_id: "\217\325\327\314\313*v<"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978521823000
+      end_time_unix_nano: 1789013978562911700
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "5df21532-f1cd-48ab-ae9b-ba4bc2885f4f"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "\352\023q5\340Y\026oD\357\033D\326l\337\275"
+      span_id: "=:\363Y\357|\246\347"
+      parent_span_id: "\323\246#\200\235\023\215\375"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978521823000
+      end_time_unix_nano: 1789013978562898100
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "d595aa2d-b714-4a1b-88ac-81a295c9ba40"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "\344!\327lP\323\005bp\356\215\264\3548\"\345"
+      span_id: "\210\321P\305E\225\302 "
+      parent_span_id: "\355(C\312N\032\251\273"
+      name: "trustweave.trust_registry"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978516269500
+      end_time_unix_nano: 1789013978562766700
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "8c779971-7af6-4379-a005-099a60792a80"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 771
+    }
+    spans {
+      trace_id: "G\\W\357Jm]\372\366\344\234\360\300y\344\003"
+      span_id: "m:\025\313\020\353\361O"
+      parent_span_id: ".x\344\2621\323\232\272"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497124400
+      end_time_unix_nano: 1789013978617849700
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "q\355\206qI\313\347\034\245\234p\362\v\bM\222"
+      span_id: "I\375\3658D\tj\245"
+      parent_span_id: "h\377\032\306\177\303\202t"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497228200
+      end_time_unix_nano: 1789013978617845200
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "-\274\261\223\256\3676\234\262\343\"xa\f6\206"
+      span_id: "\022\321q\003\354$\277\345"
+      parent_span_id: "\360\226\336)\354\250J\223"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497121700
+      end_time_unix_nano: 1789013978617854200
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\243\023\230\002O\321\300\374\362\261\325\211\2647.r"
+      span_id: "\254z\000\247\b\v\222\v"
+      parent_span_id: "\254+\027\202\320\231g\276"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497185100
+      end_time_unix_nano: 1789013978617816800
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "t\375\325\031\343\005\275\026\337\265cx;\334\310\213"
+      span_id: "\217\325\327\314\313*v<"
+      parent_span_id: "\201\253\231\023q\026\331`"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497197900
+      end_time_unix_nano: 1789013978617884200
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\344!\327lP\323\005bp\356\215\264\3548\"\345"
+      span_id: "\355(C\312N\032\251\273"
+      parent_span_id: "\300\377\274G\f@\027\310"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497191100
+      end_time_unix_nano: 1789013978617871600
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\352\023q5\340Y\026oD\357\033D\326l\337\275"
+      span_id: "\323\246#\200\235\023\215\375"
+      parent_span_id: "\323\370\225U\215\311K\323"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497150400
+      end_time_unix_nano: 1789013978617954000
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\333u\322z\332\340h\260h5\264\027[\367\254z"
+      span_id: "\217]\321\374\035J9\212"
+      parent_span_id: "\026\n5\003\355\371a\252"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497197500
+      end_time_unix_nano: 1789013978618007700
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "$n\331\270~\"ao\327W-TN0\224\250"
+      span_id: "\346\371\207D\210\224\'\313"
+      parent_span_id: "\276~\206\026\365@\333H"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497144400
+      end_time_unix_nano: 1789013978618174000
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\323\271Rg\234\2069:\240Z3\345\355\037\355\244"
+      span_id: "\243\365~\312\002\264\r\271"
+      parent_span_id: "\003\261\266?(S\244\305"
+      name: "trustweave.provider"
+      kind: SPAN_KIND_CLIENT
+      start_time_unix_nano: 1789013978497123100
+      end_time_unix_nano: 1789013978618292900
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "$n\331\270~\"ao\327W-TN0\224\250"
+      span_id: "\276~\206\026\365@\333H"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636354900
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "1d5d4ec0-9f7c-4329-828f-65024bf9490a"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\352\023q5\340Y\026oD\357\033D\326l\337\275"
+      span_id: "\323\370\225U\215\311K\323"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636396300
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "d78cd1a2-d029-41f4-b845-6032a65ea52e"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+  }
+}
+
+resource_spans {
+  resource {
+    attributes {
+      key: "service.name"
+      value {
+        string_value: "unknown_service:java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.language"
+      value {
+        string_value: "java"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.name"
+      value {
+        string_value: "opentelemetry"
+      }
+    }
+    attributes {
+      key: "telemetry.sdk.version"
+      value {
+        string_value: "1.65.0"
+      }
+    }
+  }
+  scope_spans {
+    scope {
+      name: "org.trustweave.host"
+      version: "0.7.0"
+    }
+    spans {
+      trace_id: "-\274\261\223\256\3676\234\262\343\"xa\f6\206"
+      span_id: "\360\226\336)\354\250J\223"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636462900
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "689873df-42b8-4ad0-8eb9-cd84516ff691"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\243\023\230\002O\321\300\374\362\261\325\211\2647.r"
+      span_id: "\254+\027\202\320\231g\276"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636447400
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "b0a74bcb-4c52-4c77-a17f-53278ab43511"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\333u\322z\332\340h\260h5\264\027[\367\254z"
+      span_id: "\026\n5\003\355\371a\252"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636570200
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "94206671-9c48-49b2-ac43-2479b29e0f41"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "q\355\206qI\313\347\034\245\234p\362\v\bM\222"
+      span_id: "h\377\032\306\177\303\202t"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636580600
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "fa762b01-e93c-4869-9e40-21f1200b3b46"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\344!\327lP\323\005bp\356\215\264\3548\"\345"
+      span_id: "\300\377\274G\f@\027\310"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636544500
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "8f11ba70-819a-436b-8bb1-16d08aa24b5a"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "\323\271Rg\234\2069:\240Z3\345\355\037\355\244"
+      span_id: "\003\261\266?(S\244\305"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636550000
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "73153aa1-c19f-4c43-ba1e-3699f34fedcd"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "G\\W\357Jm]\372\366\344\234\360\300y\344\003"
+      span_id: ".x\344\2621\323\232\272"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636698200
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "b8d8f7dc-8cff-4a86-ac00-ca6c2888d78e"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+    spans {
+      trace_id: "t\375\325\031\343\005\275\026\337\265cx;\334\310\213"
+      span_id: "\201\253\231\023q\026\331`"
+      name: "trustweave.vc_api"
+      kind: SPAN_KIND_SERVER
+      start_time_unix_nano: 1789013978438536400
+      end_time_unix_nano: 1789013978636709700
+      attributes {
+        key: "trustweave.request_id"
+        value {
+          string_value: "70fcfe7f-67c6-4fb8-82b4-2d7796ee18eb"
+        }
+      }
+      attributes {
+        key: "http.request.method"
+        value {
+          string_value: "GET"
+        }
+      }
+      attributes {
+        key: "http.response.status_code"
+        value {
+          int_value: 200
+        }
+      }
+      attributes {
+        key: "trustweave.outcome"
+        value {
+          string_value: "success"
+        }
+      }
+      status {
+      }
+      flags: 259
+    }
+  }
+}

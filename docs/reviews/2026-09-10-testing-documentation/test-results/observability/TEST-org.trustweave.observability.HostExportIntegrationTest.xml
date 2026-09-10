@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.observability.HostExportIntegrationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:38:30.244Z" hostname="THEMATRIX" time="4.11">
+  <properties/>
+  <testcase name="two real HTTP hosts export correlated traces through authenticated OTLP protobuf()" classname="org.trustweave.observability.HostExportIntegrationTest" time="3.545"/>
+  <testcase name="blocked exporter uses a bounded queue and does not block application work()" classname="org.trustweave.observability.HostExportIntegrationTest" time="0.562"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Sep 10, 2026 1:38:34 AM io.opentelemetry.sdk.trace.export.BatchSpanProcessor$Worker exportCurrentBatch
+WARNING: BatchSpanProcessor dropped 9968 span(s) since the last export because the queue is full (maxQueueSize=32)
+]]></system-err>
+</testsuite>

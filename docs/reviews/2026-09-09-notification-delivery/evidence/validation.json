@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "started_utc": "2026-09-10T03:39:28.268690+00:00",
+  "scope": "Local synthetic notification pipeline; no production recipient or database",
+  "scenarios": [
+    {
+      "alert": "IntentHealthUnavailable",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "c4bd50c8bd58d386",
+      "firing_seconds": 122.704,
+      "total_seconds": 123.704
+    },
+    {
+      "alert": "IntentTelemetryMissing",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "0c1137f78aa73e65",
+      "firing_seconds": 122.109,
+      "total_seconds": 124.109
+    },
+    {
+      "alert": "IntentHostUnavailable",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "f59666be6546dbd6",
+      "firing_seconds": 122.141,
+      "total_seconds": 124.156
+    }
+  ],
+  "source_sha256": {
+    "scripts\\intent-notification-exercise.py": "d0613aebcc2468f0ed9acea89ba382c62d0bd41c7b2850502b52a755c9dbb266",
+    "docs\\operations\\intent\\alerts.yml": "61b952bf602cf449822b9eabe9e0f39de453b188b0a3fc21e9e7b6f9d621557a",
+    "credentials\\plugins\\verifiable-intent\\build\\reports\\intent-metrics.prom": "eeec81715d8aeda4f381ef417b3c09670366e3647493db264775dc69178ee125"
+  },
+  "tools": {
+    "prometheus": {
+      "version": "3.5.0",
+      "archive_sha256": "b3c2607d1e80a277735fd3cde86432eb1b6843897cb82fb04fbf4c7ffb1d1c36",
+      "source": "https://github.com/prometheus/prometheus/releases/download/v3.5.0/prometheus-3.5.0.windows-amd64.zip"
+    },
+    "alertmanager": {
+      "version": "0.28.1",
+      "archive_sha256": "521de9569ab0570845c38889cceb26790696ab04b1cba0b0086994b785013ca8",
+      "source": "https://github.com/prometheus/alertmanager/releases/download/v0.28.1/alertmanager-0.28.1.windows-amd64.zip"
+    }
+  },
+  "receiver_retry": "Initial HTTP 503 followed by accepted firing and resolved delivery",
+  "finished_utc": "2026-09-10T03:46:03.577580+00:00"
+}

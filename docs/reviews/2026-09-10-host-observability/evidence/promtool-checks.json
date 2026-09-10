@@ -1,0 +1,14 @@
+{
+  "host_rules": {
+    "exit_code": 0,
+    "stdout": "  SUCCESS\n\n",
+    "stderr": "",
+    "assertions": 32
+  },
+  "host_metrics": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "sha256": "4568937ca104d55af88c3328f3b95dc738683e7098ac1a64d00b9709c0fe9e7b"
+  }
+}

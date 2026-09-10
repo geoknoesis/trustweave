@@ -1,0 +1,49 @@
+{
+  "previous_overall": 8.7,
+  "overall": 8.8,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not independently reassessed in this scoped review"
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9,
+      "reason": "Runtime ledger instrumentation, safe HTTP/log correlation, bounded concurrency tests, outage scrapes, freshness/availability alerts and operator runbooks now have executed local evidence. Deployed SLO, tracing and pager qualification remain.",
+      "previous": 8
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9,
+      "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not independently reassessed in this scoped review"
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not independently reassessed in this scoped review"
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Local tests, lint, ABI and alert gates pass and are wired into workflows. Changes remain uncommitted; hosted validation and a release for this tree are still outstanding.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; not independently reassessed in this scoped review"
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 8.5,
+      "reason": "50 intent tests, expanded conformance profile, real PostgreSQL restore and nine Prometheus evaluations pass. Full cross-stack conformance and wider SDK branch coverage remain incomplete.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; not independently reassessed in this scoped review"
+    }
+  ],
+  "rubric": "Same six equally weighted categories; only observability reassessed. Engineering judgment, not certification.",
+  "arithmetic": "53 / 6 = 8.8333, rounded half-up to 8.8"
+}

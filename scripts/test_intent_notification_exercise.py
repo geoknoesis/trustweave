@@ -6,7 +6,7 @@ from pathlib import Path
 import platform
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 spec = importlib.util.spec_from_file_location(
@@ -17,6 +17,26 @@ spec.loader.exec_module(exercise)
 
 
 class NotificationExerciseFailureTest(unittest.TestCase):
+    def test_startup_alert_must_clear_before_five_healthy_observations(self):
+        pending = [{"metric": {"alertname": "IntentTelemetryMissing", "alertstate": "pending"}}]
+        query = Mock(side_effect=[pending, [], [], [], [], [], []])
+        with patch.object(exercise.time, "sleep"):
+            exercise.healthy_baseline(query, [])
+        self.assertEqual(7, query.call_count)
+
+    def test_persistent_startup_alert_times_out(self):
+        query = Mock(return_value=[{"metric": {"alertname": "IntentTelemetryMissing"}}])
+        with patch.object(exercise.time, "monotonic", side_effect=[0, 0, 31]), patch.object(exercise.time, "sleep"):
+            with self.assertRaises(TimeoutError):
+                exercise.healthy_baseline(query, [])
+        self.assertEqual(1, query.call_count)
+
+    def test_alert_after_startup_convergence_still_fails(self):
+        query = Mock(side_effect=[[], [{"metric": {"alertname": "unexpected"}}]])
+        with patch.object(exercise.time, "sleep"):
+            with self.assertRaisesRegex(AssertionError, "unexpected"):
+                exercise.healthy_baseline(query, [])
+
     def check_failure(self, error):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)

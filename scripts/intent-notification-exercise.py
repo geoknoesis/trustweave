@@ -217,6 +217,17 @@ def wait_for(description, predicate, processes, timeout=200):
     raise TimeoutError(description)
 
 
+def healthy_baseline(query, processes):
+    # A successful scrape can precede the next rule evaluation. Bootstrap
+    # absence/unavailability alerts must converge before testing steady health.
+    wait_for("Waiting for healthy startup rule evaluation", lambda: not query("ALERTS"), processes, 30)
+    for _ in range(5):
+        alerts = query("ALERTS")
+        if alerts:
+            raise AssertionError(f"Healthy fixture unexpectedly generated an alert: {json.dumps(alerts)}")
+        time.sleep(1)
+
+
 def exercise(args):
     args.output.mkdir(parents=True, exist_ok=True)
     result = dict(status="failed", started_utc=datetime.now(timezone.utc).isoformat(),
@@ -290,11 +301,7 @@ def exercise(args):
 
             wait_for("Waiting for a successful runtime-contract scrape", lambda: query('up{job="trustweave-intent"} == 1'), processes, 60)
             wait_for("Waiting for Alertmanager readiness", lambda: get_json(am_url + "/api/v2/status"), processes, 30)
-            # Ensure the healthy contract does not itself generate a pending alert.
-            for _ in range(5):
-                if query("ALERTS"):
-                    raise AssertionError("Healthy fixture unexpectedly generated an alert")
-                time.sleep(1)
+            healthy_baseline(query, processes)
             for mode, alertname in (("unhealthy", "IntentHealthUnavailable"),
                                     ("missing", "IntentTelemetryMissing"),
                                     ("unreachable", "IntentHostUnavailable")):

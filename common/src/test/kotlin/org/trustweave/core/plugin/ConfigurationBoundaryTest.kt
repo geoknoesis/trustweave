@@ -64,11 +64,12 @@ class ConfigurationBoundaryTest {
         assertFailsWith<ConfigException.InvalidFormat> { PluginConfigurationLoader.loadFromFile(large.path) }
         assertFailsWith<ConfigException.InvalidFormat> { PluginConfigurationLoader.loadFromJson(oversized) }
         assertFailsWith<ConfigException.InvalidFormat> { PluginConfigurationLoader.loadFromJson("\"\uD800\"") }
-        assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromJson("""{"x":"${"é".repeat(ConfigurationJson.MAX_BYTES / 2)}"}""")
+        assertFailsWith<IllegalArgumentException> {
+            ConfigurationJson.parse("""{"x":"${"é".repeat(ConfigurationJson.MAX_BYTES / 2)}"}""")
         }
-        assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromJson("""{"x":${"[".repeat(65)}0${"]".repeat(65)}}""")
+        assertEquals(1, ConfigurationJson.parse("""{"x":${"[".repeat(63)}0${"]".repeat(63)}}""").size)
+        assertFailsWith<IllegalArgumentException> {
+            ConfigurationJson.parse("""{"x":${"[".repeat(64)}0${"]".repeat(64)}}""")
         }
     }
 

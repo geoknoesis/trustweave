@@ -11,6 +11,8 @@ import javax.sql.DataSource
  * Execute payments with the signed transaction ID as an idempotency key. Never retry an
  * uncertain database commit as a fresh authorization. Retain records for the mandate lifetime.
  * Configure connection/network timeouts on the DataSource; SQL statements have a 10-second timeout.
+ * Transactions require synchronous WAL acknowledgement (and retain remote_apply when configured).
+ * This cannot compensate for fsync being disabled or missing synchronous replicas at the server.
  */
 public class PostgresIntentLedger
     @JvmOverloads
@@ -24,6 +26,7 @@ public class PostgresIntentLedger
             source.connection.use { connection ->
                 connection.autoCommit = false
                 try {
+                    requireDurableCommit(connection)
                     connection.createStatement().use { statement ->
                         statement.queryTimeout = 10
                         statement.execute(
@@ -47,6 +50,8 @@ public class PostgresIntentLedger
                             )
                             """.trimIndent(),
                         )
+                        // Lock accounts before reservations, matching writers; drain writers before deployment.
+                        statement.execute("LOCK TABLE vi_budget_accounts, vi_budget_reservations IN ACCESS EXCLUSIVE MODE")
                         statement.execute(
                             "ALTER TABLE vi_budget_reservations ADD COLUMN IF NOT EXISTS " +
                                 "settlement_state VARCHAR(16) NOT NULL DEFAULT 'RESERVED'",
@@ -57,6 +62,40 @@ public class PostgresIntentLedger
                                 "created_at TIMESTAMPTZ",
                         )
                         statement.execute("ALTER TABLE vi_budget_reservations ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP")
+                        statement.execute(
+                            "ALTER TABLE vi_budget_accounts ADD COLUMN IF NOT EXISTS " +
+                                "occurrence_count BIGINT NOT NULL DEFAULT 0 CHECK (occurrence_count >= 0)",
+                        )
+                        statement.execute(
+                            """
+                            UPDATE vi_budget_accounts a
+                            SET occurrence_count = greatest(a.occurrence_count, r.total)
+                            FROM (SELECT scope, count(*) AS total FROM vi_budget_reservations GROUP BY scope) r
+                            WHERE a.scope = r.scope AND a.occurrence_count < r.total
+                            """.trimIndent(),
+                        )
+                        // An AFTER INSERT trigger runs only for actual inserts, never ON CONFLICT no-ops.
+                        // It shares the reservation transaction and also covers preceding SDK writers.
+                        statement.execute(
+                            """
+                            CREATE OR REPLACE FUNCTION vi_count_occurrence() RETURNS trigger AS ${'$'}${'$'}
+                            DECLARE affected BIGINT;
+                            BEGIN
+                                EXECUTE format('UPDATE %I.vi_budget_accounts SET occurrence_count=occurrence_count+1 WHERE scope=${'$'}1',
+                                               TG_TABLE_SCHEMA) USING NEW.scope;
+                                GET DIAGNOSTICS affected = ROW_COUNT;
+                                IF affected <> 1 THEN
+                                    RAISE EXCEPTION 'Budget account unavailable for occurrence accounting';
+                                END IF;
+                                RETURN NEW;
+                            END; ${'$'}${'$'} LANGUAGE plpgsql
+                            """.trimIndent(),
+                        )
+                        statement.execute("DROP TRIGGER IF EXISTS vi_count_occurrence ON vi_budget_reservations")
+                        statement.execute(
+                            "CREATE TRIGGER vi_count_occurrence AFTER INSERT ON vi_budget_reservations " +
+                                "FOR EACH ROW EXECUTE FUNCTION vi_count_occurrence()",
+                        )
                     }
                     connection.commit()
                 } catch (failure: Throwable) {
@@ -106,6 +145,7 @@ public class PostgresIntentLedger
                 connection.autoCommit = false
                 connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
                 try {
+                    requireDurableCommit(connection)
                     val account =
                         connection.prepareStatement("SELECT scope FROM vi_budget_accounts WHERE scope=? FOR UPDATE").use { statement ->
                             statement.queryTimeout = 10
@@ -203,6 +243,16 @@ public class PostgresIntentLedger
             org.trustweave.credential.vi.crypto
                 .sha256B64Url(value.toByteArray(Charsets.UTF_8))
 
+        private fun requireDurableCommit(connection: Connection) {
+            connection.createStatement().use { statement ->
+                statement.queryTimeout = 10
+                statement.execute(
+                    "SELECT set_config('synchronous_commit', " +
+                        "CASE WHEN current_setting('synchronous_commit')='remote_apply' THEN 'remote_apply' ELSE 'on' END, true)",
+                )
+            }
+        }
+
         internal fun reserve(
             scope: String,
             transaction: String,
@@ -224,6 +274,7 @@ public class PostgresIntentLedger
                 connection.autoCommit = false
                 connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
                 try {
+                    requireDurableCommit(connection)
                     connection
                         .prepareStatement(
                             "INSERT INTO vi_budget_accounts(scope,currency,maximum,spent) VALUES (?,?,?,0) ON CONFLICT DO NOTHING",
@@ -234,10 +285,10 @@ public class PostgresIntentLedger
                             statement.setLong(3, budget.maximum)
                             statement.executeUpdate()
                         }
-                    val remaining =
+                    val account =
                         connection
                             .prepareStatement(
-                                "SELECT currency,maximum,spent FROM vi_budget_accounts WHERE scope=? FOR UPDATE",
+                                "SELECT currency,maximum,spent,occurrence_count FROM vi_budget_accounts WHERE scope=? FOR UPDATE",
                             ).use { statement ->
                                 statement.queryTimeout = 10
                                 statement.setString(1, scope)
@@ -246,19 +297,10 @@ public class PostgresIntentLedger
                                     check(rows.getString(1) == budget.currency && rows.getLong(2) == budget.maximum) {
                                         "Budget policy differs from stored mandate"
                                     }
-                                    rows.getLong(2) - rows.getLong(3)
+                                    (rows.getLong(2) - rows.getLong(3)) to rows.getLong(4)
                                 }
                             }
-                    val occurrences =
-                        connection.prepareStatement("SELECT count(*) FROM vi_budget_reservations WHERE scope=?").use { statement ->
-                            statement.queryTimeout = 10
-                            statement.setString(1, scope)
-                            statement.executeQuery().use { rows ->
-                                check(rows.next())
-                                rows.getLong(1)
-                            }
-                        }
-                    if (budget.amount > remaining || occurrences >= budget.maximumOccurrences) {
+                    if (budget.amount > account.first || account.second >= budget.maximumOccurrences) {
                         connection.rollback()
                         return@use false
                     }

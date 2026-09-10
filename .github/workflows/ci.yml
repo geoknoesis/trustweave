@@ -85,6 +85,7 @@ jobs:
         run: |
           python scripts/check-junit-contract.py --report build/reports/junit-contract.json
           python scripts/check-test-evidence.py --report build/reports/test-evidence.json
+          python scripts/check-reliability-evidence.py
 
       - name: Verify API compatibility
         run: ./gradlew checkKotlinAbi --no-daemon --stacktrace
@@ -172,6 +173,7 @@ jobs:
             build/reports/validation-manifest.json
             build/reports/vi-matrix.json
             credentials/plugins/verifiable-intent/build/reports/intent-operations.json
+            credentials/plugins/verifiable-intent/build/reports/reliability/
             credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom
             credentials/plugins/status-list/server/build/reports/status-list-diagnostics.log
             build/reports/intent-notifications/

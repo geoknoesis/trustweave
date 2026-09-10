@@ -197,6 +197,10 @@ rollback to a writer that ignores occurrence limits is not qualified.
 
 ## Production backup/restore acceptance procedure
 
+The [reliability and scale profile](reliability.md) covers counter migration, bounded
+contention, process-crash recovery and physical backup plus archived-WAL recovery.
+Its deployment limits and the procedure below still apply.
+
 1. Stop admission on every host and drain active authorizations and reconciliation writes.
    Fence downstream execution and record the authoritative payment-journal watermark.
 2. Take an encrypted, access-controlled backup with the schema and all reservation/evidence

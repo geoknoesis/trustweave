@@ -173,6 +173,27 @@
       "tests": [
         "scenario checks complete successfully"
       ]
+    },
+    {
+      "id": "RELIABILITY-1",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "tests": [
+        "bounded pool sustains mixed multi instance contention without overspend or replay",
+        "sustained skewed traffic keeps the pool bounded and the durable ledger consistent",
+        "large legacy history migrates atomically and occurrence admission avoids history scans",
+        "database lock timeout rolls back completely and unrelated mandates progress",
+        "counter trigger respects runtime privileges and rolls back failed budget writes",
+        "synchronous commit is enforced without weakening remote apply or leaking pooled settings"
+      ]
+    },
+    {
+      "id": "RELIABILITY-2",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.IntentWalRecoveryTest",
+      "tests": [
+        "crash restart and archived WAL restore preserve authorization and settlement at target"
+      ]
     }
   ]
 }

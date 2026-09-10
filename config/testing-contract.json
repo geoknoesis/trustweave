@@ -165,6 +165,14 @@
       "tests": [
         "real embedded server exposes authenticated metrics during overload and correlates error with trace"
       ]
+    },
+    {
+      "id": "DOC-SIGNED-VERIFY",
+      "module": "distribution/examples",
+      "suite": "org.trustweave.examples.financial.FinancialServicesExampleTest",
+      "tests": [
+        "scenario checks complete successfully"
+      ]
     }
   ]
 }

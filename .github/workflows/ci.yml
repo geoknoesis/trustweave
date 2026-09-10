@@ -89,6 +89,9 @@ jobs:
       - name: Verify API compatibility
         run: ./gradlew checkKotlinAbi --no-daemon --stacktrace
 
+      - name: Execute compiled documentation entry points
+        run: ./gradlew :distribution:examples:checkDocumentationExamples --no-daemon --stacktrace | tee build/reports/documentation-execution.log
+
       - name: Checkout pinned VI interoperability reference
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -174,6 +177,7 @@ jobs:
             build/reports/intent-notifications/
             observability/build/reports/
             build/reports/documentation.json
+            build/reports/documentation-execution.log
             build/reports/junit-contract.json
             build/reports/test-evidence.json
             build/observability/reports/kover/

@@ -36,6 +36,9 @@ jobs:
           ./gradlew build ktlintCheck checkKotlinAbi koverXmlReport cyclonedxBom --no-daemon --stacktrace
           python -m unittest discover -s scripts -p test_check_coverage_policy.py
           python scripts/check-coverage-policy.py
+      - name: Execute compiled documentation entry points
+        run: ./gradlew :distribution:examples:checkDocumentationExamples --no-daemon --stacktrace | tee build/reports/documentation-execution.log
+
       - name: Checkout pinned VI interoperability reference
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -123,6 +126,7 @@ jobs:
             build/reports/validation-manifest.json
             build/reports/vi-matrix.json
             build/reports/documentation.json
+            build/reports/documentation-execution.log
             build/reports/junit-contract.json
             build/reports/test-evidence.json
             build/**/test-results/

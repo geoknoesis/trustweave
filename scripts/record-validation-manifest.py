@@ -8,7 +8,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 
 
-def collect(root, build_root, allow_dirty=False, coverage_report=None):
+def collect(root, build_root, allow_dirty=False, coverage_report=None, skip_policy=None):
     def git(*args):
         return subprocess.check_output(['git','-C',str(root),*args],text=True).strip()
     head=git('rev-parse','HEAD')
@@ -36,6 +36,18 @@ def collect(root, build_root, allow_dirty=False, coverage_report=None):
             if case.find('skipped') is not None:
                 skipped.append(dict(suite=suite.attrib['name'],name=case.attrib['name']))
         artifacts[path.relative_to(build_root).as_posix()]=hashlib.sha256(path.read_bytes()).hexdigest()
+    if skip_policy is not None:
+        approved={}
+        for item in skip_policy['allowed']:
+            key=(item['suite'],item['name'])
+            if key in approved or not isinstance(item['reason'],str) or not item['reason'].strip():
+                raise ValueError('Invalid duplicate or unexplained skip policy')
+            approved[key]=item['reason']
+        for item in skipped:
+            key=(item['suite'],item['name'])
+            if key not in approved:
+                raise ValueError(f'Unapproved skipped test: {key}')
+            item['reason']=approved[key]
     if not totals['tests'] or totals['failures'] or totals['errors']:
         raise ValueError('Missing or failing JUnit evidence')
     coverage=Path(coverage_report) if coverage_report else Path(build_root)/'reports/kover/report.xml'
@@ -59,10 +71,12 @@ if __name__=='__main__':
     parser.add_argument('--build-root',type=Path,default=Path('build'))
     parser.add_argument('--allow-dirty',action='store_true')
     parser.add_argument('--coverage-report',type=Path)
+    parser.add_argument('--skip-policy',type=Path,default=Path('config/test-skip-policy.json'))
     parser.add_argument('--output',type=Path,default=Path('build/reports/validation-manifest.json'))
     args=parser.parse_args()
     try:
-        result=collect(Path.cwd(),args.build_root,args.allow_dirty,args.coverage_report)
+        result=collect(Path.cwd(),args.build_root,args.allow_dirty,args.coverage_report,
+                       json.loads(args.skip_policy.read_text(encoding='utf-8-sig')))
     except (ValueError,KeyError,OSError,ET.ParseError,subprocess.CalledProcessError) as error:
         raise SystemExit(str(error))
     args.output.parent.mkdir(parents=True,exist_ok=True)

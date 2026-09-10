@@ -49,3 +49,32 @@ the [host policy](../../../config/host-coverage-policy.json) adds measured local
 The documentation checker verifies maintained local paths, selected API patterns, fences
 and exact source copies. It inventories other Kotlin blocks and explicitly does not certify
 their compilation, external URLs or historical designs.
+
+## Committed candidate evidence
+
+`release-evidence.yml` runs the full SDK build, lint and ABI checks, merged coverage
+policy, pinned interoperability reference suite, both-direction token checks, exact
+conformance inventory, compiled JUnit discovery checks and required named regressions.
+It also exercises the documented alert/notification paths and archives diagnostics
+when a gate fails. A successful job writes `build/reports/validation-manifest.json`
+with the exact Git commit/tree, source and JUnit/coverage hashes and test counters.
+The manifest refuses dirty source and a mismatched `GITHUB_SHA`.
+
+The [skip policy](../../../config/test-skip-policy.json) enumerates the exact optional
+external-service/HSM/example cases allowed in the credential-free SDK gate. An
+unlisted skipped test fails candidate qualification. Each retained skip carries its
+reason; none is counted as executed provider coverage. Required named regressions
+cannot use these exceptions. Live custody and deployed-service qualification still
+require their own authorized environments.
+
+For local diagnostics on Windows with the default external build layout, use:
+
+```text
+python scripts/record-validation-manifest.py --allow-dirty --build-root C:/Users/USER/AppData/Local/TrustWeave/gradle-build/trustweave --coverage-report C:/Users/USER/AppData/Local/TrustWeave/gradle-build/trustweave/_root/reports/kover/report.xml --output .gradle/local-validation.json
+```
+
+Replace `USER` with the actual account directory. `--allow-dirty` permits local changes and marks evidence from a dirty tree as
+**not a release candidate**. Run it only after the preceding full
+build and policy checks succeed. A manifest is an identity record, not independent
+proof of execution freshness. Never run concurrent Gradle builds that share an output
+directory; an isolated Windows worktree must use `-Ptrustweave.windowsInRepoBuild=true`.

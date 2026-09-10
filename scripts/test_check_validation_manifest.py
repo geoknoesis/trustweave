@@ -76,5 +76,16 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual('disabled',result['skipped'][0]['name'])
         self.assertIn('_root/reports/kover/report.xml',result['artifact_sha256'])
 
+    def test_new_skip_fails_and_approved_skip_retains_reason(self):
+        self.xml.write_text('<testsuite name="demo" tests="1" failures="0" errors="0" skipped="1"><testcase name="disabled"><skipped/></testcase></testsuite>')
+        with self.assertRaisesRegex(ValueError,'Unapproved skipped'):
+            manifest.collect(self.root,self.build,skip_policy={'allowed':[]})
+        policy={'allowed':[dict(suite='demo',name='disabled',reason='Requires an authorized external service')]}
+        result=manifest.collect(self.root,self.build,skip_policy=policy)
+        self.assertEqual(policy['allowed'][0]['reason'],result['skipped'][0]['reason'])
+        policy['allowed'].append(policy['allowed'][0])
+        with self.assertRaisesRegex(ValueError,'duplicate'):
+            manifest.collect(self.root,self.build,skip_policy=policy)
+
 if __name__=='__main__':
     unittest.main()

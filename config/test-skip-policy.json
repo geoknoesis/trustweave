@@ -1,0 +1,80 @@
+{
+  "description": "Exact optional integration skips permitted for the credential-free SDK gate. New skips fail. These exceptions do not qualify unavailable providers.",
+  "allowed": [
+    {
+      "suite": "org.trustweave.anchor.cardano.CardanoBlockfrostIntegrationTest",
+      "name": "anchor and read back round-trip on Preview()",
+      "reason": "Requires an authorized Blockfrost Preview project and funded test wallet."
+    },
+    {
+      "suite": "org.trustweave.anchor.polygon.PolygonBlockchainAnchorClientTest",
+      "name": "should throw NotFoundException for non-existent transaction()",
+      "reason": "Live Amoy RPC requires TRUSTWEAVE_TEST_USE_REAL_SERVICES; local transport tests are separate evidence."
+    },
+    {
+      "suite": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "name": "requireClusterActive does not throw()",
+      "reason": "Requires an authorized AWS CloudHSM cluster, HSM identity and native library; no hardware custody qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "name": "cluster is ACTIVE()",
+      "reason": "Requires an authorized AWS CloudHSM cluster, HSM identity and native library; no hardware custody qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.cloudhsm.CloudHsmKeyManagementServiceIntegrationTest",
+      "name": "generateKey sign and deleteKey round-trip on the HSM()",
+      "reason": "Requires an authorized AWS CloudHSM cluster, HSM identity and native library; no hardware custody qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.googlekms.GoogleKmsProviderTest",
+      "name": "test create with valid options()",
+      "reason": "Requires Google Cloud credentials; constructor checks are not live KMS qualification."
+    },
+    {
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "name": "generateKey(P256) returns a handle and getPublicKey round-trips it()",
+      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "name": "sign(P256) produces a signature that verifies with JCA SHA256withECDSA()",
+      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "name": "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)()",
+      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "name": "generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)()",
+      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "name": "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound()",
+      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
+    },
+    {
+      "suite": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "name": "example test requiring multiple plugins()",
+      "reason": "Conditional external-plugin example; intentionally unavailable without example provider credentials."
+    },
+    {
+      "suite": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "name": "example test requiring Google Cloud KMS()",
+      "reason": "Conditional external-plugin example; intentionally unavailable without example provider credentials."
+    },
+    {
+      "suite": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
+      "name": "example test requiring AWS KMS()",
+      "reason": "Conditional external-plugin example; intentionally unavailable without example provider credentials."
+    },
+    {
+      "suite": "org.trustweave.integration.InMemoryTrustWeaveIntegrationTest",
+      "name": "test with external services template()",
+      "reason": "External-services template requires AWS KMS and Ethereum DID configuration; not executed integration coverage."
+    }
+  ]
+}

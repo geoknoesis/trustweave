@@ -22,6 +22,18 @@ public class PostgresIntentLedger
     ) {
         public fun initializeSchema(): Unit = diagnostics.observe(IntentLedgerDiagnostics.Operation.MIGRATE) { initializeSchemaImpl() }
 
+        /**
+         * Audits a coherent database snapshot and returns a versioned SHA-256 checkpoint.
+         * Retain the checkpoint outside this database at a drained, trusted recovery boundary.
+         * Before enabling restored writers, pass that checkpoint to reject stale or altered data.
+         * This method does not fence writers or authenticate the external checkpoint storage.
+         * It scans all retained records with bounded client memory; run as an operational check,
+         * never in the admission path. The audit role must see all rows (no row-level filtering).
+         * Conservative excess occurrence counts are preserved; missing consumption is rejected.
+         */
+        @JvmOverloads
+        public fun verifyIntegrity(expectedCheckpoint: String? = null): String = verifyLedgerIntegrity(source, expectedCheckpoint)
+
         private fun initializeSchemaImpl(): Unit =
             source.connection.use { connection ->
                 connection.autoCommit = false

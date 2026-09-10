@@ -194,6 +194,28 @@
       "tests": [
         "crash restart and archived WAL restore preserve authorization and settlement at target"
       ]
+    },
+    {
+      "id": "CONFIG-BOUNDARY",
+      "module": "common",
+      "suite": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "tests": [
+        "ambiguous JSON and unknown schema fields fail closed",
+        "schema errors never retain secret input or parser excerpts",
+        "bounded strict UTF8 applies to strings and files",
+        "valid escaped values and discovered fallback providers remain compatible"
+      ]
+    },
+    {
+      "id": "DATA-INTEGRITY",
+      "module": "credentials/plugins/verifiable-intent",
+      "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "tests": [
+        "internally consistent rollback is rejected against external checkpoint",
+        "filtered audit role fails instead of authenticating partial data",
+        "checkpoint detects stale data and includes terminal evidence without exposing identifiers",
+        "audit rejects inconsistent balances consumption states and evidence without repairing data"
+      ]
     }
   ]
 }

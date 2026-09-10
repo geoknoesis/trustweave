@@ -1,21 +1,25 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.ConfigException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import kotlin.test.*
+import org.trustweave.core.exception.ConfigException
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Error handling tests for PluginConfigurationLoader.
  */
 class PluginConfigurationErrorTest {
-
     @Test
     fun `test loadFromFile throws InvalidConfigFormat for blank path`() {
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromFile("")
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromFile("")
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
         assertTrue(exception.parseError.contains("blank"))
@@ -23,16 +27,19 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromFile throws ConfigNotFound when file does not exist`() {
-        val exception = assertFailsWith<ConfigException.NotFound> {
-            PluginConfigurationLoader.loadFromFile("/nonexistent/path/config.json")
-        }
+        val exception =
+            assertFailsWith<ConfigException.NotFound> {
+                PluginConfigurationLoader.loadFromFile("/nonexistent/path/config.json")
+            }
 
         assertEquals("CONFIG_NOT_FOUND", exception.code)
         assertEquals("/nonexistent/path/config.json", exception.path)
     }
 
     @Test
-    fun `test loadFromFile throws ConfigReadFailed when file cannot be read`(@TempDir tempDir: File) {
+    fun `test loadFromFile throws ConfigReadFailed when file cannot be read`(
+        @TempDir tempDir: File,
+    ) {
         val file = File(tempDir, "config.json")
         file.createNewFile()
 
@@ -43,21 +50,25 @@ class PluginConfigurationErrorTest {
 
         // This should throw InvalidConfigFormat, not ConfigReadFailed
         // Let's test the actual scenario: file exists but cannot be parsed
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromFile(file.absolutePath)
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromFile(file.absolutePath)
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
     }
 
     @Test
-    fun `test loadFromFile throws InvalidConfigFormat for invalid JSON`(@TempDir tempDir: File) {
+    fun `test loadFromFile throws InvalidConfigFormat for invalid JSON`(
+        @TempDir tempDir: File,
+    ) {
         val file = File(tempDir, "config.json")
         file.writeText("{ invalid json }")
 
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromFile(file.absolutePath)
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromFile(file.absolutePath)
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
         assertNotNull(exception.parseError)
@@ -65,9 +76,10 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromResource throws InvalidConfigFormat for blank resource`() {
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromResource("")
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromResource("")
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
         assertTrue(exception.parseError.contains("blank"))
@@ -75,9 +87,10 @@ class PluginConfigurationErrorTest {
 
     @Test
     fun `test loadFromResource throws ConfigNotFound when resource does not exist`() {
-        val exception = assertFailsWith<ConfigException.NotFound> {
-            PluginConfigurationLoader.loadFromResource("nonexistent-resource.json")
-        }
+        val exception =
+            assertFailsWith<ConfigException.NotFound> {
+                PluginConfigurationLoader.loadFromResource("nonexistent-resource.json")
+            }
 
         assertEquals("CONFIG_NOT_FOUND", exception.code)
         assertEquals("nonexistent-resource.json", exception.path)
@@ -87,22 +100,24 @@ class PluginConfigurationErrorTest {
     fun `test loadFromJson throws InvalidConfigFormat for invalid JSON`() {
         val invalidJson = "{ invalid json }"
 
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromJson(invalidJson)
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromJson(invalidJson)
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
         assertNotNull(exception.parseError)
-        assertEquals(invalidJson, exception.jsonString)
+        assertNull(exception.jsonString)
     }
 
     @Test
     fun `test loadFromJson throws InvalidConfigFormat for incomplete JSON`() {
         val incompleteJson = """{"plugins": ["""
 
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromJson(incompleteJson)
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromJson(incompleteJson)
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
     }
@@ -111,9 +126,10 @@ class PluginConfigurationErrorTest {
     fun `test loadFromJson throws InvalidConfigFormat for wrong type`() {
         val wrongTypeJson = """{"plugins": "should be array"}"""
 
-        val exception = assertFailsWith<ConfigException.InvalidFormat> {
-            PluginConfigurationLoader.loadFromJson(wrongTypeJson)
-        }
+        val exception =
+            assertFailsWith<ConfigException.InvalidFormat> {
+                PluginConfigurationLoader.loadFromJson(wrongTypeJson)
+            }
 
         assertEquals("INVALID_CONFIG_FORMAT", exception.code)
     }
@@ -140,9 +156,12 @@ class PluginConfigurationErrorTest {
     }
 
     @Test
-    fun `test loadFromFile succeeds with valid file`(@TempDir tempDir: File) {
+    fun `test loadFromFile succeeds with valid file`(
+        @TempDir tempDir: File,
+    ) {
         val file = File(tempDir, "config.json")
-        file.writeText("""
+        file.writeText(
+            """
         {
             "plugins": [
                 {
@@ -152,7 +171,8 @@ class PluginConfigurationErrorTest {
                 }
             ]
         }
-        """)
+        """,
+        )
 
         val config = PluginConfigurationLoader.loadFromFile(file.absolutePath)
 
@@ -160,4 +180,3 @@ class PluginConfigurationErrorTest {
         assertEquals(1, config.plugins.size)
     }
 }
-

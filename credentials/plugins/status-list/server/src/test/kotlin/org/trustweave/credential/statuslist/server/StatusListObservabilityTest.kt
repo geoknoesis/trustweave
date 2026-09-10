@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.trustweave.observability.HostObservability
 import org.trustweave.observability.HostTelemetry
 import org.trustweave.revocation.token.TokenStatusListManager
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class StatusListObservabilityTest {
     @Test
+    @Timeout(90)
     fun `real embedded server exposes authenticated metrics during overload and correlates error with trace`() {
         val exporter = InMemorySpanExporter.create()
         val provider = SdkTracerProvider.builder().addSpanProcessor(SimpleSpanProcessor.create(exporter)).build()
@@ -43,7 +45,7 @@ class StatusListObservabilityTest {
                     override fun getConnection(): java.sql.Connection {
                         if (fail.get()) {
                             entered.countDown()
-                            check(release.await(5, TimeUnit.SECONDS))
+                            check(release.await(60, TimeUnit.SECONDS)) { "Overload probe did not release the database request" }
                             throw java.sql.SQLException("secret database address and password")
                         }
                         return backing.connection
@@ -66,10 +68,11 @@ class StatusListObservabilityTest {
             fun request(
                 path: String,
                 auth: Boolean = false,
+                timeout: Duration = Duration.ofSeconds(10),
             ): HttpRequest =
                 HttpRequest
                     .newBuilder(URI("http://127.0.0.1:$port$path"))
-                    .timeout(Duration.ofSeconds(4))
+                    .timeout(timeout)
                     .apply { if (auth) header("Authorization", "Bearer $secret") }
                     .header("X-Request-ID", "secret-forged")
                     .build()
@@ -79,8 +82,14 @@ class StatusListObservabilityTest {
             val log = java.io.PrintStream(bytes, true, Charsets.UTF_8)
             try {
                 System.setErr(log)
-                val pending = client.sendAsync(request("/token-status-lists/secret-id"), HttpResponse.BodyHandlers.ofString())
-                assertTrue(entered.await(3, TimeUnit.SECONDS))
+                // This request remains blocked while all three independent probes execute.
+                // Its deadline must exceed their combined budgets; the test itself remains bounded.
+                val pending =
+                    client.sendAsync(
+                        request("/token-status-lists/secret-id", timeout = Duration.ofSeconds(75)),
+                        HttpResponse.BodyHandlers.ofString(),
+                    )
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
                 val rejected = client.send(request("/token-status-lists/another-secret"), HttpResponse.BodyHandlers.ofString())
                 assertEquals(503, rejected.statusCode())
                 assertEquals("1", rejected.headers().firstValue("Retry-After").orElseThrow())
@@ -90,7 +99,7 @@ class StatusListObservabilityTest {
                 assertTrue(scrape.body().contains("trustweave_host_active_requests 1"))
                 assertFalse(scrape.body().contains("secret"))
                 release.countDown()
-                val response = pending.get(4, TimeUnit.SECONDS)
+                val response = pending.get(10, TimeUnit.SECONDS)
                 assertEquals(500, response.statusCode())
                 val id = response.headers().firstValue("X-Request-ID").orElseThrow()
                 assertEquals(1, response.headers().allValues("X-Request-ID").size)

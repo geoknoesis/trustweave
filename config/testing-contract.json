@@ -157,6 +157,14 @@
         "cart-over-quantity",
         "merchant-wrong-audience"
       ]
+    },
+    {
+      "id": "HOST-STATUS-OVERLOAD",
+      "module": "credentials/plugins/status-list/server",
+      "suite": "org.trustweave.credential.statuslist.server.StatusListObservabilityTest",
+      "tests": [
+        "real embedded server exposes authenticated metrics during overload and correlates error with trace"
+      ]
     }
   ]
 }

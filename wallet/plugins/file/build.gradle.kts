@@ -17,8 +17,8 @@ dependencies {
     implementation(libs.slf4j.api)
 
     // Encryption libraries
-    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
-    implementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.pkix)
 
     // Test dependencies
     testImplementation(project(":testkit"))

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:43:41.116Z" hostname="THEMATRIX" time="0.362">
+  <properties/>
+  <testcase name="failed provider page leaves the last durable checkpoint intact()" classname="com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest" time="0.309"/>
+  <testcase name="sync pages from checkpoint without fetching each user again and isolates failed items()" classname="com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest" time="0.051"/>
+  <system-out><![CDATA[21:43:41.423 [Test worker] WARN com.geoknoesis.trustweave.saas.server.services.UserSyncService -- User synchronization paused at checkpoint (IllegalStateException)
+21:43:41.423 [Test worker] INFO com.geoknoesis.trustweave.saas.server.services.UserSyncService -- User synchronization finished: synced=0, errors=1, nextOffset=200
+21:43:41.442 [Test worker] WARN com.geoknoesis.trustweave.saas.server.services.UserSyncService -- User synchronization item failed (IllegalStateException)
+21:43:41.458 [Test worker] INFO com.geoknoesis.trustweave.saas.server.services.UserSyncService -- User synchronization finished: synced=99, errors=1, nextOffset=0
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:09.977Z" hostname="THEMATRIX" time="0.266">
+  <properties/>
+  <testcase name="work deadline interrupts a waiting provider()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest" time="0.053"/>
+  <testcase name="duplicate work is refused while the first request runs()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest" time="0.005"/>
+  <testcase name="non cooperative timed out work retains tenant and session reservations()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest" time="0.206"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

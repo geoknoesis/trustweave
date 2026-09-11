@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:46.583Z" hostname="THEMATRIX" time="0.094">
+  <properties/>
+  <testcase name="posts to the endpoint the auth block names, not the platform realm()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest" time="0.045"/>
+  <testcase name="refreshes after the token expires()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest" time="0.025"/>
+  <testcase name="fetches a token and caches it until near expiry()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest" time="0.023"/>
+  <system-out><![CDATA[00:15:46.610 DEBUG [] o.s.web.client.DefaultRestClient - Writing [{grant_type=[client_credentials], client_id=[trustweave-merchant], client_secret=[merchant-secret]}] as "application/x-www-form-urlencoded" with org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter
+00:15:46.621 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProvider$TokenResponse]
+00:15:46.642 DEBUG [] o.s.web.client.DefaultRestClient - Writing [{grant_type=[client_credentials], client_id=[svc], client_secret=[shh]}] as "application/x-www-form-urlencoded" with org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter
+00:15:46.646 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProvider$TokenResponse]
+00:15:46.649 DEBUG [] o.s.web.client.DefaultRestClient - Writing [{grant_type=[client_credentials], client_id=[svc], client_secret=[shh]}] as "application/x-www-form-urlencoded" with org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter
+00:15:46.652 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProvider$TokenResponse]
+00:15:46.668 DEBUG [] o.s.web.client.DefaultRestClient - Writing [{grant_type=[client_credentials], client_id=[svc], client_secret=[shh]}] as "application/x-www-form-urlencoded" with org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter
+00:15:46.673 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProvider$TokenResponse]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

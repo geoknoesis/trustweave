@@ -22,7 +22,7 @@ The `common` module provides **domain-agnostic core infrastructure** for TrustWe
 
 ### Plugin Infrastructure (`org.trustweave.core.plugin`)
 - **`PluginMetadata`** / **`PluginCapabilities`** – Plugin metadata with domain-agnostic capabilities
-- **`PluginConfiguration`** / **`PluginConfigurationLoader`** – Configuration loaded from YAML/JSON files
+- **`PluginConfiguration`** / **`PluginConfigurationLoader`** – Strict, bounded UTF-8 JSON configuration; see [configuration limits and migration](../../operations/configuration-data.md)
 - **`PluginType`** – Framework-level plugin type enumeration (BLOCKCHAIN, CREDENTIAL_SERVICE, DID_METHOD, etc.)
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
 - **`PluginRegistry`** / **`ProviderChain`** – Internal infrastructure (`internal` visibility). Domain-specific registries (`DidMethodRegistry`, `BlockchainAnchorRegistry`, `TrustRegistry`) are the public entry points.

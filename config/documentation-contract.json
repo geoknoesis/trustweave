@@ -1,0 +1,41 @@
+{
+  "description": "Required source-backed documentation examples. A removed marker must fail validation rather than silently reduce coverage.",
+  "examples": [
+    {
+      "document": "docs/contributing/testing-guidelines.md",
+      "source": "testkit/src/test/kotlin/org/trustweave/testkit/DocumentationExampleTest.kt"
+    },
+    {
+      "document": "docs/getting-started/quick-start.md",
+      "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+    },
+    {
+      "document": "docs/operations/host/example.md",
+      "source": "observability/src/test/kotlin/org/trustweave/observability/HostDocumentationExampleTest.kt"
+    },
+    {
+      "document": "docs/README.md",
+      "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+    },
+    {
+      "document": "README.md",
+      "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/documentation/DocumentationQuickStart.kt"
+    },
+    {
+      "document": "docs/operations/verified-examples/verification.md",
+      "source": "distribution/examples/src/main/kotlin/org/trustweave/examples/scenarios/SignedScenario.kt"
+    },
+    {
+      "document": "docs/operations/verified-examples/merchant-authentication.md",
+      "source": "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CheckoutTrustTest.kt"
+    },
+    {
+      "document": "docs/operations/verified-examples/wallet-configuration.md",
+      "source": "wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletFactoryTest.kt"
+    },
+    {
+      "document": "docs/operations/verified-examples/ledger-migration.md",
+      "source": "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerMigrationDocumentationTest.kt"
+    }
+  ]
+}

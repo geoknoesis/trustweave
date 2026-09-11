@@ -1,0 +1,17 @@
+{
+  "common/src/main/kotlin/org/trustweave/core/plugin/ConfigurationJson.kt": "481f4ffe8e5c76b5bed42dd6f355757eaf28b7cf26f4a3ec8ae7d00057373137",
+  "common/src/main/kotlin/org/trustweave/core/plugin/PluginConfiguration.kt": "c2a134497bd19ae9f8422774cc0ef9e29e3a2f74872ec9b58aadc3e8797ecdf0",
+  "common/src/main/kotlin/org/trustweave/core/plugin/PluginConfigurationLoader.kt": "5c3a8d84837c822382976a08d34e092d07cf57c3933b09dde767465807dc1c96",
+  "common/src/test/kotlin/org/trustweave/core/plugin/ConfigurationBoundaryTest.kt": "f89c30a643c1d1e65375a5bb17f577841fecd6594f67e838913c4538e233088b",
+  "common/src/test/kotlin/org/trustweave/core/plugin/PluginConfigurationErrorTest.kt": "d7628292f4d8f496616a5fa83dbeb8bb6a073cf7dcb0515190efc8ebdd4794fd",
+  "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/PostgresIntentLedger.kt": "6bc73ebe624c5200a6e6d5b5ec247643541de2a0addba0553857da5a1453bd5d",
+  "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/LedgerIntegrity.kt": "c6e148cd214b44db25fb2109eaea10d2b50c763113656e6b1dc2c00c5a383bb5",
+  "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerIntegrityTest.kt": "52a79a3cc73d889b382790a1018521ded4f712c6eed449ff00189ba3a1f8df38",
+  "credentials/plugins/verifiable-intent/api/verifiable-intent.api": "c2210776d980786e2ac19371a1705d82ce6040789a03759aca9cc982b5cc895a",
+  "config/testing-contract.json": "2f58aa6c6bca773e4fc8fe0eb065f44bb19dfb58585a49de0159cb4b9bd97ceb",
+  "docs/operations/configuration-data.md": "8a5bae064f818b5a307607234da93960d670d1e0f8f652d20345d562a6f7384f",
+  "docs/api-reference/modules/trustweave-common.md": "3505d6f0945ca18cadfe2c7568f3563d54b73be4aa9c559c811b5a7d6582612f",
+  "docs/api-reference/modules/trustweave-common-package-structure.md": "a581837ab3e118b38c19e7be2512b5c96952c08c98d50739df6fb7e4b5df3e0d",
+  "scripts/intent-notification-exercise.py": "fbdd7e5dbe4164f12d512e66fbb7034e41cee4ba68d6db79425e47a9143b8fd3",
+  "scripts/test_intent_notification_exercise.py": "0a66f7cad7c3d8d83d930a13b5d1b7dddf098516e511bbccef0654b234d21970"
+}

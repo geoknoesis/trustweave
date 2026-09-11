@@ -32,7 +32,7 @@ dependencies {
     implementation(libs.bouncycastle.pkix)
 
     // DIDComm library (production crypto implementation)
-    implementation("org.didcommx:didcomm:0.3.2")
+    implementation(libs.didcommx)
 
     // HTTP client for message delivery
     implementation(libs.okhttp)
@@ -46,7 +46,7 @@ dependencies {
     // Uncomment when using MongoDB storage:
     // implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
     // For compilation only (Document class reference):
-    compileOnly("org.mongodb:bson:4.11.0")
+    compileOnly(libs.mongodb.bson)
 
     // Test dependencies
     testImplementation(project(":testkit"))

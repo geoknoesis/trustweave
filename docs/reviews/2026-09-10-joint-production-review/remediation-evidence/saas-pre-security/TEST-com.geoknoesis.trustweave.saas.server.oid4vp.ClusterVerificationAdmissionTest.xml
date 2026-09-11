@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:06.145Z" hostname="THEMATRIX" time="2.118">
+  <properties/>
+  <testcase name="provider exception does not leak database reservations()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest" time="0.186"/>
+  <testcase name="non cooperative provider keeps its cross instance session reservation after timeout()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest" time="1.158"/>
+  <testcase name="two instances share tenant capacity and release reservations after completion()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest" time="0.297"/>
+  <testcase name="cluster global capacity is bounded across tenants()" classname="com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest" time="0.476"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

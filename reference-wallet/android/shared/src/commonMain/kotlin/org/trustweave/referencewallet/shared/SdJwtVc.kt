@@ -25,16 +25,14 @@ import kotlinx.serialization.json.put
  * and any future server-side issuer/verifier can use the same canonical impl.
  */
 object SdJwtVc {
-
     /** `_sd_alg`="sha-256" — base64url(SHA-256(disclosure)). */
-    fun disclosureHash(disclosure: String): String =
-        Base64Url.encode(sha256(disclosure.encodeToByteArray()))
+    fun disclosureHash(disclosure: String): String = Base64Url.encode(sha256(disclosure.encodeToByteArray()))
 
     fun randomSalt(): String = Base64Url.encode(secureRandomBytes(16))
 
     /** A single disclosure for an object-property claim. */
     data class Disclosure(
-        val raw: String,    // base64url([salt, name, value])
+        val raw: String, // base64url([salt, name, value])
         val hash: String,
         val salt: String,
         val name: String,
@@ -42,13 +40,17 @@ object SdJwtVc {
     )
 
     /** Build one disclosure: `base64url([salt, name, value])`. */
-    fun createObjectDisclosure(name: String, value: JsonElement): Disclosure {
+    fun createObjectDisclosure(
+        name: String,
+        value: JsonElement,
+    ): Disclosure {
         val salt = randomSalt()
-        val arr = buildJsonArray {
-            add(JsonPrimitive(salt))
-            add(JsonPrimitive(name))
-            add(value)
-        }
+        val arr =
+            buildJsonArray {
+                add(JsonPrimitive(salt))
+                add(JsonPrimitive(name))
+                add(value)
+            }
         val raw = Base64Url.encodeString(Json.encodeToString(JsonElement.serializer(), arr))
         return Disclosure(raw, disclosureHash(raw), salt, name, value)
     }
@@ -80,9 +82,12 @@ object SdJwtVc {
         require(parts.isNotEmpty()) { "Empty SD-JWT VC" }
         val issuerJwt = parts[0]
         var lastIdx = parts.size - 1
-        val kbJwt: String? = if (parts[lastIdx].isNotEmpty()) {
-            parts[lastIdx].also { lastIdx -= 1 }
-        } else null
+        val kbJwt: String? =
+            if (parts[lastIdx].isNotEmpty()) {
+                parts[lastIdx].also { lastIdx -= 1 }
+            } else {
+                null
+            }
         val disclosureSegments = parts.subList(1, lastIdx + 1).filter { it.isNotEmpty() }
         val disclosures = disclosureSegments.map { parseDisclosure(it) }
 
@@ -103,7 +108,12 @@ object SdJwtVc {
         typ: String,
         signer: (ByteArray) -> ByteArray,
     ): String {
-        val header = """{"alg":"EdDSA","typ":"$typ","kid":"$kid"}"""
+        val header =
+            buildJsonObject {
+                put("alg", "EdDSA")
+                put("typ", typ)
+                put("kid", kid)
+            }.toString()
         val encodedHeader = Base64Url.encodeString(header)
         val encodedPayload = Base64Url.encodeString(jsonPayload)
         val signingInput = "$encodedHeader.$encodedPayload"
@@ -129,18 +139,20 @@ object SdJwtVc {
         val prefix = (listOf(decoded.issuerJwt) + selected.map { it.raw } + listOf("")).joinToString("~")
         val sdHash = Base64Url.encode(sha256(prefix.encodeToByteArray()))
         val didTail = holderDid.removePrefix("did:key:")
-        val kbPayload = buildJsonObject {
-            put("iat", nowEpochSeconds)
-            put("aud", audience)
-            put("nonce", nonce)
-            put("sd_hash", sdHash)
-        }
-        val kbJwt = signCompactJws(
-            jsonPayload = Json.encodeToString(JsonElement.serializer(), kbPayload),
-            kid = "$holderDid#$didTail",
-            typ = "kb+jwt",
-            signer = holderSigner,
-        )
+        val kbPayload =
+            buildJsonObject {
+                put("iat", nowEpochSeconds)
+                put("aud", audience)
+                put("nonce", nonce)
+                put("sd_hash", sdHash)
+            }
+        val kbJwt =
+            signCompactJws(
+                jsonPayload = Json.encodeToString(JsonElement.serializer(), kbPayload),
+                kid = "$holderDid#$didTail",
+                typ = "kb+jwt",
+                signer = holderSigner,
+            )
         return prefix + kbJwt
     }
 }

@@ -1,0 +1,310 @@
+[
+  {
+    "received_utc": "2026-09-10T03:41:52.557602+00:00",
+    "http_status": 503,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "firing",
+      "alerts": [
+        {
+          "status": "firing",
+          "labels": {
+            "alertname": "IntentHealthUnavailable",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+          },
+          "startsAt": "2026-09-10T03:41:51.532Z",
+          "endsAt": "0001-01-01T00:00:00Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=%28trustweave_intent_health_poll_success+%3D%3D+0%29+or+%28time%28%29+-+trustweave_intent_health_last_success_timestamp_seconds+%3E+120%29&g0.tab=1",
+          "fingerprint": "c4bd50c8bd58d386"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentHealthUnavailable\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:41:52.868986+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "firing",
+      "alerts": [
+        {
+          "status": "firing",
+          "labels": {
+            "alertname": "IntentHealthUnavailable",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+          },
+          "startsAt": "2026-09-10T03:41:51.532Z",
+          "endsAt": "0001-01-01T00:00:00Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=%28trustweave_intent_health_poll_success+%3D%3D+0%29+or+%28time%28%29+-+trustweave_intent_health_last_success_timestamp_seconds+%3E+120%29&g0.tab=1",
+          "fingerprint": "c4bd50c8bd58d386"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentHealthUnavailable\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:41:54.549717+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "resolved",
+      "alerts": [
+        {
+          "status": "resolved",
+          "labels": {
+            "alertname": "IntentHealthUnavailable",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+          },
+          "startsAt": "2026-09-10T03:41:51.532Z",
+          "endsAt": "2026-09-10T03:41:54.532Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=%28trustweave_intent_health_poll_success+%3D%3D+0%29+or+%28time%28%29+-+trustweave_intent_health_last_success_timestamp_seconds+%3E+120%29&g0.tab=1",
+          "fingerprint": "c4bd50c8bd58d386"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentHealthUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#health-polling-failure-or-staleness"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentHealthUnavailable\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:43:56.539951+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "firing",
+      "alerts": [
+        {
+          "status": "firing",
+          "labels": {
+            "alertname": "IntentTelemetryMissing",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+          },
+          "startsAt": "2026-09-10T03:43:55.532Z",
+          "endsAt": "0001-01-01T00:00:00Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=%28up%7Bjob%3D%22trustweave-intent%22%7D+%3D%3D+1%29+unless+on+%28job%2C+instance%29+%28trustweave_intent_health_poll_success+and+on+%28job%2C+instance%29+trustweave_intent_health_last_success_timestamp_seconds%29&g0.tab=1",
+          "fingerprint": "0c1137f78aa73e65"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentTelemetryMissing",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentTelemetryMissing",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentTelemetryMissing\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:43:58.543019+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "resolved",
+      "alerts": [
+        {
+          "status": "resolved",
+          "labels": {
+            "alertname": "IntentTelemetryMissing",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+          },
+          "startsAt": "2026-09-10T03:43:55.532Z",
+          "endsAt": "2026-09-10T03:43:57.532Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=%28up%7Bjob%3D%22trustweave-intent%22%7D+%3D%3D+1%29+unless+on+%28job%2C+instance%29+%28trustweave_intent_health_poll_success+and+on+%28job%2C+instance%29+trustweave_intent_health_last_success_timestamp_seconds%29&g0.tab=1",
+          "fingerprint": "0c1137f78aa73e65"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentTelemetryMissing",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentTelemetryMissing",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentTelemetryMissing\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:46:00.546961+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "firing",
+      "alerts": [
+        {
+          "status": "firing",
+          "labels": {
+            "alertname": "IntentHostUnavailable",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+          },
+          "startsAt": "2026-09-10T03:45:59.532Z",
+          "endsAt": "0001-01-01T00:00:00Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=up%7Bjob%3D%22trustweave-intent%22%7D+%3D%3D+0&g0.tab=1",
+          "fingerprint": "f59666be6546dbd6"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentHostUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentHostUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentHostUnavailable\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  },
+  {
+    "received_utc": "2026-09-10T03:46:02.544308+00:00",
+    "http_status": 200,
+    "payload": {
+      "receiver": "local-exercise",
+      "status": "resolved",
+      "alerts": [
+        {
+          "status": "resolved",
+          "labels": {
+            "alertname": "IntentHostUnavailable",
+            "instance": "127.0.0.1:51989",
+            "job": "trustweave-intent",
+            "severity": "critical"
+          },
+          "annotations": {
+            "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+          },
+          "startsAt": "2026-09-10T03:45:59.532Z",
+          "endsAt": "2026-09-10T03:46:01.532Z",
+          "generatorURL": "http://thematrix:51990/graph?g0.expr=up%7Bjob%3D%22trustweave-intent%22%7D+%3D%3D+0&g0.tab=1",
+          "fingerprint": "f59666be6546dbd6"
+        }
+      ],
+      "groupLabels": {
+        "alertname": "IntentHostUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent"
+      },
+      "commonLabels": {
+        "alertname": "IntentHostUnavailable",
+        "instance": "127.0.0.1:51989",
+        "job": "trustweave-intent",
+        "severity": "critical"
+      },
+      "commonAnnotations": {
+        "runbook": "docs/operations/intent/README.md#missing-host-or-failed-scrape"
+      },
+      "externalURL": "http://thematrix:51991",
+      "version": "4",
+      "groupKey": "{}:{alertname=\"IntentHostUnavailable\", instance=\"127.0.0.1:51989\", job=\"trustweave-intent\"}",
+      "truncatedAlerts": 0
+    }
+  }
+]

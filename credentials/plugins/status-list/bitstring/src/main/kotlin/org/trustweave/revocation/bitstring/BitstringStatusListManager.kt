@@ -2,6 +2,8 @@ package org.trustweave.revocation.bitstring
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -118,6 +120,16 @@ class BitstringStatusListManager(
          * `UNIQUE (status_list_id, entry_index)` constraint.
          */
         private const val MAX_INDEX_ASSIGNMENT_RETRIES: Int = 5
+
+        /**
+         * Bits between cooperative-cancellation probes when encoding or decoding a bitstring.
+         *
+         * Small enough that a cancelled call abandons a default 131072-bit list after at most
+         * 8192 bit operations, large enough that the probe itself is not measurable against the
+         * per-bit work. Must stay a divisor of 8 so the byte-indexed decode loop probes on the
+         * same stride as the bit-indexed encode loop.
+         */
+        private const val CANCELLATION_PROBE_STRIDE: Int = 8192
 
         private val vcJson =
             Json {
@@ -958,7 +970,7 @@ class BitstringStatusListManager(
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private fun updateCredentialStatus(
+    private suspend fun updateCredentialStatus(
         credentialId: String,
         statusListId: String,
         revoked: Boolean?,
@@ -1202,16 +1214,17 @@ class BitstringStatusListManager(
      * Bit ordering follows the W3C spec: the LEFT-MOST bit of each byte (the most
      * significant bit) is the lowest index, i.e. entry 0 = bit 7 of byte 0 (0x80).
      */
-    private fun encodeBitSet(
+    private suspend fun encodeBitSet(
         bitSet: BitSet,
         size: Int,
     ): String {
         val byteCount = (size + 7) / 8
         val bytes = ByteArray(byteCount)
-        // TODO: cancellation gap — this loop iterates over the full status list (default 131072)
-        // without checking for cooperative cancellation. As a plain non-suspend function it cannot
-        // reach coroutineContext; if made suspend, add coroutineContext.ensureActive() every ~8192 iterations.
+        // A default list is 131072 bits and callers may configure far more. Probe cooperative
+        // cancellation on a fixed stride so a cancelled refresh stops promptly instead of burning
+        // a Dispatchers.IO thread to completion.
         for (i in 0 until size) {
+            if (i % CANCELLATION_PROBE_STRIDE == 0) currentCoroutineContext().ensureActive()
             if (bitSet.get(i)) {
                 bytes[i / 8] = (bytes[i / 8].toInt() or (1 shl (7 - (i % 8)))).toByte()
             }
@@ -1240,7 +1253,7 @@ class BitstringStatusListManager(
      * `STATUS_LIST_LEGACY_FORMAT`); a raw GZIP payload base64url-encodes to
      * `H4s...`, so the prefix detection is unambiguous.
      */
-    private fun decodeBitSet(encoded: String): BitSet {
+    private suspend fun decodeBitSet(encoded: String): BitSet {
         if (!encoded.startsWith(MULTIBASE_BASE64URL_NO_PAD_PREFIX)) {
             throw TrustWeaveException.InvalidState(
                 code = "STATUS_LIST_LEGACY_FORMAT",
@@ -1260,10 +1273,9 @@ class BitstringStatusListManager(
                 .GZIPInputStream(gzipped.inputStream())
                 .use { it.readBytes() }
         val bitSet = BitSet(bytes.size * 8)
-        // TODO: cancellation gap — this nested loop iterates over the full status list
-        // without checking for cooperative cancellation. As a plain non-suspend function it cannot
-        // reach coroutineContext; if made suspend, add coroutineContext.ensureActive() every ~8192 iterations.
+        // Same stride as encodeBitSet, counted in bits so both directions probe at the same rate.
         for (i in bytes.indices) {
+            if ((i * 8) % CANCELLATION_PROBE_STRIDE == 0) currentCoroutineContext().ensureActive()
             for (j in 0..7) {
                 if ((bytes[i].toInt() and (1 shl (7 - j))) != 0) {
                     bitSet.set(i * 8 + j)

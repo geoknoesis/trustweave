@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.security.AuthenticationFailureResponseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:19.675Z" hostname="THEMATRIX" time="0.02">
+  <properties/>
+  <testcase name="controller authentication failure returns a safe bearer challenge()" classname="com.geoknoesis.trustweave.saas.server.security.AuthenticationFailureResponseTest" time="0.019"/>
+  <system-out><![CDATA[00:18:19.680 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 1 mappings in org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+00:18:19.681 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 3 RequestBodyAdvice, 2 ResponseBodyAdvice
+00:18:19.681 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 2 ResponseBodyAdvice
+00:18:19.682 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.security.AuthenticationFailureResponseTest$Fixture#failure()
+00:18:19.684 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.geoknoesis.trustweave.saas.server.exception.GlobalExceptionHandler#handleAuthenticationFailure()
+00:18:19.686 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:18:19.686 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [ErrorResponse(message=Authentication is required, status=401, timestamp=2026-09-11T04:18:19.68404490 (truncated)...]
+00:18:19.689 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.security.authentication.BadCredentialsException: sensitive-provider-detail]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

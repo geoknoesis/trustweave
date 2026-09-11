@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.wallet.file.FileWalletFactoryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:41:21.038Z" hostname="THEMATRIX" time="1.278">
+  <properties/>
+  <testcase name="typed encryption key is validated rather than silently ignored()" classname="org.trustweave.wallet.file.FileWalletFactoryTest" time="0.967"/>
+  <testcase name="production policy rejects before storage creation()" classname="org.trustweave.wallet.file.FileWalletFactoryTest" time="0.225"/>
+  <testcase name="unsafe wallet ids cannot escape or reuse the storage root()" classname="org.trustweave.wallet.file.FileWalletFactoryTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

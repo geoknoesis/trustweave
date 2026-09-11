@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:21.210Z" hostname="THEMATRIX" time="0.806">
+  <properties/>
+  <testcase name="extractDisplayNameFromClaims reads holder string()" classname="com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest" time="0.8"/>
+  <testcase name="createPerson requires reference number()" classname="com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest" time="0.002"/>
+  <testcase name="extractDisplayNameFromClaims reads nested name()" classname="com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

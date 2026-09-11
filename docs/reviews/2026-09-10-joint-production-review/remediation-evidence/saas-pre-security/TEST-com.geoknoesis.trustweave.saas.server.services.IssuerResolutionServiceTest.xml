@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:19.610Z" hostname="THEMATRIX" time="0.047">
+  <properties/>
+  <testcase name="a full URL is accepted, since that is what people paste()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.011"/>
+  <testcase name="input that is not a web address is refused with an explanation()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.008"/>
+  <testcase name="a bare domain becomes a resolvable did-web()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.004"/>
+  <testcase name="a port is percent-encoded, or the DID silently never resolves()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.004"/>
+  <testcase name="a domain that publishes nothing is reported, not silently accepted()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.004"/>
+  <testcase name="a subdomain is preserved()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.004"/>
+  <testcase name="case and trailing slashes do not change the identifier()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.004"/>
+  <testcase name="a path becomes colon-separated segments per the did-web spec()" classname="com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest" time="0.005"/>
+  <system-out><![CDATA[22:54:19.618 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example from website https://partner.example/
+22:54:19.635 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example from website partner.example
+22:54:19.639 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example%3A8443 from website https://partner.example:8443
+22:54:19.644 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example from website partner.example
+22:54:19.648 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:identity.partner.example from website identity.partner.example
+22:54:19.652 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example from website Partner.Example/
+22:54:19.652 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example from website https://partner.example
+22:54:19.657 DEBUG [] c.g.t.s.s.s.IssuerResolutionService - Attempting to resolve did:web:partner.example:orgs:acme from website https://partner.example/orgs/acme
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

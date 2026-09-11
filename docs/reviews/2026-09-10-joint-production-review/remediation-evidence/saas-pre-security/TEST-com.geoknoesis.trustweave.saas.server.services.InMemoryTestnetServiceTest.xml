@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:19.599Z" hostname="THEMATRIX" time="0.01">
+  <properties/>
+  <testcase name="createTransaction should create and confirm transaction immediately()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="getAllTransactions should return all transactions()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="isDidAnchored should return true for anchored DID()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="isDidAnchored should return false for non-anchored DID()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.0"/>
+  <testcase name="getAllAnchoredDids should return all anchored DIDs()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="getStatistics should return correct statistics()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="getAnchoredDid should return anchored DID information()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="getTransaction should return transaction by hash()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.0"/>
+  <testcase name="getTransaction should return null for non-existent hash()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <testcase name="reset should clear all transactions and anchored DIDs()" classname="com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest" time="0.001"/>
+  <system-out><![CDATA[22:54:19.601 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:123: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.603 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:1: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.603 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:2: 0x000000000000000000000000000000000000000000000000000000000inmem_2
+22:54:19.603 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:3: 0x000000000000000000000000000000000000000000000000000000000inmem_3
+22:54:19.603 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:789: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.604 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:1: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.604 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:2: 0x000000000000000000000000000000000000000000000000000000000inmem_2
+22:54:19.604 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:1: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.604 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:2: 0x000000000000000000000000000000000000000000000000000000000inmem_2
+22:54:19.606 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:anchored: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.607 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:456: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.609 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:1: 0x000000000000000000000000000000000000000000000000000000000inmem_1
+22:54:19.609 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Created in-memory transaction for DID did:example:test:2: 0x000000000000000000000000000000000000000000000000000000000inmem_2
+22:54:19.609 INFO  [] c.g.t.s.s.s.InMemoryTestnetService - Resetting in-memory testnet
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+{
+  "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/PostgresIntentLedger.kt": "9b8a8700c4807ec95d2ece10766c16f7571a645ace1887fbe23c3791c8746350",
+  "credentials/plugins/verifiable-intent/build.gradle.kts": "37dbc04311f867e86968262e52ad41d31abcc583017ddce9dbfdf91862b8af0c",
+  "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentReliabilityTest.kt": "2a5ed7a5ad42d63c5ff1d6072f25c520ff5eab781830e6ed2397896ce02d586e",
+  "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentWalRecoveryTest.kt": "32723884c3c8861f1f09b8e6d3cb56a052e3494533c55d2e1aa5183868e64a10",
+  "scripts/check-reliability-evidence.py": "8f83f24fafaabdf6f64c2e2ed2facfe023a929eaa8cb1f892c392ae6658c3ffd",
+  "scripts/test_check_reliability_evidence.py": "ca4a748d0ed6a136b6edba6bccf23f42de6255f265bca4d22b722cf8bcef0588",
+  "config/testing-contract.json": "2fdd44541e7490972b3c616364f4531cb4c5d1605a2f2bd584bfbd586f54e25b",
+  ".github/workflows/ci.yml": "a7bd2f7a1afb1eabf756744fa8e88c3dea2fd6dd0a82e768491b35f6fb23be07",
+  ".github/workflows/release-evidence.yml": "c473ad0855c8918e033313aa827a17064f3b9d2cf49aca1213771b005764cd70",
+  "docs/operations/intent/README.md": "228c595bf987f9f3a885581f1fe698b7ddbc3769cf35e12a72696ac0f8372067",
+  "docs/operations/intent/reliability.md": "bfa5edf6e1229d9df555e82e3d66c3369d6f1e727843b911ccdb5ce15ebeeb4a"
+}

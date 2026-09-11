@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.hashicorpkms.VaultKeyManagementServiceRoundTripTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:06:34.773Z" hostname="THEMATRIX" time="0.023">
+  <properties/>
+  <testcase name="distinct algorithms encode distinctly()" classname="org.trustweave.hashicorpkms.VaultKeyManagementServiceRoundTripTest" time="0.003"/>
+  <testcase name="every advertised algorithm round-trips()" classname="org.trustweave.hashicorpkms.VaultKeyManagementServiceRoundTripTest" time="0.014"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

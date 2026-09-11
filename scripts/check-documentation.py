@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HISTORICAL = {'.internal', 'superpowers', 'reviews'}
 
 
-def inspect(root):
+def inspect(root, require_contract=False):
     names = subprocess.check_output(
         ['git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']
     ).decode().split('\0')
@@ -34,10 +34,18 @@ def inspect(root):
         for match in re.finditer(r'^```(kotlin|kts)[^\n]*\n(.*?)^```', content, re.M | re.S):
             snippets.append({'file': relative.as_posix(), 'line': content[:match.start()].count('\n') + 1,
                              'historical': historical, 'has_main': bool(re.search(r'fun\s+main\s*\(', match[2]))})
-        for match in re.finditer(r'<!-- example-source: ([^\n]+) -->\s*```kotlin\n(.*?)```', content, re.S):
-            source = root / match[1]
+        markers = list(re.finditer(r'<!-- example-source:([^\n]*?)-->', content))
+        examples = list(re.finditer(r'<!-- example-source: ([^\n]+) -->\s*```kotlin\n(.*?)```', content, re.S))
+        matched = {match.start() for match in examples}
+        for marker in markers:
+            if marker.start() not in matched:
+                errors.append(f'{relative}: source-backed marker requires an immediately following Kotlin fence')
+        for match in examples:
+            source = (root / match[1]).resolve()
             source_examples.append({'document': relative.as_posix(), 'source': match[1]})
-            if not source.is_file() or source.read_text(encoding='utf-8').strip() != match[2].strip():
+            if not source.is_relative_to(root.resolve()) or source not in available or source.suffix != '.kt':
+                errors.append(f'{relative}: example source must be a shipped Kotlin file inside the repository: {match[1]}')
+            elif not source.is_file() or source.read_text(encoding='utf-8-sig').strip() != match[2].strip():
                 errors.append(f'{relative}: source-backed example drift: {match[1]}')
         if historical:
             continue
@@ -78,6 +86,24 @@ def inspect(root):
             shipped = resolved in available or (resolved.is_dir() and any(resolved in item.parents for item in available))
             if not resolved.exists() or not shipped:
                 errors.append(f'{relative}: missing relative link: {target}')
+    contract_file = root / 'config/documentation-contract.json'
+    if require_contract and not contract_file.is_file():
+        errors.append('Missing required config/documentation-contract.json')
+    if contract_file.is_file():
+        try:
+            contract = json.loads(contract_file.read_text(encoding='utf-8-sig'))
+            required = contract['examples']
+            if not isinstance(required, list) or not required:
+                raise ValueError('nonempty examples required')
+            pairs = [(item['document'], item['source']) for item in required]
+            if len(set(pairs)) != len(pairs) or any(not all(isinstance(value, str) and value for value in pair) for pair in pairs):
+                raise ValueError('unique nonempty document/source pairs required')
+            for document, source in pairs:
+                matches = [item for item in source_examples if item == {'document': document, 'source': source}]
+                if len(matches) != 1:
+                    errors.append(f'{document}: required source contract missing or duplicated: {source}')
+        except (ValueError, TypeError, KeyError) as error:
+            errors.append(f'Invalid documentation contract: {error}')
     example_build = root / 'distribution/examples/build.gradle.kts'
     executable_examples = []
     if example_build.exists():
@@ -112,7 +138,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
-    result = inspect(ROOT)
+    result = inspect(ROOT, require_contract=True)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')

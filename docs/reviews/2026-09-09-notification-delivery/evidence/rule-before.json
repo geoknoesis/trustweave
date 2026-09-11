@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout": "\n\n",
+  "stderr": "  FAILED:\n    name: partial telemetry loses timestamp and another host cannot mask it,\n    alertname: IntentTelemetryMissing, time: 5m, \n        exp:[\n            0:\n              Labels:{alertname=\"IntentTelemetryMissing\", instance=\"host-a\", job=\"trustweave-intent\", severity=\"critical\"}\n              Annotations:{runbook=\"docs/operations/intent/README.md#missing-host-or-failed-scrape\"}\n            ], \n        got:[]\n"
+}

@@ -1,0 +1,221 @@
+rule_files:
+- alerts.yml
+evaluation_interval: 1m
+tests:
+- name: operation failure backlog and latency fire and recover
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_operations_total{operation="reserve",outcome="storage_failure"}
+    values: 0+1x15 15+0x20
+  - series: trustweave_intent_reconciliation_pending
+    values: 50+0x15 0+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="0.01"}
+    values: 0+0x15 0+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="0.1"}
+    values: 0+10x15 150+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="1.0"}
+    values: 0+100x15 1500+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="5.0"}
+    values: 0+200x15 3000+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="10.0"}
+    values: 0+200x15 3000+0x20
+  - series: trustweave_intent_operation_seconds_bucket{operation="reserve",le="+Inf"}
+    values: 0+200x15 3000+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentStorageFailure
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentStorageFailure
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#storage-failure
+  - eval_time: 35m
+    alertname: IntentStorageFailure
+    exp_alerts: []
+  - eval_time: 0m
+    alertname: IntentReconciliationBacklog
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentReconciliationBacklog
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - eval_time: 35m
+    alertname: IntentReconciliationBacklog
+    exp_alerts: []
+  - eval_time: 0m
+    alertname: IntentAuthorizationLatency
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentAuthorizationLatency
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#latency-and-in-flight-work
+  - eval_time: 35m
+    alertname: IntentAuthorizationLatency
+    exp_alerts: []
+- name: poll failure
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_health_poll_success
+    values: 0+0x15 1+0x20
+  - series: trustweave_intent_health_last_success_timestamp_seconds
+    values: 0+60x36
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentHealthUnavailable
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentHealthUnavailable
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+      exp_annotations: &id001
+        runbook: docs/operations/intent/README.md#health-polling-failure-or-staleness
+  - eval_time: 35m
+    alertname: IntentHealthUnavailable
+    exp_alerts: []
+- name: poll scheduler stops despite preceding success
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_health_poll_success
+    values: 1+0x36
+  - series: trustweave_intent_health_last_success_timestamp_seconds
+    values: 0+0x15 960+60x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentHealthUnavailable
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentHealthUnavailable
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+      exp_annotations: *id001
+  - eval_time: 35m
+    alertname: IntentHealthUnavailable
+    exp_alerts: []
+- name: legacy unknown age
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_oldest_pending_known
+    values: 0+0x15 1+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentPendingAgeUnknown
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentPendingAgeUnknown
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - eval_time: 35m
+    alertname: IntentPendingAgeUnknown
+    exp_alerts: []
+- name: known pending age exceeds threshold
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_oldest_pending_age_seconds
+    values: 1200+0x15 0+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentPendingTooOld
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentPendingTooOld
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - eval_time: 35m
+    alertname: IntentPendingTooOld
+    exp_alerts: []
+- name: target scrape fails
+  interval: 1m
+  input_series:
+  - series: up{job="trustweave-intent",instance="host-a"}
+    values: 0+0x15 1+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentHostUnavailable
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentHostUnavailable
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        job: trustweave-intent
+        instance: host-a
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape
+  - eval_time: 35m
+    alertname: IntentHostUnavailable
+    exp_alerts: []
+- name: target disappears from discovery
+  interval: 1m
+  input_series:
+  - series: up{job="trustweave-intent",instance="host-a"}
+    values: 1 1 stale _ _ _ _ _ _ _ _ _ _ _ _ _ 1+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentHostMissing
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentHostMissing
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        job: trustweave-intent
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape
+  - eval_time: 35m
+    alertname: IntentHostMissing
+    exp_alerts: []
+- name: scrape works but ledger instrumentation disappears
+  interval: 1m
+  input_series:
+  - series: up{job="trustweave-intent",instance="host-a"}
+    values: 1+0x36
+  - series: trustweave_intent_health_poll_success{job="trustweave-intent",instance="host-a"}
+    values: 1 1 stale _ _ _ _ _ _ _ _ _ _ _ _ _ 1+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: IntentTelemetryMissing
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: IntentTelemetryMissing
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        job: trustweave-intent
+        instance: host-a
+      exp_annotations:
+        runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape
+  - eval_time: 35m
+    alertname: IntentTelemetryMissing
+    exp_alerts: []
+- name: expected outcomes do not trigger storage failure
+  interval: 1m
+  input_series:
+  - series: trustweave_intent_operations_total{operation="reserve",outcome="success"}
+    values: 0+100x36
+  - series: trustweave_intent_operations_total{operation="reserve",outcome="rejected"}
+    values: 0+100x36
+  - series: trustweave_intent_operations_total{operation="reserve",outcome="invalid"}
+    values: 0+100x36
+  - series: trustweave_intent_operations_total{operation="reserve",outcome="cancelled"}
+    values: 0+100x36
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: IntentStorageFailure
+    exp_alerts: []

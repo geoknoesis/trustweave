@@ -109,11 +109,11 @@ ambiguity):
 | Type | Enforces |
 |---|---|
 | `mandate.checkout.allowed_merchants` | Merchant allowlist |
-| `mandate.checkout.line_items` | Not implemented; autonomous checkout fails closed |
+| `mandate.checkout.line_items` | Authenticated cart, quantities and alternatives via `verifyChainWithCheckout` |
 | `mandate.payment.allowed_payees` | Payee allowlist |
 | `mandate.payment.amount_range` | Per-transaction min/max + currency |
-| `mandate.payment.budget` | Requires external state; open mandates fail closed |
-| `mandate.payment.recurrence` / `agent_recurrence` | Requires external state; open mandates fail closed |
+| `mandate.payment.budget` | Atomic cumulative cap and per-payment minimum via `verifyAndReserveBudget` |
+| `mandate.payment.recurrence` / `agent_recurrence` | Bounded signed subscription setup / date and occurrence limits via the ledger API |
 | `mandate.payment.reference` | Binds the payment mandate to the checkout disclosure |
 
 Unknown constraint types are rejected in open mandates (an unevaluable constraint would leave agent
@@ -147,10 +147,11 @@ Draft, tracking VI spec v0.1 — **Experimental** (see the
 
 Run the suite: `./gradlew :credentials:plugins:verifiable-intent:test`
 
-Deliberate scope boundaries: multi-pair L2 (one mandate authorizing several purchases),
-`line_items` deep matching, returning the core `Result<T>` type, and plugin/SPI discoverability.
-See the module [README](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/verifiable-intent)
-for details.
+See the [module conformance profile](../../../credentials/plugins/verifiable-intent/CONFORMANCE.md)
+for exact supported cases. Stateless APIs reject stateful constraints. The ledger path requires
+shared PostgreSQL and trusted verifier challenges. Reconciliation requires authenticated external
+payment evidence; unknown outcomes must not release authority. No full conformance certification
+or production custody qualification is claimed.
 
 ## Related documentation
 

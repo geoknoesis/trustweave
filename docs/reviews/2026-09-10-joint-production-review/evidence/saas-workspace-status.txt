@@ -1,0 +1,80 @@
+M .github/workflows/ci.yml
+ M .trustweave-revision
+ M .trustweave-source-sha256
+ M README.md
+ M frontend/src/App.tsx
+ M frontend/src/components/Layout.tsx
+ M frontend/src/components/admin/UserAssignmentsModal.tsx
+ M frontend/src/pages/Admin.tsx
+ M frontend/src/pages/CheckCredential.tsx
+ M scripts/test_verify_sdk_source.py
+ M scripts/verify-sdk-source.py
+ M server/build.gradle.kts
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingClient.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyDtos.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/CatalogReconciler.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/config/KeycloakConfig.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/controller/UserController.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/exception/GlobalExceptionHandler.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vci/AccessTokenStore.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/oid4vp/VerificationHistoryRetention.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/repository/UsageOutboxRepository.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/repository/UserRepository.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/KeycloakSecurityConfig.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/TenantContext.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/dev/DevSecurityConfig.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/CredentialExpiryService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/KeycloakService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/MemberInvitationService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/RoleService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserGroupService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserSyncService.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/FailedWebhookStore.kt
+ M server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryMonitor.kt
+ M server/src/main/resources/application-dev.yml
+ M server/src/main/resources/application-fly.yml
+ M server/src/main/resources/application-staging.yml
+ M server/src/main/resources/application.yml
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/ApplicationContextSmokeTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingClientTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/CatalogReconcilerTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/migration/FlywayMigrationTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/services/RoleServiceTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/services/UserGroupServiceTest.kt
+ M server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryIntegrationTest.kt
+ M server/src/test/resources/application-local.yml
+ M server/src/test/resources/application-test.yml
+?? docs/administration-security.md
+?? docs/reviews/
+?? docs/round-5-operations.md
+?? docs/round-6-operations.md
+?? docs/round-7-operations.md
+?? frontend/src/api/webhookRecovery.ts
+?? frontend/src/components/admin/UserAssignmentsModal.test.tsx
+?? frontend/src/components/admin/WebhookRecoveryPanel.test.tsx
+?? frontend/src/components/admin/WebhookRecoveryPanel.tsx
+?? frontend/src/pages/Admin.test.tsx
+?? scripts/__pycache__/
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/config/SchedulerLockConfig.kt
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimitWindowSweeper.kt
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/SharedRateLimitStore.kt
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/TenantAdministration.kt
+?? server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/webhook/WebhookRecoveryController.kt
+?? server/src/main/resources/db/saas-migration/V25__webhook_first_failure.sql
+?? server/src/main/resources/db/saas-migration/V30__complete_trust_space_column_renames.sql
+?? server/src/main/resources/db/saas-migration/V31__accountly_organization_state.sql
+?? server/src/main/resources/db/saas-migration/V32__template_publication_fields.sql
+?? server/src/main/resources/db/saas-migration/V33__usage_outbox_properties.sql
+?? server/src/main/resources/db/saas-migration/V34__shedlock.sql
+?? server/src/main/resources/db/saas-migration/V35__rate_limit_windows.sql
+?? server/src/main/resources/logback-spring.xml
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyDeploymentContractTest.kt
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/config/DefaultDatabaseProfileTest.kt
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/controller/TenantAdministrationIntegrationTest.kt
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/migration/MigratedSchemaValidationTest.kt
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/services/TenantAdministrationBoundaryTest.kt
+?? server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/services/TenantGroupRolePolicyTest.kt

@@ -1,0 +1,47 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "outcomes": [
+    {
+      "name": "kotlin-autonomous-checkout",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-checkout-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-checkout-wrong-checkout-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    }
+  ]
+}

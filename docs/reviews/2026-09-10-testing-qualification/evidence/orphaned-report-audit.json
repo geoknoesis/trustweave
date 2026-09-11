@@ -1,0 +1,8 @@
+{
+  "reason": "Removed BBS project had two stale passing JUnit XML reports from 2026-08-22; it is absent from current settings and source. These are not current SDK execution evidence.",
+  "excluded_test_cases": 34,
+  "source": "C:/Users/steph/AppData/Local/TrustWeave/gradle-build/trustweave/credentials/plugins/bbs/test-results/test",
+  "quarantine": ".gradle/qualification-orphaned-bbs-reports",
+  "previous_manifest": ".gradle/qualification-manifest-before-orphan-audit.json",
+  "scope": "Reversible relocation of obsolete reports only; active test results and coverage unchanged"
+}

@@ -5,6 +5,7 @@ plugins {
 
 group = "org.trustweave.did"
 dependencies {
+    api(project(":observability"))
     implementation(project(":common"))
     implementation(project(":did:did-core"))
     implementation(project(":did:registrar"))
@@ -20,4 +21,3 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
 }
-

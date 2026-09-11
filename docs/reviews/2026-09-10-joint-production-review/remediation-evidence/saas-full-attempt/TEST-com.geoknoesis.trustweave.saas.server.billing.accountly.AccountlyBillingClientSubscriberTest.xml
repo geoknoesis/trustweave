@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:12.457Z" hostname="THEMATRIX" time="7.002">
+  <properties/>
+  <testcase name="changePlan issues PATCH()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" time="5.666"/>
+  <testcase name="provisionSubscriber returns subscriberId and killbillAccountId()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" time="0.918"/>
+  <testcase name="subscribe returns subscription_id()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" time="0.137"/>
+  <testcase name="getEntitlement parses status and quotaEnvelopeJson()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" time="0.155"/>
+  <testcase name="cancel issues DELETE()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest" time="0.101"/>
+  <system-out><![CDATA[22:20:16.295 DEBUG [] o.s.web.client.DefaultRestClient - Writing [SubscribeRequest(planId=plan-pro)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:18.566 DEBUG [] o.s.web.client.DefaultRestClient - Writing [ProvisionSubscriberRequest(externalRef=trustweave:org:7, displayName=Org 7, email=null)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:18.893 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.ProvisionSubscriberResponse]
+22:20:19.158 DEBUG [] o.s.web.client.DefaultRestClient - Writing [SubscribeRequest(planId=plan-free)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:19.175 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+22:20:19.322 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementSnapshotDto]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

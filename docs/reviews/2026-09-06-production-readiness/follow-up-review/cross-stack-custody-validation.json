@@ -1,0 +1,83 @@
+{
+  "date": "2026-09-06",
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "upstream_pytest": {
+    "passed": 326,
+    "seconds": 6.13
+  },
+  "kotlin_targeted_tests": [
+    {
+      "name": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.trustweave.credential.vi.IssuanceRoundTripTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "gradle": {
+    "result": "passed",
+    "duration_seconds": 59,
+    "lint": "passed"
+  },
+  "python_to_kotlin_cases": 6,
+  "kotlin_to_python": [
+    {
+      "name": "kotlin-immediate",
+      "valid": true
+    },
+    {
+      "name": "kotlin-immediate-wrong-audience",
+      "valid": false
+    },
+    {
+      "name": "kotlin-immediate-wrong-nonce",
+      "valid": false
+    },
+    {
+      "name": "kotlin-autonomous-payment",
+      "valid": true
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-audience",
+      "valid": false
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-nonce",
+      "valid": false
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-payment-audience",
+      "valid": false
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-payment-nonce",
+      "valid": false
+    }
+  ],
+  "full_module_run": {
+    "status": "interrupted",
+    "reason": "Docker Desktop engine returned HTTP 500; stopped only this run test worker after compilation/lint"
+  },
+  "custody": {
+    "status": "not_run",
+    "reason": "No identified KMS resource/profile; production signing/recovery service not implemented"
+  },
+  "score": {
+    "retained": 8.7,
+    "reason": "Broader evidence, not full conformance or live custody qualification"
+  },
+  "hosted_ci": "wired; not executed for this working tree",
+  "source_sha256": {
+    "scripts/vi-cross-stack.py": "bee781b672f7dd887ba5b5312c5064e77b0c96d05c20ece71586e6fc592d5529",
+    "credentials/plugins/verifiable-intent/src/test/resources/vi_python_cross_stack.json": "b5c281f474632c749dde97d0216bea082e1a754b627cdd789f0840e7799b3b48",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CrossStackConformanceTest.kt": "07c36af92e7b2e61ea2795ec7f7c8ee27f6b1c4ca282a12d4ffbdba222d89960",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IssuanceRoundTripTest.kt": "3e8029382c5756a2bc0936be3af6faf5536de8446cc14b23a41a76e9e749ca90"
+  }
+}

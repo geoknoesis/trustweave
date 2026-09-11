@@ -1,0 +1,114 @@
+{
+  "totals": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:42:18.483Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:42:35.300Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:35.555Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageQueueMonitorTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:36.310Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageRecoveryAuthorizationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:36.647Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:39.326Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:41:53.698Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.domain.UsageOutboxEntityTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:39.529Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:39.559Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.observability.DependencyHealthTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:39.629Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.observability.RequestContextFilterTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:40.331Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.security.RateLimiterTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:40.426Z"
+    },
+    {
+      "name": "com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "timestamp": "2026-09-11T01:43:41.116Z"
+    }
+  ]
+}

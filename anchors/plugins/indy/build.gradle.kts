@@ -36,7 +36,7 @@ dependencies {
     // Test dependencies
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.test.runtime)
-    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.2")
+    testImplementation(libs.wiremock.jre8.standalone)
 
     integrationTestImplementation(libs.testcontainers)
     integrationTestImplementation(libs.testcontainers.junit)

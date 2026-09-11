@@ -69,6 +69,10 @@ profile were requested for the remaining provider integration.
 
 ## Validation limits
 
+Use the [live qualification matrix](../docs/operations/custody-qualification.md)
+to distinguish provider signing, access recovery and replacement-key recovery.
+Each requires an identified test resource and retained execution evidence.
+
 Tests use real browser WebAuthn with a Chromium virtual authenticator and locally
 generated cryptographic keys for managed-service contract fixtures. They are not
 physical HSM, physical passkey, hosted IAM or recovery-service validation. Neither

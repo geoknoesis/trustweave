@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:46.570Z" hostname="THEMATRIX" time="0.005">
+  <properties/>
+  <testcase name="a configured auth block overrides the platform realm entirely()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" time="0.0"/>
+  <testcase name="blank auth falls back to the platform realm token endpoint()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" time="0.001"/>
+  <testcase name="auth defaults are blank so local dev keeps using the platform realm()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" time="0.001"/>
+  <testcase name="defaults are sensible()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" time="0.001"/>
+  <testcase name="trims trailing slash from base url()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

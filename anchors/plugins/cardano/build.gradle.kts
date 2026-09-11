@@ -19,8 +19,8 @@ dependencies {
     implementation(libs.jackson.dataformat.cbor)
 
     // Cardano transaction building & Blockfrost backend (CIP-20 transaction metadata)
-    implementation("com.bloxbean.cardano:cardano-client-lib:0.5.1")
-    implementation("com.bloxbean.cardano:cardano-client-backend-blockfrost:0.5.1")
+    implementation(libs.cardano.client.lib)
+    implementation(libs.cardano.client.backend.blockfrost)
 
     // Test dependencies — keep light to avoid coupling to broken-in-CI modules.
     testImplementation(libs.bundles.test)

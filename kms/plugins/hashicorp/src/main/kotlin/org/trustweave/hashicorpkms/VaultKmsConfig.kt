@@ -23,14 +23,19 @@ data class VaultKmsConfig(
     val appRolePath: String? = null,
     val roleId: String? = null,
     val secretId: String? = null,
-    val engineVersion: Int = 2,
+    val engineVersion: Int = 1,
 ) {
     init {
         org.trustweave.core.net.TransportSecurity
             .requireSecureForPublicHosts(address, "Vault credentials")
         require(address.isNotBlank()) { "Vault address must be specified" }
         require(transitPath.isNotBlank()) { "Transit path must be specified" }
+        require(engineVersion == 1) { "Vault Transit requires unversioned API routing (engineVersion=1)" }
     }
+
+    override fun toString(): String =
+        "VaultKmsConfig(address=<configured>, token=<redacted>, transitPath=$transitPath, " +
+            "namespace=$namespace, appRolePath=$appRolePath, roleId=<redacted>, secretId=<redacted>, engineVersion=$engineVersion)"
 
     companion object {
         /**
@@ -68,6 +73,17 @@ data class VaultKmsConfig(
          * @throws IllegalArgumentException if address is not provided
          */
         fun fromMap(options: Map<String, Any?>): VaultKmsConfig {
+            val names = setOf("address", "token", "transitPath", "namespace", "appRolePath", "roleId", "secretId", "engineVersion")
+            require(options.keys.all { it in names }) { "Unsupported Vault configuration option" }
+            require(
+                options.all { (key, value) ->
+                    if (key == "engineVersion") {
+                        value == null || (value is Number && value.toDouble() == 1.0)
+                    } else {
+                        value == null || value is String
+                    }
+                },
+            ) { "Invalid Vault configuration option type or engine version" }
             val address =
                 options["address"] as? String
                     ?: throw IllegalArgumentException("Vault address must be specified in options")
@@ -80,7 +96,7 @@ data class VaultKmsConfig(
                 .appRolePath(options["appRolePath"] as? String)
                 .roleId(options["roleId"] as? String)
                 .secretId(options["secretId"] as? String)
-                .engineVersion((options["engineVersion"] as? Number)?.toInt() ?: 2)
+                .engineVersion((options["engineVersion"] as? Number)?.toInt() ?: 1)
                 .build()
         }
     }
@@ -96,7 +112,7 @@ data class VaultKmsConfig(
         private var appRolePath: String? = null
         private var roleId: String? = null
         private var secretId: String? = null
-        private var engineVersion: Int = 2
+        private var engineVersion: Int = 1
 
         fun address(address: String): Builder {
             this.address = address

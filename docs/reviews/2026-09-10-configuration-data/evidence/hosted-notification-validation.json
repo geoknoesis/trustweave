@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "started_utc": "2026-09-10T20:04:21.118429+00:00",
+  "scope": "Local synthetic notification pipeline; no production recipient or database",
+  "scenarios": [
+    {
+      "alert": "IntentHealthUnavailable",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "5eda4fdd56c38f34",
+      "firing_seconds": 123.016,
+      "total_seconds": 125.017
+    },
+    {
+      "alert": "IntentTelemetryMissing",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "c6a1854100565747",
+      "firing_seconds": 123.02,
+      "total_seconds": 125.021
+    },
+    {
+      "alert": "IntentHostUnavailable",
+      "pending_observed": true,
+      "firing_delivered": true,
+      "recovery_delivered": true,
+      "fingerprint": "86c8e9210eea28c4",
+      "firing_seconds": 123.021,
+      "total_seconds": 125.023
+    }
+  ],
+  "source_sha256": {
+    "scripts/intent-notification-exercise.py": "fbdd7e5dbe4164f12d512e66fbb7034e41cee4ba68d6db79425e47a9143b8fd3",
+    "docs/operations/intent/alerts.yml": "493847f632e33afde9560539f6d4cf25a0d174665bd574ed6909114bfd2570fe",
+    "credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom": "3eadaabc6597df3d02a639bde04e170fbb7de6a9eb01b613f6e245c1ae170002"
+  },
+  "tools": {
+    "prometheus": {
+      "version": "3.5.0",
+      "archive_sha256": "e811827af26d822afb09a4f28314f61b618b12cff5369835a67f674d8b46f39a",
+      "source": "https://github.com/prometheus/prometheus/releases/download/v3.5.0/prometheus-3.5.0.linux-amd64.tar.gz"
+    },
+    "alertmanager": {
+      "version": "0.28.1",
+      "archive_sha256": "5ac7ab5e4b8ee5ce4d8fb0988f9cb275efcc3f181b4b408179fafee121693311",
+      "source": "https://github.com/prometheus/alertmanager/releases/download/v0.28.1/alertmanager-0.28.1.linux-amd64.tar.gz"
+    }
+  },
+  "receiver_retry": "Initial HTTP 503 followed by accepted firing and resolved delivery",
+  "finished_utc": "2026-09-10T20:10:54.425750+00:00"
+}

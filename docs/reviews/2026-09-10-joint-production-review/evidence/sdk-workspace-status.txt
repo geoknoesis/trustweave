@@ -1,0 +1,152 @@
+M .github/workflows/ci.yml
+ M .github/workflows/docs-check.yml
+ M .github/workflows/release-evidence.yml
+ M anchors/anchor-core/src/main/kotlin/org/trustweave/anchor/AbstractBlockchainAnchorClient.kt
+ M anchors/plugins/indy/README.md
+ M anchors/plugins/indy/src/main/kotlin/org/trustweave/anchor/indy/IndyVdrProxyTransport.kt
+ M anchors/plugins/indy/src/test/kotlin/org/trustweave/anchor/indy/IndyVdrProxyTransportTest.kt
+ M common/src/main/kotlin/org/trustweave/core/plugin/PluginConfiguration.kt
+ M common/src/main/kotlin/org/trustweave/core/plugin/PluginConfigurationLoader.kt
+ M common/src/test/kotlin/org/trustweave/core/plugin/PluginConfigurationErrorTest.kt
+ M credentials/avp-authorization-server/api/avp-authorization-server.api
+ M credentials/avp-authorization-server/build.gradle.kts
+ M credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/AvpAuthorizationServer.kt
+ M credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/dto/AvpAuthorizationDtos.kt
+ M credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/engine/AuthorizationEngine.kt
+ M credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/state/Stores.kt
+ M credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/ParityTest.kt
+ M credentials/avp-authorization-server/src/test/kotlin/org/trustweave/credential/avpauth/engine/AuthorizationEngineTest.kt
+ M credentials/oidc4vci-server/api/oidc4vci-server.api
+ M credentials/oidc4vci-server/build.gradle.kts
+ M credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciIssuerService.kt
+ M credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServer.kt
+ M credentials/oidc4vci-server/src/main/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServerRoutes.kt
+ M credentials/oidc4vci-server/src/test/kotlin/org/trustweave/credential/oidc4vci/server/Oidc4VciServerTest.kt
+ M credentials/plugins/anchor/src/main/kotlin/org/trustweave/credential/anchor/CredentialAnchorService.kt
+ M credentials/plugins/anchor/src/test/kotlin/org/trustweave/credential/anchor/CredentialAnchorServiceTest.kt
+ M credentials/plugins/oidc4vp/src/test/kotlin/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.kt
+ M credentials/plugins/status-list/database/build.gradle.kts
+ M credentials/plugins/status-list/database/src/main/kotlin/org/trustweave/revocation/database/DatabaseStatusListManager.kt
+ M credentials/plugins/status-list/server/api/server.api
+ M credentials/plugins/status-list/server/build.gradle.kts
+ M credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutes.kt
+ M credentials/plugins/status-list/server/src/main/kotlin/org/trustweave/credential/statuslist/server/StatusListServer.kt
+ M credentials/plugins/status-list/server/src/test/kotlin/org/trustweave/credential/statuslist/server/StatusListRoutesTest.kt
+ M credentials/plugins/verifiable-intent/README.md
+ M credentials/plugins/verifiable-intent/api/verifiable-intent.api
+ M credentials/plugins/verifiable-intent/build.gradle.kts
+ M credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/VerifiableIntent.kt
+ M credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/model/Constraint.kt
+ M credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt
+ M credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt
+ M credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/ChainVerifierKnownAnswerTest.kt
+ M credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/ConstraintCheckerTest.kt
+ M credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IssuanceRoundTripTest.kt
+ M credentials/vc-api-server/api/vc-api-server.api
+ M credentials/vc-api-server/build.gradle.kts
+ M credentials/vc-api-server/src/main/kotlin/org/trustweave/credential/vcapi/VcApiServer.kt
+ M did/registrar-server-ktor/api/registrar-server-ktor.api
+ M did/registrar-server-ktor/build.gradle.kts
+ M did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/DidRegistrarRoutes.kt
+ M did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/DidRegistrarServer.kt
+ M did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/CreateDidRequest.kt
+ M did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/DeactivateDidRequest.kt
+ M did/registrar-server-ktor/src/main/kotlin/org/trustweave/did/registrar/server/dto/UpdateDidRequest.kt
+ M distribution/bom/build.gradle.kts
+ M docs/api-reference/advanced/testing-strategies.md
+ M docs/api-reference/assessed-capabilities.md
+ M docs/api-reference/features/verifiable-intent.md
+ M docs/api-reference/modules/trustweave-common-package-structure.md
+ M docs/api-reference/modules/trustweave-common.md
+ M docs/contributing/testing-guidelines.md
+ M docs/contributing/testing/integration-testing.md
+ M docs/operations/observability.md
+ M docs/reviews/2026-09-05-code-review/round-2/remediation.html
+ M reference-wallet/CUSTODY.md
+ M reference-wallet/android/shared/src/commonMain/kotlin/org/trustweave/referencewallet/shared/SdJwtVc.kt
+ M scripts/check-documentation.py
+ M scripts/test_check_documentation.py
+ M settings.gradle.kts
+ M trust-registry/trust-registry-server/api/trust-registry-server.api
+ M trust-registry/trust-registry-server/build.gradle.kts
+ M trust-registry/trust-registry-server/src/main/kotlin/org/trustweave/registry/server/TrustRegistryServer.kt
+ M wallet/plugins/cloud/src/test/kotlin/org/trustweave/wallet/cloud/CloudRecoveryTest.kt
+ M wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletFactoryTest.kt
+?? anchors/anchor-core/src/test/kotlin/org/trustweave/anchor/AnchorCancellationTest.kt
+?? common/src/main/kotlin/org/trustweave/core/plugin/ConfigurationJson.kt
+?? common/src/test/kotlin/org/trustweave/core/plugin/ConfigurationBoundaryTest.kt
+?? config/coverage-policy.json
+?? config/documentation-contract.json
+?? config/host-coverage-policy.json
+?? config/test-skip-policy.json
+?? config/testing-contract.json
+?? config/vi-conformance-matrix.json
+?? credentials/credential-api/src/test/kotlin/org/trustweave/credential/internal/ScratchUriEquivalenceTest.kt
+?? credentials/plugins/status-list/database/src/test/kotlin/org/trustweave/revocation/database/PostgresStatusMutationTest.kt
+?? credentials/plugins/status-list/database/src/test/kotlin/org/trustweave/revocation/database/StatusMutationTest.kt
+?? credentials/plugins/status-list/server/src/test/kotlin/org/trustweave/credential/statuslist/server/StatusListObservabilityTest.kt
+?? credentials/plugins/status-list/server/src/test/resources/
+?? credentials/plugins/verifiable-intent/CONFORMANCE.md
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/CheckoutTrust.kt
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/IntentLedgerDiagnostics.kt
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/LedgerIntegrity.kt
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/LineItemMatcher.kt
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/PostgresIntentLedger.kt
+?? credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/RecurrenceRules.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CheckoutTrustTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CrossLanguageLedgerModelTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CrossStackConformanceTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentLedgerDiagnosticsTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentOperationsExerciseTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentReliabilityTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IntentWalRecoveryTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerIntegrityTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerMigrationDocumentationTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LineItemMatcherTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/PaymentSchemaValidationTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/PostgresIntentLedgerTest.kt
+?? credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/RecurrenceRulesTest.kt
+?? credentials/plugins/verifiable-intent/src/test/resources/vi_python_autonomous.json
+?? credentials/plugins/verifiable-intent/src/test/resources/vi_python_cross_stack.json
+?? credentials/plugins/verifiable-intent/src/test/resources/vi_stateful_model.json
+?? docs/contributing/testing/acceptance.md
+?? docs/operations/configuration-data.md
+?? docs/operations/custody-qualification.md
+?? docs/operations/host/
+?? docs/operations/intent/
+?? docs/operations/verified-examples/
+?? docs/operations/vi-cross-stack.md
+?? docs/reviews/2026-09-06-production-readiness/follow-up-review/
+?? docs/reviews/2026-09-07-intent-validation/
+?? docs/reviews/2026-09-08-observability/
+?? docs/reviews/2026-09-09-notification-delivery/
+?? docs/reviews/2026-09-10-configuration-data/
+?? docs/reviews/2026-09-10-host-observability/
+?? docs/reviews/2026-09-10-joint-production-review/
+?? docs/reviews/2026-09-10-reliability-scale/
+?? docs/reviews/2026-09-10-testing-documentation/
+?? docs/reviews/2026-09-10-testing-qualification/
+?? observability/
+?? reference-wallet/android/shared/src/commonTest/
+?? round12-coverage-threads.txt
+?? round12-gradle-threads.txt
+?? scripts/check-coverage-policy.py
+?? scripts/check-junit-contract.py
+?? scripts/check-reliability-evidence.py
+?? scripts/check-test-evidence.py
+?? scripts/check-vi-matrix.py
+?? scripts/intent-notification-exercise.py
+?? scripts/record-validation-manifest.py
+?? scripts/test_check_coverage_policy.py
+?? scripts/test_check_junit_contract.py
+?? scripts/test_check_reliability_evidence.py
+?? scripts/test_check_test_evidence.py
+?? scripts/test_check_validation_manifest.py
+?? scripts/test_check_vi_matrix.py
+?? scripts/test_check_vi_stateful_model.py
+?? scripts/test_intent_notification_exercise.py
+?? scripts/vi-cross-stack.py
+?? scripts/vi-stateful-model.py
+?? scripts/vi_autonomous_vectors.py
+?? testkit/src/test/kotlin/org/trustweave/testkit/DocumentationExampleTest.kt
+?? trustweave.code-workspace

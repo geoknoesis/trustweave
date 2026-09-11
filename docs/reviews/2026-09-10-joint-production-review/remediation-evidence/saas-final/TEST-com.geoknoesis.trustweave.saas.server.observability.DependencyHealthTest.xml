@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.observability.DependencyHealthTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:08.448Z" hostname="THEMATRIX" time="0.269">
+  <properties/>
+  <testcase name="readiness requires valid discovery rather than mere HTTP reachability()" classname="com.geoknoesis.trustweave.saas.server.observability.DependencyHealthTest" time="0.269"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

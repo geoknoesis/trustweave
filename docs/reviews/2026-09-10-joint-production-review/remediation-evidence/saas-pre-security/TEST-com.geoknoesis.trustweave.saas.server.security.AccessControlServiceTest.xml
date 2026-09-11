@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:10.254Z" hostname="THEMATRIX" time="0.95">
+  <properties/>
+  <testcase name="a role in one space does not open a sibling space in the same organization()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.004"/>
+  <testcase name="a group pointing at a missing organization grants nothing()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.003"/>
+  <testcase name="a role in a trust space grants that space — not the whole organization()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.004"/>
+  <testcase name="a stranger may access nothing()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.005"/>
+  <testcase name="a colleague invited into a group may access that organization's trust spaces()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.003"/>
+  <testcase name="a role in an unknown trust space grants nothing()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.003"/>
+  <testcase name="an owner may access their organization()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.002"/>
+  <testcase name="a colleague invited into a group may access that group's organization()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.002"/>
+  <testcase name="access to one organization does not imply access to another()" classname="com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,13 +1,17 @@
-﻿package org.trustweave.registry.server
+package org.trustweave.registry.server
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.observability.HostKind
+import org.trustweave.observability.HostObservability
 import org.trustweave.registry.TrustRegistry
 
 /**
@@ -28,6 +32,14 @@ class TrustRegistryServer(
     private val apiToken: String? = null,
 ) {
     private var server: NettyApplicationEngine? = null
+    private var observability: HostObservability? = null
+
+    /** Configure tracing, protected metrics and optional admission limits before starting. */
+    fun withObservability(configuration: HostObservability): TrustRegistryServer {
+        check(server == null) { "Configure observability before starting the server" }
+        observability = configuration
+        return this
+    }
 
     fun start(wait: Boolean = false) {
         server =
@@ -42,6 +54,7 @@ class TrustRegistryServer(
     }
 
     internal fun Application.configureApplication() {
+        observability?.install(this, HostKind.TRUST_REGISTRY)
         install(ContentNegotiation) {
             json(
                 Json {

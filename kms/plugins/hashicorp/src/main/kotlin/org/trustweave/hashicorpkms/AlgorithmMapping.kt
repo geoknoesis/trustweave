@@ -1,8 +1,8 @@
 package org.trustweave.hashicorpkms
 
 import org.trustweave.kms.Algorithm
-import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.interfaces.ECPublicKey
@@ -21,8 +21,8 @@ object AlgorithmMapping {
      * @return Vault Transit key type string
      * @throws IllegalArgumentException if algorithm is not supported by Vault Transit
      */
-    fun toVaultKeyType(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toVaultKeyType(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "ed25519"
             is Algorithm.Secp256k1 -> "ecdsa-p256k1"
             is Algorithm.P256 -> "ecdsa-p256"
@@ -38,7 +38,6 @@ object AlgorithmMapping {
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Vault Transit")
         }
-    }
 
     /**
      * Parses Vault Transit key type to TrustWeave Algorithm.
@@ -46,8 +45,8 @@ object AlgorithmMapping {
      * @param keyType Vault Transit key type string
      * @return TrustWeave Algorithm, or null if not recognized
      */
-    fun fromVaultKeyType(keyType: String): Algorithm? {
-        return when (keyType.lowercase()) {
+    fun fromVaultKeyType(keyType: String): Algorithm? =
+        when (keyType.lowercase()) {
             "ed25519" -> Algorithm.Ed25519
             "ecdsa-p256k1" -> Algorithm.Secp256k1
             "ecdsa-p256" -> Algorithm.P256
@@ -58,7 +57,6 @@ object AlgorithmMapping {
             "rsa-4096" -> Algorithm.RSA.RSA_4096
             else -> null
         }
-    }
 
     /**
      * Maps TrustWeave Algorithm to Vault Transit hash algorithm for signing.
@@ -66,8 +64,8 @@ object AlgorithmMapping {
      * @param algorithm TrustWeave algorithm
      * @return Vault Transit hash algorithm string
      */
-    fun toVaultHashAlgorithm(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toVaultHashAlgorithm(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "sha2-256" // Ed25519 uses SHA-256 internally
             is Algorithm.Secp256k1 -> "sha2-256"
             is Algorithm.P256 -> "sha2-256"
@@ -76,7 +74,6 @@ object AlgorithmMapping {
             is Algorithm.RSA -> "sha2-256"
             else -> "sha2-256"
         }
-    }
 
     /**
      * Resolves a key identifier to a Vault Transit key name.
@@ -88,7 +85,10 @@ object AlgorithmMapping {
      * @param config Vault configuration
      * @return Resolved key name for Vault API
      */
-    fun resolveKeyName(keyId: String, config: VaultKmsConfig): String {
+    fun resolveKeyName(
+        keyId: String,
+        config: VaultKmsConfig,
+    ): String {
         // If keyId already contains the transit path, extract just the key name
         val transitPrefix = "${config.transitPath}/keys/"
         val transitPrefixWithSlash = "/${config.transitPath}/keys/"
@@ -108,62 +108,79 @@ object AlgorithmMapping {
      * @param algorithm The algorithm type
      * @return JWK map representation
      */
-    fun publicKeyPemToJwk(publicKeyPem: String, algorithm: Algorithm): Map<String, Any?> {
+    fun publicKeyPemToJwk(
+        publicKeyPem: String,
+        algorithm: Algorithm,
+    ): Map<String, Any?> {
         // Note: This is a simplified conversion. In production, use a proper PEM parser.
         // For now, we'll extract the base64 portion and convert based on algorithm type.
         try {
             when (algorithm) {
                 is Algorithm.Ed25519 -> {
                     // Ed25519 public key in PEM format
-                    val base64Key = publicKeyPem
-                        .replace("-----BEGIN PUBLIC KEY-----", "")
-                        .replace("-----END PUBLIC KEY-----", "")
-                        .replace("\n", "")
-                        .replace(" ", "")
+                    val base64Key =
+                        publicKeyPem
+                            .replace("-----BEGIN PUBLIC KEY-----", "")
+                            .replace("-----END PUBLIC KEY-----", "")
+                            .replace("\n", "")
+                            .replace(" ", "")
 
                     val keyBytes = Base64.getDecoder().decode(base64Key)
-                    // Ed25519 public key is 32 bytes, typically at the end of the DER structure
-                    val rawKey = if (keyBytes.size >= 32) {
-                        keyBytes.takeLast(32).toByteArray()
-                    } else {
-                        keyBytes
-                    }
+                    // Transit returns raw Ed25519 bytes. Also accept the exact RFC 8410 SPKI
+                    // representation; never silently truncate an arbitrary DER/key type.
+                    val prefix =
+                        java.util.HexFormat
+                            .of()
+                            .parseHex("302a300506032b6570032100")
+                    val rawKey =
+                        when {
+                            keyBytes.size == 32 -> keyBytes
+                            keyBytes.size == prefix.size + 32 && keyBytes.copyOfRange(0, prefix.size).contentEquals(prefix) ->
+                                keyBytes.copyOfRange(prefix.size, keyBytes.size)
+                            else -> throw IllegalArgumentException("Invalid Ed25519 public-key encoding")
+                        }
 
                     return mapOf(
                         JwkKeys.KTY to JwkKeyTypes.OKP,
                         JwkKeys.CRV to Algorithm.Ed25519.curveName,
-                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey),
                     )
                 }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                     // Parse EC key from PEM format
-                    val base64Key = publicKeyPem
-                        .replace("-----BEGIN PUBLIC KEY-----", "")
-                        .replace("-----END PUBLIC KEY-----", "")
-                        .replace("-----BEGIN EC PUBLIC KEY-----", "")
-                        .replace("-----END EC PUBLIC KEY-----", "")
-                        .replace("\n", "")
-                        .replace(" ", "")
+                    val base64Key =
+                        publicKeyPem
+                            .replace("-----BEGIN PUBLIC KEY-----", "")
+                            .replace("-----END PUBLIC KEY-----", "")
+                            .replace("-----BEGIN EC PUBLIC KEY-----", "")
+                            .replace("-----END EC PUBLIC KEY-----", "")
+                            .replace("\n", "")
+                            .replace(" ", "")
 
                     val keyBytes = Base64.getDecoder().decode(base64Key)
-                    
+
                     // Parse DER-encoded EC public key
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(keyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    
-                    val curveName = algorithm.curveName
-                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
-                    val coordinateLength = when (algorithm) {
-                        is Algorithm.Secp256k1, is Algorithm.P256 -> 32
-                        is Algorithm.P384 -> 48
-                        is Algorithm.P521 -> 66
-                        else -> 32
-                    }
+                    val curveName =
+                        algorithm.curveName
+                            ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
+
+                    val coordinateLength =
+                        when (algorithm) {
+                            is Algorithm.Secp256k1, is Algorithm.P256 -> 32
+                            is Algorithm.P384 -> 48
+                            is Algorithm.P521 -> 66
+                            else -> 32
+                        }
 
                     // Convert BigInteger to unsigned byte array
-                    fun toUnsignedByteArray(bigInt: java.math.BigInteger, length: Int): ByteArray {
+                    fun toUnsignedByteArray(
+                        bigInt: java.math.BigInteger,
+                        length: Int,
+                    ): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
                         val offset = length - bytes.size
@@ -182,21 +199,22 @@ object AlgorithmMapping {
                         JwkKeys.KTY to JwkKeyTypes.EC,
                         JwkKeys.CRV to curveName,
                         JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y),
                     )
                 }
                 is Algorithm.RSA -> {
                     // Parse RSA key from PEM format
-                    val base64Key = publicKeyPem
-                        .replace("-----BEGIN PUBLIC KEY-----", "")
-                        .replace("-----END PUBLIC KEY-----", "")
-                        .replace("-----BEGIN RSA PUBLIC KEY-----", "")
-                        .replace("-----END RSA PUBLIC KEY-----", "")
-                        .replace("\n", "")
-                        .replace(" ", "")
+                    val base64Key =
+                        publicKeyPem
+                            .replace("-----BEGIN PUBLIC KEY-----", "")
+                            .replace("-----END PUBLIC KEY-----", "")
+                            .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                            .replace("-----END RSA PUBLIC KEY-----", "")
+                            .replace("\n", "")
+                            .replace(" ", "")
 
                     val keyBytes = Base64.getDecoder().decode(base64Key)
-                    
+
                     // Parse DER-encoded RSA public key
                     val keyFactory = KeyFactory.getInstance("RSA")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(keyBytes)) as RSAPublicKey
@@ -215,7 +233,7 @@ object AlgorithmMapping {
                     return mapOf(
                         JwkKeys.KTY to JwkKeyTypes.RSA,
                         JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
-                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent)),
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
@@ -225,4 +243,3 @@ object AlgorithmMapping {
         }
     }
 }
-

@@ -1,0 +1,9 @@
+{
+    "scenario": "history",
+    "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+    "legacy_rows": 100000,
+    "migration_ms": 88,
+    "new_requests": 100,
+    "new_requests_ms": 3014,
+    "admission_history_scans": 0
+}

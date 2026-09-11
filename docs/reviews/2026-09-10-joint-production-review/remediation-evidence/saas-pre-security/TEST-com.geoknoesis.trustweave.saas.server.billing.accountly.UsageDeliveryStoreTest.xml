@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:48:08.179Z" hostname="THEMATRIX" time="22.142">
+  <properties/>
+  <testcase name="shared rate-limit capacity cannot be bypassed by concurrent new keys or duplicate upserts()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.125"/>
+  <testcase name="concurrent workers cannot own the same event and stale acknowledgements are fenced()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.057"/>
+  <testcase name="permanent rejections stop at the explicit poison budget()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.198"/>
+  <testcase name="redrive is audited and retains remote idempotency while refusing sent rows()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.046"/>
+  <testcase name="transient outages remain eligible beyond poison limit and respect retry time()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.207"/>
+  <testcase name="Spring transaction proxies commit claims and keep remote calls outside caller transactions()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.129"/>
+  <system-out><![CDATA[22:48:08.189 INFO  [] tc.postgres:15 - Creating container for image: postgres:15
+22:48:09.115 INFO  [] tc.postgres:15 - Container postgres:15 is starting: 70fcde70c1befe380adc97d32e7c05c79502b2a9a7317eba49d8335f63c0f9e4
+22:48:23.956 INFO  [] tc.postgres:15 - Container postgres:15 started in PT15.767213S
+22:48:23.956 INFO  [] tc.postgres:15 - Container is started (JDBC URL: jdbc:postgresql://localhost:54719/test?loggerLevel=OFF)
+22:48:23.970 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Starting...
+22:48:24.052 INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@116fa996
+22:48:24.053 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Start completed.
+22:48:24.109 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:54719/test?loggerLevel=OFF (PostgreSQL 15.18)
+22:48:24.333 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+22:48:24.335 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.127s)
+22:48:24.449 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+22:48:24.634 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+22:48:24.651 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - Initial schema"
+22:48:25.090 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "2 - Add keycloak fields"
+22:48:25.220 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "3 - Add stripe customer id"
+22:48:25.315 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "4 - Add blockchain network seed data"
+22:48:25.390 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "5 - rename project to domain"
+22:48:25.394 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:48:25.442 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: relation "issued_credentials" does not exist, skipping
+22:48:25.518 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6 - credential offers"
+22:48:25.594 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6.1 - issued credentials"
+22:48:25.678 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "7 - subjects"
+22:48:25.800 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8 - audit log organization id"
+22:48:25.805 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:48:25.849 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8.1 - starter kits"
+22:48:25.895 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9 - data integrity constraints"
+22:48:25.900 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:48:25.934 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: index "trust_anchors_did_key" does not exist, skipping
+22:48:26.109 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9.1 - credential types"
+22:48:26.274 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10 - anchoring"
+22:48:26.485 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10.1 - baseline missing tables"
+22:48:26.635 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "11 - credential status list"
+22:48:26.761 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "12 - review remediation schema"
+22:48:26.871 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "13 - split trust anchors"
+22:48:27.290 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "14 - rename domain to trust space"
+22:48:27.457 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "15 - verification sessions"
+22:48:27.554 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "16 - wallet identity lifecycle"
+22:48:27.887 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "17 - credential suspension"
+22:48:27.941 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "18 - issuing identity keys"
+22:48:28.003 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "19 - verification requested claims"
+22:48:28.046 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "20 - credential supersession"
+22:48:28.118 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "21 - subscription status synced at"
+22:48:28.161 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "22 - verification work lease"
+22:48:28.210 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "23 - failed webhook recovery"
+22:48:28.289 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "24 - webhook recovery monitor index"
+22:48:28.349 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "25 - webhook first failure"
+22:48:28.407 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "30 - complete trust space column renames"
+22:48:28.482 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "31 - accountly organization state"
+22:48:28.682 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "32 - template publication fields"
+22:48:28.869 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "33 - usage outbox properties"
+22:48:29.002 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "34 - shedlock"
+22:48:29.134 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "35 - rate limit windows"
+22:48:29.218 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "36 - usage delivery leases"
+22:48:29.289 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "37 - user sync progress"
+22:48:29.350 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "38 - usage redrive audit"
+22:48:29.434 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "39 - rate limit capacity"
+22:48:29.526 INFO  [] o.f.core.internal.command.DbMigrate - Successfully applied 39 migrations to schema "public", now at version v39 (execution time 00:02.754s)
+22:48:29.558 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:29.564 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:29.567 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM rate_limit_windows]
+22:48:29.580 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE rate_limit_capacity SET max_rows = 2]
+22:48:29.585 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.585 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.592 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.593 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.603 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.603 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.603 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.603 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.637 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT count(*) FROM rate_limit_windows]
+22:48:29.642 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT retained FROM rate_limit_capacity]
+22:48:29.649 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE rate_limit_windows SET hit_count = 2147483647 WHERE bucket_key = 'first']
+22:48:29.652 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.653 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.655 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE rate_limit_windows SET expires_at = statement_timestamp() - interval '1 second']
+22:48:29.657 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM rate_limit_windows WHERE bucket_key IN (
+    SELECT bucket_key FROM rate_limit_windows
+    WHERE expires_at <= statement_timestamp() ORDER BY expires_at LIMIT 1000
+)]
+22:48:29.665 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT retained FROM rate_limit_capacity]
+22:48:29.667 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.667 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement
+22:48:29.671 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM rate_limit_windows]
+22:48:29.675 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE rate_limit_capacity SET max_rows = 50000]
+22:48:29.682 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:29.685 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:29.689 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.690 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.690 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.690 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.701 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.701 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.704 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET leased_until = statement_timestamp() - interval '1 second']
+22:48:29.706 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.706 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'SENT', sent_at = statement_timestamp(),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.709 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.709 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.722 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.723 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.728 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.728 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'SENT', sent_at = statement_timestamp(),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.732 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.732 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.736 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT sent_at FROM usage_outbox]
+22:48:29.740 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:29.742 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:29.744 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.744 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.748 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.748 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.758 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.761 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.761 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.764 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.764 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.770 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.776 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.776 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.779 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.780 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.782 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.787 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.787 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.793 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.794 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.797 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.799 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.799 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.802 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.802 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.812 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.815 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.815 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.849 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.850 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.852 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.855 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.855 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.857 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.857 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.866 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.868 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.869 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.871 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.871 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.882 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.885 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.885 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.889 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.889 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.893 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.898 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.899 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.910 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.910 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.925 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:29.933 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.933 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.935 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT attempts FROM usage_outbox]
+22:48:29.938 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:29.940 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:29.943 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET status = 'FAILED', attempts = 10]
+22:48:29.946 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.946 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [SELECT id, event_type, attempts, created_at FROM usage_outbox
+            WHERE status = 'FAILED' AND attempts >= 10 AND id > ? ORDER BY id LIMIT ?]
+22:48:29.950 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.950 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [WITH changed AS (
+    UPDATE usage_outbox SET status = 'PENDING', attempts = 0, delivery_failures = 0,
+        next_attempt_at = statement_timestamp(), delivery_token = NULL, leased_until = NULL
+    WHERE id = ? AND status = 'FAILED' AND attempts >= 10
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    RETURNING id
+)
+INSERT INTO usage_redrive_audit(outbox_id, actor_subject, reason)
+    SELECT id, ?, ? FROM changed RETURNING id]
+22:48:29.958 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.958 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [WITH changed AS (
+    UPDATE usage_outbox SET status = 'PENDING', attempts = 0, delivery_failures = 0,
+        next_attempt_at = statement_timestamp(), delivery_token = NULL, leased_until = NULL
+    WHERE id = ? AND status = 'FAILED' AND attempts >= 10
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    RETURNING id
+)
+INSERT INTO usage_redrive_audit(outbox_id, actor_subject, reason)
+    SELECT id, ?, ? FROM changed RETURNING id]
+22:48:29.962 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.962 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.974 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.974 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [SELECT count(*) FROM usage_redrive_audit WHERE outbox_id = ?]
+22:48:29.978 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.978 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'SENT', sent_at = statement_timestamp(),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.981 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.981 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [WITH changed AS (
+    UPDATE usage_outbox SET status = 'PENDING', attempts = 0, delivery_failures = 0,
+        next_attempt_at = statement_timestamp(), delivery_token = NULL, leased_until = NULL
+    WHERE id = ? AND status = 'FAILED' AND attempts >= 10
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    RETURNING id
+)
+INSERT INTO usage_redrive_audit(outbox_id, actor_subject, reason)
+    SELECT id, ?, ? FROM changed RETURNING id]
+22:48:29.985 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:29.989 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:29.992 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.992 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:29.994 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:29.994 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:29.999 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:29.999 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.001 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.005 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.005 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.007 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.007 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.010 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.010 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.012 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.017 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.017 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.020 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.020 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.023 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.023 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.027 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.032 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.032 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.036 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.036 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.040 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.040 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.044 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.047 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.047 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.051 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.051 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.053 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.053 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.056 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.059 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.059 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.066 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.066 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.068 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.068 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.072 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.075 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.075 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.078 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.078 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.083 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.083 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.087 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.091 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.091 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.095 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.095 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.099 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.099 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.103 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.105 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.105 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.109 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.109 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.114 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.114 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.127 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.132 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.133 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.135 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.135 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.138 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.138 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.141 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.143 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.143 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.149 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.149 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.153 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.153 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.156 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.158 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.158 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.161 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.161 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'FAILED',
+    attempts = attempts + ?, delivery_failures = LEAST(delivery_failures, 2147483646) + 1,
+    next_attempt_at = statement_timestamp() + (? * interval '1 second'),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.165 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.165 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.169 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [UPDATE usage_outbox SET next_attempt_at = statement_timestamp() - interval '1 second']
+22:48:30.172 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT attempts FROM usage_outbox]
+22:48:30.177 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.177 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.189 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.189 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'SENT', sent_at = statement_timestamp(),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.193 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [DELETE FROM usage_outbox]
+22:48:30.195 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL update [INSERT INTO usage_outbox(subscriber_account_id,event_type,quantity,unit,idempotency_key,status,attempts,created_at)
+            VALUES ('sub','event','1','unit','stable-key','PENDING',0,statement_timestamp())]
+22:48:30.236 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.236 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.271 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:48:30.272 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET status = 'SENT', sent_at = statement_timestamp(),
+    delivery_token = NULL, leased_until = NULL
+WHERE id = ? AND delivery_token = ? AND leased_until > statement_timestamp()]
+22:48:30.295 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL query
+22:48:30.296 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE usage_outbox SET delivery_token = ?, leased_until = statement_timestamp() + interval '5 minutes'
+WHERE id = (
+    SELECT id FROM usage_outbox WHERE status IN ('PENDING', 'FAILED') AND attempts < 10
+        AND next_attempt_at <= statement_timestamp()
+        AND (leased_until IS NULL OR leased_until <= statement_timestamp())
+    ORDER BY next_attempt_at, created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+) RETURNING *]
+22:48:30.319 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT status FROM usage_outbox]
+22:48:30.324 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown initiated...
+22:48:30.349 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown completed.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

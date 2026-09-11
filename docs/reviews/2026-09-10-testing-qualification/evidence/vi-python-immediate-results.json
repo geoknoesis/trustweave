@@ -1,0 +1,53 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "outcomes": [
+    {
+      "name": "python-immediate",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "expired",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "withheld-mandates",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "invalid-signature",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-immediate-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-immediate-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    }
+  ]
+}

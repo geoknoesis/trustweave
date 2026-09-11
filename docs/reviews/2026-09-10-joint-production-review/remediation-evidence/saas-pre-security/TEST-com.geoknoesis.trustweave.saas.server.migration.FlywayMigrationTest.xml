@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:53:30.132Z" hostname="THEMATRIX" time="15.953">
+  <properties/>
+  <testcase name="the migration set applies cleanly to an empty database()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="2.905"/>
+  <testcase name="recovery age migration preserves existing timestamps and supports old inserts()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.047"/>
+  <testcase name="the entity scan finds tables, so the derived guard is not vacuously empty()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="2.732"/>
+  <testcase name="the set is idempotent when re-applied()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.23"/>
+  <testcase name="every entity table exists after migrating()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.184"/>
+  <system-out><![CDATA[22:53:30.135 INFO  [] tc.postgres:15 - Creating container for image: postgres:15
+22:53:30.139 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT count(*) FILTER (WHERE attempts < 10) AS pending,
+    count(*) FILTER (WHERE attempts >= 10) AS poison,
+    count(*) FILTER (WHERE leased_until > statement_timestamp()) AS leased,
+    COALESCE(GREATEST(0, EXTRACT(EPOCH FROM statement_timestamp() - min(created_at))), 0)::bigint AS oldest
+FROM usage_outbox WHERE status <> 'SENT']
+22:53:30.414 INFO  [] tc.postgres:15 - Container postgres:15 is starting: a1e7b95f40d126dfea883b0294beb7e83a4c228e981143a789a865371dbcccc0
+22:53:30.540 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:30.540 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:30.545 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:30.546 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:30.546 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:30.552 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:32.674 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:32.674 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:32.714 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitor$$SpringCGLIB$$0.poll(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:32.715 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:32.715 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:32.724 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitor$$SpringCGLIB$$0.poll(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:32.737 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT count(*) FILTER (WHERE attempts < 10) AS pending,
+    count(*) FILTER (WHERE attempts >= 10) AS poison,
+    count(*) FILTER (WHERE leased_until > statement_timestamp()) AS leased,
+    COALESCE(GREATEST(0, EXTRACT(EPOCH FROM statement_timestamp() - min(created_at))), 0)::bigint AS oldest
+FROM usage_outbox WHERE status <> 'SENT']
+22:53:33.091 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.092 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.096 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:33.097 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.097 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.100 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:33.543 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing SQL query [SELECT count(*) FILTER (WHERE attempts < 10) AS pending,
+    count(*) FILTER (WHERE attempts >= 10) AS poison,
+    count(*) FILTER (WHERE leased_until > statement_timestamp()) AS leased,
+    COALESCE(GREATEST(0, EXTRACT(EPOCH FROM statement_timestamp() - min(created_at))), 0)::bigint AS oldest
+FROM usage_outbox WHERE status <> 'SENT']
+22:53:33.555 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.556 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.559 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitor$$SpringCGLIB$$0.poll(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:33.560 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.560 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.563 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitor$$SpringCGLIB$$0.poll(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:33.694 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.694 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.697 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:33.698 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:33.698 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:33.702 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:39.954 INFO  [] tc.postgres:15 - Container postgres:15 started in PT9.8189355S
+22:53:39.955 INFO  [] tc.postgres:15 - Container is started (JDBC URL: jdbc:postgresql://localhost:50597/migration_test?loggerLevel=OFF)
+22:53:39.956 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Starting...
+22:53:39.985 INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-7 - Added connection org.postgresql.jdbc.PgConnection@b9c781
+22:53:39.985 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Start completed.
+22:53:40.014 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:50597/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+22:53:40.127 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+22:53:40.129 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.081s)
+22:53:40.173 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+22:53:40.207 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+22:53:40.219 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - Initial schema"
+22:53:40.400 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "2 - Add keycloak fields"
+22:53:40.455 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "3 - Add stripe customer id"
+22:53:40.555 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "4 - Add blockchain network seed data"
+22:53:40.659 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "5 - rename project to domain"
+22:53:40.678 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:53:40.699 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: relation "issued_credentials" does not exist, skipping
+22:53:40.786 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6 - credential offers"
+22:53:40.842 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6.1 - issued credentials"
+22:53:40.890 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "7 - subjects"
+22:53:40.962 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8 - audit log organization id"
+22:53:40.966 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:53:41.012 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8.1 - starter kits"
+22:53:41.055 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9 - data integrity constraints"
+22:53:41.063 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+22:53:41.095 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: index "trust_anchors_did_key" does not exist, skipping
+22:53:41.164 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9.1 - credential types"
+22:53:41.217 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10 - anchoring"
+22:53:41.380 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10.1 - baseline missing tables"
+22:53:41.518 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "11 - credential status list"
+22:53:41.674 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "12 - review remediation schema"
+22:53:41.755 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "13 - split trust anchors"
+22:53:41.855 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "14 - rename domain to trust space"
+22:53:41.948 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "15 - verification sessions"
+22:53:41.989 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "16 - wallet identity lifecycle"
+22:53:42.039 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "17 - credential suspension"
+22:53:42.080 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "18 - issuing identity keys"
+22:53:42.141 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "19 - verification requested claims"
+22:53:42.180 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "20 - credential supersession"
+22:53:42.215 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "21 - subscription status synced at"
+22:53:42.255 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "22 - verification work lease"
+22:53:42.297 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "23 - failed webhook recovery"
+22:53:42.331 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "24 - webhook recovery monitor index"
+22:53:42.364 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "25 - webhook first failure"
+22:53:42.407 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "30 - complete trust space column renames"
+22:53:42.443 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "31 - accountly organization state"
+22:53:42.489 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "32 - template publication fields"
+22:53:42.542 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "33 - usage outbox properties"
+22:53:42.609 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "34 - shedlock"
+22:53:42.644 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "35 - rate limit windows"
+22:53:42.680 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "36 - usage delivery leases"
+22:53:42.723 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "37 - user sync progress"
+22:53:42.761 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "38 - usage redrive audit"
+22:53:42.808 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "39 - rate limit capacity"
+22:53:42.874 INFO  [] o.f.core.internal.command.DbMigrate - Successfully applied 39 migrations to schema "public", now at version v39 (execution time 00:01.217s)
+22:53:45.565 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:45.565 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:45.570 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:45.571 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:53:45.571 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:53:45.577 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:53:45.691 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:50597/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+22:53:45.770 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.062s)
+22:53:45.795 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+22:53:45.797 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+22:53:45.871 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.045s)
+22:53:45.891 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+22:53:45.893 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+22:53:45.917 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:50597/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+22:53:45.981 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.048s)
+22:53:46.002 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+22:53:46.004 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+22:53:46.085 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Shutdown initiated...
+22:53:46.087 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Shutdown completed.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:46.530Z" hostname="THEMATRIX" time="0.039">
+  <properties/>
+  <testcase name="postUsageEvent sends body + Idempotency-Key + bearer and reports replayed=false()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest" time="0.038"/>
+  <system-out><![CDATA[00:15:46.553 DEBUG [] o.s.web.client.DefaultRestClient - Writing [UsageEventRequest(subscriberAccountId=sub-7, eventType=blockchain.tx, quantity=42, unit=usd-cents, source=trustweave, occurredAt=null, properties=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:46.566 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

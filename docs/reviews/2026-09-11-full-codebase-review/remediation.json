@@ -1,0 +1,130 @@
+{
+  "date": "2026-09-11",
+  "scope": "Remediation of the same-day full-codebase review. Working tree on main at e0a4464f.",
+  "status": "Nine of fifteen tasks closed with local evidence. Four remain open as multi-week work, and two need an action only the repository owner can take.",
+  "findings": [
+    {
+      "id": "F1",
+      "task": "T01",
+      "title": "The tree does not pass its own build",
+      "status": "Closed",
+      "action": "ktlintFormat on kms:plugins:hashicorp cleared all 232 violations across 10 files. The module baseline is unchanged, so nothing was grandfathered.",
+      "evidence": "./gradlew build now completes; :kms:plugins:hashicorp:test passes"
+    },
+    {
+      "id": "F2",
+      "task": "T02",
+      "title": "main carries an unversioned copy of the reviewed code",
+      "status": "Partially closed",
+      "action": "The tree is committed on main. Merging the codex/* remediation branches and pushing is left to the owner: it rewrites shared history and publishes the work.",
+      "remaining": "Merge codex/joint-remediation-20260910, push, confirm the CI run."
+    },
+    {
+      "id": "F3",
+      "task": "T03",
+      "title": "There is no publication path",
+      "status": "Closed in code; one external step remains",
+      "action": "Declared a Maven repository in the root build and in the BOM, added scm and issueManagement to every POM, corrected the dead documentation URL, added a reviewer-gated publish job on v* tags, and added scripts/check-publication.py to CI so none of it can regress.",
+      "evidence": "publishAllPublicationsToCentralRepository now exists; 103 generated POMs validate",
+      "remaining": "Sonatype namespace verification and the secrets/environment setup in docs/operations/publishing.md."
+    },
+    {
+      "id": "F4",
+      "task": "T04",
+      "title": "Coverage is bimodal",
+      "status": "Open",
+      "remaining": "57.30% line / 39.83% branch to roughly 75% / 60%, top-down from credential-api. Two to three weeks of test writing; not attempted here."
+    },
+    {
+      "id": "F5",
+      "task": "T05",
+      "title": "61 dependency coordinates escape the catalog",
+      "status": "Closed",
+      "action": "All 61 literals moved into gradle/libs.versions.toml across 34 build files. Converged web3j 4.10.0 to 4.14.0, gson 2.10.1 to 2.14.0, slf4j 2.0.9 to 2.0.17 and kotlinx-coroutines-test 1.8.1 to 1.10.2. bitcoinj stays at 0.16.2 through a new bitcoinj-legacy alias because 0.17 is a breaking API change that needs its own migration; the drift is now recorded in the catalog instead of hidden in a module. scripts/check-dependency-catalog.py fails the build on a new literal.",
+      "evidence": "109 build scripts checked, zero literal coordinates; affected modules compile on the converged versions"
+    },
+    {
+      "id": "F6",
+      "task": "T07",
+      "title": "Three shipped servers have no authentication primitive",
+      "status": "Closed",
+      "action": "Added HostAuthentication to the observability module: constant-time bearer tokens, host-supplied authorizers, an explicit frontedByProxy declaration, and per-caller fixed-window rate limiting with bounded caller tracking. The DID registrar, VC API and status-list servers gained withAuthentication and refuse mutating requests with 503 until it is called. This is a breaking change and is recorded in the changelog.",
+      "evidence": "13 new tests in HostAuthenticationTest; ABI dumps updated additively"
+    },
+    {
+      "id": "F7",
+      "task": "T06",
+      "title": "Instrumentation stops at the HTTP boundary",
+      "status": "Open",
+      "remaining": "An observability SPI through did-core, kms-core, wallet-core and credential-api. One week; not attempted here."
+    },
+    {
+      "id": "F8",
+      "task": "T08",
+      "title": "Half the workflows are unpinned",
+      "status": "Closed",
+      "action": "All 14 remaining action references pinned to commit SHAs with version comments. Added permissions blocks to the two workflows that had none. The nightly conformance job's issues:write moved to a separate job that runs no repository code, so a compromised build dependency cannot reach it. scripts/check-workflow-pinning.py enforces both properties in CI.",
+      "evidence": "6 workflows checked; every action SHA-pinned and every job permission-scoped"
+    },
+    {
+      "id": "F9",
+      "task": "T09",
+      "title": "Nothing is declared production-supported",
+      "status": "Partially closed",
+      "action": "Added a ratchet: every module must appear in the capability catalog or in config/capability-ratchet.json, and the unassessed count may only fall. A new module with no declared maturity now fails the build.",
+      "remaining": "Classifying the 102 recorded modules, and the custody and hardware qualification behind a supported rating. Both are owner decisions, not mechanical work."
+    },
+    {
+      "id": "F10",
+      "task": "T12",
+      "title": "A presenter-reachable exception escapes the verification contract",
+      "status": "Closed",
+      "action": "ChainVerifier translates ledger IllegalStateException and IllegalArgumentException into an invalid result with a stable message, alongside the SQLException path it already had.",
+      "evidence": "New regression in IssuanceRoundTripTest drives both exception types through a refusing data source"
+    },
+    {
+      "id": "F11",
+      "task": "T10",
+      "title": "Two documented cancellation gaps",
+      "status": "Closed",
+      "action": "encodeBitSet and decodeBitSet are suspend and call ensureActive() every 8192 bits, as their TODOs prescribed. updateCredentialStatus became suspend with them; every caller was already suspend, so no public signature changed.",
+      "evidence": "Two new tests: a cancelled revocation issues fewer statements than a completed one, proving the decode loop aborted before its post-decode SQL; and a structural guard that both functions stay suspend"
+    },
+    {
+      "id": "F12",
+      "task": "T13",
+      "title": "The validation gates read the wrong directory on Windows",
+      "status": "Closed",
+      "action": "Added scripts/build_root.py, which resolves the build root the way the Gradle build does, including the trustweave.windowsInRepoBuild opt-out, and refuses a root holding no JUnit results rather than reporting phantom gaps. Both gates now use it.",
+      "evidence": "Both gates exit 0 with no arguments after a build; 9 unit tests cover the resolution and the refusal"
+    },
+    {
+      "id": "F13",
+      "task": "T15",
+      "title": "Broad catch surface",
+      "status": "Partially closed; the original count was wrong",
+      "correction": "The review said 549 broad catches with 12 empty bodies. The 549 is right (550 on a precise count). The 12 is not: a balanced-brace scan finds zero genuinely empty catch bodies and 21 whose body is only a comment. That figure came from a line-counting grep, not a parse.",
+      "action": "Of those 21, four sat in suspend functions and swallowed CancellationException: TrustedDomainManager.emitSafely, InMemoryDomainTreasury.emitSafely and two testkit integration helpers. All four now rethrow it. The rest are best-effort close() and logging fallbacks in non-suspend code, each already carrying a comment explaining why.",
+      "remaining": "187 broad catches in suspend functions that neither rethrow nor convert to a result. Most are legitimate conversions to a sealed failure; the audit is a week's work and is not attempted here."
+    },
+    {
+      "id": "T11",
+      "title": "Deployment-scale ledger qualification",
+      "status": "Open",
+      "remaining": "Sustained load, replica promotion under write load, published RPO/RTO. Needs real infrastructure and soak time."
+    },
+    {
+      "id": "T14",
+      "title": "Compile the documentation consumers copy",
+      "status": "Open",
+      "remaining": "9 of 2,363 Kotlin blocks are source-backed. One week; not attempted here."
+    }
+  ],
+  "new_gates": [
+    "scripts/check-workflow-pinning.py — every action SHA-pinned, every job permission-scoped",
+    "scripts/check-dependency-catalog.py — no dependency version outside the catalog",
+    "scripts/check-publication.py — publishing repository declared, POMs complete, documentation links live",
+    "scripts/check-capability-coverage.py — every module declares a maturity; the unassessed count may only fall",
+    "scripts/build_root.py — evidence gates read the directory Gradle actually wrote"
+  ]
+}

@@ -3,7 +3,6 @@ package org.trustweave.hashicorpkms
 import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultConfig
 import com.bettercloud.vault.response.AuthResponse
-import java.io.Closeable
 
 /**
  * Factory for creating HashiCorp Vault clients.
@@ -18,9 +17,12 @@ object VaultKmsClientFactory {
      * @return Configured Vault client
      */
     fun createClient(config: VaultKmsConfig): Vault {
-        val vaultConfig = VaultConfig()
-            .address(config.address)
-            .engineVersion(config.engineVersion)
+        val vaultConfig =
+            VaultConfig()
+                .address(config.address)
+                .engineVersion(config.engineVersion)
+                .openTimeout(5)
+                .readTimeout(15)
 
         // Set namespace if provided (Vault Enterprise)
         config.namespace?.let {
@@ -37,18 +39,19 @@ object VaultKmsClientFactory {
 
             // Authenticate using AppRole
             val tempVault = Vault(vaultConfig)
-            val authResponse: AuthResponse = tempVault.auth()
-                .loginByAppRole(appRolePath, config.roleId, config.secretId)
+            val authResponse: AuthResponse =
+                tempVault
+                    .auth()
+                    .loginByAppRole(appRolePath, config.roleId, config.secretId)
 
             // Update config with the token from AppRole authentication
             vaultConfig.token(authResponse.authClientToken)
         } else {
             throw IllegalArgumentException(
-                "Vault authentication requires either 'token' or 'roleId' + 'secretId' (AppRole)"
+                "Vault authentication requires either 'token' or 'roleId' + 'secretId' (AppRole)",
             )
         }
 
         return Vault(vaultConfig.build())
     }
 }
-

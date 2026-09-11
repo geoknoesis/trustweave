@@ -69,4 +69,109 @@ public object VerifiableIntent {
             expectedL3CheckoutAud = expectedL3CheckoutAud,
             expectedL3CheckoutNonce = expectedL3CheckoutNonce,
         )
+
+    /**
+     * Verifies with a verifier-provisioned merchant key, identity and checkout challenge.
+     * The original verifyChain API remains unchanged and rejects autonomous checkout without this policy.
+     * Cart constraints use the authenticated merchant JWT cart, never independent agent-supplied claims.
+     */
+    public fun verifyChainWithCheckout(
+        checkoutTrust: org.trustweave.credential.vi.verification.CheckoutTrust,
+        l1: String,
+        l2: String,
+        issuerJwk: JsonObject,
+        l3Payment: String? = null,
+        l3Checkout: String? = null,
+        l2RoutedForPayment: String? = null,
+        l2RoutedForCheckout: String? = null,
+        now: Long = System.currentTimeMillis() / 1000,
+        clockSkewSeconds: Long = 300,
+        expectedL2Aud: String? = null,
+        expectedL2Nonce: String? = null,
+        strictness: StrictnessMode = StrictnessMode.PERMISSIVE,
+        requireReplayProtection: Boolean = true,
+        allowMissingTemporalClaims: Boolean = false,
+        expectedL3PaymentAud: String? = null,
+        expectedL3PaymentNonce: String? = null,
+        expectedL3CheckoutAud: String? = null,
+        expectedL3CheckoutNonce: String? = null,
+    ): ChainVerificationResult =
+        ChainVerifier.verify(
+            checkoutTrust = checkoutTrust,
+            l1 = ViSdJwt.parse(l1),
+            l2 = ViSdJwt.parse(l2),
+            issuerJwk = issuerJwk,
+            l3Payment = l3Payment?.let { ViSdJwt.parse(it) },
+            l3Checkout = l3Checkout?.let { ViSdJwt.parse(it) },
+            l2RoutedForPayment = l2RoutedForPayment,
+            l2RoutedForCheckout = l2RoutedForCheckout,
+            now = now,
+            clockSkewSeconds = clockSkewSeconds,
+            expectedL2Aud = expectedL2Aud,
+            expectedL2Nonce = expectedL2Nonce,
+            strictness = strictness,
+            requireReplayProtection = requireReplayProtection,
+            allowMissingTemporalClaims = allowMissingTemporalClaims,
+            expectedL3PaymentAud = expectedL3PaymentAud,
+            expectedL3PaymentNonce = expectedL3PaymentNonce,
+            expectedL3CheckoutAud = expectedL3CheckoutAud,
+            expectedL3CheckoutNonce = expectedL3CheckoutNonce,
+        )
+
+    /**
+     * Verifies a payment chain and atomically reserves its cumulative budget and one-use challenge.
+     * Uses a shared PostgreSQL ledger. Rejected chains do not consume budget. A successful result
+     * is a conservative reservation, not proof of payment; downstream execution must be idempotent.
+     * Supports one payment budget with per-payment minimum and bounded recurrence profiles.
+     *
+     * Every outcome reachable from presenter-controlled input is a [ChainVerificationResult], never
+     * a throw. Storage failure, an uncertain commit and a budget that disagrees with the stored
+     * account all return `valid = false`; the last of those is reachable because the ledger scopes
+     * an account by the L2 JWT alone, so one signed L2 carrying two payment mandates with different
+     * budgets resolves to the same account under different presentations.
+     */
+    public fun verifyAndReserveBudget(
+        budgetLedger: org.trustweave.credential.vi.verification.PostgresIntentLedger,
+        checkoutTrust: org.trustweave.credential.vi.verification.CheckoutTrust? = null,
+        l1: String,
+        l2: String,
+        issuerJwk: JsonObject,
+        l3Payment: String? = null,
+        l3Checkout: String? = null,
+        l2RoutedForPayment: String? = null,
+        l2RoutedForCheckout: String? = null,
+        now: Long = System.currentTimeMillis() / 1000,
+        clockSkewSeconds: Long = 300,
+        expectedL2Aud: String? = null,
+        expectedL2Nonce: String? = null,
+        strictness: StrictnessMode = StrictnessMode.PERMISSIVE,
+        requireReplayProtection: Boolean = true,
+        allowMissingTemporalClaims: Boolean = false,
+        expectedL3PaymentAud: String? = null,
+        expectedL3PaymentNonce: String? = null,
+        expectedL3CheckoutAud: String? = null,
+        expectedL3CheckoutNonce: String? = null,
+    ): ChainVerificationResult =
+        ChainVerifier.verify(
+            budgetLedger = budgetLedger,
+            checkoutTrust = checkoutTrust,
+            l1 = ViSdJwt.parse(l1),
+            l2 = ViSdJwt.parse(l2),
+            issuerJwk = issuerJwk,
+            l3Payment = l3Payment?.let { ViSdJwt.parse(it) },
+            l3Checkout = l3Checkout?.let { ViSdJwt.parse(it) },
+            l2RoutedForPayment = l2RoutedForPayment,
+            l2RoutedForCheckout = l2RoutedForCheckout,
+            now = now,
+            clockSkewSeconds = clockSkewSeconds,
+            expectedL2Aud = expectedL2Aud,
+            expectedL2Nonce = expectedL2Nonce,
+            strictness = strictness,
+            requireReplayProtection = requireReplayProtection,
+            allowMissingTemporalClaims = allowMissingTemporalClaims,
+            expectedL3PaymentAud = expectedL3PaymentAud,
+            expectedL3PaymentNonce = expectedL3PaymentNonce,
+            expectedL3CheckoutAud = expectedL3CheckoutAud,
+            expectedL3CheckoutNonce = expectedL3CheckoutNonce,
+        )
 }

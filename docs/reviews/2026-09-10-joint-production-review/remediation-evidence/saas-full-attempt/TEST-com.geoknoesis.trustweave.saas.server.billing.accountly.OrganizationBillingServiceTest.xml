@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:23.724Z" hostname="THEMATRIX" time="0.067">
+  <properties/>
+  <testcase name="provision creates subscriber, subscribes to FREE, and stores linkage()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.014"/>
+  <testcase name="staying on the same paid tier is not treated as an upgrade()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.009"/>
+  <testcase name="downgrading to FREE is allowed()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.009"/>
+  <testcase name="changeTier switches the Accountly plan and updates the local tier()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.005"/>
+  <testcase name="upgrading to a paid tier is refused while nothing can collect payment()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.004"/>
+  <testcase name="cancel cancels the Accountly subscription and resets tier to FREE()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest" time="0.003"/>
+  <system-out><![CDATA[22:20:23.738 INFO  [] c.g.t.s.s.b.a.OrganizationBillingService - Provisioned org 7 as Accountly subscriber sub-7 (sub acct-sub-7)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

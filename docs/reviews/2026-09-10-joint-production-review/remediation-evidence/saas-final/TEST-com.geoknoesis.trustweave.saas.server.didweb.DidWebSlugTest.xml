@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:17:36.500Z" hostname="THEMATRIX" time="0.001">
+  <properties/>
+  <testcase name="lowercases and hyphenates()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" time="0.0"/>
+  <testcase name="rejects a name with nothing usable in it()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" time="0.0"/>
+  <testcase name="strips characters that would break a URL or a DID()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" time="0.0"/>
+  <testcase name="bounds the length and never ends on a separator()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" time="0.0"/>
+  <testcase name="collapses runs and trims leading and trailing separators()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

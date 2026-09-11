@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:22.277Z" hostname="THEMATRIX" time="0.498">
+  <properties/>
+  <testcase name="the refusal never repeats the card number()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest" time="0.004"/>
+  <testcase name="refuses to send a body containing card data, and does not call through()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest" time="0.006"/>
+  <testcase name="lets an ordinary billing payload through untouched()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest" time="0.146"/>
+  <testcase name="lets a bodyless GET through()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest" time="0.002"/>
+  <system-out><![CDATA[22:20:22.611 ERROR [] c.g.t.s.s.b.a.CardholderDataInterceptor - Blocked an Accountly request to null carrying cardholder data: card-data field name 'cardNumber'; a Luhn-valid 16-digit card number (value redacted)
+22:20:22.618 ERROR [] c.g.t.s.s.b.a.CardholderDataInterceptor - Blocked an Accountly request to null carrying cardholder data: card-data field name 'cardNumber'; a Luhn-valid 16-digit card number (value redacted)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

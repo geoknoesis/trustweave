@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:36.290Z" hostname="THEMATRIX" time="0.209">
+  <properties/>
+  <testcase name="a malformed email address is refused before anything is created()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.005"/>
+  <testcase name="an account that cannot be created is reported, not half-recorded()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.003"/>
+  <testcase name="an invitation puts the person in a team, which is what carries their organization()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.007"/>
+  <testcase name="a failure to send the email does not fail the invitation()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.002"/>
+  <testcase name="a team belonging to another organization is refused()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.002"/>
+  <testcase name="the new account must set its own password()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.003"/>
+  <testcase name="someone already in the team is not added twice()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.003"/>
+  <testcase name="an existing colleague is added rather than refused()" classname="com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest" time="0.006"/>
+  <system-out><![CDATA[22:30:36.475 INFO  [] c.g.t.s.s.s.MemberInvitationService - admin@acme.example invited new@acme.example into organization 5 (group Members), email sent: true
+22:30:36.481 INFO  [] c.g.t.s.s.s.MemberInvitationService - admin@acme.example invited new@acme.example into organization 5 (group Members), email sent: false
+22:30:36.487 INFO  [] c.g.t.s.s.s.MemberInvitationService - admin@acme.example invited new@acme.example into organization 5 (group Members), email sent: true
+22:30:36.492 INFO  [] c.g.t.s.s.s.MemberInvitationService - admin@acme.example invited new@acme.example into organization 5 (group Members), email sent: true
+22:30:36.498 INFO  [] c.g.t.s.s.s.MemberInvitationService - admin@acme.example invited existing@acme.example into organization 5 (group Members), email sent: false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

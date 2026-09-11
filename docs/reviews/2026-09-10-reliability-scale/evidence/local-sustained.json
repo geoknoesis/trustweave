@@ -1,0 +1,15 @@
+{
+    "scenario": "sustained",
+    "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+    "duration_ms": 60148,
+    "completed_workflows": 7793,
+    "callers": 32,
+    "instances": 4,
+    "pool_limit": 8,
+    "peak_connections": 8,
+    "hot_scope_percent": 80,
+    "workflow_p95_ms": 374,
+    "workflow_p99_ms": 485,
+    "workflow_max_ms": 750,
+    "invariant_violations": 0
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:20.781Z" hostname="THEMATRIX" time="0.022">
+  <properties/>
+  <testcase name="getOrganizationIdForUser should return organization ID()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.003"/>
+  <testcase name="getOrganizationForUser should return owned organization when user owns one()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.003"/>
+  <testcase name="createDefault does not provision in Accountly when the flag is off()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.003"/>
+  <testcase name="createDefault provisions in Accountly (non-fatal) when the flag is on()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.005"/>
+  <testcase name="getOrganizationForUser should create default organization when user owns none()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.003"/>
+  <testcase name="createDefault still returns the org when Accountly provisioning throws()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest" time="0.003"/>
+  <system-out><![CDATA[22:54:20.784 DEBUG [] c.g.t.s.s.s.OrganizationContextService - User 1 owns organization 1
+22:54:20.787 DEBUG [] c.g.t.s.s.s.OrganizationContextService - User 1 owns organization 1
+22:54:20.800 INFO  [] c.g.t.s.s.s.OrganizationContextService - Creating default organization for user 1
+22:54:20.802 WARN  [] c.g.t.s.s.s.OrganizationContextService - Accountly provisioning failed (non-fatal) for org 0: Accountly down
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

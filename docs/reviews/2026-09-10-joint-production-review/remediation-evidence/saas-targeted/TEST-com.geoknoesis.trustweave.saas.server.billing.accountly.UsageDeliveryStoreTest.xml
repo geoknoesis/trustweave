@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:42:35.300Z" hostname="THEMATRIX" time="56.95">
+  <properties/>
+  <testcase name="shared rate-limit capacity cannot be bypassed by concurrent new keys or duplicate upserts()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.391"/>
+  <testcase name="concurrent workers cannot own the same event and stale acknowledgements are fenced()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.077"/>
+  <testcase name="permanent rejections stop at the explicit poison budget()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.105"/>
+  <testcase name="redrive is audited and retains remote idempotency while refusing sent rows()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.042"/>
+  <testcase name="transient outages remain eligible beyond poison limit and respect retry time()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="0.338"/>
+  <testcase name="Spring transaction proxies commit claims and keep remote calls outside caller transactions()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest" time="1.539"/>
+  <system-out><![CDATA[21:42:35.445 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+21:42:35.461 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+21:42:35.492 [Test worker] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.21.4
+21:42:36.931 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.NpipeSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+21:42:39.911 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=npipe:////./pipe/dockerDesktopLinuxEngine
+21:42:39.916 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+21:42:40.114 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 29.4.1
+  API Version: 1.54
+  Operating System: Docker Desktop
+  Total Memory: 15826 MB
+  Labels: 
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+21:42:43.520 [Test worker] INFO tc.testcontainers/ryuk:0.12.0 -- Creating container for image: testcontainers/ryuk:0.12.0
+21:42:50.328 [Test worker] INFO org.testcontainers.utility.RegistryAuthLocator -- Credential helper/store (docker-credential-desktop) does not have credentials for https://index.docker.io/v1/
+21:42:50.926 [Test worker] INFO tc.testcontainers/ryuk:0.12.0 -- Container testcontainers/ryuk:0.12.0 is starting: 4027e596d37a716e595e0aebce0f00b62597ebf86f164fc64d261306bc944428
+21:42:55.418 [Test worker] INFO tc.testcontainers/ryuk:0.12.0 -- Container testcontainers/ryuk:0.12.0 started in PT11.8981037S
+21:42:55.438 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+21:42:55.439 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+21:42:55.441 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+21:42:55.442 [Test worker] INFO tc.postgres:15 -- Creating container for image: postgres:15
+21:42:57.015 [Test worker] INFO tc.postgres:15 -- Container postgres:15 is starting: f01a5548c646a87824f6a0d34b7b3425029b27d010c1cda3603923c77115d6b7
+21:43:17.243 [Test worker] INFO tc.postgres:15 -- Container postgres:15 started in PT21.8011653S
+21:43:17.245 [Test worker] INFO tc.postgres:15 -- Container is started (JDBC URL: jdbc:postgresql://localhost:50785/test?loggerLevel=OFF)
+21:43:17.284 [Test worker] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+21:43:18.457 [Test worker] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@a2cc63e
+21:43:18.463 [Test worker] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Start completed.
+21:43:20.081 [Test worker] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:50785/test?loggerLevel=OFF (PostgreSQL 15.18)
+21:43:21.635 [Test worker] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
+21:43:21.646 [Test worker] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 39 migrations (execution time 00:01.396s)
+21:43:21.793 [Test worker] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
+21:43:22.191 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
+21:43:22.255 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - Initial schema"
+21:43:23.157 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - Add keycloak fields"
+21:43:23.332 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - Add stripe customer id"
+21:43:23.504 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - Add blockchain network seed data"
+21:43:23.644 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - rename project to domain"
+21:43:23.674 [Test worker] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+21:43:23.890 [Test worker] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: relation "issued_credentials" does not exist, skipping
+21:43:24.539 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6 - credential offers"
+21:43:24.925 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6.1 - issued credentials"
+21:43:25.160 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "7 - subjects"
+21:43:25.273 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "8 - audit log organization id"
+21:43:25.279 [Test worker] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+21:43:25.334 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "8.1 - starter kits"
+21:43:25.500 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "9 - data integrity constraints"
+21:43:25.532 [Test worker] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+21:43:25.759 [Test worker] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: index "trust_anchors_did_key" does not exist, skipping
+21:43:26.236 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "9.1 - credential types"
+21:43:26.464 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "10 - anchoring"
+21:43:26.571 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "10.1 - baseline missing tables"
+21:43:26.738 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "11 - credential status list"
+21:43:26.907 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "12 - review remediation schema"
+21:43:27.020 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "13 - split trust anchors"
+21:43:27.146 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "14 - rename domain to trust space"
+21:43:27.215 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "15 - verification sessions"
+21:43:27.294 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "16 - wallet identity lifecycle"
+21:43:27.377 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "17 - credential suspension"
+21:43:27.458 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "18 - issuing identity keys"
+21:43:27.589 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "19 - verification requested claims"
+21:43:27.628 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "20 - credential supersession"
+21:43:27.693 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "21 - subscription status synced at"
+21:43:27.761 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "22 - verification work lease"
+21:43:27.820 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "23 - failed webhook recovery"
+21:43:27.955 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "24 - webhook recovery monitor index"
+21:43:27.998 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "25 - webhook first failure"
+21:43:28.060 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "30 - complete trust space column renames"
+21:43:28.131 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "31 - accountly organization state"
+21:43:28.225 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "32 - template publication fields"
+21:43:28.674 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "33 - usage outbox properties"
+21:43:28.798 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "34 - shedlock"
+21:43:28.934 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "35 - rate limit windows"
+21:43:29.026 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "36 - usage delivery leases"
+21:43:29.149 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "37 - user sync progress"
+21:43:29.293 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "38 - usage redrive audit"
+21:43:29.473 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "39 - rate limit capacity"
+21:43:29.649 [Test worker] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 39 migrations to schema "public", now at version v39 (execution time 00:03.838s)
+21:43:32.252 [Test worker] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown initiated...
+21:43:32.261 [Test worker] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown completed.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

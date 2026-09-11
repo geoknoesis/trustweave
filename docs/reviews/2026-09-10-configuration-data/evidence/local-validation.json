@@ -1,0 +1,20 @@
+{
+  "modules": {
+    "common": {
+      "tests": 438,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "credentials/plugins/verifiable-intent": {
+      "tests": 125,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "logs": {
+    "configuration-data-final.log": "d573476a5d658a4e7dffa75bdae84efa1b72df468617edeae94ada1cb39b99e8"
+  },
+  "scope": "Local module tests, lint, additive ABI checks and VI coverage report; hosted run qualifies the full SDK"
+}

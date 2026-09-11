@@ -75,8 +75,8 @@ Plugin infrastructure for extensibility:
 
 - **`PluginMetadata`** – Metadata about plugins (capabilities, dependencies, configuration)
 - **`PluginCapabilities`** – Domain-agnostic capabilities (features, extensions)
-- **`PluginConfiguration`** – Configuration loaded from YAML/JSON files
-- **`PluginConfigurationLoader`** – Loader for YAML/JSON plugin configurations
+- **`PluginConfiguration`** – Declarative plugin configuration model
+- **`PluginConfigurationLoader`** – Strict, bounded UTF-8 JSON loader; see [configuration limits and migration](../../operations/configuration-data.md)
 - **`PluginType`** – Framework-level plugin type enumeration (BLOCKCHAIN, CREDENTIAL_SERVICE, DID_METHOD, KMS, etc.)
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
 - **`PluginRegistry`** / **`ProviderChain`** – Internal infrastructure (`internal` visibility). Use domain registries (`DidMethodRegistry`, `BlockchainAnchorRegistry`, etc.) instead.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:24.352Z" hostname="THEMATRIX" time="0.019">
+  <properties/>
+  <testcase name="deleteGroup should delete group from Keycloak and locally()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.004"/>
+  <testcase name="getGroupById should return group when found()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.001"/>
+  <testcase name="getGroupByKeycloakGroupId should return group when found()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.001"/>
+  <testcase name="createGroup should create group in Keycloak and save locally()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.003"/>
+  <testcase name="getKeycloakGroup should return Keycloak group representation()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.002"/>
+  <testcase name="updateGroup should update group in Keycloak and locally()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.003"/>
+  <testcase name="createGroup should throw exception when Keycloak creation fails()" classname="com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

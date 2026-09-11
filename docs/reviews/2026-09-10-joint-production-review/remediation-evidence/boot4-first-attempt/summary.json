@@ -1,0 +1,2311 @@
+{
+  "saas_commit": "6e8f8c5ff139888f16d0d3f5208c1c9e4cd19313",
+  "sdk_commit": "2a1b99cb168817e454dde87c8c9ad8107fd592df",
+  "tests": 575,
+  "passed": 571,
+  "failed": 1,
+  "skipped": 3,
+  "cases": [
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$FullLifecycle#create, read, update, delete a trusted domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$DeleteNetwork#returns 404 when network does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$DeleteNetwork#returns 404 when network belongs to another org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$DeleteNetwork#returns 204 and removes the network from the database()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$DeleteNetwork#returns 401 when no token is provided()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#persists the network in the database()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#returns 201 with full response body()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#returns 400 when environment is missing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#returns 400 when name is blank()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#returns 400 when environment value is invalid()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$CreateNetwork#returns 401 when no token is provided()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork#returns 404 when network does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork#persists the updated values in the database()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork#returns 404 when network belongs to another org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork#returns 401 when no token is provided()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$UpdateNetwork#returns 200 with updated fields()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest#the configured KMS provider is accepted for this profile()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest#status lists can be allocated against the real facade()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest#the real TrustWeave facade is built, not a mock()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest#changePlan issues PATCH()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest#provisionSubscriber returns subscriberId and killbillAccountId()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest#subscribe returns subscription_id()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest#getEntitlement parses status and quotaEnvelopeJson()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientSubscriberTest#cancel issues DELETE()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#createPlanQuota returns quota_id()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#existing dedicated billing tenant needs no mutation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#listApplications parses the array()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#createPlan returns plan_id()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#declareUsageVariable returns id()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#provisions a dedicated billing tenant and refuses a shared response()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#listPlans parses plan list with quotas()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#createApplication posts name and returns id, with bearer auth()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest#updateKillbillMapping issues a PATCH()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientUsageTest#postUsageEvent sends body + Idempotency-Key + bearer and reports replayed=false()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest#a configured auth block overrides the platform realm entirely()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest#blank auth falls back to the platform realm token endpoint()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest#auth defaults are blank so local dev keeps using the platform realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest#defaults are sensible()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingPropertiesTest#trims trailing slash from base url()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest#deployed provider supports application provisioning and payment metadata()",
+      "status": "skipped"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest#the cardholder-data interceptor blocks a PAN before it reaches Accountly()",
+      "status": "skipped"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest#the whole payment surface round-trips through the real client()",
+      "status": "skipped"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest#posts to the endpoint the auth block names, not the platform realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest#refreshes after the token expires()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyServiceTokenProviderTest#fetches a token and caches it until near expiry()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest#unknown org or foreign ref is ignored()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest#canceled status resets the org to FREE()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest#subscription updated to tw-pro upgrades the org tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookVerifierTest#rejects a wrong signature or wrong secret()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookVerifierTest#accepts a valid signature()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#flags card-shaped keys inside an escaped JSON blob()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#flags a PAN written in the grouped form a form field produces()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#passes a real usage event, whose quantity is a digit string()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#passes a real provision-subscriber payload()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#flags a card-shaped key()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#passes epoch-millis and other long numbers that are not quoted()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#passes a long digit string that fails the Luhn check()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#flags a Luhn-valid PAN hiding under an innocent key()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#never echoes the offending value into the failure message()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest#passes an empty body()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest#the refusal never repeats the card number()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest#refuses to send a body containing card data, and does not call through()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest#lets an ordinary billing payload through untouched()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataInterceptorTest#lets a bodyless GET through()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest#is idempotent - existing application and plans are not recreated()",
+      "status": "failed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest#shared tenant migration refusal stops catalog writes()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest#creates application, all tier plans with mapping and quotas, and usage variables on an empty Accountly()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest#allows when well under the limit()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest#fails open when the limit is non-positive()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest#blocks when the request would exceed the hard limit()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest#fails open for unknown event type, empty, null, or unparseable snapshot()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementGateTest#warns when at or above 80 percent of the limit()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementServiceTest#refresh fetches the snapshot from Accountly and caches it on the org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementServiceTest#refresh is a no-op when the org has no Accountly subscriber()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.EntitlementServiceTest#check runs the gate against the org's cached snapshot (no network)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#provision creates subscriber, subscribes to FREE, and stores linkage()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#staying on the same paid tier is not treated as an upgrade()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#downgrading to FREE is allowed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#changeTier switches the Accountly plan and updates the local tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#upgrading to a paid tier is refused while nothing can collect payment()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationBillingServiceTest#cancel cancels the Accountly subscription and resets tier to FREE()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest#returns null for foreign or malformed refs()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest#formats and parses org external ref()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest#no card-data field is declared anywhere in the server source()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest#the detector fires on a declaration()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest#the detector ignores prose about cardholders()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest#allows the payment-method metadata a compliant integration has to store()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest#lets a downgrade through without requiring a payment method()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest#refuses a paid upgrade with no payment method, and does not touch the plan()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest#fails closed when Accountly cannot be reached()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodGateTest#allows a paid upgrade when a payment method is on file()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest#refuses to start setup for an org that is not provisioned in billing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest#builds the setup session return URLs from our own base, ignoring caller input()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest#an org with no payment method simply has none()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentMethodServiceTest#lists what Accountly holds()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PlanFeatureFormatterTest#formats wallet seats()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PlanFeatureFormatterTest#formats known event types with thousands separators and period()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.PlanFeatureFormatterTest#falls back to the raw event type for unknown events()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest#declares the four metered usage variables()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest#defines all three tiers mapped to kill bill plans()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest#free tier caps credential issuance at 500 per month()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#shared rate-limit capacity cannot be bypassed by concurrent new keys or duplicate upserts()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#concurrent workers cannot own the same event and stale acknowledgements are fenced()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#permanent rejections stop at the explicit poison budget()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#redrive is audited and retains remote idempotency while refusing sent rows()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#transient outages remain eligible beyond poison limit and respect retry time()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageDeliveryStoreTest#Spring transaction proxies commit claims and keep remote calls outside caller transactions()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest#record does not duplicate an existing idempotency key()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest#record appends a PENDING outbox row for a provisioned org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest#record is a no-op when the org is not provisioned()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageQueueMonitorTest#monitor failures remain unknown or stale rather than reporting an empty healthy queue()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageRecoveryAuthorizationTest#only a platform administrator can inspect or redrive usage()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#long transport outage remains retryable and stops the batch()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#empty queue performs no remote reconciliation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#invalid event consumes a bounded poison attempt()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#rate limits and credential failures preserve the poison budget()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#reconciliation outage releases claim for later retry()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest#scheduled entry acknowledges only after remote success()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageRetryDelayTest#numeric and HTTP-date retry directives are honored within the outage bound()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest#createCustomer should create Stripe customer()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest#getCustomer should return customer when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#an incomplete Stripe subscription does not grant the tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#getSubscriptionByOrganizationId should return subscription when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#webhook cancellation revokes the tier \u2014 dashboard cancellations must not leave paid quotas()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#createSubscription should throw exception when organization not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#createSubscription should create subscription when organization exists()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#a newer webhook event applies and records when it was synced()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#an older webhook event does not overwrite a newer status()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#cancelSubscription should cancel subscription and update organization tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#creating a subscription must not clobber the just-saved stripeCustomerId()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#webhook transition to ACTIVE grants the organization the tier it paid for()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest#a trialing subscription grants the tier \u2014 Stripe treats trials as entitled()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest#generateTransactionCostInvoiceItems should return empty list when no costs exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest#markTransactionCostsAsBilled should delegate to transactionCostService()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest#generateTransactionCostInvoiceItems should return invoice items when costs exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest#reports period cost as a blockchain_tx usage event in USD cents()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest#does nothing when the period cost is zero()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest#does nothing when the organization is not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest#default database settings have no local credential fallback()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest#default schema is owned by Flyway and validated by Hibernate()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest#default Keycloak administrator settings have no local credential fallback()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should verify connection properties()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should verify password authentication is required()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should fail to connect with empty password()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should execute SQL queries after successful authentication()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should connect to PostgreSQL with correct password()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should verify multiple connections work with password authentication()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.JdbcPasswordAuthenticationTest#should fail to connect with incorrect password()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#logs at INFO, not DEBUG()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#never auto-mutates the schema()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#makes Accountly authoritative for tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#applies the saas migration set, not the generic one()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#accountly auth has no fallback to our own realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.config.StagingProfileTest#defaults to a persistent KMS()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BillingProxyControllerTest#enterprise tier maps display name and null monthlyFee falls back to 0()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BillingProxyControllerTest#GET plans returns sorted tier cards with features()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionControllerIntegrationTest#getTransactions should return transactions for domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionControllerIntegrationTest#getTransactions should return transactions for organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionPagingTest#filtering by trust space checks access before reading anything()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionPagingTest#the requested page size reaches the query()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionPagingTest#filtering by issuer is scoped to the caller's organization in the query()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionPagingTest#the endpoint reports the total, not just the page it returned()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.CredentialTypeControllerTest#list returns the org's credential types()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.CredentialTypeControllerTest#getOne returns the type with its versions()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.CredentialTypeControllerTest#getOne hides another tenant's custom type()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest#createEducationCredentialsExample should create education domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest#createAllExamples should create all example domains()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest#createIdentity should create a new issuing identity()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest#updateIdentity should update the issuing identity()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest#getIdentity should return the issuing identity when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest#deleteTrustAnchor should delete trust anchor()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest#listIdentities should return every issuing identity in the trust space()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest#still withholds the billing correlation ids()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest#reports isOwner true for the owner()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest#reports isOwner false for a member who is not the owner()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest#GET usage returns 404 when the org does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest#GET usage refreshes the snapshot and returns tier + parsed quotas()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest#POST change-tier delegates to OrganizationBillingService and returns the new tier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest#POST change-tier rejects an invalid tier with 400()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest#GET usage returns empty quotas when snapshot is null()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.PublicCredentialOfferSecurityTest#a public credential identifier never reveals its owner or content()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest#DELETE starter-kits removes a custom kit and returns 204()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest#POST instantiate creates a trusted domain and returns 201()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest#GET starter-kits lists kits for the caller's org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest#POST starter-kits creates a kit and returns 201()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest#list returns subjects for domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest#bulkCreatePeople returns created count()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest#get returns detail when subject exists()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#group mutations cannot cross tenants or import an outsider()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#plain users cannot administer users roles or groups and tenant admins cannot read operations()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#display name admin cannot create or rename a privileged realm role()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#legacy privileged role ownership cannot authorize a realm role grant or rename()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#tenant lists include only owner and members and search never queries or syncs the realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#all role mutation paths reject foreign resources before Keycloak writes()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#tenant admin cannot read or sync another tenant user()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest#tenant cannot grant built in or composite roles but can grant its own simple role()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$GetNetwork#returns 200 with full network details()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$GetNetwork#returns 404 when network does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$GetNetwork#returns 404 when network belongs to another org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$GetNetwork#returns 401 when no token is provided()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$ListNetworks#returns empty list when user has no networks()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$ListNetworks#returns 200 with all networks for the authenticated user's org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$ListNetworks#does not return networks belonging to another org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$ListNetworks#returns 401 when no token is provided()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest#getAllUsers should return all users()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest#getCurrentUser should return current user()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest#getUserById should return user when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest#getUserById should return 404 when not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest#a portless https base url passes the bare host as domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest#a ported base url percent-encodes the colon into the domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest#the captured identifier resolves to the route the hosting controller currently serves()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest#lowercases and hyphenates()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest#rejects a name with nothing usable in it()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest#strips characters that would break a URL or a DID()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest#bounds the length and never ends on a separator()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.didweb.DidWebSlugTest#collapses runs and trims leading and trailing separators()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.domain.OrganizationBillingFieldsTest#billing-link fields default to null and survive copy()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.domain.UsageOutboxEntityTest#new row defaults to PENDING with zero attempts()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.domain.UsageOutboxEntityTest#markSent and markFailed mutate status()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest#an upstream 429 becomes a retryable 503, not a 500()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest#an upstream 503 is treated the same way()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest#the message never leaks the upstream's own response body()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest#an upstream 4xx that is not a throttle is left to the other handlers()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest#should get access token for test user()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest#should create test user in Keycloak()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest#Keycloak container should be accessible()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest#should create and list users from master realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#a did-key identity is refused rotation against the real registrar()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#a published hold can be set and then actually cleared()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#reporting a key stolen withdraws it from the published document()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#a credential signed with the rotated key can actually be issued()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#after rotation, new credentials are signed with the new key()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#a hold on one credential does not disturb its neighbours in the list()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest#rotating a web identity mints a new key and keeps the old one published()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsHostWiringTest#unknown bound options fail startup without including their values()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsHostWiringTest#bound Vault endpoint namespace and mount reach the real SDK driver()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsHostWiringTest#mixed deployed and local profiles fail during actual Spring host construction()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#refuses the in-memory provider in the staging profile()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#explicit provider options are typed and unrecognized options are rejected()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#accepts the vault provider in the staging profile()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#defaults to the in-memory provider for local development()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#allows a persistent provider in production()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#refuses the in-memory provider outside dev and test()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#provider name matching is case-insensitive()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#allows the in-memory provider in dev and test()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#development profiles cannot override a deployed or unknown profile()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest#refuses the in-memory provider when no profile is active()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest#the migration set applies cleanly to an empty database()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest#recovery age migration preserves existing timestamps and supports old inserts()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest#the entity scan finds tables, so the derived guard is not vacuously empty()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest#the set is idempotent when re-applied()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest#every entity table exists after migrating()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.migration.MigratedSchemaValidationTest#migrations create the schema required by Hibernate()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.observability.DependencyHealthTest#readiness requires valid discovery rather than mere HTTP reachability()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.observability.RequestContextFilterTest#capability paths never enter MDC and failures clean up context()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#a token can be consumed exactly once()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#concurrent consumers cannot both win()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#each issued token and nonce is distinct()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#consuming returns the offer and nonce the token was issued against()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#an unknown token is rejected()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest#an expired token cannot be consumed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a non did-key holder, whose key would need a network fetch to resolve()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a stale proof()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects garbage()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#accepts a well-formed proof and returns the holder DID()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a proof with the wrong typ()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a proof harvested for a different issuer()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a proof with no iat()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a proof signed by a key other than the one it names()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest#rejects a replayed proof bound to a different nonce()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest#provider exception does not leak database reservations()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest#non cooperative provider keeps its cross instance session reservation after timeout()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest#two instances share tenant capacity and release reservations after completion()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.ClusterVerificationAdmissionTest#cluster global capacity is bounded across tenants()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationHistoryRetentionTest#retention uses a bounded repository operation and configured age()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#an expired request cannot be satisfied()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#each request gets its own unguessable nonce()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#the QR payload carries the client id and a request uri()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#requested claims survive being stored and read back()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#history is bounded and rejects excessive page sizes()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#history cleanup removes expired personal data using the database batch query()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#the request object asks for the requested type and echoes the nonce()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#blank and duplicate claim names are cleaned up rather than sent to the wallet()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#the credential type is still constrained when claims are named()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#a claim is looked for wherever the format puts it()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#a completed session refuses a second presentation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#an unknown session id yields nothing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#a presentation without holder binding is rejected()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#a request naming no claims does not limit disclosure()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#cancellation is tenant bound and prevents subsequent submission()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#a request naming claims asks for those claims and limits disclosure to them()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#reads expire unanswered requests()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#the request is addressed to this verifier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#an unparseable presentation is rejected, not accepted()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#concurrent submissions cannot overwrite a terminal result()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest#an empty request asks for any trusted credential rather than matching nothing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest#work deadline interrupts a waiting provider()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest#duplicate work is refused while the first request runs()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationWorkGateTest#non cooperative timed out work retains tenant and session reservations()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.ProvisionRequestTest#defaults match the wizard defaults()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.ProvisionRequestTest#an unresolved partner is not trusted()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.ProvisionRequestTest#partners named without a DID survive into the request()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.TrustSpaceProvisioningBusinessRulesTest#known business names map to the built-in catalog tokens()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.TrustSpaceProvisioningBusinessRulesTest#an unknown business name falls back to a usable token()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.provisioning.TrustSpaceProvisioningBusinessRulesTest#the same name always maps to the same token()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a role in one space does not open a sibling space in the same organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a group pointing at a missing organization grants nothing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a role in a trust space grants that space \u2014 not the whole organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a stranger may access nothing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a colleague invited into a group may access that organization's trust spaces()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a role in an unknown trust space grants nothing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#an owner may access their organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#a colleague invited into a group may access that group's organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AccessControlServiceTest#access to one organization does not imply access to another()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest#resource audience is required and accepted()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest#authorized party cannot replace resource audience()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.AuthenticationFailureResponseTest#controller authentication failure returns a safe bearer challenge()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest#each demo portrait decodes under the wallet memory budget()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest#each demo portrait is an inline jpeg data uri()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest#demo holders map to distinct portraits()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.RateLimiterTest#expired keys are collected and live keys cannot be evicted by flooding()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.RateLimiterTest#changing forwarded headers does not change client identity()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.RateLimiterTest#shared store failure rejects admission and records bounded metrics()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest#unauthenticated request should return 401()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest#authenticated request should succeed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest#admin user should have admin role()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#anchorTrustAnchor should handle real blockchain transaction()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#anchorDid persists the USD-converted fee from the cost allocation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#anchorTrustAnchor should handle blockchain transaction failure()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#getTransactionById should return transaction when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#anchorTrustAnchor should handle in-memory testnet transaction()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.BlockchainTransactionServiceTest#getTransactionsByOrganization should return transactions for organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest#each catalog entry has a published-ready field schema()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest#starter packs reference catalog type keys()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest#catalog covers education employment identity organization healthcare and supply chain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest#catalog defines twenty-one well-known credential vocabularies()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.BuiltInCredentialTypeCatalogTest#common access card credential includes nested object fields()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#an explicit mdoc declaration wins()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#an empty or malformed schema does not throw()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#mdoc wins even over selective disclosure, which it handles itself()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#an explicit vc-ld declaration overrides the selective-disclosure inference()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#selective disclosure still implies SD-JWT VC()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#a plain type still issues VC-LD()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#the spellings an operator or importer might use all resolve()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialFormatTest#an unknown format falls back rather than failing issuance()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeMigrationServiceTest#inferFields handles the licenseNumber exclusion and other number-ish names()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeMigrationServiceTest#inferFields maps names to builder fields with inferred types()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#editDraft rejects a published version()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#editDraft rejects a built-in type()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#create makes an org-owned type with a v1 DRAFT version()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#clone appends a numeric suffix when the type key already exists()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#create rejects a duplicate typeKey in the same org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#publish freezes a draft()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#findIssuableVersionId returns null when nothing published()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#clone copies source fields into a new org-owned draft()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#deprecate marks a version DEPRECATED()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#listForOrg returns built-in plus org types()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#editDraft updates a draft version's fields()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#findIssuableVersionId prefers org type's latest published version()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#listSummaries marks built-in types as always issuable()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.CredentialTypeServiceTest#newVersion copies forward published fields as a new draft()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.StarterPackServiceTest#apply clones each built-in type in the pack as published()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.credentialtype.StarterPackServiceTest#apply throws for an unknown pack()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest#createEducationCredentialsExample should create domain with trust anchors()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest#createAllExamples should create all example domains()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest#createEducationCredentialsExample should throw exception when in-memory testnet not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a person in another organization is not reachable either()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a credential with no status list is reported as not independently revocable()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#an out-of-scope person is indistinguishable from one that does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a status list failure is counted, not swallowed, and does not stop the retirement()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a device belonging to someone else cannot be retired through this person()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#retiring a device revokes the credentials bound to it on the published list()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a person in another trust space is not reachable by guessing their id()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#a retired device is not silently brought back to life()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#re-presenting from a known device refreshes it rather than duplicating()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest#credentials in another trust space are untouched()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#createTransaction should create and confirm transaction immediately()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getAllTransactions should return all transactions()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#isDidAnchored should return true for anchored DID()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#isDidAnchored should return false for non-anchored DID()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getAllAnchoredDids should return all anchored DIDs()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getStatistics should return correct statistics()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getAnchoredDid should return anchored DID information()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getTransaction should return transaction by hash()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#getTransaction should return null for non-existent hash()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.InMemoryTestnetServiceTest#reset should clear all transactions and anchored DIDs()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a full URL is accepted, since that is what people paste()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#input that is not a web address is refused with an explanation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a bare domain becomes a resolvable did-web()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a port is percent-encoded, or the DID silently never resolves()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a domain that publishes nothing is reported, not silently accepted()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a subdomain is preserved()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#case and trailing slashes do not change the identifier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuerResolutionServiceTest#a path becomes colon-separated segments per the did-web spec()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuingKeyDirectoryTest#a malformed published document does not bring down signing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuingKeyDirectoryTest#an identity with no recorded key falls back to the name in its published document()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuingKeyDirectoryTest#a DID we know nothing about yields null rather than a made-up key()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.IssuingKeyDirectoryTest#the active key is used when one is recorded()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#history is reported newest first()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#an unknown identity is reported rather than rotating something else()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#the status list cache is not invalidated when nothing was rotated()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#nothing is recorded when the library rotation fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#an identity from another trust space cannot be rotated()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#a did-key identity is refused, because its key is its identifier()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.KeyRotationServiceTest#the current verification method comes from the directory()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#a malformed email address is refused before anything is created()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#an account that cannot be created is reported, not half-recorded()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#an invitation puts the person in a team, which is what carries their organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#a failure to send the email does not fail the invitation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#a team belonging to another organization is refused()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#the new account must set its own password()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#someone already in the team is not added twice()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.MemberInvitationServiceTest#an existing colleague is added rather than refused()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest#enableChain is idempotent (returns existing)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest#enableChain rejects unknown network()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#getOrganizationIdForUser should return organization ID()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#getOrganizationForUser should return owned organization when user owns one()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#createDefault does not provision in Accountly when the flag is off()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#createDefault provisions in Accountly (non-fatal) when the flag is on()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#getOrganizationForUser should create default organization when user owns none()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationContextServiceTest#createDefault still returns the org when Accountly provisioning throws()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest#a group pointing at an organization that no longer exists does not strand the user()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest#a user who belongs to a group joins that group's organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest#a user holding a role in a trust space joins the organization that owns it()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest#ownership still wins over membership()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#createRole should create role in Keycloak and save locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#updateRole should update role in Keycloak and locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#getRoleByKeycloakRoleName should return role when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#getKeycloakRole should return Keycloak role representation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#assignRoleToUser should delegate to KeycloakService()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#removeRoleFromUser should delegate to KeycloakService()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#getRoleById should return role when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.RoleServiceTest#deleteRole should delete role from Keycloak and locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.BuiltInStarterKitsTest#includes a military CAC starter kit()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.BuiltInStarterKitsTest#includes a spatial web drone authorization starter kit()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#create persists a custom kit with a slug, owner, and serialized anchors()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#instantiate makes a colliding DID unique so a kit can be used more than once()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#delete on a built-in kit is forbidden()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#accessing another tenant's custom kit is reported as not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#list returns built-ins first then custom kits, each sorted by name()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#update on a built-in kit is forbidden()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#instantiate creates a domain plus an anchor per blueprint and skips blank DIDs()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest#built-in kits are visible to any org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest#extractDisplayNameFromClaims reads holder string()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest#createPerson requires reference number()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.SubjectServiceTest#extractDisplayNameFromClaims reads nested name()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest#getTemplatesByCategory should return templates for category()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest#getTemplateById should return template when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#missing admin role denies service access before repository reads()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#organization argument cannot override identity during role or group creation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#foreign role id is hidden and mutations never reach Keycloak()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#foreign groups are rejected on role grants and group mutation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#foreign user is rejected on both grant and removal before reading realm roles()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#user search always supplies authenticated organization and never queries realm()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest#space-only access cannot become organization administration()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantGroupRolePolicyTest#realm admin and roles from another tenant are denied()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantGroupRolePolicyTest#privileged parent cannot be bypassed by joining its child()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantGroupRolePolicyTest#client administration grants are denied()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TenantGroupRolePolicyTest#tenant group with only its own effective roles is allowed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest#upsert allows disabled config without chain validation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest#get throws when domain not in org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest#upsert rejects a default network not enabled for the org()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest#upsert saves targets and trigger()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#updateDomain should throw exception when domain not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#validateDomainAccess should return true when domain exists()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#updateDomain should update domain when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#validateDomainAccess should return false when domain does not exist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#deleteDomain should throw exception when domain not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#getDomainById should return domain when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#deleteDomain should delete domain when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#getDomainsByOrganization should return all domains for organization()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#getDomainById should return null when not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest#createDomain should create and save domain()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#deleteGroup should delete group from Keycloak and locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#getGroupById should return group when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#getGroupByKeycloakGroupId should return group when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#createGroup should create group in Keycloak and save locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#getKeycloakGroup should return Keycloak group representation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#updateGroup should update group in Keycloak and locally()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserGroupServiceTest#createGroup should throw exception when Keycloak creation fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#blank JWT subject is rejected before accessing user data()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#getKeycloakUser should return Keycloak user representation()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#createOrSyncUser should return existing user when found in local DB()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#createOrSyncUser should throw exception when user not found in Keycloak()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#getUserByEmail should return user when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#getUserById should return null when not found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#createOrSyncUser should sync from Keycloak when not found in local DB()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#getUserByKeycloakUserId should return user when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#getUserById should return user when found()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserServiceTest#missing JWT subject is rejected before accessing user data()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest#failed provider page leaves the last durable checkpoint intact()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.services.UserSyncPagingTest#sync pages from checkpoint without fetching each user again and isolates failed items()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest#debit beyond balance does not throw (warns, records DEBIT)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest#getOrCreate creates a zero-balance account when none exists()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest#hasSufficientCredit is false when balance below cost()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest#topUp increases balance and writes a TOPUP ledger entry()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest#debit reduces balance and records a DEBIT linked to the tx()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#falls back to fallback network when default anchor fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#skips when no enabled config()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#skips when target not selected()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#anchors then debits on success()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#does not fall back to fallback network when only the credit debit fails after a successful anchor()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.AnchoringServiceTest#skips with INSUFFICIENT_CREDIT (no throw)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.BlockchainAnchorServiceTest#anchorDid returns success when blockchain anchor succeeds()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.BlockchainAnchorServiceTest#anchorDid returns failure when blockchain anchor throws()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.BlockchainAnchorServiceTest#anchorDid returns failure when chain is not available()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialIssuanceGateTest#issue does not persist a credential when entitlement gate returns BLOCK()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialIssuanceGateTest#issue returns failure with quota message when entitlement gate returns BLOCK()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#a revoked credential cannot be renewed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#a credential on hold cannot be renewed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#a missing credential is reported rather than silently ignored()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#a credential that was already renewed is not renewed twice()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#nothing is retired when the replacement cannot be issued()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialRenewalTest#an expired credential is still renewable()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a reinstatement that did not clear the bit leaves the credential on hold()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a revoked credential cannot be reduced to a hold()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#only a credential on hold can be reinstated()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#the hold is published before it is recorded()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a credential stays on hold when the hold cannot be cleared()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a missing credential is reported rather than silently ignored()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#an active credential can be placed on hold()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a credential is left active when the hold cannot be published()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a credential with no status list is held locally rather than refused()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a credential that expired while on hold is not resurrected()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a credential already on hold is not suspended twice()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#an expired credential cannot be held()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a hold that did not actually reach the list is reported, not recorded()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a revoked credential cannot be reinstated()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialSuspensionTest#a hold can be lifted, which is the whole point of it()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyPresentation is rejected when holder binding proof is missing()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyRaw returns unsupported format for non-json non-sd-jwt input()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyPresentation is rejected when holder proof nonce does not match (replay protection)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyCredential catches and wraps unexpected exceptions()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyPresentation is invalid when the SECOND embedded credential fails (expired)()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyRaw marks Issuer trust false when issuer is not an active trust anchor()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#strict verification refuses an empty trust allowlist()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CredentialVerifierServiceTest#verifyCredential returns failure when JSON is not a valid VerifiableCredential()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest#convertToUsd should FAIL CLOSED on unknown currency()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest#convertToUsd should convert MATIC to USD correctly()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest#convertToUsd should convert ETH to USD correctly()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest#convertFromUsd should FAIL CLOSED on unknown currency()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest#convertFromUsd should convert USD to ETH correctly()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest#resolveDid returns success with document when resolution succeeds()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest#validateDid returns true when resolution succeeds()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest#validateDid returns false when resolution fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest#resolveDid returns failure when resolution fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.DidResolverServiceTest#resolveDid returns failure when TrustWeave throws()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.SdJwtRawCredentialParserTest#looksLikeCompactSdJwt rejects plain json()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.SdJwtRawCredentialParserTest#looksLikeCompactSdJwt detects issuer jwt with disclosures()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.SdJwtRawCredentialParserTest#parse rejects malformed compact string()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest#getTotalCostsForPeriod should return total costs for billing period()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest#recordTransactionCost should create cost allocation with USD conversion()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#strict adds revocation and expiry()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#every level verifies the signature()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#basic checks the signature only()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#standard adds issuer trust()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#the level is named in the policy so a result can say how it was checked()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest#issuer trust cannot be claimed without an issuer list()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.AccountlyWebhookControllerTest#valid signature is processed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.AccountlyWebhookControllerTest#invalid signature is rejected and not processed()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerIntegrationTest#handleWebhook should return 200 for valid subscription update event()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerIntegrationTest#updateSubscriptionStatus should update subscription status()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerTest#processes a valid subscription update and records it()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerTest#returns retryable failure and stores verified payload when deserialization fails()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerTest#refuses to process when the webhook secret is not configured()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest#a handler failure propagates so the transaction - marker included - rolls back()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest#records the marker BEFORE dispatching, so the unique constraint serializes duplicates()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest#an already-processed event is skipped without dispatching()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest#signed failure rolls back dedup then redelivery recovers exactly once()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest#recovery metrics are restricted to platform administrators()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest#recovery inventory requires platform admin and never exposes payloads()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest#invalid signature never enters recovery or dispatch()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest#retry preserves original failure age while updating recovery details()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitorTest#monitoring failures are observable and do not look like an empty healthy queue()",
+      "status": "passed"
+    },
+    {
+      "id": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryMonitorTest#backlog metrics expose counts and age and clear after recovery()",
+      "status": "passed"
+    }
+  ],
+  "cause": "Standalone Spring Framework 7 HTTP client lacked the Jackson 3 Kotlin module, losing DTO constructor defaults."
+}

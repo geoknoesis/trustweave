@@ -1,5 +1,6 @@
 package org.trustweave.testkit.integration
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
@@ -126,8 +127,10 @@ abstract class KmsIntegrationTest : BaseIntegrationTest() {
 
         // Attempting to retrieve deleted key should fail
         try {
-            val getResult = kms.getPublicKey(keyHandle.id)
+            kms.getPublicKey(keyHandle.id)
             // Some KMS implementations may not throw, so this is optional
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             // Expected behavior
         }

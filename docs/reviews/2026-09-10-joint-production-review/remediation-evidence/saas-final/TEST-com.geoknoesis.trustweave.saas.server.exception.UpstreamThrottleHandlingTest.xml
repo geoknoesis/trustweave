@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:17:36.503Z" hostname="THEMATRIX" time="0.005">
+  <properties/>
+  <testcase name="an upstream 429 becomes a retryable 503, not a 500()" classname="com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest" time="0.0"/>
+  <testcase name="an upstream 503 is treated the same way()" classname="com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest" time="0.002"/>
+  <testcase name="the message never leaks the upstream's own response body()" classname="com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest" time="0.0"/>
+  <testcase name="an upstream 4xx that is not a throttle is left to the other handlers()" classname="com.geoknoesis.trustweave.saas.server.exception.UpstreamThrottleHandlingTest" time="0.001"/>
+  <system-out><![CDATA[00:17:36.504 WARN  [] c.g.t.s.s.e.GlobalExceptionHandler - Billing service returned 429 - reporting as retryable
+00:17:36.507 WARN  [] c.g.t.s.s.e.GlobalExceptionHandler - Billing service returned 503 - reporting as retryable
+00:17:36.508 WARN  [] c.g.t.s.s.e.GlobalExceptionHandler - Billing service returned 429 - reporting as retryable
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

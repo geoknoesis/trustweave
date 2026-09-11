@@ -1,0 +1,257 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "outcomes": [
+    {
+      "name": "python-autonomous-payment",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "autonomous-aud",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-paymentAud",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-paymentNonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-routedL2",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-now",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-reordered-disclosures",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "autonomous-withheld-payment",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-1",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-200",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-0",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-201",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-currency",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "checkout-checkoutAud",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "checkout-checkoutNonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "checkout-routedCheckout",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "cart-over-quantity",
+      "valid": true,
+      "sdk_expected": false,
+      "difference": "Python chain verifier does not enforce the SDK authenticated merchant/cart profile"
+    },
+    {
+      "name": "merchant-wrong-audience",
+      "valid": true,
+      "sdk_expected": false,
+      "difference": "Python chain verifier does not enforce the SDK authenticated merchant/cart profile"
+    },
+    {
+      "name": "python-autonomous-payment-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-payment-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-payment-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-payment-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-reordered-disclosures-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-reordered-disclosures-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-reordered-disclosures-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-reordered-disclosures-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-1-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-1-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-1-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-1-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-200-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-200-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-200-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "autonomous-amount-200-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-checkout-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "python-autonomous-checkout-wrong-checkout-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    }
+  ]
+}

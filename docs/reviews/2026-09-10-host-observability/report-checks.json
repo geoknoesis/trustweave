@@ -1,0 +1,22 @@
+{
+  "recorded_utc": "2026-09-10T04:26:27.574520+00:00",
+  "source_hashes_verified": 64,
+  "artifact_hashes_verified": 13,
+  "html_sha256": "179f5482961b0048320ed524a6083b76a59790421640721d692a677784e08eed",
+  "browser": {
+    "desktop_width": 1280,
+    "mobile_width": 390,
+    "local_links": "passed",
+    "horizontal_overflow": "none",
+    "javascript_errors": 0,
+    "visual_review": "desktop and mobile passed"
+  },
+  "historical_notices": "passed",
+  "workflow_yaml": "passed",
+  "scoped_diff_check": "passed",
+  "documentation": {
+    "markdown_files": 361,
+    "kotlin_blocks": 2391,
+    "errors": []
+  }
+}

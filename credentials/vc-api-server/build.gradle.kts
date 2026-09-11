@@ -6,6 +6,7 @@ plugins {
 group = "org.trustweave.credentials"
 
 dependencies {
+    api(project(":observability"))
     implementation(project(":credentials:credential-api"))
     implementation(project(":common"))
     implementation(project(":did:did-core"))

@@ -1,0 +1,206 @@
+[
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/RequestContextFilter.kt",
+    "line": 41,
+    "sha256": "61c39a042c732477afe1a462175853ea4ae52ebc7e680016979bc2f12d5b61fe"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/ApplicationContextSmokeTest.kt",
+    "line": 1,
+    "sha256": "18bd323f45f9f9e632408fde3577362f3f1806a01b277aa24245082f75074bbb"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt",
+    "line": 54,
+    "sha256": "f94ad2e5598e96d523bd756f9c8e2cf75ee58e098faecd850d8962df30f093ae"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/repository/UsageOutboxRepository.kt",
+    "line": 38,
+    "sha256": "702648a3cb9a64e3e574e48a391ebe1672d6085b83e505c54b887a1327534447"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingProperties.kt",
+    "line": 13,
+    "sha256": "10b14d2382033f16bf7ded56eefef09c661ea6a1a9cf3d16e270481b7b84496b"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporterTest.kt",
+    "line": 38,
+    "sha256": "ce9bb8a66f21cf2551f093990bd96f738226c003f007b365851d9ceebce4209c"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt",
+    "line": 50,
+    "sha256": "a284a137ebaf8be61e079ff8e3d71a64ba7b826a7e266be68094bfeac2c2a2a7"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/SharedRateLimitStore.kt",
+    "line": 59,
+    "sha256": "ccc2c380feadeb2eb3853821b22b4b5e382e2477e6f2168495001bce269f093e"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/kms/KmsProviderConfig.kt",
+    "line": 26,
+    "sha256": "029c8ca8e978f7092b2361058a508f3f19dc676f103dae839f315c01e6a6e620"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/config/TrustWeaveConfig.kt",
+    "line": 40,
+    "sha256": "6ae7ae7b5c219c5d8e80a2dd7259ec23260174ba4326090810ab6805ee71ab49"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/controller/PublicClaimController.kt",
+    "line": 52,
+    "sha256": "6d4cd2aa94bde1d68cd8652f215797bea9be674d5863690436a19764ea617152"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/resources/logback-spring.xml",
+    "line": 35,
+    "sha256": "9b7d27e152b30bbee3ad1f7b49096bbc8ed254677a56406e56c143d7aa4080fa"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/DependencyHealthIndicators.kt",
+    "line": 45,
+    "sha256": "d03032330bbda622663969e7715a956a4b1aca6ee447edc8a5343027ef9b5028"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/resources/application.yml",
+    "line": 77,
+    "sha256": "6a27248d4293cdd2770d89066cea5fa249cf730f518824a4654b7951c35c45c4"
+  },
+  {
+    "repo": "SaaS",
+    "path": "fly.toml",
+    "line": 16,
+    "sha256": "ec41bfd650b9ffd1cb160a25912584dd066dc8186183a3e9e6102c37a5a0a080"
+  },
+  {
+    "repo": "SaaS",
+    "path": "Dockerfile",
+    "line": 8,
+    "sha256": "78e5be51c9ba049266050e71526848972c99529266000cf3468c2a2bc14e8713"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/resources/application-fly.yml",
+    "line": 1,
+    "sha256": "8dc41d772d9bf0a3c64f1438ff9d5212b8656fa0c4e132f118d10a034596e12a"
+  },
+  {
+    "repo": "SaaS",
+    "path": ".trustweave-revision",
+    "line": 1,
+    "sha256": "81328eaed2a4b2b591e7ef149111c70e022f73aacfe15dd6a96d4c1ee7dde312"
+  },
+  {
+    "repo": "SaaS",
+    "path": "scripts/verify-sdk-source.py",
+    "line": 1,
+    "sha256": "1e0282c844fb217dc89b294753dcbcc6e37efd545f72ec9910ea986d27e6fcb9"
+  },
+  {
+    "repo": "SaaS",
+    "path": "settings.gradle.kts",
+    "line": 15,
+    "sha256": "adbed546b7a2a02ffb0872d1fbecff6e5de46b697ce0b7a5ec89fe370eaf4a85"
+  },
+  {
+    "repo": "SaaS",
+    "path": ".github/workflows/ci.yml",
+    "line": 37,
+    "sha256": "608b03c9c57b42e163cc5ddf00cec174b0988ba7e470e6d9b48c348761cd89a6"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/build.gradle.kts",
+    "line": 208,
+    "sha256": "f21b4f23cbe6806396c24a74b6f2d335ed29a9657ceddbe1f49de316788cb866"
+  },
+  {
+    "repo": "SaaS",
+    "path": "frontend/vitest.config.ts",
+    "line": 13,
+    "sha256": "ec583aea133ab0f82eef3e81a75bdb54a5b285043b8c2737e224945952fe0a12"
+  },
+  {
+    "repo": "SaaS",
+    "path": "frontend/src/test/setup.ts",
+    "line": 10,
+    "sha256": "7fc43decbd582d5135b727e2be9ee0c5d4b7cf8372f71511edac138a1e2ae2b8"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserSyncService.kt",
+    "line": 64,
+    "sha256": "556061da1194a7eca7e6c933d370c3a8b209625c9d6109539a4603ba12804659"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/KeycloakService.kt",
+    "line": 97,
+    "sha256": "642702ffc0d5a1949dbc2218373f7ddfb2e15c1bb3e43b638c14c4dae92b2993"
+  },
+  {
+    "repo": "SDK",
+    "path": "kms/plugins/hashicorp/src/main/kotlin/org/trustweave/hashicorpkms/VaultKeyManagementService.kt",
+    "line": 234,
+    "sha256": "c761bde18c0a805903433097a394ec6823573db741b2a60cc5c47db121b2d92c"
+  },
+  {
+    "repo": "SDK",
+    "path": "kms/plugins/hashicorp/build.gradle.kts",
+    "line": 17,
+    "sha256": "80dc1e51c7e3c96b63904d30f532213342aaa4505c4acba4c6d9bca0058b697f"
+  },
+  {
+    "repo": "SaaS",
+    "path": "server/src/main/resources/application-staging.yml",
+    "line": 58,
+    "sha256": "dd7a33cf6e7d41ab8bb3e43ab0ebb5274a08e95cc7daeb049e0266bc6ea4cd6a"
+  },
+  {
+    "repo": "SDK",
+    "path": "docs/operations/custody-qualification.md",
+    "line": 3,
+    "sha256": "30d563932c6ed8d0617104399b251723ffe4ba220adc4f23373edcbd4835d236"
+  },
+  {
+    "repo": "SDK",
+    "path": "docs/api-reference/provider-deployment-profiles.md",
+    "line": 49,
+    "sha256": "13a1cfee86443a9b52b477ad229340f7f87aa38d9508232d64331f1935691e08"
+  },
+  {
+    "repo": "SDK",
+    "path": "common/src/main/resources/trustweave-capabilities.json",
+    "line": 1,
+    "sha256": "efe3eaf977296cae9cf3f3d26a0f9e624d68d7a284d0c27947ba0f7deedf58ed"
+  },
+  {
+    "repo": "SDK",
+    "path": "docs/operations/configuration-data.md",
+    "line": 1,
+    "sha256": "8a5bae064f818b5a307607234da93960d670d1e0f8f652d20345d562a6f7384f"
+  },
+  {
+    "repo": "SDK",
+    "path": "docs/operations/intent/reliability.md",
+    "line": 1,
+    "sha256": "bfa5edf6e1229d9df555e82e3d66c3369d6f1e727843b911ccdb5ce15ebeeb4a"
+  }
+]

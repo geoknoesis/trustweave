@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:41:53.698Z" hostname="THEMATRIX" time="24.729">
+  <properties/>
+  <testcase name="reports period cost as a blockchain_tx usage event in USD cents()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="3.623"/>
+  <testcase name="does nothing when the period cost is zero()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="0.006"/>
+  <testcase name="does nothing when the organization is not found()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="0.009"/>
+  <system-out><![CDATA[21:42:15.378 [Test worker] INFO com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingService -- Reported 1234 usd-cents of blockchain.tx usage for org 7 (2026-06)
+21:42:18.424 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingService -- Cannot report transaction costs: org 99 not found
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\steph\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.17.8\f09415827a71be7ed621c7bd02550678f28bc81c\byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

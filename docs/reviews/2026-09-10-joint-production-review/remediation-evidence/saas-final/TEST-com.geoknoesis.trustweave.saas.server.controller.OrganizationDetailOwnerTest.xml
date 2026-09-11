@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:17:12.407Z" hostname="THEMATRIX" time="0.767">
+  <properties/>
+  <testcase name="still withholds the billing correlation ids()" classname="com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest" time="0.017"/>
+  <testcase name="reports isOwner true for the owner()" classname="com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest" time="0.011"/>
+  <testcase name="reports isOwner false for a member who is not the owner()" classname="com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest" time="0.02"/>
+  <system-out><![CDATA[00:17:12.409 INFO  [] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest]: OrganizationDetailOwnerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+00:17:12.409 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Using ContextCustomizerFactory implementations for test class [OrganizationDetailOwnerTest]: [WebDriverContextCustomizerFactory, OnFailureConditionReportContextCustomizerFactory, OverrideAutoConfigurationContextCustomizerFactory, ImportsContextCustomizerFactory, PropertyMappingContextCustomizerFactory, ExcludeFilterContextCustomizerFactory, TypeExcludeFiltersContextCustomizerFactory, DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory, DuplicateJsonObjectContextCustomizerFactory, SpringBootTestRandomPortContextCustomizerFactory, BeanOverrideContextCustomizerFactory, MockServerContainerContextCustomizerFactory, DynamicPropertiesContextCustomizerFactory]
+00:17:12.420 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Using ContextCustomizers for test class [OrganizationDetailOwnerTest]: [WebDriverContextCustomizer, OnFailureConditionReportContextCustomizer, DisableAutoConfigurationContextCustomizer, ImportsContextCustomizer, PropertyMappingContextCustomizer, ExcludeFilterContextCustomizer, TypeExcludeFiltersContextCustomizer, DuplicateJsonObjectContextCustomizer, SpringBootTestRandomPortContextCustomizer, BeanOverrideContextCustomizer, DynamicPropertiesContextCustomizer]
+00:17:12.421 INFO  [] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.geoknoesis.trustweave.saas.server.Application for test class com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest
+00:17:12.421 INFO  [] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest]: OrganizationDetailOwnerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+00:17:12.422 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Using ContextCustomizerFactory implementations for test class [OrganizationDetailOwnerTest]: [WebDriverContextCustomizerFactory, OnFailureConditionReportContextCustomizerFactory, OverrideAutoConfigurationContextCustomizerFactory, ImportsContextCustomizerFactory, PropertyMappingContextCustomizerFactory, ExcludeFilterContextCustomizerFactory, TypeExcludeFiltersContextCustomizerFactory, DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory, DuplicateJsonObjectContextCustomizerFactory, SpringBootTestRandomPortContextCustomizerFactory, BeanOverrideContextCustomizerFactory, MockServerContainerContextCustomizerFactory, DynamicPropertiesContextCustomizerFactory]
+00:17:12.434 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Using ContextCustomizers for test class [OrganizationDetailOwnerTest]: [WebDriverContextCustomizer, OnFailureConditionReportContextCustomizer, DisableAutoConfigurationContextCustomizer, ImportsContextCustomizer, PropertyMappingContextCustomizer, ExcludeFilterContextCustomizer, TypeExcludeFiltersContextCustomizer, DuplicateJsonObjectContextCustomizer, SpringBootTestRandomPortContextCustomizer, BeanOverrideContextCustomizer, DynamicPropertiesContextCustomizer]
+00:17:12.434 INFO  [] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.geoknoesis.trustweave.saas.server.Application for test class com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest
+00:17:12.434 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [OrganizationDetailOwnerTest]: using SpringBootContextLoader
+00:17:12.435 DEBUG [] o.s.b.w.t.a.WebMvcTestContextBootstrapper - Using TestExecutionListeners for test class [OrganizationDetailOwnerTest]: [ServletTestExecutionListener, DirtiesContextBeforeModesTestExecutionListener, ApplicationEventsTestExecutionListener, BeanOverrideTestExecutionListener, DependencyInjectionTestExecutionListener, MicrometerObservationRegistryTestExecutionListener, DirtiesContextTestExecutionListener, CommonCachesTestExecutionListener, TransactionalTestExecutionListener, SqlScriptsTestExecutionListener, WithSecurityContextTestExecutionListener, EventPublishingTestExecutionListener, ReactorContextTestExecutionListener, MockMvcPrintOnlyOnFailureTestExecutionListener, WebDriverTestExecutionListener, MockitoResetTestExecutionListener]
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+00:17:12.473 INFO  [] c.g.t.s.s.c.OrganizationDetailOwnerTest - Starting OrganizationDetailOwnerTest using Java 21.0.7 with PID 11564 (started by steph in C:\Users\steph\work\tw-joint-remediation-20260910\trustweave-saas\server)
+00:17:12.473 INFO  [] c.g.t.s.s.c.OrganizationDetailOwnerTest - No active profile set, falling back to 1 default profile: "default"
+00:17:12.473 DEBUG [] o.s.boot.SpringApplication - Loading source class com.geoknoesis.trustweave.saas.server.Application
+00:17:12.475 DEBUG [] o.s.w.c.s.GenericWebApplicationContext - Refreshing org.springframework.web.context.support.GenericWebApplicationContext@492b56ec
+00:17:13.024 DEBUG [] o.s.b.a.AutoConfigurationPackages - @EnableAutoConfiguration was declared on a class in the package 'com.geoknoesis.trustweave.saas.server'. Automatic @Repository and @Entity scanning is enabled.
+00:17:13.070 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 4 mappings in 'requestMappingHandlerMapping'
+00:17:13.073 DEBUG [] o.s.w.s.h.SimpleUrlHandlerMapping - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+00:17:13.076 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 3 RequestBodyAdvice, 2 ResponseBodyAdvice
+00:17:13.078 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 2 ResponseBodyAdvice
+00:17:13.102 INFO  [] o.s.b.t.m.w.SpringBootMockServletContext - Initializing Spring TestDispatcherServlet ''
+00:17:13.102 INFO  [] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+00:17:13.103 INFO  [] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+00:17:13.112 DEBUG [] o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+
+============================
+CONDITIONS EVALUATION REPORT
+============================
+
+
+Positive matches:
+-----------------
+
+   DataWebAutoConfiguration matched:
+      - @ConditionalOnClass found required classes 'org.springframework.data.web.PageableHandlerMethodArgumentResolver', 'org.springframework.web.servlet.config.annotation.WebMvcConfigurer' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+      - @ConditionalOnMissingBean (types: org.springframework.data.web.PageableHandlerMethodArgumentResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   DataWebAutoConfiguration#pageableCustomizer matched:
+      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   DataWebAutoConfiguration#sortCustomizer matched:
+      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.SortHandlerMethodArgumentResolverCustomizer; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   DataWebAutoConfiguration#springDataWebSettings matched:
+      - @ConditionalOnMissingBean (types: org.springframework.data.web.config.SpringDataWebSettings; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   ErrorMvcAutoConfiguration matched:
+      - @ConditionalOnClass found required classes 'jakarta.servlet.Servlet', 'org.springframework.web.servlet.DispatcherServlet' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+
+   ErrorMvcAutoConfiguration#basicErrorController matched:
+      - @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.error.ErrorController; SearchStrategy: current) did not find any beans (OnBeanCondition)
+
+   ErrorMvcAutoConfiguration#errorAttributes matched:
+      - @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.error.ErrorAttributes; SearchStrategy: current) did not find any beans (OnBeanCondition)
+
+   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration matched:
+      - @ConditionalOnBooleanProperty (spring.web.error.whitelabel.enabled=true) matched (OnPropertyCondition)
+      - ErrorTemplate Missing did not find error template view (ErrorMvcAutoConfiguration.ErrorTemplateMissingCondition)
+
+   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration#beanNameViewResolver matched:
+      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.BeanNameViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   ErrorMvcAutoConfiguration.WhitelabelErrorViewConfiguration#defaultErrorView matched:
+      - @ConditionalOnMissingBean (names: error; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   GsonHttpMessageConvertersConfiguration matched:
+      - @ConditionalOnClass found required class 'com.google.gson.Gson' (OnClassCondition)
+
+   HttpEncodingAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.web.filter.CharacterEncodingFilter' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+      - @ConditionalOnBooleanProperty (spring.servlet.encoding.enabled=true) matched (OnPropertyCondition)
+
+   HttpEncodingAutoConfiguration#characterEncodingFilter matched:
+      - @ConditionalOnMissingBean (types: org.springframework.web.filter.CharacterEncodingFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   HttpMessageConvertersAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.converter.HttpMessageConverter' (OnClassCondition)
+      - NoneNestedConditions 0 matched 1 did not; NestedCondition on HttpMessageConvertersAutoConfiguration.NotReactiveWebApplicationCondition.ReactiveWebApplication did not find reactive web application classes (HttpMessageConvertersAutoConfiguration.NotReactiveWebApplicationCondition)
+
+   HttpMessageConvertersAutoConfiguration.StringHttpMessageConverterConfiguration#stringHttpMessageConvertersCustomizer matched:
+      - @ConditionalOnMissingBean (types: org.springframework.http.converter.StringHttpMessageConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   Jackson2AutoConfiguration matched:
+      - @ConditionalOnClass found required class 'com.fasterxml.jackson.databind.ObjectMapper' (OnClassCondition)
+
+   Jackson2AutoConfiguration.Jackson2ObjectMapperBuilderCustomizerConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.converter.json.Jackson2ObjectMapperBuilder' (OnClassCondition)
+
+   Jackson2AutoConfiguration.JacksonObjectMapperBuilderConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.converter.json.Jackson2ObjectMapperBuilder' (OnClassCondition)
+
+   Jackson2AutoConfiguration.JacksonObjectMapperBuilderConfiguration#jackson2ObjectMapperBuilder matched:
+      - @ConditionalOnMissingBean (types: org.springframework.http.converter.json.Jackson2ObjectMapperBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   Jackson2AutoConfiguration.JacksonObjectMapperConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.converter.json.Jackson2ObjectMapperBuilder' (OnClassCondition)
+
+   Jackson2AutoConfiguration.JacksonObjectMapperConfiguration#jackson2ObjectMapper matched:
+      - @ConditionalOnMissingBean (types: com.fasterxml.jackson.databind.ObjectMapper; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   Jackson2AutoConfiguration.ParameterNamesModuleConfiguration matched:
+      - @ConditionalOnClass found required class 'com.fasterxml.jackson.module.paramnames.ParameterNamesModule' (OnClassCondition)
+
+   Jackson2AutoConfiguration.ParameterNamesModuleConfiguration#jackson2ParameterNamesModule matched:
+      - @ConditionalOnMissingBean (types: com.fasterxml.jackson.module.paramnames.ParameterNamesModule; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   Jackson2HttpMessageConvertersConfiguration.MappingJackson2HttpMessageConverterConfiguration matched:
+      - @ConditionalOnClass found required class 'com.fasterxml.jackson.databind.ObjectMapper' (OnClassCondition)
+      - AnyNestedCondition 2 matched 0 did not; NestedCondition on Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition.JacksonUnavailable @ConditionalOnMissingBean (types: org.springframework.boot.http.converter.autoconfigure.JacksonHttpMessageConvertersConfiguration$JacksonJsonHttpMessageConvertersCustomizer; SearchStrategy: all) did not find any beans; NestedCondition on Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition.Jackson2Preferred @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=jackson2) matched (Jackson2HttpMessageConvertersConfiguration.PreferJackson2OrJacksonUnavailableCondition)
+      - @ConditionalOnBean (types: com.fasterxml.jackson.databind.ObjectMapper; SearchStrategy: all) found bean 'jackson2ObjectMapper' (OnBeanCondition)
+
+   Jackson2HttpMessageConvertersConfiguration.MappingJackson2HttpMessageConverterConfiguration#jackson2HttpMessageConvertersCustomizer matched:
+      - @ConditionalOnMissingBean (types: org.springframework.http.converter.json.MappingJackson2HttpMessageConverter; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   JacksonAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'tools.jackson.databind.json.JsonMapper' (OnClassCondition)
+
+   JacksonAutoConfiguration#jacksonJsonMapper matched:
+      - @ConditionalOnMissingBean (types: tools.jackson.databind.json.JsonMapper; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   JacksonAutoConfiguration#jsonFactory matched:
+      - @ConditionalOnMissingBean (types: tools.jackson.core.json.JsonFactory; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   JacksonAutoConfiguration#jsonMapperBuilder matched:
+      - @ConditionalOnMissingBean (types: tools.jackson.databind.json.JsonMapper$Builder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   JacksonAutoConfiguration.JsonProblemDetailsConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.ProblemDetail' (OnClassCondition)
+
+   JwtDecoderConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.oauth2.jwt.JwtDecoder' (OnClassCondition)
+      - @ConditionalOnMissingBean (types: org.springframework.security.oauth2.jwt.JwtDecoder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   JwtDecoderConfiguration#jwtDecoderByIssuerUri matched:
+      - OpenID Connect Issuer URI Condition found issuer-uri property (IssuerUriCondition)
+
+   MockMvcAutoConfiguration matched:
+      - found 'session' scope (OnWebApplicationCondition)
+
+   MockMvcAutoConfiguration#dispatcherServlet matched:
+      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.DispatcherServlet; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   MockMvcAutoConfiguration#dispatcherServletPath matched:
+      - @ConditionalOnMissingBean (types: org.springframework.boot.webmvc.autoconfigure.DispatcherServletPath; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   MockMvcConfiguration#mockMvc matched:
+      - @ConditionalOnMissingBean (types: org.springframework.test.web.servlet.MockMvc; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   MockMvcConfiguration#mockMvcBuilder matched:
+      - @ConditionalOnMissingBean (types: org.springframework.test.web.servlet.MockMvcBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   MockMvcTesterConfiguration matched:
+      - @ConditionalOnClass found required class 'org.assertj.core.api.Assert' (OnClassCondition)
+
+   MockMvcTesterConfiguration#mockMvcTester matched:
+      - @ConditionalOnMissingBean (types: org.springframework.test.web.servlet.assertj.MockMvcTester; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   OAuth2ResourceServerAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken' (OnClassCondition)
+
+   OAuth2ResourceServerWebSecurityAutoConfiguration matched:
+      - found 'session' scope (OnWebApplicationCondition)
+      - AllNestedConditions 2 matched 0 did not; NestedCondition on DefaultWebSecurityCondition.Beans @ConditionalOnMissingBean (types: org.springframework.security.web.SecurityFilterChain; SearchStrategy: all) did not find any beans; NestedCondition on DefaultWebSecurityCondition.Classes @ConditionalOnClass found required classes 'org.springframework.security.web.SecurityFilterChain', 'org.springframework.security.config.annotation.web.builders.HttpSecurity' (DefaultWebSecurityCondition)
+
+   OAuth2ResourceServerWebSecurityAutoConfiguration#jwtSecurityFilterChain matched:
+      - @ConditionalOnBean (types: org.springframework.security.oauth2.jwt.JwtDecoder; SearchStrategy: all) found bean 'jwtDecoderByIssuerUri' (OnBeanCondition)
+
+   OpaqueTokenIntrospectionConfiguration matched:
+      - @ConditionalOnMissingBean (types: org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   SecurityAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.authentication.DefaultAuthenticationEventPublisher' (OnClassCondition)
+
+   SecurityAutoConfiguration#authenticationEventPublisher matched:
+      - @ConditionalOnMissingBean (types: org.springframework.security.authentication.AuthenticationEventPublisher; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   SecurityFilterAutoConfiguration matched:
+      - @ConditionalOnClass found required classes 'org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer', 'org.springframework.security.config.http.SessionCreationPolicy' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+
+   SecurityFilterAutoConfiguration#securityFilterChainRegistration matched:
+      - @ConditionalOnBean (names: springSecurityFilterChain; SearchStrategy: all) found bean 'springSecurityFilterChain' (OnBeanCondition)
+
+   SecurityMockMvcAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.test.web.servlet.MockMvc' (OnClassCondition)
+
+   SecurityMockMvcAutoConfiguration#securityMockMvcBuilderCustomizer matched:
+      - @ConditionalOnBean (names: springSecurityFilterChain; SearchStrategy: all) found bean 'springSecurityFilterChain' (OnBeanCondition)
+
+   ServletWebSecurityAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.config.annotation.web.configuration.EnableWebSecurity' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+
+   ServletWebSecurityAutoConfiguration.EnableWebSecurityConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.config.annotation.web.configuration.EnableWebSecurity' (OnClassCondition)
+      - @ConditionalOnMissingBean (names: springSecurityFilterChain; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   ServletWebSecurityAutoConfiguration.PathPatternRequestMatcherBuilderConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.boot.webmvc.autoconfigure.DispatcherServletPath' (OnClassCondition)
+      - @ConditionalOnBean (types: org.springframework.boot.webmvc.autoconfigure.DispatcherServletPath; SearchStrategy: all) found bean 'dispatcherServletPath' (OnBeanCondition)
+
+   ServletWebSecurityAutoConfiguration.PathPatternRequestMatcherBuilderConfiguration#pathPatternRequestMatcherBuilder matched:
+      - @ConditionalOnMissingBean (types: org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher$Builder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   TaskExecutionAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor' (OnClassCondition)
+
+   TaskExecutorConfigurations.AsyncConfigurerConfiguration matched:
+      - @ConditionalOnMissingBean (types: org.springframework.scheduling.annotation.AsyncConfigurer; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   TaskExecutorConfigurations.SimpleAsyncTaskExecutorBuilderConfiguration#simpleAsyncTaskExecutorBuilder matched:
+      - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+      - @ConditionalOnThreading found PLATFORM (OnThreadingCondition)
+
+   TaskExecutorConfigurations.TaskExecutorConfiguration matched:
+      - AnyNestedCondition 1 matched 1 did not; NestedCondition on TaskExecutorConfigurations.OnExecutorCondition.ModelCondition @ConditionalOnProperty (spring.task.execution.mode=force) did not find property 'spring.task.execution.mode'; NestedCondition on TaskExecutorConfigurations.OnExecutorCondition.ExecutorBeanCondition @ConditionalOnMissingBean (types: java.util.concurrent.Executor; SearchStrategy: all) did not find any beans (TaskExecutorConfigurations.OnExecutorCondition)
+
+   TaskExecutorConfigurations.TaskExecutorConfiguration#applicationTaskExecutor matched:
+      - @ConditionalOnThreading found PLATFORM (OnThreadingCondition)
+
+   TaskExecutorConfigurations.TaskExecutorContextPropagationConfiguration matched:
+      - @ConditionalOnClass found required class 'io.micrometer.context.ContextSnapshot' (OnClassCondition)
+
+   TaskExecutorConfigurations.ThreadPoolTaskExecutorBuilderConfiguration#threadPoolTaskExecutorBuilder matched:
+      - @ConditionalOnMissingBean (types: org.springframework.boot.task.ThreadPoolTaskExecutorBuilder; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   ValidationAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'jakarta.validation.executable.ExecutableValidator' (OnClassCondition)
+      - @ConditionalOnResource found location classpath:META-INF/services/jakarta.validation.spi.ValidationProvider (OnResourceCondition)
+
+   ValidationAutoConfiguration#defaultValidator matched:
+      - @ConditionalOnMissingBean (types: jakarta.validation.Validator; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   ValidationAutoConfiguration#methodValidationPostProcessor matched:
+      - @ConditionalOnMissingBean (types: org.springframework.validation.beanvalidation.MethodValidationPostProcessor; SearchStrategy: current) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration matched:
+      - @ConditionalOnClass found required classes 'jakarta.servlet.Servlet', 'org.springframework.web.servlet.DispatcherServlet', 'org.springframework.web.servlet.config.annotation.WebMvcConfigurer' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration#formContentFilter matched:
+      - @ConditionalOnBooleanProperty (spring.mvc.formcontent.filter.enabled=true) matched (OnPropertyCondition)
+      - @ConditionalOnMissingBean (types: org.springframework.web.filter.FormContentFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.EnableWebMvcConfiguration#flashMapManager matched:
+      - @ConditionalOnMissingBean (names: flashMapManager; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.EnableWebMvcConfiguration#localeResolver matched:
+      - @ConditionalOnMissingBean (names: localeResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.EnableWebMvcConfiguration#viewNameTranslator matched:
+      - @ConditionalOnMissingBean (names: viewNameTranslator; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#defaultViewResolver matched:
+      - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.InternalResourceViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#requestContextFilter matched:
+      - @ConditionalOnMissingBean (types: org.springframework.web.context.request.RequestContextListener,org.springframework.web.filter.RequestContextFilter; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#viewResolver matched:
+      - @ConditionalOnBean (types: org.springframework.web.servlet.ViewResolver; SearchStrategy: all) found beans 'defaultViewResolver', 'beanNameViewResolver', 'mvcViewResolver'; @ConditionalOnMissingBean (names: viewResolver types: org.springframework.web.servlet.view.ContentNegotiatingViewResolver; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+
+Negative matches:
+-----------------
+
+   ErrorMvcAutoConfiguration.DefaultErrorViewResolverConfiguration#conventionErrorViewResolver:
+      Did not match:
+         - @ConditionalOnBean (types: org.springframework.web.servlet.DispatcherServlet; SearchStrategy: all) did not find any beans of type org.springframework.web.servlet.DispatcherServlet (OnBeanCondition)
+
+   GsonHttpMessageConvertersConfiguration.GsonHttpMessageConverterConfiguration:
+      Did not match:
+         - AnyNestedCondition 0 matched 2 did not; NestedCondition on GsonHttpMessageConvertersConfiguration.PreferGsonOrJacksonAndJsonbUnavailableCondition.JacksonJsonbUnavailable NoneNestedConditions 1 matched 2 did not; NestedCondition on GsonHttpMessageConvertersConfiguration.JacksonAndJsonbUnavailableCondition.JsonbPreferred @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=jsonb) found different value in property 'spring.http.converters.preferred-json-mapper'; NestedCondition on GsonHttpMessageConvertersConfiguration.JacksonAndJsonbUnavailableCondition.Jackson2Available @ConditionalOnBean (types: org.springframework.boot.http.converter.autoconfigure.Jackson2HttpMessageConvertersConfiguration$Jackson2JsonMessageConvertersCustomizer; SearchStrategy: all) found bean 'jackson2HttpMessageConvertersCustomizer'; NestedCondition on GsonHttpMessageConvertersConfiguration.JacksonAndJsonbUnavailableCondition.JacksonAvailable @ConditionalOnBean (types: org.springframework.boot.http.converter.autoconfigure.JacksonHttpMessageConvertersConfiguration$JacksonJsonHttpMessageConvertersCustomizer; SearchStrategy: all) did not find any beans of type org.springframework.boot.http.converter.autoconfigure.JacksonHttpMessageConvertersConfiguration$JacksonJsonHttpMessageConvertersCustomizer; NestedCondition on GsonHttpMessageConvertersConfiguration.PreferGsonOrJacksonAndJsonbUnavailableCondition.GsonPreferred @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=gson) found different value in property 'spring.http.converters.preferred-json-mapper' (GsonHttpMessageConvertersConfiguration.PreferGsonOrJacksonAndJsonbUnavailableCondition)
+
+   Jackson2HttpMessageConvertersConfiguration.MappingJackson2XmlHttpMessageConverterConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'com.fasterxml.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
+
+   JacksonAutoConfiguration.CborConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.cbor.CBORMapper' (OnClassCondition)
+
+   JacksonAutoConfiguration.XmlConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
+
+   JacksonHttpMessageConvertersConfiguration.JacksonJsonHttpMessageConverterConfiguration:
+      Did not match:
+         - @ConditionalOnProperty (spring.http.converters.preferred-json-mapper=jackson) found different value in property 'spring.http.converters.preferred-json-mapper' (OnPropertyCondition)
+      Matched:
+         - @ConditionalOnClass found required class 'tools.jackson.databind.json.JsonMapper' (OnClassCondition)
+
+   JacksonHttpMessageConvertersConfiguration.JacksonXmlHttpMessageConverterConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'tools.jackson.dataformat.xml.XmlMapper' (OnClassCondition)
+
+   JsonbHttpMessageConvertersConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'jakarta.json.bind.Jsonb' (OnClassCondition)
+
+   JwtConverterConfiguration:
+      Did not match:
+         - AnyNestedCondition 0 matched 4 did not; NestedCondition on JwtConverterConfiguration.PropertiesCondition.OnAuthoritiesExpressions Authorities claim expressions did not find property spring.security.oauth2.resourceserver.jwt.authorities-claim-expressions; NestedCondition on JwtConverterConfiguration.PropertiesCondition.OnAuthoritiesClaimName @ConditionalOnProperty (spring.security.oauth2.resourceserver.jwt.authorities-claim-name) did not find property 'spring.security.oauth2.resourceserver.jwt.authorities-claim-name'; NestedCondition on JwtConverterConfiguration.PropertiesCondition.OnPrincipalClaimName @ConditionalOnProperty (spring.security.oauth2.resourceserver.jwt.principal-claim-name) did not find property 'spring.security.oauth2.resourceserver.jwt.principal-claim-name'; NestedCondition on JwtConverterConfiguration.PropertiesCondition.OnAuthorityPrefix @ConditionalOnProperty (spring.security.oauth2.resourceserver.jwt.authority-prefix) did not find property 'spring.security.oauth2.resourceserver.jwt.authority-prefix' (JwtConverterConfiguration.PropertiesCondition)
+      Matched:
+         - @ConditionalOnClass found required class 'org.springframework.security.oauth2.jwt.JwtDecoder' (OnClassCondition)
+
+   JwtDecoderConfiguration#jwtDecoderByJwkKeySetUri:
+      Did not match:
+         - JWK Set URI Condition did not find jwk-set-uri property (JwkSetUriCondition)
+
+   JwtDecoderConfiguration#jwtDecoderByPublicKeyValue:
+      Did not match:
+         - Public Key Value Condition did not find public-key-location property (KeyValueCondition)
+
+   KotlinSerializationHttpMessageConvertersConfiguration:
+      Did not match:
+         - @ConditionalOnBean (types: kotlinx.serialization.json.Json; SearchStrategy: all) did not find any beans of type kotlinx.serialization.json.Json (OnBeanCondition)
+      Matched:
+         - @ConditionalOnClass found required classes 'kotlinx.serialization.Serializable', 'kotlinx.serialization.json.Json' (OnClassCondition)
+
+   MessageSourceAutoConfiguration:
+      Did not match:
+         - ResourceBundle did not find bundle with basename messages (MessageSourceAutoConfiguration.ResourceBundleCondition)
+
+   MockMvcWebClientAutoConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'org.htmlunit.WebClient' (OnClassCondition)
+
+   MockMvcWebDriverAutoConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'org.openqa.selenium.htmlunit.HtmlUnitDriver' (OnClassCondition)
+
+   OAuth2ResourceServerWebSecurityAutoConfiguration#opaqueTokenSecurityFilterChain:
+      Did not match:
+         - @ConditionalOnBean (types: org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector; SearchStrategy: all) did not find any beans of type org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector (OnBeanCondition)
+
+   OpaqueTokenIntrospectionConfiguration#opaqueTokenIntrospector:
+      Did not match:
+         - @ConditionalOnProperty (spring.security.oauth2.resourceserver.opaquetoken.introspection-uri) did not find property 'spring.security.oauth2.resourceserver.opaquetoken.introspection-uri' (OnPropertyCondition)
+
+   SecurityAutoConfiguration.SecurityDataConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'org.springframework.security.data.repository.query.SecurityEvaluationContextExtension' (OnClassCondition)
+
+   SecurityMockMvcAutoConfiguration.SecurityMockMvcHtmlUnitDriverConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'org.openqa.selenium.htmlunit.HtmlUnitDriver' (OnClassCondition)
+
+   ServletWebSecurityAutoConfiguration.SecurityFilterChainConfiguration:
+      Did not match:
+         - AllNestedConditions 1 matched 1 did not; NestedCondition on DefaultWebSecurityCondition.Beans @ConditionalOnMissingBean (types: org.springframework.security.web.SecurityFilterChain; SearchStrategy: all) found beans of type 'org.springframework.security.web.SecurityFilterChain' jwtSecurityFilterChain; NestedCondition on DefaultWebSecurityCondition.Classes @ConditionalOnClass found required classes 'org.springframework.security.web.SecurityFilterChain', 'org.springframework.security.config.annotation.web.builders.HttpSecurity' (DefaultWebSecurityCondition)
+
+   TaskExecutorConfigurations.AsyncConfigurerWrapperConfiguration:
+      Did not match:
+         - @ConditionalOnBean (types: org.springframework.scheduling.annotation.AsyncConfigurer; SearchStrategy: all) did not find any beans of type org.springframework.scheduling.annotation.AsyncConfigurer (OnBeanCondition)
+
+   TaskExecutorConfigurations.SimpleAsyncTaskExecutorBuilderConfiguration#simpleAsyncTaskExecutorBuilderVirtualThreads:
+      Did not match:
+         - @ConditionalOnMissingBean (types: org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder; SearchStrategy: all) found beans of type 'org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder' simpleAsyncTaskExecutorBuilder (OnBeanCondition)
+
+   TaskExecutorConfigurations.TaskExecutorConfiguration#applicationTaskExecutorVirtualThreads:
+      Did not match:
+         - @ConditionalOnThreading did not find VIRTUAL (OnThreadingCondition)
+
+   TaskExecutorConfigurations.TaskExecutorContextPropagationConfiguration#contextPropagatingTaskDecorator:
+      Did not match:
+         - @ConditionalOnProperty (spring.task.execution.propagate-context=true) did not find property 'spring.task.execution.propagate-context' (OnPropertyCondition)
+
+   UserDetailsServiceAutoConfiguration:
+      Did not match:
+         - AnyNestedCondition 0 matched 3 did not; NestedCondition on MissingAlternativeUserDetailsManagerOrUserPropertiesConfigured.PasswordConfigured @ConditionalOnProperty (spring.security.user.password) did not find property 'spring.security.user.password'; NestedCondition on MissingAlternativeUserDetailsManagerOrUserPropertiesConfigured.NameConfigured @ConditionalOnProperty (spring.security.user.name) did not find property 'spring.security.user.name'; NestedCondition on MissingAlternativeUserDetailsManagerOrUserPropertiesConfigured.MissingAlternative @ConditionalOnMissingClass found unwanted class 'org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector' (MissingAlternativeUserDetailsManagerOrUserPropertiesConfigured)
+      Matched:
+         - @ConditionalOnClass found required class 'org.springframework.security.authentication.AuthenticationManager' (OnClassCondition)
+         - found 'session' scope (OnWebApplicationCondition)
+
+   WebMvcAutoConfiguration#hiddenHttpMethodFilter:
+      Did not match:
+         - @ConditionalOnBooleanProperty (spring.mvc.hiddenmethod.filter.enabled=true) did not find property 'spring.mvc.hiddenmethod.filter.enabled' (OnPropertyCondition)
+
+   WebMvcAutoConfiguration.ProblemDetailsErrorHandlingConfiguration:
+      Did not match:
+         - @ConditionalOnBooleanProperty (spring.mvc.problemdetails.enabled=true) did not find property 'spring.mvc.problemdetails.enabled' (OnPropertyCondition)
+
+   WebMvcAutoConfiguration.ResourceChainCustomizerConfiguration:
+      Did not match:
+         - @ConditionalOnEnabledResourceChain did not find class org.webjars.WebJarVersionLocator (OnEnabledResourceChainCondition)
+
+   WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter#beanNameViewResolver:
+      Did not match:
+         - @ConditionalOnMissingBean (types: org.springframework.web.servlet.view.BeanNameViewResolver; SearchStrategy: all) found beans of type 'org.springframework.web.servlet.view.BeanNameViewResolver' beanNameViewResolver (OnBeanCondition)
+
+
+Exclusions:
+-----------
+
+    None
+
+
+Unconditional classes:
+----------------------
+
+    None
+
+
+
+00:17:13.114 INFO  [] c.g.t.s.s.c.OrganizationDetailOwnerTest - Started OrganizationDetailOwnerTest in 0.675 seconds (process running for 143.165)
+00:17:13.122 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.OrganizationController#getOrganization(long)
+00:17:13.126 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:13.126 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{id=7, name=Org 7, tier=PRO, preferredBlockchainNetworkId=, createdAt=2026-09-11T04:17:12.436572600Z (truncated)...]
+00:17:13.144 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.OrganizationController#getOrganization(long)
+00:17:13.145 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:13.145 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{id=7, name=Org 7, tier=PRO, preferredBlockchainNetworkId=, createdAt=2026-09-11T04:17:13.134208200Z (truncated)...]
+00:17:13.163 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.OrganizationController#getOrganization(long)
+00:17:13.164 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:13.164 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{id=7, name=Org 7, tier=PRO, preferredBlockchainNetworkId=, createdAt=2026-09-11T04:17:13.151194100Z (truncated)...]
+]]></system-out>
+  <system-err><![CDATA[00:17:12,466 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [JSON] not referenced. Skipping further processing.
+]]></system-err>
+</testsuite>

@@ -6,6 +6,7 @@
 group = "org.trustweave.credentials"
 
 dependencies {
+    api(project(":observability"))
     implementation(project(":credentials:credential-api"))
     implementation(project(":credentials:plugins:oidc4vci"))
     implementation(project(":common"))

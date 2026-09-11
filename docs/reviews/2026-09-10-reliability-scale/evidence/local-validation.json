@@ -1,0 +1,28 @@
+{
+  "tests": {
+    "tests": 121,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "build_log_sha256": "cccafbd63181866da9985721afca561f0ea00bd3b2d2ac058b946283f451b456",
+  "junit_sha256": {
+    "TEST-org.trustweave.credential.vi.ChainVerifierKnownAnswerTest.xml": "1a4565bad0107d935a30f6d39e5b1cc49084775e910d9c510162005922d74b71",
+    "TEST-org.trustweave.credential.vi.CheckoutTrustTest.xml": "2d65b337df0ce4952c84c902425d09dee8c0ed522072d7cecd11c27bc88aeefa",
+    "TEST-org.trustweave.credential.vi.ConstraintCheckerTest.xml": "d752b91b24797b115865feb955e1691b26e2b46b49945d47e1bcf6b46af1cb75",
+    "TEST-org.trustweave.credential.vi.ConstraintValidationRegressionTest.xml": "2dd7e6b888615000d3d0d3155642318e519f26594567ef5225a19c377c60a88e",
+    "TEST-org.trustweave.credential.vi.CrossLanguageLedgerModelTest.xml": "0691d58bc7b646d3dcb8658ec2986a156b111a3ca49036c5adbd914a2cc4ce83",
+    "TEST-org.trustweave.credential.vi.CrossStackConformanceTest.xml": "86d5cdf1475d23255a6642cdc6c950ede3a0d147150824d69e01bf6a0457526e",
+    "TEST-org.trustweave.credential.vi.Es256AlgorithmPinningTest.xml": "f261ea2fc21d701467513ec7cbd10e4d098fba936cc8521263c02dbfcf63e278",
+    "TEST-org.trustweave.credential.vi.IntentLedgerDiagnosticsTest.xml": "6e82f3ac53bec988491404d1ddba50e6f72894557d18445709d13c1dadb54a01",
+    "TEST-org.trustweave.credential.vi.IntentOperationsExerciseTest.xml": "64a8554a0b47b54a1ab5e32319499760aa94428cfa0d4d1e3d56a6a36bee032c",
+    "TEST-org.trustweave.credential.vi.IntentReliabilityTest.xml": "853de5a4a1f2109270f8815af9cd179906f2763b810d80009a46f620ae57e78e",
+    "TEST-org.trustweave.credential.vi.IntentWalRecoveryTest.xml": "8820c3c69f6ecd30701168355f9921d7e4e33c732646807f6c86d6343f834349",
+    "TEST-org.trustweave.credential.vi.IssuanceRoundTripTest.xml": "fb5dc4127182fa64e405d68325fa6c787bae2602185118c9dab384e0ac6b53ff",
+    "TEST-org.trustweave.credential.vi.LedgerMigrationDocumentationTest.xml": "b42a9c6c5307a11f50f69fa7e73d0b9c24e6d2c8b6103162f8e2f5930edd7810",
+    "TEST-org.trustweave.credential.vi.LineItemMatcherTest.xml": "67003e16cc516cdaf634472c5924f8dcbf1acbbc92a372507b75953746a9efc2",
+    "TEST-org.trustweave.credential.vi.PaymentSchemaValidationTest.xml": "f0f4e695ba49b52c4ecc6c416493f7a1154a67a1f3acdf989920a7bb34e58428",
+    "TEST-org.trustweave.credential.vi.PostgresIntentLedgerTest.xml": "b05ae467e3bbe7097410c1bee73a6a873884612a617eb4b616dd553b3868bf37",
+    "TEST-org.trustweave.credential.vi.RecurrenceRulesTest.xml": "358d12ec8bcd0d83cf4528ed7d9c469de4cdf996b679705f4898703e203b2fa0"
+  }
+}

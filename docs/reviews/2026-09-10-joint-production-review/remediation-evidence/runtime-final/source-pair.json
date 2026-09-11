@@ -1,0 +1,11 @@
+{
+  "schema": 3,
+  "saas_commit": "8b67281d0771ee8fdd9a6eb38860a266e5121c9e",
+  "sdk_commit": "dbec32c05f9da1f6be4b8932bb0b207cb6d18052",
+  "archive_sha256": "dea99b9bf4e4ae85d288a3d53c04e9ddcee90c023223f3d7f611fe7d298ff13b",
+  "docker_image_id": "sha256:a2f946f333cc5da33fc6b454c2a5ae3bf8f71546d80fc7315dd28ec072a1f43a",
+  "dockerfile_sha256": "5f77990ffab50bf824e5db2d82a5478139dc82bf6c7d59c502cb73795dae4e5c",
+  "sbom_sha256": "77bd5c31db8c7d4485fe738dbd94eded642c8ef2ba272fc91315d9ad8ecbe931",
+  "vulnerabilities_sha256": "bc60ea66e115a8f370e04a060d66bff6b03b5ef7f4f78c338b4ee9b0248ca6d5",
+  "test_inventory_sha256": "4b7db2cc07d31369cd52c7b0f9e1a768e643524de097b3e190dfafc3fbe9f167"
+}

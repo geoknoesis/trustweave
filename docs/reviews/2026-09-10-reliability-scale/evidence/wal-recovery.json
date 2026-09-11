@@ -1,0 +1,14 @@
+{
+    "base_backup_verified": true,
+    "corrupt_backup_rejected": true,
+    "base_digest": "-hUpufZTPtTmGkeuvYFj-VEAyCSvKXdNZ1MRMXk1TAM",
+    "target_digest": "5WHTUK5pl4yydSQBAu5gd4hnjYxOn6mS9Irq64QKmo0",
+    "latest_digest": "VRm7UZiVoBIoSJ-HurXCd4n6Npb8PhxnF26FjpvPaRE",
+    "target_segment": "000000010000000000000004",
+    "crash_restart_ms": 764,
+    "restore_and_assertions_ms": 9416,
+    "post_backup_records_recovered": 3,
+    "after_target_records_excluded": 1,
+    "missing_wal_failed_closed": true,
+    "scope": "Local component PITR and crash recovery; no production RPO/RTO or external payment-journal claim"
+}

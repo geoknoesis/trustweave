@@ -1,0 +1,743 @@
+[
+  {
+    "id": "T01",
+    "wave": 0,
+    "repository": "Joint",
+    "owner": "Tech lead",
+    "effort": "S",
+    "title": "Declare the initial production support envelope",
+    "acceptance": "Record supported provider, algorithms, wallet flows, deployment platform, PostgreSQL version, tenant scale and excluded experimental operations.",
+    "findings": [
+      "R16",
+      "R17"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T02",
+    "wave": 0,
+    "repository": "Joint",
+    "owner": "Release engineering",
+    "effort": "M",
+    "title": "Select and bind an immutable candidate pair",
+    "acceptance": "Both clean candidate SHAs, reviewed source manifest and source verifier agree; preserve existing local work.",
+    "findings": [
+      "R11"
+    ],
+    "depends_on": [
+      "T01"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T03",
+    "wave": 1,
+    "repository": "SDK",
+    "owner": "KMS maintainers",
+    "effort": "M",
+    "title": "Correct Vault structured response parsing",
+    "acceptance": "Faithful nested driver fixtures cover create/get, missing keys, version selection and malformed types.",
+    "findings": [
+      "R15"
+    ],
+    "depends_on": [
+      "T01"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T04",
+    "wave": 1,
+    "repository": "SDK",
+    "owner": "KMS maintainers",
+    "effort": "L",
+    "title": "Qualify the selected Vault lifecycle",
+    "acceptance": "Isolated provider create/sign/independent verification/restart/rotation passes; no orphaned retry keys.",
+    "findings": [
+      "R15",
+      "R16"
+    ],
+    "depends_on": [
+      "T03"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T05",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Platform backend",
+    "effort": "S",
+    "title": "Reject incompatible production KMS profiles",
+    "acceptance": "Truth table and actual Spring startup reject prod+local, staging+local and unintended ephemeral configurations.",
+    "findings": [
+      "R06"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T06",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Platform backend",
+    "effort": "M",
+    "title": "Make KMS options effective and validated",
+    "acceptance": "Non-default endpoint/namespace is used; unknown/unconsumed options fail startup; diagnostics redact secrets.",
+    "findings": [
+      "R07"
+    ],
+    "depends_on": [
+      "T05"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T07",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Billing backend",
+    "effort": "M",
+    "title": "Establish real outbox transaction boundaries",
+    "acceptance": "Spring-managed scheduler/proxy tests demonstrate short atomic claim/finalize transactions.",
+    "findings": [
+      "R01",
+      "R03"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T08",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Billing backend",
+    "effort": "L",
+    "title": "Implement durable bounded delivery leases",
+    "acceptance": "Two-worker, expired-lease and worker-crash tests preserve claim ownership with fencing tokens and bounded batch runtime.",
+    "findings": [
+      "R02"
+    ],
+    "depends_on": [
+      "T07"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T09",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Billing backend",
+    "effort": "M",
+    "title": "Separate transient retries from poison events",
+    "acceptance": "Connection outage beyond ten ticks recovers; permanent rejection enters an audited terminal queue; retry delay and Retry-After are bounded.",
+    "findings": [
+      "R02"
+    ],
+    "depends_on": [
+      "T08"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T10",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Billing backend",
+    "effort": "M",
+    "title": "Prove remote idempotency and authenticated redrive",
+    "acceptance": "Provider commit/response-loss and operator redrive produce exactly one remote charge/effect per event key.",
+    "findings": [
+      "R02"
+    ],
+    "depends_on": [
+      "T09"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T11",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Security backend",
+    "effort": "M",
+    "title": "Enforce endpoint-specific limiter failure policy",
+    "acceptance": "Counter-only outage causes sensitive mutation rejection and bounded approved read fallback; no blanket allow path.",
+    "findings": [
+      "R04"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T12",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Security backend",
+    "effort": "M",
+    "title": "Use authoritative time and bounded shared counters",
+    "acceptance": "Skewed caller clocks cannot reset budgets; counters saturate and TTL/pool limits survive hot-key and churn load.",
+    "findings": [
+      "R05"
+    ],
+    "depends_on": [
+      "T11"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T13",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Observability",
+    "effort": "M",
+    "title": "Remove capability values from telemetry",
+    "acceptance": "Canary path tokens are absent from logs, spans, access logs and error cases while correlation remains intact.",
+    "findings": [
+      "R08"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T14",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Platform backend",
+    "effort": "S",
+    "title": "Make readiness verify dependency function",
+    "acceptance": "401/404/429/500, malformed discovery and issuer mismatch are not UP; liveness remains independent.",
+    "findings": [
+      "R09"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T15",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Deployment engineering",
+    "effort": "M",
+    "title": "Repair and test the chosen deployment recipe",
+    "acceptance": "One port/JDBC/issuer contract builds and boots through its actual proxy; missing secrets fail safely.",
+    "findings": [
+      "R10"
+    ],
+    "depends_on": [
+      "T01",
+      "T46"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T16",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Test engineering",
+    "effort": "M",
+    "title": "Replace stale outbox mocks with contract coverage",
+    "acceptance": "Current unit cases pass and a regression removing scheduler transaction/lease correctness is detected.",
+    "findings": [
+      "R03"
+    ],
+    "depends_on": [
+      "T07",
+      "T08"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T17",
+    "wave": 2,
+    "repository": "SaaS",
+    "owner": "Identity backend",
+    "effort": "M",
+    "title": "Page and checkpoint user synchronization",
+    "acceptance": "Multi-page provider fixtures plus a failed page and restart demonstrate complete, idempotent recovery.",
+    "findings": [
+      "R14"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T18",
+    "wave": 2,
+    "repository": "SaaS",
+    "owner": "Identity backend",
+    "effort": "M",
+    "title": "Bound synchronization transactions",
+    "acceptance": "Slow identity HTTP does not hold a DB transaction; one failed persistence unit does not roll back unrelated successful units.",
+    "findings": [
+      "R14"
+    ],
+    "depends_on": [
+      "T17"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T19",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Security architecture",
+    "effort": "M",
+    "title": "Enforce provider policy at host startup",
+    "acceptance": "The declared profile rejects unknown/stub/disallowed experimental providers before opening resources; no LEGACY bypass in production entry points.",
+    "findings": [
+      "R16"
+    ],
+    "depends_on": [
+      "T01",
+      "T04",
+      "T06"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T20",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Custody operations",
+    "effort": "L",
+    "title": "Exercise signing denial and outage boundaries",
+    "acceptance": "Wrong tenant/key/algorithm, expired and replayed proofs fail before provider signing; outage does not select a fallback key.",
+    "findings": [
+      "R16"
+    ],
+    "depends_on": [
+      "T19"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T21",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Custody operations",
+    "effort": "L",
+    "title": "Exercise authorized recovery and replacement",
+    "acceptance": "Restart/access recovery preserve identity; replacement has independent authorization, revoked old binding and durable audit. Physical-device tests apply only if included in T01.",
+    "findings": [
+      "R16"
+    ],
+    "depends_on": [
+      "T20"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T22",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Data engineering",
+    "effort": "M",
+    "title": "Persist independently trusted recovery checkpoints",
+    "acceptance": "Checkpoint authenticity and freshness survive DB compromise/restore; application DB alone cannot rewrite the trust anchor.",
+    "findings": [
+      "R17"
+    ],
+    "depends_on": [
+      "T01"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T23",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Data engineering",
+    "effort": "L",
+    "title": "Fence admission during restore and reconciliation",
+    "acceptance": "No new authorization is admitted until ledger/checkpoint/external journal verification completes; failure remains fenced.",
+    "findings": [
+      "R17"
+    ],
+    "depends_on": [
+      "T22"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T24",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Billing and data",
+    "effort": "L",
+    "title": "Reconcile external effects after restore",
+    "acceptance": "Authenticated journal and local outbox reconcile commit/ack-loss and stale restore without duplicate effects or reused authorization.",
+    "findings": [
+      "R17"
+    ],
+    "depends_on": [
+      "T10",
+      "T23"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T25",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "SRE",
+    "effort": "L",
+    "title": "Qualify production-shaped backup and recovery",
+    "acceptance": "Record agreed RPO/RTO, dataset size and timings; missing WAL/corrupt backup/stale checkpoint fail closed; recovered service resumes safely.",
+    "findings": [
+      "R17"
+    ],
+    "depends_on": [
+      "T21",
+      "T24"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T26",
+    "wave": 2,
+    "repository": "SaaS",
+    "owner": "Data engineering",
+    "effort": "M",
+    "title": "Qualify schema upgrades and rollback compatibility",
+    "acceptance": "Upgrade from two declared supported schema versions under writes; old/new application compatibility and interrupted migration recovery are explicit.",
+    "findings": [
+      "R10",
+      "R12"
+    ],
+    "depends_on": [
+      "T15"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T27",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Security test engineering",
+    "effort": "L",
+    "title": "Complete cross-tenant negative authorization matrix",
+    "acceptance": "Every declared public/admin/tenant mutation has wrong-tenant, wrong-role, expired, replay and identifier-substitution outcomes tied to source and tests.",
+    "findings": [
+      "R16"
+    ],
+    "depends_on": [
+      "T01"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T28",
+    "wave": 2,
+    "repository": "Joint",
+    "owner": "Security engineering",
+    "effort": "M",
+    "title": "Qualify outbound network restrictions",
+    "acceptance": "Declared DID, webhook and provider clients reject disallowed destinations/redirects and bound size/time; tests use actual host integration.",
+    "findings": [],
+    "depends_on": [
+      "T01"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T29",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Observability",
+    "effort": "M",
+    "title": "Verify distributed traces through billing and SDK calls",
+    "acceptance": "A real incoming request produces correlated outgoing provider spans with trace propagation and authenticated export; prove manual RestClient construction receives instrumentation.",
+    "findings": [],
+    "depends_on": [
+      "T07",
+      "T13",
+      "T46"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T30",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Observability",
+    "effort": "M",
+    "title": "Add queue, limiter and recovery signals",
+    "acceptance": "Oldest outbox age, leased/failed rows, limiter degradation, recovery fence and reconciliation failures have bounded labels and verified alerts.",
+    "findings": [
+      "R02",
+      "R04",
+      "R17"
+    ],
+    "depends_on": [
+      "T09",
+      "T11",
+      "T23"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T31",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "SRE",
+    "effort": "M",
+    "title": "Define measurable service objectives and alert ownership",
+    "acceptance": "Availability, latency, signing and delivery objectives have error budgets, accountable owners and tested notification acknowledgement.",
+    "findings": [],
+    "depends_on": [
+      "T01",
+      "T30"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T32",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "SRE and security",
+    "effort": "M",
+    "title": "Qualify telemetry privacy and retention",
+    "acceptance": "Access controls and retention are enforced in the selected backend; sensitive canaries never reach storage; cardinality/load limits are measured.",
+    "findings": [
+      "R08"
+    ],
+    "depends_on": [
+      "T13",
+      "T29"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T33",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "Performance engineering",
+    "effort": "L",
+    "title": "Run representative multi-node soak and overload tests",
+    "acceptance": "Agree workload first; run proposed 72-hour steady/peak soak and burst/fault phases, tracking p99, saturation, queue age, DB growth and recovery. This is a target, not a completed measurement.",
+    "findings": [
+      "R02",
+      "R05",
+      "R14"
+    ],
+    "depends_on": [
+      "T08",
+      "T12",
+      "T18",
+      "T31"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T34",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "Performance engineering",
+    "effort": "M",
+    "title": "Record scale ceilings and backpressure policy",
+    "acceptance": "Document tested tenant/data/request limits, capacity headroom and bounded degradation, including KMS/IdP/billing outages.",
+    "findings": [],
+    "depends_on": [
+      "T33"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T35",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "Test engineering",
+    "effort": "M",
+    "title": "Define risk-based coverage and mutation gates",
+    "acceptance": "Critical auth/custody/claim/recovery branches have explicit agreed floors (proposed 90% line, 85% branch) and meaningful mutation checks; exceptions are reviewed, not hidden.",
+    "findings": [
+      "R13"
+    ],
+    "depends_on": [
+      "T16",
+      "T20",
+      "T24",
+      "T27"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T36",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Frontend engineering",
+    "effort": "M",
+    "title": "Make browser tests deterministic and enforce coverage",
+    "acceptance": "Classify current network warnings, add missing fixtures and fail unexpected requests without the prior worker serialization problem; CI runs coverage with agreed floors.",
+    "findings": [
+      "R13"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  },
+  {
+    "id": "T37",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "Test engineering",
+    "effort": "M",
+    "title": "Bind test discovery and skips to release evidence",
+    "acceptance": "Test IDs/counts, failures, documented optional skips and required provider profiles are archived and checked against the immutable candidate pair.",
+    "findings": [
+      "R11",
+      "R13"
+    ],
+    "depends_on": [
+      "T02",
+      "T35",
+      "T36"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T38",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Release engineering",
+    "effort": "M",
+    "title": "Build the runtime image in CI",
+    "acceptance": "bootJar, frontend assets and OCI image are built from the candidate pair; production-profile startup and smoke tests run against that image.",
+    "findings": [
+      "R12"
+    ],
+    "depends_on": [
+      "T02",
+      "T15"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T39",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Supply-chain security",
+    "effort": "M",
+    "title": "Pin inputs and generate SBOM/provenance",
+    "acceptance": "Actions/base image are immutable; dependency/image scans enforce a defined policy; SBOM and provenance identify both repository commits.",
+    "findings": [
+      "R12"
+    ],
+    "depends_on": [
+      "T38"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T40",
+    "wave": 3,
+    "repository": "Joint",
+    "owner": "Release engineering",
+    "effort": "M",
+    "title": "Verify artifact identity during promotion",
+    "acceptance": "A modified image, wrong source pair or untrusted attestation is rejected; the tested digest is the promoted digest.",
+    "findings": [
+      "R11",
+      "R12"
+    ],
+    "depends_on": [
+      "T39"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T41",
+    "wave": 3,
+    "repository": "SaaS",
+    "owner": "Release engineering",
+    "effort": "L",
+    "title": "Exercise canary rollout and rollback",
+    "acceptance": "Promote a qualified digest with explicit health/error-budget gates and demonstrate rollback with the supported schema compatibility window.",
+    "findings": [
+      "R12"
+    ],
+    "depends_on": [
+      "T26",
+      "T31",
+      "T40"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T42",
+    "wave": 4,
+    "repository": "Joint",
+    "owner": "Documentation owners",
+    "effort": "M",
+    "title": "Publish one production support and operations contract",
+    "acceptance": "Setup, configuration precedence, limits, provider scope, backup, rotation, incident and rollback instructions match tested commands and evidence.",
+    "findings": [
+      "R16",
+      "R17"
+    ],
+    "depends_on": [
+      "T25",
+      "T34",
+      "T41"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T43",
+    "wave": 4,
+    "repository": "Joint",
+    "owner": "SRE",
+    "effort": "M",
+    "title": "Run an operator drill from the documentation",
+    "acceptance": "An operator other than the author executes restore, custody outage, stuck-delivery redrive and rollback using only published runbooks; gaps are fixed.",
+    "findings": [],
+    "depends_on": [
+      "T42"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T44",
+    "wave": 4,
+    "repository": "Joint",
+    "owner": "Independent reviewer",
+    "effort": "M",
+    "title": "Re-review closure evidence and remaining risks",
+    "acceptance": "All P1 findings are closed by behavior tests, scope exclusions are explicit, and evidence is tied to the exact released candidate pair.",
+    "findings": [],
+    "depends_on": [
+      "T37",
+      "T43"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T45",
+    "wave": 4,
+    "repository": "Joint",
+    "owner": "Review owner",
+    "effort": "S",
+    "title": "Recalculate scores only after acceptance",
+    "acceptance": "Each repository is above 9.7 unrounded, every critical category is at least 9.7, and production acceptance gates pass. Target 9.8; no points are awarded simply for adding documentation/tests.",
+    "findings": [],
+    "depends_on": [
+      "T44"
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "T46",
+    "wave": 1,
+    "repository": "SaaS",
+    "owner": "Platform backend",
+    "effort": "S",
+    "title": "Remove the Spring request-context bean collision",
+    "acceptance": "Explicitly named telemetry filter coexists with Spring MVC, overriding stays disabled, smoke startup and affected integration cases pass.",
+    "findings": [
+      "R18"
+    ],
+    "depends_on": [],
+    "status": "Open"
+  }
+]

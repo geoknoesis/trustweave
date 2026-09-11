@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "profile": "PostgreSQL 16 SDK component reliability v1",
+  "limits": "Fixed local/CI fixture; no production capacity, RPO/RTO, replica promotion or external journal qualification.",
+  "sha256": {
+    "contention.json": "147d1d2869b0ba8ec3799d91aa2500e15b25d60ec2fbe34a5488c872f485d8fe",
+    "history.json": "bace52e335453d22a65ed6f6d5a8d530b338c9eee52a68c2485ade5687e0e727",
+    "lock-timeout.json": "ddf5ef5173ae113efb54ba7c5ffde9985a6ee44c0c37cdfd38fc0b1f11765a31",
+    "sustained.json": "5ae4dd915f0fe22a3bca9b433765d015f3c9d6ad106653abf77e24bca0e9362e",
+    "wal-missing.log": "86c30e5407caf15d0ea6594e85eea23af50c1e6a974899a86486de30385cf4f3",
+    "wal-recovery.json": "f839062d47a4b24cd6d32ff9475ac32473521cea03a4e89857dc73d84f1c4cd7",
+    "wal-recovery.log": "72db1c771c836ed54de69d54aeec828c07a38ea0daaf17c1c37145f130b9203d"
+  }
+}

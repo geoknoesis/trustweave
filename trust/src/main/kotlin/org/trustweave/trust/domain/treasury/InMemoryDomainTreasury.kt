@@ -1,5 +1,6 @@
 package org.trustweave.trust.domain.treasury
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.trustweave.anchor.AnchorResult
@@ -186,8 +187,13 @@ class InMemoryDomainTreasury(
     private suspend fun emitSafely(event: DomainEvent) {
         try {
             eventSink.emit(event)
+        } catch (cancelled: CancellationException) {
+            // Telemetry must never break a treasury operation, but cancelling the caller is not a
+            // telemetry failure: swallowing it here would leave the coroutine running after its
+            // scope was cancelled.
+            throw cancelled
         } catch (_: Throwable) {
-            // telemetry must never break a treasury operation
+            // Any other sink failure is absorbed by design.
         }
     }
 

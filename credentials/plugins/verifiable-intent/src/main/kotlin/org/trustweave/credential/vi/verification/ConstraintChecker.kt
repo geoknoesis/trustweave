@@ -23,8 +23,11 @@ public data class ConstraintCheckResult(
  *
  * Enforces non-negative integer amount bounds and currency, and resolves disclosed allowlists.
  * Budget and recurrence require external state: open mandates and STRICT checks fail closed.
- * Reference integrity is checked separately by ChainVerifier. Line-item matching is unsupported
- * and fails closed for open mandates and STRICT checks.
+ * Reference integrity is checked separately by ChainVerifier. Line-item matching enforces
+ * per-requirement capacities and exact coverage, including overlapping alternatives.
+ *
+ * The standalone matcher assumes fulfillment data has been authenticated by the caller.
+ * ChainVerifier requires CheckoutTrust to authenticate merchant JWT/cart data before checking checkout constraints.
  *
  * Unknown types: rejected when [isOpenMandate] (an unevaluable constraint leaves authority unbounded)
  * or under [StrictnessMode.STRICT]; otherwise skipped.
@@ -68,17 +71,10 @@ public object ConstraintChecker {
                         }
                 }
                 is Constraint.LineItems -> {
-                    // Deliberately NOT reported as checked. `line_items` bounds what an agent may
-                    // buy (acceptable items, quantity caps) and the matching is not implemented,
-                    // so counting it as evaluated would tell a verifier the bound held when
-                    // nothing enforced it. Treated exactly like an unevaluable constraint: fatal
-                    // where the bound is load-bearing, skipped and visible otherwise.
-                    // TODO: port acceptable-id + quantity-cap matching, then move back to `checked`.
-                    if (isOpenMandate || mode == StrictnessMode.STRICT) {
+                    checked += c.type
+                    LineItemMatcher.check(c, fulfillment, disclosuresByHash)?.let {
                         satisfied = false
-                        violations += "Constraint ${c.type} cannot be evaluated (line-item matching is not implemented)"
-                    } else {
-                        skipped += c.type
+                        violations += it
                     }
                 }
                 is Constraint.Reference -> skipped += c.type // ChainVerifier independently checks cross-mandate integrity.
@@ -156,7 +152,13 @@ public object ConstraintChecker {
             val ref = entry["..."]?.contentOrNull()
             when {
                 ref != null -> {
-                    val disclosed = disclosuresByHash[ref]?.let { Disclosures.parse(it)?.value as? JsonObject }
+                    val disclosed =
+                        disclosuresByHash[ref]
+                            ?.takeIf {
+                                Disclosures.hash(
+                                    it,
+                                ) == ref
+                            }?.let { Disclosures.parse(it)?.value as? JsonObject }
                     if (disclosed != null) candidates += disclosed else unresolvedRefs++
                 }
                 entry["id"] != null || entry["name"] != null -> candidates += entry
@@ -182,15 +184,18 @@ public object ConstraintChecker {
         candidate: JsonObject,
         target: JsonObject,
     ): Boolean {
-        val cid = candidate["id"]?.contentOrNull()
-        val tid = target["id"]?.contentOrNull()
-        if (!cid.isNullOrEmpty() && !tid.isNullOrEmpty()) return cid == tid
-        val cName = candidate["name"]?.contentOrNull()
-        val cSite = candidate["website"]?.contentOrNull()
+        fun text(
+            obj: JsonObject,
+            field: String,
+        ): String? = (obj[field] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString && it.content.isNotBlank() }?.content
+        val cid = text(candidate, "id")
+        if ("id" in candidate) return cid != null && cid == text(target, "id")
+        val cName = text(candidate, "name")
+        val cSite = text(candidate, "website")
         return !cName.isNullOrEmpty() &&
-            cName == target["name"]?.contentOrNull() &&
+            cName == text(target, "name") &&
             !cSite.isNullOrEmpty() &&
-            cSite == target["website"]?.contentOrNull()
+            cSite == text(target, "website")
     }
 }
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.hashicorpkms.AlgorithmMappingTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:06:31.850Z" hostname="THEMATRIX" time="2.652">
+  <properties/>
+  <testcase name="test resolve key name with custom transit path()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="2.023"/>
+  <testcase name="test from vault key type unknown returns null()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.048"/>
+  <testcase name="test from vault key type for all supported types()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.068"/>
+  <testcase name="test from vault key type case insensitive()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.001"/>
+  <testcase name="test to vault hash algorithm()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.001"/>
+  <testcase name="test unsupported algorithm throws exception()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.012"/>
+  <testcase name="test to vault key type for all supported algorithms()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.001"/>
+  <testcase name="test resolve key name()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.001"/>
+  <testcase name="Ed25519 conversion rejects truncated keys and unrelated DER prefixes()" classname="org.trustweave.hashicorpkms.AlgorithmMappingTest" time="0.372"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,241 @@
+{
+  "counts": {
+    "tests": 556,
+    "failures": 111,
+    "errors": 0,
+    "skipped": 3
+  },
+  "root_causes": [
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@12577519 testClass = com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySour",
+      "count": 24,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.TrustSpaceControllerIntegrationTest$FullLifecycle",
+        "test": "create, read, update, delete a trusted domain()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "Caused by: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@b23edc8 testClass = com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProperties = [\"org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true\"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7b5833ee, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@6723cce7, [ImportsContextCustomizer@d42828c key = [com.geoknoesis.trustweave.saas.server.config.TestConfig]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@63c99f7, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@7f5e6833, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@6e4f0a11, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@110620d, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@1f408ab6, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@621cc53c, org.springframework.boot.test.context.SpringBootTestAnnotation@9ee04ebe], resourceBasePath = \"src/main/webapp\", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]",
+      "count": 21,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest",
+        "test": "an expired request cannot be satisfied()",
+        "causes": [
+          "Caused by: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@b23edc8 testClass = com.geoknoesis.trustweave.saas.server.oid4vp.VerificationRequestServiceTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProperties = [\"org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true\"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7b5833ee, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@6723cce7, [ImportsContextCustomizer@d42828c key = [com.geoknoesis.trustweave.saas.server.config.TestConfig]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@63c99f7, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@7f5e6833, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@6e4f0a11, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@110620d, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@1f408ab6, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@621cc53c, org.springframework.boot.test.context.SpringBootTestAnnotation@9ee04ebe], resourceBasePath = \"src/main/webapp\", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]"
+        ]
+      }
+    },
+    {
+      "cause": "Caused by: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'requestContextFilter' defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter.class]: Cannot register bean definition [Root bean: class=org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=null; factoryMethodName=requestContextFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter.class]] for bean 'requestContextFilter' since there is already [Generic bean: class=com.geoknoesis.trustweave.saas.server.observability.RequestContextFilter; scope=singleton; abstract=false; lazyInit=null; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in file [C:\\Users\\steph\\work\\trustweave-saas\\server\\build\\classes\\kotlin\\main\\com\\geoknoesis\\trustweave\\saas\\server\\observability\\RequestContextFilter.class]] bound.",
+      "count": 11,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest",
+        "test": "the configured KMS provider is accepted for this profile()",
+        "causes": [
+          "Caused by: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'requestContextFilter' defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter.class]: Cannot register bean definition [Root bean: class=org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=null; factoryMethodName=requestContextFilter; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [org/springframework/boot/autoconfigure/web/servlet/WebMvcAutoConfiguration$WebMvcAutoConfigurationAdapter.class]] for bean 'requestContextFilter' since there is already [Generic bean: class=com.geoknoesis.trustweave.saas.server.observability.RequestContextFilter; scope=singleton; abstract=false; lazyInit=null; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in file [C:\\Users\\steph\\work\\trustweave-saas\\server\\build\\classes\\kotlin\\main\\com\\geoknoesis\\trustweave\\saas\\server\\observability\\RequestContextFilter.class]] bound."
+        ]
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@4d988304 testClass = com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySour",
+      "count": 7,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.TenantAdministrationIntegrationTest",
+        "test": "plain users cannot administer users roles or groups and tenant admins cannot read operations()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@3af33463 testClass = com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"local\"], propertySourceDescriptors = [], proper",
+      "count": 6,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.integration.KeyRotationAndSuspensionIntegrationTest",
+        "test": "a published hold can be set and then actually cleared()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "Caused by: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@692390b8 testClass = com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProperties = [\"org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true\"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7b5833ee, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@6723cce7, [ImportsContextCustomizer@7c558afc key = [com.geoknoesis.trustweave.saas.server.config.TestConfig]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@63c99f7, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@7f5e6833, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@6e4f0a11, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@110620d, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@1f408ab6, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@621cc53c, org.springframework.boot.test.context.SpringBootTestAnnotation@9ee04ebe], resourceBasePath = \"src/main/webapp\", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]",
+      "count": 5,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest",
+        "test": "concurrent consumers cannot both win()",
+        "causes": [
+          "Caused by: java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@692390b8 testClass = com.geoknoesis.trustweave.saas.server.oid4vci.AccessTokenStoreTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProperties = [\"org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true\"], contextCustomizers = [org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7b5833ee, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@6723cce7, [ImportsContextCustomizer@7c558afc key = [com.geoknoesis.trustweave.saas.server.config.TestConfig]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@63c99f7, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@7f5e6833, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@6e4f0a11, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@110620d, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@1f408ab6, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@621cc53c, org.springframework.boot.test.context.SpringBootTestAnnotation@9ee04ebe], resourceBasePath = \"src/main/webapp\", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]"
+        ]
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@43d7837e testClass = com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProper",
+      "count": 5,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.webhook.WebhookRecoveryIntegrationTest",
+        "test": "signed failure rolls back dedup then redelivery recovers exactly once()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@2fe14e3c testClass = com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourcePr",
+      "count": 4,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.IssuerControllerIntegrationTest",
+        "test": "updateIdentity should update the issuing identity()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@1097e7eb testClass = com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [], propertySourceProperties = [\"",
+      "count": 4,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.OrgBillingControllerTest",
+        "test": "GET usage refreshes the snapshot and returns tier + parsed quotas()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@651b9342 testClass = com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProp",
+      "count": 4,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest",
+        "test": "getAllUsers should return all users()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@788460b8 testClass = com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySourceProperties =",
+      "count": 3,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.security.SecurityIntegrationTest",
+        "test": "unauthenticated request should return 401()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@4237aaa6 testClass = com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"local\"], propertySourceDescriptors = [], propertySourceProperties = [\"o",
+      "count": 2,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.ApplicationContextSmokeTest",
+        "test": "status lists can be allocated against the real facade()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@7180ac09 testClass = com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], property",
+      "count": 2,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest",
+        "test": "createEducationCredentialsExample should create education domain()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@d41e4bc testClass = com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [], propertySourceProperties = ",
+      "count": 2,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.OrganizationDetailOwnerTest",
+        "test": "reports isOwner true for the owner()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.opentest4j.AssertionFailedError: expected: <4> but was: <3>",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "a genuine rejection still consumes the budget()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.mockito.exceptions.verification.WantedButNotInvoked: \nWanted but not invoked:\naccountlyBillingClient.postUsageEvent(\n    <any java.lang.String>,\n    <any java.lang.String>,\n    <any com.geoknoesis.trustweave.saas.server.billing.accountly.UsageEventRequest>\n);\n-> at com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClient.postUsageEvent(AccountlyBillingClient.kt:151)\nActually, there were zero interactions with this mock.\n",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "a 429 stops the batch instead of hammering the rest()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.mockito.exceptions.verification.WantedButNotInvoked: \nWanted but not invoked:\naccountlyBillingClient.postUsageEvent(\n    \"app-1\",\n    \"k-1\",\n    <any com.geoknoesis.trustweave.saas.server.billing.accountly.UsageEventRequest>\n);\n-> at com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClient.postUsageEvent(AccountlyBillingClient.kt:151)\nActually, there were zero interactions with this mock.\n",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "drains pending rows, posts to Accountly, marks SENT()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.opentest4j.AssertionFailedError: expected: not <null>",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "stamps sentAt with the actual send time, not createdAt()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.opentest4j.AssertionFailedError: expected: <FAILED> but was: <PENDING>",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "marks FAILED and increments attempts on post failure()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.mockito.exceptions.verification.WantedButNotInvoked: \nWanted but not invoked:\nusageOutboxRepository.findByStatusInAndAttemptsLessThanOrderByCreatedAtAsc(\n    [PENDING, FAILED],\n    <any java.lang.Integer>,\n    <any org.springframework.data.domain.Pageable>\n);\n-> at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest.queries for PENDING and FAILED rows below the attempt cap(UsageReporterTest.kt:103)\n\nHowever, there was ex",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "queries for PENDING and FAILED rows below the attempt cap()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "org.mockito.exceptions.verification.WantedButNotInvoked: \nWanted but not invoked:\naccountlyBillingClient.postUsageEvent(\n    \"app-1\",\n    \"k-retry\",\n    <any com.geoknoesis.trustweave.saas.server.billing.accountly.UsageEventRequest>\n);\n-> at com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClient.postUsageEvent(AccountlyBillingClient.kt:151)\nActually, there were zero interactions with this mock.\n",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest",
+        "test": "re-drains a previously FAILED row that is still under the attempt cap()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@689c7fc1 testClass = com.geoknoesis.trustweave.saas.server.controller.BillingProxyControllerTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [], propertySourceProperties = ",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.BillingProxyControllerTest",
+        "test": "GET plans returns sorted tier cards with features()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@798bb89f testClass = com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], p",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.controller.BlockchainTransactionControllerIntegrationTest",
+        "test": "getTransactions should return transactions for organization()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@777dbf4c testClass = com.geoknoesis.trustweave.saas.server.webhook.AccountlyWebhookControllerTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [PropertySourceDescriptor[loca",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.webhook.AccountlyWebhookControllerTest",
+        "test": "invalid signature is rejected and not processed()",
+        "causes": []
+      }
+    },
+    {
+      "cause": "java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@71658083 testClass = com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerIntegrationTest, locations = [], classes = [com.geoknoesis.trustweave.saas.server.Application], contextInitializerClasses = [], activeProfiles = [\"test\"], propertySourceDescriptors = [], propertySour",
+      "count": 1,
+      "example": {
+        "suite": "com.geoknoesis.trustweave.saas.server.webhook.StripeWebhookControllerIntegrationTest",
+        "test": "updateSubscriptionStatus should update subscription status()",
+        "causes": []
+      }
+    }
+  ]
+}

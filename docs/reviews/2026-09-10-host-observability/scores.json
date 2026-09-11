@@ -1,0 +1,57 @@
+{
+  "previous_overall": 8.8,
+  "overall": 8.9,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9.6,
+      "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+      "previous": 9
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9,
+      "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+      "previous": 9,
+      "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Local tests, lint, ABI and alert gates pass and are wired into workflows. Changes remain uncommitted; hosted validation and a release for this tree are still outstanding.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 8.5,
+      "reason": "50 intent tests, expanded conformance profile, real PostgreSQL restore and nine Prometheus evaluations pass. Full cross-stack conformance and wider SDK branch coverage remain incomplete.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; not reassessed in this scoped engineering review"
+    }
+  ],
+  "rubric": "Same six equally weighted categories; only observability reassessed. Engineering judgment, not certification.",
+  "arithmetic": "53.6 / 6 = 8.9333, rounded half-up to 8.9",
+  "scope": "SDK instrumentation and local operability engineering assessment, not a deployed-service certification or a measurement of achieved SLOs",
+  "reassessment_basis": [
+    "The former generic host tracing gap is now backed by an implemented shared adapter and real HTTP/OTLP parent-child verification.",
+    "Host queue and pool visibility is now implemented and exercised under saturation, cancellation and connection failure.",
+    "Protected metrics remain available under overload; generated request IDs join response, log and span without private payload fields.",
+    "Bounded asynchronous export and six host alert rules have executable evidence and CI gates.",
+    "The remaining 0.4 deduction retains deployment qualification, wider provider/SaaS coverage and operational policy limitations; no production-readiness claim is made."
+  ]
+}

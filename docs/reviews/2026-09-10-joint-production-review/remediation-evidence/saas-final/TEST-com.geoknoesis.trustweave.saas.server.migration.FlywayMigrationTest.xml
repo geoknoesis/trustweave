@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:17:52.481Z" hostname="THEMATRIX" time="7.309">
+  <properties/>
+  <testcase name="the migration set applies cleanly to an empty database()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="1.654"/>
+  <testcase name="recovery age migration preserves existing timestamps and supports old inserts()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.022"/>
+  <testcase name="the entity scan finds tables, so the derived guard is not vacuously empty()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.232"/>
+  <testcase name="the set is idempotent when re-applied()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.241"/>
+  <testcase name="every entity table exists after migrating()" classname="com.geoknoesis.trustweave.saas.server.migration.FlywayMigrationTest" time="0.222"/>
+  <system-out><![CDATA[00:17:52.482 INFO  [] tc.postgres:15 - Creating container for image: postgres:15
+00:17:52.778 INFO  [] tc.postgres:15 - Container postgres:15 is starting: 26ce12a1a6e285fb4ee3e5bf8e05499b42aae4dbe2505520ec777a34a0e6e277
+00:17:57.383 INFO  [] tc.postgres:15 - Container postgres:15 started in PT4.9003061S
+00:17:57.383 INFO  [] tc.postgres:15 - Container is started (JDBC URL: jdbc:postgresql://localhost:60888/migration_test?loggerLevel=OFF)
+00:17:57.383 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Starting...
+00:17:57.417 INFO  [] com.zaxxer.hikari.pool.HikariPool - HikariPool-7 - Added connection org.postgresql.jdbc.PgConnection@4ef7831b
+00:17:57.418 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Start completed.
+00:17:57.434 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:60888/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+00:17:57.519 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+00:17:57.520 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.057s)
+00:17:57.536 INFO  [] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+00:17:57.562 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+00:17:57.576 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - Initial schema"
+00:17:57.711 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "2 - Add keycloak fields"
+00:17:57.745 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "3 - Add stripe customer id"
+00:17:57.775 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "4 - Add blockchain network seed data"
+00:17:57.802 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "5 - rename project to domain"
+00:17:57.805 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+00:17:57.812 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: relation "issued_credentials" does not exist, skipping
+00:17:57.862 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6 - credential offers"
+00:17:57.898 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "6.1 - issued credentials"
+00:17:57.931 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "7 - subjects"
+00:17:58.000 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8 - audit log organization id"
+00:17:58.003 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+00:17:58.039 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8.1 - starter kits"
+00:17:58.075 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9 - data integrity constraints"
+00:17:58.079 WARN  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: there is already a transaction in progress (SQL State: 25001 - Error Code: 0)
+00:17:58.093 INFO  [] o.f.c.i.s.DefaultSqlScriptExecutor - DB: index "trust_anchors_did_key" does not exist, skipping
+00:17:58.134 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9.1 - credential types"
+00:17:58.172 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10 - anchoring"
+00:17:58.225 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10.1 - baseline missing tables"
+00:17:58.252 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "11 - credential status list"
+00:17:58.280 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "12 - review remediation schema"
+00:17:58.339 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "13 - split trust anchors"
+00:17:58.387 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "14 - rename domain to trust space"
+00:17:58.426 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "15 - verification sessions"
+00:17:58.452 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "16 - wallet identity lifecycle"
+00:17:58.479 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "17 - credential suspension"
+00:17:58.509 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "18 - issuing identity keys"
+00:17:58.545 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "19 - verification requested claims"
+00:17:58.571 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "20 - credential supersession"
+00:17:58.603 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "21 - subscription status synced at"
+00:17:58.631 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "22 - verification work lease"
+00:17:58.659 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "23 - failed webhook recovery"
+00:17:58.685 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "24 - webhook recovery monitor index"
+00:17:58.710 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "25 - webhook first failure"
+00:17:58.759 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "30 - complete trust space column renames"
+00:17:58.793 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "31 - accountly organization state"
+00:17:58.830 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "32 - template publication fields"
+00:17:58.863 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "33 - usage outbox properties"
+00:17:58.894 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "34 - shedlock"
+00:17:58.925 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "35 - rate limit windows"
+00:17:58.951 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "36 - usage delivery leases"
+00:17:58.976 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "37 - user sync progress"
+00:17:59.001 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "38 - usage redrive audit"
+00:17:59.031 INFO  [] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "39 - rate limit capacity"
+00:17:59.064 INFO  [] o.f.core.internal.command.DbMigrate - Successfully applied 39 migrations to schema "public", now at version v39 (execution time 00:00.741s)
+00:17:59.342 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:60888/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+00:17:59.434 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.064s)
+00:17:59.450 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+00:17:59.452 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+00:17:59.462 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:60888/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+00:17:59.545 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.060s)
+00:17:59.560 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+00:17:59.561 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+00:17:59.582 INFO  [] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:60888/migration_test?loggerLevel=OFF (PostgreSQL 15.18)
+00:17:59.657 INFO  [] o.f.core.internal.command.DbValidate - Successfully validated 39 migrations (execution time 00:00.047s)
+00:17:59.673 INFO  [] o.f.core.internal.command.DbMigrate - Current version of schema "public": 39
+00:17:59.675 INFO  [] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+00:17:59.790 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Shutdown initiated...
+00:17:59.791 INFO  [] com.zaxxer.hikari.HikariDataSource - HikariPool-7 - Shutdown completed.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":anchors:anchor-core"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
-    implementation("com.algorand:algosdk:2.10.1")
+    implementation(libs.algosdk)
 
     // Test dependencies
     testImplementation(project(":testkit"))

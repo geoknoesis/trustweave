@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.iot.IoTDeviceExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.698Z" hostname="THEMATRIX" time="0.081">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.iot.IoTDeviceExampleTest" time="0.079"/>
+  <system-out><![CDATA[iot-device: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

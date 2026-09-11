@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:43:39.326Z" hostname="THEMATRIX" time="0.2">
+  <properties/>
+  <testcase name="long transport outage remains retryable and stops the batch()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.009"/>
+  <testcase name="empty queue performs no remote reconciliation()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.004"/>
+  <testcase name="invalid event consumes a bounded poison attempt()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.032"/>
+  <testcase name="rate limits and credential failures preserve the poison budget()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.069"/>
+  <testcase name="reconciliation outage releases claim for later retry()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.009"/>
+  <testcase name="scheduled entry acknowledges only after remote success()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.057"/>
+  <system-out><![CDATA[21:43:39.336 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=false, failure type=RuntimeException
+21:43:39.379 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=true, failure type=HttpClientErrorException
+21:43:39.391 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+21:43:39.406 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+21:43:39.449 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+21:43:39.465 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage row 1 deferred; permanent rejection=false, failure type=RuntimeException
+21:43:39.474 [Test worker] WARN com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter -- Usage acknowledgement fenced for row 1
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:40.819Z" hostname="THEMATRIX" time="0.056">
+  <properties/>
+  <testcase name="updateDomain should throw exception when domain not found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.003"/>
+  <testcase name="validateDomainAccess should return true when domain exists()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.003"/>
+  <testcase name="updateDomain should update domain when found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.014"/>
+  <testcase name="validateDomainAccess should return false when domain does not exist()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.002"/>
+  <testcase name="deleteDomain should throw exception when domain not found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.006"/>
+  <testcase name="getDomainById should return domain when found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.003"/>
+  <testcase name="deleteDomain should delete domain when found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.008"/>
+  <testcase name="getDomainsByOrganization should return all domains for organization()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.006"/>
+  <testcase name="getDomainById should return null when not found()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.001"/>
+  <testcase name="createDomain should create and save domain()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceServiceTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

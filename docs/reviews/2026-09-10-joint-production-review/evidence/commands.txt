@@ -1,0 +1,16 @@
+Commands executed from trustweave-saas unless otherwise stated.
+JDK: Eclipse Adoptium 21, local Gradle-managed installation.
+Backend (exit 1; no coverage waiver):
+  ./gradlew.bat :server:test --no-daemon --max-workers=1 --no-parallel -Dorg.gradle.jvmargs="-Xmx1g -Dfile.encoding=UTF-8" -Pkotlin.compiler.execution.strategy=in-process --console=plain
+Frontend cwd frontend (all exit 0):
+  npm test -- --reporter=json --outputFile=../.gradle/joint-review-frontend-tests.json
+  npm run lint
+  npm run build
+Source pair (exit 1): python scripts/verify-sdk-source.py
+KMS profile probe (exit 0; unsafe acceptance observed):
+  java -cp "server/build/classes/kotlin/main;<kotlin-stdlib-2.3.10.jar>" .gradle/KmsProfileReviewProbe.java
+Vault API inspection and fixture (exit 0):
+  javap -classpath <vault-java-driver-5.1.0.jar> com.bettercloud.vault.response.LogicalResponse
+  java -cp <vault-java-driver-5.1.0.jar> .gradle/VaultResponseReviewProbe.java
+The KMS probe was repeated after this invocation compiled server classes.
+Diagnostic sources are copied beside this file. No live provider mutation or deployment was performed.

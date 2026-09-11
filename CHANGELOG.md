@@ -2,6 +2,77 @@
 
 All notable API changes are described here. The project does not yet follow strict semantic versioning in this file; treat entries as migration notes.
 
+## [Unreleased]
+
+Remediation of the 11 September 2026 full-codebase review
+(`docs/reviews/2026-09-11-full-codebase-review/`).
+
+**Read this section before upgrading — it contains one breaking change.**
+
+### Changed
+
+- **BREAKING — `DidRegistrarServer`, `VcApiServer` and the status-list server refuse mutating
+  requests until authentication is configured.** These servers create and deactivate DIDs and sign
+  credentials with whatever keys their KMS holds, and previously carried no authentication
+  primitive at all — only a loopback bind default and documentation asking the operator to front
+  them with a proxy. POST, PUT, PATCH and DELETE now return 503 `authentication_not_configured`
+  until the host calls `withAuthentication(...)`. Reads are unaffected. Three ways to satisfy it:
+
+  ```kotlin
+  server.withAuthentication(HostAuthentication.bearerToken(System.getenv("API_TOKEN")))
+  server.withAuthentication(HostAuthentication.custom { call -> gateway.authorize(call) })
+  server.withAuthentication(HostAuthentication.frontedByProxy("mTLS terminated at the ingress"))
+  ```
+
+  `frontedByProxy` admits everything, exactly as before. It exists so that "a proxy handles it" is
+  a recorded decision in the host's own code rather than the accidental result of configuring
+  nothing.
+
+- `BitstringStatusListManager`'s bitstring encode and decode are now `suspend` and check
+  cooperative cancellation every 8192 bits. A cancelled status-list refresh previously ran the full
+  131072-entry loop to completion. `updateCredentialStatus` became `suspend` with them; all its
+  callers were already suspend, so no public signature changed.
+
+- `ChainVerifier.verifyAndReserveBudget` translates ledger `IllegalStateException` and
+  `IllegalArgumentException` into an invalid `ChainVerificationResult` instead of propagating them.
+  One signed L2 carrying two payment-mandate disclosures with different budgets resolves to the
+  same ledger account and previously threw out of a function whose contract is a result.
+
+- Dependency versions all come from `gradle/libs.versions.toml`. 61 coordinates were literals in
+  module build files and had drifted from the catalog: web3j 4.10.0 → 4.14.0, gson 2.10.1 → 2.14.0,
+  slf4j 2.0.9 → 2.0.17 and kotlinx-coroutines-test 1.8.1 → 1.10.2 are now in effect. bitcoinj stays
+  on 0.16.2 through a new `bitcoinj-legacy` alias, because 0.17 is a breaking API change; the drift
+  is recorded rather than hidden. `scripts/check-dependency-catalog.py` fails the build on a new
+  literal coordinate.
+
+### Added
+
+- `HostAuthentication` in `observability`: constant-time bearer tokens, host-supplied authorizers,
+  an explicit `frontedByProxy` declaration, and per-caller fixed-window rate limiting with bounded
+  caller tracking.
+
+- A real publication path — a declared Maven repository, `scm` and `issueManagement` in every POM,
+  and a reviewer-gated publish job on `v*` tags. See `docs/operations/publishing.md`.
+
+### Fixed
+
+- Four `suspend` functions swallowed `CancellationException` through a broad catch with an empty
+  body (`TrustedDomainManager.emitSafely`, `InMemoryDomainTreasury.emitSafely`, and two testkit
+  integration helpers). They now rethrow it.
+
+- The published POM pointed every consumer at `docs/reference/module-maturity.md`, which does not
+  exist. It is `docs/api-reference/module-maturity.md`.
+
+- `scripts/check-test-evidence.py` and `scripts/check-junit-contract.py` defaulted to the in-repo
+  `build/` directory, which on this project's documented Windows layout is not where Gradle writes.
+  Run with their defaults they reported 40 evidence failures and 8 invalid JUnit methods that did
+  not exist. They now resolve the build root the way the build does and refuse a root with no
+  results rather than reporting on it.
+
+- All 14 remaining unpinned GitHub Actions references are pinned to commit SHAs, and the two
+  workflows that declared no `permissions` block now do. The nightly conformance job's
+  `issues: write` moved to a separate job that runs no repository code.
+
 ## [0.7.0] - 2026-08-29
 
 Covers the 483 commits landed since 0.6.0. Minor bump rather than patch: this release contains

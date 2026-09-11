@@ -1,0 +1,5 @@
+{
+  "status": "timed_out",
+  "seconds": 8,
+  "command": "docker info --format {{.ServerVersion}}"
+}

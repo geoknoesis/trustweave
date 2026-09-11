@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:34.676Z" hostname="THEMATRIX" time="0.214">
+  <properties/>
+  <testcase name="createEducationCredentialsExample should create domain with trust anchors()" classname="com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest" time="0.201"/>
+  <testcase name="createAllExamples should create all example domains()" classname="com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest" time="0.005"/>
+  <testcase name="createEducationCredentialsExample should throw exception when in-memory testnet not found()" classname="com.geoknoesis.trustweave.saas.server.services.ExampleProjectServiceTest" time="0.005"/>
+  <system-out><![CDATA[22:30:34.877 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Education Credentials example domain for organization 1
+22:30:34.877 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created Education Credentials example domain with 2 issuing identitys
+22:30:34.882 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating all example domains for organization 1
+22:30:34.882 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Education Credentials example domain for organization 1
+22:30:34.882 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created Education Credentials example domain with 2 issuing identitys
+22:30:34.883 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating KYC Platform example domain for organization 1
+22:30:34.883 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created KYC Platform example domain with 1 issuing identitys
+22:30:34.883 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Healthcare Credentials example domain for organization 1
+22:30:34.883 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created Healthcare Credentials example domain with 2 issuing identitys
+22:30:34.883 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Government Identity example domain for organization 1
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created Government Identity example domain with 1 issuing identitys
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Professional Certifications example domain for organization 1
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created Professional Certifications example domain with 2 issuing identitys
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating European Open (EO) example domain for organization 1
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created European Open example domain with 3 issuing identitys
+22:30:34.884 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating DCAT Catalog example domain for organization 1
+22:30:34.885 INFO  [] c.g.t.s.s.s.ExampleProjectService - Created DCAT Catalog example domain with 4 issuing identitys
+22:30:34.890 INFO  [] c.g.t.s.s.s.ExampleProjectService - Creating Education Credentials example domain for organization 1
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

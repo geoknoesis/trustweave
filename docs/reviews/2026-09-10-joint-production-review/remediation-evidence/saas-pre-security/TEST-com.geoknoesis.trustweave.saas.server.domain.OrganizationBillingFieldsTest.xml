@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.domain.OrganizationBillingFieldsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:52:56.511Z" hostname="THEMATRIX" time="0.002">
+  <properties/>
+  <testcase name="billing-link fields default to null and survive copy()" classname="com.geoknoesis.trustweave.saas.server.domain.OrganizationBillingFieldsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

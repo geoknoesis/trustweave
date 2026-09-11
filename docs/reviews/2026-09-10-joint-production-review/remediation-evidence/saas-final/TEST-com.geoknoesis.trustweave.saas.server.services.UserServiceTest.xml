@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:26.878Z" hostname="THEMATRIX" time="0.029">
+  <properties/>
+  <testcase name="blank JWT subject is rejected before accessing user data()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="getKeycloakUser should return Keycloak user representation()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="createOrSyncUser should return existing user when found in local DB()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="createOrSyncUser should throw exception when user not found in Keycloak()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.004"/>
+  <testcase name="getUserByEmail should return user when found()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="getUserById should return null when not found()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="createOrSyncUser should sync from Keycloak when not found in local DB()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.003"/>
+  <testcase name="getUserByKeycloakUserId should return user when found()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.003"/>
+  <testcase name="getUserById should return user when found()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.002"/>
+  <testcase name="missing JWT subject is rejected before accessing user data()" classname="com.geoknoesis.trustweave.saas.server.services.UserServiceTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

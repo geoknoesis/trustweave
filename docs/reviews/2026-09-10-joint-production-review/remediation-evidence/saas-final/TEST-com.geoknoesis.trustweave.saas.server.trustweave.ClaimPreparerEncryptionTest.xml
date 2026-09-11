@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:28.593Z" hostname="THEMATRIX" time="0.198">
+  <properties/>
+  <testcase name="encrypted fields reject unsupported holders and malformed nontext values()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.008"/>
+  <testcase name="portrait demo exception is limited to exclusively development profiles()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.0"/>
+  <testcase name="deployed mixed unknown and empty profiles cannot bypass portrait encryption()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.01"/>
+  <testcase name="serialization failure cannot become an empty credential document()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.173"/>
+  <testcase name="SD-JWT format refuses a missing matching proof instead of falling back to JSON()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.003"/>
+  <testcase name="nested encryption preserves caller data and accepts complete existing envelopes()" classname="com.geoknoesis.trustweave.saas.server.trustweave.ClaimPreparerEncryptionTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

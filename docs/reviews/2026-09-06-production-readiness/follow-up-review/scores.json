@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-06",
+  "repository": "trustweave",
+  "reviewed_commit": "e0a4464fc6cafa339b94121fd56f33812c6601e4",
+  "overall": 7.3,
+  "previous_overall": 6.6,
+  "rubric": "Six equally weighted categories matching the prior production-readiness assessment. Mean 7.3333 rounded to 7.3. Engineering judgement, not certification or remediation completion.",
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 7.5,
+      "reason": "Federation and L3 fixes credited; lost revocations remain security-relevant."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 6.5,
+      "reason": "Better guidance and safe route errors; raw Indy errors and deployment evidence remain."
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 6.5,
+      "reason": "Bounded stores and improved scans; reproduced concurrency and expansion defects remain."
+    },
+    {
+      "name": "Configuration and data",
+      "score": 7.0,
+      "reason": "SPI/policy fixes hold; bitmap invariants and digest integration need repair."
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Green hosted gates and verified provenance; published-release qualification remains."
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 8.0,
+      "reason": "Broad executed baseline and clearer limits; modest branch coverage and new failing probes."
+    }
+  ]
+}

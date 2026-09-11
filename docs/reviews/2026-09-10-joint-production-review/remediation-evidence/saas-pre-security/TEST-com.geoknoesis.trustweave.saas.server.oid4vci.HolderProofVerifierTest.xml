@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:05.895Z" hostname="THEMATRIX" time="0.249">
+  <properties/>
+  <testcase name="rejects a non did-key holder, whose key would need a network fetch to resolve()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.019"/>
+  <testcase name="rejects a stale proof()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.02"/>
+  <testcase name="rejects garbage()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.001"/>
+  <testcase name="accepts a well-formed proof and returns the holder DID()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.008"/>
+  <testcase name="rejects a proof with the wrong typ()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.004"/>
+  <testcase name="rejects a proof harvested for a different issuer()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.005"/>
+  <testcase name="rejects a proof with no iat()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.006"/>
+  <testcase name="rejects a proof signed by a key other than the one it names()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.006"/>
+  <testcase name="rejects a replayed proof bound to a different nonce()" classname="com.geoknoesis.trustweave.saas.server.oid4vci.HolderProofVerifierTest" time="0.005"/>
+  <system-out><![CDATA[22:54:06.079 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: holder key must be a did:key, got: did:web:evil.example
+22:54:06.100 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof iat is stale
+22:54:06.103 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: Invalid serialized unsecured/JWS/JWE object: Missing part delimiters
+22:54:06.117 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof JWT must have typ=openid4vci-proof+jwt
+22:54:06.124 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof aud is not this issuer
+22:54:06.131 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof JWT must carry iat
+22:54:06.138 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof signature does not verify
+22:54:06.144 DEBUG [] c.g.t.s.s.o.HolderProofVerifier - Holder proof rejected: proof nonce does not match the issued c_nonce
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

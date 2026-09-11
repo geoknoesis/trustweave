@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:47.809Z" hostname="THEMATRIX" time="0.004">
+  <properties/>
+  <testcase name="declares the four metered usage variables()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest" time="0.001"/>
+  <testcase name="defines all three tiers mapped to kill bill plans()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest" time="0.0"/>
+  <testcase name="free tier caps credential issuance at 500 per month()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.TrustWeaveTierCatalogTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

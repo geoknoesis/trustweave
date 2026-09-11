@@ -1,0 +1,69 @@
+{
+  "target": 9.8,
+  "target_met": false,
+  "production_qualified": false,
+  "sdk_overall": 9.1,
+  "saas_overall": 8.8,
+  "joint_overall": 8.9,
+  "unrounded": {
+    "sdk": "9.05",
+    "saas": "8.816666666666666666666666667",
+    "joint": "8.933333333333333333333333335"
+  },
+  "categories": [
+    {
+      "name": "Security and access control",
+      "sdk": 9.0,
+      "saas": 9.0,
+      "joint": 9.0,
+      "sdk_reason": "Core SDK controls retained; production custody policy and the complete negative authorization matrix remain open.",
+      "saas_reason": "Actual host tests reject unsafe profiles and invalid Vault options. Admission fails closed and MDC excludes capability paths; end-to-end telemetry privacy and recovery authorization remain open."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "sdk": 9.6,
+      "saas": 8.8,
+      "joint": 9.2,
+      "sdk_reason": "Prior SDK host observability evidence retained; no new production exporter qualification claimed.",
+      "saas_reason": "Functional readiness, safe route context, bounded failure counters and stale-aware queue gauges are verified locally. Export, retention and alert acknowledgement remain unqualified."
+    },
+    {
+      "name": "Reliability and scale",
+      "sdk": 9.0,
+      "saas": 8.8,
+      "joint": 8.9,
+      "sdk_reason": "Real Vault Transit lifecycle and strict response/key handling now pass. Server restart, rotation, HA and independently anchored recovery remain open.",
+      "saas_reason": "PostgreSQL lease fencing, transaction separation, retries, audited redrive and counter capacity pass. Remote acknowledgement-loss reconciliation and sustained multi-node limits remain open."
+    },
+    {
+      "name": "Configuration and data",
+      "sdk": 9.0,
+      "saas": 8.8,
+      "joint": 8.9,
+      "sdk_reason": "Vault options and routing are corrected and verified. Host-owned checkpoint trust and restore acceptance remain open.",
+      "saas_reason": "Bound host options, mixed-profile rejection, complete clean migrations and Hibernate validation pass. Legacy timestamp assumptions and supported upgrade/restore windows still require deployment qualification."
+    },
+    {
+      "name": "Deployment and release",
+      "sdk": 8.5,
+      "saas": 8.5,
+      "joint": 8.5,
+      "sdk_reason": "Immutable local SDK candidate and prior hosted evidence retained. No new deployed custody profile is certified.",
+      "saas_reason": "Maintained framework, source binding, actual non-root image build, clean HIGH/CRITICAL scan, SBOM and negative evidence-verifier tests are verified locally. Hosted attestation, promotion and rollback qualification remain open."
+    },
+    {
+      "name": "Testing and documentation",
+      "sdk": 9.2,
+      "saas": 9.0,
+      "joint": 9.1,
+      "sdk_reason": "667 affected-module tests, including 27 Vault cases with real provider and independent verification, pass on the candidate. Production operations and Android qualification remain open.",
+      "saas_reason": "Full backend discovery and coverage gate, 302 browser tests, explicit skip policy, host regressions and release verifier tests provide stronger evidence. Critical-path mutation/coverage targets and independent operator drills remain open."
+    }
+  ],
+  "candidate_pair": {
+    "sdk_commit": "dbec32c05f9da1f6be4b8932bb0b207cb6d18052",
+    "saas_commit": "8b67281d0771ee8fdd9a6eb38860a266e5121c9e"
+  },
+  "rubric": "Provisional engineering judgment using the original six equally weighted categories and equally weighted repositories. Scores are planning indicators, not statistical measurements or production acceptance. Original review scores are preserved separately.",
+  "release_gate": "Not met. Independent recovery architecture, declared custody/platform support, external-effect reconciliation, artifact promotion, critical-path qualification, and operational/load exercises remain open."
+}

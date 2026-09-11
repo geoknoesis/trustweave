@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:56.843Z" hostname="THEMATRIX" time="0.026">
+  <properties/>
+  <testcase name="logs at INFO, not DEBUG()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.001"/>
+  <testcase name="never auto-mutates the schema()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.0"/>
+  <testcase name="makes Accountly authoritative for tier()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.0"/>
+  <testcase name="applies the saas migration set, not the generic one()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.0"/>
+  <testcase name="accountly auth has no fallback to our own realm()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.001"/>
+  <testcase name="defaults to a persistent KMS()" classname="com.geoknoesis.trustweave.saas.server.config.StagingProfileTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

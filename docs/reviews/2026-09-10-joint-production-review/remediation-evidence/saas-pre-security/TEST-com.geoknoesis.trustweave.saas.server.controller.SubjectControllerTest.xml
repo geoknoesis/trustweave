@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:51:53.092Z" hostname="THEMATRIX" time="0.459">
+  <properties/>
+  <testcase name="list returns subjects for domain()" classname="com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest" time="0.44"/>
+  <testcase name="bulkCreatePeople returns created count()" classname="com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest" time="0.006"/>
+  <testcase name="get returns detail when subject exists()" classname="com.geoknoesis.trustweave.saas.server.controller.SubjectControllerTest" time="0.009"/>
+  <system-out><![CDATA[22:51:53.129 WARN  [] o.jboss.resteasy.client.jaxrs.i18n - RESTEASY004687: Closing a class org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine$CleanupAction instance for you. Please close clients yourself.
+22:51:53.134 WARN  [] o.jboss.resteasy.client.jaxrs.i18n - RESTEASY004687: Closing a class org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine$CleanupAction instance for you. Please close clients yourself.
+22:51:53.134 WARN  [] o.jboss.resteasy.client.jaxrs.i18n - RESTEASY004687: Closing a class org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine$CleanupAction instance for you. Please close clients yourself.
+22:51:53.135 WARN  [] o.jboss.resteasy.client.jaxrs.i18n - RESTEASY004687: Closing a class org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine$CleanupAction instance for you. Please close clients yourself.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "statements": {
+      "total": 4054,
+      "covered": 2319,
+      "pct": 57.2
+    },
+    "branches": {
+      "total": 3435,
+      "covered": 1750,
+      "pct": 50.94
+    },
+    "functions": {
+      "total": 1372,
+      "covered": 651,
+      "pct": 47.44
+    },
+    "lines": {
+      "total": 3389,
+      "covered": 2003,
+      "pct": 59.1
+    }
+  },
+  "floors": {
+    "statements": 55,
+    "branches": 50,
+    "functions": 47,
+    "lines": 57
+  },
+  "gate": "pass",
+  "scope": "Frontend application code only; test fixtures excluded. Critical-path qualification remains separate"
+}

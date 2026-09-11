@@ -24,13 +24,13 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // JDBC drivers (PostgreSQL and H2 — MySQL is not supported, see DatabaseWallet KDoc)
-    implementation("org.postgresql:postgresql:42.7.1")
-    implementation("com.h2database:h2:2.2.224")
+    implementation(libs.postgresql)
+    implementation(libs.h2)
 
     // Connection pooling
-    implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation(libs.hikaricp)
 
     // Test dependencies
     testImplementation(project(":testkit"))
-    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation(libs.testcontainers.postgresql)
 }

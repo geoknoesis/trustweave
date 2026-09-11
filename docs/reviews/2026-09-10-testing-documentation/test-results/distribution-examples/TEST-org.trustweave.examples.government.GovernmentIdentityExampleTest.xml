@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.government.GovernmentIdentityExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.451Z" hostname="THEMATRIX" time="0.159">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.government.GovernmentIdentityExampleTest" time="0.157"/>
+  <system-out><![CDATA[government: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

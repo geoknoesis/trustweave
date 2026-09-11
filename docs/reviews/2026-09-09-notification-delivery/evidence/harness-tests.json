@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Python311\\python.exe",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts",
+    "-p",
+    "test_intent_notification_exercise.py",
+    "-v"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "test_bootstrap_failure_replaces_stale_success (test_intent_notification_exercise.NotificationExerciseFailureTest.test_bootstrap_failure_replaces_stale_success) ... ok\ntest_cached_archive_is_verified_before_any_extraction_or_download (test_intent_notification_exercise.NotificationExerciseFailureTest.test_cached_archive_is_verified_before_any_extraction_or_download) ... ok\ntest_interruption_is_recorded_and_propagated (test_intent_notification_exercise.NotificationExerciseFailureTest.test_interruption_is_recorded_and_propagated) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.091s\n\nOK\n"
+}

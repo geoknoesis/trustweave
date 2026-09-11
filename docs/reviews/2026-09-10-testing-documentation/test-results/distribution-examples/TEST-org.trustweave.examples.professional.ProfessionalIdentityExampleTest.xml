@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:20.164Z" hostname="THEMATRIX" time="0.464">
+  <properties/>
+  <testcase name="test selective disclosure presentation()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.052"/>
+  <testcase name="test credential querying by type()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.051"/>
+  <testcase name="test main function executes successfully()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.233"/>
+  <testcase name="test credential tagging()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.025"/>
+  <testcase name="test full presentation creation()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.025"/>
+  <testcase name="test credential organization with collections()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.022"/>
+  <testcase name="test storing multiple credential types()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.02"/>
+  <testcase name="test querying active certifications()" classname="org.trustweave.examples.professional.ProfessionalIdentityExampleTest" time="0.027"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

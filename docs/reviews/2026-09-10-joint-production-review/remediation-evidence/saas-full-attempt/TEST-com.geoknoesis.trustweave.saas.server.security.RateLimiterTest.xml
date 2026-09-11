@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.security.RateLimiterTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:17.432Z" hostname="THEMATRIX" time="0.493">
+  <properties/>
+  <testcase name="expired keys are collected and live keys cannot be evicted by flooding()" classname="com.geoknoesis.trustweave.saas.server.security.RateLimiterTest" time="0.058"/>
+  <testcase name="changing forwarded headers does not change client identity()" classname="com.geoknoesis.trustweave.saas.server.security.RateLimiterTest" time="0.003"/>
+  <testcase name="shared store failure rejects admission and records bounded metrics()" classname="com.geoknoesis.trustweave.saas.server.security.RateLimiterTest" time="0.429"/>
+  <system-out><![CDATA[22:30:17.922 WARN  [] c.g.t.s.server.security.RateLimiter - Shared rate-limit store unavailable; rejecting admission (DataAccessResourceFailureException)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

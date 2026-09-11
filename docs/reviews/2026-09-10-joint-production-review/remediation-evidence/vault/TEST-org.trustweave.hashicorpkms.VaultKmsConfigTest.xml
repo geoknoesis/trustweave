@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.hashicorpkms.VaultKmsConfigTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:06:34.801Z" hostname="THEMATRIX" time="0.069">
+  <properties/>
+  <testcase name="test builder creates valid config()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.003"/>
+  <testcase name="test builder with AppRole authentication()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.01"/>
+  <testcase name="test from map creates valid config()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.004"/>
+  <testcase name="test config with empty address throws exception()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.003"/>
+  <testcase name="test from map without address throws exception()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.006"/>
+  <testcase name="test builder without address throws exception()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.006"/>
+  <testcase name="test from map uses default transit path()" classname="org.trustweave.hashicorpkms.VaultKmsConfigTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

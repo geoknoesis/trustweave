@@ -1,0 +1,110 @@
+public final class org/trustweave/observability/HostAuthentication {
+	public static final field Companion Lorg/trustweave/observability/HostAuthentication$Companion;
+	public synthetic fun <init> (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;Ljava/util/Set;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun bearerToken (Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun bearerToken (Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun bearerToken (Ljava/lang/String;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun custom (Lorg/trustweave/observability/HostAuthenticator;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun custom (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun custom (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun frontedByProxy (Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
+	public static final fun frontedByProxy (Ljava/lang/String;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun getDelegatedTo ()Ljava/lang/String;
+	public final fun install (Lio/ktor/server/application/Application;)V
+}
+
+public final class org/trustweave/observability/HostAuthentication$Companion {
+	public final fun bearerToken (Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun bearerToken (Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun bearerToken (Ljava/lang/String;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public static synthetic fun bearerToken$default (Lorg/trustweave/observability/HostAuthentication$Companion;Ljava/lang/String;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;ILjava/lang/Object;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun custom (Lorg/trustweave/observability/HostAuthenticator;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun custom (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun custom (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public static synthetic fun custom$default (Lorg/trustweave/observability/HostAuthentication$Companion;Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;ILjava/lang/Object;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun frontedByProxy (Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun frontedByProxy (Ljava/lang/String;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
+	public static synthetic fun frontedByProxy$default (Lorg/trustweave/observability/HostAuthentication$Companion;Ljava/lang/String;Lorg/trustweave/observability/HostAuthentication$RateLimit;ILjava/lang/Object;)Lorg/trustweave/observability/HostAuthentication;
+	public final fun getALL ()Ljava/util/Set;
+	public final fun getMUTATING ()Ljava/util/Set;
+}
+
+public final class org/trustweave/observability/HostAuthentication$RateLimit {
+	public fun <init> (I)V
+	public fun <init> (IJ)V
+	public fun <init> (IJI)V
+	public fun <init> (IJILkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (IJILkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/trustweave/observability/HostAuthentication$Unconfigured {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun install (Lio/ktor/server/application/Application;)V
+}
+
+public abstract interface class org/trustweave/observability/HostAuthenticator {
+	public abstract fun authorize (Lio/ktor/server/application/ApplicationCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/observability/HostKind : java/lang/Enum {
+	public static final field AVP_AUTHORIZATION Lorg/trustweave/observability/HostKind;
+	public static final field DID_REGISTRAR Lorg/trustweave/observability/HostKind;
+	public static final field OID4VCI Lorg/trustweave/observability/HostKind;
+	public static final field STATUS_LIST Lorg/trustweave/observability/HostKind;
+	public static final field TRUST_REGISTRY Lorg/trustweave/observability/HostKind;
+	public static final field VC_API Lorg/trustweave/observability/HostKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/observability/HostKind;
+	public static fun values ()[Lorg/trustweave/observability/HostKind;
+}
+
+public final class org/trustweave/observability/HostObservability {
+	public static final field METRICS_PATH Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/observability/HostTelemetry;)V
+	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;)V
+	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;Z)V
+	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;)V
+	public synthetic fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getTelemetry ()Lorg/trustweave/observability/HostTelemetry;
+	public final fun install (Lio/ktor/server/application/Application;Lorg/trustweave/observability/HostKind;)V
+}
+
+public final class org/trustweave/observability/HostObservabilityKt {
+	public static final fun getHostRequestId ()Lio/ktor/util/AttributeKey;
+}
+
+public final class org/trustweave/observability/HostOutcome : java/lang/Enum {
+	public static final field CANCELLED Lorg/trustweave/observability/HostOutcome;
+	public static final field CLIENT_ERROR Lorg/trustweave/observability/HostOutcome;
+	public static final field REJECTED Lorg/trustweave/observability/HostOutcome;
+	public static final field SERVER_ERROR Lorg/trustweave/observability/HostOutcome;
+	public static final field SUCCESS Lorg/trustweave/observability/HostOutcome;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/observability/HostOutcome;
+	public static fun values ()[Lorg/trustweave/observability/HostOutcome;
+}
+
+public final class org/trustweave/observability/HostPhase : java/lang/Enum {
+	public static final field DATABASE_ACQUIRE Lorg/trustweave/observability/HostPhase;
+	public static final field PROVIDER Lorg/trustweave/observability/HostPhase;
+	public static final field SIGN Lorg/trustweave/observability/HostPhase;
+	public static final field VERIFY Lorg/trustweave/observability/HostPhase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/observability/HostPhase;
+	public static fun values ()[Lorg/trustweave/observability/HostPhase;
+}
+
+public final class org/trustweave/observability/HostTelemetry {
+	public fun <init> ()V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;)V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;I)V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;II)V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;IIJ)V
+	public synthetic fun <init> (Lio/opentelemetry/api/OpenTelemetry;IIJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun observeDataSource (Ljavax/sql/DataSource;)Ljavax/sql/DataSource;
+	public final fun phase (Lorg/trustweave/observability/HostPhase;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun prometheus (Ljavax/sql/DataSource;)Ljava/lang/String;
+	public static synthetic fun prometheus$default (Lorg/trustweave/observability/HostTelemetry;Ljavax/sql/DataSource;ILjava/lang/Object;)Ljava/lang/String;
+}
+

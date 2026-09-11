@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - '*.md'
+      - '**/*.md'
       - 'reference-wallet/**/*.md'
       - 'distribution/examples/**'
       - 'scripts/check-doc*'
-      - 'scripts/test_check_documentation.py'
+      - 'scripts/test_check_*.py'
+      - 'scripts/check-junit-contract.py'
+      - 'scripts/check-test-evidence.py'
+      - 'config/testing-contract.json'
+      - 'config/documentation-contract.json'
       - '**/*.kt'
       - '**/*.kts'
       - 'gradle/**'
@@ -19,11 +23,15 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - '*.md'
+      - '**/*.md'
       - 'reference-wallet/**/*.md'
       - 'distribution/examples/**'
       - 'scripts/check-doc*'
-      - 'scripts/test_check_documentation.py'
+      - 'scripts/test_check_*.py'
+      - 'scripts/check-junit-contract.py'
+      - 'scripts/check-test-evidence.py'
+      - 'config/testing-contract.json'
+      - 'config/documentation-contract.json'
       - '**/*.kt'
       - '**/*.kts'
       - 'gradle/**'
@@ -44,10 +52,23 @@ jobs:
           distribution: temurin
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
       - name: Test the documentation checker
-        run: python -m unittest discover -s scripts -p test_check_documentation.py
+        run: python -m unittest discover -s scripts -p 'test_check_*.py'
       - name: Check maintained links, fences, API patterns and exact examples
-        run: python scripts/check-documentation.py
+        run: python scripts/check-documentation.py --report build/reports/documentation.json
       - name: Check generated capability documentation
         run: python scripts/generate-capability-docs.py --check
       - name: Run implemented local documentation examples
         run: ./gradlew :distribution:examples:checkDocumentationExamples :distribution:examples:test :distribution:examples:ktlintCheck --no-daemon
+      - name: Execute fixture and host documentation contracts
+        run: ./gradlew :testkit:test --tests '*DocumentationExampleTest' :observability:test --tests '*HostDocumentationExampleTest' --no-daemon
+      - name: Execute critical integration documentation
+        run: ./gradlew :credentials:plugins:verifiable-intent:test --tests '*CheckoutTrustTest' --tests '*LedgerMigrationDocumentationTest' :wallet:plugins:file:test --tests '*FileWalletFactoryTest' --no-daemon
+      - name: Preserve documentation results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: documentation-evidence
+          path: |
+            build/reports/documentation.json
+            build/**/test-results/
+          if-no-files-found: error

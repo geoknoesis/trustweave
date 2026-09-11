@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:41.839Z" hostname="THEMATRIX" time="0.564">
+  <properties/>
+  <testcase name="create persists a custom kit with a slug, owner, and serialized anchors()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.016"/>
+  <testcase name="instantiate makes a colliding DID unique so a kit can be used more than once()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.014"/>
+  <testcase name="delete on a built-in kit is forbidden()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.004"/>
+  <testcase name="accessing another tenant's custom kit is reported as not found()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.011"/>
+  <testcase name="list returns built-ins first then custom kits, each sorted by name()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.132"/>
+  <testcase name="update on a built-in kit is forbidden()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.007"/>
+  <testcase name="instantiate creates a domain plus an anchor per blueprint and skips blank DIDs()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.013"/>
+  <testcase name="built-in kits are visible to any org()" classname="com.geoknoesis.trustweave.saas.server.services.starterkit.StarterKitServiceTest" time="0.005"/>
+  <system-out><![CDATA[22:30:42.211 INFO  [] c.g.t.s.s.s.s.StarterKitService - Instantiated starter kit 'education-credentials' as domain 10 (1 anchors, 0 skipped)
+22:30:42.393 INFO  [] c.g.t.s.s.s.s.StarterKitService - Skipping placeholder anchor 'Placeholder' (no DID) for domain 10
+22:30:42.393 INFO  [] c.g.t.s.s.s.s.StarterKitService - Instantiated starter kit 'education-credentials' as domain 10 (1 anchors, 1 skipped)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.national.NationalEducationExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.874Z" hostname="THEMATRIX" time="0.212">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.national.NationalEducationExampleTest" time="0.21"/>
+  <system-out><![CDATA[======================================================================
+National Education Credentials (AlgeroPass) - Complete Scenario
+======================================================================
+
+Step 1: Setting up TrustWeave with blockchain anchoring...
+✓ TrustWeave instance created
+✓ Blockchain client registered: algorand:testnet
+  - Mode: In-memory (for testing)
+  - Note: In production, use real blockchain clients (Algorand, Ethereum, etc.)
+
+Step 2: Creating National Education Authority DID...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Create DID for National Education Authority
+  Purpose: Create decentralized identifier for Ministry of Higher Education
+  Role: Trusted issuer of national-level education credentials
+  Method: key (default)
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Authority DID Created Successfully
+  ✓ DID: did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK
+  ✓ Verification Methods: 1
+  ✓ Role: National Education Authority (Ministry of Higher Education)
+  ✓ Authority Key ID: (auto-extracted during signing)
+
+Step 3: Creating Educational Institution DID...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Create DID for Educational Institution
+  Purpose: Create decentralized identifier for University of Algiers
+  Role: Recognized educational institution
+  Institution: University of Algiers (UA-001)
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Institution DID Created Successfully
+  ✓ DID: did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo
+  ✓ Verification Methods: 1
+  ✓ Institution: University of Algiers
+  ✓ Institution Code: UA-001
+  ✓ Institution Key ID: (auto-extracted during signing)
+
+Step 4: Creating Student DID...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Create DID for Student
+  Purpose: Create decentralized identifier for student
+  Role: Credential holder and owner
+  Student ID: STU-2024-001234
+  National ID: 1234567890123
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Student DID Created Successfully
+  ✓ DID: did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC
+  ✓ Verification Methods: (resolved on demand)
+  ✓ Student ID: STU-2024-001234
+  ✓ National ID: 1234567890123
+
+Step 5: Issuing AlgeroPass Enrollment Credential...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Issue Enrollment Credential
+  Purpose: Issue national-level enrollment credential (AlgeroPass)
+  What it attests:
+    - Student is enrolled at a recognized institution
+    - Enrollment is recognized at national level
+    - Credential is portable across institutions
+  Parameters:
+    - Issuer: did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK (National Authority)
+    - Subject: did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC (Student)
+    - Institution: University of Algiers (did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo)
+    - Program: Computer Science (Bachelor)
+    - Academic Year: 2024-2025
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Enrollment Credential Issued Successfully
+  ✓ Credential ID: urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5
+  ✓ Issuer: IriIssuer(id=did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK)
+  ✓ Types: VerifiableCredential, Custom(value=AlgeroPassCredential), Custom(value=EnrollmentCredential), EducationCredential
+  ✓ Issuance Date: 2026-09-10T05:46:19.959713500Z
+  ✓ Has Proof: true
+  ✓ Proof Type: Ed25519Signature2020
+  ✓ Proof Purpose: assertionMethod
+  ✓ Student ID: STU-2024-001234
+  ✓ Institution: University of Algiers
+  ✓ Program: Computer Science (Bachelor)
+  ✓ Status: active
+
+  Full Credential Document:
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://contexts.trustweave.example/examples/v1",
+        "https://w3id.org/security/suites/ed25519-2020/v1"
+    ],
+    "id": "urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5",
+    "type": [
+        "VerifiableCredential",
+        "AlgeroPassCredential",
+        "EnrollmentCredential",
+        "EducationCredential"
+    ],
+    "issuer": "did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK",
+    "issuanceDate": "2026-09-10T05:46:19.959713500Z",
+    "credentialSubject": {
+        "id": "did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC",
+        "algeroPass": {
+            "credentialType": "enrollment",
+            "studentId": "STU-2024-001234",
+            "nationalId": "1234567890123",
+            "institution": {
+                "institutionDid": "did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo",
+                "institutionName": "University of Algiers",
+                "institutionCode": "UA-001"
+            },
+            "program": {
+                "programName": "Computer Science",
+                "programCode": "CS-BS",
+                "degreeLevel": "Bachelor"
+            },
+            "enrollmentDate": "2024-09-01",
+            "status": "active",
+            "academicYear": "2024-2025"
+        }
+    },
+    "proof": {
+        "type": "Ed25519Signature2020",
+        "created": "2026-09-10T05:46:19.975163100Z",
+        "verificationMethod": "did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK#key_03c8d179-bb89-4277-b92a-d8c4cbf579e2",
+        "proofPurpose": "assertionMethod",
+        "proofValue": "zYFiZRMN6qHybqBrM7EPoC2uevXpv9ekWa155UnVhTcGo7c6bEZe7axVXXTrZ2dKcznovbTgNHWZFTK7aYTMRmL5",
+        "@type": "LinkedDataProof"
+    }
+}
+
+Step 6: Verifying Enrollment Credential...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Verify Enrollment Credential
+  Purpose: Verify the cryptographic proof and validity of the enrollment credential
+  Credential ID: urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5
+  Checks performed:
+    - Cryptographic proof verification
+    - Issuer DID resolution and validation
+    - Expiration check
+    - Revocation status check
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Enrollment Credential Verification Result
+  ✓ Overall Status: VALID
+  ✓ Proof Valid: true
+  ✓ Issuer Valid: true
+  ✓ Not Expired: true
+  ✓ Not Revoked: true
+
+Step 7: Issuing Achievement Credential...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Issue Achievement Credential
+  Purpose: Issue national-level achievement credential (grades/transcript)
+  What it attests:
+    - Student academic achievements and grades
+    - Achievements are recognized at national level
+    - Enables credit transfer between institutions
+  Parameters:
+    - Issuer: did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK (National Authority)
+    - Subject: did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC (Student)
+    - Institution: University of Algiers
+    - Academic Year: 2024-2025
+    - Semester: Fall 2024
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Achievement Credential Issued Successfully
+  ✓ Credential ID: urn:uuid:4e7ae2c5-1850-4da6-8744-cc0eb74b25fd
+  ✓ Issuer: IriIssuer(id=did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK)
+  ✓ Types: VerifiableCredential, Custom(value=AlgeroPassCredential), Custom(value=AchievementCredential), EducationCredential
+  ✓ Issuance Date: 2026-09-10T05:46:20.035868800Z
+  ✓ Has Proof: true
+  ✓ Academic Year: 2024-2025
+  ✓ Semester: Fall 2024
+  ✓ Total Credits: 10
+  ✓ GPA: 3.73
+  ✓ Number of Courses: 3
+
+  Full Credential Document:
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://contexts.trustweave.example/examples/v1",
+        "https://w3id.org/security/suites/ed25519-2020/v1"
+    ],
+    "id": "urn:uuid:4e7ae2c5-1850-4da6-8744-cc0eb74b25fd",
+    "type": [
+        "VerifiableCredential",
+        "AlgeroPassCredential",
+        "AchievementCredential",
+        "EducationCredential"
+    ],
+    "issuer": "did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK",
+    "issuanceDate": "2026-09-10T05:46:20.035868800Z",
+    "credentialSubject": {
+        "id": "did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC",
+        "algeroPass": {
+            "credentialType": "achievement",
+            "studentId": "STU-2024-001234",
+            "institution": {
+                "institutionDid": "did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo",
+                "institutionName": "University of Algiers",
+                "institutionCode": "UA-001"
+            },
+            "academicYear": "2024-2025",
+            "semester": "Fall 2024",
+            "grades": "org.trustweave.credential.model.vc.ArrayOfObjects@18d847b",
+            "totalCredits": 10,
+            "gpa": 3.73
+        }
+    },
+    "proof": {
+        "type": "Ed25519Signature2020",
+        "created": "2026-09-10T05:46:20.050670800Z",
+        "verificationMethod": "did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK#key_03c8d179-bb89-4277-b92a-d8c4cbf579e2",
+        "proofPurpose": "assertionMethod",
+        "proofValue": "z52y7CsnytYDJC1LLmxKiMWb1AMgmKGmtLJZeNLwPK3jm1JCr36tcNP7SwHxkYa7v86vwqVY146dQY4uz32skxMBs",
+        "@type": "LinkedDataProof"
+    }
+}
+
+Step 8: Anchoring Credentials to Blockchain...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Anchor Credentials to Blockchain
+  Purpose: Store credential digests immutably on blockchain for long-term verification
+  Chain ID: algorand:testnet
+  Mode: In-memory (for testing)
+  Credentials to anchor:
+    1. Enrollment Credential: urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5
+    2. Achievement Credential: urn:uuid:4e7ae2c5-1850-4da6-8744-cc0eb74b25fd
+  Enrollment Record:
+{"studentDid":"did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC","studentId":"STU-2024-001234","credentialType":"enrollment","institutionDid":"did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo","credentialDigest":"zCUjT5QE6n6ai8CEdfZnRJh2JJyfGPsffeiXhKskJHRWa","credentialId":"urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5","timestamp":"2026-09-10T05:46:20.075112100Z"}
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Enrollment Credential Anchored Successfully
+  ✓ Chain ID: algorand:testnet
+  ✓ Transaction Hash: tx_1_1789019180077
+  ✓ Timestamp: 1789019180
+  ✓ Credential Digest: zCUjT5QE6n6ai8CEdfZnRJh2JJyfGPsffeiXhKskJHRWa
+
+  Achievement Record:
+{"studentDid":"did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC","studentId":"STU-2024-001234","credentialType":"achievement","institutionDid":"did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo","credentialDigest":"ztUMjDi3nfLcGLCSFYofXEFqnRkySHT4w3fKV8yVeTRK","credentialId":"urn:uuid:4e7ae2c5-1850-4da6-8744-cc0eb74b25fd","academicYear":"2024-2025","semester":"Fall 2024","timestamp":"2026-09-10T05:46:20.077827Z"}
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Achievement Credential Anchored Successfully
+  ✓ Chain ID: algorand:testnet
+  ✓ Transaction Hash: tx_2_1789019180079
+  ✓ Timestamp: 1789019180
+  ✓ Credential Digest: ztUMjDi3nfLcGLCSFYofXEFqnRkySHT4w3fKV8yVeTRK
+
+Step 9: Reading Anchored Credentials from Blockchain...
+
+]]>&#x1f4e4;<![CDATA[ REQUEST: Read Enrollment Record from Blockchain
+  Purpose: Retrieve and verify the anchored enrollment record
+  Anchor Reference:
+    - Chain ID: algorand:testnet
+    - Transaction Hash: tx_1_1789019180077
+
+]]>&#x1f4e5;<![CDATA[ RESPONSE: Enrollment Record Retrieved
+  ✓ Status: Successfully read from blockchain
+  ✓ Student DID: did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC
+  ✓ Student ID: STU-2024-001234
+  ✓ Credential Type: enrollment
+  ✓ Credential Digest: zCUjT5QE6n6ai8CEdfZnRJh2JJyfGPsffeiXhKskJHRWa
+  ✓ Timestamp: 2026-09-10T05:46:20.075112100Z
+
+  Integrity Verification:
+    Expected Digest: zCUjT5QE6n6ai8CEdfZnRJh2JJyfGPsffeiXhKskJHRWa
+    Retrieved Digest: zCUjT5QE6n6ai8CEdfZnRJh2JJyfGPsffeiXhKskJHRWa
+    ✓ Status: MATCH - Data integrity verified
+
+======================================================================
+AlgeroPass Scenario Summary
+======================================================================
+✓ TrustWeave instance created with blockchain integration
+✓ National Authority DID: did:key:z6MkhRchGiDMLjiCq5xsLHbzmbYjMCXCtLhopnXqfQZ2THSK
+✓ Institution DID: did:key:z6MkjDR4tGFskBWLBjXtBC12dg9uvbPBtZkvtHZZiUsLp7Mo
+✓ Student DID: did:key:z6MkmU8jkmV3x9Vdr2CrFvp9PX7tsT57wpTeMG9tHD2D2HcC
+✓ Enrollment Credential issued: urn:uuid:1327e9e7-95c6-4525-9d73-28fd959f50b5
+  - Student ID: STU-2024-001234
+  - Institution: University of Algiers
+  - Program: Computer Science (Bachelor)
+  - Status: active
+✓ Achievement Credential issued: urn:uuid:4e7ae2c5-1850-4da6-8744-cc0eb74b25fd
+  - Academic Year: 2024-2025
+  - Semester: Fall 2024
+  - GPA: 3.73
+✓ Enrollment credential anchored: tx_1_1789019180077
+✓ Achievement credential anchored: tx_2_1789019180079
+
+======================================================================
+✅ Complete AlgeroPass Scenario Successful!
+======================================================================
+
+Design goals (not validated by this local demonstration):
+  - National Recognition: Credentials recognized across all Algerian institutions
+  - Student Mobility: Easy transfer between universities
+  - Fraud Prevention: Cryptographic proof prevents credential forgery
+  - Efficiency: Instant verification without contacting institutions
+  - Student Control: Students own and control their credentials
+  - Privacy: Selective disclosure protects student privacy
+  - Interoperability: Standard format works across all institutions
+  - Immutability: Blockchain anchoring provides long-term verification
+======================================================================
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

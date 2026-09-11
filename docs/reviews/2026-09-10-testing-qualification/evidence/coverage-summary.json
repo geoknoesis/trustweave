@@ -1,0 +1,87 @@
+[
+  {
+    "scope": "*",
+    "metrics": {
+      "LINE": {
+        "covered": 27978,
+        "missed": 20847,
+        "percent": 57.3026113671275,
+        "floor": 56.0
+      },
+      "BRANCH": {
+        "covered": 11085,
+        "missed": 16746,
+        "percent": 39.82968632100895,
+        "floor": 38.0
+      }
+    }
+  },
+  {
+    "scope": "org/trustweave/revocation/database",
+    "metrics": {
+      "LINE": {
+        "covered": 347,
+        "missed": 121,
+        "percent": 74.14529914529915,
+        "floor": 59.0
+      },
+      "BRANCH": {
+        "covered": 120,
+        "missed": 106,
+        "percent": 53.097345132743364,
+        "floor": 44.0
+      }
+    }
+  },
+  {
+    "scope": "org/trustweave/credential/anchor",
+    "metrics": {
+      "LINE": {
+        "covered": 95,
+        "missed": 27,
+        "percent": 77.8688524590164,
+        "floor": 75.0
+      },
+      "BRANCH": {
+        "covered": 43,
+        "missed": 73,
+        "percent": 37.06896551724138,
+        "floor": 33.0
+      }
+    }
+  },
+  {
+    "scope": "org/trustweave/credential/vi/verification",
+    "metrics": {
+      "LINE": {
+        "covered": 923,
+        "missed": 85,
+        "percent": 91.56746031746032,
+        "floor": 83.0
+      },
+      "BRANCH": {
+        "covered": 886,
+        "missed": 404,
+        "percent": 68.68217054263566,
+        "floor": 58.0
+      }
+    }
+  },
+  {
+    "scope": "org/trustweave/anchor/indy",
+    "metrics": {
+      "LINE": {
+        "covered": 421,
+        "missed": 87,
+        "percent": 82.8740157480315,
+        "floor": 82.0
+      },
+      "BRANCH": {
+        "covered": 184,
+        "missed": 117,
+        "percent": 61.12956810631229,
+        "floor": 60.0
+      }
+    }
+  }
+]

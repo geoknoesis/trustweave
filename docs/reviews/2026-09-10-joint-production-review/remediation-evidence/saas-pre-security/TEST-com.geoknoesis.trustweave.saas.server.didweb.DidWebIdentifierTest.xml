@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:52:56.055Z" hostname="THEMATRIX" time="0.433">
+  <properties/>
+  <testcase name="a portless https base url passes the bare host as domain()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest" time="0.426"/>
+  <testcase name="a ported base url percent-encodes the colon into the domain()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest" time="0.003"/>
+  <testcase name="the captured identifier resolves to the route the hosting controller currently serves()" classname="com.geoknoesis.trustweave.saas.server.didweb.DidWebIdentifierTest" time="0.003"/>
+  <system-out><![CDATA[22:52:56.479 INFO  [] c.g.t.s.server.didweb.DidWebService - Published did:web document for did:web:placeholder.invalid:did:placeholder at /did/acme-university/did.json
+22:52:56.484 INFO  [] c.g.t.s.server.didweb.DidWebService - Published did:web document for did:web:placeholder.invalid:did:placeholder at /did/acme-university/did.json
+22:52:56.488 INFO  [] c.g.t.s.server.didweb.DidWebService - Published did:web document for did:web:placeholder.invalid:did:placeholder at /did/acme-university/did.json
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

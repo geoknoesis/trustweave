@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustWeave · Full codebase review</title>
+<style>
+:root{color-scheme:light;--ink:#142a36;--muted:#4d6370;--accent:#08766d;--warn:#a8452c;--line:#ccdcd9}
+*{box-sizing:border-box}body{margin:0;background:#f2f6f4;color:var(--ink);font:16px/1.65 system-ui,sans-serif}
+main{max-width:1080px;margin:auto;padding:46px 24px 70px}h1{font-size:clamp(2rem,5vw,3.7rem);line-height:1.07;max-width:820px;letter-spacing:-.045em}
+h2{font-size:1.6rem;margin-top:0;line-height:1.3}h3{font-size:1.05rem;margin-bottom:.3em}p{max-width:86ch}a{color:#086b78;overflow-wrap:anywhere}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:750;color:var(--accent)}
+.intro{font-size:1.15rem;color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
+.card,section{background:white;border:1px solid var(--line);border-radius:14px;padding:25px}.card strong{font-size:2.5rem;display:block;line-height:1.2;color:var(--accent)}
+.card.bad strong{color:var(--warn)}.card span{display:block;color:var(--muted);font-size:.88rem}section{margin:22px 0}
+.note{border-left:4px solid #bd8732;padding:12px 18px;background:#fff7e9}
+table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+tbody th{font-weight:550}code{font-size:.86em;overflow-wrap:anywhere}li{margin:.6em 0}summary{cursor:pointer;font-weight:650}
+.down{color:var(--warn);font-weight:650}.flat{color:var(--muted)}
+.meta{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}footer{color:var(--muted)}
+@media(max-width:600px){main{padding:28px 16px}.cards{grid-template-columns:1fr;gap:10px}.card,section{padding:19px}.card strong{font-size:2rem}th,td{padding:10px 5px;font-size:.9rem}}
+</style></head><body><main>
+<div class="eyebrow">TrustWeave SDK · 11 September 2026</div>
+<h1>Excellent code,<br>no way to ship it.</h1>
+<p class="intro">The first whole-repository pass since 2026-09-06. Every category is re-derived from the current tree rather than carried forward, and the mean lands at <strong>8.6 / 10</strong>.</p>
+<div class="cards">
+<div class="card bad"><strong>8.6 / 10</strong><span>Overall · six-category mean · previously 9.3 composite</span></div>
+<div class="card"><strong>3,897</strong><span>Tests passed · 0 failures · 0 errors · 15 documented skips</span></div>
+<div class="card bad"><strong>57.3%</strong><span>Merged line coverage · 39.8% branch</span></div>
+</div>
+<p class="note">The previous 9.3 was a composite: each round from 2026-09-07 to 2026-09-10 reassessed one category and carried five forward. Nothing verified in those rounds regressed. What moves the number here is the long tail no recent round examined.</p>
+
+<section><h2>What is genuinely excellent</h2><ul>
+<li><strong>Verifiable Intent chain verification</strong> fails closed at every branch I could construct — multi-pair L2, duplicate disclosure references, an L3 without its authorizing L2 mandate, mismatched agent keys, <code>kid</code> mismatch, over-long L3 lifetime, budget constraints with no ledger. <code>Constraint.Malformed</code> fails closed regardless of strictness.</li>
+<li><strong>The intent ledger</strong> forces <code>synchronous_commit</code>, locks accounts before reservations in writer order, counts occurrences in an <code>AFTER INSERT</code> trigger that cannot fire on an <code>ON CONFLICT</code> no-op, and treats an uncertain commit as a denial.</li>
+<li><strong>Outbound HTTP is SSRF-guarded by default</strong>, including the federation resolver, whose own comment explains why a bare client there would let a peer steer requests at loopback.</li>
+<li><strong>No crypto anti-patterns.</strong> Every security-path random source is <code>SecureRandom</code>; no trust-all managers, no hostname-verifier bypass, no <code>GlobalScope</code>; XML parsers disable DOCTYPE and external entities.</li>
+<li><strong>Test discipline.</strong> Zero <code>@Disabled</code>; all 15 skips named and justified in policy; VI cross-checked against a pinned Python reference.</li>
+</ul></section>
+
+<section><h2>Findings</h2>
+<h3>F1 · The tree does not pass its own build</h3>
+<p><code>./gradlew build</code> <strong>fails</strong> — 232 ktlint violations across 10 files in <code>kms:plugins:hashicorp</code> (169 main, 63 test), 115 of them in <code>VaultKeyManagementService.kt</code>. This is the Vault work that closed finding R15, written and never linted. Everything else is clean: 3,897 tests pass and <code>checkKotlinAbi</code> passes.</p>
+<h3>F2 · main carries an unversioned copy of the reviewed code</h3>
+<p>169 uncommitted files. The same work is committed on <code>codex/joint-remediation-20260910</code> and <code>codex/configuration-data-20260910</code>, neither merged; the tree differs from the former in two tracked files. Every score since 2026-09-07 was awarded to code reachable from no branch on <code>main</code>. CI on main <em>is</em> green as of <code>e0a4464f</code> — the red-since-August state no longer holds.</p>
+<h3>F3 · There is no publication path</h3>
+<p>No build file declares a publishing repository, so <code>publishToMavenRepository</code> is never created and <code>publishToMavenLocal</code> is the only thing that works. The POM has no <code>scm</code> block, which Central rejects outright, and its description points at <code>docs/reference/module-maturity.md</code> — a path that does not exist. <code>v0.7.0</code> is tagged with no release and no artifact.</p>
+<h3>F4 · Coverage is bimodal</h3>
+<p>Recently reviewed modules are strong — observability 97.8%, verifiable-intent 90.0%, common 87.0%, kms-core 85.0%. The rest is not.</p>
+<table><thead><tr><th>Module</th><th>Lines</th><th>Line</th><th>Branch</th></tr></thead><tbody>
+<tr><th>credentials/credential-api</th><td>4,095</td><td>48.6%</td><td>38.1%</td></tr>
+<tr><th>did/did-core</th><td>2,491</td><td>58.1%</td><td>33.4%</td></tr>
+<tr><th>wallet/wallet-core</th><td>216</td><td>24.5%</td><td>24.0%</td></tr>
+<tr><th>did/plugins/web</th><td>191</td><td>21.5%</td><td>29.7%</td></tr>
+<tr><th>did/registrar</th><td>768</td><td>11.5%</td><td>11.7%</td></tr>
+<tr><th>credentials/credential-models-mp</th><td>1,214</td><td>6.8%</td><td>14.3%</td></tr>
+<tr><th>did plugins ion · sol · polygon · plc · cheqd · ens</th><td>162–324</td><td>1.2–2.5%</td><td>~2%</td></tr>
+</tbody></table>
+<p>The policy floors (56.0 line / 38.0 branch) sit just under the measurement — they record where the code is, not where it should be. Separately, of 2,363 Kotlin blocks inventoried across the docs, 9 are source-backed and executed.</p>
+<h3>F5 · 61 dependency coordinates escape the catalog, and have drifted</h3>
+<table><thead><tr><th>Library</th><th>Hardcoded</th><th>Catalog</th></tr></thead><tbody>
+<tr><th>org.bitcoinj:bitcoinj-core</th><td>0.16.2</td><td>0.17.1</td></tr>
+<tr><th>org.web3j:core</th><td>4.10.0</td><td>5.0.2 / 4.14.0</td></tr>
+<tr><th>com.google.code.gson:gson</th><td>2.10.1</td><td>2.14.0</td></tr>
+<tr><th>org.slf4j:slf4j-api</th><td>2.0.9</td><td>2.0.17</td></tr>
+<tr><th>kotlinx-coroutines-test</th><td>1.8.1 (5 modules)</td><td>1.10.2</td></tr>
+</tbody></table>
+<p>Dependabot raises PRs against the catalog; these modules never move — and they parse untrusted network input. The new <code>observability</code> module repeats the pattern, pinning OpenTelemetry 1.65.0 inline in four places.</p>
+<h3>F6 · Three shipped servers have no authentication primitive</h3>
+<p><code>DidRegistrarServer</code>, <code>VcApiServer</code> and the status-list server ship with none. <code>VcApiServer</code>'s own KDoc says it: <em>"There is no API key, bearer token, or mTLS anywhere in this module."</em> The registrar creates, updates and deactivates DIDs. A loopback default plus a note telling operators to add a proxy is guidance, not a control — and <code>trust-registry-server</code> already shows the right shape.</p>
+<h3>F7 · Instrumentation stops at the HTTP boundary</h3>
+<p>The observability module is excellent and wired into six hosts. Across the tree, <strong>33 of 788</strong> main-source files reference a logger; DID resolution, KMS, wallet and credential verification emit no structured events, metrics or correlation id. A host with a failed verification span has nothing to join it to.</p>
+<h3>F8 · Half the workflows are unpinned</h3>
+<p><code>ci.yml</code>, <code>release-evidence.yml</code> and <code>docs-check.yml</code> pin every action by SHA. <code>deploy.yml</code>, <code>conformance-nightly.yml</code> and <code>conformance-pr.yml</code> pin none, and the last two declare no <code>permissions</code> block — the nightly job runs <code>actions/github-script@v7</code>, which creates issues, on the default token scope.</p>
+<h3>F9 · Nothing is declared production-supported</h3>
+<p>The capability catalog has <strong>8 entries for 107 modules</strong>, none <code>supported</code>. The custody runbook states no profile is qualified. A consumer cannot tell which module is production code.</p>
+<h3>F10 · A presenter-reachable exception escapes the verification contract</h3>
+<p><code>ChainVerifier.verify</code> translates only <code>SQLException</code> from the budget reservation, but the ledger also throws <code>IllegalStateException</code> on a stored-policy mismatch. The ledger scope is <code>sha256</code> of the L2 JWT <em>without</em> disclosures, so one signed L2 carrying two payment mandates with different budgets reaches it. Fails hard, not open — but it breaks the result contract on presenter-controlled input. The adjacent negative-<code>max</code> variant is <em>not</em> a defect: it is caught as <code>Malformed</code> and fails closed.</p>
+<h3>F11 · Two documented cancellation gaps</h3>
+<p><code>BitstringStatusListManager</code> lines 1211 and 1263 iterate 131,072 entries with no cooperative cancellation, in non-suspend functions that cannot reach <code>coroutineContext</code>. The TODOs prescribe the fix.</p>
+<h3>F12 · The validation gates read the wrong directory on Windows</h3>
+<p><code>check-test-evidence.py</code> and <code>check-junit-contract.py</code> default to the in-repo <code>build/</code>, which on this project's documented Windows layout is a stale 2026-09-06 snapshot. Run with their defaults they report 40 evidence failures and 8 invalid JUnit methods; pointed at the real build root both exit 0 with zero failures. This caught me mid-review — the 8 looked like the known non-void <code>@Test</code> trap until I confirmed all six named OID4VP tests do appear in the current JUnit XML.</p>
+<h3>F13 · 550 broad catches, 21 with a comment for a body</h3>
+<p>Every security path I read fails closed correctly, but the surface has not been audited, and a swallowed <code>CancellationException</code> is exactly the class of defect these rounds keep finding one at a time. A balanced-brace scan finds <strong>zero</strong> genuinely empty catch bodies — an earlier line-counting grep in this review reported 12, which was wrong — and 21 whose body is only a comment. Four of those sat in <code>suspend</code> functions and swallowed cancellation. The wider surface is <strong>187</strong> broad catches inside suspend functions that neither rethrow nor mention cancellation; most convert to a sealed failure and are fine.</p>
+</section>
+
+<section><h2>Scores</h2><table><thead><tr><th>Category</th><th>2026-09-10</th><th>Now</th><th>Why</th></tr></thead><tbody>
+<tr><th>Security and access control</th><td>9.0</td><td class="down">8.8</td><td>F6, F8, F9, F10</td></tr>
+<tr><th>Observability and diagnosability</th><td>9.6</td><td class="down">9.0</td><td>F7 — the 9.6 was scored against the six HTTP hosts, not the library</td></tr>
+<tr><th>Reliability and scale</th><td>9.5</td><td class="down">9.2</td><td>F11, and no deployment-scale evidence</td></tr>
+<tr><th>Configuration and data</th><td>9.5</td><td class="down">8.8</td><td>F5</td></tr>
+<tr><th>Deployment and release</th><td>8.5</td><td class="down">7.0</td><td>F1, F2, F3, F12</td></tr>
+<tr><th>Testing and documentation</th><td>9.5</td><td class="down">8.5</td><td>F4</td></tr>
+</tbody></table>
+<p>Equal-weight mean: 51.3 ÷ 6 = 8.55, rounded to <strong>8.6</strong>.</p></section>
+
+<section><h2>Getting above 9.5</h2>
+<p>Full acceptance criteria in <a href="tasks.json">tasks.json</a>. Fifteen tasks; the projected mean on completion is <strong>9.52</strong>.</p>
+<h3>Week 1 — stop the bleeding</h3>
+<ul>
+<li><strong>T01</strong> <code>ktlintFormat</code> the Vault module. Do not re-baseline — these are new violations. <em>Under an hour.</em></li>
+<li><strong>T02</strong> Reconcile the two local edits onto <code>codex/joint-remediation-20260910</code>, merge to <code>main</code>, push, confirm CI. Stage explicit paths, never <code>git add -A</code>. <em>Half a day.</em></li>
+<li><strong>T08</strong> SHA-pin the 14 unpinned action refs; add the two missing <code>permissions</code> blocks. <em>Under an hour.</em></li>
+<li><strong>T10</strong> Close the bitstring cancellation gaps. <strong>T12</strong> Keep ledger failures inside the result contract. <strong>T13</strong> Fix the Windows build-root default.</li>
+</ul>
+<h3>Weeks 2–3 — make it shippable</h3>
+<ul>
+<li><strong>T03</strong> Central repository, <code>scm</code> in the POM, correct doc URL, tag-triggered publish workflow, signed artifacts with SBOM and provenance. <em>Two to three days plus namespace verification.</em></li>
+<li><strong>T05</strong> All 61 coordinates into the catalog, converge the drift, add a gate that rejects literals. <em>One to two days.</em></li>
+<li><strong>T07</strong> A <code>withAuthentication</code> hook beside <code>withObservability</code>, failing closed on mutating routes, plus per-caller rate limiting. <em>Three to four days.</em></li>
+</ul>
+<h3>Weeks 2–6 — the big one</h3>
+<ul><li><strong>T04</strong> Coverage from 57.3%/39.8% to roughly 75%/60%, top-down by untested line count: <code>credential-api</code>, then <code>did-core</code>, then <code>wallet-core</code> and <code>did:web</code>. Decide whether the 1–3% DID plugins ship or are experimental. This single item limits the score more than any other.</li></ul>
+<h3>Weeks 4–5, then ongoing</h3>
+<ul>
+<li><strong>T06</strong> Instrument the library behind the observability SPI. <strong>T09</strong> Classify all 107 modules and qualify the GA core. <strong>T14</strong> Compile the doc blocks consumers copy.</li>
+<li><strong>T11</strong> Deployment-scale ledger qualification. <strong>T15</strong> Broad-catch audit.</li>
+</ul>
+<p class="note">Two items do not compress no matter how fast the code goes: Sonatype namespace verification (T03) and real custody or hardware qualification (T09). Start them first even though they finish last.</p>
+</section>
+
+<section><details><summary>Evidence and machine-readable assessment</summary><ul>
+<li><a href="review.md">Full review (Markdown)</a></li>
+<li><a href="scores.json">scores.json</a> · <a href="tasks.json">tasks.json</a></li>
+<li><a href="evidence/tests.json">tests.json</a> — 3,897 tests, 0 failures, 489 suite XMLs</li>
+<li><a href="evidence/coverage.json">coverage.json</a> — merged and per-module Kover figures for 83 modules</li>
+<li><a href="evidence/build-tail.log">build-tail.log</a> — the failing build result</li>
+<li><a href="evidence/ktlintMainSourceSetCheck.txt">ktlintMainSourceSetCheck.txt</a> · <a href="evidence/ktlintTestSourceSetCheck.txt">ktlintTestSourceSetCheck.txt</a></li>
+</ul>
+<p class="meta">Tree: <code>e0a4464f</code> plus 169 uncommitted files · full build 13m38s, 2188 actionable tasks · <code>checkKotlinAbi</code> passed · all seven Python validation gates executed.</p>
+</details></section>
+
+<section><h2>Remediation, same day</h2>
+<p class="intro" style="font-size:1rem">Nine of fifteen tasks closed with local evidence. Four remain open as multi-week work, and two need an action only the repository owner can take. Full record in <a href="remediation.json">remediation.json</a>.</p>
+<table><thead><tr><th>Finding</th><th>State</th><th>What changed</th></tr></thead><tbody>
+<tr><th>F1 · build fails</th><td><strong>Closed</strong></td><td><code>ktlintFormat</code> cleared all 232 violations in <code>kms:plugins:hashicorp</code>. The module baseline is untouched, so nothing was grandfathered.</td></tr>
+<tr><th>F2 · unversioned tree</th><td>Partly</td><td>The tree is committed. Merging the <code>codex/*</code> branches and pushing rewrites shared history and publishes the work, so it is left to the owner.</td></tr>
+<tr><th>F3 · no publication path</th><td><strong>Closed</strong> in code</td><td>Maven repository declared in the root build and the BOM, <code>scm</code> and <code>issueManagement</code> in every POM, the dead documentation URL corrected, and a reviewer-gated publish job on <code>v*</code> tags. Sonatype namespace verification remains an external step — see <a href="../../operations/publishing.md">the runbook</a>.</td></tr>
+<tr><th>F4 · coverage</th><td>Open</td><td>Two to three weeks of test writing; not attempted.</td></tr>
+<tr><th>F5 · catalog drift</th><td><strong>Closed</strong></td><td>All 61 literals moved into the catalog across 34 build files. web3j, gson, slf4j and coroutines-test converged; bitcoinj stays on 0.16.2 through an explicit <code>bitcoinj-legacy</code> alias because 0.17 is a breaking API change — recorded rather than hidden.</td></tr>
+<tr><th>F6 · no server authentication</th><td><strong>Closed</strong></td><td>New <code>HostAuthentication</code>: constant-time bearer tokens, host-supplied authorizers, an explicit <code>frontedByProxy</code> declaration, per-caller rate limiting. The three servers refuse mutations with 503 until a host says which applies. Breaking; in the changelog.</td></tr>
+<tr><th>F7 · library instrumentation</th><td>Open</td><td>One week; not attempted.</td></tr>
+<tr><th>F8 · unpinned workflows</th><td><strong>Closed</strong></td><td>All 14 references SHA-pinned, both missing <code>permissions</code> blocks added, and the nightly job's <code>issues: write</code> moved to a job that runs no repository code.</td></tr>
+<tr><th>F9 · nothing supported</th><td>Partly</td><td>A ratchet: every module must declare a maturity or be recorded as unassessed, and the unassessed count may only fall. Classifying the 102 recorded modules is an owner decision.</td></tr>
+<tr><th>F10 · escaping exception</th><td><strong>Closed</strong></td><td>Ledger <code>IllegalStateException</code> and <code>IllegalArgumentException</code> become an invalid result, with a regression driving both through a refusing data source.</td></tr>
+<tr><th>F11 · cancellation gaps</th><td><strong>Closed</strong></td><td>Both loops are <code>suspend</code> and probe every 8192 bits. A test proves a cancelled revocation issues fewer statements than a completed one, so the decode really did abort.</td></tr>
+<tr><th>F12 · wrong build root</th><td><strong>Closed</strong></td><td><code>scripts/build_root.py</code> resolves the root the way the build does and refuses one holding no results, instead of reporting phantom gaps.</td></tr>
+<tr><th>F13 · broad catches</th><td>Partly; count corrected</td><td>Zero genuinely empty bodies, not 12. Four of the 21 comment-only bodies sat in <code>suspend</code> functions and swallowed cancellation; all four now rethrow. 187 remain to triage.</td></tr>
+</tbody></table>
+<p>Five new gates keep the closed findings closed: <code>check-workflow-pinning</code>, <code>check-dependency-catalog</code>, <code>check-publication</code>, <code>check-capability-coverage</code>, and the shared <code>build_root</code> resolver. All are wired into CI and the release workflow, and each ships with unit tests.</p>
+</section>
+
+<footer>Previous baseline: <a href="../2026-09-10-configuration-data/index.html">Configuration and data qualification</a>. No release was published and no production deployment was qualified.</footer>
+</main></body></html>

@@ -8,10 +8,10 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Plugin configuration loaded from YAML/JSON.
+ * Plugin configuration loaded from strict JSON.
  *
  * Allows declarative configuration of plugins via configuration files.
- * Supports both YAML and JSON formats.
+ * The loader accepts UTF-8 JSON; YAML must be converted by the caller.
  *
  * **Example Configuration**:
  * ```yaml
@@ -39,7 +39,7 @@ import kotlinx.serialization.json.put
 data class PluginConfiguration(
     val plugins: List<PluginConfig> = emptyList(),
     val defaultProviders: Map<String, String> = emptyMap(),
-    val providerChains: Map<String, List<String>> = emptyMap()
+    val providerChains: Map<String, List<String>> = emptyMap(),
 )
 
 @Serializable
@@ -49,17 +49,18 @@ data class PluginConfig(
     val provider: String,
     val enabled: Boolean = true,
     val config: Map<String, String> = emptyMap(),
-    val priority: Int = 0
+    val priority: Int = 0,
 ) {
+    override fun toString(): String =
+        "PluginConfig(id=$id, type=$type, provider=$provider, enabled=$enabled, configEntries=${config.size}, priority=$priority)"
+
     /**
      * Get configuration value as string.
      *
      * @param key Configuration key
      * @return Configuration value as string, or null if not found
      */
-    fun getConfigValue(key: String): String? {
-        return config[key]
-    }
+    fun getConfigValue(key: String): String? = config[key]
 
     /**
      * Get configuration value as integer.
@@ -67,9 +68,7 @@ data class PluginConfig(
      * @param key Configuration key
      * @return Configuration value as integer, or null if not found or invalid
      */
-    fun getConfigInt(key: String): Int? {
-        return config[key]?.toIntOrNull()
-    }
+    fun getConfigInt(key: String): Int? = config[key]?.toIntOrNull()
 
     /**
      * Get configuration value as boolean.
@@ -77,9 +76,7 @@ data class PluginConfig(
      * @param key Configuration key
      * @return Configuration value as boolean, or null if not found or invalid
      */
-    fun getConfigBoolean(key: String): Boolean? {
-        return config[key]?.toBooleanStrictOrNull()
-    }
+    fun getConfigBoolean(key: String): Boolean? = config[key]?.toBooleanStrictOrNull()
 
     /**
      * Get configuration value as long.
@@ -87,9 +84,7 @@ data class PluginConfig(
      * @param key Configuration key
      * @return Configuration value as long, or null if not found or invalid
      */
-    fun getConfigLong(key: String): Long? {
-        return config[key]?.toLongOrNull()
-    }
+    fun getConfigLong(key: String): Long? = config[key]?.toLongOrNull()
 
     /**
      * Get configuration value as double.
@@ -97,16 +92,14 @@ data class PluginConfig(
      * @param key Configuration key
      * @return Configuration value as double, or null if not found or invalid
      */
-    fun getConfigDouble(key: String): Double? {
-        return config[key]?.toDoubleOrNull()
-    }
+    fun getConfigDouble(key: String): Double? = config[key]?.toDoubleOrNull()
 
     /**
      * Get configuration as JsonObject for complex configurations.
      *
      * Attempts to parse each configuration value as JSON. If parsing fails,
      * falls back to storing the value as a string.
-     * 
+     *
      * Performance: Result is cached after first call to avoid re-parsing.
      */
     private val jsonObjectCache: JsonObject by lazy {

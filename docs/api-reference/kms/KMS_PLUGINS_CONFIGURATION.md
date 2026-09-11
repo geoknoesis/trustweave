@@ -578,7 +578,7 @@ data class VaultKmsConfig(
     val appRolePath: String? = null,             // Optional (for AppRole auth)
     val roleId: String? = null,                  // Optional (for AppRole auth)
     val secretId: String? = null,                // Optional (for AppRole auth)
-    val engineVersion: Int = 2                   // Optional (default: 2)
+    val engineVersion: Int = 1                   // Transit API routing; KV-v2 rewriting is rejected
 )
 ```
 

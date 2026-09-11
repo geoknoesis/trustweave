@@ -1,0 +1,57 @@
+{
+  "previous_overall": 9.1,
+  "overall": 9.2,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; this review reassesses Reliability and scale only."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9.6,
+      "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+      "previous": 9.6,
+      "assessment_note": "Carried forward; this review reassesses Reliability and scale only."
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9.5,
+      "reason": "History-independent occurrence checks, atomic migration/counter updates, synchronous WAL writes, bounded contention and a one-minute skewed workload pass. Physical archived-WAL recovery, process-crash durability, backup corruption and missing-WAL rejection are qualified on PostgreSQL 16. Deployment-scale load, external-journal recovery, replica fencing and agreed RPO/RTO remain unqualified. 9.5 is the SDK engineering assessment, not production certification.",
+      "previous": 9
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+      "previous": 9,
+      "assessment_note": "Carried forward; this review reassesses Reliability and scale only."
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Historical score retained. This review adds a committed SDK candidate and hosted validation; publishing and deployed release qualification remain separate.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; this review reassesses Reliability and scale only."
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 9.5,
+      "reason": "Full local SDK build and exact-commit hosted release-evidence gates pass; merged coverage retains its floors; 26 Python vectors, three reverse profiles and a 214-step PostgreSQL model broaden conformance; nine source-backed examples and strict discovery, named-result, matrix and skip gates protect evidence. Full provider qualification and exhaustive supported-profile/snippet review remain outside this assessment.",
+      "previous": 9.5,
+      "assessment_note": "Carried forward; this review reassesses Reliability and scale only."
+    }
+  ],
+  "rubric": "Same six equally weighted categories; Reliability and scale reassessed. Engineering judgment, not a certificate or a coverage percentage.",
+  "arithmetic": "55.1 / 6 = 9.1833, rounded to 9.2",
+  "scope": "Committed credential-free SDK candidate; no production deployment or external payment system qualified.",
+  "reassessment_basis": [
+    "All hosted SDK gates pass for the recorded commit.",
+    "Seven required PostgreSQL regressions and a measured reliability profile close component reliability gaps.",
+    "The remaining production load and recovery acceptance cannot be replaced by local fixture results."
+  ],
+  "target": 9.5,
+  "target_met": true
+}

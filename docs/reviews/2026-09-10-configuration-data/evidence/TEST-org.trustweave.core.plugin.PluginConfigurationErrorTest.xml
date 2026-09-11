@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.core.plugin.PluginConfigurationErrorTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-10T19:53:09.855Z" hostname="runnervmlun5p" time="0.055">
+  <properties/>
+  <testcase name="test loadFromJson throws InvalidConfigFormat for wrong type()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.001"/>
+  <testcase name="test loadFromFile succeeds with valid file(File)" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.003"/>
+  <testcase name="test loadFromFile throws ConfigReadFailed when file cannot be read(File)" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.005"/>
+  <testcase name="test loadFromResource throws InvalidConfigFormat for blank resource()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.001"/>
+  <testcase name="test loadFromFile throws ConfigNotFound when file does not exist()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.001"/>
+  <testcase name="test loadFromFile throws InvalidConfigFormat for blank path()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.0"/>
+  <testcase name="test loadFromFile throws InvalidConfigFormat for invalid JSON(File)" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.008"/>
+  <testcase name="test loadFromResource throws ConfigNotFound when resource does not exist()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.007"/>
+  <testcase name="test loadFromJson throws InvalidConfigFormat for invalid JSON()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.0"/>
+  <testcase name="test loadFromJson throws InvalidConfigFormat for incomplete JSON()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.0"/>
+  <testcase name="test loadFromJson succeeds with valid JSON()" classname="org.trustweave.core.plugin.PluginConfigurationErrorTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

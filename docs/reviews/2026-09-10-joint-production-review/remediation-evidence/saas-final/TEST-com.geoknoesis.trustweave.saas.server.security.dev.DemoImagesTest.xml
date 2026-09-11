@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:21.741Z" hostname="THEMATRIX" time="0.017">
+  <properties/>
+  <testcase name="each demo portrait decodes under the wallet memory budget()" classname="com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest" time="0.003"/>
+  <testcase name="each demo portrait is an inline jpeg data uri()" classname="com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest" time="0.0"/>
+  <testcase name="demo holders map to distinct portraits()" classname="com.geoknoesis.trustweave.saas.server.security.dev.DemoImagesTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

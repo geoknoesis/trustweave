@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:24:18.038Z" hostname="THEMATRIX" time="6.937">
+  <properties/>
+  <testcase name="createEducationCredentialsExample should create education domain()" classname="com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest" time="2.56"/>
+  <testcase name="createAllExamples should create all example domains()" classname="com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest" time="4.36"/>
+  <system-out><![CDATA[22:24:18.040 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [ExampleProjectControllerIntegrationTest]: using SpringBootContextLoader
+22:24:18.044 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizerFactory implementations for test class [ExampleProjectControllerIntegrationTest]: [OnFailureConditionReportContextCustomizerFactory, OverrideAutoConfigurationContextCustomizerFactory, ObservabilityContextCustomizerFactory, TypeExcludeFiltersContextCustomizerFactory, PropertyMappingContextCustomizerFactory, WebDriverContextCustomizerFactory, ImportsContextCustomizerFactory, ExcludeFilterContextCustomizerFactory, HttpGraphQlTesterContextCustomizerFactory, DuplicateJsonObjectContextCustomizerFactory, MockitoContextCustomizerFactory, TestRestTemplateContextCustomizerFactory, WebTestClientContextCustomizerFactory, DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory, BeanOverrideContextCustomizerFactory, MockServerContainerContextCustomizerFactory, DynamicPropertiesContextCustomizerFactory]
+22:24:18.048 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizers for test class [ExampleProjectControllerIntegrationTest]: [OnFailureConditionReportContextCustomizer, DisableObservabilityContextCustomizer, PropertyMappingContextCustomizer, WebDriverContextCustomizer, ImportsContextCustomizer, ExcludeFilterContextCustomizer, DuplicateJsonObjectContextCustomizer, MockitoContextCustomizer, TestRestTemplateContextCustomizer, DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer, DynamicPropertiesContextCustomizer]
+22:24:18.048 INFO  [] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.geoknoesis.trustweave.saas.server.Application for test class com.geoknoesis.trustweave.saas.server.controller.ExampleProjectControllerIntegrationTest
+22:24:18.052 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using TestExecutionListeners for test class [ExampleProjectControllerIntegrationTest]: [ServletTestExecutionListener, DirtiesContextBeforeModesTestExecutionListener, ApplicationEventsTestExecutionListener, MockitoTestExecutionListener, BeanOverrideTestExecutionListener, DependencyInjectionTestExecutionListener, MicrometerObservationRegistryTestExecutionListener, DirtiesContextTestExecutionListener, CommonCachesTestExecutionListener, TransactionalTestExecutionListener, SqlScriptsTestExecutionListener, WithSecurityContextTestExecutionListener, EventPublishingTestExecutionListener, ReactorContextTestExecutionListener, RestDocsTestExecutionListener, MockRestServiceServerResetTestExecutionListener, MockMvcPrintOnlyOnFailureTestExecutionListener, WebDriverTestExecutionListener, MockWebServiceServerTestExecutionListener, ResetMocksTestExecutionListener, MockitoResetTestExecutionListener]
+22:24:19.913 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:19.918 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+22:24:19.923 DEBUG [] org.hibernate.SQL - insert into organizations (accountly_subscriber_id,accountly_subscription_id,blockchain_network_settings,created_at,entitlement_snapshot,accountly_killbill_account_id,name,owner_id,preferred_blockchain_network_id,settings,snapshot_refreshed_at,stripe_customer_id,stripe_subscription_id,tier,transaction_cost_tracking_enabled,version) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+22:24:19.928 DEBUG [] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:19.934 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.security.web.FilterChainProxy - Securing POST /api/example-domains/education-credentials
+22:24:19.938 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+22:24:19.938 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.jwt.Jwt@41434f9c, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_default-roles-test-realm, ROLE_offline_access, ROLE_uma_authorization]]
+22:24:19.940 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.security.web.FilterChainProxy - Secured POST /api/example-domains/education-credentials
+22:24:19.940 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.ExampleProjectController#createEducationCredentialsExample()
+22:24:19.951 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:19.989 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+22:24:20.013 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] c.g.t.s.s.s.OrganizationContextService - User 3 owns organization 3
+22:24:20.016 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:20.035 INFO  [1d26b806-a1db-49ea-a186-7a14b6fadc75] c.g.t.s.s.s.ExampleProjectService - Creating Education Credentials example domain for organization 3
+22:24:20.036 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:20.059 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:20.180 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:20.248 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:20.278 INFO  [1d26b806-a1db-49ea-a186-7a14b6fadc75] c.g.t.s.s.s.ExampleProjectService - Created Education Credentials example domain with 2 issuing identitys
+22:24:20.537 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+22:24:20.548 DEBUG [1d26b806-a1db-49ea-a186-7a14b6fadc75] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [TrustSpaceResponse(id=2, organizationId=3, name=Education Credentials Platform, description=Example  (truncated)...]
+22:24:22.505 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:24:22.506 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:24:22.512 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:24:22.513 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+22:24:22.513 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+22:24:22.520 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:993)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:337)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:342)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:130)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$2(ScheduledMethodRunnable.java:124)
+	at io.micrometer.observation.Observation.observe(Observation.java:498)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:124)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:87)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2736)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2421)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:525)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:435)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:196)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:157)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 29 common frames omitted
+22:24:23.593 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:23.617 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+22:24:23.643 DEBUG [] org.hibernate.SQL - insert into organizations (accountly_subscriber_id,accountly_subscription_id,blockchain_network_settings,created_at,entitlement_snapshot,accountly_killbill_account_id,name,owner_id,preferred_blockchain_network_id,settings,snapshot_refreshed_at,stripe_customer_id,stripe_subscription_id,tier,transaction_cost_tracking_enabled,version) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+22:24:23.673 DEBUG [] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:23.685 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.security.web.FilterChainProxy - Securing POST /api/example-domains/all
+22:24:23.688 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+22:24:23.690 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.jwt.Jwt@9d862830, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_default-roles-test-realm, ROLE_offline_access, ROLE_uma_authorization]]
+22:24:23.691 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.security.web.FilterChainProxy - Secured POST /api/example-domains/all
+22:24:23.691 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.ExampleProjectController#createAllExamples()
+22:24:23.695 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:23.714 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+22:24:23.729 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.OrganizationContextService - User 4 owns organization 4
+22:24:23.732 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+22:24:23.743 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating all example domains for organization 4
+22:24:23.743 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating Education Credentials example domain for organization 4
+22:24:23.745 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:23.766 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:23.811 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:23.836 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:23.859 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created Education Credentials example domain with 2 issuing identitys
+22:24:23.859 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating KYC Platform example domain for organization 4
+22:24:23.861 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:23.877 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:23.893 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:23.913 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created KYC Platform example domain with 1 issuing identitys
+22:24:23.915 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating Healthcare Credentials example domain for organization 4
+22:24:23.917 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:23.937 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:23.961 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:23.988 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.026 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created Healthcare Credentials example domain with 2 issuing identitys
+22:24:24.026 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating Government Identity example domain for organization 4
+22:24:24.028 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:24.045 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:24.121 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.221 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created Government Identity example domain with 1 issuing identitys
+22:24:24.221 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating Professional Certifications example domain for organization 4
+22:24:24.223 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:24.361 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:24.484 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.580 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.711 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created Professional Certifications example domain with 2 issuing identitys
+22:24:24.711 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating European Open (EO) example domain for organization 4
+22:24:24.713 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:24.762 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:24.810 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.845 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.856 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.862 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created European Open example domain with 3 issuing identitys
+22:24:24.862 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Creating DCAT Catalog example domain for organization 4
+22:24:24.864 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - select bn1_0.id,bn1_0.created_at,bn1_0.currency_symbol,bn1_0.fee_structure_type,bn1_0.is_active,bn1_0.name,bn1_0.network_type,bn1_0.rpc_endpoint,bn1_0.settings from blockchain_networks bn1_0 where bn1_0.is_active
+22:24:24.873 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into trust_spaces (blockchain_network_id,created_at,description,environment,name,organization_id,settings,trust_model,verification_level) values (?,?,?,?,?,?,?,?,?)
+22:24:24.881 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.895 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.909 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.921 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] org.hibernate.SQL - insert into issuing_identities (created_at,created_by,credential_types,description,did,did_method,name,status,trust_space_id,version) values (?,?,?,?,?,?,?,?,?,?)
+22:24:24.928 INFO  [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] c.g.t.s.s.s.ExampleProjectService - Created DCAT Catalog example domain with 4 issuing identitys
+22:24:24.930 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+22:24:24.931 DEBUG [ab0d74ca-741b-478a-83e7-3f54a4f39ba6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[TrustSpaceResponse(id=3, organizationId=4, name=Education Credentials Platform, description=Example (truncated)...]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

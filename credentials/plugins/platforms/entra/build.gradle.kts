@@ -20,5 +20,5 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
+    testImplementation(libs.wiremock.jre8)
 }

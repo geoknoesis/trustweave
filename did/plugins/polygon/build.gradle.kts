@@ -17,7 +17,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // Web3j for Polygon blockchain interaction
-    implementation("org.web3j:core:4.10.0")
+    implementation(libs.web3j.legacy)
 
     // Test dependencies
     testImplementation(project(":testkit"))

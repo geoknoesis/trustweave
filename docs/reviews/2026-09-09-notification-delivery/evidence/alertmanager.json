@@ -1,0 +1,24 @@
+{
+  "route": {
+    "receiver": "local-exercise",
+    "group_by": [
+      "alertname",
+      "job",
+      "instance"
+    ],
+    "group_wait": "1s",
+    "group_interval": "2s",
+    "repeat_interval": "1h"
+  },
+  "receivers": [
+    {
+      "name": "local-exercise",
+      "webhook_configs": [
+        {
+          "url": "http://127.0.0.1:51989/notifications",
+          "send_resolved": true
+        }
+      ]
+    }
+  ]
+}

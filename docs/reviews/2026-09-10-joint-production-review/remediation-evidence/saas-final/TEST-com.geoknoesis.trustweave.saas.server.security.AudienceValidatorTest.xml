@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:19.673Z" hostname="THEMATRIX" time="0.002">
+  <properties/>
+  <testcase name="resource audience is required and accepted()" classname="com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest" time="0.002"/>
+  <testcase name="authorized party cannot replace resource audience()" classname="com.geoknoesis.trustweave.saas.server.security.AudienceValidatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.testkit.TrustWeaveTestFixtureTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:44:05.014Z" hostname="THEMATRIX" time="1.375">
+  <properties/>
+  <testcase name="test builder with custom KMS()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.005"/>
+  <testcase name="test builder with blockchain client()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.007"/>
+  <testcase name="test getBlockchainClient returns null for unregistered chain()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.006"/>
+  <testcase name="test createIssuerDid with custom algorithm()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="1.196"/>
+  <testcase name="test close cleans up registries()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.004"/>
+  <testcase name="test createIssuerDid()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.009"/>
+  <testcase name="test builder with in-memory blockchain client()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.003"/>
+  <testcase name="test minimal fixture()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.004"/>
+  <testcase name="test builder withDidMethod throws for unsupported method()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.109"/>
+  <testcase name="test builder creates fixture with defaults()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.005"/>
+  <testcase name="test getAllBlockchainClients()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.007"/>
+  <testcase name="test builder with custom DID method()" classname="org.trustweave.testkit.TrustWeaveTestFixtureTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

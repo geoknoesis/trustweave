@@ -1,0 +1,295 @@
+{
+  "saas_commit": "1643ad1f3be74bc92265e144b4286f5dbf24e3cb",
+  "sdk_commit": "477088ffaff2ddf89300bf93fba31c7ed4fe9eef",
+  "findings": [
+    {
+      "VulnerabilityID": "CVE-2026-14456",
+      "PkgName": "libcrypto3",
+      "InstalledVersion": "3.5.7-r0",
+      "FixedVersion": "3.5.8-r0",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-76956",
+      "PkgName": "libexpat",
+      "InstalledVersion": "2.8.3-r0",
+      "FixedVersion": "2.8.4-r0",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-76956"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-76957",
+      "PkgName": "libexpat",
+      "InstalledVersion": "2.8.3-r0",
+      "FixedVersion": "2.8.4-r0",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-76957"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-14456",
+      "PkgName": "libssl3",
+      "InstalledVersion": "3.5.7-r0",
+      "FixedVersion": "3.5.8-r0",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-14456",
+      "PkgName": "openssl",
+      "InstalledVersion": "3.5.7-r0",
+      "FixedVersion": "3.5.8-r0",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456"
+    },
+    {
+      "VulnerabilityID": "GHSA-r7wm-3cxj-wff9",
+      "PkgName": "com.fasterxml.jackson.core:jackson-core",
+      "InstalledVersion": "2.19.2",
+      "FixedVersion": "2.18.8, 2.21.4",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://github.com/advisories/GHSA-r7wm-3cxj-wff9"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-54512",
+      "PkgName": "com.fasterxml.jackson.core:jackson-databind",
+      "InstalledVersion": "2.19.2",
+      "FixedVersion": "2.18.8, 3.1.4, 2.21.4",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54512"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-54513",
+      "PkgName": "com.fasterxml.jackson.core:jackson-databind",
+      "InstalledVersion": "2.19.2",
+      "FixedVersion": "2.18.8, 2.21.4, 3.1.4",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54513"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-40983",
+      "PkgName": "io.micrometer:micrometer-core",
+      "InstalledVersion": "1.15.5",
+      "FixedVersion": "1.16.6, 1.15.12",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-40983"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-40984",
+      "PkgName": "io.micrometer:micrometer-core",
+      "InstalledVersion": "1.15.5",
+      "FixedVersion": "1.16.6, 1.15.12",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-40984"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-54399",
+      "PkgName": "org.apache.httpcomponents.core5:httpcore5",
+      "InstalledVersion": "5.3.6",
+      "FixedVersion": "5.4.3, 5.5-beta2",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54399"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-54428",
+      "PkgName": "org.apache.httpcomponents.core5:httpcore5-h2",
+      "InstalledVersion": "5.3.6",
+      "FixedVersion": "5.4.3, 5.5-beta2",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54428"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41293",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41293"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-43512",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-43512"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-43515",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-43515"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-65182",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "11.0.25, 10.1.58, 9.0.121",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-65182"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-65905",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "11.0.25, 10.1.58, 9.0.121",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-65905"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-68525",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "11.0.25, 10.1.58, 9.0.121",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68525"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-24734",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "11.0.18, 10.1.52, 9.0.115",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-24734"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-24880",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.116, 10.1.52, 11.0.20",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-24880"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-34483",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.116, 10.1.54, 11.0.21",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-34483"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-34487",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.117, 10.1.54, 11.0.21",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-34487"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41284",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41284"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-42498",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-42498"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-43513",
+      "PkgName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "InstalledVersion": "10.1.48",
+      "FixedVersion": "9.0.118, 10.1.55, 11.0.22",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-43513"
+    },
+    {
+      "VulnerabilityID": "CVE-2025-14813",
+      "PkgName": "org.bouncycastle:bcprov-jdk18on",
+      "InstalledVersion": "1.79",
+      "FixedVersion": "1.80.2, 1.81.1, 1.84",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-14813"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-42198",
+      "PkgName": "org.postgresql:postgresql",
+      "InstalledVersion": "42.7.8",
+      "FixedVersion": "42.7.11",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-42198"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-54291",
+      "PkgName": "org.postgresql:postgresql",
+      "InstalledVersion": "42.7.8",
+      "FixedVersion": "42.7.12",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54291"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-40973",
+      "PkgName": "org.springframework.boot:spring-boot",
+      "InstalledVersion": "3.5.7",
+      "FixedVersion": "4.0.6, 3.5.14",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-40973"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41695",
+      "PkgName": "org.springframework.data:spring-data-commons",
+      "InstalledVersion": "3.5.5",
+      "FixedVersion": "4.0.6, 3.5.12",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41695"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41716",
+      "PkgName": "org.springframework.data:spring-data-commons",
+      "InstalledVersion": "3.5.5",
+      "FixedVersion": "4.0.6, 3.5.12",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41716"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-22732",
+      "PkgName": "org.springframework.security:spring-security-web",
+      "InstalledVersion": "6.5.6",
+      "FixedVersion": "6.5.9, 7.0.4",
+      "Severity": "CRITICAL",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-22732"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41850",
+      "PkgName": "org.springframework:spring-expression",
+      "InstalledVersion": "6.2.12",
+      "FixedVersion": "7.0.8, 6.2.19",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41850"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41842",
+      "PkgName": "org.springframework:spring-webmvc",
+      "InstalledVersion": "6.2.12",
+      "FixedVersion": "7.0.8, 6.2.19",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41842"
+    },
+    {
+      "VulnerabilityID": "CVE-2026-41845",
+      "PkgName": "org.springframework:spring-webmvc",
+      "InstalledVersion": "6.2.12",
+      "FixedVersion": "7.0.8, 6.2.19",
+      "Severity": "HIGH",
+      "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-41845"
+    }
+  ],
+  "counts": {
+    "HIGH": 27,
+    "CRITICAL": 8
+  },
+  "package_findings": 35,
+  "unique_advisories": 33,
+  "status": "release gate failed; patched candidate requires full tests and a new scan",
+  "non_root_uid_verified": 100,
+  "scanner": "aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+}

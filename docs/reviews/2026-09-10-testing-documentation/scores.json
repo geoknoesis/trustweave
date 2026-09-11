@@ -1,0 +1,57 @@
+{
+  "previous_overall": 8.9,
+  "overall": 9.0,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward, not reassessed in this scoped review"
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9.6,
+      "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+      "previous": 9.6,
+      "assessment_note": "Carried forward, not reassessed in this scoped review"
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9,
+      "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward, not reassessed in this scoped review"
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+      "previous": 9,
+      "assessment_note": "Carried forward, not reassessed in this scoped review"
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Local tests, lint, ABI and alert gates pass and are wired into workflows. Changes remain uncommitted; hosted validation and a release for this tree are still outstanding.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward, not reassessed in this scoped review"
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 9.0,
+      "reason": "Eight undiscovered regressions now execute; compiled JUnit and named-result gates, strict coverage policies, stronger host branch tests and five protected executable source examples have local evidence. Full current-tree SDK integration/merged coverage, wider snippet review and complete supported-profile independent conformance remain open.",
+      "previous": 8.5
+    }
+  ],
+  "rubric": "Same six equally weighted categories; only Testing and documentation reassessed. Engineering judgment, not certification.",
+  "arithmetic": "54.1 / 6 = 9.0167, rounded half-up to 9.0",
+  "scope": "Scoped local SDK testing/documentation improvements; target 10.0 not achieved",
+  "reassessment_basis": [
+    "Discovery defects were reproduced in actual compiled classes and corrected in source.",
+    "Named JUnit XML gates prevent required regressions from disappearing or being skipped.",
+    "Host coverage improved without production-code changes, exclusions or lowered global floors.",
+    "Copyable fixture/host examples now compile, execute and have non-removable source contracts.",
+    "Remaining full SDK, interoperability, snippet review and hosted evidence prevent a 10.0 score."
+  ]
+}

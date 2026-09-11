@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustWeave · Configuration and data qualification</title>
+<style>
+:root{color-scheme:light;--ink:#142a36;--muted:#4d6370;--accent:#08766d;--line:#ccdcd9}
+*{box-sizing:border-box}body{margin:0;background:#f2f6f4;color:var(--ink);font:16px/1.65 system-ui,sans-serif}
+main{max-width:1080px;margin:auto;padding:46px 24px 70px}h1{font-size:clamp(2rem,5vw,3.7rem);line-height:1.07;max-width:820px;letter-spacing:-.045em}
+h2{font-size:1.6rem;margin-top:0;line-height:1.3}h3{font-size:1.1rem}p{max-width:86ch}a{color:#086b78;overflow-wrap:anywhere}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:750;color:var(--accent)}
+.intro{font-size:1.15rem;color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
+.card,section{background:white;border:1px solid var(--line);border-radius:14px;padding:25px}.card strong{font-size:2.5rem;display:block;line-height:1.2;color:var(--accent)}
+.card span{display:block;color:var(--muted);font-size:.88rem}section{margin:22px 0}.note{border-left:4px solid #bd8732;padding:12px 18px;background:#fff7e9}
+table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}th:first-child{width:64%}
+tbody th{font-weight:550}code{font-size:.86em;overflow-wrap:anywhere}li{margin:.6em 0}summary{cursor:pointer;font-weight:650}
+.meta{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}footer{color:var(--muted)}
+@media(max-width:600px){main{padding:28px 16px}.cards{grid-template-columns:1fr;gap:10px}.card,section{padding:19px}.card strong{font-size:2rem}th:first-child{width:52%}th,td{padding:10px 5px;font-size:.9rem}}
+</style></head><body><main>
+<div class="eyebrow">TrustWeave SDK · 10 September 2026</div>
+<h1>Configuration and data,<br>verified at the boundary.</h1>
+<p class="intro">Strict configuration loading and a coherent ledger recovery checkpoint raise the scoped engineering assessment from <strong>9.0 to 9.5 / 10</strong>.</p>
+<div class="cards"><div class="card"><strong>9.5 / 10</strong><span>Configuration and data · previously 9.0</span></div>
+<div class="card"><strong>3,909</strong><span>Hosted tests passed · 15 documented optional skips</span></div>
+<div class="card"><strong>9.3 / 10</strong><span>Overall · six-category mean</span></div></div>
+<p class="note">This score assesses SDK engineering. It does not certify production backup custody, provider configuration, external payment journals or deployment recovery objectives.</p>
+<section><h2>Defects closed</h2><ol>
+<li><strong>Ambiguous configuration:</strong> unknown schema fields, lenient syntax, duplicate decoded JSON members and duplicate plugin IDs now fail. Provider chains reject empty, repeated or invalid identifiers.</li>
+<li><strong>Unbounded and malformed input:</strong> file and resource reads stop after 1 MiB plus one byte; input must be valid UTF-8. A structural preflight limits nesting to 64 before schema parsing.</li>
+<li><strong>Credential leakage in diagnostics:</strong> loader failures retain neither the original JSON nor parser excerpts/causes. Plugin model string rendering omits configuration keys and values.</li>
+<li><strong>Undetected logical data corruption:</strong> a read-only audit compares spending to live reservations, checks occurrence consumption, states, evidence, orphan rows and currency invariants.</li>
+<li><strong>Consistent stale recovery:</strong> a versioned SHA-256 digest covers retained ledger fields. Comparing it with an independently retained expected checkpoint rejects a consistent old snapshot. Filtered database roles fail instead of returning a partial audit.</li>
+<li><strong>Verification harness startup ordering:</strong> the notification fixture now allows up to 30 seconds for initial rule evaluation to converge, then retains its steady healthy check. Three added unit regressions protect convergence, persistent-alert failure and post-startup failure. Full two-minute firing holds remain unchanged.</li>
+</ol></section>
+<section><h2>Evidence and compatibility</h2><p>All hosted gates passed for <a href="https://github.com/geoknoesis/trustweave/actions/runs/34522786430">this exact candidate run</a>. The report verifies all 15 changed files against the tested Git tree. Fourteen source hashes are also checked against the workflow manifest; the API baseline is covered by the hosted ABI gate. Source hashing normalizes CRLF to LF. All 490 downloaded build-artifact hashes match the recorded manifest, and the downloaded VI artifact's provenance is independently verified.</p>
+<p>Eight new named regressions are required by CI: four configuration tests and four PostgreSQL integrity tests. Existing full SDK tests, interoperability checks, physical backup/WAL exercises, documentation checks, coverage gates and notification delivery exercises also ran. Global measured coverage is <strong>57.41% line / 40.04% branch</strong>; the 9.5 score is not a claim of 95% coverage.</p>
+<p>The ledger API change is additive: <code>verifyIntegrity()</code> and <code>verifyIntegrity(expectedCheckpoint)</code>. Existing reconciliation stays privileged and compatible. Strict configuration rejection is an intentional behavior change; see the <a href="../../operations/configuration-data.md">configuration migration and recovery runbook</a>. Direct model construction and provider-specific settings are not validated by the loader.</p>
+<p class="meta">Candidate: <code>5e8dc04c0e45dd51b323b6b3c475d302615715af</code><br>Branch: <code>codex/configuration-data-20260910</code></p></section>
+<section><h2>Score reassessment</h2><table><thead><tr><th>Aspect</th><th>Before</th><th>Now</th></tr></thead><tbody><tr><th>Security and access control</th><td>9.0</td><td>9.0</td></tr><tr><th>Observability and diagnosability</th><td>9.6</td><td>9.6</td></tr><tr><th>Reliability and scale</th><td>9.5</td><td>9.5</td></tr><tr><th>Configuration and data</th><td>9.0</td><td>9.5</td></tr><tr><th>Deployment and release</th><td>8.5</td><td>8.5</td></tr><tr><th>Testing and documentation</th><td>9.5</td><td>9.5</td></tr></tbody></table>
+<p>Configuration and data gains 0.5 for verified input controls and a tested recovery integrity boundary. Other categories are carried forward. The equal-weight mean is 55.6 ÷ 6 = 9.2667, rounded to <strong>9.3</strong>.</p>
+<p>The remaining 0.5 reflects provider-specific setting validation and host-operated journal authentication, checkpoint custody and admission fencing. These are material integration requirements, not silently completed work.</p></section>
+<section><h2>Operational acceptance still required</h2><ul>
+<li>Drain and fence writers at a trusted recovery boundary. Store the checkpoint outside the database rollback domain with authenticated backup/target identity.</li>
+<li>Before restored traffic, compare against that trusted checkpoint. An audit without an expected checkpoint checks consistency, not freshness. Do not generate a replacement expectation from restored data.</li>
+<li>Authenticate the authoritative payment journal and bind outcomes to mandate, transaction, amount and currency. Release only after confirmed non-execution and downstream fencing.</li>
+<li>Qualify full-scan audit duration, provider settings, backup retention, access policy and production RPO/RTO. The audit streams 256 rows at a time with 60-second SQL timeouts; it is not an admission-path operation.</li>
+</ul></section>
+<section><details><summary>Downloadable evidence and machine-readable assessment</summary><ul><li><a href="scores.json">Scores and rationale</a></li><li><a href="summary.json">Validation summary</a></li><li><a href="evidence/artifact-attestation.json">artifact-attestation.json</a></li><li><a href="evidence/documentation.json">documentation.json</a></li><li><a href="evidence/hosted-notification-validation.json">hosted-notification-validation.json</a></li><li><a href="evidence/hosted-run.json">hosted-run.json</a></li><li><a href="evidence/junit-contract.json">junit-contract.json</a></li><li><a href="evidence/local-notification-validation.json">local-notification-validation.json</a></li><li><a href="evidence/local-validation.json">local-validation.json</a></li><li><a href="evidence/required-tests.json">required-tests.json</a></li><li><a href="evidence/source-files.json">source-files.json</a></li><li><a href="evidence/TEST-org.trustweave.core.plugin.ConfigurationBoundaryTest.xml">TEST-org.trustweave.core.plugin.ConfigurationBoundaryTest.xml</a></li><li><a href="evidence/TEST-org.trustweave.core.plugin.PluginConfigurationErrorTest.xml">TEST-org.trustweave.core.plugin.PluginConfigurationErrorTest.xml</a></li><li><a href="evidence/TEST-org.trustweave.credential.vi.LedgerIntegrityTest.xml">TEST-org.trustweave.credential.vi.LedgerIntegrityTest.xml</a></li><li><a href="evidence/validation-manifest.json">validation-manifest.json</a></li></ul></details></section>
+<footer>Previous baseline: <a href="../2026-09-10-reliability-scale/index.html">Reliability and scale qualification</a>. No production deployment or release publication was performed.</footer>
+</main></body></html>

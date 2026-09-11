@@ -1,0 +1,30 @@
+{
+  "localLinks": "pass",
+  "checks": [
+    {
+      "label": "desktop",
+      "width": 1280,
+      "expanded": false,
+      "overflow": false
+    },
+    {
+      "label": "desktop",
+      "width": 1280,
+      "expanded": true,
+      "overflow": false
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "expanded": false,
+      "overflow": false
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "expanded": true,
+      "overflow": false
+    }
+  ],
+  "javascriptErrors": []
+}

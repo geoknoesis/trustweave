@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:43:35.555Z" hostname="THEMATRIX" time="0.754">
+  <properties/>
+  <testcase name="record does not duplicate an existing idempotency key()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest" time="0.038"/>
+  <testcase name="record appends a PENDING outbox row for a provisioned org()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest" time="0.046"/>
+  <testcase name="record is a no-op when the org is not provisioned()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageMeteringServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

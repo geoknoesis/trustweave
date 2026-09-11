@@ -1,0 +1,14 @@
+{
+  "trustweave": {
+    "candidate_commit": "dbec32c05f9da1f6be4b8932bb0b207cb6d18052",
+    "matching_non_documentation_files": 1918,
+    "normalization": "UTF-8 CRLF to LF; binary unchanged",
+    "scope": "Candidate tracked files compared with original workspace. Original-only files, documentation and SDK reference-wallet excluded; original changes preserved. Reference-wallet has independent concurrent edits and is not runtime-qualified."
+  },
+  "trustweave-saas": {
+    "candidate_commit": "8b67281d0771ee8fdd9a6eb38860a266e5121c9e",
+    "matching_non_documentation_files": 781,
+    "normalization": "UTF-8 CRLF to LF; binary unchanged",
+    "scope": "Candidate tracked files compared with original workspace. Original-only files, documentation and SDK reference-wallet excluded; original changes preserved. Reference-wallet has independent concurrent edits and is not runtime-qualified."
+  }
+}

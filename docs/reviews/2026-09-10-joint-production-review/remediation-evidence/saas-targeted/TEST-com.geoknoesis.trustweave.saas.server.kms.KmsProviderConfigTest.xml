@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:43:39.559Z" hostname="THEMATRIX" time="0.064">
+  <properties/>
+  <testcase name="refuses the in-memory provider in the staging profile()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.006"/>
+  <testcase name="explicit provider options are typed and unrecognized options are rejected()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.002"/>
+  <testcase name="accepts the vault provider in the staging profile()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.001"/>
+  <testcase name="defaults to the in-memory provider for local development()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.005"/>
+  <testcase name="allows a persistent provider in production()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.002"/>
+  <testcase name="refuses the in-memory provider outside dev and test()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.003"/>
+  <testcase name="provider name matching is case-insensitive()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.007"/>
+  <testcase name="allows the in-memory provider in dev and test()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.002"/>
+  <testcase name="development profiles cannot override a deployed or unknown profile()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.004"/>
+  <testcase name="refuses the in-memory provider when no profile is active()" classname="com.geoknoesis.trustweave.saas.server.kms.KmsProviderConfigTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

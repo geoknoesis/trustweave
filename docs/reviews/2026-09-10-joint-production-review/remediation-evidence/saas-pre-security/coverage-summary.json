@@ -1,0 +1,32 @@
+{
+  "INSTRUCTION": {
+    "covered": 34630,
+    "missed": 35152,
+    "percent": 49.63
+  },
+  "BRANCH": {
+    "covered": 1425,
+    "missed": 2790,
+    "percent": 33.81
+  },
+  "LINE": {
+    "covered": 5771,
+    "missed": 4926,
+    "percent": 53.95
+  },
+  "COMPLEXITY": {
+    "covered": 1853,
+    "missed": 3217,
+    "percent": 36.55
+  },
+  "METHOD": {
+    "covered": 1437,
+    "missed": 1501,
+    "percent": 48.91
+  },
+  "CLASS": {
+    "covered": 348,
+    "missed": 170,
+    "percent": 67.18
+  }
+}

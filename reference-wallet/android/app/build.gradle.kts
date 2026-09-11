@@ -77,7 +77,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Crypto — Ed25519 + did:key encoding
-    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.84")
 
     // Serialization for VC-JWT payloads + DTOs
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")

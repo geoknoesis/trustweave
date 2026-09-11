@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:36.500Z" hostname="THEMATRIX" time="0.426">
+  <properties/>
+  <testcase name="enableChain is idempotent (returns existing)()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest" time="0.191"/>
+  <testcase name="enableChain rejects unknown network()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationChainServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

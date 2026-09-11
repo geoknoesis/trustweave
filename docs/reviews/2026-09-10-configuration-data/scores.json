@@ -1,0 +1,58 @@
+{
+  "previous_overall": 9.2,
+  "overall": 9.3,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Carried forward; only Configuration and data is reassessed here."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9.6,
+      "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+      "previous": 9.6,
+      "assessment_note": "Carried forward; only Configuration and data is reassessed here."
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9.5,
+      "reason": "History-independent occurrence checks, atomic migration/counter updates, synchronous WAL writes, bounded contention and a one-minute skewed workload pass. Physical archived-WAL recovery, process-crash durability, backup corruption and missing-WAL rejection are qualified on PostgreSQL 16. Deployment-scale load, external-journal recovery, replica fencing and agreed RPO/RTO remain unqualified. 9.5 is the SDK engineering assessment, not production certification.",
+      "previous": 9.5,
+      "assessment_note": "Carried forward; only Configuration and data is reassessed here."
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9.5,
+      "reason": "Strict bounded UTF-8 configuration, duplicate-key and schema rejection, secret-safe loader errors, provider-chain validation and compatible nullable getters are tested. A streaming repeatable-read ledger audit checks retained accounting and terminal evidence; externally retained checkpoints detect consistent stale snapshots. Filtered audit roles fail closed. Provider-specific setting validation, checkpoint custody, admission fencing and authoritative external-journal authentication remain host responsibilities. This is an SDK engineering score.",
+      "previous": 9
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Historical score retained. This review adds a committed SDK candidate and hosted validation; publishing and deployed release qualification remain separate.",
+      "previous": 8.5,
+      "assessment_note": "Carried forward; only Configuration and data is reassessed here."
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 9.5,
+      "reason": "Full local SDK build and exact-commit hosted release-evidence gates pass; merged coverage retains its floors; 26 Python vectors, three reverse profiles and a 214-step PostgreSQL model broaden conformance; nine source-backed examples and strict discovery, named-result, matrix and skip gates protect evidence. Full provider qualification and exhaustive supported-profile/snippet review remain outside this assessment.",
+      "previous": 9.5,
+      "assessment_note": "Carried forward; only Configuration and data is reassessed here."
+    }
+  ],
+  "rubric": "Same six equally weighted categories. Engineering judgment, not production certification or a test-coverage percentage.",
+  "arithmetic": "55.6 / 6 = 9.2667, rounded to 9.3",
+  "scope": "SDK configuration-loading and PostgreSQL ledger-data boundaries; external custody and production recovery are not certified.",
+  "reassessment_basis": [
+    "Exact-commit hosted SDK gates and additive ABI checks pass.",
+    "Eight named regressions cover configuration ambiguity, resource limits, redaction, data corruption, stale snapshots and filtered audit roles.",
+    "Physical backup/WAL qualification remains in the preceding reliability review and is rerun by the hosted suite.",
+    "The remaining 0.5 acknowledges provider-specific validation and host-operated trust, custody and recovery controls."
+  ],
+  "target": 9.5,
+  "target_met": true
+}

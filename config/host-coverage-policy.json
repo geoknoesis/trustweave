@@ -1,0 +1,9 @@
+{
+  "description": "Measured local shared-host coverage floors. No generated-code exclusions and no reduction of repository-wide coverage policy.",
+  "scopes": {
+    "org/trustweave/observability": {
+      "LINE": 97.0,
+      "BRANCH": 85.0
+    }
+  }
+}

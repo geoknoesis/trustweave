@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:53:25.987Z" hostname="THEMATRIX" time="3.896">
+  <properties/>
+  <testcase name="should get access token for test user()" classname="com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest" time="1.348"/>
+  <testcase name="should create test user in Keycloak()" classname="com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest" time="0.932"/>
+  <testcase name="Keycloak container should be accessible()" classname="com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest" time="0.586"/>
+  <testcase name="should create and list users from master realm()" classname="com.geoknoesis.trustweave.saas.server.integration.KeycloakIntegrationTest" time="1.029"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

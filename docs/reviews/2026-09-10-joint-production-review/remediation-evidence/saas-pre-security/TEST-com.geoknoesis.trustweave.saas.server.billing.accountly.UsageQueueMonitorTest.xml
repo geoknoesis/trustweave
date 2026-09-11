@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageQueueMonitorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:48:32.702Z" hostname="THEMATRIX" time="0.17">
+  <properties/>
+  <testcase name="monitor failures remain unknown or stale rather than reporting an empty healthy queue()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageQueueMonitorTest" time="0.169"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

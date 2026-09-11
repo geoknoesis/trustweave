@@ -1,0 +1,316 @@
+{
+  "requirements": 22,
+  "verified_tests": [
+    {
+      "id": "DISCOVERY-01",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with missing request_uri throws exception"
+    },
+    {
+      "id": "DISCOVERY-02",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with invalid URL format throws exception"
+    },
+    {
+      "id": "DISCOVERY-03",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with HTTP error response throws exception"
+    },
+    {
+      "id": "DISCOVERY-04",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test fetchVerifierMetadata with HTTP error throws exception"
+    },
+    {
+      "id": "DISCOVERY-05",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "unsigned request object with alg none is rejected"
+    },
+    {
+      "id": "DISCOVERY-06",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "request object signed with key not matching client_metadata jwks is rejected"
+    },
+    {
+      "id": "DISCOVERY-07",
+      "suite": "org.trustweave.wallet.cloud.CloudRecoveryTest",
+      "test": "recovery does not swallow cancellation"
+    },
+    {
+      "id": "DISCOVERY-08",
+      "suite": "org.trustweave.wallet.file.FileWalletFactoryTest",
+      "test": "typed encryption key is validated rather than silently ignored"
+    },
+    {
+      "id": "DOC-FIXTURE",
+      "suite": "org.trustweave.testkit.DocumentationExampleTest",
+      "test": "fixtures isolate registries and close releases registrations"
+    },
+    {
+      "id": "DOC-HOST",
+      "suite": "org.trustweave.observability.HostDocumentationExampleTest",
+      "test": "documented host setup serves requests and protects metrics"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "all hosts classify client and server responses and bound unknown HTTP methods"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "admitted waiter runs after release and timed out waiter never runs"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "request errors and callback failure preserve identity and release capacity"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "cancelled phase ends its span without counting a provider failure"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "credentialed acquisition returns the original connection and preserves rollback"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "absent uninitialized and closed pools omit unavailable connection gauges"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "noop tracing omits trace header and metrics authentication rejects oversized values"
+    },
+    {
+      "id": "HOST-EXPORT",
+      "suite": "org.trustweave.observability.HostExportIntegrationTest",
+      "test": "two real HTTP hosts export correlated traces through authenticated OTLP protobuf"
+    },
+    {
+      "id": "HOST-EXPORT",
+      "suite": "org.trustweave.observability.HostExportIntegrationTest",
+      "test": "blocked exporter uses a bounded queue and does not block application work"
+    },
+    {
+      "id": "VI-LEDGER-MODEL",
+      "suite": "org.trustweave.credential.vi.CrossLanguageLedgerModelTest",
+      "test": "PostgreSQL agrees with Python model through 214 reserve and settlement transitions"
+    },
+    {
+      "id": "DOC-LEDGER-MIGRATION",
+      "suite": "org.trustweave.credential.vi.LedgerMigrationDocumentationTest",
+      "test": "documented schema upgrade is idempotent and preserves legacy reservations"
+    },
+    {
+      "id": "DOC-MERCHANT-AUTH",
+      "suite": "org.trustweave.credential.vi.CheckoutTrustTest",
+      "test": "authenticated cart and merchant replace absent agent assertions"
+    },
+    {
+      "id": "DOC-MERCHANT-AUTH",
+      "suite": "org.trustweave.credential.vi.CheckoutTrustTest",
+      "test": "signed tokens with invalid challenge or lifetime fail closed"
+    },
+    {
+      "id": "DOC-MERCHANT-AUTH",
+      "suite": "org.trustweave.credential.vi.CheckoutTrustTest",
+      "test": "wrong key hash and agent shadow cart are rejected"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "Python issued immediate positive and adversarial vectors agree"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "python-autonomous-payment"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-aud"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-nonce"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-paymentAud"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-paymentNonce"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-routedL2"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-now"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-reordered-disclosures"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-withheld-payment"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-amount-1"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-amount-200"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-amount-0"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-amount-201"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "autonomous-currency"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "python-autonomous-checkout"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "checkout-checkoutAud"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "checkout-checkoutNonce"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "checkout-routedCheckout"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "cart-over-quantity"
+    },
+    {
+      "id": "VI-CROSS-STACK",
+      "suite": "org.trustweave.credential.vi.CrossStackConformanceTest",
+      "test": "merchant-wrong-audience"
+    },
+    {
+      "id": "HOST-STATUS-OVERLOAD",
+      "suite": "org.trustweave.credential.statuslist.server.StatusListObservabilityTest",
+      "test": "real embedded server exposes authenticated metrics during overload and correlates error with trace"
+    },
+    {
+      "id": "DOC-SIGNED-VERIFY",
+      "suite": "org.trustweave.examples.financial.FinancialServicesExampleTest",
+      "test": "scenario checks complete successfully"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "bounded pool sustains mixed multi instance contention without overspend or replay"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "sustained skewed traffic keeps the pool bounded and the durable ledger consistent"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "large legacy history migrates atomically and occurrence admission avoids history scans"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "database lock timeout rolls back completely and unrelated mandates progress"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "counter trigger respects runtime privileges and rolls back failed budget writes"
+    },
+    {
+      "id": "RELIABILITY-1",
+      "suite": "org.trustweave.credential.vi.IntentReliabilityTest",
+      "test": "synchronous commit is enforced without weakening remote apply or leaking pooled settings"
+    },
+    {
+      "id": "RELIABILITY-2",
+      "suite": "org.trustweave.credential.vi.IntentWalRecoveryTest",
+      "test": "crash restart and archived WAL restore preserve authorization and settlement at target"
+    },
+    {
+      "id": "CONFIG-BOUNDARY",
+      "suite": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "test": "ambiguous JSON and unknown schema fields fail closed"
+    },
+    {
+      "id": "CONFIG-BOUNDARY",
+      "suite": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "test": "schema errors never retain secret input or parser excerpts"
+    },
+    {
+      "id": "CONFIG-BOUNDARY",
+      "suite": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "test": "bounded strict UTF8 applies to strings and files(Path)"
+    },
+    {
+      "id": "CONFIG-BOUNDARY",
+      "suite": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "test": "valid escaped values and discovered fallback providers remain compatible"
+    },
+    {
+      "id": "DATA-INTEGRITY",
+      "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "test": "internally consistent rollback is rejected against external checkpoint"
+    },
+    {
+      "id": "DATA-INTEGRITY",
+      "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "test": "filtered audit role fails instead of authenticating partial data"
+    },
+    {
+      "id": "DATA-INTEGRITY",
+      "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "test": "checkpoint detects stale data and includes terminal evidence without exposing identifiers"
+    },
+    {
+      "id": "DATA-INTEGRITY",
+      "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "test": "audit rejects inconsistent balances consumption states and evidence without repairing data"
+    }
+  ],
+  "failures": []
+}

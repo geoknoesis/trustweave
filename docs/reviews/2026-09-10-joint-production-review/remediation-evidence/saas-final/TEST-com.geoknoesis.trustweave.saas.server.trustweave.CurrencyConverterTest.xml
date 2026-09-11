@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:29.532Z" hostname="THEMATRIX" time="0.007">
+  <properties/>
+  <testcase name="convertToUsd should FAIL CLOSED on unknown currency()" classname="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" time="0.001"/>
+  <testcase name="convertToUsd should convert MATIC to USD correctly()" classname="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" time="0.001"/>
+  <testcase name="convertToUsd should convert ETH to USD correctly()" classname="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" time="0.001"/>
+  <testcase name="convertFromUsd should FAIL CLOSED on unknown currency()" classname="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" time="0.001"/>
+  <testcase name="convertFromUsd should convert USD to ETH correctly()" classname="com.geoknoesis.trustweave.saas.server.trustweave.CurrencyConverterTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

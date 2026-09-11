@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:24.966Z" hostname="THEMATRIX" time="0.174">
+  <properties/>
+  <testcase name="getTemplatesByCategory should return templates for category()" classname="com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest" time="0.171"/>
+  <testcase name="getTemplateById should return template when found()" classname="com.geoknoesis.trustweave.saas.server.services.TemplateServiceTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

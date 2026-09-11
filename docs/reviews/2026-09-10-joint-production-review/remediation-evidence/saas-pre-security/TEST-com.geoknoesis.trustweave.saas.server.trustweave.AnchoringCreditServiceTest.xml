@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:54:25.724Z" hostname="THEMATRIX" time="0.39">
+  <properties/>
+  <testcase name="debit beyond balance does not throw (warns, records DEBIT)()" classname="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" time="0.003"/>
+  <testcase name="getOrCreate creates a zero-balance account when none exists()" classname="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" time="0.002"/>
+  <testcase name="hasSufficientCredit is false when balance below cost()" classname="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" time="0.001"/>
+  <testcase name="topUp increases balance and writes a TOPUP ledger entry()" classname="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" time="0.003"/>
+  <testcase name="debit reduces balance and records a DEBIT linked to the tx()" classname="com.geoknoesis.trustweave.saas.server.trustweave.AnchoringCreditServiceTest" time="0.002"/>
+  <system-out><![CDATA[22:54:26.105 WARN  [] c.g.t.s.s.t.AnchoringCreditService - Anchoring credit balance went negative for org 1 (type=DEBIT, newBalance=-0.04). A debit bypassed the hasSufficientCredit gate; recording anyway.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.healthcare.HealthcareExampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.611Z" hostname="THEMATRIX" time="0.086">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.healthcare.HealthcareExampleTest" time="0.085"/>
+  <system-out><![CDATA[healthcare: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

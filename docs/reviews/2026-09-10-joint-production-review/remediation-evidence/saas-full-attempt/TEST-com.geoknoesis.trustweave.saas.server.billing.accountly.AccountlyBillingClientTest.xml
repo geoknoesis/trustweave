@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:19.463Z" hostname="THEMATRIX" time="1.75">
+  <properties/>
+  <testcase name="createPlanQuota returns quota_id()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.448"/>
+  <testcase name="existing dedicated billing tenant needs no mutation()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.096"/>
+  <testcase name="listApplications parses the array()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.122"/>
+  <testcase name="createPlan returns plan_id()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.506"/>
+  <testcase name="declareUsageVariable returns id()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.091"/>
+  <testcase name="provisions a dedicated billing tenant and refuses a shared response()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.123"/>
+  <testcase name="listPlans parses plan list with quotas()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.149"/>
+  <testcase name="createApplication posts name and returns id, with bearer auth()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.084"/>
+  <testcase name="updateKillbillMapping issues a PATCH()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyBillingClientTest" time="0.1"/>
+  <system-out><![CDATA[22:20:19.889 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.issued, hardLimit=500, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:19.913 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+22:20:20.013 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+22:20:20.102 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.ApplicationDto>]
+22:20:20.612 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreatePlanRequest(name=tw-pro, pricingModel=FlatRate, monthlyFee=99, level=2, isDefault=false)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:20.638 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+22:20:20.729 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=credential.issued, unit=credential, description=null, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:20.743 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+22:20:20.828 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+22:20:20.840 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+22:20:20.859 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+22:20:20.863 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+22:20:20.938 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.PlanDto>]
+22:20:21.096 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateApplicationRequest(name=TrustWeave SaaS, description=Merchant)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+22:20:21.106 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+22:20:21.199 DEBUG [] o.s.web.client.DefaultRestClient - Writing [KillbillMappingRequest(killbillPlanName=trustweave-pro-monthly, killbillProductName=trustweave-pro, killbillPriceList=DEFAULT)] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,5 +1,6 @@
 package org.trustweave.testkit.integration
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.BlockchainAnchorClient
@@ -121,6 +122,8 @@ abstract class ChainIntegrationTest : BaseIntegrationTest() {
         try {
             client.readPayload(invalidRef)
             // Some implementations may return null instead of throwing
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             // Expected behavior for invalid references
         }

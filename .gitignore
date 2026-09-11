@@ -84,3 +84,12 @@ docs/**/*.pdf
 
 # Reference wallet CI uses reproducible npm installs.
 !reference-wallet/package-lock.json
+
+# Kotlin compiler scratch directory (errors/, sessions/) — never a build input.
+.kotlin/
+
+# JVM thread dumps captured while diagnosing a build; not evidence, not source.
+*-threads.txt
+
+# Personal multi-root editor workspace; it points at sibling checkouts.
+*.code-workspace

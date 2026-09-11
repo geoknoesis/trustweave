@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.examples.financial.FinancialServicesExampleTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:46:19.179Z" hostname="THEMATRIX" time="0.268">
+  <properties/>
+  <testcase name="scenario checks complete successfully()" classname="org.trustweave.examples.financial.FinancialServicesExampleTest" time="0.132"/>
+  <testcase name="test scenario prints expected output()" classname="org.trustweave.examples.financial.FinancialServicesExampleTest" time="0.134"/>
+  <system-out><![CDATA[financial-services: original verified; JSON round-trip verified; tampering rejected
+financial-services: original verified; JSON round-trip verified; tampering rejected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

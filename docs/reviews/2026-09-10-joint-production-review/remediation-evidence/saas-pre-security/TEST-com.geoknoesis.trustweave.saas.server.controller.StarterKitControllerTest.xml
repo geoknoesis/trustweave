@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:51:52.104Z" hostname="THEMATRIX" time="0.987">
+  <properties/>
+  <testcase name="DELETE starter-kits removes a custom kit and returns 204()" classname="com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest" time="0.084"/>
+  <testcase name="POST instantiate creates a trusted domain and returns 201()" classname="com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest" time="0.09"/>
+  <testcase name="GET starter-kits lists kits for the caller's org()" classname="com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest" time="0.602"/>
+  <testcase name="POST starter-kits creates a kit and returns 201()" classname="com.geoknoesis.trustweave.saas.server.controller.StarterKitControllerTest" time="0.04"/>
+  <system-out><![CDATA[22:51:52.316 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 6 mappings in org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+22:51:52.316 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+22:51:52.316 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+22:51:52.316 INFO  [] o.s.mock.web.MockServletContext - Initializing Spring TestDispatcherServlet ''
+22:51:52.316 INFO  [] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+22:51:52.317 INFO  [] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+22:51:52.329 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.StarterKitController#delete(long)
+22:51:52.356 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+22:51:52.356 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Nothing to write: null body
+22:51:52.372 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 6 mappings in org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+22:51:52.373 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+22:51:52.373 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+22:51:52.373 INFO  [] o.s.mock.web.MockServletContext - Initializing Spring TestDispatcherServlet ''
+22:51:52.373 INFO  [] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+22:51:52.374 INFO  [] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+22:51:52.374 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.StarterKitController#instantiate(long, InstantiateStarterKitRequest)
+22:51:52.418 DEBUG [] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json" to [InstantiateStarterKitRequest(networkName=My Net, description=null, environment=null, blockchainNetwo (truncated)...]
+22:51:52.440 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+22:51:52.445 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [InstantiateStarterKitResponse(domain=TrustSpaceResponse(id=10, organizationId=5, name=My Net, descri (truncated)...]
+22:51:52.454 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 6 mappings in org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+22:51:52.454 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+22:51:52.454 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+22:51:52.454 INFO  [] o.s.mock.web.MockServletContext - Initializing Spring TestDispatcherServlet ''
+22:51:52.454 INFO  [] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+22:51:52.455 INFO  [] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+22:51:52.456 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.StarterKitController#list()
+22:51:52.462 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+22:51:52.468 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[StarterKitResponse(id=1, organizationId=null, slug=education-credentials, name=Education Credential (truncated)...]
+22:51:53.058 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 6 mappings in org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+22:51:53.058 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+22:51:53.061 DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+22:51:53.061 INFO  [] o.s.mock.web.MockServletContext - Initializing Spring TestDispatcherServlet ''
+22:51:53.062 INFO  [] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+22:51:53.062 INFO  [] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 0 ms
+22:51:53.063 DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.StarterKitController#create(CreateStarterKitRequest)
+22:51:53.079 DEBUG [] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json" to [CreateStarterKitRequest(name=My Kit, description=null, icon=null, category=null, tags=[], standards= (truncated)...]
+22:51:53.088 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+22:51:53.089 DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [StarterKitResponse(id=2, organizationId=5, slug=education-credentials, name=Education Credentials Pl (truncated)...]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

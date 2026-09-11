@@ -1,0 +1,97 @@
+{
+  "date": "2026-09-06",
+  "scope": "Targeted uncommitted intent follow-up; earlier full-repository baseline is separate",
+  "tests": {
+    "tests": 47,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "commands": [
+    "gradlew.bat :credentials:plugins:verifiable-intent:test :credentials:plugins:verifiable-intent:ktlintCheck :credentials:plugins:verifiable-intent:checkKotlinAbi koverXmlReport",
+    "gradlew.bat :credentials:plugins:verifiable-intent:test :credentials:plugins:verifiable-intent:ktlintCheck koverXmlReport (after adding uncertain-commit test)",
+    "python scripts/check-coverage-policy.py build/reports/kover/report.xml",
+    "python scripts/check-documentation.py --report .gradle/budget-documentation.json"
+  ],
+  "gradle_options": "--max-workers=2 -Ptrustweave.windowsInRepoBuild=true --project-cache-dir .gradle/readiness-validation",
+  "abi": "passed; 13 added lines against HEAD, zero removals; includes prior checkout addition",
+  "postgres_evidence": [
+    "32 competing reservations, exactly 10 accepted under cap",
+    "state persists across verifier instances",
+    "transaction and audience/nonce replay rejected",
+    "failure after reservation insert rolls back account and reservation",
+    "lost acknowledgement after real commit retains reservation and rejects retry",
+    "Long.MAX_VALUE boundary does not overflow",
+    "invalid checkout and over-cap chain consume no budget",
+    "signed checkout and budget authorize together, replay fails"
+  ],
+  "coverage": {
+    "INSTRUCTION": {
+      "covered": 186405,
+      "missed": 150972
+    },
+    "BRANCH": {
+      "covered": 10727,
+      "missed": 16704
+    },
+    "LINE": {
+      "covered": 27438,
+      "missed": 20866
+    },
+    "METHOD": {
+      "covered": 4685,
+      "missed": 3099
+    },
+    "CLASS": {
+      "covered": 1879,
+      "missed": 949
+    }
+  },
+  "coverage_percent": {
+    "INSTRUCTION": 55.25124712117305,
+    "BRANCH": 39.105391710109004,
+    "LINE": 56.802749254720105,
+    "METHOD": 60.18756423432682,
+    "CLASS": 66.44271570014145
+  },
+  "source_sha256": {
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/VerifiableIntent.kt": "6539bc6041778eeba578e84e07bc8df20491c5675b3f6cf97e4976d3e7dff45b",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/Cnf.kt": "df05a88d26619bc52d467fc9d197431c1e060fe6928c56cfea14b469ae3a6a9c",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/Disclosure.kt": "014d59bcc3b33c74cd61cf4592ffbece96825aeff8d842a584fbe3d147be3a7d",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/Es256.kt": "beae6cc08875fa2be48b69c150e7ba69fb5e5818b36803ed447b1ddfc5dbb16e",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/Hashing.kt": "b7bb88ae089f979dc6f2fbc40ee29656b028d8dcec82f543866beb7080f10828",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/Jws.kt": "61c5d3e6abb28bb468697899bfd2b1dc459eadafeda172fe7d6103a93507aead",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/crypto/ViSdJwt.kt": "4826325ccf63ac26b2578b15d59334611d2e34295f79e48149a0e2d2c10a4330",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/issuance/ViAgent.kt": "cea933a5a5edb52f8ba9c4c3eb17f763fc651b70b34920480d60cc4f555fecae",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/issuance/ViIssuer.kt": "553987480c3ab0c5d559f3304e413ce3975c4b6e1683765c7d78d1c730f01970",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/issuance/ViUser.kt": "28c4385adb0cdfa7807c5fb538eb263c46b4a62a258786df5442fa899d3b6028",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/model/Constraint.kt": "afae22073a5b26630014a659aa881b58044db8ec396a098e8d8ac2b792bc70d8",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/model/MandateMode.kt": "28827cee084a95b656e38d79eb57f42fb95f162d4ade94bd0b3cca44d14699a5",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/model/Mandates.kt": "e609ac2458666cf0894917e7d87b964c4e44ec24bec82dfa4c63875ab586636b",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/model/Vct.kt": "98e611a293034e1b3546f517301bbacd3152fc28109fd61d5c53af34fa8f0128",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerificationResult.kt": "f92f76ff027af6bb8c18c9ad25e1c0ff22bcb00d0a515c0d35c75b5f57c05d7c",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ChainVerifier.kt": "484d8c4512cf76b51854d9996dde0d2d4df1abecf8ae3be785d710a591d7d25d",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/CheckoutTrust.kt": "bf3eaad7811b301a8b7a21b4b785e0b36131838275772bea36cb5fb09837484c",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/ConstraintChecker.kt": "a2a1a49e7c426c834f4f8eb200e3d3f666bea781d6d9721d5e30a7b6b6b04e46",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/IntegrityChecker.kt": "d28fd8d454a56bdb105fd50baf826f791c9bf009d16f9ca5b56feaae564c971c",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/LineItemMatcher.kt": "f59d44d609321d629b87e0f14ce31dfcb6c49f009f172139192570df553afd60",
+    "credentials/plugins/verifiable-intent/src/main/kotlin/org/trustweave/credential/vi/verification/PostgresIntentLedger.kt": "3ff1f07f820f096aa3e300c785552176bc0be954899b2e23ed7fd2260e920faa",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/ChainVerifierKnownAnswerTest.kt": "3f6565947b9ccfba06c41ccaef579d1222e3894146b2ddafc913a6f4a52a50e8",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CheckoutTrustTest.kt": "7c29d7b45af9b0c50fd7f4b1fbdbce701668272b0e44c8a0b9d93668bedb52be",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/ConstraintCheckerTest.kt": "74b2cea0f18026efb0c28751afb8bf8fbcfc681700a29ed36964cfb0f43575c0",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/ConstraintValidationRegressionTest.kt": "1ab4a6aadf094703757bffe243cff5b89054344a238e09ecc4a4e63cfdb6e823",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/Es256AlgorithmPinningTest.kt": "ddd67caa6c842deebca577b6cc31d4beed858204b2776048a40cf45273335121",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/IssuanceRoundTripTest.kt": "a2ed94e6d94cec8df439a49a6b55bf337c45456e2ecc1a7fb05daf8827c0dcba",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LineItemMatcherTest.kt": "38115bc69a25be17254b6fbdbf217d78bf360dc9a4593185226dc3d5e42d1949",
+    "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/PostgresIntentLedgerTest.kt": "efc37ab5828ce68f964dce8fd2d0c5596b0ecb64a08f50124331b899bffd7536",
+    "credentials/plugins/verifiable-intent/README.md": "38da5c66417efff0bb5e41e93cf5d6d29bb1d582ef7f214619789e38592ec1fc",
+    "credentials/plugins/verifiable-intent/build.gradle.kts": "f5eb88f0f8525c18c3d40c9b3264420035c73f25e67f250add502e868cb00953",
+    "credentials/plugins/verifiable-intent/api/verifiable-intent.api": "018c37844fbcb7a9aae8864fbddf53e3e8721e355d2417364a697596039898d8"
+  },
+  "limitations": [
+    "Not a production load test",
+    "No live KMS/HSM or physical passkey qualification",
+    "No fresh full-repository build, hosted CI or release",
+    "Recurrence and automated refunds/reconciliation remain unsupported"
+  ]
+}

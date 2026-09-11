@@ -33,6 +33,6 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     
     // MockWebServer for HTTP mocking
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation(libs.mockwebserver)
 }
 

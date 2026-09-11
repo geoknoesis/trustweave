@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:48:03.194Z" hostname="THEMATRIX" time="0.038">
+  <properties/>
+  <testcase name="flags card-shaped keys inside an escaped JSON blob()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.02"/>
+  <testcase name="flags a PAN written in the grouped form a form field produces()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="passes a real usage event, whose quantity is a digit string()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="passes a real provision-subscriber payload()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="flags a card-shaped key()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="passes epoch-millis and other long numbers that are not quoted()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="passes a long digit string that fails the Luhn check()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="flags a Luhn-valid PAN hiding under an innocent key()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.0"/>
+  <testcase name="never echoes the offending value into the failure message()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.001"/>
+  <testcase name="passes an empty body()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CardholderDataGuardTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

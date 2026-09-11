@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:36.983Z" hostname="THEMATRIX" time="0.437">
+  <properties/>
+  <testcase name="createRole should create role in Keycloak and save locally()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.383"/>
+  <testcase name="updateRole should update role in Keycloak and locally()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.005"/>
+  <testcase name="getRoleByKeycloakRoleName should return role when found()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.003"/>
+  <testcase name="getKeycloakRole should return Keycloak role representation()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.004"/>
+  <testcase name="assignRoleToUser should delegate to KeycloakService()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.005"/>
+  <testcase name="removeRoleFromUser should delegate to KeycloakService()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.005"/>
+  <testcase name="getRoleById should return role when found()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.006"/>
+  <testcase name="deleteRole should delete role from Keycloak and locally()" classname="com.geoknoesis.trustweave.saas.server.services.RoleServiceTest" time="0.021"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

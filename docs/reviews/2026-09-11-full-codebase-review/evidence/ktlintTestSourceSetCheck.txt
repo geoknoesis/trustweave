@@ -1,0 +1,63 @@
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:13:68: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:13:81: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:16:49: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:16:72: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:16:90: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:17:73: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:17:86: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:18:42: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:18:58: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:18:88: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:75:22: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:75:36: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:87:22: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:87:36: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\AlgorithmMappingTest.kt:96:1: Needless blank line(s) (standard:no-consecutive-blank-lines)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultPublicKeyResponseTest.kt:11:42: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultPublicKeyResponseTest.kt:11:42: Newline expected before expression body (standard:function-signature)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultPublicKeyResponseTest.kt:13:12: Argument should be on a separate line (unless all arguments can fit a single line) (standard:argument-list-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultPublicKeyResponseTest.kt:35:12: Missing { ... } (standard:multiline-loop)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:24:34: Newline expected after opening parenthesis (standard:class-signature)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:24:56: Newline expected before closing parenthesis (standard:class-signature)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:27:75: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:27:75: Newline expected before expression body (standard:function-signature)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:28:25: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:28:40: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:28:40: Missing newline after "(" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:30:9: Missing newline before ")" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:30:11: Expected newline before '.' (standard:chain-method-continuation)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:40:24: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:40:24: Missing newline after "(" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:40:24: Argument should be on a separate line (unless all arguments can fit a single line) (standard:argument-list-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:41:40: Missing newline after "," (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:41:41: Argument should be on a separate line (unless all arguments can fit a single line) (standard:argument-list-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:41:87: Missing newline before ")" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:41:88: Missing newline before ")" (standard:argument-list-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:47:27: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:47:76: A multiline expression should start on a new line (standard:multiline-expression-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:47:76: Missing newline after "(" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:49:13: Missing newline before ")" (standard:wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:51:42: Missing newline after ';' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:53:42: Missing newline after ';' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:64:20: Expected a newline after '{' (standard:try-catch-finally-spacing)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:64:21: Missing newline after '{' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:64:38: Missing newline before '}' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitLifecycleTest.kt:64:38: Expected a newline before '}' (standard:try-catch-finally-spacing)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitRoutingTest.kt:3:1: Imports must be ordered in lexicographic order without any empty lines in-between with "java", "javax", "kotlin" and aliases in the end (standard:import-ordering)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitRoutingTest.kt:32:20: Expected a newline after '{' (standard:try-catch-finally-spacing)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitRoutingTest.kt:32:21: Missing newline after '{' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitRoutingTest.kt:32:36: Missing newline before '}' (standard:statement-wrapping)
+C:\Users\steph\work\trustweave\kms\plugins\hashicorp\src\test\kotlin\org\trustweave\hashicorpkms\VaultTransitRoutingTest.kt:32:36: Expected a newline before '}' (standard:try-catch-finally-spacing)
+
+Summary error count (descending) by rule:
+  standard:chain-method-continuation: 13
+  standard:multiline-expression-wrapping: 9
+  standard:wrapping: 7
+  standard:statement-wrapping: 6
+  standard:argument-list-wrapping: 4
+  standard:try-catch-finally-spacing: 4
+  standard:class-signature: 2
+  standard:function-signature: 2
+  standard:import-ordering: 1
+  standard:multiline-loop: 1
+  standard:no-consecutive-blank-lines: 1

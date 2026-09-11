@@ -76,31 +76,28 @@ ATTRIB write request, signed with Ed25519 over the canonical signing payload:
 GET_ATTRIB is sent unsigned and returns a `data` field with the same JSON string
 verbatim, which the plugin parses back into a `JsonElement`.
 
-## Running locally
+## Local validation
 
-Start a local Indy network with [von-network](https://github.com/bcgov/von-network):
-
-```bash
-docker run --rm -d --name vonnetwork \
-  -p 9000:9000 -p 9701-9708:9701-9708 \
-  bcgovimages/von-network-base:latest \
-  ./scripts/start_webserver.sh
-```
-
-Then `POST /register` (e.g. `curl -X POST http://localhost:9000/register -d '{"seed":"00000000000000000000000000000000","role":"ENDORSER"}'`)
-to mint a Steward DID and feed the returned DID + seed into the plugin options.
-
-## Testing
+The integration task builds a disposable four-validator network and a small HTTP
+adapter from the pinned fixture in
+[`src/integrationTest/resources/indy`](src/integrationTest/resources/indy/README.md).
+It uses public test identities only. It is not a production network deployment recipe.
 
 ```bash
 ./gradlew :anchors:plugins:indy:test
-./gradlew :anchors:plugins:indy:integrationTest   # requires Docker
+TRUSTWEAVE_INDY_INTEGRATION=required ./gradlew :anchors:plugins:indy:integrationTest
 ```
 
-Unit tests use WireMock to mock `indy-vdr-proxy` and verify the on-the-wire JSON
-matches expectations. Integration tests bring up `bcgovimages/von-network-base` via
-TestContainers and exercise the real ATTRIB/GET_ATTRIB round-trip; they skip cleanly
-when Docker is not available.
+Docker must be running for required mode; unavailable Docker is a failure, not a
+successful skip. Automatic mode may skip when Docker is absent. The integration
+checks an ATTRIB write/read and replacement. One current attribute is stored per
+DID: historical references are rejected after replacement rather than returning
+new data under an old transaction reference.
+
+The HTTP transport enforces a 30-second operation deadline even for an injected
+client and limits decoded responses to 1 MiB. Provider error bodies are excluded
+from exception messages. Cancellation propagates. The fixture validates protocol
+behavior, not production Indy availability or operational qualification.
 
 ## References
 

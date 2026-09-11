@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:22.142Z" hostname="THEMATRIX" time="0.04">
+  <properties/>
+  <testcase name="unknown org or foreign ref is ignored()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest" time="0.01"/>
+  <testcase name="canceled status resets the org to FREE()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest" time="0.004"/>
+  <testcase name="subscription updated to tw-pro upgrades the org tier()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyWebhookHandlerTest" time="0.02"/>
+  <system-out><![CDATA[22:20:22.154 WARN  [] c.g.t.s.s.b.a.AccountlyWebhookHandler - Accountly webhook for unknown org 7
+22:20:22.160 INFO  [] c.g.t.s.s.b.a.AccountlyWebhookHandler - Org 7 tier synced to FREE from Accountly webhook (status=Canceled)
+22:20:22.182 INFO  [] c.g.t.s.s.b.a.AccountlyWebhookHandler - Org 7 tier synced to PRO from Accountly webhook (status=Active)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

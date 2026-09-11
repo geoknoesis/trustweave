@@ -12,7 +12,7 @@ import org.trustweave.kms.spi.KeyManagementServiceProvider
  * **Example:**
  * ```kotlin
  * import org.trustweave.kms.*
- * 
+ *
  * val kms = KeyManagementServices.create("vault", mapOf(
  *     "address" to "http://localhost:8200",
  *     "token" to "hvs.xxx"
@@ -25,19 +25,22 @@ class VaultKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val supportedAlgorithms: Set<Algorithm> = VaultKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
-        val config = try {
-            VaultKmsConfig.fromMap(options)
-        } catch (e: Exception) {
-            // Try environment variables as fallback
-            VaultKmsConfig.fromEnvironment()
-                ?: throw IllegalArgumentException(
-                    "Vault configuration requires 'address' in options or VAULT_ADDR environment variable. " +
-                    "Error: ${e.message}",
-                    e
-                )
+        val algorithm = options["algorithm"]
+        require(algorithm == null || (algorithm is String && supportsAlgorithm(algorithm))) {
+            "Unsupported Vault signing algorithm"
         }
+        // The SDK supplies algorithm as a selection hint, not a Vault connection setting.
+        val connectionOptions = options - "algorithm"
+        val config =
+            if (connectionOptions.isEmpty()) {
+                VaultKmsConfig.fromEnvironment()
+                    ?: throw IllegalArgumentException(
+                        "Vault configuration requires explicit options or VAULT_ADDR",
+                    )
+            } else {
+                VaultKmsConfig.fromMap(connectionOptions)
+            }
 
         return VaultKeyManagementService(config)
     }
 }
-

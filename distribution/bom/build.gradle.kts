@@ -19,6 +19,7 @@ dependencies {
     constraints {
         // Core
         api(project(":common"))
+        api(project(":observability"))
         api(project(":trust"))
         api(project(":contract"))
         api(project(":distribution:all"))
@@ -133,6 +134,26 @@ dependencies {
 }
 
 publishing {
+    // java-platform projects are skipped by the root script's publishing block, so the BOM
+    // declares its own repository and full POM. Maven Central rejects a POM without scm.
+    repositories {
+        maven {
+            name = "central"
+            val release =
+                providers.environmentVariable("TRUSTWEAVE_PUBLISH_URL").getOrElse(
+                    "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/",
+                )
+            val snapshot =
+                providers.environmentVariable("TRUSTWEAVE_SNAPSHOT_URL").getOrElse(
+                    "https://central.sonatype.com/repository/maven-snapshots/",
+                )
+            url = uri(if (project.version.toString().endsWith("SNAPSHOT")) snapshot else release)
+            credentials {
+                username = providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").orNull
+                password = providers.environmentVariable("TRUSTWEAVE_PUBLISH_PASSWORD").orNull
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             from(components["javaPlatform"])
@@ -155,6 +176,17 @@ publishing {
                         name.set("TrustWeave Team")
                         email.set("info@geoknoesis.com")
                     }
+                }
+
+                scm {
+                    connection.set("scm:git:https://github.com/geoknoesis/trustweave.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/geoknoesis/trustweave.git")
+                    url.set("https://github.com/geoknoesis/trustweave")
+                }
+
+                issueManagement {
+                    system.set("GitHub Issues")
+                    url.set("https://github.com/geoknoesis/trustweave/issues")
                 }
             }
         }

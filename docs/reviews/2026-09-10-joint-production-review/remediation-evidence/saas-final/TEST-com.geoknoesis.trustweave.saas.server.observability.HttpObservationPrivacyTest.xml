@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.observability.HttpObservationPrivacyTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:08.718Z" hostname="THEMATRIX" time="0.007">
+  <properties/>
+  <testcase name="completed and failed HTTP observations exclude capability path and query values()" classname="com.geoknoesis.trustweave.saas.server.observability.HttpObservationPrivacyTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

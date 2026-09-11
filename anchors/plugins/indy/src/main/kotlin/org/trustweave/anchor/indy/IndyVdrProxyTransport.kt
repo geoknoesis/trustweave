@@ -1,21 +1,22 @@
 package org.trustweave.anchor.indy
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import io.ktor.client.request.headers
-import io.ktor.client.request.post
+import io.ktor.client.request.prepareGet
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import org.trustweave.anchor.exceptions.BlockchainException
@@ -41,6 +42,7 @@ internal class IndyVdrProxyTransport(
     private val timeoutMillis: Long = DEFAULT_TIMEOUT_MILLIS,
 ) {
     init {
+        require(timeoutMillis > 0) { "Timeout must be positive" }
         org.trustweave.core.net.TransportSecurity
             .requireSecureForPublicHosts(baseUrl, "Indy requests")
         require(baseUrl.startsWith("http://") || baseUrl.startsWith("https://")) {
@@ -49,14 +51,13 @@ internal class IndyVdrProxyTransport(
     }
 
     suspend fun submit(request: JsonObject): JsonObject =
-        withContext(Dispatchers.IO) {
-            val response: HttpResponse =
-                httpClient.post(buildUrl("submit")) {
+        withTimeout(timeoutMillis) {
+            httpClient
+                .preparePost(buildUrl("submit")) {
                     contentType(ContentType.Application.Json)
                     headers { append(HttpHeaders.Accept, ContentType.Application.Json.toString()) }
                     setBody(IndyRequestCodec.json.encodeToString(JsonObject.serializer(), request))
-                }
-            decode(response, "submit")
+                }.execute { response -> decode(response, "submit") }
         }
 
     /**
@@ -66,8 +67,9 @@ internal class IndyVdrProxyTransport(
     suspend fun isReady(): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                val resp: HttpResponse = httpClient.get(buildUrl("status"))
-                resp.status.isSuccess()
+                withTimeout(timeoutMillis) {
+                    httpClient.prepareGet(buildUrl("status")).execute { response -> response.status.isSuccess() }
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
@@ -86,37 +88,47 @@ internal class IndyVdrProxyTransport(
         response: HttpResponse,
         op: String,
     ): JsonObject {
-        val body = response.bodyAsText()
         if (!response.status.isSuccess()) {
             throw BlockchainException.ConnectionFailed(
                 chainId = null,
                 endpoint = baseUrl,
-                reason = "indy-vdr-proxy $op returned HTTP ${response.status.value}: $body",
+                reason = "indy-vdr-proxy $op returned HTTP ${response.status.value}",
             )
         }
+        val channel = response.bodyAsChannel()
+        val output = java.io.ByteArrayOutputStream()
+        val chunk = ByteArray(8192)
+        while (true) {
+            val count = channel.readAvailable(chunk, 0, chunk.size)
+            if (count < 0) break
+            require(output.size() + count <= MAX_RESPONSE_BYTES) { "Indy response exceeds size limit" }
+            output.write(chunk, 0, count)
+        }
+        val body = output.toString(Charsets.UTF_8.name())
         val parsed =
             try {
                 IndyRequestCodec.json.parseToJsonElement(body).jsonObject
-            } catch (t: Throwable) {
+            } catch (t: IllegalArgumentException) {
                 throw BlockchainException.TransactionFailed(
                     chainId = null,
                     operation = op,
-                    reason = "indy-vdr-proxy returned non-JSON body: $body",
+                    reason = "indy-vdr-proxy returned invalid JSON",
                 )
             }
 
         val opField = parsed["op"]
-        if (opField != null && opField.toString().trim('"') == "REJECT") {
+        if (opField != null && opField.toString().trim('"') in setOf("REJECT", "REQNACK")) {
             throw BlockchainException.TransactionFailed(
                 chainId = null,
                 operation = op,
-                reason = "indy ledger rejected request: $body",
+                reason = "indy ledger rejected request",
             )
         }
         return parsed
     }
 
     companion object {
+        const val MAX_RESPONSE_BYTES: Int = 1_048_576
         const val DEFAULT_TIMEOUT_MILLIS: Long = 30_000
 
         /** HTTP status code used by indy-vdr-proxy for ledger NACKs. */

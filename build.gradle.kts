@@ -74,6 +74,10 @@ subprojects {
                 require(signingKey.isPresent) {
                     "Remote publication requires TRUSTWEAVE_SIGNING_KEY; use publishToMavenLocal for development."
                 }
+                require(providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").isPresent) {
+                    "Remote publication requires TRUSTWEAVE_PUBLISH_USERNAME and TRUSTWEAVE_PUBLISH_PASSWORD; " +
+                        "use publishToMavenLocal for development."
+                }
             }
         }
     }
@@ -322,6 +326,32 @@ subprojects {
 
             // Configure Maven publishing
             configure<org.gradle.api.publish.PublishingExtension> {
+                // Without a declared repository Gradle never creates a PublishToMavenRepository
+                // task, so `publishToMavenLocal` is the only thing that works and the signing
+                // requirement below is unreachable. The repository is always declared; the
+                // credentials are read from the environment so an unconfigured machine fails with
+                // a clear message instead of silently having no publish task at all.
+                //
+                // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
+                // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
+                repositories {
+                    maven {
+                        name = "central"
+                        val release =
+                            providers.environmentVariable("TRUSTWEAVE_PUBLISH_URL").getOrElse(
+                                "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/",
+                            )
+                        val snapshot =
+                            providers.environmentVariable("TRUSTWEAVE_SNAPSHOT_URL").getOrElse(
+                                "https://central.sonatype.com/repository/maven-snapshots/",
+                            )
+                        url = uri(if (project.version.toString().endsWith("SNAPSHOT")) snapshot else release)
+                        credentials {
+                            username = providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").orNull
+                            password = providers.environmentVariable("TRUSTWEAVE_PUBLISH_PASSWORD").orNull
+                        }
+                    }
+                }
                 publications {
                     create<org.gradle.api.publish.maven.MavenPublication>("maven") {
                         from(components["java"])
@@ -341,7 +371,7 @@ subprojects {
                             description.set(
                                 project.description
                                     ?: "TrustWeave ${project.name} module. " +
-                                    "See docs/reference/module-maturity.md for GA vs experimental guidance.",
+                                    "See docs/api-reference/module-maturity.md for GA vs experimental guidance.",
                             )
                             url.set("https://github.com/geoknoesis/trustweave")
 
@@ -358,6 +388,20 @@ subprojects {
                                     name.set("TrustWeave Team")
                                     email.set("info@geoknoesis.com")
                                 }
+                            }
+
+                            // Maven Central validation rejects a POM without scm. Publication
+                            // fails at the staging step rather than at build time, so this is
+                            // easy to lose track of; the publishing smoke test asserts it.
+                            scm {
+                                connection.set("scm:git:https://github.com/geoknoesis/trustweave.git")
+                                developerConnection.set("scm:git:ssh://git@github.com/geoknoesis/trustweave.git")
+                                url.set("https://github.com/geoknoesis/trustweave")
+                            }
+
+                            issueManagement {
+                                system.set("GitHub Issues")
+                                url.set("https://github.com/geoknoesis/trustweave/issues")
                             }
                         }
                     }

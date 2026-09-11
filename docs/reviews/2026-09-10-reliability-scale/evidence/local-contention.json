@@ -1,0 +1,15 @@
+{
+    "scenario": "contention",
+    "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+    "callers": 32,
+    "instances": 4,
+    "pool_limit": 8,
+    "initial_requests": 4096,
+    "initial_accepted": 2048,
+    "followup_accepted": 512,
+    "elapsed_ms": 21196,
+    "reserve_p95_ms": 133,
+    "reserve_p99_ms": 210,
+    "reserve_max_ms": 474,
+    "invariant_violations": 0
+}

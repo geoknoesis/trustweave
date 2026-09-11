@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest" tests="2" skipped="2" failures="0" errors="0" timestamp="2026-09-11T04:15:46.583Z" hostname="THEMATRIX" time="0.0">
+  <properties/>
+  <testcase name="the cardholder-data interceptor blocks a PAN before it reaches Accountly()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <testcase name="the whole payment surface round-trips through the real client()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyLiveContractTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

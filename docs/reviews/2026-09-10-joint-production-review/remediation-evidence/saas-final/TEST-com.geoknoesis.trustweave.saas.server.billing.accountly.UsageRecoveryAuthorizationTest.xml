@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageRecoveryAuthorizationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:53.340Z" hostname="THEMATRIX" time="0.142">
+  <properties/>
+  <testcase name="only a platform administrator can inspect or redrive usage()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageRecoveryAuthorizationTest" time="0.141"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

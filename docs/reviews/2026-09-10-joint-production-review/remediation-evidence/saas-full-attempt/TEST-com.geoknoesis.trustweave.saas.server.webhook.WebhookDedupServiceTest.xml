@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:31:04.224Z" hostname="THEMATRIX" time="0.01">
+  <properties/>
+  <testcase name="a handler failure propagates so the transaction - marker included - rolls back()" classname="com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest" time="0.004"/>
+  <testcase name="records the marker BEFORE dispatching, so the unique constraint serializes duplicates()" classname="com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest" time="0.003"/>
+  <testcase name="an already-processed event is skipped without dispatching()" classname="com.geoknoesis.trustweave.saas.server.webhook.WebhookDedupServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

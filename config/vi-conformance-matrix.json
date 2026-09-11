@@ -1,0 +1,243 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "vectors": [
+    {
+      "id": "python-immediate",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "wrong-audience",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "wrong-nonce",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "expired",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "withheld-mandates",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "invalid-signature",
+      "direction": "Python to Kotlin",
+      "profile": "immediate",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "python-autonomous-payment",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "autonomous-aud",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-nonce",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-paymentAud",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-paymentNonce",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-routedL2",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-now",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-reordered-disclosures",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "autonomous-withheld-payment",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-amount-1",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "autonomous-amount-200",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "autonomous-amount-0",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-amount-201",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "autonomous-currency",
+      "direction": "Python to Kotlin",
+      "profile": "autonomous-payment",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "python-autonomous-checkout",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": true,
+      "reference_expected": true,
+      "difference": null
+    },
+    {
+      "id": "checkout-checkoutAud",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "checkout-checkoutNonce",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "checkout-routedCheckout",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": false,
+      "reference_expected": false,
+      "difference": null
+    },
+    {
+      "id": "cart-over-quantity",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": false,
+      "reference_expected": true,
+      "difference": "Python chain verifier does not enforce the SDK authenticated merchant/cart profile"
+    },
+    {
+      "id": "merchant-wrong-audience",
+      "direction": "Python to Kotlin",
+      "profile": "authenticated-checkout",
+      "sdk_expected": false,
+      "reference_expected": true,
+      "difference": "Python chain verifier does not enforce the SDK authenticated merchant/cart profile"
+    },
+    {
+      "id": "kotlin-immediate",
+      "direction": "Kotlin to Python",
+      "profile": "immediate",
+      "evidence": "vi-kotlin-immediate.json"
+    },
+    {
+      "id": "kotlin-autonomous-payment",
+      "direction": "Kotlin to Python",
+      "profile": "autonomous-payment",
+      "evidence": "vi-kotlin-autonomous.json"
+    },
+    {
+      "id": "kotlin-autonomous-checkout",
+      "direction": "Kotlin to Python",
+      "profile": "authenticated-checkout",
+      "evidence": "vi-kotlin-checkout.json"
+    },
+    {
+      "id": "ledger-model-214",
+      "direction": "Python model to PostgreSQL/Kotlin",
+      "profile": "stateful-ledger",
+      "evidence": "CrossLanguageLedgerModelTest",
+      "limits": "Sequential model agreement; existing dedicated tests separately cover concurrency, rollback and uncertain commits"
+    }
+  ],
+  "limits": [
+    "Python chain verification does not authenticate the SDK merchant policy; two explicit differences are retained.",
+    "The ledger oracle is an independent-language model, not an external settlement system.",
+    "Unsupported multi-pair and mixed-recurrence profiles remain rejected; this matrix is not certification."
+  ]
+}

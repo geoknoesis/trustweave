@@ -1,0 +1,446 @@
+{
+ "merged": {
+  "BRANCH": {
+   "covered": 11085,
+   "percent": 39.83,
+   "total": 27831
+  },
+  "CLASS": {
+   "covered": 1905,
+   "percent": 66.77,
+   "total": 2853
+  },
+  "INSTRUCTION": {
+   "covered": 191483,
+   "percent": 55.92,
+   "total": 342442
+  },
+  "LINE": {
+   "covered": 27978,
+   "percent": 57.3,
+   "total": 48825
+  },
+  "METHOD": {
+   "covered": 4760,
+   "percent": 60.6,
+   "total": 7855
+  }
+ },
+ "modules": {
+  "_root/reports/kover/report.xml": {
+   "branch_percent": 39.83,
+   "line_percent": 57.3,
+   "lines": 48825
+  },
+  "anchors/anchor-core/reports/kover/report.xml": {
+   "branch_percent": 56.25,
+   "line_percent": 57.16,
+   "lines": 761
+  },
+  "anchors/plugins/algorand/reports/kover/report.xml": {
+   "branch_percent": 56.44,
+   "line_percent": 50.0,
+   "lines": 342
+  },
+  "anchors/plugins/bitcoin/reports/kover/report.xml": {
+   "branch_percent": 18.58,
+   "line_percent": 41.27,
+   "lines": 252
+  },
+  "anchors/plugins/cardano/reports/kover/report.xml": {
+   "branch_percent": 58.71,
+   "line_percent": 64.52,
+   "lines": 248
+  },
+  "anchors/plugins/ethereum/reports/kover/report.xml": {
+   "branch_percent": 0.0,
+   "line_percent": 0.0,
+   "lines": 118
+  },
+  "anchors/plugins/evm-base/reports/kover/report.xml": {
+   "branch_percent": 46.25,
+   "line_percent": 64.5,
+   "lines": 200
+  },
+  "anchors/plugins/indy/reports/kover/report.xml": {
+   "branch_percent": 61.13,
+   "line_percent": 82.87,
+   "lines": 508
+  },
+  "common-mp/reports/kover/report.xml": {
+   "branch_percent": 0.0,
+   "line_percent": 0.0,
+   "lines": 103
+  },
+  "common/reports/kover/report.xml": {
+   "branch_percent": 66.53,
+   "line_percent": 86.98,
+   "lines": 868
+  },
+  "contract/reports/kover/report.xml": {
+   "branch_percent": 19.35,
+   "line_percent": 44.28,
+   "lines": 901
+  },
+  "credentials/avp-authorization-server/reports/kover/report.xml": {
+   "branch_percent": 73.33,
+   "line_percent": 79.49,
+   "lines": 117
+  },
+  "credentials/credential-api/reports/kover/report.xml": {
+   "branch_percent": 38.15,
+   "line_percent": 48.57,
+   "lines": 4095
+  },
+  "credentials/credential-models-mp/reports/kover/report.xml": {
+   "branch_percent": 14.29,
+   "line_percent": 6.75,
+   "lines": 1214
+  },
+  "credentials/oidc4vci-server/reports/kover/report.xml": {
+   "branch_percent": 45.49,
+   "line_percent": 83.16,
+   "lines": 297
+  },
+  "credentials/plugins/anchor/reports/kover/report.xml": {
+   "branch_percent": 37.07,
+   "line_percent": 77.87,
+   "lines": 122
+  },
+  "credentials/plugins/avp-micro/reports/kover/report.xml": {
+   "branch_percent": 58.64,
+   "line_percent": 90.62,
+   "lines": 224
+  },
+  "credentials/plugins/chapi/reports/kover/report.xml": {
+   "branch_percent": 0.0,
+   "line_percent": 14.75,
+   "lines": 244
+  },
+  "credentials/plugins/didcomm/reports/kover/report.xml": {
+   "branch_percent": 24.29,
+   "line_percent": 31.56,
+   "lines": 2693
+  },
+  "credentials/plugins/eudiw/reports/kover/report.xml": {
+   "branch_percent": 52.6,
+   "line_percent": 70.2,
+   "lines": 198
+  },
+  "credentials/plugins/jades/reports/kover/report.xml": {
+   "branch_percent": 40.0,
+   "line_percent": 73.61,
+   "lines": 144
+  },
+  "credentials/plugins/mdl/reports/kover/report.xml": {
+   "branch_percent": 43.06,
+   "line_percent": 73.12,
+   "lines": 703
+  },
+  "credentials/plugins/oidc4vci/reports/kover/report.xml": {
+   "branch_percent": 34.84,
+   "line_percent": 58.94,
+   "lines": 1130
+  },
+  "credentials/plugins/oidc4vp/reports/kover/report.xml": {
+   "branch_percent": 32.96,
+   "line_percent": 67.86,
+   "lines": 924
+  },
+  "credentials/plugins/openid-federation/reports/kover/report.xml": {
+   "branch_percent": 42.53,
+   "line_percent": 56.58,
+   "lines": 357
+  },
+  "credentials/plugins/platforms/entra/reports/kover/report.xml": {
+   "branch_percent": 33.48,
+   "line_percent": 90.64,
+   "lines": 470
+  },
+  "credentials/plugins/presentation-exchange/reports/kover/report.xml": {
+   "branch_percent": 53.9,
+   "line_percent": 81.3,
+   "lines": 262
+  },
+  "credentials/plugins/siop/reports/kover/report.xml": {
+   "branch_percent": 20.48,
+   "line_percent": 52.87,
+   "lines": 488
+  },
+  "credentials/plugins/status-list/bitstring/reports/kover/report.xml": {
+   "branch_percent": 56.64,
+   "line_percent": 78.52,
+   "lines": 675
+  },
+  "credentials/plugins/status-list/database/reports/kover/report.xml": {
+   "branch_percent": 53.1,
+   "line_percent": 74.15,
+   "lines": 468
+  },
+  "credentials/plugins/status-list/token/reports/kover/report.xml": {
+   "branch_percent": 39.63,
+   "line_percent": 69.77,
+   "lines": 569
+  },
+  "credentials/plugins/verifiable-intent/reports/kover/report.xml": {
+   "branch_percent": 69.46,
+   "line_percent": 90.01,
+   "lines": 1562
+  },
+  "credentials/vc-api-server/reports/kover/report.xml": {
+   "branch_percent": 20.41,
+   "line_percent": 60.62,
+   "lines": 226
+  },
+  "did/did-core/reports/kover/report.xml": {
+   "branch_percent": 33.38,
+   "line_percent": 58.09,
+   "lines": 2491
+  },
+  "did/did-identifiers-mp/reports/kover/report.xml": {
+   "branch_percent": 44.55,
+   "line_percent": 41.03,
+   "lines": 195
+  },
+  "did/plugins/base/reports/kover/report.xml": {
+   "branch_percent": 45.98,
+   "line_percent": 65.58,
+   "lines": 584
+  },
+  "did/plugins/cheqd/reports/kover/report.xml": {
+   "branch_percent": 1.92,
+   "line_percent": 1.98,
+   "lines": 202
+  },
+  "did/plugins/ebsi/reports/kover/report.xml": {
+   "branch_percent": 33.91,
+   "line_percent": 51.32,
+   "lines": 228
+  },
+  "did/plugins/ens/reports/kover/report.xml": {
+   "branch_percent": 2.17,
+   "line_percent": 2.47,
+   "lines": 162
+  },
+  "did/plugins/ethr/reports/kover/report.xml": {
+   "branch_percent": 26.0,
+   "line_percent": 32.96,
+   "lines": 270
+  },
+  "did/plugins/godiddy/reports/kover/report.xml": {
+   "branch_percent": 17.39,
+   "line_percent": 52.41,
+   "lines": 727
+  },
+  "did/plugins/ion/reports/kover/report.xml": {
+   "branch_percent": 0.69,
+   "line_percent": 1.23,
+   "lines": 324
+  },
+  "did/plugins/key/reports/kover/report.xml": {
+   "branch_percent": 48.24,
+   "line_percent": 68.21,
+   "lines": 173
+  },
+  "did/plugins/orb/reports/kover/report.xml": {
+   "branch_percent": 62.7,
+   "line_percent": 67.2,
+   "lines": 314
+  },
+  "did/plugins/peer/reports/kover/report.xml": {
+   "branch_percent": 56.91,
+   "line_percent": 71.87,
+   "lines": 327
+  },
+  "did/plugins/plc/reports/kover/report.xml": {
+   "branch_percent": 1.85,
+   "line_percent": 1.98,
+   "lines": 202
+  },
+  "did/plugins/polygon/reports/kover/report.xml": {
+   "branch_percent": 1.85,
+   "line_percent": 1.83,
+   "lines": 218
+  },
+  "did/plugins/sidetree-core/reports/kover/report.xml": {
+   "branch_percent": 31.03,
+   "line_percent": 68.64,
+   "lines": 491
+  },
+  "did/plugins/sol/reports/kover/report.xml": {
+   "branch_percent": 0.98,
+   "line_percent": 1.3,
+   "lines": 307
+  },
+  "did/plugins/web/reports/kover/report.xml": {
+   "branch_percent": 29.73,
+   "line_percent": 21.47,
+   "lines": 191
+  },
+  "did/registrar-server-ktor/reports/kover/report.xml": {
+   "branch_percent": 4.44,
+   "line_percent": 9.52,
+   "lines": 126
+  },
+  "did/registrar/reports/kover/report.xml": {
+   "branch_percent": 11.7,
+   "line_percent": 11.46,
+   "lines": 768
+  },
+  "distribution/conformance/reports/kover/report.xml": {
+   "branch_percent": 50.0,
+   "line_percent": 96.26,
+   "lines": 294
+  },
+  "distribution/examples/reports/kover/report.xml": {
+   "branch_percent": 23.6,
+   "line_percent": 40.96,
+   "lines": 2495
+  },
+  "kms/kms-core/reports/kover/report.xml": {
+   "branch_percent": 69.08,
+   "line_percent": 85.04,
+   "lines": 742
+  },
+  "kms/plugins/aws/reports/kover/report.xml": {
+   "branch_percent": 24.28,
+   "line_percent": 26.56,
+   "lines": 497
+  },
+  "kms/plugins/azure/reports/kover/report.xml": {
+   "branch_percent": 23.99,
+   "line_percent": 26.83,
+   "lines": 492
+  },
+  "kms/plugins/cloudhsm/reports/kover/report.xml": {
+   "branch_percent": 36.31,
+   "line_percent": 57.63,
+   "lines": 177
+  },
+  "kms/plugins/cyberark/reports/kover/report.xml": {
+   "branch_percent": 11.01,
+   "line_percent": 7.95,
+   "lines": 390
+  },
+  "kms/plugins/fortanix/reports/kover/report.xml": {
+   "branch_percent": 18.38,
+   "line_percent": 12.65,
+   "lines": 332
+  },
+  "kms/plugins/google/reports/kover/report.xml": {
+   "branch_percent": 32.75,
+   "line_percent": 23.94,
+   "lines": 447
+  },
+  "kms/plugins/hashicorp/reports/kover/report.xml": {
+   "branch_percent": 22.15,
+   "line_percent": 26.6,
+   "lines": 470
+  },
+  "kms/plugins/ibm/reports/kover/report.xml": {
+   "branch_percent": 21.83,
+   "line_percent": 19.93,
+   "lines": 537
+  },
+  "kms/plugins/inmemory/reports/kover/report.xml": {
+   "branch_percent": 61.44,
+   "line_percent": 69.81,
+   "lines": 308
+  },
+  "kms/plugins/pkcs11/reports/kover/report.xml": {
+   "branch_percent": 22.22,
+   "line_percent": 29.71,
+   "lines": 276
+  },
+  "kms/plugins/thales/reports/kover/report.xml": {
+   "branch_percent": 14.85,
+   "line_percent": 9.92,
+   "lines": 383
+  },
+  "kms/plugins/waltid/reports/kover/report.xml": {
+   "branch_percent": 20.34,
+   "line_percent": 45.4,
+   "lines": 489
+  },
+  "observability/reports/kover/report.xml": {
+   "branch_percent": 87.16,
+   "line_percent": 97.83,
+   "lines": 230
+  },
+  "signatures/cades/reports/kover/report.xml": {
+   "branch_percent": 48.44,
+   "line_percent": 79.71,
+   "lines": 276
+  },
+  "signatures/etsi-validation/reports/kover/report.xml": {
+   "branch_percent": 49.62,
+   "line_percent": 81.11,
+   "lines": 217
+  },
+  "signatures/jades/reports/kover/report.xml": {
+   "branch_percent": 63.73,
+   "line_percent": 88.6,
+   "lines": 605
+  },
+  "signatures/trust-lists/reports/kover/report.xml": {
+   "branch_percent": 62.62,
+   "line_percent": 90.88,
+   "lines": 362
+  },
+  "signatures/tsa-core/reports/kover/report.xml": {
+   "branch_percent": 51.47,
+   "line_percent": 82.81,
+   "lines": 128
+  },
+  "signatures/xades/reports/kover/report.xml": {
+   "branch_percent": 57.14,
+   "line_percent": 89.16,
+   "lines": 203
+  },
+  "testkit/reports/kover/report.xml": {
+   "branch_percent": 35.39,
+   "line_percent": 44.89,
+   "lines": 2134
+  },
+  "trust-registry/plugins/database/reports/kover/report.xml": {
+   "branch_percent": 33.33,
+   "line_percent": 62.43,
+   "lines": 173
+  },
+  "trust-registry/trust-registry-core/reports/kover/report.xml": {
+   "branch_percent": 2.29,
+   "line_percent": 54.55,
+   "lines": 132
+  },
+  "trust-registry/trust-registry-server/reports/kover/report.xml": {
+   "branch_percent": 38.16,
+   "line_percent": 65.05,
+   "lines": 103
+  },
+  "trust/reports/kover/report.xml": {
+   "branch_percent": 43.63,
+   "line_percent": 65.81,
+   "lines": 3100
+  },
+  "wallet/plugins/cloud/reports/kover/report.xml": {
+   "branch_percent": 23.84,
+   "line_percent": 54.39,
+   "lines": 342
+  },
+  "wallet/plugins/database/reports/kover/report.xml": {
+   "branch_percent": 57.75,
+   "line_percent": 87.21,
+   "lines": 743
+  },
+  "wallet/plugins/file/reports/kover/report.xml": {
+   "branch_percent": 54.17,
+   "line_percent": 91.63,
+   "lines": 251
+  },
+  "wallet/wallet-core/reports/kover/report.xml": {
+   "branch_percent": 24.04,
+   "line_percent": 24.54,
+   "lines": 216
+  }
+ }
+}

@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "stdout": "  SUCCESS\n\n",
+  "stderr": "",
+  "rules_sha256": "61b952bf602cf449822b9eabe9e0f39de453b188b0a3fc21e9e7b6f9d621557a",
+  "tests_sha256": "fa9e9f325dd5ecdc27a6e4222fbea9e35bc38c2b98e7b58b0e5765ec1bbc28a4"
+}

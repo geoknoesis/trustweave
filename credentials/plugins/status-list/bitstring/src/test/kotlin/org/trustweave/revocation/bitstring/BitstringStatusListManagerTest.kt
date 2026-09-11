@@ -25,13 +25,18 @@ import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import java.io.ByteArrayOutputStream
+import java.sql.Connection
+import java.sql.PreparedStatement
 import java.util.Base64
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
@@ -1329,4 +1334,106 @@ class BitstringStatusListManagerTest {
                 expectedSizeBits = BitstringStatusListManager.MIN_STATUS_LIST_SIZE_BITS + 128
             )
         }
+
+    // -------------------------------------------------------------------------
+    // Cooperative cancellation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Records the SQL a manager issues and can cancel a job the next time a statement is prepared.
+     *
+     * A status list is 131072 bits by default, so encoding and decoding it are the two longest
+     * stretches of uninterrupted work in this class. The manager reaches its post-decode SQL only
+     * if the decode loop ran to completion, which makes the statement count an observable proxy
+     * for "the loop kept going after cancellation was requested". Arming is explicit so the
+     * factory's schema DDL is not mistaken for the operation under test.
+     */
+    private class RecordingDataSource(
+        private val delegate: DataSource
+    ) : DataSource by delegate {
+        val sql: MutableList<String> = mutableListOf()
+
+        /** Cancelled once, on the next prepared statement, then disarmed. */
+        var cancelOnNextStatement: Job? = null
+
+        override fun getConnection(): Connection = wrap(delegate.connection)
+
+        override fun getConnection(username: String?, password: String?): Connection =
+            wrap(delegate.getConnection(username, password))
+
+        private fun wrap(connection: Connection): Connection =
+            object : Connection by connection {
+                override fun prepareStatement(statement: String): PreparedStatement {
+                    sql += statement
+                    cancelOnNextStatement?.let {
+                        cancelOnNextStatement = null
+                        it.cancel()
+                    }
+                    return connection.prepareStatement(statement)
+                }
+            }
+    }
+
+    private fun managerOver(source: DataSource): BitstringStatusListManager =
+        BitstringStatusListManagerFactory.create(
+            dataSource = source,
+            kms = kms,
+            issuerDid = issuerDid,
+            bitsPerEntry = 1
+        )
+
+    @Test
+    fun `decoding abandons the bitstring when cancellation is requested instead of running to completion`() =
+        runBlocking<Unit> {
+            val statusListId = manager.createStatusList(
+                issuerDid = issuerDid,
+                purpose = StatusPurpose.REVOCATION
+            )
+
+            // Baseline: the statements a revocation that runs to completion needs. Counted after
+            // construction so the factory's schema DDL is excluded.
+            val baselineSource = RecordingDataSource(dataSource)
+            val baselineManager = managerOver(baselineSource)
+            val baselineStart = baselineSource.sql.size
+            baselineManager.revokeCredentials(listOf("baseline-credential"), statusListId)
+            val baseline = baselineSource.sql.size - baselineStart
+            assertTrue(baseline > 1, "revokeCredentials must issue SQL after decoding, got $baseline statements")
+
+            // Cancelled: the job is cancelled while the revocation's first statement is prepared,
+            // which is before decodeBitSet runs. The decode loop must abort at its next probe, so
+            // the statements that follow decoding are never prepared.
+            val cancelledSource = RecordingDataSource(dataSource)
+            val cancelledManager = managerOver(cancelledSource)
+            val job = Job()
+            val cancelledStart = cancelledSource.sql.size
+            cancelledSource.cancelOnNextStatement = job
+            assertFailsWith<CancellationException> {
+                CoroutineScope(Dispatchers.IO + job)
+                    .async { cancelledManager.revokeCredentials(listOf("cancelled-credential"), statusListId) }
+                    .await()
+            }
+            val cancelled = cancelledSource.sql.size - cancelledStart
+            assertTrue(
+                cancelled in 1..<baseline,
+                "decodeBitSet must stop at its cancellation probe: the cancelled revocation issued " +
+                    "$cancelled statements, a completed one issues $baseline"
+            )
+        }
+
+    @Test
+    fun `bitstring encoding and decoding stay suspend so the cancellation probe remains reachable`() {
+        val names = setOf("encodeBitSet", "decodeBitSet")
+        val found = BitstringStatusListManager::class.java.declaredMethods.filter { it.name in names }
+        assertEquals(
+            names,
+            found.map { it.name }.toSet(),
+            "encodeBitSet and decodeBitSet must exist; they carry the only unbounded loops in this class"
+        )
+        for (method in found) {
+            assertTrue(
+                method.parameterTypes.any { it.name == "kotlin.coroutines.Continuation" },
+                "${method.name} must stay suspend: a plain function cannot reach ensureActive()"
+            )
+        }
+    }
 }

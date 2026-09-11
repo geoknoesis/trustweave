@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:17:33.999Z" hostname="THEMATRIX" time="2.245">
+  <properties/>
+  <testcase name="getAllUsers should return all users()" classname="com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest" time="0.69"/>
+  <testcase name="getCurrentUser should return current user()" classname="com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest" time="0.503"/>
+  <testcase name="getUserById should return user when found()" classname="com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest" time="0.534"/>
+  <testcase name="getUserById should return 404 when not found()" classname="com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest" time="0.502"/>
+  <system-out><![CDATA[00:17:34.001 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizerFactory implementations for test class [UserControllerIntegrationTest]: [WebDriverContextCustomizerFactory, OnFailureConditionReportContextCustomizerFactory, OverrideAutoConfigurationContextCustomizerFactory, ImportsContextCustomizerFactory, PropertyMappingContextCustomizerFactory, ExcludeFilterContextCustomizerFactory, TypeExcludeFiltersContextCustomizerFactory, DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory, DuplicateJsonObjectContextCustomizerFactory, SpringBootTestRandomPortContextCustomizerFactory, BeanOverrideContextCustomizerFactory, MockServerContainerContextCustomizerFactory, DynamicPropertiesContextCustomizerFactory]
+00:17:34.005 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizers for test class [UserControllerIntegrationTest]: [WebDriverContextCustomizer, OnFailureConditionReportContextCustomizer, ImportsContextCustomizer, PropertyMappingContextCustomizer, ExcludeFilterContextCustomizer, DuplicateJsonObjectContextCustomizer, SpringBootTestRandomPortContextCustomizer, DynamicPropertiesContextCustomizer]
+00:17:34.006 INFO  [] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.geoknoesis.trustweave.saas.server.Application for test class com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest
+00:17:34.010 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizerFactory implementations for test class [UserControllerIntegrationTest]: [WebDriverContextCustomizerFactory, OnFailureConditionReportContextCustomizerFactory, OverrideAutoConfigurationContextCustomizerFactory, ImportsContextCustomizerFactory, PropertyMappingContextCustomizerFactory, ExcludeFilterContextCustomizerFactory, TypeExcludeFiltersContextCustomizerFactory, DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory, DuplicateJsonObjectContextCustomizerFactory, SpringBootTestRandomPortContextCustomizerFactory, BeanOverrideContextCustomizerFactory, MockServerContainerContextCustomizerFactory, DynamicPropertiesContextCustomizerFactory]
+00:17:34.012 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using ContextCustomizers for test class [UserControllerIntegrationTest]: [WebDriverContextCustomizer, OnFailureConditionReportContextCustomizer, ImportsContextCustomizer, PropertyMappingContextCustomizer, ExcludeFilterContextCustomizer, DuplicateJsonObjectContextCustomizer, SpringBootTestRandomPortContextCustomizer, DynamicPropertiesContextCustomizer]
+00:17:34.013 INFO  [] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.geoknoesis.trustweave.saas.server.Application for test class com.geoknoesis.trustweave.saas.server.controller.UserControllerIntegrationTest
+00:17:34.013 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [UserControllerIntegrationTest]: using SpringBootContextLoader
+00:17:34.013 DEBUG [] o.s.b.t.c.SpringBootTestContextBootstrapper - Using TestExecutionListeners for test class [UserControllerIntegrationTest]: [ServletTestExecutionListener, DirtiesContextBeforeModesTestExecutionListener, ApplicationEventsTestExecutionListener, BeanOverrideTestExecutionListener, DependencyInjectionTestExecutionListener, MicrometerObservationRegistryTestExecutionListener, DirtiesContextTestExecutionListener, CommonCachesTestExecutionListener, TransactionalTestExecutionListener, SqlScriptsTestExecutionListener, WithSecurityContextTestExecutionListener, EventPublishingTestExecutionListener, ReactorContextTestExecutionListener, MockMvcPrintOnlyOnFailureTestExecutionListener, WebDriverTestExecutionListener, MockitoResetTestExecutionListener]
+00:17:34.666 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:34.667 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+00:17:34.670 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+00:17:34.672 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.security.web.FilterChainProxy - Securing GET /api/users
+00:17:34.674 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+00:17:34.674 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter$JwtAuthenticatedPrincipal@69254cb7, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_offline_access, ROLE_default-roles-test-realm, ROLE_uma_authorization, ROLE_admin, FactorGrantedAuthority [authority=FACTOR_BEARER, issuedAt=2026-09-11T04:17:34.674382800Z]]]
+00:17:34.675 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.security.web.FilterChainProxy - Secured GET /api/users
+00:17:34.675 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.UserController#getAllUsers()
+00:17:34.676 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:34.678 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+00:17:34.679 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select ugm1_0.id,ugm1_0.group_id,ugm1_0.user_id from user_group_memberships ugm1_0 where ugm1_0.user_id=?
+00:17:34.682 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select ura1_0.id,ura1_0.created_at,ura1_0.role_id,ura1_0.trust_space_id,ura1_0.user_id from user_role_assignments ura1_0 where ura1_0.user_id=?
+00:17:34.684 INFO  [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] c.g.t.s.s.s.OrganizationContextService - Creating default organization for user 58
+00:17:34.684 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - insert into organizations (accountly_subscriber_id,accountly_subscription_id,blockchain_network_settings,created_at,entitlement_snapshot,accountly_killbill_account_id,name,owner_id,preferred_blockchain_network_id,settings,snapshot_refreshed_at,stripe_customer_id,stripe_subscription_id,tier,transaction_cost_tracking_enabled,version) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+00:17:34.686 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:34.689 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+00:17:34.690 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select ugm1_0.id,ugm1_0.group_id,ugm1_0.user_id from user_group_memberships ugm1_0 where ugm1_0.user_id=?
+00:17:34.696 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where (exists(select o1_0.id from organizations o1_0 where o1_0.id=? and o1_0.owner_id=u1_0.id) or exists(select ugm1_0.id from user_group_memberships ugm1_0,user_groups ug1_0 where ugm1_0.user_id=u1_0.id and ugm1_0.group_id=ug1_0.id and ug1_0.organization_id=?)) and (?='' or position(lower(?) in lower(u1_0.email))>0 or position(lower(?) in lower(u1_0.name))>0) order by u1_0.id
+00:17:34.698 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:34.699 DEBUG [af50ee72-cbcb-4a6f-ab4b-8dd90ea092e4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[UserDto(id=58, keycloakUserId=b0d225f0-db39-45a1-8b12-cb7492c8f7fe, email=admin@example.com, name=T (truncated)...]
+00:17:35.189 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:35.191 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+00:17:35.194 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.security.web.FilterChainProxy - Securing GET /api/users/me
+00:17:35.196 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+00:17:35.196 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter$JwtAuthenticatedPrincipal@307a7d21, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_offline_access, ROLE_default-roles-test-realm, ROLE_uma_authorization, FactorGrantedAuthority [authority=FACTOR_BEARER, issuedAt=2026-09-11T04:17:35.196049500Z], ROLE_admin]]
+00:17:35.196 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.security.web.FilterChainProxy - Secured GET /api/users/me
+00:17:35.197 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.UserController#getCurrentUser()
+00:17:35.198 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:35.203 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:35.203 DEBUG [dfe1956e-9247-41df-9df4-ac930edcfadc] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [UserDto(id=60, keycloakUserId=b0d225f0-db39-45a1-8b12-cb7492c8f7fe, email=admin@example.com, name=Te (truncated)...]
+00:17:35.728 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:35.730 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+00:17:35.733 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.security.web.FilterChainProxy - Securing GET /api/users/61
+00:17:35.734 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+00:17:35.734 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter$JwtAuthenticatedPrincipal@445c2437, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_offline_access, FactorGrantedAuthority [authority=FACTOR_BEARER, issuedAt=2026-09-11T04:17:35.734031400Z], ROLE_default-roles-test-realm, ROLE_uma_authorization, ROLE_admin]]
+00:17:35.735 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.security.web.FilterChainProxy - Secured GET /api/users/61
+00:17:35.735 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.UserController#getUserById(long)
+00:17:35.736 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:35.738 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:35.738 DEBUG [8876089a-c6f9-41f6-b73f-5c28df083717] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [UserDto(id=61, keycloakUserId=b0d225f0-db39-45a1-8b12-cb7492c8f7fe, email=admin@example.com, name=Te (truncated)...]
+00:17:35.784 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+00:17:35.784 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+00:17:35.786 ERROR [] n.j.s.p.j.JdbcTemplateStorageAccessor - Unexpected exception
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [INSERT INTO shedlock(name, lock_until, locked_at, locked_by) VALUES(?, timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), timezone('utc', CURRENT_TIMESTAMP), ?) ON CONFLICT (name) DO UPDATE SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:102)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:111)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1549)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:689)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:966)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:987)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:339)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:344)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.insertRecord(JdbcTemplateStorageAccessor.java:64)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:72)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122)
+	at io.micrometer.observation.Observation.observe(Observation.java:569)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 13
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2656)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:446)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:533)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:449)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:197)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:158)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$0(JdbcTemplate.java:971)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:670)
+	... 29 common frames omitted
+00:17:35.787 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL update
+00:17:35.787 DEBUG [] o.s.jdbc.core.JdbcTemplate - Executing prepared SQL statement [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+00:17:35.789 ERROR [] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+org.springframework.jdbc.BadSqlGrammarException: PreparedStatementCallback; bad SQL grammar [UPDATE shedlock SET lock_until = timezone('utc', CURRENT_TIMESTAMP) + cast(? as interval), locked_at = timezone('utc', CURRENT_TIMESTAMP), locked_by = ? WHERE shedlock.name = ? AND shedlock.lock_until <= timezone('utc', CURRENT_TIMESTAMP)]
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:134)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:102)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:111)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1549)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:689)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:966)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:987)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:339)
+	at org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate.update(NamedParameterJdbcTemplate.java:344)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.lambda$execute$0(JdbcTemplateStorageAccessor.java:122)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:137)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.execute(JdbcTemplateStorageAccessor.java:122)
+	at net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateStorageAccessor.updateRecord(JdbcTemplateStorageAccessor.java:81)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.doLock(StorageBasedLockProvider.java:85)
+	at net.javacrumbs.shedlock.support.StorageBasedLockProvider.lock(StorageBasedLockProvider.java:55)
+	at net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor.executeWithLock(DefaultLockingTaskExecutor.java:63)
+	at net.javacrumbs.shedlock.spring.aop.MethodProxyScheduledLockAdvisor$LockingInterceptor.invoke(MethodProxyScheduledLockAdvisor.java:84)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+	at com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporter$$SpringCGLIB$$0.scheduledDrain(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122)
+	at io.micrometer.observation.Observation.observe(Observation.java:569)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122)
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:358)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "shedlock" does not exist
+  Position: 8
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2993)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2656)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:446)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:533)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:449)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:197)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:158)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$0(JdbcTemplate.java:971)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:670)
+	... 29 common frames omitted
+00:17:36.213 DEBUG [] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:36.215 DEBUG [] org.hibernate.SQL - insert into users (created_at,email,keycloak_user_id,name) values (?,?,?,?)
+00:17:36.217 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.security.web.FilterChainProxy - Securing GET /api/users/999
+00:17:36.218 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.s.o.s.r.a.JwtAuthenticationProvider - Authenticated token
+00:17:36.218 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.s.o.s.r.w.a.BearerTokenAuthenticationFilter - Set SecurityContextHolder to JwtAuthenticationToken [Principal=org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter$JwtAuthenticatedPrincipal@1bbcfbf4, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[FactorGrantedAuthority [authority=FACTOR_BEARER, issuedAt=2026-09-11T04:17:36.218804Z], ROLE_offline_access, ROLE_default-roles-test-realm, ROLE_uma_authorization, ROLE_admin]]
+00:17:36.219 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.security.web.FilterChainProxy - Secured GET /api/users/999
+00:17:36.219 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.geoknoesis.trustweave.saas.server.controller.UserController#getUserById(long)
+00:17:36.220 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:36.222 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:36.224 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+00:17:36.225 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select ugm1_0.id,ugm1_0.group_id,ugm1_0.user_id from user_group_memberships ugm1_0 where ugm1_0.user_id=?
+00:17:36.227 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select ura1_0.id,ura1_0.created_at,ura1_0.role_id,ura1_0.trust_space_id,ura1_0.user_id from user_role_assignments ura1_0 where ura1_0.user_id=?
+00:17:36.228 INFO  [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] c.g.t.s.s.s.OrganizationContextService - Creating default organization for user 62
+00:17:36.229 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - insert into organizations (accountly_subscriber_id,accountly_subscription_id,blockchain_network_settings,created_at,entitlement_snapshot,accountly_killbill_account_id,name,owner_id,preferred_blockchain_network_id,settings,snapshot_refreshed_at,stripe_customer_id,stripe_subscription_id,tier,transaction_cost_tracking_enabled,version) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+00:17:36.231 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where u1_0.keycloak_user_id=?
+00:17:36.233 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select o1_0.id,o1_0.accountly_subscriber_id,o1_0.accountly_subscription_id,o1_0.blockchain_network_settings,o1_0.created_at,o1_0.entitlement_snapshot,o1_0.accountly_killbill_account_id,o1_0.name,o1_0.owner_id,o1_0.preferred_blockchain_network_id,o1_0.settings,o1_0.snapshot_refreshed_at,o1_0.stripe_customer_id,o1_0.stripe_subscription_id,o1_0.tier,o1_0.transaction_cost_tracking_enabled,o1_0.version from organizations o1_0 where o1_0.owner_id=?
+00:17:36.235 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select ugm1_0.id,ugm1_0.group_id,ugm1_0.user_id from user_group_memberships ugm1_0 where ugm1_0.user_id=?
+00:17:36.237 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] org.hibernate.SQL - select u1_0.id,u1_0.created_at,u1_0.email,u1_0.keycloak_user_id,u1_0.name from users u1_0 where (exists(select o1_0.id from organizations o1_0 where o1_0.id=? and o1_0.owner_id=u1_0.id) or exists(select ugm1_0.id from user_group_memberships ugm1_0,user_groups ug1_0 where ugm1_0.user_id=u1_0.id and ugm1_0.group_id=ug1_0.id and ug1_0.organization_id=?)) and (?='' or position(lower(?) in lower(u1_0.email))>0 or position(lower(?) in lower(u1_0.name))>0) order by u1_0.id
+00:17:36.238 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.geoknoesis.trustweave.saas.server.exception.GlobalExceptionHandler#handleResourceNotFound(ResourceNotFoundException)
+00:17:36.239 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/cbor]
+00:17:36.239 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [ErrorResponse(message=User not found, status=404, timestamp=2026-09-11T04:17:36.239614600Z)]
+00:17:36.240 DEBUG [0f9c6930-6a08-483f-a7c0-8ecac8d1b0f9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.geoknoesis.trustweave.saas.server.exception.ResourceNotFoundException: User not found]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

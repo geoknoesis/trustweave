@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:23.815Z" hostname="THEMATRIX" time="5.329">
+  <properties/>
+  <testcase name="no card-data field is declared anywhere in the server source()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest" time="5.314"/>
+  <testcase name="the detector fires on a declaration()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest" time="0.002"/>
+  <testcase name="the detector ignores prose about cardholders()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest" time="0.001"/>
+  <testcase name="allows the payment-method metadata a compliant integration has to store()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.PaymentDataBoundaryTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

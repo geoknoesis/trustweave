@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:48:33.303Z" hostname="THEMATRIX" time="0.063">
+  <properties/>
+  <testcase name="default database settings have no local credential fallback()" classname="com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest" time="0.001"/>
+  <testcase name="default schema is owned by Flyway and validated by Hibernate()" classname="com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest" time="0.001"/>
+  <testcase name="default Keycloak administrator settings have no local credential fallback()" classname="com.geoknoesis.trustweave.saas.server.config.DefaultDatabaseProfileTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

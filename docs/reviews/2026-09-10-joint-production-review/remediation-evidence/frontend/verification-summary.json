@@ -1,0 +1,8 @@
+{
+  "saas_commit": "17d13e9a6ee0df29d2a0c7e1215d4abf2b3bb254",
+  "tests": 302,
+  "passed": 302,
+  "failed": 0,
+  "coverage_scope": "Application code only, with test helpers and fixtures excluded",
+  "crypto_scope": "Real WebCrypto encryption/decryption, wrong-holder and authentication-tag rejection, complete envelope validation; device/browser interoperability remains separate"
+}

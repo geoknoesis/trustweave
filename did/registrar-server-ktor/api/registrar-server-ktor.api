@@ -8,6 +8,8 @@ public final class org/trustweave/did/registrar/server/DidRegistrarServer {
 	public final fun start (Z)V
 	public static synthetic fun start$default (Lorg/trustweave/did/registrar/server/DidRegistrarServer;ZILjava/lang/Object;)V
 	public final fun stop ()V
+	public final fun withAuthentication (Lorg/trustweave/observability/HostAuthentication;)Lorg/trustweave/did/registrar/server/DidRegistrarServer;
+	public final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/did/registrar/server/DidRegistrarServer;
 }
 
 public final class org/trustweave/did/registrar/server/dto/CreateDidRequest {

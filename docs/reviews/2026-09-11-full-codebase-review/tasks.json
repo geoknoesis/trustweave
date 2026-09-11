@@ -1,0 +1,188 @@
+{
+  "goal": "Raise the six-category mean from 8.6 to above 9.5",
+  "date": "2026-09-11",
+  "note": "Estimates assume the AI-assisted cadence this repository has been working at. Items marked does_not_compress are gated by external qualification, hardware, or real deployment time and will not shrink with more tooling.",
+  "tasks": [
+    {
+      "id": "T01",
+      "priority": "P0",
+      "category": "Deployment and release",
+      "title": "Make the working tree pass its own build",
+      "problem": "./gradlew build fails. kms:plugins:hashicorp has 232 ktlint violations across 10 files (169 main, 63 test) — the Vault Transit routing and response-parsing work that closed finding R15 was never linted. New and changed code carries no baseline cover, so this fails on any push.",
+      "action": "Run ./gradlew :kms:plugins:hashicorp:ktlintFormat, hand-fix the residue, re-run ./gradlew build. Do not regenerate the module baseline — these violations are new code, not grandfathered backlog.",
+      "acceptance": "./gradlew build completes with BUILD SUCCESSFUL on the full tree; kms/plugins/hashicorp/config/ktlint/baseline.xml is unchanged.",
+      "estimate": "under an hour",
+      "score_effect": "Deployment and release 7.0 -> 7.5"
+    },
+    {
+      "id": "T02",
+      "priority": "P0",
+      "category": "Deployment and release",
+      "title": "Land one candidate on main and stop reviewing an unversioned tree",
+      "problem": "main is at e0a4464f with 169 uncommitted files. The remediation those files contain is already committed on codex/joint-remediation-20260910 (dbec32c0) and codex/configuration-data-20260910 (5e8dc04c), neither merged. The working tree differs from dbec32c0 in only two tracked files (reference-wallet/CUSTODY.md and SdJwtVc.kt) plus untracked review evidence. Every score since 2026-09-07 was awarded to code that is not on any branch reachable from main.",
+      "action": "Reconcile the two local file edits onto codex/joint-remediation-20260910, merge that branch into main, stage the review evidence explicitly (never git add -A; the tree carries in-progress docs and scratch tests), push, and confirm the CI run on main is green.",
+      "acceptance": "git status is clean, origin/main contains the remediation commits, and the CI run for that commit passes all gates including the new junit-contract, test-evidence, coverage and VI cross-stack steps.",
+      "estimate": "half a day",
+      "score_effect": "Deployment and release 7.5 -> 8.3"
+    },
+    {
+      "id": "T03",
+      "priority": "P0",
+      "category": "Deployment and release",
+      "title": "Build a publication path that actually publishes",
+      "problem": "No build file declares a publishing repository. maven-publish is applied to every JAR module and signing is enforced for PublishToMavenRepository, but that task type is never created, so publishToMavenLocal is the only thing that works. The POM has no scm block, which Sonatype Central rejects outright, and its description points readers at docs/reference/module-maturity.md, a path that does not exist (the file is docs/api-reference/module-maturity.md). v0.7.0 is tagged with no GitHub release and no published artifact.",
+      "action": "Add the Central publishing repository and credentials wiring, add scm and issueManagement to the POM, correct the doc path in the description, and add a publish workflow triggered on v* tags that runs the release-evidence gates and then publishes signed artifacts with the CycloneDX SBOM and provenance attestation. Dry-run against a staging repository first.",
+      "acceptance": "A tagged prerelease publishes signed, SBOM-carrying artifacts to a staging repository; the staged POM validates against Central's requirements; a GitHub release exists with the evidence bundle attached.",
+      "estimate": "two to three days, plus Central namespace verification which does_not_compress",
+      "score_effect": "Deployment and release 8.3 -> 9.5"
+    },
+    {
+      "id": "T04",
+      "priority": "P1",
+      "category": "Testing and documentation",
+      "title": "Close the coverage gap outside the recently reviewed modules",
+      "problem": "Merged coverage is 57.30% line / 39.83% branch and the policy floors (56.0/38.0) were set just under the measurement rather than at a target. The modules reviewed in the last five rounds are excellent — verifiable-intent 90.0%/69.5%, observability 97.8%/87.2%, kms-core 85.0%, common 87.0% — and the rest of the library is not: credential-api 48.6%/38.1% over 4,095 lines, did-core 58.1%/33.4% over 2,491, wallet-core 24.5%/24.0%, did:web 21.5% (the SSRF-sensitive resolver), did/registrar 11.5%, registrar-server-ktor 9.5%, credential-models-mp 6.8%, common-mp 0%, and did plugins ion/sol/polygon/plc/cheqd/ens between 1.2% and 2.5%.",
+      "action": "Work top-down by untested line count: credential-api first (issuance, verification, proof engines, schema), then did-core resolution, then wallet-core and did:web. Add per-scope floors to config/coverage-policy.json as each module lands and raise the global floor in step. Decide explicitly whether the 1-3% DID plugins are shipped or experimental, and mark them in trustweave-capabilities.json accordingly.",
+      "acceptance": "Merged coverage at or above 75% line / 60% branch; no module over 500 lines below 60% line unless declared experimental in the capability catalog; the global floor in config/coverage-policy.json is raised to the new measurement minus 1.",
+      "estimate": "two to three weeks of sustained test writing; this is the largest single item on the list",
+      "score_effect": "Testing and documentation 8.5 -> 9.4"
+    },
+    {
+      "id": "T05",
+      "priority": "P1",
+      "category": "Configuration and data",
+      "title": "Pull all dependency coordinates back into the version catalog",
+      "problem": "61 dependency coordinates are hardcoded as literal strings in module build files, outside gradle/libs.versions.toml. They have drifted, and the drift is on libraries that parse untrusted network input: bitcoinj 0.16.2 hardcoded in anchors/plugins/bitcoin and did/plugins/btcr against catalog 0.17.1; web3j 4.10.0 in did/plugins/ens, ethr and polygon against catalog 5.0.2 / legacy 4.14.0; gson 2.10.1 in did/plugins/ion against catalog 2.14.0; slf4j 2.0.9 in did-core against catalog 2.0.17; kotlinx-coroutines-test 1.8.1 in five modules against catalog 1.10.2. Dependabot updates the catalog and these modules never move. The new observability module pins OpenTelemetry 1.65.0 inline in four places.",
+      "action": "Move every coordinate into libs.versions.toml (adding otel, testcontainers-postgresql, wiremock and didcomm entries), converge the drifted versions and run the affected suites, then add a build-level check that fails on a literal group:name:version string in any dependency declaration.",
+      "acceptance": "grep for literal versioned coordinates in build.gradle.kts files returns zero outside the catalog; the new gate fails a deliberately reintroduced literal; the full suite passes on the converged versions.",
+      "estimate": "one to two days, plus whatever the web3j 4.10 -> 5.x migration turns up",
+      "score_effect": "Configuration and data 8.8 -> 9.6"
+    },
+    {
+      "id": "T06",
+      "priority": "P1",
+      "category": "Observability and diagnosability",
+      "title": "Instrument the library, not only the six HTTP hosts",
+      "problem": "The observability module is the best-tested code in the repository and integrates six Ktor hosts with traces, protected Prometheus metrics, bounded admission and pool diagnostics. But instrumentation stops at the HTTP boundary: 33 of 788 main-source files reference a logger at all, and DID resolution, KMS operations, wallet storage and credential verification emit no structured events, no metrics and no correlation identifier. A host that sees a failed verification span has nothing to join it to.",
+      "action": "Define a minimal SPI in the observability module (operation name, outcome, duration, correlation id, no secrets) and wire it through the four core paths: did-core resolution, kms-core sign/verify/generate, wallet-core store/get/query and credential-api issue/verify. Propagate the HostRequestId already set by HostObservability. Add counters and latency histograms for each, and a documented set of failure reason codes.",
+      "acceptance": "A single verification failure produces a host span, a library event carrying the same correlation id and a reason code, and a counter increment; the operations runbook documents every emitted metric and reason code; the observability module's own coverage floor holds.",
+      "estimate": "one week",
+      "score_effect": "Observability and diagnosability 9.0 -> 9.5"
+    },
+    {
+      "id": "T07",
+      "priority": "P1",
+      "category": "Security and access control",
+      "title": "Give the shipped servers an authentication surface",
+      "problem": "DidRegistrarServer, VcApiServer and the status-list server ship with no authentication or authorization primitive of any kind. VcApiServer's own KDoc states there is no API key, bearer token or mTLS anywhere in the module. The registrar creates, updates and deactivates DIDs. The mitigation is a loopback default plus documentation telling operators to front the server with a proxy, which is guidance, not a control. trust-registry-server already demonstrates the right shape with a required bearer token on mutating routes, and DidRegistrarServer already has a withObservability extension point to model the API on.",
+      "action": "Add a withAuthentication hook alongside withObservability, taking a pluggable verifier (bearer, mTLS subject, or a caller-supplied predicate). Default to fail-closed on mutating routes so an unconfigured server refuses writes rather than accepting them. Add per-caller rate limiting distinct from the existing global admission bound.",
+      "acceptance": "Each server rejects unauthenticated mutating requests by default; a configured verifier admits them; rate limiting is exercised by tests; the KDoc no longer tells the reader there is no authentication.",
+      "estimate": "three to four days",
+      "score_effect": "Security and access control 8.8 -> 9.2"
+    },
+    {
+      "id": "T08",
+      "priority": "P1",
+      "category": "Security and access control",
+      "title": "Close the workflow supply-chain gaps",
+      "problem": "ci.yml, docs-check.yml and release-evidence.yml pin every action by commit SHA. conformance-nightly.yml (0 of 5 pinned), conformance-pr.yml (0 of 4) and deploy.yml (0 of 5) use mutable tags. conformance-nightly.yml and conformance-pr.yml also have no top-level permissions block, so they run with the repository default token scope — and the nightly job invokes actions/github-script@v7, which creates issues, on that token.",
+      "action": "SHA-pin the 14 unpinned action references with version comments, add least-privilege permissions blocks to the two workflows that lack one, and scope the nightly job's issues:write to the single step that needs it.",
+      "acceptance": "Every uses: reference in .github/workflows resolves to a 40-character SHA; every workflow declares top-level permissions; Dependabot's github_actions ecosystem still opens update PRs against the pinned refs.",
+      "estimate": "under an hour",
+      "score_effect": "Security and access control 9.2 -> 9.35"
+    },
+    {
+      "id": "T09",
+      "priority": "P1",
+      "category": "Security and access control",
+      "title": "Declare what is actually supported",
+      "problem": "common/src/main/resources/trustweave-capabilities.json has 8 entries for 107 modules, and not one is marked supported — four stubs and four experimental. docs/operations/custody-qualification.md states that no custody profile is qualified. A consumer cannot tell which of 107 modules is production code, and the review series has correctly refused to award a production score on that basis for four rounds running.",
+      "action": "Define the bar for supported (coverage floor, security review, interop evidence, documented operational limits) and classify every module against it. Qualify the GA core first: did-core, did:key, did:web, credential-api, kms-core, one KMS provider, wallet-core, verifiable-intent. Generate the catalog from module metadata so it cannot drift, and fail the build when a module has no declared maturity.",
+      "acceptance": "All 107 modules appear in the catalog with a maturity; at least the GA core set is supported with linked evidence; a new module without a maturity declaration fails the build.",
+      "estimate": "one week to classify and wire the gate; the underlying custody and hardware qualification does_not_compress",
+      "score_effect": "Security and access control 9.35 -> 9.5"
+    },
+    {
+      "id": "T10",
+      "priority": "P2",
+      "category": "Reliability and scale",
+      "title": "Close the bitstring status-list cancellation gaps",
+      "problem": "BitstringStatusListManager carries two TODOs marking loops that iterate the full status list (131,072 entries by default) with no cooperative cancellation check, at lines 1211 and 1263. Both are plain non-suspend functions, so they cannot reach coroutineContext. A cancelled status-list refresh keeps burning CPU to completion.",
+      "action": "Make both functions suspend and call coroutineContext.ensureActive() every 8192 iterations, as the TODOs themselves prescribe, or move the work behind a cancellable dispatcher boundary. Add a test that cancels mid-encode and asserts prompt termination.",
+      "acceptance": "Both TODOs are gone; a cancellation test proves the loop stops early; the status-list suite still passes.",
+      "estimate": "half a day",
+      "score_effect": "Reliability and scale 9.2 -> 9.35"
+    },
+    {
+      "id": "T11",
+      "priority": "P2",
+      "category": "Reliability and scale",
+      "title": "Qualify the ledger at deployment scale",
+      "problem": "PostgresIntentLedger reliability is qualified against a fixed local PostgreSQL 16 fixture: WAL recovery, contention, lock timeout and a one-minute skewed workload. check-reliability-evidence.py states the limit in its own output — no production capacity, RPO/RTO, replica promotion or external journal qualification. Reliability cannot pass 9.5 on component evidence alone.",
+      "action": "Run a sustained multi-hour load at target throughput with a real connection pool, exercise replica promotion with the ledger under write load, measure and publish RPO/RTO, and document the admission-fencing procedure the integrity audit depends on.",
+      "acceptance": "Published load, failover and RPO/RTO figures for a named deployment profile; the reliability evidence gate covers them.",
+      "estimate": "one week of engineering; the deployment and soak time does_not_compress",
+      "score_effect": "Reliability and scale 9.35 -> 9.5"
+    },
+    {
+      "id": "T12",
+      "priority": "P2",
+      "category": "Security and access control",
+      "title": "Keep ledger failures inside the verification result contract",
+      "problem": "ChainVerifier.verify returns a ChainVerificationResult and translates only java.sql.SQLException from the budget reservation. PostgresIntentLedger.reserveImpl also throws IllegalStateException from check(rows.getString(1) == budget.currency && rows.getLong(2) == budget.maximum) when a presented budget disagrees with the stored account. That is reachable: the ledger scope is sha256 of the L2 JWT alone, so one signed L2 carrying two payment-mandate disclosures with different budgets yields the same scope under different presentations. The second presentation raises an unchecked exception out of a function whose documented contract is a result object.",
+      "action": "Catch IllegalStateException and IllegalArgumentException at the reserve call site and return fail(\"Budget policy differs from the stored mandate\") rather than propagating. Add a regression presenting the same L2 JWT with two different budget disclosures.",
+      "acceptance": "The regression returns valid = false with a stable error; no exception escapes verify() for any presenter-controlled input.",
+      "estimate": "an hour",
+      "score_effect": "folded into T07/T09"
+    },
+    {
+      "id": "T13",
+      "priority": "P2",
+      "category": "Deployment and release",
+      "title": "Make the validation gates runnable on the documented Windows layout",
+      "problem": "check-test-evidence.py and check-junit-contract.py default --build-root to the in-repo build/ directory. On this project's documented Windows default, outputs go to %LOCALAPPDATA%/TrustWeave/gradle-build/, and the stale in-repo build/ tree from 2026-09-06 is what the scripts read. Run with their defaults today, they report 40 evidence failures and 8 invalid JUnit methods; pointed at the real build root they both exit 0 with zero failures. A developer running the gates locally gets an entirely fictional result, and the failure mode is silent in the other direction too.",
+      "action": "Resolve the build root the way the Gradle build does (honour trustweave.windowsInRepoBuild and the LOCALAPPDATA redirect), or fail loudly when the resolved root has no test results newer than the newest source file. Stamp the evidence with the tree hash the results came from, which is the freshness check the script docstring already says it cannot perform.",
+      "acceptance": "Both scripts, run with no arguments after a build on Windows, agree with the CI result; a stale evidence tree is rejected rather than silently trusted.",
+      "estimate": "half a day",
+      "score_effect": "Deployment and release, protects T03"
+    },
+    {
+      "id": "T14",
+      "priority": "P2",
+      "category": "Testing and documentation",
+      "title": "Compile the documentation that consumers copy",
+      "problem": "check-documentation.py inventories 2,363 Kotlin blocks across 371 Markdown files and only 9 are source-backed and executed. Everything else is prose that compiles in nobody's build, which is exactly how the recorded API drift (kotlinx.datetime versus java.time, CredentialBuilder method names, duration types, signedBy, DSL constant scoping) reached the docs in the first place.",
+      "action": "Extend the distribution:examples checkDocumentationExamples mechanism to cover every block in getting-started, api-reference and tutorials, then ratchet the source-backed count in config/documentation-contract.json so it cannot fall.",
+      "acceptance": "All quick-start and api-reference Kotlin blocks compile and the runnable ones execute in CI; the contract records the new floor.",
+      "estimate": "one week",
+      "score_effect": "Testing and documentation 9.4 -> 9.5"
+    },
+    {
+      "id": "T15",
+      "priority": "P3",
+      "category": "Security and access control",
+      "title": "Audit the broad catch surface",
+      "problem": "549 catch (Exception) or catch (Throwable) sites in 788 main-source files, with 12 empty catch bodies. The security-critical paths reviewed in this round all fail closed correctly, but the surface as a whole has not been audited, and a swallowed CancellationException or a masked verification failure is exactly the class of defect these rounds keep finding one at a time.",
+      "action": "Triage by module, starting with credential-api, did-core and the KMS providers. Every catch should either rethrow CancellationException, narrow to the expected type, or carry a comment explaining why the broad catch is correct. Add a lint rule or detekt check for empty catch bodies.",
+      "acceptance": "Zero empty catches; CancellationException is never swallowed; broad catches in the four core modules are narrowed or justified in a comment.",
+      "estimate": "one week, incremental",
+      "score_effect": "hardening; protects the 9.5 rather than reaching it"
+    }
+  ],
+  "sequence": {
+    "week_1": ["T01", "T02", "T08", "T10", "T12", "T13"],
+    "week_2_3": ["T03", "T05", "T07"],
+    "week_2_6": ["T04"],
+    "week_4_5": ["T06", "T09", "T14"],
+    "ongoing": ["T11", "T15"]
+  },
+  "projected": {
+    "security_and_access_control": 9.5,
+    "observability_and_diagnosability": 9.5,
+    "reliability_and_scale": 9.5,
+    "configuration_and_data": 9.6,
+    "deployment_and_release": 9.5,
+    "testing_and_documentation": 9.5,
+    "overall": 9.52
+  }
+}

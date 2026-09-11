@@ -21,7 +21,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Logging
-    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation(libs.slf4j.api)
 
     // Note: IBM Cloud SDK dependencies are not available in public Maven repositories
     // This implementation uses HTTP client directly. For production use, add IBM SDK

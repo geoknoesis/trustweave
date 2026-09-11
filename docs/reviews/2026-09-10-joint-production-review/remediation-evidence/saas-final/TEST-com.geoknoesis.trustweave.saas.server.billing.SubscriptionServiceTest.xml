@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:42.352Z" hostname="THEMATRIX" time="0.708">
+  <properties/>
+  <testcase name="an incomplete Stripe subscription does not grant the tier()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.643"/>
+  <testcase name="getSubscriptionByOrganizationId should return subscription when found()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.007"/>
+  <testcase name="webhook cancellation revokes the tier — dashboard cancellations must not leave paid quotas()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.01"/>
+  <testcase name="createSubscription should throw exception when organization not found()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.011"/>
+  <testcase name="createSubscription should create subscription when organization exists()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.008"/>
+  <testcase name="a newer webhook event applies and records when it was synced()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.003"/>
+  <testcase name="an older webhook event does not overwrite a newer status()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.002"/>
+  <testcase name="cancelSubscription should cancel subscription and update organization tier()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.005"/>
+  <testcase name="creating a subscription must not clobber the just-saved stripeCustomerId()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.004"/>
+  <testcase name="webhook transition to ACTIVE grants the organization the tier it paid for()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.003"/>
+  <testcase name="a trialing subscription grants the tier — Stripe treats trials as entitled()" classname="com.geoknoesis.trustweave.saas.server.billing.SubscriptionServiceTest" time="0.005"/>
+  <system-out><![CDATA[00:15:42.973 WARN  [] c.g.t.s.s.b.SubscriptionService - Not granting tier PRO to org 1: provider='stripe', subscription sub_e8c2187332d246d0ac2e070ca5bfb3b7 status=INACTIVE
+00:15:43.008 INFO  [] c.g.t.s.s.b.SubscriptionService - Org 7 tier PRO -> FREE following subscription sub_x status CANCELED
+00:15:43.038 INFO  [] c.g.t.s.s.b.SubscriptionService - Org 7 tier FREE -> PRO following subscription sub_x status ACTIVE
+00:15:43.040 INFO  [] c.g.t.s.s.b.SubscriptionService - Skipping out-of-order status PAST_DUE for subscription sub_x (event 2026-09-11T04:05:43.040237600Z <= last applied 2026-09-11T04:15:43.040237600Z)
+00:15:43.053 INFO  [] c.g.t.s.s.b.SubscriptionService - Org 7 tier FREE -> PRO following subscription sub_x status ACTIVE
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,61 @@
+{
+  "assessment_type": "full-codebase-review",
+  "date": "2026-09-11",
+  "repository": "trustweave",
+  "scope": "Whole SDK working tree on main at e0a4464f with 169 uncommitted files (87 modified, 82 untracked). trustweave-saas is out of scope.",
+  "rubric": "Same six equally weighted categories as the 2026-09-05 through 2026-09-10 rounds, so the numbers are comparable. Engineering judgement, not certification.",
+  "method": "Independent whole-repository pass. Unlike the 2026-09-07..09-10 rounds, which each reassessed one category against newly written code and carried the other five forward, every category here is re-derived from the current tree. A full ./gradlew build (13m38s, 2188 tasks), checkKotlinAbi, the merged Kover report, and all seven Python validation gates were executed.",
+  "previous": {
+    "date": "2026-09-10",
+    "source": "docs/reviews/2026-09-10-configuration-data/scores.json",
+    "security_and_access_control": 9.0,
+    "observability_and_diagnosability": 9.6,
+    "reliability_and_scale": 9.5,
+    "configuration_and_data": 9.5,
+    "deployment_and_release": 8.5,
+    "testing_and_documentation": 9.5,
+    "overall": 9.3,
+    "note": "Five of six categories in that round were carried forward, not reassessed."
+  },
+  "current": {
+    "verdict": "Strong, carefully hardened engineering with an unreleasable delivery path. The tree does not pass its own build, cannot be published anywhere, and half the library outside the recently reviewed modules is thinly tested.",
+    "security_and_access_control": 8.8,
+    "observability_and_diagnosability": 9.0,
+    "reliability_and_scale": 9.2,
+    "configuration_and_data": 8.8,
+    "deployment_and_release": 7.0,
+    "testing_and_documentation": 8.5,
+    "overall": 8.6,
+    "unrounded": "8.55"
+  },
+  "why_it_differs_from_the_carried_forward_9_3": {
+    "security_and_access_control": "-0.2: three shipped HTTP servers have no authentication primitive at all, no plugin is declared production-supported in the capability catalog, and three of six workflows use mutable action tags (two with no permissions block).",
+    "observability_and_diagnosability": "-0.6: the 9.6 was scored against the six HTTP hosts. Measured across the whole tree, 33 of 788 main-source files reference a logger; DID resolution, KMS, wallet and credential verification emit no structured events or metrics.",
+    "reliability_and_scale": "-0.3: ledger durability work is genuinely strong, but the bitstring status manager still carries two documented cancellation gaps over 131,072-entry loops, and no deployment-scale evidence exists.",
+    "configuration_and_data": "-0.7: the configuration loader is excellent, but 61 dependency coordinates sit outside the version catalog with verified drift on network-facing parsers (bitcoinj, web3j, gson, slf4j, coroutines-test).",
+    "deployment_and_release": "-1.5: ./gradlew build FAILS on this tree (232 ktlint violations); no publishing repository is configured in any build file; the POM has no scm block and points at a non-existent doc; no release exists for v0.7.0; the reviewed remediation lives on unmerged codex/* branches while main carries an unversioned near-copy.",
+    "testing_and_documentation": "-1.0: 3,897 tests pass cleanly, but merged coverage is 57.30% line / 39.83% branch and the policy floors (56/38) sit just under the measurement. credential-api is 48.6%/38.1% over 4,095 lines; wallet-core 24.5%; did:web 21.5%; six DID plugins 1-3%."
+  },
+  "verified_evidence": {
+    "build": "FAILED in 13m38s; 2188 actionable tasks; 2 failing tasks, both ktlint on kms:plugins:hashicorp",
+    "tests": "3897 executed, 0 failures, 0 errors, 15 documented skips, 0 @Disabled across 489 suite XMLs",
+    "abi": "checkKotlinAbi passed",
+    "coverage": "merged 57.30% line, 39.83% branch, 60.60% method",
+    "documentation_gates": "61 script unit tests pass; 371 Markdown files checked, 0 errors; capability docs in sync",
+    "ci_on_main": "green since 2026-09-06 (run 34040898083); the red-since-2026-08-23 state recorded in earlier rounds no longer holds",
+    "ktlint_violations": "232 across 10 files in kms/plugins/hashicorp (169 main, 63 test)"
+  },
+  "target": {
+    "overall": 9.5,
+    "required_mean": "at least 57.0 of 60",
+    "allocation": {
+      "security_and_access_control": 9.5,
+      "observability_and_diagnosability": 9.5,
+      "reliability_and_scale": 9.5,
+      "configuration_and_data": 9.6,
+      "deployment_and_release": 9.5,
+      "testing_and_documentation": 9.5,
+      "overall": 9.52
+    }
+  }
+}

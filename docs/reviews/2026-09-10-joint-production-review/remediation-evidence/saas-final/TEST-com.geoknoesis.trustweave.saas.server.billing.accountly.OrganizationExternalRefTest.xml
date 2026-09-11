@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:47.454Z" hostname="THEMATRIX" time="0.004">
+  <properties/>
+  <testcase name="returns null for foreign or malformed refs()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest" time="0.001"/>
+  <testcase name="formats and parses org external ref()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.OrganizationExternalRefTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

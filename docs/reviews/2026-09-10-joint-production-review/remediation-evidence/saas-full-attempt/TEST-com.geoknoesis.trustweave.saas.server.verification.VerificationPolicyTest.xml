@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:44.992Z" hostname="THEMATRIX" time="0.009">
+  <properties/>
+  <testcase name="strict adds revocation and expiry()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.0"/>
+  <testcase name="every level verifies the signature()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.001"/>
+  <testcase name="basic checks the signature only()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.0"/>
+  <testcase name="standard adds issuer trust()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.001"/>
+  <testcase name="the level is named in the policy so a result can say how it was checked()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.0"/>
+  <testcase name="issuer trust cannot be claimed without an issuer list()" classname="com.geoknoesis.trustweave.saas.server.verification.VerificationPolicyTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

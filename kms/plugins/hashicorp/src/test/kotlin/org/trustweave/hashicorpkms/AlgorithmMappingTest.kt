@@ -1,11 +1,43 @@
 package org.trustweave.hashicorpkms
 
-import org.trustweave.kms.Algorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.kms.Algorithm
 import kotlin.test.*
 
 class AlgorithmMappingTest {
+    @Test
+    fun `Ed25519 conversion rejects truncated keys and unrelated DER prefixes`() {
+        for (bytes in listOf(ByteArray(31), ByteArray(33), ByteArray(44))) {
+            assertFailsWith<IllegalArgumentException> {
+                AlgorithmMapping.publicKeyPemToJwk(
+                    java.util.Base64
+                        .getEncoder()
+                        .encodeToString(bytes),
+                    Algorithm.Ed25519,
+                )
+            }
+        }
+        val key =
+            java.security.KeyPairGenerator
+                .getInstance("Ed25519")
+                .generateKeyPair()
+                .public.encoded
+        val result =
+            AlgorithmMapping.publicKeyPemToJwk(
+                java.util.Base64
+                    .getEncoder()
+                    .encodeToString(key),
+                Algorithm.Ed25519,
+            )
+        assertEquals(
+            32,
+            java.util.Base64
+                .getUrlDecoder()
+                .decode(result["x"] as String)
+                .size,
+        )
+    }
 
     @Test
     fun `test to vault key type for all supported algorithms`() {
@@ -61,10 +93,12 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test resolve key name`() {
-        val config = VaultKmsConfig.builder()
-            .address("http://localhost:8200")
-            .transitPath("transit")
-            .build()
+        val config =
+            VaultKmsConfig
+                .builder()
+                .address("http://localhost:8200")
+                .transitPath("transit")
+                .build()
 
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("my-key", config))
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("transit/keys/my-key", config))
@@ -73,12 +107,13 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test resolve key name with custom transit path`() {
-        val config = VaultKmsConfig.builder()
-            .address("http://localhost:8200")
-            .transitPath("custom-transit")
-            .build()
+        val config =
+            VaultKmsConfig
+                .builder()
+                .address("http://localhost:8200")
+                .transitPath("custom-transit")
+                .build()
 
         assertEquals("my-key", AlgorithmMapping.resolveKeyName("custom-transit/keys/my-key", config))
     }
 }
-

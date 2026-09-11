@@ -1,0 +1,87 @@
+# HELP trustweave_intent_operations_total Completed ledger operations by bounded outcome.
+# TYPE trustweave_intent_operations_total counter
+trustweave_intent_operations_total{operation="migrate",outcome="success"} 1
+trustweave_intent_operations_total{operation="migrate",outcome="rejected"} 0
+trustweave_intent_operations_total{operation="migrate",outcome="invalid"} 0
+trustweave_intent_operations_total{operation="migrate",outcome="storage_failure"} 0
+trustweave_intent_operations_total{operation="migrate",outcome="failure"} 0
+trustweave_intent_operations_total{operation="migrate",outcome="cancelled"} 0
+trustweave_intent_operations_total{operation="reserve",outcome="success"} 51
+trustweave_intent_operations_total{operation="reserve",outcome="rejected"} 101
+trustweave_intent_operations_total{operation="reserve",outcome="invalid"} 0
+trustweave_intent_operations_total{operation="reserve",outcome="storage_failure"} 1
+trustweave_intent_operations_total{operation="reserve",outcome="failure"} 0
+trustweave_intent_operations_total{operation="reserve",outcome="cancelled"} 0
+trustweave_intent_operations_total{operation="reconcile",outcome="success"} 9
+trustweave_intent_operations_total{operation="reconcile",outcome="rejected"} 1
+trustweave_intent_operations_total{operation="reconcile",outcome="invalid"} 0
+trustweave_intent_operations_total{operation="reconcile",outcome="storage_failure"} 0
+trustweave_intent_operations_total{operation="reconcile",outcome="failure"} 0
+trustweave_intent_operations_total{operation="reconcile",outcome="cancelled"} 0
+trustweave_intent_operations_total{operation="health",outcome="success"} 3
+trustweave_intent_operations_total{operation="health",outcome="rejected"} 0
+trustweave_intent_operations_total{operation="health",outcome="invalid"} 0
+trustweave_intent_operations_total{operation="health",outcome="storage_failure"} 1
+trustweave_intent_operations_total{operation="health",outcome="failure"} 0
+trustweave_intent_operations_total{operation="health",outcome="cancelled"} 0
+# HELP trustweave_intent_in_flight Operations currently executing, including connection and lock waits.
+# TYPE trustweave_intent_in_flight gauge
+trustweave_intent_in_flight{operation="migrate"} 0
+trustweave_intent_in_flight{operation="reserve"} 0
+trustweave_intent_in_flight{operation="reconcile"} 0
+trustweave_intent_in_flight{operation="health"} 0
+# HELP trustweave_intent_operation_seconds Ledger duration including connection and transaction completion.
+# TYPE trustweave_intent_operation_seconds histogram
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="0.01"} 0
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="0.1"} 0
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="1.0"} 1
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="5.0"} 1
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="10.0"} 1
+trustweave_intent_operation_seconds_bucket{operation="migrate",le="+Inf"} 1
+trustweave_intent_operation_seconds_count{operation="migrate"} 1
+trustweave_intent_operation_seconds_sum{operation="migrate"} 0.5883872
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="0.01"} 0
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="0.1"} 116
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="1.0"} 153
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="5.0"} 153
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="10.0"} 153
+trustweave_intent_operation_seconds_bucket{operation="reserve",le="+Inf"} 153
+trustweave_intent_operation_seconds_count{operation="reserve"} 153
+trustweave_intent_operation_seconds_sum{operation="reserve"} 11.503576999999995
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="0.01"} 0
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="0.1"} 10
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="1.0"} 10
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="5.0"} 10
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="10.0"} 10
+trustweave_intent_operation_seconds_bucket{operation="reconcile",le="+Inf"} 10
+trustweave_intent_operation_seconds_count{operation="reconcile"} 10
+trustweave_intent_operation_seconds_sum{operation="reconcile"} 0.5935742
+trustweave_intent_operation_seconds_bucket{operation="health",le="0.01"} 1
+trustweave_intent_operation_seconds_bucket{operation="health",le="0.1"} 4
+trustweave_intent_operation_seconds_bucket{operation="health",le="1.0"} 4
+trustweave_intent_operation_seconds_bucket{operation="health",le="5.0"} 4
+trustweave_intent_operation_seconds_bucket{operation="health",le="10.0"} 4
+trustweave_intent_operation_seconds_bucket{operation="health",le="+Inf"} 4
+trustweave_intent_operation_seconds_count{operation="health"} 4
+trustweave_intent_operation_seconds_sum{operation="health"} 0.08876819999999999
+# HELP trustweave_intent_health_poll_success Whether the latest health poll succeeded; zero before first poll.
+# TYPE trustweave_intent_health_poll_success gauge
+trustweave_intent_health_poll_success 1
+# HELP trustweave_intent_health_last_success_timestamp_seconds Unix timestamp of last successful health poll; zero before first poll.
+# TYPE trustweave_intent_health_last_success_timestamp_seconds gauge
+trustweave_intent_health_last_success_timestamp_seconds 1788840740
+# HELP trustweave_intent_reconciliation_pending Pending reservations at last successful poll.
+# TYPE trustweave_intent_reconciliation_pending gauge
+trustweave_intent_reconciliation_pending 49
+# HELP trustweave_intent_reconciliation_settled Settled reservations at last successful poll.
+# TYPE trustweave_intent_reconciliation_settled gauge
+trustweave_intent_reconciliation_settled 1
+# HELP trustweave_intent_reconciliation_released Released reservations at last successful poll.
+# TYPE trustweave_intent_reconciliation_released gauge
+trustweave_intent_reconciliation_released 1
+# HELP trustweave_intent_oldest_pending_known Whether pending age is known; zero for undated legacy reservations.
+# TYPE trustweave_intent_oldest_pending_known gauge
+trustweave_intent_oldest_pending_known 1
+# HELP trustweave_intent_oldest_pending_age_seconds Oldest pending age measured at last successful poll.
+# TYPE trustweave_intent_oldest_pending_age_seconds gauge
+trustweave_intent_oldest_pending_age_seconds 7

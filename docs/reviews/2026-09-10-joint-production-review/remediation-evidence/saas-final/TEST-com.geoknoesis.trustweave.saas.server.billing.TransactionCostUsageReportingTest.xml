@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:43.323Z" hostname="THEMATRIX" time="0.013">
+  <properties/>
+  <testcase name="reports period cost as a blockchain_tx usage event in USD cents()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="0.003"/>
+  <testcase name="does nothing when the period cost is zero()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="0.002"/>
+  <testcase name="does nothing when the organization is not found()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostUsageReportingTest" time="0.001"/>
+  <system-out><![CDATA[00:15:43.330 INFO  [] c.g.t.s.s.b.TransactionCostBillingService - Reported 1234 usd-cents of blockchain.tx usage for org 7 (2026-06)
+00:15:43.335 WARN  [] c.g.t.s.s.b.TransactionCostBillingService - Cannot report transaction costs: org 99 not found
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

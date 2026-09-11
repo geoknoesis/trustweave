@@ -6,6 +6,7 @@
 group = "org.trustweave.registry"
 
 dependencies {
+    api(project(":observability"))
     implementation(project(":trust-registry:trust-registry-core"))
     implementation(project(":common"))
     implementation(libs.kotlinx.serialization.json)

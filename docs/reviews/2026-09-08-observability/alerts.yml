@@ -1,0 +1,69 @@
+groups:
+- name: intent-host
+  rules:
+  - alert: IntentStorageFailure
+    expr: sum by (job, instance) (increase(trustweave_intent_operations_total{outcome="storage_failure"}[5m]))
+      > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/intent/README.md#storage-failure
+  - alert: IntentReconciliationBacklog
+    expr: trustweave_intent_reconciliation_pending > 40
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - alert: IntentAuthorizationLatency
+    expr: histogram_quantile(0.95, sum by (job, instance, le) (rate(trustweave_intent_operation_seconds_bucket{operation="reserve"}[5m])))
+      > 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/intent/README.md#latency-and-in-flight-work
+  - alert: IntentHealthUnavailable
+    expr: (trustweave_intent_health_poll_success == 0) or (time() - trustweave_intent_health_last_success_timestamp_seconds
+      > 120)
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/intent/README.md#health-polling-failure-or-staleness
+  - alert: IntentPendingAgeUnknown
+    expr: trustweave_intent_oldest_pending_known == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - alert: IntentPendingTooOld
+    expr: trustweave_intent_oldest_pending_age_seconds > 900
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      runbook: docs/operations/intent/README.md#reconciliation-backlog-and-age
+  - alert: IntentHostUnavailable
+    expr: up{job="trustweave-intent"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape
+  - alert: IntentHostMissing
+    expr: absent(up{job="trustweave-intent"})
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape
+  - alert: IntentTelemetryMissing
+    expr: (up{job="trustweave-intent"} == 1) unless on (job, instance) trustweave_intent_health_poll_success
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      runbook: docs/operations/intent/README.md#missing-host-or-failed-scrape

@@ -34,7 +34,7 @@ dependencies {
     }
 
     // Logging
-    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation(libs.slf4j.api)
     // Add other walt.id modules as needed:
     // implementation("id.walt.crypto:waltid-crypto:$WALTID_VERSION")
     // implementation("id.walt.credentials:waltid-verifiable-credentials:$WALTID_VERSION")

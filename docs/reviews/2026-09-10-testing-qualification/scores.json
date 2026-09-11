@@ -1,0 +1,57 @@
+{
+  "previous_overall": 9.0,
+  "overall": 9.1,
+  "categories": [
+    {
+      "name": "Security and access control",
+      "score": 9,
+      "reason": "Authenticated merchant recurrence terms, single-use base mandates and atomic agent occurrence caps join existing signature/cart/replay checks. Live custody remains unqualified.",
+      "previous": 9,
+      "assessment_note": "Historical score carried forward; not reassessed in this testing/documentation review."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "score": 9.6,
+      "reason": "Shared instrumentation now integrates six SDK HTTP hosts with coroutine-safe traces, authenticated metrics, bounded admission, connection-pool diagnostics, real authenticated OTLP export and exporter-backpressure evidence. Deployment SLO agreement, backend retention/access enforcement and actual on-call qualification remain open.",
+      "previous": 9.6,
+      "assessment_note": "Historical score carried forward; not reassessed in this testing/documentation review."
+    },
+    {
+      "name": "Reliability and scale",
+      "score": 9,
+      "reason": "Budget and occurrence races, reconciliation rollback, replay and uncertain commit pass. Real backup/restore preserves the complete ledger snapshot; broad production load and PITR are not qualified.",
+      "previous": 9,
+      "assessment_note": "Historical score carried forward; not reassessed in this testing/documentation review."
+    },
+    {
+      "name": "Configuration and data",
+      "score": 9,
+      "reason": "Idempotent terminal reconciliation, preserved replay/count state, legacy schema migration and unknown legacy ages are tested. External journal authentication and stale-backup recovery remain host responsibilities.",
+      "previous": 9,
+      "assessment_note": "Historical score carried forward; not reassessed in this testing/documentation review."
+    },
+    {
+      "name": "Deployment and release",
+      "score": 8.5,
+      "reason": "Historical score retained. This review adds a committed SDK candidate and hosted validation; publishing and deployed release qualification remain separate.",
+      "previous": 8.5,
+      "assessment_note": "Historical score carried forward; not reassessed in this testing/documentation review."
+    },
+    {
+      "name": "Testing and documentation",
+      "score": 9.5,
+      "reason": "Full local SDK build and exact-commit hosted release-evidence gates pass; merged coverage retains its floors; 26 Python vectors, three reverse profiles and a 214-step PostgreSQL model broaden conformance; nine source-backed examples and strict discovery, named-result, matrix and skip gates protect evidence. Full provider qualification and exhaustive supported-profile/snippet review remain outside this assessment.",
+      "previous": 9.0
+    }
+  ],
+  "rubric": "Same six equally weighted categories; only Testing and documentation reassessed. Engineering judgment, not certification.",
+  "arithmetic": "54.6 / 6 = 9.1, rounded half-up to 9.1",
+  "scope": "Testing/documentation qualification of the credential-free SDK candidate, with explicit optional provider exceptions; not universal conformance or production deployment certification.",
+  "reassessment_basis": [
+    "The previous full-build, merged-coverage and Docker evidence gaps are closed for this candidate.",
+    "Hosted release evidence is bound to the exact committed source and retained with its artifacts.",
+    "Independent-language conformance adds autonomous payment, signed checkout and sequential durable ledger behavior.",
+    "Critical examples are exact copies of compiled/executed source; missing vectors, named regressions and unapproved skips fail CI.",
+    "A 10.0 remains unwarranted while external custody/provider matrices, exhaustive supported-profile conformance and the wider snippet inventory remain incomplete."
+  ]
+}

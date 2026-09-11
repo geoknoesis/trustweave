@@ -1,0 +1,103 @@
+{
+  "classes_scanned": 3057,
+  "test_methods": 3774,
+  "failures": [
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "test parseAuthorizationUrl with missing request_uri throws exception",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$UrlParseFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "test parseAuthorizationUrl with invalid URL format throws exception",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$UrlParseFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "test parseAuthorizationUrl with HTTP error response throws exception",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$AuthorizationRequestFetchFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "test fetchVerifierMetadata with HTTP error throws exception",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$MetadataFetchFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "unsigned request object with alg none is rejected",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$AuthorizationRequestFetchFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "credentials/plugins/oidc4vp/classes/kotlin/test/org/trustweave/credential/oidc4vp/Oidc4VpServiceTest.class",
+      "method": "request object signed with key not matching client_metadata jwks is rejected",
+      "descriptor": "()Lorg/trustweave/credential/oidc4vp/exception/Oidc4VpException$AuthorizationRequestFetchFailed;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "wallet/plugins/cloud/classes/kotlin/test/org/trustweave/wallet/cloud/CloudRecoveryTest.class",
+      "method": "recovery does not swallow cancellation",
+      "descriptor": "()Ljava/util/concurrent/CancellationException;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    },
+    {
+      "class": "wallet/plugins/file/classes/kotlin/test/org/trustweave/wallet/file/FileWalletFactoryTest.class",
+      "method": "typed encryption key is validated rather than silently ignored",
+      "descriptor": "()Ljava/lang/IllegalArgumentException;",
+      "access": 17,
+      "annotations": [
+        "Lorg/junit/jupiter/api/Test;"
+      ],
+      "reasons": [
+        "test must return JVM void; use explicit Unit for coroutine expression bodies"
+      ]
+    }
+  ],
+  "limits": "Direct JVM JUnit annotations only; execution and custom/dynamic test discovery require separate evidence."
+}

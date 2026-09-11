@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:11.718Z" hostname="THEMATRIX" time="0.647">
+  <properties/>
+  <testcase name="generateTransactionCostInvoiceItems should return empty list when no costs exist()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest" time="0.608"/>
+  <testcase name="markTransactionCostsAsBilled should delegate to transactionCostService()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest" time="0.023"/>
+  <testcase name="generateTransactionCostInvoiceItems should return invoice items when costs exist()" classname="com.geoknoesis.trustweave.saas.server.billing.TransactionCostBillingServiceTest" time="0.009"/>
+  <system-out><![CDATA[22:20:12.352 INFO  [] c.g.t.s.s.b.TransactionCostBillingService - Marked transaction costs as billed for organization 1, period 2026-09
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

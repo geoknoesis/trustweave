@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:53.483Z" hostname="THEMATRIX" time="0.042">
+  <properties/>
+  <testcase name="long transport outage remains retryable and stops the batch()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.006"/>
+  <testcase name="empty queue performs no remote reconciliation()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.006"/>
+  <testcase name="invalid event consumes a bounded poison attempt()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.003"/>
+  <testcase name="rate limits and credential failures preserve the poison budget()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.008"/>
+  <testcase name="reconciliation outage releases claim for later retry()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.002"/>
+  <testcase name="scheduled entry acknowledges only after remote success()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.UsageReporterTest" time="0.012"/>
+  <system-out><![CDATA[00:15:53.489 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=false, failure type=RuntimeException
+00:15:53.501 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=true, failure type=HttpClientErrorException
+00:15:53.507 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+00:15:53.508 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+00:15:53.510 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=false, failure type=HttpClientErrorException
+00:15:53.513 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage row 1 deferred; permanent rejection=false, failure type=RuntimeException
+00:15:53.516 WARN  [] c.g.t.s.s.b.accountly.UsageReporter - Usage acknowledgement fenced for row 1
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

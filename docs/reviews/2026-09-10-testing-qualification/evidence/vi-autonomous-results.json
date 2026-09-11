@@ -1,0 +1,35 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "outcomes": [
+    {
+      "name": "kotlin-autonomous-payment",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-payment-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-autonomous-payment-wrong-payment-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    }
+  ]
+}

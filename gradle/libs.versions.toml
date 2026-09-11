@@ -11,23 +11,33 @@ junit = "5.14.4"
 junit-platform = "1.14.4"
 kotest = "5.9.1"
 testcontainers = "1.21.4"
+wiremock = "2.35.2"
 
 # HTTP & Serialization
 ktor = "2.3.13"
 okhttp = "4.12.0"
-jackson = "2.21.3"
+jackson = "2.21.4"
 gson = "2.14.0"
 jayway-jsonpath = "2.9.0"
-spring-boot = "3.5.14"
+spring-boot = "4.1.1"
+
+# Observability
+opentelemetry = "1.65.0"
+opentelemetry-proto = "1.11.0-alpha"
 
 # Blockchain
 web3j = "5.0.2"
 web3j-legacy = "4.14.0"
+# 0.17 is a breaking API change (Transaction/NetworkParameters/HEX/isOpReturn all moved), so the
+# two consumers still build against 0.16.2 through bitcoinj-legacy. Both aliases live here so the
+# drift is recorded and Dependabot can see it; the 0.17 migration is tracked separately.
 bitcoinj = "0.17.1"
+bitcoinj-legacy = "0.16.2"
 algosdk = "2.10.1"
+cardano-client = "0.5.1"
 
 # Database
-postgresql = "42.7.11"
+postgresql = "42.7.13"
 mysql = "9.7.0"
 h2 = "2.4.240"
 hikaricp = "7.0.2"
@@ -48,6 +58,8 @@ google-cloud-bom-legacy = "26.80.0"
 
 # Other
 vault-java-driver = "5.1.0"
+didcommx = "0.3.2"
+mongodb-bson = "4.11.0"
 microsoft-graph = "5.80.0"
 azure-identity = "1.18.2"
 
@@ -66,12 +78,16 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 
 # Testing
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+wiremock-jre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+wiremock-jre8-standalone = { module = "com.github.tomakehurst:wiremock-jre8-standalone", version.ref = "wiremock" }
 
 # HTTP & Serialization
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -95,11 +111,22 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }
 
+# Observability
+opentelemetry-api = { module = "io.opentelemetry:opentelemetry-api", version.ref = "opentelemetry" }
+opentelemetry-extension-kotlin = { module = "io.opentelemetry:opentelemetry-extension-kotlin", version.ref = "opentelemetry" }
+opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry" }
+opentelemetry-sdk-testing = { module = "io.opentelemetry:opentelemetry-sdk-testing", version.ref = "opentelemetry" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "opentelemetry" }
+opentelemetry-proto = { module = "io.opentelemetry.proto:opentelemetry-proto", version.ref = "opentelemetry-proto" }
+
 # Blockchain
 web3j = { module = "org.web3j:core", version.ref = "web3j" }
 web3j-legacy = { module = "org.web3j:core", version.ref = "web3j-legacy" }
 bitcoinj-core = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj" }
+bitcoinj-core-legacy = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj-legacy" }
 algosdk = { module = "com.algorand:algosdk", version.ref = "algosdk" }
+cardano-client-lib = { module = "com.bloxbean.cardano:cardano-client-lib", version.ref = "cardano-client" }
+cardano-client-backend-blockfrost = { module = "com.bloxbean.cardano:cardano-client-backend-blockfrost", version.ref = "cardano-client" }
 
 # Database
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
@@ -116,6 +143,7 @@ titanium-json-ld = { module = "com.apicatalog:titanium-json-ld", version.ref = "
 titanium-rdfc = { module = "com.apicatalog:titanium-rdfc", version.ref = "titanium-rdfc" }
 jakarta-json = { module = "org.glassfish:jakarta.json", version.ref = "jakarta-json" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
 # Cloud SDKs (BOMs)
 aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk-bom" }
@@ -125,6 +153,8 @@ google-cloud-bom-legacy = { module = "com.google.cloud:libraries-bom", version.r
 
 # Other
 vault-java-driver = { module = "com.bettercloud:vault-java-driver", version.ref = "vault-java-driver" }
+didcommx = { module = "org.didcommx:didcomm", version.ref = "didcommx" }
+mongodb-bson = { module = "org.mongodb:bson", version.ref = "mongodb-bson" }
 microsoft-graph = { module = "com.microsoft.graph:microsoft-graph", version.ref = "microsoft-graph" }
 azure-identity = { module = "com.azure:azure-identity", version.ref = "azure-identity" }
 

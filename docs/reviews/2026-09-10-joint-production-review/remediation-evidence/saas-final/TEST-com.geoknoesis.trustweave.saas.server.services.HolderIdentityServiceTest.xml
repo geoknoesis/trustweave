@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:22.483Z" hostname="THEMATRIX" time="0.454">
+  <properties/>
+  <testcase name="a person in another organization is not reachable either()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.001"/>
+  <testcase name="a credential with no status list is reported as not independently revocable()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.002"/>
+  <testcase name="an out-of-scope person is indistinguishable from one that does not exist()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.001"/>
+  <testcase name="a status list failure is counted, not swallowed, and does not stop the retirement()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.002"/>
+  <testcase name="a device belonging to someone else cannot be retired through this person()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.001"/>
+  <testcase name="retiring a device revokes the credentials bound to it on the published list()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.003"/>
+  <testcase name="a person in another trust space is not reachable by guessing their id()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.002"/>
+  <testcase name="a retired device is not silently brought back to life()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.001"/>
+  <testcase name="re-presenting from a known device refreshes it rather than duplicating()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.002"/>
+  <testcase name="credentials in another trust space are untouched()" classname="com.geoknoesis.trustweave.saas.server.services.HolderIdentityServiceTest" time="0.002"/>
+  <system-out><![CDATA[00:18:22.919 INFO  [] c.g.t.s.s.s.HolderIdentityService - Retired device did:key:z6MkLostPhone for person 1; revoked 0 credential(s), 1 failed
+00:18:22.924 ERROR [] c.g.t.s.s.s.HolderIdentityService - Could not revoke urn:uuid:cred-1 after retiring device did:key:z6MkLostPhone: list unreachable
+00:18:22.924 INFO  [] c.g.t.s.s.s.HolderIdentityService - Retired device did:key:z6MkLostPhone for person 1; revoked 0 credential(s), 1 failed
+00:18:22.929 INFO  [] c.g.t.s.s.s.HolderIdentityService - Retired device did:key:z6MkLostPhone for person 1; revoked 2 credential(s), 0 failed
+00:18:22.938 INFO  [] c.g.t.s.s.s.HolderIdentityService - Retired device did:key:z6MkLostPhone for person 1; revoked 0 credential(s), 0 failed
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

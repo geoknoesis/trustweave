@@ -1,12 +1,11 @@
 package org.trustweave.hashicorpkms
 
-import org.trustweave.kms.Algorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.kms.Algorithm
 import kotlin.test.*
 
 class VaultKeyManagementServiceProviderTest {
-
     @Test
     fun `test provider name`() {
         val provider = VaultKeyManagementServiceProvider()
@@ -37,10 +36,13 @@ class VaultKeyManagementServiceProviderTest {
     fun `test provider create with address`() {
         val provider = VaultKeyManagementServiceProvider()
 
-        val kms = provider.create(mapOf(
-            "address" to "http://localhost:8200",
-            "token" to "test-token"
-        ))
+        val kms =
+            provider.create(
+                mapOf(
+                    "address" to "http://localhost:8200",
+                    "token" to "test-token",
+                ),
+            )
 
         assertNotNull(kms)
         assertTrue(kms is VaultKeyManagementService)
@@ -56,4 +58,3 @@ class VaultKeyManagementServiceProviderTest {
         assertFalse(provider.supportsAlgorithm("BLS12-381"))
     }
 }
-

@@ -1,0 +1,7 @@
+{
+    "scenario": "lock-timeout",
+    "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+    "elapsed_ms": 10113,
+    "unrelated_progress": 1,
+    "rollback_retry_success": 1
+}

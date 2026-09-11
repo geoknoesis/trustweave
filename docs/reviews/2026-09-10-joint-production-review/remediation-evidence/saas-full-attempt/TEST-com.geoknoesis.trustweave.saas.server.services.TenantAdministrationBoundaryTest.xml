@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:38.550Z" hostname="THEMATRIX" time="0.04">
+  <properties/>
+  <testcase name="missing admin role denies service access before repository reads()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.007"/>
+  <testcase name="organization argument cannot override identity during role or group creation()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.004"/>
+  <testcase name="foreign role id is hidden and mutations never reach Keycloak()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.002"/>
+  <testcase name="foreign groups are rejected on role grants and group mutation()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.007"/>
+  <testcase name="foreign user is rejected on both grant and removal before reading realm roles()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.007"/>
+  <testcase name="user search always supplies authenticated organization and never queries realm()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.001"/>
+  <testcase name="space-only access cannot become organization administration()" classname="com.geoknoesis.trustweave.saas.server.services.TenantAdministrationBoundaryTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

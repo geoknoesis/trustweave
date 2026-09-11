@@ -245,7 +245,8 @@ class DatabaseStatusListManager(
                 conn.autoCommit = false
                 try {
                     // Get status list
-                    val statusListJson = getStatusListFromDb(statusListId) ?: return@withContext false
+                    val size = lockStatusList(statusListId, conn)
+                    val statusListJson = getStatusListFromDb(statusListId, conn) ?: return@withContext false
                     val purpose = extractPurpose(statusListJson)
                     val encodedList = extractEncodedList(statusListJson)
 
@@ -265,7 +266,7 @@ class DatabaseStatusListManager(
                     }
 
                     // Update encoded list
-                    val newEncodedList = encodeBitSet(bitSet, bitSet.size())
+                    val newEncodedList = encodeBitSet(bitSet, size)
                     val updatedStatusListJson = updateEncodedList(statusListJson, newEncodedList)
 
                     // Save to database
@@ -284,6 +285,9 @@ class DatabaseStatusListManager(
 
                     conn.commit()
                     true
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    conn.rollback()
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     false
@@ -428,30 +432,23 @@ class DatabaseStatusListManager(
     override suspend fun updateStatusListBatch(
         statusListId: StatusListId,
         updates: List<StatusUpdate>,
-    ) = withContext(Dispatchers.IO) {
-        val statusListJson =
-            getStatusListFromDb(statusListId.toString())
-                ?: throw IllegalArgumentException("Status list not found: $statusListId")
-
-        val encodedList = extractEncodedList(statusListJson)
-        val bitSet = decodeBitSet(encodedList)
-        val purpose = extractPurpose(statusListJson)
-
-        for (update in updates) {
-            val revoked = update.revoked
-            val suspended = update.suspended
-            if (revoked != null && purpose == StatusPurpose.REVOCATION) {
-                bitSet.set(update.index, revoked)
-            } else if (suspended != null && purpose == StatusPurpose.SUSPENSION) {
-                bitSet.set(update.index, suspended)
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            mutateStatusList(statusListId.toString()) { conn, size, document ->
+                val purpose = extractPurpose(document)
+                for (update in updates) {
+                    require(update.index in 0 until size) { "Status index is outside the list" }
+                    require(
+                        (purpose == StatusPurpose.REVOCATION && update.revoked != null && update.suspended == null) ||
+                            (purpose == StatusPurpose.SUSPENSION && update.suspended != null && update.revoked == null),
+                    ) { "Status update does not match list purpose" }
+                }
+                val bits = decodeBitSet(extractEncodedList(document))
+                for (update in updates) bits.set(update.index, update.revoked ?: checkNotNull(update.suspended))
+                val encoded = encodeBitSet(bits, size)
+                updateStatusListInDb(statusListId.toString(), updateEncodedList(document, encoded), encoded, conn)
             }
         }
-
-        val newEncodedList = encodeBitSet(bitSet, bitSet.size())
-        val updatedStatusListJson = updateEncodedList(statusListJson, newEncodedList)
-
-        updateStatusListInDb(statusListId.toString(), updatedStatusListJson, newEncodedList)
-    }
 
     override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? =
         withContext(Dispatchers.IO) {
@@ -556,6 +553,9 @@ class DatabaseStatusListManager(
                     val deleted = stmt.executeUpdate() > 0
                     conn.commit()
                     deleted
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    conn.rollback()
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     false
@@ -605,36 +605,19 @@ class DatabaseStatusListManager(
         statusListId: StatusListId,
     ): Map<String, Boolean> =
         withContext(Dispatchers.IO) {
-            val statusListJson = getStatusListFromDb(statusListId.toString()) ?: return@withContext credentialIds.associateWith { false }
-
-            val purpose = extractPurpose(statusListJson)
-            if (purpose != StatusPurpose.REVOCATION) {
-                return@withContext credentialIds.associateWith { false }
-            }
-
-            dataSource.connection.use { conn ->
-                conn.autoCommit = false
-                try {
-                    val encodedList = extractEncodedList(statusListJson)
-                    val bitSet = decodeBitSet(encodedList)
-                    val results = mutableMapOf<String, Boolean>()
-
-                    for (credentialId in credentialIds) {
-                        val index = getOrAssignIndex(credentialId, statusListId.toString(), conn)
-                        bitSet.set(index, true)
-                        results[credentialId] = true
-                    }
-
-                    val newEncodedList = encodeBitSet(bitSet, bitSet.size())
-                    val updatedStatusListJson = updateEncodedList(statusListJson, newEncodedList)
-                    updateStatusListInDb(statusListId.toString(), updatedStatusListJson, newEncodedList, conn)
-
-                    conn.commit()
-                    results
-                } catch (e: Exception) {
-                    conn.rollback()
-                    credentialIds.associateWith { false }
+            try {
+                mutateStatusList(statusListId.toString()) { conn, size, document ->
+                    require(extractPurpose(document) == StatusPurpose.REVOCATION) { "List is not for revocation" }
+                    val bits = decodeBitSet(extractEncodedList(document))
+                    for (credentialId in credentialIds) bits.set(getOrAssignIndex(credentialId, statusListId.toString(), conn), true)
+                    val encoded = encodeBitSet(bits, size)
+                    updateStatusListInDb(statusListId.toString(), updateEncodedList(document, encoded), encoded, conn)
                 }
+                credentialIds.associateWith { true }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                credentialIds.associateWith { false }
             }
         }
 
@@ -643,54 +626,52 @@ class DatabaseStatusListManager(
         additionalSize: Int,
     ): Unit =
         withContext(Dispatchers.IO) {
-            val statusListJson =
-                getStatusListFromDb(statusListId.toString())
-                    ?: throw IllegalArgumentException("Status list not found: $statusListId")
-
-            val encodedList = extractEncodedList(statusListJson)
-            val currentBitSet = decodeBitSet(encodedList)
-            val currentSize = currentBitSet.size()
-            val newSize = currentSize + additionalSize
-            val newBitSet = BitSet(newSize)
-
-            // Copy existing bits
-            for (i in 0 until currentSize) {
-                if (currentBitSet.get(i)) {
-                    newBitSet.set(i, true)
+            require(additionalSize > 0) { "Additional size must be positive" }
+            mutateStatusList(statusListId.toString()) { conn, size, document ->
+                require(additionalSize <= Int.MAX_VALUE - size - 7) { "Expanded size is too large" }
+                val newSize = size + additionalSize
+                val encoded = encodeBitSet(decodeBitSet(extractEncodedList(document)), newSize)
+                updateStatusListInDb(statusListId.toString(), updateEncodedList(document, encoded), encoded, conn)
+                conn.prepareStatement("UPDATE status_lists SET size = ? WHERE id = ?").use { statement ->
+                    statement.setInt(1, newSize)
+                    statement.setString(2, statusListId.toString())
+                    check(statement.executeUpdate() == 1) { "Status list disappeared" }
                 }
             }
+        }
 
-            val newEncodedList = encodeBitSet(newBitSet, newSize)
-            val updatedStatusListJson = updateEncodedList(statusListJson, newEncodedList)
-
-            updateStatusListInDb(statusListId.toString(), updatedStatusListJson, newEncodedList)
-
-            // Update size in database
-            dataSource.connection.use { conn ->
-                val stmt =
-                    conn.prepareStatement(
-                        """
-                UPDATE status_lists SET size = ? WHERE id = ?
-            """,
-                    )
-                stmt.setInt(1, newSize)
-                stmt.setString(2, statusListId.toString())
-                stmt.executeUpdate()
+    /** All mutations read the current bitmap only after acquiring the cross-process row lock. */
+    private fun mutateStatusList(
+        id: String,
+        mutation: (java.sql.Connection, Int, JsonObject) -> Unit,
+    ) {
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            try {
+                val size = lockStatusList(id, conn)
+                val document = checkNotNull(getStatusListFromDb(id, conn))
+                mutation(conn, size, document)
+                conn.commit()
+            } catch (failure: Throwable) {
+                conn.rollback()
+                throw failure
             }
         }
+    }
 
     // Helper methods
 
     private fun getStatusListFromDb(statusListId: String): JsonObject? =
-        dataSource.connection.use { conn ->
-            val stmt = conn.prepareStatement("SELECT status_list_data FROM status_lists WHERE id = ?")
-            stmt.setString(1, statusListId)
-            val rs = stmt.executeQuery()
-            if (rs.next()) {
-                val jsonData = rs.getString("status_list_data")
-                json.decodeFromString(JsonObject.serializer(), jsonData)
-            } else {
-                null
+        dataSource.connection.use { conn -> getStatusListFromDb(statusListId, conn) }
+
+    private fun getStatusListFromDb(
+        statusListId: String,
+        conn: java.sql.Connection,
+    ): JsonObject? =
+        conn.prepareStatement("SELECT status_list_data FROM status_lists WHERE id = ?").use { statement ->
+            statement.setString(1, statusListId)
+            statement.executeQuery().use { rows ->
+                if (rows.next()) json.decodeFromString(JsonObject.serializer(), rows.getString(1)) else null
             }
         }
 

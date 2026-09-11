@@ -1,0 +1,62 @@
+{
+  "target": "Strictly above 9.0 using the unchanged six-category production-readiness rubric",
+  "target_achieved": false,
+  "validation_status": "50 current intent tests, lint/ABI, regenerated coverage, documentation checks and nine Prometheus evaluations passed. Reference-host restore passed; no production qualification claimed.",
+  "remediations": [
+    {
+      "id": "TW-FU-01",
+      "status": "closed",
+      "evidence": "Row lock precedes bitmap read; H2 mixed single/batch tests and 32-writer PostgreSQL test passed."
+    },
+    {
+      "id": "TW-FU-02",
+      "status": "closed",
+      "evidence": "Declared sizes, positive growth and overflow checks; atomic bitmap/metadata updates. PostgreSQL trigger-injected failure verified complete rollback."
+    },
+    {
+      "id": "TW-FU-03",
+      "status": "closed",
+      "evidence": "Batch index and purpose validation precede writes; rollback and invalid-index tests passed."
+    },
+    {
+      "id": "TW-FU-04",
+      "status": "closed",
+      "evidence": "Digest envelope verification binds expected credential bytes and media type. Positive digest round trip and tampering regression passed."
+    },
+    {
+      "id": "TW-FU-05",
+      "status": "closed",
+      "evidence": "Shared anchor handlers rethrow cancellation; real/test-mode read/write regressions passed."
+    },
+    {
+      "id": "TW-FU-06",
+      "status": "closed",
+      "evidence": "Streaming 1 MiB response cap, explicit operation deadline, redacted failures and REQNACK rejection; transport tests passed."
+    },
+    {
+      "id": "TW-FU-07",
+      "status": "closed",
+      "evidence": "JSON header serialization preserves quotes, backslashes and Unicode; shared Android JVM test passed and CI now runs it."
+    },
+    {
+      "id": "TW-FU-08",
+      "status": "open",
+      "evidence": "No production custody support promotion. Managed signing/KMS test endpoint/resource/profile requested; Accountly billing evidence is not custody evidence; physical-device and durable recovery qualification remain."
+    },
+    {
+      "id": "TW-FU-09",
+      "status": "partial",
+      "evidence": "Implemented supported agent recurrence dates/counts and merchant subscription setup using authenticated signed metadata. Added per-payment budget minimum, single-use base mandates and durable idempotent reconciliation. Conformance matrix and positive/adversarial tests expanded. Full interoperability, mixed/duplicate recurrence modes and broader merchant profiles remain outside scope."
+    },
+    {
+      "id": "TW-FU-10",
+      "status": "partial",
+      "evidence": "50 intent tests pass with unchanged coverage floors; migration, occurrence races, reconciliation failure, reference-host load and full-row restore are covered. Broader SDK and cross-stack conformance assurance remains incomplete."
+    },
+    {
+      "id": "TW-FU-11",
+      "status": "partial",
+      "evidence": "Instrumented loopback host load, actual database loss, all-row pg_dump/pg_restore comparison and replay of all 50 restored transactions pass. Nine Prometheus alert evaluations cover firing and recovery; CI/release gates retain evidence. Production deployment SLO/PITR/journal/pager exercises and current hosted release evidence remain open."
+    }
+  ]
+}

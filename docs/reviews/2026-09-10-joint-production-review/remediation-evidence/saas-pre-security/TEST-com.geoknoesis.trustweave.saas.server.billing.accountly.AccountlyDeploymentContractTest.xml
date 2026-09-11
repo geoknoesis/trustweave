@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest" tests="1" skipped="1" failures="0" errors="0" timestamp="2026-09-11T02:48:02.793Z" hostname="THEMATRIX" time="0.001">
+  <properties/>
+  <testcase name="deployed provider supports application provisioning and payment metadata()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.AccountlyDeploymentContractTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,15 @@
+{
+  "updated_utc": "2026-09-11T03:33:11.983847+00:00",
+  "saas_commit": "8d3724f3b66df7756fa569a621b81522872d8304",
+  "sdk_commit": "477088ffaff2ddf89300bf93fba31c7ed4fe9eef",
+  "high_critical_gate": "passed",
+  "high": 0,
+  "critical": 0,
+  "docker_image_id": "sha256:6b42913116f75f197bb2836cd646029765f8ef1fbc23f82e273a28378203ddb6",
+  "runtime_uid": "100",
+  "scanner": "aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
+  "limitations": "Local tested security-patch checkpoint. Boot 3.5 OSS support has ended; maintained-line migration and hosted provenance/promotion remain separate gates.",
+  "archive_sha256": "c2bfffff14a0c0f45eee9915de01ab8540127a652a2ff4714eec1ad9c6ec54d4",
+  "sbom_sha256": "f57fa88e76bdeead27b4458c08d6c90be27671b6d197aad21ed2d92edaddc6c0",
+  "vulnerabilities_sha256": "5fdafe976d99bf90060acad8812a4155b95c5743fd2514bd05ed3506033e1241"
+}

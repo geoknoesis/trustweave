@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // BitcoinJ for Bitcoin blockchain interaction
-    implementation("org.bitcoinj:bitcoinj-core:0.16.2")
+    implementation(libs.bitcoinj.core.legacy)
 
     // HTTP client
     implementation(libs.okhttp)

@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "statements": {
+      "total": 4091,
+      "covered": 2282,
+      "pct": 55.78
+    },
+    "branches": {
+      "total": 3427,
+      "covered": 1720,
+      "pct": 50.18
+    },
+    "functions": {
+      "total": 1404,
+      "covered": 660,
+      "pct": 47
+    },
+    "lines": {
+      "total": 3430,
+      "covered": 1977,
+      "pct": 57.63
+    }
+  },
+  "floors": {
+    "statements": 55,
+    "branches": 50,
+    "functions": 47,
+    "lines": 57
+  },
+  "gate": "pass",
+  "scope": "Whole frontend; critical-path qualification remains separate"
+}

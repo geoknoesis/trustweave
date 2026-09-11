@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:18:26.538Z" hostname="THEMATRIX" time="0.296">
+  <properties/>
+  <testcase name="upsert allows disabled config without chain validation()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest" time="0.139"/>
+  <testcase name="get throws when domain not in org()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest" time="0.007"/>
+  <testcase name="upsert rejects a default network not enabled for the org()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest" time="0.004"/>
+  <testcase name="upsert saves targets and trigger()" classname="com.geoknoesis.trustweave.saas.server.services.TrustSpaceAnchoringConfigServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

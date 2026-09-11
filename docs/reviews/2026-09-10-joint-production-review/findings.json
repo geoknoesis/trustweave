@@ -1,0 +1,518 @@
+[
+  {
+    "id": "R18",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Reproduced in full backend suite",
+    "title": "Custom requestContextFilter bean prevents Spring MVC startup",
+    "observation": "The custom @Component RequestContextFilter receives the default bean name requestContextFilter. Spring Boot MVC auto-configuration registers its own bean with that name. The full backend run reproduces BeanDefinitionOverrideException in 11 initial context loads, followed by cached failure-threshold errors in dependent cases.",
+    "impact": "ApplicationContextSmokeTest and multiple real integration contexts cannot start. This is a code-level bean-name collision, not a missing Docker or identity-provider prerequisite. The 111 failing test cases are not 111 independent defects.",
+    "remediation": "Give the telemetry filter an explicit distinct bean name (or rename the class), preserve Spring’s request-context filter, and keep bean overriding disabled. Re-run real application smoke and all affected integration suites.",
+    "acceptance": "Both framework and telemetry filters exist with intended ordering and no duplicate registration. The application boots, MDC is cleaned after errors/async dispatch, and the complete suite passes without enabling bean-definition overriding.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/RequestContextFilter.kt",
+        "line": 29,
+        "sha256": "61c39a042c732477afe1a462175853ea4ae52ebc7e680016979bc2f12d5b61fe"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/ApplicationContextSmokeTest.kt",
+        "line": 1,
+        "sha256": "18bd323f45f9f9e632408fde3577362f3f1806a01b277aa24245082f75074bbb"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R01",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Source-confirmed",
+    "title": "Scheduled usage delivery bypasses its transaction boundary",
+    "observation": "scheduledDrain() invokes drainOnce() on the same bean. Only drainOnce() has @Transactional. The native claim query uses FOR UPDATE SKIP LOCKED. Under Spring’s default proxy transaction mode, this internal call does not open the intended encompassing transaction.",
+    "impact": "The scheduler path cannot rely on row locks covering delivery and persistence. Whether the provider rejects the query or releases locks early must be established with the real scheduled entry point; neither outcome is acceptable as the claimed concurrency guarantee.",
+    "remediation": "Move work behind a separate proxied worker or explicit transaction boundary. Prefer short claim/finalize transactions with durable leases; do not merely put a long transaction around HTTP delivery.",
+    "acceptance": "Invoke the Spring-managed scheduled entry with PostgreSQL, assert the claim transaction, pause two workers at claim/send boundaries, and kill/restart one worker. Verify recovery and provider idempotency.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt",
+        "line": 39,
+        "sha256": "f94ad2e5598e96d523bd756f9c8e2cf75ee58e098faecd850d8962df30f093ae"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/repository/UsageOutboxRepository.kt",
+        "line": 38,
+        "sha256": "702648a3cb9a64e3e574e48a391ebe1672d6085b83e505c54b887a1327534447"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R02",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Source-confirmed design risk",
+    "title": "Outbox lease and outage handling do not bound delivery safely",
+    "observation": "A five-minute scheduler lease protects up to 100 sequential events with a default 20-second request timeout. One timeout per event alone can exceed 33 minutes. Generic transport and circuit-open failures consume the ten-attempt poison budget; only HTTP 429/503 are exempt.",
+    "impact": "A long batch can outlive its scheduler lease. When transactions are corrected, remote calls inside the transaction can exhaust DB capacity. A prolonged transient outage can leave valid billable events terminally FAILED and dependent on manual intervention.",
+    "remediation": "Use per-row durable claim tokens/expiry, bounded batches and deadlines, short transactions, remote idempotency, and classified exponential retry with jitter. Expose authenticated redrive and oldest-pending alerts.",
+    "acceptance": "Test lease expiry, provider commit followed by lost response, 429/503, repeated connection failures and recovery after more than ten drain ticks. No valid event is silently abandoned or billed twice.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt",
+        "line": 27,
+        "sha256": "f94ad2e5598e96d523bd756f9c8e2cf75ee58e098faecd850d8962df30f093ae"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt",
+        "line": 37,
+        "sha256": "f94ad2e5598e96d523bd756f9c8e2cf75ee58e098faecd850d8962df30f093ae"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/AccountlyBillingProperties.kt",
+        "line": 13,
+        "sha256": "10b14d2382033f16bf7ded56eefef09c661ea6a1a9cf3d16e270481b7b84496b"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R03",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Reproduced: seven reporter cases fail",
+    "title": "Usage reporter tests exercise the obsolete repository contract",
+    "observation": "UsageReporterTest stubs findByStatusInAndAttemptsLessThanOrderByCreatedAtAsc, while production calls claimForDelivery. It constructs UsageReporter directly and calls drainOnce(), so it also misses scheduler/proxy semantics.",
+    "impact": "Existing assertions do not qualify the changed claim path. Merely replacing mock method names would still leave the transaction defect undetected.",
+    "remediation": "Update unit contracts and add real PostgreSQL/Spring proxy integration tests for the scheduled entry point, concurrent claims and retry state transitions.",
+    "acceptance": "All existing reporter cases pass against the current method; a deliberately removed transaction or broken claim lease makes an integration test fail.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/test/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporterTest.kt",
+        "line": 38,
+        "sha256": "ce9bb8a66f21cf2551f093990bd96f738226c003f007b365851d9ceebce4209c"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/billing/accountly/UsageReporter.kt",
+        "line": 54,
+        "sha256": "f94ad2e5598e96d523bd756f9c8e2cf75ee58e098faecd850d8962df30f093ae"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R04",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Source-confirmed",
+    "title": "Shared rate-limit failures allow every request",
+    "observation": "RateLimiter.check catches every Exception from the shared store, logs a warning, and returns success. This policy applies to public token, claim and redemption paths as well as verification. No dedicated failure-policy metric is emitted by this class.",
+    "impact": "Counter-table permission loss or a store outage removes abuse limits on sensitive public operations. This is not a JWT/signature bypass, but authentication alone does not replace abuse controls.",
+    "remediation": "Define endpoint-specific failure policy. Fail closed with bounded 503 on sensitive mutations; use an explicitly bounded local fallback only for approved read operations. Add low-cardinality metrics and sampled logs.",
+    "acceptance": "Break only the counter-table access while the rest of the service remains available. Sensitive operations reject without downstream mutation; approved read fallback remains bounded across concurrent callers.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/RateLimiter.kt",
+        "line": 50,
+        "sha256": "a284a137ebaf8be61e079ff8e3d71a64ba7b826a7e266be68094bfeac2c2a2a7"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R05",
+    "repository": "SaaS",
+    "priority": "P2",
+    "confidence": "Source-confirmed design risk",
+    "title": "Shared limiter uses caller clocks and lacks a cardinality budget",
+    "observation": "The upsert and expiry sweep use Instant.now() from each application instance. Shared rows have no configured maximum, unlike the bounded local map; rejected hits still increment an integer counter.",
+    "impact": "Clock skew can make nodes disagree about expiry. High-cardinality traffic and a hot key can load the primary DB. No measured failure threshold is claimed by this review.",
+    "remediation": "Use database time for the shared decision, saturate counts, bound statement latency and retention, and define a key-cardinality/pool budget. Consider a dedicated limiter store only if measured DB costs justify it.",
+    "acceptance": "Run skewed-clock multi-node tests plus hot-key and high-cardinality load; record p95/p99 latency, pool occupancy, retained rows, cleanup time and rejection correctness.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/SharedRateLimitStore.kt",
+        "line": 38,
+        "sha256": "ccc2c380feadeb2eb3853821b22b4b5e382e2477e6f2168495001bce269f093e"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/security/SharedRateLimitStore.kt",
+        "line": 59,
+        "sha256": "ccc2c380feadeb2eb3853821b22b4b5e382e2477e6f2168495001bce269f093e"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R06",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Reproduced locally",
+    "title": "Production plus local profile accepts an ephemeral KMS",
+    "observation": "validateForProfiles allows the in-memory provider whenever any profile is dev/test/local. A local Java probe rejects prod alone but accepts prod+local and staging+local. TrustWeaveConfig is disabled only for test, so local does not disable facade construction.",
+    "impact": "An accidental profile mix can deploy issuer keys that disappear on restart, leaving persisted issuer identities unable to sign.",
+    "remediation": "Make deployed profiles dominate development allowances, reject incompatible profile combinations, and validate the effective persistent provider before startup.",
+    "acceptance": "Table-test empty, unknown, mixed, case-varied and production profiles; boot prod+local and staging+local and require rejection. A permitted persistent profile must retain the same signing identity across restart.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/kms/KmsProviderConfig.kt",
+        "line": 34,
+        "sha256": "029c8ca8e978f7092b2361058a508f3f19dc676f103dae839f315c01e6a6e620"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/config/TrustWeaveConfig.kt",
+        "line": 18,
+        "sha256": "6ae7ae7b5c219c5d8e80a2dd7259ec23260174ba4326090810ab6805ee71ab49"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R07",
+    "repository": "SaaS",
+    "priority": "P2",
+    "confidence": "Source-confirmed",
+    "title": "Bound KMS options are silently unused",
+    "observation": "KmsProviderConfig exposes provider-specific options, but TrustWeaveConfig forwards only provider and algorithm to the keys builder. No kmsConfig.options consumer was found.",
+    "impact": "An operator can supply a documented option without changing the effective provider configuration. A provider may separately read environment settings; this finding does not claim all environment-based setups fail.",
+    "remediation": "Forward typed, validated provider options through the actual factory or reject unsupported configuration explicitly. Publish a secret-safe effective-configuration fingerprint.",
+    "acceptance": "A non-default endpoint/namespace is observed by a fake provider; unknown or unused options fail startup and no secret appears in diagnostics.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/kms/KmsProviderConfig.kt",
+        "line": 26,
+        "sha256": "029c8ca8e978f7092b2361058a508f3f19dc676f103dae839f315c01e6a6e620"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/config/TrustWeaveConfig.kt",
+        "line": 40,
+        "sha256": "6ae7ae7b5c219c5d8e80a2dd7259ec23260174ba4326090810ab6805ee71ab49"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R08",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Source-confirmed",
+    "title": "Request logging context includes capability-bearing paths",
+    "observation": "RequestContextFilter puts raw request.requestURI into MDC HTTP_PATH. Production JSON logging includes httpPath. PublicClaimController serves /api/public/claim/{offerCode}, where offerCode is used to locate the claim offer.",
+    "impact": "Logs emitted while handling a claim can retain its capability value. requestURI excludes query strings; this finding concerns path tokens and does not assert that every request emits a log.",
+    "remediation": "Use route templates or an allowlisted path redactor before logging. Apply the same rule to access logs, trace attributes and error diagnostics.",
+    "acceptance": "Send unique canary offer codes through success and failure cases; captured logs/traces contain no canary while request correlation and route-level metrics remain useful.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/RequestContextFilter.kt",
+        "line": 41,
+        "sha256": "61c39a042c732477afe1a462175853ea4ae52ebc7e680016979bc2f12d5b61fe"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/controller/PublicClaimController.kt",
+        "line": 52,
+        "sha256": "6d4cd2aa94bde1d68cd8652f215797bea9be674d5863690436a19764ea617152"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/resources/logback-spring.xml",
+        "line": 35,
+        "sha256": "9b7d27e152b30bbee3ad1f7b49096bbc8ed254677a56406e56c143d7aa4080fa"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R09",
+    "repository": "SaaS",
+    "priority": "P2",
+    "confidence": "Source-confirmed",
+    "title": "Readiness accepts a missing identity realm as healthy",
+    "observation": "The dependency probe treats every status below 500 as UP, including 401, 404 and 429. Keycloak uses a public OIDC discovery URL and participates in readiness.",
+    "impact": "A deleted realm or incorrect probe URL can remain green after startup. Reachability is useful information, but is insufficient for a functional readiness decision.",
+    "remediation": "Separate reachability from readiness. Require successful, valid discovery metadata for the configured issuer, with bounded timeouts and controlled probe caching; keep liveness independent.",
+    "acceptance": "Exercise 401/404/429/500, malformed 200, wrong issuer and valid discovery responses. Readiness changes correctly without a liveness restart storm.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/observability/DependencyHealthIndicators.kt",
+        "line": 45,
+        "sha256": "d03032330bbda622663969e7715a956a4b1aca6ee447edc8a5343027ef9b5028"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/resources/application.yml",
+        "line": 99,
+        "sha256": "6a27248d4293cdd2770d89066cea5fa249cf730f518824a4654b7951c35c45c4"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R10",
+    "repository": "SaaS",
+    "priority": "P1",
+    "confidence": "Source-confirmed recipe defect",
+    "title": "Committed Fly recipe disagrees with the application port and datasource contract",
+    "observation": "fly.toml routes to 8080 while application.yml defaults to 8081 and the Docker image exposes/checks 8081. The Fly environment supplies no SERVER_PORT override, uses a postgres:// example URL where the datasource expects a JDBC URL, and retains a placeholder Keycloak host.",
+    "impact": "The committed recipe is not a reproducible production deployment. External secrets or platform overrides may make an existing deployment work; none were inspected here.",
+    "remediation": "Choose one supported port/configuration contract, remove example production fallbacks, require validated datasource/issuer settings, and qualify the actual image through the documented deployment recipe.",
+    "acceptance": "Build and boot the image with the declared profile, reach readiness through the configured proxy port, reject missing secrets, and migrate a real supported PostgreSQL instance.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "fly.toml",
+        "line": 16,
+        "sha256": "ec41bfd650b9ffd1cb160a25912584dd066dc8186183a3e9e6102c37a5a0a080"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/resources/application.yml",
+        "line": 77,
+        "sha256": "6a27248d4293cdd2770d89066cea5fa249cf730f518824a4654b7951c35c45c4"
+      },
+      {
+        "repo": "SaaS",
+        "path": "Dockerfile",
+        "line": 19,
+        "sha256": "78e5be51c9ba049266050e71526848972c99529266000cf3468c2a2bc14e8713"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/resources/application-fly.yml",
+        "line": 1,
+        "sha256": "8dc41d772d9bf0a3c64f1438ff9d5212b8656fa0c4e132f118d10a034596e12a"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R11",
+    "repository": "Joint",
+    "priority": "P1",
+    "confidence": "Reproduced source gate failure",
+    "title": "Current repositories do not form the pinned SDK/SaaS candidate pair",
+    "observation": "The SaaS pin expects a41d482a96dcdd3962c2a0a95fd1da469f310fa9; the sibling SDK HEAD is e0a4464fc6cafa339b94121fd56f33812c6601e4 with local changes. verify-sdk-source.py rejects this pair. The previously qualified SDK candidate is 5e8dc04c0e45dd51b323b6b3c475d302615715af.",
+    "impact": "Current local integration tests cannot certify the pinned release pair. This does not prove that SaaS CI against its intended pinned revision fails.",
+    "remediation": "Create immutable reviewed candidates in both repositories, update the pin and reviewed source digest manifest deliberately, and run all integration and artifact gates on that exact pair.",
+    "acceptance": "Source verifier, clean builds and hosted integration pass on the same recorded pair; all delivered artifacts and reports carry both SHAs and source digests.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": ".trustweave-revision",
+        "line": 1,
+        "sha256": "81328eaed2a4b2b591e7ef149111c70e022f73aacfe15dd6a96d4c1ee7dde312"
+      },
+      {
+        "repo": "SaaS",
+        "path": "scripts/verify-sdk-source.py",
+        "line": 1,
+        "sha256": "1e0282c844fb217dc89b294753dcbcc6e37efd545f72ec9910ea986d27e6fcb9"
+      },
+      {
+        "repo": "SaaS",
+        "path": "settings.gradle.kts",
+        "line": 15,
+        "sha256": "adbed546b7a2a02ffb0872d1fbecff6e5de46b697ce0b7a5ec89fe370eaf4a85"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R12",
+    "repository": "SaaS",
+    "priority": "P2",
+    "confidence": "Qualification gap in inspected CI",
+    "title": "Release evidence stops before the deployable artifact",
+    "observation": "The inspected CI tests backend sources and builds frontend assets, but has no bootJar/container release build, SBOM/provenance attestation, image promotion/rollback qualification or deployed digest verification. Actions use version tags and the Docker base is a floating tag.",
+    "impact": "Green source tests do not establish the identity or readiness of the image that is deployed. No specific vulnerable dependency is alleged; no fresh vulnerability scan was run.",
+    "remediation": "Build the runtime image once from the qualified pair, pin build inputs, produce SBOM/provenance, enforce a vulnerability policy, verify signatures/digests at promotion, and exercise rollback.",
+    "acceptance": "Tampered provenance or mismatched SDK/image digest blocks promotion; an immutable image passes startup, smoke, migration and rollback tests with archived evidence.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": ".github/workflows/ci.yml",
+        "line": 37,
+        "sha256": "608b03c9c57b42e163cc5ddf00cec174b0988ba7e470e6d9b48c348761cd89a6"
+      },
+      {
+        "repo": "SaaS",
+        "path": "Dockerfile",
+        "line": 8,
+        "sha256": "78e5be51c9ba049266050e71526848972c99529266000cf3468c2a2bc14e8713"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R13",
+    "repository": "Joint",
+    "priority": "P2",
+    "confidence": "Source-confirmed assurance gap",
+    "title": "Coverage and browser harness policy leave important paths unqualified",
+    "observation": "SaaS backend coverage verification has a 0.40 floor. Frontend coverage has reporters but no thresholds and CI runs ordinary tests. MSW is configured to warn on unexpected requests; the current passing suite emits network warnings. Previous SDK global coverage was 57.41% line / 40.04% branch.",
+    "impact": "Passing counts and category scores are not coverage percentages. Proxy, provider response and deployment defects can survive mock-heavy tests. Network warnings need classification rather than blanket suppression.",
+    "remediation": "Define critical-path branch and mutation targets, exercise real transaction/provider contracts, and make unexpected browser requests fail deterministically after fixture cleanup. Retain an explicit skip/discovery manifest.",
+    "acceptance": "Critical negative cases fail when their guards are removed; risk-based coverage thresholds are enforced in CI and no unapproved test skips or unexpected requests remain.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/build.gradle.kts",
+        "line": 208,
+        "sha256": "f21b4f23cbe6806396c24a74b6f2d335ed29a9657ceddbe1f49de316788cb866"
+      },
+      {
+        "repo": "SaaS",
+        "path": "frontend/vitest.config.ts",
+        "line": 13,
+        "sha256": "ec583aea133ab0f82eef3e81a75bdb54a5b285043b8c2737e224945952fe0a12"
+      },
+      {
+        "repo": "SaaS",
+        "path": "frontend/src/test/setup.ts",
+        "line": 10,
+        "sha256": "7fc43decbd582d5135b727e2be9ee0c5d4b7cf8372f71511edac138a1e2ae2b8"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R14",
+    "repository": "SaaS",
+    "priority": "P2",
+    "confidence": "Source-confirmed design risk",
+    "title": "User synchronization holds a broad transaction across remote work",
+    "observation": "syncAllUsers is transactional, fetches the user list, then calls a method that fetches each user remotely and saves it. Per-user exceptions are caught inside the outer transaction. The list call has no explicit pagination at this layer.",
+    "impact": "Large or slow identity-provider responses can lengthen transactions; a database failure may poison the outer transaction despite per-user error counting. Pagination completeness needs an explicit contract; no undocumented provider page-size assumption is made.",
+    "remediation": "Fetch bounded pages outside DB transactions, persist each bounded unit through a real transaction boundary, checkpoint progress and make retries idempotent.",
+    "acceptance": "Sync more than one provider page, inject a mid-page DB failure and slow identity responses, restart and resume, and demonstrate bounded DB occupancy and correct completion counts.",
+    "sources": [
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/UserSyncService.kt",
+        "line": 64,
+        "sha256": "556061da1194a7eca7e6c933d370c3a8b209625c9d6109539a4603ba12804659"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/kotlin/com/geoknoesis/trustweave/saas/server/services/KeycloakService.kt",
+        "line": 97,
+        "sha256": "642702ffc0d5a1949dbc2218373f7ddfb2e15c1bb3e43b638c14c4dae92b2993"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R15",
+    "repository": "SDK",
+    "priority": "P1",
+    "confidence": "Driver-shape reproduced; source-confirmed adapter defect",
+    "title": "Vault public-key extraction casts String to Map",
+    "observation": "VaultKeyManagementService generateKey/getPublicKey reads keyInfo.data[\"keys\"] and casts it to Map. The pinned driver LogicalResponse.getData() returns Map<String,String>. javap and a local nested-JSON fixture show keys is a java.lang.String; the cast cannot succeed. The compiler reports this at both paths. getDataObject() preserves structured JSON.",
+    "impact": "A valid nested Vault key response cannot yield a public key through these extraction paths. Key generation can create a provider-side key and then return failure. This is especially material to SaaS staging, which selects Vault.",
+    "remediation": "Parse the driver’s structured response with explicit schema/version/type validation. Cover missing/invalid fields and avoid orphaning/recreating keys on retry. Then qualify the declared Vault algorithm and lifecycle end to end.",
+    "acceptance": "A driver-faithful fixture passes generate/get-public-key behavior; malformed versions fail safely. Against an isolated Vault instance, create/sign/independently verify/restart/retrieve/rotate succeeds with stable identity and no private-key leakage.",
+    "sources": [
+      {
+        "repo": "SDK",
+        "path": "kms/plugins/hashicorp/src/main/kotlin/org/trustweave/hashicorpkms/VaultKeyManagementService.kt",
+        "line": 126,
+        "sha256": "c761bde18c0a805903433097a394ec6823573db741b2a60cc5c47db121b2d92c"
+      },
+      {
+        "repo": "SDK",
+        "path": "kms/plugins/hashicorp/src/main/kotlin/org/trustweave/hashicorpkms/VaultKeyManagementService.kt",
+        "line": 234,
+        "sha256": "c761bde18c0a805903433097a394ec6823573db741b2a60cc5c47db121b2d92c"
+      },
+      {
+        "repo": "SDK",
+        "path": "kms/plugins/hashicorp/build.gradle.kts",
+        "line": 17,
+        "sha256": "80dc1e51c7e3c96b63904d30f532213342aaa4505c4acba4c6d9bca0058b697f"
+      },
+      {
+        "repo": "SaaS",
+        "path": "server/src/main/resources/application-staging.yml",
+        "line": 58,
+        "sha256": "dd7a33cf6e7d41ab8bb3e43ab0ebb5274a08e95cc7daeb049e0266bc6ea4cd6a"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R16",
+    "repository": "Joint",
+    "priority": "P1",
+    "confidence": "Explicit qualification gap",
+    "title": "No declared production custody profile is fully qualified",
+    "observation": "The SDK custody runbook explicitly says not qualified. Its assessed capability catalog has no supported entries; deployment gating is opt-in outside selected factories and compatibility defaults remain LEGACY. The reference wallet adapters remain experimental.",
+    "impact": "A strong core SDK score cannot certify all providers, physical authenticators or the SaaS-managed signing path. Broad production-ready claims exceed available evidence.",
+    "remediation": "Declare the exact initial production provider/algorithm/wallet surface, enforce its policy at host construction, and complete real signing, denied access, outage, restart, rotation and authorized recovery evidence. Keep excluded adapters explicitly experimental.",
+    "acceptance": "The chosen profile has immutable provider/key identity, independent signature verification, negative authorization and replay tests, recovery approval/audit evidence, and no fallback to ephemeral custody.",
+    "sources": [
+      {
+        "repo": "SDK",
+        "path": "docs/operations/custody-qualification.md",
+        "line": 3,
+        "sha256": "30d563932c6ed8d0617104399b251723ffe4ba220adc4f23373edcbd4835d236"
+      },
+      {
+        "repo": "SDK",
+        "path": "docs/api-reference/provider-deployment-profiles.md",
+        "line": 49,
+        "sha256": "13a1cfee86443a9b52b477ad229340f7f87aa38d9508232d64331f1935691e08"
+      },
+      {
+        "repo": "SDK",
+        "path": "common/src/main/resources/trustweave-capabilities.json",
+        "line": 1,
+        "sha256": "efe3eaf977296cae9cf3f3d26a0f9e624d68d7a284d0c27947ba0f7deedf58ed"
+      }
+    ],
+    "status": "Open"
+  },
+  {
+    "id": "R17",
+    "repository": "Joint",
+    "priority": "P1",
+    "confidence": "Explicit qualification gap",
+    "title": "Component recovery is not an end-to-end admission and journal recovery proof",
+    "observation": "Previous SDK tests qualify component WAL recovery and a read-only ledger integrity helper. The helper depends on a separately trusted checkpoint; it does not itself store that checkpoint, authenticate an external payment journal or fence new admission during reconciliation. SaaS recovery of billing, claims and custody together is not evidenced by those tests.",
+    "impact": "A consistent but stale restore can still be unsafe to resume if external effects and authorization consumption are not reconciled. RPO/RTO and replica fencing remain deployment-specific.",
+    "remediation": "Own checkpoint custody and journal authentication at the host, keep admission fenced until verification/reconciliation completes, and exercise application-wide restore with custody and external effects.",
+    "acceptance": "Restore an isolated production-shaped dataset, reject stale/tampered checkpoints and missing WAL, reconcile acknowledged external effects, prove no reused authorization or duplicate billing, and measure agreed RPO/RTO before opening admission.",
+    "sources": [
+      {
+        "repo": "SDK",
+        "path": "docs/operations/configuration-data.md",
+        "line": 1,
+        "sha256": "8a5bae064f818b5a307607234da93960d670d1e0f8f652d20345d562a6f7384f"
+      },
+      {
+        "repo": "SDK",
+        "path": "docs/operations/intent/reliability.md",
+        "line": 1,
+        "sha256": "bfa5edf6e1229d9df555e82e3d66c3369d6f1e727843b911ccdb5ce15ebeeb4a"
+      }
+    ],
+    "status": "Open"
+  }
+]

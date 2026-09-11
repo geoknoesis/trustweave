@@ -1,0 +1,23 @@
+{
+  "reference_revision": "356c29635f1c44df7de02edb58699ca9f29bece6",
+  "outcomes": [
+    {
+      "name": "kotlin-immediate",
+      "valid": true,
+      "sdk_expected": true,
+      "difference": null
+    },
+    {
+      "name": "kotlin-immediate-wrong-audience",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    },
+    {
+      "name": "kotlin-immediate-wrong-nonce",
+      "valid": false,
+      "sdk_expected": false,
+      "difference": null
+    }
+  ]
+}

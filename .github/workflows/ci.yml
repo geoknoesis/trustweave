@@ -52,7 +52,7 @@ jobs:
       - name: Install Android SDK components
         run: '"${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-34" "build-tools;34.0.0"'
       - name: Compile Android and run app unit tests
-        run: ./gradlew :app:testDebugUnitTest :shared:compileKotlinJvm --max-workers=2 --no-daemon
+        run: ./gradlew :app:testDebugUnitTest :shared:jvmTest --max-workers=2 --no-daemon
   build:
     name: Build and test
     runs-on: ubuntu-latest
@@ -69,8 +69,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
-      - name: Check generated capability documentation
-        run: python scripts/generate-capability-docs.py --check
+      - name: Test validation tools and documentation contracts
+        run: |
+          python -m unittest discover -s scripts -p 'test_check_*.py'
+          python scripts/check-documentation.py --report build/reports/documentation.json
+          python scripts/generate-capability-docs.py --check
+          python scripts/check-workflow-pinning.py
+          python scripts/check-dependency-catalog.py
+          python scripts/check-publication.py
+          python scripts/check-capability-coverage.py
 
       - name: Lint with ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
@@ -78,21 +85,108 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build --no-daemon --stacktrace
 
+      - name: Reject undiscoverable tests and verify required regression evidence
+        run: |
+          python scripts/check-junit-contract.py --report build/reports/junit-contract.json
+          python scripts/check-test-evidence.py --report build/reports/test-evidence.json
+          python scripts/check-reliability-evidence.py
+
       - name: Verify API compatibility
         run: ./gradlew checkKotlinAbi --no-daemon --stacktrace
+
+      - name: Execute compiled documentation entry points
+        run: ./gradlew :distribution:examples:checkDocumentationExamples --no-daemon --stacktrace | tee build/reports/documentation-execution.log
+
+      - name: Checkout pinned VI interoperability reference
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: agent-intent/verifiable-intent
+          ref: 356c29635f1c44df7de02edb58699ca9f29bece6
+          path: .gradle/vi-reference
+          persist-credentials: false
+
+      - name: Verify Kotlin tokens with the Python reference
+        run: |
+          python3 -m venv .gradle/vi-python
+          .gradle/vi-python/bin/python -m pip install cryptography==46.0.3 pytest==9.0.2
+          PYTHONPATH="${PWD}/.gradle/vi-reference/src" .gradle/vi-python/bin/python -m pytest .gradle/vi-reference/tests -q --junitxml=.gradle/vi-reference-results.xml
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-immediate.json > .gradle/vi-immediate-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-autonomous.json > .gradle/vi-autonomous-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-checkout.json > .gradle/vi-checkout-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/src/test/resources/vi_python_cross_stack.json > .gradle/vi-python-immediate-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/src/test/resources/vi_python_autonomous.json > .gradle/vi-python-autonomous-results.json
+          python scripts/vi-stateful-model.py --check --file credentials/plugins/verifiable-intent/src/test/resources/vi_stateful_model.json
+          python scripts/check-vi-matrix.py
 
       - name: Generate merged coverage
         run: ./gradlew koverXmlReport koverHtmlReport --no-daemon --stacktrace
 
+      - name: Enforce coverage policy
+        run: |
+          python -m unittest discover -s scripts -p test_check_coverage_policy.py
+          python scripts/check-coverage-policy.py
+
+      - name: Validate intent host alert rules
+        run: >-
+          docker run --rm --network none --entrypoint promtool
+          --mount "type=bind,source=${PWD}/docs/operations/intent,target=/work,readonly"
+          --workdir /work prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 test rules alerts.test.yml
+
+      - name: Validate runtime ledger metric exposition
+        run: >-
+          docker run --rm -i --network none --entrypoint promtool
+          prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics
+          < credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom
+
+      - name: Exercise intent notification delivery and recovery
+        timeout-minutes: 15
+        run: |
+          python -m pip install PyYAML==6.0.3
+          python -m unittest discover -s scripts -p test_intent_notification_exercise.py
+          python scripts/intent-notification-exercise.py
+
+      - name: Enforce shared host coverage floors
+        run: |
+          ./gradlew :observability:koverXmlReport --no-daemon
+          python scripts/check-coverage-policy.py build/observability/reports/kover/report.xml --policy config/host-coverage-policy.json
+
+      - name: Validate shared host alert rules and metric exposition
+        run: |
+          docker run --rm --network none --entrypoint promtool --mount "type=bind,source=${PWD}/docs/operations/host,target=/work,readonly" --workdir /work prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 test rules alerts.test.yml
+          docker run --rm -i --network none --entrypoint promtool prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics < observability/build/reports/host-metrics.prom
+
       - name: Generate dependency inventory
         run: ./gradlew cyclonedxBom --no-daemon --stacktrace
+
+      - name: Bind validation to the candidate commit
+        run: python scripts/record-validation-manifest.py
 
       - name: Upload coverage and test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sdk-validation
+          include-hidden-files: true
           path: |
+            .gradle/vi-reference-results.xml
+            .gradle/vi-immediate-results.json
+            .gradle/vi-autonomous-results.json
+            .gradle/vi-checkout-results.json
+            .gradle/vi-python-immediate-results.json
+            .gradle/vi-python-autonomous-results.json
+            build/reports/validation-manifest.json
+            build/reports/vi-matrix.json
+            credentials/plugins/verifiable-intent/build/reports/intent-operations.json
+            credentials/plugins/verifiable-intent/build/reports/reliability/
+            credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom
+            credentials/plugins/status-list/server/build/reports/status-list-diagnostics.log
+            build/reports/intent-notifications/
+            observability/build/reports/
+            build/reports/documentation.json
+            build/reports/documentation-execution.log
+            build/reports/junit-contract.json
+            build/reports/test-evidence.json
+            build/observability/reports/kover/
             build/reports/kover/
             build/reports/cyclonedx/
             build/**/test-results/

@@ -1,0 +1,243 @@
+rule_files:
+- alerts.yml
+evaluation_interval: 1m
+tests:
+- name: HostAvailabilityBudgetFastBurn fires and recovers
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+100x10 1000+0x620
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+900x640
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+  - eval_time: 2m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: critical
+      exp_annotations:
+        runbook: docs/operations/host/README.md#availability-and-admission
+  - eval_time: 9h
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+- name: HostAvailabilityBudgetSlowBurn fires and recovers
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+100x10 1000+0x620
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+900x640
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+  - eval_time: 2m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/host/README.md#availability-and-admission
+  - eval_time: 9h
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+- name: queue tail grows and drains
+  interval: 1m
+  input_series:
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="0.001"}
+    values: 0+0x15 0+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="0.01"}
+    values: 0+0x15 0+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="0.1"}
+    values: 0+0x15 0+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="0.5"}
+    values: 0+100x15 1500+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="1.0"}
+    values: 0+100x15 1500+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="5.0"}
+    values: 0+100x15 1500+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="30.0"}
+    values: 0+100x15 1500+100x45
+  - series: trustweave_host_queue_seconds_bucket{job="trustweave-host",instance="host-a",host="vc_api",le="+Inf"}
+    values: 0+100x15 1500+100x45
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostAdmissionQueueLatency
+    exp_alerts: []
+  - eval_time: 2m
+    alertname: HostAdmissionQueueLatency
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostAdmissionQueueLatency
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - eval_time: 35m
+    alertname: HostAdmissionQueueLatency
+    exp_alerts: []
+- name: HostPoolSaturation recovers
+  interval: 1m
+  input_series:
+  - series: trustweave_host_pool_waiting{job="trustweave-host",instance="host-a"}
+    values: 1+0x15 0+0x30
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostPoolSaturation
+    exp_alerts: []
+  - eval_time: 1m
+    alertname: HostPoolSaturation
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostPoolSaturation
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: warning
+      exp_annotations:
+        runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - eval_time: 35m
+    alertname: HostPoolSaturation
+    exp_alerts: []
+- name: HostExpectedPoolUnavailable recovers
+  interval: 1m
+  input_series:
+  - series: trustweave_host_pool_available{job="trustweave-host",instance="host-a",expects_pool="true"}
+    values: 0+0x15 1+0x30
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostExpectedPoolUnavailable
+    exp_alerts: []
+  - eval_time: 1m
+    alertname: HostExpectedPoolUnavailable
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostExpectedPoolUnavailable
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: critical
+        expects_pool: 'true'
+      exp_annotations:
+        runbook: docs/operations/host/README.md#queue-and-pool-saturation
+  - eval_time: 35m
+    alertname: HostExpectedPoolUnavailable
+    exp_alerts: []
+- name: scrape without host contract
+  interval: 1m
+  input_series:
+  - series: up{job="trustweave-host",instance="host-a"}
+    values: 1+0x36
+  - series: trustweave_host_active_requests{job="trustweave-host",instance="host-a"}
+    values: 1 1 stale _ _ _ _ _ _ _ _ _ _ _ _ _ 1+0x20
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: HostTelemetryMissing
+    exp_alerts: []
+  - eval_time: 3m
+    alertname: HostTelemetryMissing
+    exp_alerts: []
+  - eval_time: 10m
+    alertname: HostTelemetryMissing
+    exp_alerts:
+    - exp_labels:
+        job: trustweave-host
+        instance: host-a
+        severity: critical
+      exp_annotations:
+        runbook: docs/operations/host/README.md#protected-scraping
+  - eval_time: 35m
+    alertname: HostTelemetryMissing
+    exp_alerts: []
+- name: idle does not burn budget
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="cancelled"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="rejected"}
+    values: 0+0x100
+  alert_rule_test:
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+- name: only cancellations does not burn budget
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="cancelled"}
+    values: 0+100x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="rejected"}
+    values: 0+0x100
+  alert_rule_test:
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+- name: healthy traffic does not burn budget
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+1000x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="cancelled"}
+    values: 0+100x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+0x100
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="rejected"}
+    values: 0+0x100
+  alert_rule_test:
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []
+  - eval_time: 60m
+    alertname: HostAvailabilityBudgetSlowBurn
+    exp_alerts: []
+- name: poolless host is not unhealthy
+  interval: 1m
+  input_series:
+  - series: trustweave_host_pool_available{job="trustweave-host",instance="host-a"}
+    values: 0+0x30
+  alert_rule_test:
+  - eval_time: 10m
+    alertname: HostExpectedPoolUnavailable
+    exp_alerts: []
+- name: short spike alone does not meet both burn windows
+  interval: 1m
+  input_series:
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="server_error"}
+    values: 0+0x60 100+100x2 300+0x60
+  - series: trustweave_host_requests_total{job="trustweave-host",instance="host-a",host="vc_api",outcome="success"}
+    values: 0+1000x124
+  alert_rule_test:
+  - eval_time: 64m
+    alertname: HostAvailabilityBudgetFastBurn
+    exp_alerts: []

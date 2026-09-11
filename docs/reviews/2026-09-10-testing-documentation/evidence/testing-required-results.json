@@ -1,0 +1,101 @@
+{
+  "requirements": 12,
+  "verified_tests": [
+    {
+      "id": "DISCOVERY-01",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with missing request_uri throws exception"
+    },
+    {
+      "id": "DISCOVERY-02",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with invalid URL format throws exception"
+    },
+    {
+      "id": "DISCOVERY-03",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test parseAuthorizationUrl with HTTP error response throws exception"
+    },
+    {
+      "id": "DISCOVERY-04",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "test fetchVerifierMetadata with HTTP error throws exception"
+    },
+    {
+      "id": "DISCOVERY-05",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "unsigned request object with alg none is rejected"
+    },
+    {
+      "id": "DISCOVERY-06",
+      "suite": "org.trustweave.credential.oidc4vp.Oidc4VpServiceTest",
+      "test": "request object signed with key not matching client_metadata jwks is rejected"
+    },
+    {
+      "id": "DISCOVERY-07",
+      "suite": "org.trustweave.wallet.cloud.CloudRecoveryTest",
+      "test": "recovery does not swallow cancellation"
+    },
+    {
+      "id": "DISCOVERY-08",
+      "suite": "org.trustweave.wallet.file.FileWalletFactoryTest",
+      "test": "typed encryption key is validated rather than silently ignored"
+    },
+    {
+      "id": "DOC-FIXTURE",
+      "suite": "org.trustweave.testkit.DocumentationExampleTest",
+      "test": "fixtures isolate registries and close releases registrations"
+    },
+    {
+      "id": "DOC-HOST",
+      "suite": "org.trustweave.observability.HostDocumentationExampleTest",
+      "test": "documented host setup serves requests and protects metrics"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "all hosts classify client and server responses and bound unknown HTTP methods"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "admitted waiter runs after release and timed out waiter never runs"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "request errors and callback failure preserve identity and release capacity"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "cancelled phase ends its span without counting a provider failure"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "credentialed acquisition returns the original connection and preserves rollback"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "absent uninitialized and closed pools omit unavailable connection gauges"
+    },
+    {
+      "id": "HOST-EDGE",
+      "suite": "org.trustweave.observability.HostTelemetryEdgeTest",
+      "test": "noop tracing omits trace header and metrics authentication rejects oversized values"
+    },
+    {
+      "id": "HOST-EXPORT",
+      "suite": "org.trustweave.observability.HostExportIntegrationTest",
+      "test": "two real HTTP hosts export correlated traces through authenticated OTLP protobuf"
+    },
+    {
+      "id": "HOST-EXPORT",
+      "suite": "org.trustweave.observability.HostExportIntegrationTest",
+      "test": "blocked exporter uses a bounded queue and does not block application work"
+    }
+  ],
+  "failures": []
+}

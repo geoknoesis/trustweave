@@ -1,0 +1,178 @@
+{
+  "candidate": "bc86c662bddc6c53f70ff9c853603bfeb9ea6385",
+  "run": "https://github.com/geoknoesis/trustweave/actions/runs/34515810997",
+  "tests": {
+    "tests": 3916,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 15
+  },
+  "coverage": {
+    "LINE": {
+      "covered": 27989,
+      "missed": 20847,
+      "percent": 57.31
+    },
+    "BRANCH": {
+      "covered": 11086,
+      "missed": 16743,
+      "percent": 39.84
+    }
+  },
+  "reliability_score": 9.5,
+  "target_met": true,
+  "overall": 9.2,
+  "hosted": {
+    "contention": {
+      "scenario": "contention",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "callers": 32,
+      "instances": 4,
+      "pool_limit": 8,
+      "initial_requests": 4096,
+      "initial_accepted": 2048,
+      "followup_accepted": 512,
+      "elapsed_ms": 8908,
+      "reserve_p95_ms": 127,
+      "reserve_p99_ms": 205,
+      "reserve_max_ms": 406,
+      "invariant_violations": 0
+    },
+    "sustained": {
+      "scenario": "sustained",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "duration_ms": 60212,
+      "completed_workflows": 15016,
+      "callers": 32,
+      "instances": 4,
+      "pool_limit": 8,
+      "peak_connections": 8,
+      "hot_scope_percent": 80,
+      "workflow_p95_ms": 443,
+      "workflow_p99_ms": 691,
+      "workflow_max_ms": 1745,
+      "invariant_violations": 0
+    },
+    "history": {
+      "scenario": "history",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "legacy_rows": 100000,
+      "migration_ms": 88,
+      "new_requests": 100,
+      "new_requests_ms": 3014,
+      "admission_history_scans": 0
+    },
+    "lock-timeout": {
+      "scenario": "lock-timeout",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "elapsed_ms": 10113,
+      "unrelated_progress": 1,
+      "rollback_retry_success": 1
+    },
+    "wal-recovery": {
+      "base_backup_verified": true,
+      "corrupt_backup_rejected": true,
+      "base_digest": "-hUpufZTPtTmGkeuvYFj-VEAyCSvKXdNZ1MRMXk1TAM",
+      "target_digest": "5WHTUK5pl4yydSQBAu5gd4hnjYxOn6mS9Irq64QKmo0",
+      "latest_digest": "VRm7UZiVoBIoSJ-HurXCd4n6Npb8PhxnF26FjpvPaRE",
+      "target_segment": "000000010000000000000004",
+      "crash_restart_ms": 764,
+      "restore_and_assertions_ms": 9416,
+      "post_backup_records_recovered": 3,
+      "after_target_records_excluded": 1,
+      "missing_wal_failed_closed": true,
+      "scope": "Local component PITR and crash recovery; no production RPO/RTO or external payment-journal claim"
+    }
+  },
+  "local": {
+    "contention": {
+      "scenario": "contention",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "callers": 32,
+      "instances": 4,
+      "pool_limit": 8,
+      "initial_requests": 4096,
+      "initial_accepted": 2048,
+      "followup_accepted": 512,
+      "elapsed_ms": 21196,
+      "reserve_p95_ms": 133,
+      "reserve_p99_ms": 210,
+      "reserve_max_ms": 474,
+      "invariant_violations": 0
+    },
+    "sustained": {
+      "scenario": "sustained",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "duration_ms": 60148,
+      "completed_workflows": 7793,
+      "callers": 32,
+      "instances": 4,
+      "pool_limit": 8,
+      "peak_connections": 8,
+      "hot_scope_percent": 80,
+      "workflow_p95_ms": 374,
+      "workflow_p99_ms": 485,
+      "workflow_max_ms": 750,
+      "invariant_violations": 0
+    },
+    "history": {
+      "scenario": "history",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "legacy_rows": 100000,
+      "migration_ms": 125,
+      "new_requests": 100,
+      "new_requests_ms": 4977,
+      "admission_history_scans": 0
+    },
+    "lock-timeout": {
+      "scenario": "lock-timeout",
+      "scope": "Disposable PostgreSQL 16 component qualification; not production capacity or RTO",
+      "elapsed_ms": 10089,
+      "unrelated_progress": 1,
+      "rollback_retry_success": 1
+    },
+    "wal-recovery": {
+      "base_backup_verified": true,
+      "corrupt_backup_rejected": true,
+      "base_digest": "48RKBw39jqPs5uRUtHKvfigIpjbdvnx7pDFZ9qTSIRI",
+      "target_digest": "gCUNZ3kfen3VqM5PLZhp-orFGwl0MCZKROZWmh2XOog",
+      "latest_digest": "vdJyDbAnoIDGRXxpD3wbHVZqylk62sUbpbU5XWIWVwo",
+      "target_segment": "000000010000000000000004",
+      "crash_restart_ms": 1951,
+      "restore_and_assertions_ms": 14663,
+      "post_backup_records_recovered": 3,
+      "after_target_records_excluded": 1,
+      "missing_wal_failed_closed": true,
+      "scope": "Local component PITR and crash recovery; no production RPO/RTO or external payment-journal claim"
+    }
+  },
+  "source_files": 11,
+  "verified_build_artifacts": 488,
+  "limits": "Committed credential-free SDK candidate; no production deployment or external payment system qualified.",
+  "evidence_sha256": {
+    "artifact-attestation.json": "fc1bc3adfd58cf9f970d7936fe4534f7d40fdd241dfc8ce7de3a15d56d66b79c",
+    "contention.json": "147d1d2869b0ba8ec3799d91aa2500e15b25d60ec2fbe34a5488c872f485d8fe",
+    "documentation.json": "b41efe2215816d2f15d1fe7f2993e60992a8bc32eaa93242acf5e2ea946712a2",
+    "history.json": "bace52e335453d22a65ed6f6d5a8d530b338c9eee52a68c2485ade5687e0e727",
+    "hosted-run.json": "fc9312ec3318df898840a5515d48a8d8fed1d5ce93f30ce1e9d7b2f469e46bd1",
+    "junit-contract.json": "6808d465a9ea358c6120f8e84e5d1a3662aa3870519353e804fdb8252a65dd25",
+    "local-contention.json": "d3c48c3694e22c4a65368301a06ac89fe3832d4a7920ba2ca39c6e942586b439",
+    "local-history.json": "c69156cc9d8b8b92daf28f5114e91694884a0fb8455a98c2507dbe1bdfc5463d",
+    "local-lock-timeout.json": "d7f127078a86c9b64d5004e26883e6e45d89c300824346705eb055feccb0cc45",
+    "local-qualification.json": "6d8e04659d5de203a20ed2ddf2bf20ed8228665f6f8f37bbd7642e20ec73ebbd",
+    "local-sustained.json": "71da32e44075e99afd2cfa7eee682d21501c8fa448d67859dfce4beb5897a8b9",
+    "local-validation.json": "c72bf79ac95b45e0a5dc91946ab94c8d3932c985eeb970ba3600d4d0beeb5e93",
+    "local-wal-recovery.json": "59209e6bbb71f45b27673d5ae4ac6fbcc17b53e6f11989d09292fd9a9448cddd",
+    "lock-timeout.json": "ddf5ef5173ae113efb54ba7c5ffde9985a6ee44c0c37cdfd38fc0b1f11765a31",
+    "qualification.json": "21fd82568e066e1008dc3ec95553cb15d52f476c11fcae207fe2f76eaf409b13",
+    "required-tests.json": "de54b177ee686bd4c11656d19bbd65e2056aa366573b62fb463e232b7bfde9fe",
+    "source-files.json": "5f662f90961ec2a08cbe127952894c32422ecc44b0faa6b6a1402b03d1ece069",
+    "sustained.json": "5ae4dd915f0fe22a3bca9b433765d015f3c9d6ad106653abf77e24bca0e9362e",
+    "TEST-org.trustweave.credential.vi.IntentReliabilityTest.xml": "a3c4ad8e44b0d136975532b5b43327bd8dfef9a6f690ae8c82cccb2f8c408583",
+    "TEST-org.trustweave.credential.vi.IntentWalRecoveryTest.xml": "027023aa8895bc728f80bd74c15db2a02c4f625cd82dd82a9c7f36115cbeeb30",
+    "validation-manifest.json": "efd313cd975e9461a717b76216e03182f710ebd70eb1b262ba12e5f60c35b2c4",
+    "wal-missing.log": "86c30e5407caf15d0ea6594e85eea23af50c1e6a974899a86486de30385cf4f3",
+    "wal-recovery.json": "f839062d47a4b24cd6d32ff9475ac32473521cea03a4e89857dc73d84f1c4cd7",
+    "wal-recovery.log": "72db1c771c836ed54de69d54aeec828c07a38ea0daaf17c1c37145f130b9203d"
+  }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:20:07.594Z" hostname="THEMATRIX" time="2.146">
+  <properties/>
+  <testcase name="createCustomer should create Stripe customer()" classname="com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest" time="2.091"/>
+  <testcase name="getCustomer should return customer when found()" classname="com.geoknoesis.trustweave.saas.server.billing.StripeServiceTest" time="0.037"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

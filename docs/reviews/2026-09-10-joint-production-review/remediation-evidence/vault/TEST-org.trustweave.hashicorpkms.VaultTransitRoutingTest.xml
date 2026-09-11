@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.hashicorpkms.VaultTransitRoutingTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:07:56.051Z" hostname="THEMATRIX" time="0.197">
+  <properties/>
+  <testcase name="default client sends Transit requests without KV-v2 rewriting()" classname="org.trustweave.hashicorpkms.VaultTransitRoutingTest" time="0.195"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

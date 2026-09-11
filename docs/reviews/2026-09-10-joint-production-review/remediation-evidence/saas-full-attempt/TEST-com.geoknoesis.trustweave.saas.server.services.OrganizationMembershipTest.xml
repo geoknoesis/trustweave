@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:36.959Z" hostname="THEMATRIX" time="0.023">
+  <properties/>
+  <testcase name="a group pointing at an organization that no longer exists does not strand the user()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest" time="0.005"/>
+  <testcase name="a user who belongs to a group joins that group's organization()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest" time="0.004"/>
+  <testcase name="a user holding a role in a trust space joins the organization that owns it()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest" time="0.004"/>
+  <testcase name="ownership still wins over membership()" classname="com.geoknoesis.trustweave.saas.server.services.OrganizationMembershipTest" time="0.002"/>
+  <system-out><![CDATA[22:30:36.967 INFO  [] c.g.t.s.s.s.OrganizationContextService - Creating default organization for user 11
+22:30:36.974 DEBUG [] c.g.t.s.s.s.OrganizationContextService - User 11 belongs to organization 5 through a group
+22:30:36.977 DEBUG [] c.g.t.s.s.s.OrganizationContextService - User 11 reaches organization 5 through a trust space role
+22:30:36.982 DEBUG [] c.g.t.s.s.s.OrganizationContextService - User 11 owns organization 9
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

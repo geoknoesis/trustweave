@@ -54,7 +54,7 @@ class CloudRecoveryTest {
             assertTrue(result.records.isEmpty())
         }
 
-    @Test fun `recovery does not swallow cancellation`() =
+    @Test fun `recovery does not swallow cancellation`(): Unit =
         runBlocking {
             assertFailsWith<CancellationException> { unavailable(CancellationException("cancel")).recoverRecords() }
         }

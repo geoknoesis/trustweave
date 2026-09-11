@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.trustweave.observability.HostTelemetryEdgeTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-10T05:38:25.408Z" hostname="THEMATRIX" time="4.776">
+  <properties/>
+  <testcase name="admitted waiter runs after release and timed out waiter never runs()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="1.274"/>
+  <testcase name="cancelled phase ends its span without counting a provider failure()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="0.243"/>
+  <testcase name="absent uninitialized and closed pools omit unavailable connection gauges()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="0.047"/>
+  <testcase name="all hosts classify client and server responses and bound unknown HTTP methods()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="1.881"/>
+  <testcase name="credentialed acquisition returns the original connection and preserves rollback()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="1.156"/>
+  <testcase name="request errors and callback failure preserve identity and release capacity()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="0.017"/>
+  <testcase name="noop tracing omits trace header and metrics authentication rejects oversized values()" classname="org.trustweave.observability.HostTelemetryEdgeTest" time="0.098"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

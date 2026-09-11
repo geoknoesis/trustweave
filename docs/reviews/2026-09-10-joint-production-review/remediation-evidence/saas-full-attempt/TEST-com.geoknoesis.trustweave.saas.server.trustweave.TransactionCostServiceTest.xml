@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-11T02:30:44.784Z" hostname="THEMATRIX" time="0.207">
+  <properties/>
+  <testcase name="getTotalCostsForPeriod should return total costs for billing period()" classname="com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest" time="0.196"/>
+  <testcase name="recordTransactionCost should create cost allocation with USD conversion()" classname="com.geoknoesis.trustweave.saas.server.trustweave.TransactionCostServiceTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

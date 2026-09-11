@@ -1,0 +1,72 @@
+{
+  "target": 9.8,
+  "target_met": false,
+  "production_qualified": false,
+  "historical_sdk_overall": 9.3,
+  "sdk_overall": 8.9,
+  "saas_overall": 7.1,
+  "joint_overall": 8.0,
+  "unrounded": {
+    "sdk": "8.85",
+    "saas": "7.083333333333333333333333333",
+    "joint": "7.966666666666666666666666667"
+  },
+  "categories": [
+    {
+      "name": "Security and access control",
+      "sdk": 9.0,
+      "saas": 7.5,
+      "joint": 8.25,
+      "sdk_reason": "Core controls retained; real custody and host policy remain open.",
+      "saas_reason": "KMS profile bypass, fail-open abuse limits and capability logging require correction."
+    },
+    {
+      "name": "Observability and diagnosability",
+      "sdk": 9.6,
+      "saas": 7.5,
+      "joint": 8.55,
+      "sdk_reason": "Prior SDK host telemetry evidence retained; it does not qualify Spring SaaS telemetry.",
+      "saas_reason": "Readiness semantics and sensitive path telemetry are incorrect; end-to-end export remains unqualified."
+    },
+    {
+      "name": "Reliability and scale",
+      "sdk": 8.5,
+      "saas": 6.5,
+      "joint": 7.5,
+      "sdk_reason": "Vault response defect and unqualified end-to-end recovery lower the broader assessment.",
+      "saas_reason": "Outbox scheduler transaction, lease duration and outage handling remain blockers."
+    },
+    {
+      "name": "Configuration and data",
+      "sdk": 8.5,
+      "saas": 7.5,
+      "joint": 8.0,
+      "sdk_reason": "Strict loaders and ledger audit are valuable, but Vault parsing and host checkpoint ownership are incomplete.",
+      "saas_reason": "KMS option wiring, profile composition, recovery and deployment configuration need acceptance evidence."
+    },
+    {
+      "name": "Deployment and release",
+      "sdk": 8.5,
+      "saas": 6.5,
+      "joint": 7.5,
+      "sdk_reason": "Earlier 8.5 retained; no deployed production profile is newly qualified.",
+      "saas_reason": "Recipe mismatches and absence of runtime artifact promotion evidence constrain the score."
+    },
+    {
+      "name": "Testing and documentation",
+      "sdk": 9.0,
+      "saas": 7.0,
+      "joint": 8.0,
+      "sdk_reason": "Prior hosted evidence retained; the driver contract defect demonstrates an important provider test gap.",
+      "saas_reason": "298 frontend tests pass, but backend outcome and missing proxy/provider/coverage assurance prevent a high score."
+    }
+  ],
+  "rubric": "Provisional engineering judgment. Six equally weighted categories and equally weighted repositories; joint mean is a planning indicator, not a deployability gate. Historical SDK 9.3 had narrower scope. New SDK reassessment includes the selected provider boundary. No point changes imply statistical precision.",
+  "bands": {
+    "9.8-10": "Declared production profile qualified on immutable artifacts; no critical/high defects; independently reviewed operations evidence.",
+    "9.0-9.7": "Strong engineering evidence with remaining profile/operations qualification limits.",
+    "7.0-8.9": "Material implementation or assurance gaps require remediation.",
+    "below 7": "Core reliability/release contracts have open blockers."
+  },
+  "release_gate": "Zero open P0/P1; both repository means >9.7 unrounded; critical category floors >=9.7; immutable pair and actual declared deployment/custody/recovery gates pass. A high average cannot waive a blocker."
+}

@@ -6,6 +6,7 @@ plugins {
 group = "org.trustweave.credentials"
 
 dependencies {
+    api(project(":observability"))
     implementation(project(":credentials:plugins:avp-micro"))
     implementation(project(":common"))
 

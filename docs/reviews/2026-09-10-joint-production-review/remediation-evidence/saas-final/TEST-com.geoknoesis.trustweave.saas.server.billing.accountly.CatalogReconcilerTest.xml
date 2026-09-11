@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T04:15:46.961Z" hostname="THEMATRIX" time="0.257">
+  <properties/>
+  <testcase name="is idempotent - existing application and plans are not recreated()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest" time="0.082"/>
+  <testcase name="shared tenant migration refusal stops catalog writes()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest" time="0.05"/>
+  <testcase name="creates application, all tier plans with mapping and quotas, and usage variables on an empty Accountly()" classname="com.geoknoesis.trustweave.saas.server.billing.accountly.CatalogReconcilerTest" time="0.125"/>
+  <system-out><![CDATA[00:15:46.985 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.ApplicationDto>]
+00:15:46.991 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+00:15:46.999 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.PlanDto>]
+00:15:47.011 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=credential.issued, unit=credential, description=Verifiable credentials issued, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.027 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=credential.verified, unit=verification, description=Credential verifications performed, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.033 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=blockchain.tx, unit=usd-cents, description=Blockchain anchoring transaction cost (USD cents), defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.036 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=wallet.seat, unit=seat, description=Active holder wallets / DIDs, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.070 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.ApplicationDto>]
+00:15:47.080 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+00:15:47.090 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+00:15:47.117 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.ApplicationDto>]
+00:15:47.120 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateApplicationRequest(name=TrustWeave SaaS, description=TrustWeave SaaS billing merchant)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.124 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.125 INFO  [] c.g.t.s.s.b.a.CatalogReconciler - Created Accountly application 'TrustWeave SaaS' = app-1
+00:15:47.129 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [com.geoknoesis.trustweave.saas.server.billing.accountly.BillingTenantStatus]
+00:15:47.135 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.List<com.geoknoesis.trustweave.saas.server.billing.accountly.PlanDto>]
+00:15:47.141 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreatePlanRequest(name=tw-free, pricingModel=FlatRate, monthlyFee=0, level=1, isDefault=true)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.146 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.147 DEBUG [] o.s.web.client.DefaultRestClient - Writing [KillbillMappingRequest(killbillPlanName=trustweave-free-monthly, killbillProductName=trustweave-free, killbillPriceList=DEFAULT)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.152 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.issued, hardLimit=500, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.157 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.158 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.verified, hardLimit=2000, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.162 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.162 INFO  [] c.g.t.s.s.b.a.CatalogReconciler - Reconciled plan 'tw-free' = plan-x
+00:15:47.164 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreatePlanRequest(name=tw-pro, pricingModel=FlatRate, monthlyFee=99, level=2, isDefault=false)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.166 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.167 DEBUG [] o.s.web.client.DefaultRestClient - Writing [KillbillMappingRequest(killbillPlanName=trustweave-pro-monthly, killbillProductName=trustweave-pro, killbillPriceList=DEFAULT)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.171 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.issued, hardLimit=50000, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.175 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.177 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.verified, hardLimit=200000, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.180 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.180 INFO  [] c.g.t.s.s.b.a.CatalogReconciler - Reconciled plan 'tw-pro' = plan-x
+00:15:47.180 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreatePlanRequest(name=tw-enterprise, pricingModel=FlatRate, monthlyFee=499, level=3, isDefault=false)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.184 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.184 DEBUG [] o.s.web.client.DefaultRestClient - Writing [KillbillMappingRequest(killbillPlanName=trustweave-enterprise-monthly, killbillProductName=trustweave-enterprise, killbillPriceList=DEFAULT)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.187 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.issued, hardLimit=1000000, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.191 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.192 DEBUG [] o.s.web.client.DefaultRestClient - Writing [CreateQuotaRequest(eventType=credential.verified, hardLimit=5000000, period=Month, expression=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.196 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.197 INFO  [] c.g.t.s.s.b.a.CatalogReconciler - Reconciled plan 'tw-enterprise' = plan-x
+00:15:47.197 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=credential.issued, unit=credential, description=Verifiable credentials issued, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.202 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.202 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=credential.verified, unit=verification, description=Credential verifications performed, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.205 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.206 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=blockchain.tx, unit=usd-cents, description=Blockchain anchoring transaction cost (USD cents), defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.209 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+00:15:47.210 DEBUG [] o.s.web.client.DefaultRestClient - Writing [DeclareUsageVariableRequest(eventType=wallet.seat, unit=seat, description=Active holder wallets / DIDs, defaultQuantity=null)] as "application/json" with org.springframework.http.converter.json.JacksonJsonHttpMessageConverter
+00:15:47.213 DEBUG [] o.s.web.client.DefaultRestClient - Reading to [java.util.Map<java.lang.String, ?>]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

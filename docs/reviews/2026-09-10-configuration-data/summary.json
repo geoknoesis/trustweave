@@ -1,0 +1,66 @@
+{
+  "candidate": "5e8dc04c0e45dd51b323b6b3c475d302615715af",
+  "run": "https://github.com/geoknoesis/trustweave/actions/runs/34522786430",
+  "tests": {
+    "tests": 3924,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 15
+  },
+  "coverage": {
+    "LINE": 57.41,
+    "BRANCH": 40.04
+  },
+  "configuration_data_score": 9.5,
+  "overall": 9.3,
+  "target_met": true,
+  "suites": {
+    "ConfigurationBoundaryTest": {
+      "name": "org.trustweave.core.plugin.ConfigurationBoundaryTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-09-10T19:53:08.757Z",
+      "hostname": "runnervmlun5p",
+      "time": "0.939"
+    },
+    "PluginConfigurationErrorTest": {
+      "name": "org.trustweave.core.plugin.PluginConfigurationErrorTest",
+      "tests": "11",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-09-10T19:53:09.855Z",
+      "hostname": "runnervmlun5p",
+      "time": "0.055"
+    },
+    "LedgerIntegrityTest": {
+      "name": "org.trustweave.credential.vi.LedgerIntegrityTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-09-10T20:01:49.377Z",
+      "hostname": "runnervmlun5p",
+      "time": "12.187"
+    }
+  },
+  "verified_source_files": 15,
+  "verified_artifacts": 490,
+  "evidence_sha256": {
+    "artifact-attestation.json": "d20cccb00a9d17171031a387fc44d3fb85a807b617ff2ac618532c006f533bf9",
+    "documentation.json": "44651b31036bf86cf39c5fdd548fbd40bd637b355ec74a88b080b075a7a75756",
+    "hosted-notification-validation.json": "2c40390e01bd81134c6762508f1db6910625d030a1e49e7d2db62983be0758fe",
+    "hosted-run.json": "116980880ea3c5c1094a8e939898f703510e3f9e55dedf3d02aa6fac6feb3463",
+    "junit-contract.json": "a6b183fdcb1e0ae643dcca0533608d0124c6dbf25abbb614ddd91a1015eb530a",
+    "local-notification-validation.json": "5c29aeb1ea904429abcc28734b90712728e13b09c1a206ca1af3b46604c8e0d8",
+    "local-validation.json": "032a5829290c710c6675e057e9d6b9c2e77970141090cff0d55b002b525b9504",
+    "required-tests.json": "bec66594c14da2a84d94ef253e72b2652e1d4dcaaae4911757c5b2b2f5343b1d",
+    "source-files.json": "2ee5f791c68e8d20dc94f12e7d39401ffc90b75c02cb1dc3e631bd35f1010267",
+    "TEST-org.trustweave.core.plugin.ConfigurationBoundaryTest.xml": "c565bdf6d641c7ca9a3b81483f2f3e77c76a06f39de59ae410c8397b6d63188d",
+    "TEST-org.trustweave.core.plugin.PluginConfigurationErrorTest.xml": "4bd94c1afbc8697fc763d5aa38483b2dbc8331699d7b00a769b4e2f329a809e7",
+    "TEST-org.trustweave.credential.vi.LedgerIntegrityTest.xml": "e63a6bfd770efabc533de2325b05ea81495603251b4fd358727cce2ec65db905",
+    "validation-manifest.json": "6163b13406155ceadbecb00b61c222620fda0e5a342d2c0cfc0923be50a67aaf"
+  }
+}

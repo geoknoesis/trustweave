@@ -27,11 +27,24 @@ import kotlin.test.assertTrue
 
 /** Real HTTP/S3 SDK contract against MinIO; this is not a claim of live AWS coverage. */
 class S3StorageContractTest {
+    private companion object {
+        /**
+         * Pinned by digest on MinIO's own registry.
+         *
+         * The Docker Hub copy of this release is no longer resolvable, so the previous
+         * `minio/minio:RELEASE.…` reference failed to pull on any runner without a warm cache —
+         * it passed locally and failed in CI. A digest also makes the image immutable, which a
+         * `RELEASE.` tag is not: MinIO retags and removes them.
+         */
+        const val MINIO_IMAGE =
+            "quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e"
+    }
+
     @Test
     fun `S3 storage preserves anonymous credentials paginates and reports corrupt objects`() =
         runBlocking {
             val storage =
-                GenericContainer<Nothing>("minio/minio:RELEASE.2025-09-07T16-13-09Z").apply {
+                GenericContainer<Nothing>(MINIO_IMAGE).apply {
                     withEnv("MINIO_ROOT_USER", "contract-user")
                     withEnv("MINIO_ROOT_PASSWORD", "contract-password")
                     withCommand("server", "/data")

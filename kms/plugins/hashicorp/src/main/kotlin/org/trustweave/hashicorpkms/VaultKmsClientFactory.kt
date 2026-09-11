@@ -21,6 +21,8 @@ object VaultKmsClientFactory {
         val vaultConfig = VaultConfig()
             .address(config.address)
             .engineVersion(config.engineVersion)
+            .openTimeout(5)
+            .readTimeout(15)
 
         // Set namespace if provided (Vault Enterprise)
         config.namespace?.let {

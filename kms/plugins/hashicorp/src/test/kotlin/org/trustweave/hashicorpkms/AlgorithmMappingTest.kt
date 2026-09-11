@@ -6,6 +6,17 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.*
 
 class AlgorithmMappingTest {
+    @Test
+    fun `Ed25519 conversion rejects truncated keys and unrelated DER prefixes`() {
+        for (bytes in listOf(ByteArray(31), ByteArray(33), ByteArray(44))) {
+            assertFailsWith<IllegalArgumentException> {
+                AlgorithmMapping.publicKeyPemToJwk(java.util.Base64.getEncoder().encodeToString(bytes), Algorithm.Ed25519)
+            }
+        }
+        val key = java.security.KeyPairGenerator.getInstance("Ed25519").generateKeyPair().public.encoded
+        val result = AlgorithmMapping.publicKeyPemToJwk(java.util.Base64.getEncoder().encodeToString(key), Algorithm.Ed25519)
+        assertEquals(32, java.util.Base64.getUrlDecoder().decode(result["x"] as String).size)
+    }
 
     @Test
     fun `test to vault key type for all supported algorithms`() {

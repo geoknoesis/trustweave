@@ -122,11 +122,14 @@ object AlgorithmMapping {
                         .replace(" ", "")
 
                     val keyBytes = Base64.getDecoder().decode(base64Key)
-                    // Ed25519 public key is 32 bytes, typically at the end of the DER structure
-                    val rawKey = if (keyBytes.size >= 32) {
-                        keyBytes.takeLast(32).toByteArray()
-                    } else {
-                        keyBytes
+                    // Transit returns raw Ed25519 bytes. Also accept the exact RFC 8410 SPKI
+                    // representation; never silently truncate an arbitrary DER/key type.
+                    val prefix = java.util.HexFormat.of().parseHex("302a300506032b6570032100")
+                    val rawKey = when {
+                        keyBytes.size == 32 -> keyBytes
+                        keyBytes.size == prefix.size + 32 && keyBytes.copyOfRange(0, prefix.size).contentEquals(prefix) ->
+                            keyBytes.copyOfRange(prefix.size, keyBytes.size)
+                        else -> throw IllegalArgumentException("Invalid Ed25519 public-key encoding")
                     }
 
                     return mapOf(

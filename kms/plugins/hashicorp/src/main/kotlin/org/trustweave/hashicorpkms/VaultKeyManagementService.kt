@@ -120,12 +120,8 @@ class VaultKeyManagementService(
             val keyInfoPath = "${config.transitPath}/keys/$finalKeyName"
             val keyInfo = vaultClient.logical().read(keyInfoPath)
 
-            val publicKeyPem = keyInfo.data["keys"]?.let { keys ->
-                // Get the latest version's public key
-                val latestVersion = keyInfo.data["latest_version"] as? String ?: "1"
-                val versionData = (keys as? Map<*, *>)?.get(latestVersion) as? Map<*, *>
-                versionData?.get("public_key") as? String
-            } ?: return@withContext GenerateKeyResult.Failure.Error(
+            val publicKeyPem = VaultPublicKeyResponse.extract(keyInfo)
+                ?: return@withContext GenerateKeyResult.Failure.Error(
                 algorithm = algorithm,
                 reason = "Failed to retrieve public key from Vault",
                 cause = null
@@ -230,10 +226,7 @@ class VaultKeyManagementService(
                     reason = "Unknown key type: $keyType"
                 )
 
-            val latestVersion = keyInfo.data["latest_version"] as? String ?: "1"
-            val keys = keyInfo.data["keys"] as? Map<*, *>
-            val versionData = keys?.get(latestVersion) as? Map<*, *>
-            val publicKeyPem = versionData?.get("public_key") as? String
+            val publicKeyPem = VaultPublicKeyResponse.extract(keyInfo)
                 ?: return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
                     reason = "Public key not found for key: ${keyId.value}"

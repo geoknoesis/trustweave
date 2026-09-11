@@ -37,6 +37,8 @@ class VaultTransitLifecycleTest {
             VaultKmsClientFactory.createClient(config).logical().write("sys/mounts/transit", mapOf("type" to "transit"))
             val kms = VaultKeyManagementService(config)
             val key = assertIs<GenerateKeyResult.Success>(kms.generateKey(Algorithm.Ed25519, emptyMap())).keyHandle
+            assertTrue(Regex("transit/keys/ed25519-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")
+                .matches(key.id.value), "Generated names must retain the complete UUID")
             val publicKey = assertIs<GetPublicKeyResult.Success>(kms.getPublicKey(key.id)).keyHandle
             assertEquals(key.publicKeyJwk, publicKey.publicKeyJwk)
             val message = "independent-transit-signature-check".toByteArray()

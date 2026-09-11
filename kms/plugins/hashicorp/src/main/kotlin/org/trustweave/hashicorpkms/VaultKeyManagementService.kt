@@ -446,7 +446,9 @@ class VaultKeyManagementService(
             is Algorithm.RSA -> "rsa${algorithm.keySize}"
             else -> "key"
         }
-        return "$prefix-${UUID.randomUUID().toString().take(8)}"
+        // Retain the full UUID. Truncating to eight hex characters leaves only 32 bits
+        // and can silently reuse an existing Transit key as the fleet grows.
+        return "$prefix-${UUID.randomUUID()}"
     }
 
     /**

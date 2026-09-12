@@ -21,6 +21,11 @@ class WorkflowEvidencePathTest(unittest.TestCase):
         )
         for workflow_name in WORKFLOWS:
             workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
+            self.assertIn(
+                ":credentials:plugins:verifiable-intent:test --rerun-tasks --no-build-cache",
+                workflow,
+                f"{workflow_name} must regenerate evidence independently of historical caches",
+            )
             for path in required:
                 self.assertIn(path, workflow, f"{workflow_name} must retain {path}")
             for path in forbidden:

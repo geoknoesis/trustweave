@@ -32,31 +32,6 @@
       "reason": "Requires Google Cloud credentials; constructor checks are not live KMS qualification."
     },
     {
-      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
-      "name": "generateKey(P256) returns a handle and getPublicKey round-trips it()",
-      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
-    },
-    {
-      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
-      "name": "sign(P256) produces a signature that verifies with JCA SHA256withECDSA()",
-      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
-    },
-    {
-      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
-      "name": "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)()",
-      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
-    },
-    {
-      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
-      "name": "generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)()",
-      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
-    },
-    {
-      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
-      "name": "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound()",
-      "reason": "Requires a configured PKCS11 or SoftHSM2 token and native library; no native token qualification claimed."
-    },
-    {
       "suite": "org.trustweave.testkit.annotations.RequiresPluginExampleTest",
       "name": "example test requiring multiple plugins()",
       "reason": "Conditional external-plugin example; intentionally unavailable without example provider credentials."

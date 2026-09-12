@@ -1,9 +1,17 @@
 # Live custody and key-loss qualification
 
-Status: **not qualified**. No non-production KMS resource or credential profile has
-been identified for this run. Accountly billing validation does not qualify custody.
-The reference wallet's managed and passkey adapters remain experimental; see
-[the implemented contract](../../reference-wallet/CUSTODY.md).
+Status: **software PKCS#11 boundary qualified in CI; live custody remains not
+qualified**. CI provisions an isolated SoftHSM2 token and verifies P-256 key
+generation, lookup, signing, deletion, unsupported-algorithm handling and reuse of
+an existing key after recreating the KMS client. These named tests are mandatory in
+`config/testing-contract.json`; the skip policy does not permit them to be skipped.
+
+SoftHSM2 does not qualify a hosted or physical HSM, provider IAM, production audit
+delivery, dual-control recovery or a deployed Accountly wallet flow. No identified
+non-production KMS resource and credential profile has been recorded for those
+exercises. Accountly billing validation does not qualify custody. The reference
+wallet's managed and passkey adapters remain experimental; see [the implemented
+contract](../../reference-wallet/CUSTODY.md).
 
 ## Identify the test boundary
 
@@ -68,3 +76,11 @@ existing Ed25519 UI. Those components must be implemented and exercised before
 end-to-end custody can be qualified. A direct provider SDK test can close only the
 provider identity/signing gate. Physical passkey and sync-account recovery require
 their own device/provider evidence and are not covered by a cloud KMS exercise.
+
+The Accountly repository contains a protected `Staging production qualification`
+workflow and `scripts/qualify-deployment.py`. It exercises issuance and verification
+on both sides of a `did:web` key rotation, cross-tenant rejection, mixed authenticated
+load, process restart, isolated backup restore, and Alertmanager-sourced on-call
+acknowledgement. This is an executable qualification contract. It becomes evidence
+only after a successful run records the identified deployment revision, image digest,
+KMS resource, database version, region, recovery operations and alert acknowledgement.

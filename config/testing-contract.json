@@ -207,6 +207,18 @@
       ]
     },
     {
+      "id": "CUSTODY-PKCS11-SOFTHSM",
+      "module": "kms/plugins/pkcs11",
+      "suite": "org.trustweave.kms.pkcs11.Pkcs11KeyManagementServiceIntegrationTest",
+      "tests": [
+        "generateKey(P256) returns a handle and getPublicKey round-trips it",
+        "sign(P256) produces a signature that verifies with JCA SHA256withECDSA",
+        "deleteKey removes the key so subsequent getPublicKey returns KeyNotFound",
+        "key remains usable after the KMS client is recreated",
+        "generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)"
+      ]
+    },
+    {
       "id": "DATA-INTEGRITY",
       "module": "credentials/plugins/verifiable-intent",
       "suite": "org.trustweave.credential.vi.LedgerIntegrityTest",

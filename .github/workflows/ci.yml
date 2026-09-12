@@ -69,6 +69,14 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
+      - name: Configure isolated PKCS11 qualification token
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends softhsm2
+          test -f /usr/lib/softhsm/libsofthsm2.so
+          echo "SOFTHSM2_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
+          echo "SOFTHSM2_CONF=$RUNNER_TEMP/trustweave-softhsm2.conf" >> "$GITHUB_ENV"
+
       - name: Test validation tools and documentation contracts
         run: |
           python -m unittest discover -s scripts -p 'test_check_*.py'

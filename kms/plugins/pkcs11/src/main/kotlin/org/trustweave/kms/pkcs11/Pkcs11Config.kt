@@ -11,7 +11,8 @@ package org.trustweave.kms.pkcs11
  * @property libraryPath Absolute path to the vendor PKCS#11 shared library
  *                       (e.g. `/usr/lib/softhsm/libsofthsm2.so` on Linux or
  *                       `C:\\SoftHSM2\\lib\\softhsm2-x64.dll` on Windows).
- * @property slot PKCS#11 slot index. Default `0` matches the first available slot.
+ * @property slot Numeric PKCS#11 slot ID. Obtain it from the device or token-management
+ * tooling; it is not necessarily zero or the slot's position in the returned slot list.
  * @property providerName Friendly name suffix for the SunPKCS11 provider; multiple
  *                       `Pkcs11KeyManagementService` instances may coexist as long as
  *                       their provider names differ.

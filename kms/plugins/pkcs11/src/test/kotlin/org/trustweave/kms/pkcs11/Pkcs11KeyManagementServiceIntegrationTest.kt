@@ -7,11 +7,9 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
@@ -43,12 +41,14 @@ import java.security.Signature
  *      ```
  *      sudo apt-get install -y softhsm2
  *      export SOFTHSM2_LIB=/usr/lib/softhsm/libsofthsm2.so
+ *      export SOFTHSM2_CONF="$(mktemp)"
  *      ./gradlew :kms:plugins:pkcs11:test
  *      ```
  *  - **macOS (Homebrew):**
  *      ```
  *      brew install softhsm
  *      export SOFTHSM2_LIB="$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so"
+ *      export SOFTHSM2_CONF="$(mktemp)"
  *      ./gradlew :kms:plugins:pkcs11:test
  *      ```
  *  - **Windows:** install SoftHSM2 from
@@ -78,12 +78,11 @@ import java.security.Signature
 @EnabledIfEnvironmentVariable(
     named = "SOFTHSM2_LIB",
     matches = ".+",
-    disabledReason = "SoftHSM2 integration tests require SOFTHSM2_LIB to point at " +
-        "libsofthsm2.so / softhsm2-x64.dll on the host JVM.",
+    disabledReason =
+        "SoftHSM2 integration tests require SOFTHSM2_LIB to point at " +
+            "libsofthsm2.so / softhsm2-x64.dll on the host JVM.",
 )
-@DisplayName("Pkcs11KeyManagementService — SoftHSM2 integration")
 class Pkcs11KeyManagementServiceIntegrationTest {
-
     private val tokenLabel: String = "trustweave-test"
     private val soPin: String = "1234"
     private val userPin: String = "5678"
@@ -102,9 +101,14 @@ class Pkcs11KeyManagementServiceIntegrationTest {
 
     @BeforeAll
     fun setUp() {
-        libraryPath = requireNotNull(System.getenv("SOFTHSM2_LIB")) {
-            "SOFTHSM2_LIB env var is required to run this test"
-        }
+        libraryPath =
+            requireNotNull(System.getenv("SOFTHSM2_LIB")) {
+                "SOFTHSM2_LIB env var is required to run this test"
+            }
+        val configuredPath =
+            requireNotNull(System.getenv("SOFTHSM2_CONF")) {
+                "SOFTHSM2_CONF must identify the configuration read by both SoftHSM2 and its CLI"
+            }
         check(Files.exists(Path.of(libraryPath))) {
             "SOFTHSM2_LIB points at '$libraryPath' but no such file exists"
         }
@@ -112,7 +116,8 @@ class Pkcs11KeyManagementServiceIntegrationTest {
         // Isolate token state in a per-test temp directory so concurrent CI shards don't
         // fight over the system-wide /var/lib/softhsm/tokens.
         tokensDir = Files.createTempDirectory("trustweave-softhsm2-tokens-")
-        softhsm2Conf = Files.createTempFile("softhsm2-", ".conf")
+        softhsm2Conf = Path.of(configuredPath).toAbsolutePath()
+        softhsm2Conf.parent?.let(Files::createDirectories)
         Files.writeString(
             softhsm2Conf,
             """
@@ -121,30 +126,27 @@ class Pkcs11KeyManagementServiceIntegrationTest {
             log.level = ERROR
             """.trimIndent(),
         )
-        // SunPKCS11 honors SOFTHSM2_CONF when looking up the SoftHSM config; setting it
-        // as a JVM property is not enough — we need it in the *process* env. We can only
-        // mutate the JVM's view, but SoftHSM2 reads it via getenv() at load time, so for
-        // CI we document that the workflow should export this directly.
-        // Best-effort: pass via -D so users who can't set env can still scope tokens.
-        System.setProperty("SOFTHSM2_CONF", softhsm2Conf.toAbsolutePath().toString())
+        // The workflow exports SOFTHSM2_CONF before the JVM starts, so the CLI and the
+        // native library read the same isolated token directory.
+        val slotId = initTokenViaCli()
 
-        initTokenViaCli()
-
-        val config = Pkcs11Config(
-            libraryPath = libraryPath,
-            slot = 0,
-            providerName = providerName,
-            pin = userPin.toCharArray(),
-        )
+        val config =
+            Pkcs11Config(
+                libraryPath = libraryPath,
+                slot = slotId,
+                providerName = providerName,
+                pin = userPin.toCharArray(),
+            )
         kms = Pkcs11KeyManagementService(config)
 
         // Also open a direct KeyStore for signature verification; we need the actual
         // PublicKey, which the KMS SPI returns only as a KeyHandle wrapper.
         provider = Security.getProvider("SunPKCS11-$providerName")
             ?: error("SunPKCS11-$providerName not registered after Pkcs11KeyManagementService init")
-        keyStore = KeyStore.getInstance("PKCS11", provider).apply {
-            load(null, userPin.toCharArray())
-        }
+        keyStore =
+            KeyStore.getInstance("PKCS11", provider).apply {
+                load(null, userPin.toCharArray())
+            }
     }
 
     @AfterAll
@@ -155,99 +157,133 @@ class Pkcs11KeyManagementServiceIntegrationTest {
     }
 
     @Test
-    fun `generateKey(P256) returns a handle and getPublicKey round-trips it`() = runTest {
-        val label = uniqueLabel("p256-roundtrip")
+    fun `generateKey(P256) returns a handle and getPublicKey round-trips it`() =
+        runTest {
+            val label = uniqueLabel("p256-roundtrip")
 
-        val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
-        assertTrue(gen is GenerateKeyResult.Success, "expected Success, got $gen")
-        val handle = (gen as GenerateKeyResult.Success).keyHandle
-        assertEquals(label, handle.id.value)
+            val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
+            assertTrue(gen is GenerateKeyResult.Success, "expected Success, got $gen")
+            val handle = (gen as GenerateKeyResult.Success).keyHandle
+            assertEquals(label, handle.id.value)
 
-        val pub = kms.getPublicKey(handle.id)
-        assertTrue(pub is GetPublicKeyResult.Success, "expected Success, got $pub")
-        assertEquals(handle.id, (pub as GetPublicKeyResult.Success).keyHandle.id)
-    }
-
-    @Test
-    fun `sign(P256) produces a signature that verifies with JCA SHA256withECDSA`() = runTest {
-        val label = uniqueLabel("p256-sign")
-        val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
-        val handle = (gen as GenerateKeyResult.Success).keyHandle
-
-        val data = "trustweave-test-payload".toByteArray(Charsets.UTF_8)
-        val signed = kms.sign(handle.id, data, Algorithm.P256)
-        assertTrue(signed is SignResult.Success, "expected Success, got $signed")
-        val signature = (signed as SignResult.Success).signature
-        assertNotNull(signature)
-        assertTrue(signature.isNotEmpty(), "signature must be non-empty")
-
-        // The KeyManagementService contract mandates P1363 (raw r||s) for ECDSA: 64 bytes
-        // for P-256.
-        assertEquals(64, signature.size, "P-256 signature must be 64-byte P1363 (raw r||s)")
-
-        // Verify against the public key stored on the token. The KMS SPI does not return
-        // the raw PublicKey, so we read it from the same PKCS#11 keystore directly.
-        // JCA's SHA256withECDSA verifier expects DER, so transcode P1363 → DER first.
-        val publicKey = keyStore.getCertificate(label)?.publicKey
-            ?: error("PKCS#11 token did not return a certificate for label '$label'")
-
-        val verifier = Signature.getInstance("SHA256withECDSA")
-        verifier.initVerify(publicKey)
-        verifier.update(data)
-        assertTrue(
-            verifier.verify(EcdsaSignatureCodec.p1363ToDer(signature)),
-            "signature must verify against the PKCS#11 public key"
-        )
-    }
-
-    @Test
-    fun `generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)`() = runTest {
-        val label = uniqueLabel("ed25519")
-        val gen = kms.generateKey(Algorithm.Ed25519, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
-        // SoftHSM2 < 2.6 returns CKR_MECHANISM_INVALID; our service surfaces that as
-        // GenerateKeyResult.Failure.Error. We accept either outcome here so this test
-        // does not become a SoftHSM2 version gate — but the common modern path is Success.
-        assertTrue(
-            gen is GenerateKeyResult.Success || gen is GenerateKeyResult.Failure.Error,
-            "expected Success or Failure.Error (older SoftHSM2 without Ed25519); got $gen",
-        )
-        if (gen is GenerateKeyResult.Success) {
-            assertEquals(label, gen.keyHandle.id.value)
+            val pub = kms.getPublicKey(handle.id)
+            assertTrue(pub is GetPublicKeyResult.Success, "expected Success, got $pub")
+            assertEquals(handle.id, (pub as GetPublicKeyResult.Success).keyHandle.id)
         }
-    }
 
     @Test
-    fun `deleteKey removes the key so subsequent getPublicKey returns KeyNotFound`() = runTest {
-        val label = uniqueLabel("delete-me")
-        val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
-        val handle = (gen as GenerateKeyResult.Success).keyHandle
+    fun `sign(P256) produces a signature that verifies with JCA SHA256withECDSA`() =
+        runTest {
+            val label = uniqueLabel("p256-sign")
+            val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
+            val handle = (gen as GenerateKeyResult.Success).keyHandle
 
-        val del = kms.deleteKey(handle.id)
-        assertTrue(del is DeleteKeyResult.Deleted, "expected Deleted, got $del")
+            val data = "trustweave-test-payload".toByteArray(Charsets.UTF_8)
+            val signed = kms.sign(handle.id, data, Algorithm.P256)
+            assertTrue(signed is SignResult.Success, "expected Success, got $signed")
+            val signature = (signed as SignResult.Success).signature
+            assertNotNull(signature)
+            assertTrue(signature.isNotEmpty(), "signature must be non-empty")
 
-        val pub = kms.getPublicKey(handle.id)
-        assertTrue(
-            pub is GetPublicKeyResult.Failure.KeyNotFound,
-            "expected KeyNotFound after delete, got $pub",
-        )
-    }
+            // The KeyManagementService contract mandates P1363 (raw r||s) for ECDSA: 64 bytes
+            // for P-256.
+            assertEquals(64, signature.size, "P-256 signature must be 64-byte P1363 (raw r||s)")
+
+            // Verify against the public key stored on the token. The KMS SPI does not return
+            // the raw PublicKey, so we read it from the same PKCS#11 keystore directly.
+            // JCA's SHA256withECDSA verifier expects DER, so transcode P1363 → DER first.
+            val publicKey =
+                keyStore.getCertificate(label)?.publicKey
+                    ?: error("PKCS#11 token did not return a certificate for label '$label'")
+
+            val verifier = Signature.getInstance("SHA256withECDSA")
+            verifier.initVerify(publicKey)
+            verifier.update(data)
+            assertTrue(
+                verifier.verify(EcdsaSignatureCodec.p1363ToDer(signature)),
+                "signature must verify against the PKCS#11 public key",
+            )
+        }
 
     @Test
-    fun `generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)`() = runTest {
-        val gen = kms.generateKey(Algorithm.Secp256k1)
-        assertTrue(
-            gen is GenerateKeyResult.Failure.UnsupportedAlgorithm,
-            "expected UnsupportedAlgorithm, got $gen",
-        )
-        val failure = gen as GenerateKeyResult.Failure.UnsupportedAlgorithm
-        assertEquals(Algorithm.Secp256k1, failure.algorithm)
-        assertTrue(
-            failure.supportedAlgorithms.isNotEmpty(),
-            "supportedAlgorithms must be advertised in the failure",
-        )
-    }
+    fun `generateKey(Ed25519) succeeds on SoftHSM2 (requires v2_6+)`() =
+        runTest {
+            val label = uniqueLabel("ed25519")
+            val gen = kms.generateKey(Algorithm.Ed25519, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
+            // SoftHSM2 < 2.6 returns CKR_MECHANISM_INVALID; our service surfaces that as
+            // GenerateKeyResult.Failure.Error. We accept either outcome here so this test
+            // does not become a SoftHSM2 version gate — but the common modern path is Success.
+            assertTrue(
+                gen is GenerateKeyResult.Success || gen is GenerateKeyResult.Failure.Error,
+                "expected Success or Failure.Error (older SoftHSM2 without Ed25519); got $gen",
+            )
+            if (gen is GenerateKeyResult.Success) {
+                assertEquals(label, gen.keyHandle.id.value)
+            }
+        }
+
+    @Test
+    fun `deleteKey removes the key so subsequent getPublicKey returns KeyNotFound`() =
+        runTest {
+            val label = uniqueLabel("delete-me")
+            val gen = kms.generateKey(Algorithm.P256, options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label))
+            val handle = (gen as GenerateKeyResult.Success).keyHandle
+
+            val del = kms.deleteKey(handle.id)
+            assertTrue(del is DeleteKeyResult.Deleted, "expected Deleted, got $del")
+
+            val pub = kms.getPublicKey(handle.id)
+            assertTrue(
+                pub is GetPublicKeyResult.Failure.KeyNotFound,
+                "expected KeyNotFound after delete, got $pub",
+            )
+        }
+
+    @Test
+    fun `generateKey(Secp256k1) is rejected with UnsupportedAlgorithm (MVP contract)`() =
+        runTest {
+            val gen = kms.generateKey(Algorithm.Secp256k1)
+            assertTrue(
+                gen is GenerateKeyResult.Failure.UnsupportedAlgorithm,
+                "expected UnsupportedAlgorithm, got $gen",
+            )
+            val failure = gen as GenerateKeyResult.Failure.UnsupportedAlgorithm
+            assertEquals(Algorithm.Secp256k1, failure.algorithm)
+            assertTrue(
+                failure.supportedAlgorithms.isNotEmpty(),
+                "supportedAlgorithms must be advertised in the failure",
+            )
+        }
+
+    @Test
+    fun `key remains usable after the KMS client is recreated`() =
+        runTest {
+            val label = uniqueLabel("restart-recovery")
+            val generated =
+                kms.generateKey(
+                    Algorithm.P256,
+                    options = mapOf(Pkcs11KeyManagementService.OPTION_LABEL to label),
+                )
+            val handle = (generated as GenerateKeyResult.Success).keyHandle
+
+            val restarted =
+                Pkcs11KeyManagementService(
+                    Pkcs11Config(
+                        libraryPath = libraryPath,
+                        slot = initSlotId,
+                        providerName = "$providerName-restarted",
+                        pin = userPin.toCharArray(),
+                    ),
+                )
+            assertTrue(restarted.getPublicKey(handle.id) is GetPublicKeyResult.Success)
+
+            val payload = "recovered-client-payload".toByteArray(Charsets.UTF_8)
+            val signed = restarted.sign(handle.id, payload, Algorithm.P256)
+            assertTrue(signed is SignResult.Success, "expected recovered signer to succeed, got $signed")
+        }
 
     private var labelCounter: Int = 0
+
     private fun uniqueLabel(prefix: String): String {
         // SoftHSM2 disallows label collisions within a token; salt every label.
         labelCounter += 1
@@ -257,34 +293,48 @@ class Pkcs11KeyManagementServiceIntegrationTest {
     }
 
     /**
-     * Runs `softhsm2-util --init-token --slot 0 --label ... --so-pin ... --pin ...` via
+     * Runs `softhsm2-util --init-token --free --label ... --so-pin ... --pin ...` via
      * [ProcessBuilder]. The CLI is conventionally available wherever the native library
      * is installed; if it isn't on `$PATH`, we surface a clear failure.
      */
-    private fun initTokenViaCli() {
+    private var initSlotId: Int = -1
+
+    private fun initTokenViaCli(): Int {
         val env = mapOf("SOFTHSM2_CONF" to softhsm2Conf.toAbsolutePath().toString())
-        val proc = try {
-            ProcessBuilder(
-                "softhsm2-util",
-                "--init-token",
-                "--free",
-                "--label", tokenLabel,
-                "--so-pin", soPin,
-                "--pin", userPin,
-            )
-                .redirectErrorStream(true)
-                .also { it.environment().putAll(env) }
-                .start()
-        } catch (e: IOException) {
-            error(
-                "softhsm2-util is not on PATH. Install softhsm2 alongside libsofthsm2.so, " +
-                    "or pre-initialize a token and skip CLI bootstrap. Cause: ${e.message}",
-            )
-        }
+        val proc =
+            try {
+                ProcessBuilder(
+                    "softhsm2-util",
+                    "--init-token",
+                    "--free",
+                    "--label",
+                    tokenLabel,
+                    "--so-pin",
+                    soPin,
+                    "--pin",
+                    userPin,
+                ).redirectErrorStream(true)
+                    .also { it.environment().putAll(env) }
+                    .start()
+            } catch (e: IOException) {
+                error(
+                    "softhsm2-util is not on PATH. Install softhsm2 alongside libsofthsm2.so, " +
+                        "or pre-initialize a token and skip CLI bootstrap. Cause: ${e.message}",
+                )
+            }
         val out = proc.inputStream.bufferedReader().readText()
         val exit = proc.waitFor()
         check(exit == 0 || out.contains("already initialized", ignoreCase = true)) {
             "softhsm2-util --init-token failed (exit=$exit): $out"
         }
+        val slotId =
+            Regex("reassigned to slot\\s+(\\d+)", RegexOption.IGNORE_CASE)
+                .find(out)
+                ?.groupValues
+                ?.get(1)
+                ?.toIntOrNull()
+                ?: error("softhsm2-util did not report the initialized slot ID: $out")
+        initSlotId = slotId
+        return slotId
     }
 }

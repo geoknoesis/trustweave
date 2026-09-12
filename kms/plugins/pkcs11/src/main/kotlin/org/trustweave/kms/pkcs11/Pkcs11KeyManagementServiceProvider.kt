@@ -96,7 +96,7 @@ class Pkcs11KeyManagementServiceProvider : KeyManagementServiceProvider {
         /** Option key: absolute path to the vendor PKCS#11 shared library. Required. */
         const val KEY_LIBRARY_PATH: String = "libraryPath"
 
-        /** Option key: PKCS#11 slot index. Optional; defaults to 0. */
+        /** Option key: numeric PKCS#11 slot ID. Optional; defaults to 0. */
         const val KEY_SLOT: String = "slot"
 
         /** Option key: friendly provider name suffix. Optional; defaults to "TrustWeave-PKCS11". */

@@ -14,16 +14,16 @@
         <error line="86" column="70" source="standard:multiline-expression-wrapping" />
         <error line="86" column="70" source="standard:function-signature" />
         <error line="91" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="102" column="38" source="standard:multiline-expression-wrapping" />
-        <error line="122" column="45" source="standard:multiline-expression-wrapping" />
-        <error line="123" column="22" source="standard:multiline-expression-wrapping" />
-        <error line="130" column="38" source="standard:multiline-expression-wrapping" />
-        <error line="137" column="28" source="standard:multiline-expression-wrapping" />
-        <error line="155" column="30" source="standard:function-signature" />
-        <error line="155" column="43" source="standard:function-signature" />
-        <error line="155" column="55" source="standard:function-signature" />
-        <error line="155" column="67" source="standard:multiline-expression-wrapping" />
-        <error line="155" column="67" source="standard:function-signature" />
+        <error line="104" column="38" source="standard:multiline-expression-wrapping" />
+        <error line="126" column="45" source="standard:multiline-expression-wrapping" />
+        <error line="127" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="134" column="38" source="standard:multiline-expression-wrapping" />
+        <error line="141" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="159" column="30" source="standard:function-signature" />
+        <error line="159" column="43" source="standard:function-signature" />
+        <error line="159" column="55" source="standard:function-signature" />
+        <error line="159" column="67" source="standard:multiline-expression-wrapping" />
+        <error line="159" column="67" source="standard:function-signature" />
     </file>
     <file name="src/main/kotlin/org/trustweave/jwkdid/spi/JwkDidMethodProvider.kt">
         <error line="14" column="1" source="standard:no-empty-first-line-in-class-body" />

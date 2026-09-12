@@ -1,5 +1,6 @@
 package org.trustweave.did.registrar.method
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidMethod
@@ -139,6 +140,8 @@ class HttpDidMethod(
             resolver.resolveDid(did.value)
         } catch (e: DidException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw DidException.DidResolutionFailed(
                 did = did, reason = "Failed to resolve DID: ${e.message}", cause = e

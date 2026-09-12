@@ -235,6 +235,8 @@ internal object CredentialValidation {
                         errors = validationErrors,
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: IllegalArgumentException) {
                 // Re-throw input validation errors as-is
                 return VerificationResult.Invalid.SchemaValidationFailed(
@@ -250,8 +252,6 @@ internal object CredentialValidation {
                     validationErrors = listOf("Schema registry error: ${e.message}"),
                     errors = listOf("Schema validation failed: ${e.message}"),
                 )
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
             } catch (e: Exception) {
                 return VerificationResult.Invalid.SchemaValidationFailed(
                     credential = credential,

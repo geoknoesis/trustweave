@@ -1,5 +1,6 @@
 package org.trustweave.peerdid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -86,6 +87,8 @@ class PeerDidMethod(
                 throw e
             } catch (e: IllegalArgumentException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREATE_FAILED",
@@ -134,6 +137,8 @@ class PeerDidMethod(
                 DidMethodUtils.createErrorResolutionResult("notFound", "DID document not found", method, didString)
             } catch (e: TrustWeaveException) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             }

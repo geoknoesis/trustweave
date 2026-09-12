@@ -1,5 +1,6 @@
 package org.trustweave.did.registrar.method
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.registrar.DidRegistrar
@@ -74,6 +75,8 @@ internal class RegistrationStateMachine(
             )
         return try {
             pollable.waitForCompletion(response)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw buildException(operation, did, "Failed to poll long-running operation: ${e.message}", e)
         }
@@ -93,6 +96,8 @@ internal class RegistrationStateMachine(
             delay(1000)
             current = try {
                 pollable.getOperationStatus(jobId)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw buildException(operation, did, "Failed to poll WAIT state: ${e.message}", e)
             }

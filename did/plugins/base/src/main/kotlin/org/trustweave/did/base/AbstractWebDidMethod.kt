@@ -1,5 +1,6 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.net.PrivateNetworkGuard
@@ -255,6 +256,8 @@ abstract class AbstractWebDidMethod(
                     context = mapOf("did" to didString, "method" to method, "url" to url),
                     cause = e,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to resolve DID document: ${e.message ?: "Unknown error"}",
@@ -306,6 +309,8 @@ abstract class AbstractWebDidMethod(
                 }
 
                 success
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to update DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",
@@ -360,6 +365,8 @@ abstract class AbstractWebDidMethod(
                 }
 
                 success
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to deactivate DID document on HTTP endpoint: ${e.message ?: "Unknown error"}",

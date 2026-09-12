@@ -1,5 +1,6 @@
 package org.trustweave.did.resolver
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
@@ -159,6 +160,8 @@ class DefaultUniversalResolver(
                 )
             } catch (e: DidException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 val safeDid =
                     try {

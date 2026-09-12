@@ -3,6 +3,7 @@ package org.trustweave.wallet.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.trustweave.wallet.Wallet
+import kotlinx.coroutines.CancellationException
 import org.trustweave.wallet.services.WalletCreationOptions
 import org.trustweave.wallet.services.WalletFactory
 import org.trustweave.wallet.services.validateDeployment
@@ -80,6 +81,8 @@ class DatabaseWalletFactory(
                 ownsDataSource = true,
                 statusResolver = statusResolver,
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Throwable) {
             // The wallet was never handed to the caller — close the pool here or it leaks.
             runCatching { dataSource.close() }

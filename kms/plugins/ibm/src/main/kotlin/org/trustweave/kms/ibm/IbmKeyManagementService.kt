@@ -1,5 +1,6 @@
 package org.trustweave.kms.ibm
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyHandle
@@ -223,6 +224,8 @@ class IbmKeyManagementService(
                     }
                 }
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Unexpected error generating key in IBM Key Protect", mapOf(
                 "algorithm" to algorithm.name,
@@ -336,6 +339,8 @@ class IbmKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Unexpected error getting public key from IBM Key Protect", mapOf(
                 "keyId" to keyId.value,
@@ -494,6 +499,8 @@ class IbmKeyManagementService(
                 keyId.value, signingAlgorithm.name, data.size, signature.size)
 
             SignResult.Success(signature)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Unexpected error signing data in IBM Key Protect", mapOf(
                 "keyId" to keyId.value,
@@ -593,6 +600,8 @@ class IbmKeyManagementService(
                     }
                 }
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Unexpected error deleting key from IBM Key Protect", mapOf(
                 "keyId" to keyId.value,

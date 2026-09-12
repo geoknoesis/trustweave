@@ -1,5 +1,6 @@
 package org.trustweave.signatures.xades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -72,11 +73,15 @@ class DefaultXadesVerifier : XadesVerifier {
         val factory = XMLSignatureFactory.getInstance("DOM")
         val xmlSig: XMLSignature = try {
             factory.unmarshalXMLSignature(context)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.Malformed("could not parse <ds:Signature>: ${t.message}")
         }
         val signatureValid = try {
             xmlSig.validate(context)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.BadSignature("validation threw: ${t.message}")
         }

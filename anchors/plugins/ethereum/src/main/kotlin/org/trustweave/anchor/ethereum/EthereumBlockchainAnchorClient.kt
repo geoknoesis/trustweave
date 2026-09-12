@@ -1,5 +1,6 @@
 package org.trustweave.anchor.ethereum
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -92,6 +93,8 @@ class EthereumBlockchainAnchorClient(
                     org.web3j.utils.Numeric.toHexString(it.callData),
                 )
                 web3j.ethEstimateGas(tx).send().amountUsed
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {
                 EvmGas.txGasLimit(it.callData)
             }
@@ -166,6 +169,8 @@ class EthereumBlockchainAnchorClient(
                 )
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw BlockchainException.TransactionFailed(
                     chainId = chainId,

@@ -1,5 +1,6 @@
 package org.trustweave.signatures.cades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -50,6 +51,8 @@ class DefaultCadesVerifier : CadesVerifier {
         //    detached or encapsulated; then re-parse with detached payload if appropriate.
         val probe = try {
             CMSSignedData(cmsBytes)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.Malformed("not a valid CMS SignedData: ${t.message}")
         }
@@ -62,6 +65,8 @@ class DefaultCadesVerifier : CadesVerifier {
         val cms = if (isDetached) {
             try {
                 CMSSignedData(CMSProcessableByteArray(options.detachedPayload!!), cmsBytes)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (t: Throwable) {
                 return@withContext Invalid.Malformed(
                     "CMS detached re-parse failed: ${t.message}",
@@ -74,6 +79,8 @@ class DefaultCadesVerifier : CadesVerifier {
         // 3. Extract the (single) signer.
         val signerInfo: SignerInformation = try {
             cms.signerInfos.signers.single()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.Malformed("CMS does not contain exactly one signer")
         }
@@ -81,6 +88,8 @@ class DefaultCadesVerifier : CadesVerifier {
         // 4. Resolve signer cert from the embedded cert store via SID match.
         val signerCert = try {
             findSignerCert(cms, signerInfo)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.Malformed(
                 "cannot resolve signer certificate from CMS cert store: ${t.message}",
@@ -91,6 +100,8 @@ class DefaultCadesVerifier : CadesVerifier {
         val verifier = JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(signerCert)
         val signatureValid = try {
             signerInfo.verify(verifier)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             return@withContext Invalid.BadSignature("verification threw: ${t.message}")
         }

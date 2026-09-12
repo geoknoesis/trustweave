@@ -1,5 +1,6 @@
 package org.trustweave.ethrdid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
@@ -168,6 +169,8 @@ class EthrDidMethod(
                 try {
                     val txHash = anchorDocument(document)
                     didToTxHash[did] = txHash
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     // If anchoring fails, still store locally for testing
                     storeDocument(document.id, document)
@@ -178,6 +181,8 @@ class EthrDidMethod(
                 throw e
             } catch (e: IllegalArgumentException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREATE_FAILED",
@@ -228,6 +233,8 @@ class EthrDidMethod(
                 }
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -269,6 +276,8 @@ class EthrDidMethod(
                 throw e
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "UPDATE_FAILED",
@@ -313,6 +322,8 @@ class EthrDidMethod(
                 true
             } catch (e: TrustWeaveException.NotFound) {
                 false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "DEACTIVATE_FAILED",

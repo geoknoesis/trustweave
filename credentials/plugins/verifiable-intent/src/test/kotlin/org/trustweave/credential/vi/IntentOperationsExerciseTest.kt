@@ -20,7 +20,6 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -252,7 +251,7 @@ class IntentOperationsExerciseTest {
                             )
                             put("metrics", metrics)
                         }
-                    val output = Path.of("build/reports/intent-operations.json")
+                    val output = evidenceDir("intent-operations.json")
                     Files.createDirectories(output.parent)
                     Files.writeString(output, report.toString())
                     Files.writeString(output.resolveSibling("intent-metrics.prom"), metrics)

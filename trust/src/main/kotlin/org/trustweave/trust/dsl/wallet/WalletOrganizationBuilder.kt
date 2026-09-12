@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.wallet
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.wallet.CredentialOrganization
@@ -131,6 +132,8 @@ class WalletOrganizationBuilder(
                             for (credId in collectionOp.credentialIds) {
                                 try {
                                     orgWallet.addToCollection(credId, collectionId)
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
                                 } catch (e: Exception) {
                                     errors.add("Failed to add credential $credId to collection ${collectionOp.name}: ${e.message}")
                                 }
@@ -140,10 +143,14 @@ class WalletOrganizationBuilder(
                             for (tagOp in collectionOp.tags) {
                                 try {
                                     orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
                                 } catch (e: Exception) {
                                     errors.add("Failed to tag credential ${tagOp.credentialId}: ${e.message}")
                                 }
                             }
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (e: Exception) {
                             errors.add("Failed to create collection ${collectionOp.name}: ${e.message}")
                         }
@@ -158,6 +165,8 @@ class WalletOrganizationBuilder(
                         is TagOperation.Add -> orgWallet.tagCredential(tagOp.credentialId, tagOp.tags)
                         is TagOperation.Remove -> orgWallet.untagCredential(tagOp.credentialId, tagOp.tags)
                     }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     errors.add(
                         "Failed to ${if (tagOp is TagOperation.Add) "tag" else "untag"} credential ${tagOp.credentialId}: ${e.message}",
@@ -172,6 +181,8 @@ class WalletOrganizationBuilder(
                         is MetadataOperation.Add -> orgWallet.addMetadata(metaOp.credentialId, metaOp.metadata)
                         is MetadataOperation.Notes -> orgWallet.updateNotes(metaOp.credentialId, metaOp.notes)
                     }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     errors.add("Failed to update metadata for credential ${metaOp.credentialId}: ${e.message}")
                 }

@@ -1,5 +1,6 @@
 package org.trustweave.ebsidid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyPurpose
@@ -170,6 +171,8 @@ class EbsiDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "EBSI_CREATE_FAILED",
@@ -190,6 +193,8 @@ class EbsiDidMethod(
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             return@withContext DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -282,6 +287,8 @@ class EbsiDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "EBSI_UPDATE_FAILED",
@@ -322,6 +329,8 @@ class EbsiDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             false
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "EBSI_DEACTIVATE_FAILED",

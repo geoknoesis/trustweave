@@ -1,5 +1,6 @@
 package org.trustweave.did.rotation
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -213,6 +214,8 @@ class DefaultDidRotationService(
                 success = updateResult.didState.state == org.trustweave.did.registrar.model.OperationState.FINISHED,
                 updatedDocument = updatedDocument,
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             RotationResult(
                 success = false,
@@ -320,6 +323,8 @@ class DefaultDidRotationService(
                 success = updateResult.didState.state == org.trustweave.did.registrar.model.OperationState.FINISHED,
                 updatedDocument = updatedDocument,
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             RotationResult(
                 success = false,

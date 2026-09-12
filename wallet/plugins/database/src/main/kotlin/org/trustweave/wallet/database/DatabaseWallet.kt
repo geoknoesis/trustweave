@@ -922,6 +922,8 @@ class DatabaseWallet(
                         }
                         conn.commit()
                         true
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (e: Exception) {
                         runCatching { conn.rollback() }
                         throw e
@@ -1081,6 +1083,8 @@ class DatabaseWallet(
                             }
                         conn.commit()
                         true
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (e: Exception) {
                         runCatching { conn.rollback() }
                         throw e

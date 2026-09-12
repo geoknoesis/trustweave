@@ -1,9 +1,38 @@
 """Enforce the component reliability profile; this is not a production SLO certification."""
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location("build_root", Path(__file__).with_name("build_root.py"))
+_build_root = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_build_root)
+
+MODULE = "credentials/plugins/verifiable-intent"
+REQUIRED = "contention.json"
+
+
+def locate(repository):
+    """Find the directory the reliability tests actually wrote to.
+
+    The tests write to a path relative to the test JVM's working directory, which Gradle sets to
+    the module directory, while this repository also redirects Gradle's own build directory — on
+    Windows out of the workspace entirely. Rather than assume one layout and fail loudly in the
+    other, check both and report both when neither has the evidence.
+    """
+    candidates = [
+        _build_root.resolve(repository) / MODULE / "reports" / "reliability",
+        Path(repository) / MODULE / "build" / "reports" / "reliability",
+    ]
+    for candidate in candidates:
+        if (candidate / REQUIRED).is_file():
+            return candidate
+    raise ValueError(
+        "No reliability evidence found. Run the verifiable-intent tests first. Looked in: "
+        + ", ".join(str(c) for c in candidates)
+    )
 
 
 def validate(root):
@@ -61,12 +90,12 @@ def validate(root):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--directory", type=Path,
-                        default=Path("credentials/plugins/verifiable-intent/build/reports/reliability"))
+    parser.add_argument("--directory", type=Path, default=None)
     args = parser.parse_args()
     try:
-        report = validate(args.directory)
+        directory = args.directory or locate(_build_root.repository_root())
+        report = validate(directory)
     except (OSError, KeyError, ValueError, TypeError) as error:
         raise SystemExit(str(error))
-    (args.directory / "qualification.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    (directory / "qualification.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report))

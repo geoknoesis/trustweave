@@ -8,6 +8,7 @@ import com.algorand.algosdk.util.Encoder
 import com.algorand.algosdk.v2.client.common.AlgodClient
 import com.algorand.algosdk.v2.client.common.IndexerClient
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -267,6 +268,8 @@ class AlgorandBlockchainAnchorClient(
                 }
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw BlockchainException.TransactionFailed(
                     chainId = chainId,
@@ -352,6 +355,8 @@ class AlgorandBlockchainAnchorClient(
         val response =
             try {
                 algodClient.RawTransaction().rawtxn(concatenated).execute()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw BlockchainException.TransactionFailed(
                     reason = "Failed to submit sponsored atomic group to Algorand: ${e.message ?: "Unknown error"}",
@@ -429,6 +434,8 @@ class AlgorandBlockchainAnchorClient(
         val response =
             try {
                 algodClient.RawTransaction().rawtxn(txBytes).execute()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw BlockchainException.TransactionFailed(
                     reason = "Failed to submit transaction to Algorand: ${e.message ?: "Unknown error"}",
@@ -465,6 +472,8 @@ class AlgorandBlockchainAnchorClient(
             val pending =
                 try {
                     algodClient.PendingTransactionInformation(txid).execute().body()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     null
                 }

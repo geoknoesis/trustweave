@@ -14,7 +14,6 @@ import org.trustweave.credential.vi.verification.BudgetReservation
 import org.trustweave.credential.vi.verification.PostgresIntentLedger
 import org.trustweave.credential.vi.verification.SettlementOutcome
 import java.nio.file.Files
-import java.nio.file.Path
 import java.sql.SQLException
 import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -69,7 +68,7 @@ class IntentReliabilityTest {
         name: String,
         values: Map<String, Number>,
     ) {
-        val target = Path.of("build/reports/reliability/$name.json")
+        val target = evidenceDir("reliability", "$name.json")
         Files.createDirectories(target.parent)
         Files.writeString(
             target,

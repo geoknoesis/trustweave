@@ -1,5 +1,6 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
@@ -132,6 +133,8 @@ abstract class AbstractBlockchainDidMethod(
                 result.ref.txHash
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException(
                     code = "DID_ANCHOR_FAILED",
@@ -223,6 +226,8 @@ abstract class AbstractBlockchainDidMethod(
                 throw e
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 // Try fallback to stored document
                 val stored = getStoredDocument(did)
@@ -345,6 +350,8 @@ abstract class AbstractBlockchainDidMethod(
             }
 
             return true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException(
                 code = "DID_DEACTIVATION_FAILED",

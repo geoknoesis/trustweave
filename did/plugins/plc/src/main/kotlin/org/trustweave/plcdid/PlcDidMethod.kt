@@ -1,5 +1,6 @@
 package org.trustweave.plcdid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
@@ -84,6 +85,8 @@ class PlcDidMethod(
             if (config.plcRegistryUrl != null) {
                 try {
                     registerWithPlcRegistry(document)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     // If registration fails, still store locally for testing
                     storeDocument(document.id, document)
@@ -98,6 +101,8 @@ class PlcDidMethod(
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "CREATE_FAILED",
@@ -178,6 +183,8 @@ class PlcDidMethod(
                 method,
                 did.value
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -222,6 +229,8 @@ class PlcDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "UPDATE_FAILED",
@@ -265,6 +274,8 @@ class PlcDidMethod(
             true
         } catch (e: TrustWeaveException.NotFound) {
             false
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "DEACTIVATE_FAILED",

@@ -86,6 +86,8 @@ class TrustedDomainManager(
         val result =
             try {
                 client.writePayload(payload, ctx, mediaType)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Throwable) {
                 emitSafely(
                     DomainEvent.OnChainSpendFailed(

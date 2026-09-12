@@ -3,13 +3,6 @@
     <file name="build.gradle.kts">
         <error line="25" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
-    <file name="src/main/kotlin/org/trustweave/anchor/ganache/GanacheBlockchainAnchorClient.kt">
-        <error line="39" column="44" source="standard:trailing-comma-on-declaration-site" />
-        <error line="41" column="1" source="standard:no-empty-first-line-in-class-body" />
-        <error line="48" column="41" source="standard:no-multi-spaces" />
-        <error line="63" column="43" source="standard:trailing-comma-on-call-site" />
-        <error line="68" column="47" source="standard:function-expression-body" />
-    </file>
     <file name="src/main/kotlin/org/trustweave/anchor/ganache/GanacheIntegration.kt">
         <error line="9" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="24" column="40" source="standard:trailing-comma-on-declaration-site" />
@@ -24,7 +17,7 @@
     </file>
     <file name="src/test/kotlin/org/trustweave/anchor/ganache/GanacheContainer.kt">
         <error line="15" column="26" source="standard:class-signature" />
-        <error line="16" column="61" source="standard:trailing-comma-on-call-site" />
+        <error line="16" column="62" source="standard:trailing-comma-on-call-site" />
         <error line="27" column="27" source="standard:argument-list-wrapping" />
         <error line="28" column="23" source="standard:argument-list-wrapping" />
         <error line="29" column="28" source="standard:argument-list-wrapping" />

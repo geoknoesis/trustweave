@@ -17,6 +17,7 @@ import org.trustweave.godiddy.models.GodiddyResolutionResponse
 import io.ktor.client.call.*
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Instant
@@ -83,6 +84,8 @@ class GodiddyResolver(
             // Convert godiddy response to TrustWeave DidResolutionResult
             val document = try {
                 convertToDidDocument(didDocumentJson)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null // Document might be missing or invalid
             }
@@ -134,6 +137,8 @@ class GodiddyResolver(
             }
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve DID $did: ${e.message ?: "Unknown error"}",

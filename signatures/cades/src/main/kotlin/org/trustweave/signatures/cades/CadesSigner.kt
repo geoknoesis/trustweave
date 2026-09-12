@@ -1,5 +1,6 @@
 package org.trustweave.signatures.cades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -146,6 +147,8 @@ class DefaultCadesSigner(
         val imprint = MessageDigest.getInstance("SHA-256").digest(signatureValue)
         val token = try {
             tsa.requestTimeStamp(imprint, TsaHashAlgorithm.SHA_256)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             throw CadesSignerException("TSA request failed: ${t.message}", t)
         }

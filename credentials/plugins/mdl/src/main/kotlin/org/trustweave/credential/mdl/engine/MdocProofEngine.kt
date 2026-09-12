@@ -3,6 +3,7 @@ package org.trustweave.credential.mdl.engine
 import com.upokecenter.cbor.CBORObject
 import com.upokecenter.cbor.CBORType
 import kotlinx.datetime.Clock
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -355,6 +356,8 @@ class MdocProofEngine(
                 reason = e.message ?: "mDoc verification failed",
                 errors = listOf(e.message ?: "Unknown mDoc error")
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             VerificationResult.Invalid.InvalidProof(
                 credential = credential,
@@ -446,6 +449,8 @@ class MdocProofEngine(
             val leaf = certs.first()
             try {
                 leaf.checkValidity()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw MdocException(
                     "ISSUER_CERT_EXPIRED",

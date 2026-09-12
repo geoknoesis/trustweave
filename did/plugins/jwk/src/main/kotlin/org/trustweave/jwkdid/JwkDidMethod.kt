@@ -90,6 +90,8 @@ class JwkDidMethod(kms: KeyManagementService) : AbstractDidMethod("jwk", kms) {
             val encoded = did.value.substringAfter("did:jwk:")
             val jwkBytes = try {
                 b64urlDec.decode(encoded)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -101,6 +103,8 @@ class JwkDidMethod(kms: KeyManagementService) : AbstractDidMethod("jwk", kms) {
 
             val jwkObj: JsonObject = try {
                 json.parseToJsonElement(String(jwkBytes, Charsets.UTF_8)).jsonObject
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",

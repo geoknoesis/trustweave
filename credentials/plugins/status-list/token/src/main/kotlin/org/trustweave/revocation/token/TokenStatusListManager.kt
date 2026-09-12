@@ -383,6 +383,8 @@ class TokenStatusListManager(
 
                     conn.commit()
                     assignedIndex
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     throw e
@@ -580,6 +582,8 @@ class TokenStatusListManager(
                             .executeUpdate() > 0
                     conn.commit()
                     deleted
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     false
@@ -612,6 +616,8 @@ class TokenStatusListManager(
                         setString(4, statusListId.toString())
                     }.executeUpdate()
                 conn.commit()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 conn.rollback()
                 throw e

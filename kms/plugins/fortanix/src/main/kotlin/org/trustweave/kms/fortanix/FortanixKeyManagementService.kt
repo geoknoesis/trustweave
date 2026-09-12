@@ -1,5 +1,6 @@
 package org.trustweave.kms.fortanix
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
@@ -132,6 +133,8 @@ class FortanixKeyManagementService(
                     )
                 }
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GenerateKeyResult.Failure.Error(
                 algorithm = algorithm,
@@ -219,6 +222,8 @@ class FortanixKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GetPublicKeyResult.Failure.Error(
                 keyId = keyId,
@@ -307,6 +312,8 @@ class FortanixKeyManagementService(
                     signingAlgorithm
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,
@@ -339,6 +346,8 @@ class FortanixKeyManagementService(
                     cause = null
                 )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DeleteKeyResult.Failure.Error(
                 keyId = keyId,

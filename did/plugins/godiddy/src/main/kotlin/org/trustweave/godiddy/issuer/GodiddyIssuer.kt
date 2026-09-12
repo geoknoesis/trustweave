@@ -1,5 +1,6 @@
 package org.trustweave.godiddy.issuer
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyIssueCredentialRequest
@@ -59,6 +60,8 @@ class GodiddyIssuer(
             response.credential.jsonObject
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "CREDENTIAL_ISSUANCE_FAILED",

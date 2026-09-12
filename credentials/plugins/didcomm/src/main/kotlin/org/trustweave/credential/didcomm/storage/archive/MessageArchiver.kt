@@ -1,5 +1,6 @@
 package org.trustweave.credential.didcomm.storage.archive
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.storage.DidCommMessageStorage
 import kotlinx.coroutines.Dispatchers
@@ -140,6 +141,8 @@ class S3MessageArchiver(
             try {
                 storage.store(message)
                 restoredIds.add(message.id)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 errors.add("Failed to restore ${message.id}: ${e.message}")
             }

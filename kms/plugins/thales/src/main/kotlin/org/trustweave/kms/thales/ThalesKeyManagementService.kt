@@ -1,5 +1,6 @@
 package org.trustweave.kms.thales
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
@@ -133,6 +134,8 @@ class ThalesKeyManagementService(
                     )
                 }
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GenerateKeyResult.Failure.Error(
                 algorithm = algorithm,
@@ -217,6 +220,8 @@ class ThalesKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GetPublicKeyResult.Failure.Error(
                 keyId = keyId,
@@ -305,6 +310,8 @@ class ThalesKeyManagementService(
                     signingAlgorithm
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,
@@ -337,6 +344,8 @@ class ThalesKeyManagementService(
                     cause = null
                 )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DeleteKeyResult.Failure.Error(
                 keyId = keyId,

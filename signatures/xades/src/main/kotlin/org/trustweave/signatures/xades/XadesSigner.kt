@@ -1,5 +1,6 @@
 package org.trustweave.signatures.xades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -163,6 +164,8 @@ class DefaultXadesSigner(
         signContext.setIdAttributeNS(signedPropertiesElement, null, "Id")
         try {
             xmlSignature.sign(signContext)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             throw XadesSignerException("XML-DSig signing failed: ${t.message}", t)
         }

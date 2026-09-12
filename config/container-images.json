@@ -1,0 +1,14 @@
+{
+  "description": "Container images referenced from tests that cannot currently be pinned to a version tag or digest. This file grants nothing: it records a known gap so scripts/check-container-images.py can stop new ones appearing. The list may only shrink.",
+  "recorded": 2,
+  "allowed": [
+    {
+      "image": "ghcr.io/trustbloc/orb:latest",
+      "reason": "Opt-in live-Orb integration test, skipped unless Docker is available, so it never runs in CI. trustbloc/orb publishes no version tag this test has been qualified against; pinning to an unverified tag would break the developers who do run it."
+    },
+    {
+      "image": "dockershelf/softhsm2:latest",
+      "reason": "PKCS#11 integration test gated behind @EnabledIfEnvironmentVariable, so it never runs in CI. The registry exposes no listable version tags, so there is nothing verifiable to pin to."
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package org.trustweave.credential.internal
 
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.JsonArray
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -409,6 +410,8 @@ internal object PresentationVerification {
         val kbJwt =
             try {
                 SignedJWT.parse(kbJwtString)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = firstCredential,
@@ -558,6 +561,8 @@ internal object PresentationVerification {
         val sdHash =
             try {
                 claims.getStringClaim("sd_hash")
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null
             }

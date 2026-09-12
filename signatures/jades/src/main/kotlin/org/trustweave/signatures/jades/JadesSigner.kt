@@ -1,5 +1,6 @@
 package org.trustweave.signatures.jades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -213,6 +214,8 @@ class DefaultJadesSigner(
     private suspend fun stampDigest(tsa: TsaClient, digest: ByteArray): EncodedTimeStampToken {
         val token = try {
             tsa.requestTimeStamp(digest, TsaHashAlgorithm.SHA_256)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             throw JadesSignerException("TSA request failed: ${t.message}", t)
         }

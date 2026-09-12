@@ -1,5 +1,6 @@
 package org.trustweave.soldid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -74,6 +75,8 @@ class SolanaClient(
 
             // Decode base64 (simplified - real implementation needs proper base64 decoding)
             java.util.Base64.getDecoder().decode(data)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "ACCOUNT_DATA_FAILED",
@@ -139,6 +142,8 @@ class SolanaClient(
             result
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "TRANSACTION_FAILED",
@@ -188,6 +193,8 @@ class SolanaClient(
             val responseJson = Json.parseToJsonElement(responseBody).jsonObject
 
             responseJson["result"]?.jsonObject
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             null
         }

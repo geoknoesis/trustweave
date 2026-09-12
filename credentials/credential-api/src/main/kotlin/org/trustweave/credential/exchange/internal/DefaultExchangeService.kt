@@ -1,5 +1,6 @@
 package org.trustweave.credential.exchange.internal
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.exchange.ExchangeOperation
 import org.trustweave.credential.exchange.ExchangeService
@@ -115,6 +116,8 @@ internal class DefaultExchangeService(
                     offerId = offerId,
                 ),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             e.toExchangeFailure("Failed to create credential offer")
         }
@@ -153,6 +156,8 @@ internal class DefaultExchangeService(
                     requestId = requestId,
                 ),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             e.toExchangeFailure("Failed to create credential request")
         }
@@ -192,6 +197,8 @@ internal class DefaultExchangeService(
                     credential = credential,
                 ),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             e.toExchangeFailure("Failed to issue credential")
         }
@@ -230,6 +237,8 @@ internal class DefaultExchangeService(
                     requestId = requestId,
                 ),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             e.toExchangeFailure("Failed to create proof request")
         }
@@ -269,6 +278,8 @@ internal class DefaultExchangeService(
                     presentation = presentation,
                 ),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             e.toExchangeFailure("Failed to present proof")
         }

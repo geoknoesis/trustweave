@@ -1,5 +1,6 @@
 package org.trustweave.did.registrar.client
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyAlgorithm
@@ -146,6 +147,8 @@ class KmsBasedRegistrar(
             jobStorage.store(jobId, errorResponse)
 
             errorResponse
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             val jobId = UUID.randomUUID().toString()
             val errorResponse = DidRegistrationResponse(

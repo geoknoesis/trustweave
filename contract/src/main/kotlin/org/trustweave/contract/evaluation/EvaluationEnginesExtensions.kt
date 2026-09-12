@@ -4,6 +4,7 @@ import org.trustweave.contract.models.ContractCondition
 import org.trustweave.contract.models.ExecutionModel
 import kotlinx.serialization.json.JsonElement
 
+import java.util.concurrent.CancellationException
 /**
  * Extension functions for better developer experience with evaluation engines.
  */
@@ -115,6 +116,8 @@ suspend fun ContractCondition.evaluateWith(
             satisfied = engine.evaluateCondition(this, inputData, context),
             evaluatedValue = inputData
         )
+    } catch (cancelled: CancellationException) {
+        throw cancelled
     } catch (e: IllegalArgumentException) {
         org.trustweave.contract.models.ConditionResult(
             conditionId = id,

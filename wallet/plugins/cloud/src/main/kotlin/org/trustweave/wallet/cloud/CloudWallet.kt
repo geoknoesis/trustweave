@@ -1,5 +1,6 @@
 package org.trustweave.wallet.cloud
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -153,6 +154,8 @@ abstract class CloudWallet(
                     error: kotlinx.coroutines.CancellationException,
                 ) {
                     throw error
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (error: Exception) {
                     failures.add(CredentialReadFailure(key, error.javaClass.simpleName))
                 }

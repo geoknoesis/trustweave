@@ -1,5 +1,6 @@
 package org.trustweave.cheqddid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
@@ -105,6 +106,8 @@ class CheqdDidMethod(
                 val txHash = anchorDocument(document)
                 // Store mapping
                 findDocumentTxHash(did) // Cache would be stored here
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 // If anchoring fails, still store locally for testing
                 storeDocument(document.id, document)
@@ -115,6 +118,8 @@ class CheqdDidMethod(
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "CREATE_FAILED",
@@ -167,6 +172,8 @@ class CheqdDidMethod(
                 method,
                 did.value
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -206,6 +213,8 @@ class CheqdDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "UPDATE_FAILED",
@@ -244,6 +253,8 @@ class CheqdDidMethod(
             true
         } catch (e: TrustWeaveException.NotFound) {
             false
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "DEACTIVATE_FAILED",
@@ -302,6 +313,8 @@ class CheqdDidMethod(
             }
 
             document
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             null
         }

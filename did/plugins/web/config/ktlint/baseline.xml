@@ -23,8 +23,8 @@
         <error line="123" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/webdid/WebDidMethod.kt">
-        <error line="5" column="1" source="standard:no-wildcard-imports" />
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+        <error line="8" column="1" source="standard:no-wildcard-imports" />
     </file>
     <file name="src/main/kotlin/org/trustweave/webdid/spi/WebDidMethodProvider.kt">
         <error line="3" column="1" source="standard:import-ordering" />

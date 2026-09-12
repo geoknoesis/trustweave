@@ -1,5 +1,6 @@
 package org.trustweave.did.resolver
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolution.ResolutionOptions
@@ -157,6 +158,8 @@ class ResolutionFallbackStrategy(
                         } ?: "Unknown error",
                     )
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 errors.add("Exception: ${e.message ?: "Unknown error"}")
             }

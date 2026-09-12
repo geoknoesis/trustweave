@@ -114,7 +114,7 @@ class HostTelemetryTest {
                     )
                 }
                 assertFalse(spans.toString().contains("secret"))
-                val reports = Path.of("build/reports")
+                val reports = evidenceDir()
                 Files.createDirectories(reports)
                 Files.writeString(reports.resolve("host-metrics.prom"), scrape.bodyAsText())
                 Files.writeString(

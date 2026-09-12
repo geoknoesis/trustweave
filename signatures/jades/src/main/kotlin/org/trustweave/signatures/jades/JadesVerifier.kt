@@ -1,5 +1,6 @@
 package org.trustweave.signatures.jades
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -39,6 +40,8 @@ class DefaultJadesVerifier : JadesVerifier {
             val parsed =
                 try {
                     parseFlattenedOrCompact(jadesSerialized)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed(t.message ?: "input is not valid JAdES")
                 }
@@ -47,18 +50,24 @@ class DefaultJadesVerifier : JadesVerifier {
             val protectedHeaderBytes =
                 try {
                     Base64.getUrlDecoder().decode(parsed.protectedB64u)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("protected header is not base64url: ${t.message}")
                 }
             val headerJson =
                 try {
                     Json.parseToJsonElement(String(protectedHeaderBytes, Charsets.UTF_8)).jsonObject
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("protected header is not valid JSON: ${t.message}")
                 }
             val header =
                 try {
                     decodeHeader(headerJson)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed(t.message ?: "protected header is missing required JAdES params")
                 }
@@ -93,6 +102,8 @@ class DefaultJadesVerifier : JadesVerifier {
             val chain =
                 try {
                     chainDer.map { decodeCertificate(it) }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("x5c contains an invalid certificate: ${t.message}")
                 }
@@ -102,6 +113,8 @@ class DefaultJadesVerifier : JadesVerifier {
             val signatureRaw =
                 try {
                     Base64.getUrlDecoder().decode(parsed.signatureB64u)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("signature is not base64url: ${t.message}")
                 }
@@ -138,6 +151,8 @@ class DefaultJadesVerifier : JadesVerifier {
             val signingTime =
                 try {
                     Instant.parse(header.sigT)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("sigT is not a valid ISO 8601 instant: ${header.sigT}")
                 }
@@ -206,12 +221,16 @@ class DefaultJadesVerifier : JadesVerifier {
             val payloadBytes =
                 try {
                     Base64.getUrlDecoder().decode(parsed.payloadB64u)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("payload is not base64url")
                 }
             val payloadJson =
                 try {
                     Json.parseToJsonElement(String(payloadBytes, Charsets.UTF_8))
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("payload is not valid JSON: ${t.message}")
                 }

@@ -1,5 +1,6 @@
 package org.trustweave.signatures.etsi.validation
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -76,6 +77,8 @@ class DefaultEtsiSignatureValidator(
         // ------------------------------------------------------------ Step 1: FORMAT_CHECK
         val parsed = try {
             parseEnvelope(jadesSerialized)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             outcomes[EtsiValidationStep.FORMAT_CHECK] = StepOutcome.Failed(
                 reason = t.message ?: "input is not well-formed JWS/JAdES",
@@ -91,6 +94,8 @@ class DefaultEtsiSignatureValidator(
         try {
             signerCert = decodeSignerCertificate(parsed)
             signerSubject = signerCert.subjectX500Principal.name
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             outcomes[EtsiValidationStep.IDENTIFIER_CHECK] = StepOutcome.Failed(
                 reason = t.message ?: "signer certificate could not be decoded",
@@ -107,6 +112,8 @@ class DefaultEtsiSignatureValidator(
         val signingTime: Instant? = parsed.sigT?.let {
             try {
                 Instant.parse(it)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Throwable) {
                 null
             }

@@ -1,5 +1,6 @@
 package org.trustweave.trust.services
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.trustweave.trust.context.WalletDslContext
@@ -39,6 +40,8 @@ class WalletManagementService(
                 )
             } catch (e: WalletException.WalletCreationFailed) {
                 WalletCreationResult.Failure.Other(reason = e.reason, cause = e)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Throwable) {
                 WalletCreationResult.Failure.Other(
                     reason = e.message ?: "Wallet creation failed",

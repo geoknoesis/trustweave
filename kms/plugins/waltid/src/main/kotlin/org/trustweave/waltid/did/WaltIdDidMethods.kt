@@ -1,5 +1,6 @@
 package org.trustweave.waltid.did
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
@@ -197,6 +198,8 @@ class WaltIdKeyMethod(
 
             documents[didString] = document
             document
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to create did:key: ${e.message ?: "Unknown error"}",
@@ -238,6 +241,8 @@ class WaltIdKeyMethod(
                     )
                 )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve did:key: ${e.message ?: "Unknown error"}",
@@ -314,6 +319,8 @@ class WaltIdWebMethod(
 
             documents[didString] = document
             document
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to create did:web: ${e.message ?: "Unknown error"}",
@@ -354,6 +361,8 @@ class WaltIdWebMethod(
                     )
                 )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to resolve did:web: ${e.message ?: "Unknown error"}",

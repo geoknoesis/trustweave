@@ -13,6 +13,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -210,6 +211,8 @@ class Oidc4VpService(
                     queryParams["dcql_query"]?.let { raw ->
                         try {
                             lenientJson.decodeFromString<DcqlQuery>(raw)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (_: Exception) {
                             null
                         }
@@ -220,6 +223,8 @@ class Oidc4VpService(
                     queryParams["presentation_definition"]?.let { raw ->
                         try {
                             Json.parseToJsonElement(raw).jsonObject
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (_: Exception) {
                             null
                         }
@@ -230,6 +235,8 @@ class Oidc4VpService(
                     queryParams["client_metadata"]?.let { raw ->
                         try {
                             Json.parseToJsonElement(raw).jsonObject
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (_: Exception) {
                             null
                         }
@@ -328,6 +335,8 @@ class Oidc4VpService(
                 permissionRequest
             } catch (e: Oidc4VpException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw Oidc4VpException.UrlParseFailed(
                     url = authorizationUrl,
@@ -560,6 +569,8 @@ class Oidc4VpService(
         val jwt =
             try {
                 JWTParser.parse(jwtString)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw Oidc4VpException.AuthorizationRequestFetchFailed(
                     requestUri = requestUri,

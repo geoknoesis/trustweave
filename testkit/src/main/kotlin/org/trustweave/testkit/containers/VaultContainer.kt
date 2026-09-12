@@ -36,7 +36,7 @@ class VaultContainer private constructor(
         /**
          * Default Vault Docker image.
          */
-        private val DEFAULT_IMAGE = DockerImageName.parse("hashicorp/vault:latest")
+        private val DEFAULT_IMAGE = DockerImageName.parse("hashicorp/vault:2.1.0")
 
         /**
          * Default root token for testing.

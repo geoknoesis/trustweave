@@ -1,5 +1,6 @@
 package org.trustweave.credential.did
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
@@ -191,6 +192,8 @@ suspend fun CredentialService.verifyIssuerDid(
             val issuerDid = Did(issuerIri.value)
             val resolutionResult = didResolver.resolve(issuerDid)
             resolutionResult is DidResolutionResult.Success
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             false
         }

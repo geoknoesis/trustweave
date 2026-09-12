@@ -35,7 +35,7 @@ class LocalStackContainer private constructor(
         /**
          * Default LocalStack Docker image.
          */
-        private val DEFAULT_IMAGE = DockerImageName.parse("localstack/localstack:latest")
+        private val DEFAULT_IMAGE = DockerImageName.parse("localstack/localstack:2026.08.2")
 
         /**
          * Creates a LocalStack container with default configuration.

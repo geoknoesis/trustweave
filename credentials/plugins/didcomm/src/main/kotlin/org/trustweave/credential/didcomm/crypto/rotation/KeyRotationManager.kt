@@ -2,6 +2,7 @@ package org.trustweave.credential.didcomm.crypto.rotation
 
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -37,6 +38,8 @@ class KeyRotationManager(
         val results = keysToRotate.map { keyId ->
             try {
                 rotateKey(keyId)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 KeyRotationResult(
                     oldKeyId = keyId,

@@ -1,5 +1,6 @@
 package org.trustweave.credential.oidc4vci
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -512,6 +513,8 @@ class Oidc4VciService(
             }
         } catch (e: Oidc4VciException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw Oidc4VciException.CredentialVerificationFailed(
                 reason = "failed to parse issued credential: ${e.message}",

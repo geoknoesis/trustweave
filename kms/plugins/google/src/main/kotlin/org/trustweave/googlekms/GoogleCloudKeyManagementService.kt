@@ -9,6 +9,7 @@ import com.google.cloud.kms.v1.KeyManagementServiceClient
 import com.google.cloud.kms.v1.KeyRingName
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.KeyId
@@ -290,6 +291,8 @@ class GoogleCloudKeyManagementService(
                     reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
                     cause = e,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error during key generation in Google Cloud KMS: algorithm={}, projectId={}, location={}",
@@ -355,6 +358,8 @@ class GoogleCloudKeyManagementService(
                     reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
                     cause = e,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error getting public key from Google Cloud KMS: keyId={}, resolvedKeyName={}",
@@ -453,6 +458,8 @@ class GoogleCloudKeyManagementService(
                     reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
                     cause = e,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error("Unexpected error during signing with Google Cloud KMS: keyId={}", keyId.value, e)
                 SignResult.Failure.Error(
@@ -514,6 +521,8 @@ class GoogleCloudKeyManagementService(
                     reason = "Permission denied to Google Cloud KMS. Check IAM permissions: ${e.message ?: "Unknown error"}",
                     cause = e,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error during key deletion in Google Cloud KMS: keyId={}, resolvedKeyName={}",

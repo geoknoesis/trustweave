@@ -1,5 +1,6 @@
 package org.trustweave.testkit.kms
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.*
 import org.trustweave.kms.results.*
@@ -77,6 +78,8 @@ class InMemoryKeyManagementService : KeyManagementService {
 
             keyMetadata[keyId] = handle
             GenerateKeyResult.Success(handle)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GenerateKeyResult.Failure.Error(
                 algorithm = algorithm,
@@ -160,6 +163,8 @@ class InMemoryKeyManagementService : KeyManagementService {
             // (raw r||s) with low-s for secp256k1, so normalize before returning — exactly
             // like the production kms:plugins:inmemory provider.
             SignResult.Success(EcdsaSignatureCodec.normalize(signature, effectiveAlgorithm))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,

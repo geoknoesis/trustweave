@@ -1,5 +1,6 @@
 package org.trustweave.webdid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -128,6 +129,8 @@ class WebDidMethod(
                 true
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "PUBLISH_FAILED",
@@ -196,6 +199,8 @@ class WebDidMethod(
                 throw e
             } catch (e: IllegalArgumentException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREATE_FAILED",
@@ -214,6 +219,8 @@ class WebDidMethod(
                 DidMethodUtils.createErrorResolutionResult("notFound", e.message, method, did.value)
             } catch (e: TrustWeaveException) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             }
@@ -250,6 +257,8 @@ class WebDidMethod(
                 throw e
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "UPDATE_FAILED",
@@ -290,6 +299,8 @@ class WebDidMethod(
                 true
             } catch (e: TrustWeaveException.NotFound) {
                 false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "DEACTIVATE_FAILED",

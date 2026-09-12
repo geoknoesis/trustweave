@@ -1,5 +1,6 @@
 package org.trustweave.godiddy.registrar
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -95,6 +96,8 @@ class GodiddyRegistrar(
             )
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to create DID with method $method: ${e.message ?: "Unknown error"}",
@@ -171,6 +174,8 @@ class GodiddyRegistrar(
             )
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to update DID $did: ${e.message ?: "Unknown error"}",
@@ -237,6 +242,8 @@ class GodiddyRegistrar(
                 jobId = response.jobId,
                 didState = didState
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to deactivate DID $did: ${e.message ?: "Unknown error"}",

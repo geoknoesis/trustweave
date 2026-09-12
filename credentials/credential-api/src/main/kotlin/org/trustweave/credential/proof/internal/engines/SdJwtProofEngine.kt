@@ -7,6 +7,7 @@ import com.nimbusds.jose.JWSSigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
@@ -327,6 +328,8 @@ internal class SdJwtProofEngine(
                         put("_sd_alg", claimsSet.getStringClaim("_sd_alg") ?: "sha-256")
                     },
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             VerificationResult.Invalid.InvalidProof(
                 credential = credential,
@@ -715,6 +718,8 @@ internal class SdJwtProofEngine(
                 ?: proof.sdJwtVc.let {
                     try {
                         SignedJWT.parse(it.substringBefore("~")).header.keyID
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (e: Exception) {
                         null
                     }
@@ -827,6 +832,8 @@ internal class SdJwtProofEngine(
         val keyIdFromJwt =
             try {
                 SignedJWT.parse(jwtString.substringBefore("~")).header.keyID
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null
             }
@@ -856,6 +863,8 @@ internal class SdJwtProofEngine(
                 val signature = runBlocking { signer(signingInput, keyId) }
                 com.nimbusds.jose.util.Base64URL
                     .encode(signature)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw JOSEException("KMS signing failed: ${e.message}", e)
             }

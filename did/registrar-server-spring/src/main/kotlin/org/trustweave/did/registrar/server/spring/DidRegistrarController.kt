@@ -1,5 +1,6 @@
 package org.trustweave.did.registrar.server.spring
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.registrar.model.DeactivateDidOptions
 import org.trustweave.did.registrar.model.UpdateDidOptions
@@ -62,6 +63,8 @@ class DidRegistrarController(
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.fromException(e, "INVALID_REQUEST"))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.fromException(e, "INTERNAL_ERROR"))
@@ -97,6 +100,8 @@ class DidRegistrarController(
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.fromException(e, "INVALID_REQUEST"))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.fromException(e, "INTERNAL_ERROR"))
@@ -128,6 +133,8 @@ class DidRegistrarController(
         } catch (e: TrustWeaveException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.fromException(e, "INVALID_REQUEST"))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.fromException(e, "INTERNAL_ERROR"))

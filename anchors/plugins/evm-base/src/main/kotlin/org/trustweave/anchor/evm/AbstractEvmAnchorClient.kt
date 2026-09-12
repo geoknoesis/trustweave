@@ -1,5 +1,6 @@
 package org.trustweave.anchor.evm
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
@@ -359,6 +360,8 @@ abstract class AbstractEvmAnchorClient(
                         gasUsed =
                             try {
                                 receipt.gasUsed?.toLong()
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
                             } catch (_: Exception) {
                                 null
                             },

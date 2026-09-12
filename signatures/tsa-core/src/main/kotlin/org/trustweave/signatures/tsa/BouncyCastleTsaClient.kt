@@ -1,5 +1,6 @@
 package org.trustweave.signatures.tsa
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -88,6 +89,8 @@ class BouncyCastleTsaClient(
 
             val tsResponse = try {
                 TimeStampResponse(responseBytes)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (t: Throwable) {
                 throw TsaException(
                     "TSA ${config.endpointUrl}: response is not a valid TimeStampResponse",
@@ -97,6 +100,8 @@ class BouncyCastleTsaClient(
 
             try {
                 tsResponse.validate(tsRequest)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (t: Throwable) {
                 throw TsaException(
                     "TSA ${config.endpointUrl}: response failed validation against request " +

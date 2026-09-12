@@ -1,5 +1,6 @@
 package org.trustweave.did.tezos
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
@@ -44,6 +45,8 @@ class TezosDidMethod(
         withContext(Dispatchers.IO) {
             try {
                 validateDidFormat(did)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",

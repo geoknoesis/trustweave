@@ -1,5 +1,6 @@
 package org.trustweave.credential.schema.internal
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonObject
 import org.trustweave.credential.identifiers.SchemaId
 import org.trustweave.credential.model.Claims
@@ -34,6 +35,8 @@ internal class DefaultSchemaRegistry(
                 success = true,
                 schemaId = schemaId,
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             SchemaRegistrationResult(
                 success = false,

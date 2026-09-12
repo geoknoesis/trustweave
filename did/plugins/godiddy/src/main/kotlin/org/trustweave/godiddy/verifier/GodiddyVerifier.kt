@@ -1,5 +1,6 @@
 package org.trustweave.godiddy.verifier
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyVerifyCredentialRequest
@@ -63,6 +64,8 @@ class GodiddyVerifier(
                 error = response.error,
                 checks = response.checks
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "CREDENTIAL_VERIFICATION_FAILED",

@@ -1,5 +1,6 @@
 package org.trustweave.credential.didcomm.packing
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.didcomm.crypto.DidCommCryptoInterface
 import org.trustweave.credential.didcomm.exception.DidCommException
@@ -306,6 +307,8 @@ class DidCommPacker(
             Json.parseToJsonElement(
                 String(Base64.getUrlDecoder().decode(protectedBase64), Charsets.UTF_8)
             ).jsonObject
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             signatureFailure("Cannot decode the protected JWS header", e)
         }
@@ -368,6 +371,8 @@ class DidCommPacker(
                 update(signingInput)
                 verify(signatureBytes)
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             false
         }

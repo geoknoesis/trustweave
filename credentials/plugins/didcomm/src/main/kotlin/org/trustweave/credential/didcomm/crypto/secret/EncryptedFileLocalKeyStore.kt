@@ -1,5 +1,6 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -71,6 +72,8 @@ class EncryptedFileLocalKeyStore(
             try {
                 val keys = loadKeys()
                 keys[keyId]
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null
             }
@@ -100,6 +103,8 @@ class EncryptedFileLocalKeyStore(
             try {
                 val keys = loadKeys()
                 keys.keys.toList()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 emptyList()
             }

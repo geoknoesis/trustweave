@@ -15,7 +15,6 @@ import org.trustweave.credential.vi.verification.BudgetReservation
 import org.trustweave.credential.vi.verification.PostgresIntentLedger
 import org.trustweave.credential.vi.verification.SettlementOutcome
 import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -167,7 +166,7 @@ class IntentWalRecoveryTest {
                 val crashMs = (System.nanoTime() - crashStart) / 1_000_000
                 command(primary, "tar", "-C", "/tmp", "-cf", "/tmp/tw-recovery.tar", "tw-base", "tw-archive")
                 val archive = Files.createTempFile("trustweave-wal-", ".tar")
-                val reportRoot = Path.of("build/reports/reliability")
+                val reportRoot = evidenceDir("reliability")
                 Files.createDirectories(reportRoot)
                 try {
                     primary.copyFileFromContainer("/tmp/tw-recovery.tar", archive.toString())

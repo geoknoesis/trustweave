@@ -1,7 +1,7 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.ProviderException
 import kotlinx.coroutines.CancellationException
+import org.trustweave.core.exception.ProviderException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin

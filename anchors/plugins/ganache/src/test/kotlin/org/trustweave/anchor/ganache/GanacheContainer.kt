@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName
  * @see https://hub.docker.com/r/trufflesuite/ganache-cli/
  */
 class GanacheContainer : GenericContainer<GanacheContainer>(
-    DockerImageName.parse("trufflesuite/ganache-cli:latest")
+    DockerImageName.parse("trufflesuite/ganache-cli:v6.12.2")
 ) {
     companion object {
         private const val GANACHE_PORT = 8545

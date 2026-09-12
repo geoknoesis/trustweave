@@ -1,5 +1,6 @@
 package org.trustweave.revocation.database
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -193,6 +194,8 @@ class DatabaseStatusListManager(
                     nextIndexStmt.executeUpdate()
 
                     conn.commit()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     throw RuntimeException("Failed to create status list: ${e.message}", e)
@@ -422,6 +425,8 @@ class DatabaseStatusListManager(
 
                     conn.commit()
                     assignedIndex
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     throw e
@@ -477,6 +482,8 @@ class DatabaseStatusListManager(
                     val purpose =
                         try {
                             StatusPurpose.valueOf(purposeStr.uppercase())
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (e: Exception) {
                             StatusPurpose.REVOCATION // Default fallback
                         }
@@ -525,6 +532,8 @@ class DatabaseStatusListManager(
                     val purpose =
                         try {
                             StatusPurpose.valueOf(purposeStr.uppercase())
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (e: Exception) {
                             StatusPurpose.REVOCATION // Default fallback
                         }

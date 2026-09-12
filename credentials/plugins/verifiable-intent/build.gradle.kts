@@ -22,3 +22,14 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)
 }
+
+// These tests write evidence that CI gates read back, and it is not a Gradle output unless it is
+// declared here. Written outside the declared outputs, the JUnit XML survived a build-cache hit
+// while the evidence silently did not — a cached test run then failed the reliability gate on a
+// commit whose tests had all passed. Anchoring the path to the build directory and declaring it
+// as an output makes the evidence travel with the cache entry that produced it.
+tasks.test {
+    val evidence = layout.buildDirectory.dir("reports")
+    systemProperty("trustweave.reports.dir", evidence.get().asFile.absolutePath)
+    outputs.dir(layout.buildDirectory.dir("reports/reliability")).withPropertyName("reliabilityEvidence")
+}

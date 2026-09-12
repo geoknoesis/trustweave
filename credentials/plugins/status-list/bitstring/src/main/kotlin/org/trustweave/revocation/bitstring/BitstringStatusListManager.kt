@@ -511,6 +511,8 @@ class BitstringStatusListManager(
 
                     conn.commit()
                     assignedIndex
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     throw e
@@ -766,6 +768,8 @@ class BitstringStatusListManager(
                             .executeUpdate() > 0
                     conn.commit()
                     deleted
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
                     false
@@ -819,6 +823,8 @@ class BitstringStatusListManager(
                         setString(2, statusListId.toString())
                     }.executeUpdate()
                 conn.commit()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 conn.rollback()
                 throw e

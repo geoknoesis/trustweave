@@ -9,6 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -42,6 +43,8 @@ class GodiddyClient(
                 }
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Failed to GET $path: ${e.message ?: "Unknown error"}",
@@ -66,6 +69,8 @@ class GodiddyClient(
                     }
                     setBody(body)
                 }.body()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to POST $path: ${e.message ?: "Unknown error"}",
@@ -88,6 +93,8 @@ class GodiddyClient(
                 }
                 setBody(body)
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 message = "Failed to POST $path: ${e.message ?: "Unknown error"}",

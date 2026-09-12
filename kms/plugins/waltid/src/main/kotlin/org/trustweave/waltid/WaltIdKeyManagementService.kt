@@ -1,5 +1,6 @@
 package org.trustweave.waltid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyHandle
@@ -151,6 +152,8 @@ class WaltIdKeyManagementService(
                 reason = "Invalid algorithm parameters for '${algorithm.name}': ${e.message ?: "Unknown error"}",
                 cause = e
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Failed to generate key: algorithm={}", algorithm.name, e)
             GenerateKeyResult.Failure.Error(
@@ -178,6 +181,8 @@ class WaltIdKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Failed to get public key: keyId={}", keyId.value, e)
             GetPublicKeyResult.Failure.Error(
@@ -266,6 +271,8 @@ class WaltIdKeyManagementService(
                 reason = "Signature generation failed: ${e.message ?: "Unknown error"}",
                 cause = e
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Failed to sign data: keyId={}", keyId.value, e)
             SignResult.Failure.Error(
@@ -288,6 +295,8 @@ class WaltIdKeyManagementService(
                 logger.debug("Key not found for deletion: keyId={}", keyId.value)
                 DeleteKeyResult.NotFound
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Failed to delete key: keyId={}", keyId.value, e)
             DeleteKeyResult.Failure.Error(

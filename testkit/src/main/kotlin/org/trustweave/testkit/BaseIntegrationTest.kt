@@ -1,5 +1,6 @@
 package org.trustweave.testkit
 
+import kotlinx.coroutines.CancellationException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Tag
@@ -79,6 +80,8 @@ abstract class BaseIntegrationTest : BasePluginTest() {
         repeat(maxAttempts) { attempt ->
             try {
                 return block()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Throwable) {
                 lastException = e
                 if (attempt < maxAttempts - 1) {

@@ -78,6 +78,8 @@ jobs:
           python scripts/check-dependency-catalog.py
           python scripts/check-publication.py
           python scripts/check-capability-coverage.py
+          python scripts/check-container-images.py
+          python scripts/check-cancellation-guards.py
 
       - name: Lint with ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace

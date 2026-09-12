@@ -1,5 +1,6 @@
 package org.trustweave.polygondid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
@@ -99,6 +100,8 @@ class PolygonDidMethod(
                 storeDocument(polygonDocument.id, polygonDocument)
 
                 polygonDocument
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREATE_FAILED",
@@ -209,6 +212,8 @@ class PolygonDidMethod(
                         )
                     }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -245,6 +250,8 @@ class PolygonDidMethod(
                 storeDocument(polygonUpdated.id.value, polygonUpdated)
 
                 polygonUpdated
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "UPDATE_FAILED",
@@ -271,6 +278,8 @@ class PolygonDidMethod(
                 }
 
                 deactivated
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "DEACTIVATE_FAILED",

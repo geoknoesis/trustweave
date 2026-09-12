@@ -1,5 +1,6 @@
 package org.trustweave.did.orb
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyPurpose
@@ -121,6 +122,8 @@ class OrbDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "ORB_CREATE_FAILED",
@@ -143,6 +146,8 @@ class OrbDidMethod(
     override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
         try {
             validateDidFormat(did)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             return@withContext DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -157,6 +162,8 @@ class OrbDidMethod(
         if (response.success && document != null) {
             val parsed = try {
                 DidDocumentJsonParser.parse(document)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -254,6 +261,8 @@ class OrbDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "ORB_UPDATE_FAILED",
@@ -331,6 +340,8 @@ class OrbDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "ORB_RECOVER_FAILED",
@@ -376,6 +387,8 @@ class OrbDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             false
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "ORB_DEACTIVATE_FAILED",

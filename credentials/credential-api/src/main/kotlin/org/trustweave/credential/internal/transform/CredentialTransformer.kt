@@ -7,6 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -140,6 +141,8 @@ class CredentialTransformer : CredentialFormatConverter {
 
             // Serialize to compact form
             return unsignedJwt.serialize()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             // Fallback to JSON representation on any error
             return json.encodeToString(serializer(), credential)
@@ -201,6 +204,8 @@ class CredentialTransformer : CredentialFormatConverter {
             val jwtObject =
                 try {
                     SignedJWT.parse(jwt)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     // Try PlainJWT
                     PlainJWT.parse(jwt)
@@ -224,6 +229,8 @@ class CredentialTransformer : CredentialFormatConverter {
 
             // Parse as VerifiableCredential
             return json.decodeFromJsonElement<VerifiableCredential>(vcJson)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             // Fallback: try parsing as JSON
             return json.decodeFromString<VerifiableCredential>(jwt)

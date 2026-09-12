@@ -1,5 +1,6 @@
 package org.trustweave.keydid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.core.util.encodeBase58
@@ -12,7 +13,6 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.withLock

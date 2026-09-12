@@ -1,0 +1,5 @@
+{
+  "description": "Broad catches in suspend functions that do not rethrow CancellationException first. Empty, and it must stay that way: a broad catch around suspending work turns 'the caller cancelled' into 'the operation failed', and the guard is only effective if nothing on CancellationException's own hierarchy (IllegalStateException, RuntimeException, Exception, Throwable) catches it first. Record an exception here only with a reason; the count may only fall.",
+  "recorded": 0,
+  "allowed": []
+}

@@ -1,5 +1,6 @@
 package org.trustweave.soldid
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
@@ -120,6 +121,8 @@ class SolDidMethod(
                 val txHash = anchorDocument(document)
                 // Store mapping
                 findDocumentTxHash(did) // Cache would be stored here
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 // If anchoring fails, still store locally for testing
                 storeDocument(document.id, document)
@@ -130,6 +133,8 @@ class SolDidMethod(
             throw e
         } catch (e: IllegalArgumentException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "CREATE_FAILED",
@@ -192,6 +197,8 @@ class SolDidMethod(
                 method,
                 did.value
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DidMethodUtils.createErrorResolutionResult(
                 "invalidDid",
@@ -231,6 +238,8 @@ class SolDidMethod(
             throw e
         } catch (e: TrustWeaveException) {
             throw e
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "UPDATE_FAILED",
@@ -269,6 +278,8 @@ class SolDidMethod(
             true
         } catch (e: TrustWeaveException.NotFound) {
             false
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             throw TrustWeaveException.Unknown(
                 code = "DEACTIVATE_FAILED",

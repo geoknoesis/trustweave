@@ -3,6 +3,7 @@ package org.trustweave.hashicorpkms
 import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.KeyId
@@ -195,6 +196,8 @@ class VaultKeyManagementService(
                         )
                     }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error generating key in Vault Transit",
@@ -276,6 +279,8 @@ class VaultKeyManagementService(
                         cause = e,
                     )
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error getting public key from Vault Transit",
@@ -420,6 +425,8 @@ class VaultKeyManagementService(
                         cause = e,
                     )
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error signing data in Vault Transit",
@@ -473,6 +480,8 @@ class VaultKeyManagementService(
                         cause = e,
                     )
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 logger.error(
                     "Unexpected error deleting key from Vault Transit",

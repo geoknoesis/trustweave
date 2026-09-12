@@ -1,5 +1,6 @@
 package org.trustweave.anchor.bitcoin
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -488,6 +489,8 @@ class BitcoinBlockchainAnchorClient(
         try {
             val txJson = rpcCallJson("getrawtransaction", listOf(txHash, 1)).jsonObject
             txJson["blockhash"]?.jsonPrimitive?.content
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             null
         }
@@ -499,6 +502,8 @@ class BitcoinBlockchainAnchorClient(
         try {
             val blockJson = rpcCallJson("getblock", listOf(blockHash)).jsonObject
             blockJson["time"]?.jsonPrimitive?.long
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             null
         }

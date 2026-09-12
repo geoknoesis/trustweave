@@ -36,8 +36,8 @@
         <error line="195" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/ethrdid/EthrDidMethod.kt">
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
-        <error line="423" column="5" source="standard:no-consecutive-comments" />
+        <error line="8" column="1" source="standard:no-wildcard-imports" />
+        <error line="434" column="5" source="standard:no-consecutive-comments" />
     </file>
     <file name="src/main/kotlin/org/trustweave/ethrdid/spi/EthrDidMethodProvider.kt">
         <error line="20" column="1" source="standard:no-empty-first-line-in-class-body" />

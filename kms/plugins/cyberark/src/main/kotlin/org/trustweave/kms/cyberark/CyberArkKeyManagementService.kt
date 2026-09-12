@@ -1,5 +1,6 @@
 package org.trustweave.kms.cyberark
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
@@ -129,6 +130,8 @@ class CyberArkKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GenerateKeyResult.Failure.Error(
                 algorithm = algorithm,
@@ -239,6 +242,8 @@ class CyberArkKeyManagementService(
                     publicKeyJwk = publicKeyJwk
                 )
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             GetPublicKeyResult.Failure.Error(
                 keyId = keyId,
@@ -320,6 +325,8 @@ class CyberArkKeyManagementService(
                 signingAlgorithm
             )
             SignResult.Success(signature)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             SignResult.Failure.Error(
                 keyId = keyId,
@@ -390,6 +397,8 @@ class CyberArkKeyManagementService(
                     cause = null
                 )
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             DeleteKeyResult.Failure.Error(
                 keyId = keyId,

@@ -1,5 +1,6 @@
 package org.trustweave.credential.didcomm.storage.archive
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -35,6 +36,8 @@ class AgeBasedArchivePolicy(
         val created = message.created?.let {
             try {
                 Instant.parse(it)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 null
             }

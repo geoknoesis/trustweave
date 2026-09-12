@@ -1,5 +1,6 @@
 package org.trustweave.ensdid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
@@ -122,6 +123,8 @@ class EnsDidMethod(
                     method,
                     did.value,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -188,6 +191,8 @@ class EnsDidMethod(
                         "ENS resolution not fully implemented. " +
                             "Query ENS resolver contract at ${config.ensRegistryAddress} for domain: $ensDomain",
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "RESOLVE_FAILED",

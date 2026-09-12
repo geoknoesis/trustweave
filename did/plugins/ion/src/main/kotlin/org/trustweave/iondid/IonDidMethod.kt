@@ -1,5 +1,6 @@
 package org.trustweave.iondid
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -128,6 +129,8 @@ class IonDidMethod(
                 document
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREATE_FAILED",
@@ -169,6 +172,8 @@ class IonDidMethod(
                     method,
                     did.value,
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
@@ -244,6 +249,8 @@ class IonDidMethod(
                 throw e
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "UPDATE_FAILED",
@@ -322,6 +329,8 @@ class IonDidMethod(
                 recovered
             } catch (e: TrustWeaveException) {
                 throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "RECOVER_FAILED",
@@ -370,6 +379,8 @@ class IonDidMethod(
                 true
             } catch (e: TrustWeaveException.NotFound) {
                 false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "DEACTIVATE_FAILED",

@@ -158,7 +158,7 @@ class HostExportIntegrationTest {
                                         HttpResponse.BodyHandlers.discarding(),
                                     ).statusCode(),
                             )
-                            val output = Path.of("build/reports/host-otlp")
+                            val output = evidenceDir("host-otlp")
                             Files.createDirectories(output)
                             payloads.forEachIndexed {
                                 index,
@@ -230,7 +230,7 @@ class HostExportIntegrationTest {
                             },
                         )
                         assertTrue(telemetry.prometheus().contains("trustweave_host_phase_seconds_count{phase=\"verify\"} 10001"))
-                        val output = Path.of("build/reports")
+                        val output = evidenceDir()
                         Files.createDirectories(output)
                         Files.writeString(output.resolve("host-export-backpressure.txt"), metrics.toString())
                     } finally {

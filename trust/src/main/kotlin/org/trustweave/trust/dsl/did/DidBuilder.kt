@@ -1,5 +1,6 @@
 package org.trustweave.trust.dsl.did
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -105,6 +106,8 @@ class DidBuilder(
                         val availableMethods =
                             try {
                                 didContext.getDidRegistry().getAllMethodNames()
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
                             } catch (e: Exception) {
                                 emptyList()
                             }
@@ -140,6 +143,8 @@ class DidBuilder(
                     reason = e.message ?: "Invalid configuration",
                     details = emptyMap(),
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 DidCreationResult.Failure.Other(
                     reason = e.message ?: "Unknown error during DID creation",

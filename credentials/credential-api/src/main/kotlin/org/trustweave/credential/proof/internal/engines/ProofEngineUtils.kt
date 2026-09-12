@@ -3,6 +3,7 @@ package org.trustweave.credential.proof.internal.engines
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.JsonElement
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -269,6 +270,8 @@ internal object ProofEngineUtils {
                 if (verificationMethodId != null) {
                     try {
                         VerificationMethodId.parse(verificationMethodId, issuerDid)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (e: Exception) {
                         logger.debug("Failed to parse verificationMethodId '{}': error={}", verificationMethodId, e.message)
                         // Try with just the fragment
@@ -324,6 +327,8 @@ internal object ProofEngineUtils {
             }
 
             return found
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             logger.error("Exception while resolving verification method: issuerIri={}, error={}", issuerIri.value, e.message, e)
             return null

@@ -1,5 +1,6 @@
 package org.trustweave.testkit.integrity
 
+import kotlinx.coroutines.CancellationException
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.core.exception.TrustWeaveException
@@ -114,6 +115,8 @@ object IntegrityVerifier {
         val vcDigest = DigestUtils.sha256DigestMultibase(vcWithoutMetadata)
         val vcValid = try {
             verifyVcIntegrity(vc, anchorRef, registry)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             false
         }

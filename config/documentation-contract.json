@@ -36,6 +36,10 @@
     {
       "document": "docs/operations/verified-examples/ledger-migration.md",
       "source": "credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerMigrationDocumentationTest.kt"
+    },
+    {
+      "document": "docs/operations/library-telemetry-example.md",
+      "source": "observability/src/test/kotlin/org/trustweave/observability/LibraryTelemetryDocumentationExampleTest.kt"
     }
   ]
 }

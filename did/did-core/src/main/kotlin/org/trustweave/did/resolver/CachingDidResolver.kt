@@ -1,5 +1,7 @@
 package org.trustweave.did.resolver
 
+import org.trustweave.core.telemetry.Operation
+import org.trustweave.core.telemetry.Telemetry
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.trustweave.did.identifiers.Did
@@ -88,16 +90,26 @@ class CachingDidResolver(
     /** Current number of cached entries (primarily for diagnostics and tests). */
     val size: Int get() = cache.size
 
-    override suspend fun resolve(did: Did): DidResolutionResult {
-        val key = did.value
-        val now = clock.now()
+    override suspend fun resolve(did: Did): DidResolutionResult =
+        Telemetry.measure(Operation.DID_RESOLVE, mapOf("did.method" to did.method)) {
+            val key = did.value
+            val now = clock.now()
 
-        readCache(key, now)?.let { return it }
+            readCache(key, now)?.let { cached ->
+                return@measure cached
+            }
 
-        val result = delegate.resolve(did)
-        writeCache(key, now, result)
-        return result
-    }
+            val result = delegate.resolve(did)
+            writeCache(key, now, result)
+            if (result is DidResolutionResult.Failure) {
+                Telemetry.rejected(
+                    Operation.DID_RESOLVE,
+                    result::class.simpleName ?: "Failure",
+                    mapOf("did.method" to did.method),
+                )
+            }
+            result
+        }
 
     /**
      * Resolves with DID Resolution 1.0 §4.1 options.

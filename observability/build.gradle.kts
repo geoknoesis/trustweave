@@ -3,6 +3,9 @@ plugins {
 }
 
 dependencies {
+    // The library telemetry SPI lives in :common so the core modules stay free of
+    // OpenTelemetry; this module is the adapter, so it needs both sides.
+    api(project(":common"))
     api(libs.opentelemetry.api)
     implementation(libs.opentelemetry.extension.kotlin)
     implementation(libs.kotlinx.coroutines.core)

@@ -65,7 +65,8 @@ public final class org/trustweave/observability/HostObservability {
 	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;)V
 	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;Z)V
 	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;)V
-	public synthetic fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;Lorg/trustweave/observability/LibraryTelemetry;)V
+	public synthetic fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;ZLjavax/sql/DataSource;Lorg/trustweave/observability/LibraryTelemetry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getTelemetry ()Lorg/trustweave/observability/HostTelemetry;
 	public final fun install (Lio/ktor/server/application/Application;Lorg/trustweave/observability/HostKind;)V
 }
@@ -106,5 +107,14 @@ public final class org/trustweave/observability/HostTelemetry {
 	public final fun phase (Lorg/trustweave/observability/HostPhase;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun prometheus (Ljavax/sql/DataSource;)Ljava/lang/String;
 	public static synthetic fun prometheus$default (Lorg/trustweave/observability/HostTelemetry;Ljavax/sql/DataSource;ILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class org/trustweave/observability/LibraryTelemetry : org/trustweave/core/telemetry/TelemetrySink {
+	public fun <init> ()V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;)V
+	public fun <init> (Lio/opentelemetry/api/OpenTelemetry;Z)V
+	public synthetic fun <init> (Lio/opentelemetry/api/OpenTelemetry;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun prometheus ()Ljava/lang/String;
+	public fun record (Lorg/trustweave/core/telemetry/TelemetryEvent;)V
 }
 

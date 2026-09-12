@@ -2,8 +2,8 @@
   "description": "Minimum coverage floors: raise after meaningful tests; do not lower to make CI pass. Percentages apply to Kover counters, not test counts.",
   "scopes": {
     "*": {
-      "LINE": 56.0,
-      "BRANCH": 38.0
+      "LINE": 57.0,
+      "BRANCH": 40.0
     },
     "org/trustweave/revocation/database": {
       "LINE": 59.0,
@@ -20,6 +20,10 @@
     "org/trustweave/anchor/indy": {
       "LINE": 82.0,
       "BRANCH": 60.0
+    },
+    "org/trustweave/core/telemetry": {
+      "LINE": 95.0,
+      "BRANCH": 75.0
     }
   }
 }

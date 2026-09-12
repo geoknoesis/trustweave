@@ -15,6 +15,8 @@ import io.ktor.util.AttributeKey
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
+import kotlinx.coroutines.withContext
+import org.trustweave.core.telemetry.TelemetryContext
 import java.security.MessageDigest
 import java.util.UUID
 import javax.sql.DataSource
@@ -33,6 +35,15 @@ public class HostObservability
         metricsBearerToken: String? = null,
         private val trustRemoteParent: Boolean = false,
         private val pool: DataSource? = null,
+        /**
+         * Bridges SDK operations onto this host's traces and metrics.
+         *
+         * Instrumentation used to stop at the HTTP boundary: a host saw that a request was slow
+         * without seeing that the time went to a DID resolution or an HSM round trip. Pass a
+         * [LibraryTelemetry] and the SDK's own operations join the same scrape and the same
+         * request id. Null keeps the previous behaviour.
+         */
+        private val library: LibraryTelemetry? = null,
     ) {
         private val expectedAuthorization =
             metricsBearerToken?.let {
@@ -70,7 +81,11 @@ public class HostObservability
                 }, {
                     call.response.headers.append("Retry-After", "1")
                     call.respond(HttpStatusCode.ServiceUnavailable)
-                }) { proceed() }
+                }) {
+                    // Carry the request id into the SDK so a library operation can be joined to
+                    // the request that caused it, rather than floating free in the trace.
+                    withContext(TelemetryContext(requestId)) { proceed() }
+                }
             }
             if (expectedAuthorization != null) {
                 application.routing {
@@ -84,7 +99,8 @@ public class HostObservability
                             call.respond(HttpStatusCode.Unauthorized)
                         } else {
                             call.response.headers.append("Cache-Control", "no-store")
-                            call.respondText(telemetry.prometheus(pool), ContentType.parse("text/plain; version=0.0.4"))
+                            val scrape = telemetry.prometheus(pool) + (library?.prometheus() ?: "")
+                            call.respondText(scrape, ContentType.parse("text/plain; version=0.0.4"))
                         }
                     }
                 }

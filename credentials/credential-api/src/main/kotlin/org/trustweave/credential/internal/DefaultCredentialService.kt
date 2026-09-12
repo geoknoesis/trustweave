@@ -1,5 +1,7 @@
 package org.trustweave.credential.internal
 
+import org.trustweave.core.telemetry.Operation
+import org.trustweave.core.telemetry.Telemetry
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.issue
 import org.trustweave.credential.format.ProofSuiteId
@@ -49,7 +51,16 @@ internal class DefaultCredentialService(
             serializersModule = SerializationModule.default
         }
 
-    override suspend fun issue(request: IssuanceRequest): IssuanceResult {
+    override suspend fun issue(request: IssuanceRequest): IssuanceResult =
+        Telemetry.measure(Operation.CREDENTIAL_ISSUE) {
+            issueInternal(request).also { result ->
+                if (result is IssuanceResult.Failure) {
+                    Telemetry.rejected(Operation.CREDENTIAL_ISSUE, result::class.simpleName ?: "Failure")
+                }
+            }
+        }
+
+    private suspend fun issueInternal(request: IssuanceRequest): IssuanceResult {
         // Input validation
         try {
             request.id?.let { InputValidation.validateCredentialId(it) }
@@ -90,6 +101,19 @@ internal class DefaultCredentialService(
     }
 
     override suspend fun verify(
+        credential: VerifiableCredential,
+        trustEvaluator: TrustEvaluator?,
+        options: VerificationOptions,
+    ): VerificationResult =
+        Telemetry.measure(Operation.CREDENTIAL_VERIFY) {
+            verifyInternal(credential, trustEvaluator, options).also { result ->
+                if (result is VerificationResult.Invalid) {
+                    Telemetry.rejected(Operation.CREDENTIAL_VERIFY, result::class.simpleName ?: "Invalid")
+                }
+            }
+        }
+
+    private suspend fun verifyInternal(
         credential: VerifiableCredential,
         trustEvaluator: TrustEvaluator?,
         options: VerificationOptions,

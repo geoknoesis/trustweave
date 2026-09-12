@@ -30,6 +30,11 @@ class WorkflowEvidencePathTest(unittest.TestCase):
                 workflow,
                 f"{workflow_name} must regenerate evidence independently of historical caches",
             )
+            self.assertIn(
+                ":observability:test :observability:koverXmlReport --rerun-tasks --no-build-cache",
+                workflow,
+                f"{workflow_name} must regenerate host coverage and evidence independently of historical caches",
+            )
             for path in required:
                 self.assertIn(path, workflow, f"{workflow_name} must retain {path}")
             for path in forbidden:

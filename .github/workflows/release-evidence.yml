@@ -102,7 +102,7 @@ jobs:
 
       - name: Enforce shared host coverage floors
         run: |
-          ./gradlew :observability:koverXmlReport --no-daemon
+          ./gradlew :observability:test :observability:koverXmlReport --rerun-tasks --no-build-cache --no-daemon
           python scripts/check-coverage-policy.py build/observability/reports/kover/report.xml --policy config/host-coverage-policy.json
 
       - name: Validate shared host alert rules and metric exposition

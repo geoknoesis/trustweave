@@ -11,6 +11,11 @@ import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
+import importlib.util as _importlib_util
+
+_spec = _importlib_util.spec_from_file_location("build_root", Path(__file__).with_name("build_root.py"))
+_build_root = _importlib_util.module_from_spec(_spec)
+_spec.loader.exec_module(_build_root)
 import platform
 import shutil
 import socket
@@ -355,7 +360,13 @@ def exercise(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sample", type=Path, default=ROOT / "credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom")
+    # Evidence now lives in the module's Gradle build directory, which this repository relocates
+    # on Windows, so resolve it the way the build does rather than assuming a layout.
+    parser.add_argument(
+        "--sample",
+        type=Path,
+        default=_build_root.resolve(ROOT) / "credentials/plugins/verifiable-intent/reports/intent-metrics.prom",
+    )
     parser.add_argument("--cache", type=Path, default=ROOT / ".gradle/intent-monitoring-tools")
     parser.add_argument("--output", type=Path, default=ROOT / "build/reports/intent-notifications")
     exercise(parser.parse_args())

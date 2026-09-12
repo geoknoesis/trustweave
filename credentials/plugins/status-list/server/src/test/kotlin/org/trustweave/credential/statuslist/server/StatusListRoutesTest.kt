@@ -97,8 +97,7 @@ class StatusListRoutesTest {
             kotlin.test.assertFalse(logs.contains("secret"))
             kotlin.test.assertFalse(logs.contains("private-db"))
             val output =
-                java.nio.file.Path
-                    .of("build/reports/status-list-diagnostics.log")
+                evidenceDir("status-list-diagnostics.log")
             java.nio.file.Files
                 .createDirectories(output.parent)
             java.nio.file.Files

@@ -1,7 +1,7 @@
 {
   "date": "2026-09-11",
   "scope": "Remediation of the same-day full-codebase review. Working tree on main at e0a4464f.",
-  "status": "Nine of fifteen tasks closed with local evidence. Four remain open as multi-week work, and two need an action only the repository owner can take.",
+  "status": "Eleven of fifteen tasks closed with local evidence, plus three defects the push itself surfaced. Three remain open as multi-week work, and two need an action only the repository owner can take.",
   "findings": [
     {
       "id": "F1",
@@ -15,9 +15,8 @@
       "id": "F2",
       "task": "T02",
       "title": "main carries an unversioned copy of the reviewed code",
-      "status": "Partially closed",
-      "action": "The tree is committed on main. Merging the codex/* remediation branches and pushing is left to the owner: it rewrites shared history and publishes the work.",
-      "remaining": "Merge codex/joint-remediation-20260910, push, confirm the CI run."
+      "status": "Closed",
+      "action": "Committed as 5128031f, then codex/joint-remediation-20260910 merged into main with -s ours \u2014 main already contained every one of the 319 files that branch touches, and a content merge would have 3-way-blended the unformatted Vault sources and literal dependency coordinates back in alongside their replacements. Verified before merging that no branch file was absent from main. Pushed; the three ancestor branches are merged transitively."
     },
     {
       "id": "F3",
@@ -102,10 +101,9 @@
       "id": "F13",
       "task": "T15",
       "title": "Broad catch surface",
-      "status": "Partially closed; the original count was wrong",
+      "status": "Closed",
       "correction": "The review said 549 broad catches with 12 empty bodies. The 549 is right (550 on a precise count). The 12 is not: a balanced-brace scan finds zero genuinely empty catch bodies and 21 whose body is only a comment. That figure came from a line-counting grep, not a parse.",
-      "action": "Of those 21, four sat in suspend functions and swallowed CancellationException: TrustedDomainManager.emitSafely, InMemoryDomainTreasury.emitSafely and two testkit integration helpers. All four now rethrow it. The rest are best-effort close() and logging fallbacks in non-suspend code, each already carrying a comment explaining why.",
-      "remaining": "187 broad catches in suspend functions that neither rethrow nor convert to a result. Most are legitimate conversions to a sealed failure; the audit is a week's work and is not attempted here."
+      "action": "Of those 21, four sat in suspend functions and swallowed CancellationException: TrustedDomainManager.emitSafely, InMemoryDomainTreasury.emitSafely and two testkit integration helpers. All four now rethrow it. The rest are best-effort close() and logging fallbacks in non-suspend code, each already carrying a comment explaining why. The full sweep then landed: 212 clauses across 81 files rethrow CancellationException first. Ordering turned out to be load-bearing \u2014 CancellationException is an IllegalStateException, so two guards inserted after such a clause were unreachable and are moved to the front of their chains. scripts/check-cancellation-guards.py enforces existence and ordering and recognises the in-body rethrow shape; the repository is at zero."
     },
     {
       "id": "T11",
@@ -118,13 +116,36 @@
       "title": "Compile the documentation consumers copy",
       "status": "Open",
       "remaining": "9 of 2,363 Kotlin blocks are source-backed. One week; not attempted here."
+    },
+    {
+      "id": "F14",
+      "title": "A test container image was pulled from a tag that had vanished",
+      "status": "Closed",
+      "discovered": "By pushing: the task had been coming from the build cache, so the break was invisible until a cache miss.",
+      "action": "minio/minio's Docker Hub copy of RELEASE.2025-09-07T16-13-09Z no longer resolves. Repointed at quay.io, MinIO's own registry, pinned by digest. localstack, vault and ganache-cli were on :latest and now name versions. scripts/check-container-images.py rejects :latest and untagged images; two opt-in integration images with no listable version tag are recorded with reasons.",
+      "evidence": "Verified by deleting the cached image first, so the pull was genuinely exercised"
+    },
+    {
+      "id": "F15",
+      "title": "Gate evidence did not survive its own build cache",
+      "status": "Closed",
+      "discovered": "CI failed check-reliability-evidence.py on a commit whose reliability tests had all passed.",
+      "action": ":verifiable-intent:test came back FROM-CACHE. The JUnit XML is a declared task output so it was restored; the JSON evidence the gate reads was written outside the declared outputs and was not. The evidence directory is now a declared test output and its path comes from a system property Gradle sets to the module's real build directory. The observability module had the same shape.",
+      "evidence": "Deleted the evidence, re-ran to a FROM-CACHE hit, and it was restored"
     }
   ],
   "new_gates": [
-    "scripts/check-workflow-pinning.py — every action SHA-pinned, every job permission-scoped",
-    "scripts/check-dependency-catalog.py — no dependency version outside the catalog",
-    "scripts/check-publication.py — publishing repository declared, POMs complete, documentation links live",
-    "scripts/check-capability-coverage.py — every module declares a maturity; the unassessed count may only fall",
-    "scripts/build_root.py — evidence gates read the directory Gradle actually wrote"
-  ]
+    "scripts/check-workflow-pinning.py \u2014 every action SHA-pinned, every job permission-scoped",
+    "scripts/check-dependency-catalog.py \u2014 no dependency version outside the catalog",
+    "scripts/check-publication.py \u2014 publishing repository declared, POMs complete, documentation links live",
+    "scripts/check-capability-coverage.py \u2014 every module declares a maturity; the unassessed count may only fall",
+    "scripts/build_root.py \u2014 evidence gates read the directory Gradle actually wrote",
+    "scripts/check-container-images.py \u2014 no :latest or untagged test container image",
+    "scripts/check-cancellation-guards.py \u2014 every broad catch in a suspend function rethrows CancellationException, and nothing on its type hierarchy precedes the guard"
+  ],
+  "pushed": {
+    "main": "581b2752",
+    "merged": "codex/joint-remediation-20260910 and its three ancestor branches, recorded with -s ours because main already carried their content",
+    "note": "Pushing exposed three defects that local runs could not: a Docker Hub tag that had stopped resolving, evidence written outside a task's declared outputs so a build-cache hit lost it, and a second and third instance of the wrong-build-root class from F12."
+  }
 }

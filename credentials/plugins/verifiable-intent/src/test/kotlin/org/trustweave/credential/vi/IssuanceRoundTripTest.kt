@@ -527,8 +527,7 @@ class IssuanceRoundTripTest {
                     )
                 }
             val output =
-                java.nio.file.Path
-                    .of("build/reports/vi-kotlin-autonomous.json")
+                evidenceDir("vi-kotlin-autonomous.json")
             java.nio.file.Files
                 .createDirectories(output.parent)
             java.nio.file.Files
@@ -565,8 +564,7 @@ class IssuanceRoundTripTest {
                     )
                 }
             val output =
-                java.nio.file.Path
-                    .of("build/reports/vi-kotlin-checkout.json")
+                evidenceDir("vi-kotlin-checkout.json")
             java.nio.file.Files
                 .createDirectories(output.parent)
             java.nio.file.Files
@@ -777,8 +775,7 @@ class IssuanceRoundTripTest {
                     )
                 }
             val output =
-                java.nio.file.Path
-                    .of("build/reports/vi-kotlin-immediate.json")
+                evidenceDir("vi-kotlin-immediate.json")
             java.nio.file.Files
                 .createDirectories(output.parent)
             java.nio.file.Files

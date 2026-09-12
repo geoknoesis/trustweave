@@ -181,7 +181,16 @@ Nine of fifteen tasks are closed with local evidence; the full record with accep
 
 **Closed:** F1 (build passes — all 232 ktlint violations cleared, module baseline untouched), F3 (publishing repository, `scm`, corrected doc URL, reviewer-gated publish job — see [the runbook](../../operations/publishing.md)), F5 (all 61 coordinates in the catalog, four libraries converged, bitcoinj recorded as a deliberate `-legacy` pin), F6 (`HostAuthentication` and fail-closed mutations on the three servers), F8 (14 actions SHA-pinned, both `permissions` blocks added, `issues: write` isolated), F10 (ledger exceptions become results), F11 (both loops suspend and cancellable), F12 (build root resolved the way the build resolves it).
 
-**Partly closed:** F2 — committed, but merging the `codex/*` branches and pushing is the owner's call. F9 — a ratchet now forces every new module to declare a maturity; classifying the 102 recorded ones is a product decision. F13 — the four suspend functions that swallowed cancellation now rethrow; 187 broad catches remain to triage.
+**Also closed after the push:** F2 — committed as `5128031f`, then `codex/joint-remediation-20260910` merged with `-s ours` (main already held every one of the 319 files that branch touches; a content merge would have blended the unformatted Vault sources and literal coordinates back in), and pushed. F13 — the full sweep landed: 212 clauses across 81 files rethrow `CancellationException` first.
+
+**Two defects the push itself surfaced**, both invisible to local runs because the tasks had been coming from the build cache:
+
+- **F14 — a container image tag had vanished.** `minio/minio`'s Docker Hub copy of the pinned release no longer resolves, so `:wallet:plugins:cloud:test` could not pull it on a cold runner. Repointed at quay.io by digest. `localstack`, `vault` and `ganache-cli` were on `:latest`; all now name versions, and a gate rejects `:latest`.
+- **F15 — gate evidence did not survive its own build cache.** `:verifiable-intent:test` came back `FROM-CACHE`: the JUnit XML is a declared task output so it was restored, but the reliability JSON the gate reads was written outside the declared outputs and was not. The evidence directory is now a declared test output, verified by deleting it, re-running to a cache hit, and watching it return.
+
+**Partly closed:** F9 — a ratchet now forces every new module to declare a maturity; classifying the 102 recorded ones is a product decision.
+
+**A correction to my own fix:** `CancellationException` is an `IllegalStateException`, so a guard placed after such a clause is unreachable. My first sweep did exactly that in two files. `check-cancellation-guards.py` now enforces the ordering as well as the existence, which is how those two were found.
 
 **Open:** F4 (coverage), F7 (library instrumentation), T11 (deployment-scale qualification), T14 (compiled documentation). Each is a week or more of work and none was attempted here.
 

@@ -1,4 +1,4 @@
-package org.trustweave.observability
+package org.trustweave.credential.statuslist.server
 
 import java.nio.file.Path
 

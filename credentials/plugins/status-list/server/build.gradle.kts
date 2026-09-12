@@ -26,3 +26,12 @@ dependencies {
     // Exercise actual SLF4J emission and HTTP/log correlation; applications still select their own backend.
     testRuntimeOnly(libs.slf4j.simple)
 }
+
+// Evidence read back by CI gates has to be a declared output, or a build-cache hit restores the
+// test results without it. See the verifiable-intent module for the failure this prevents.
+tasks.test {
+    val evidence = layout.buildDirectory.dir("reports")
+    systemProperty("trustweave.reports.dir", evidence.get().asFile.absolutePath)
+    val diagnostics = layout.buildDirectory.file("reports/status-list-diagnostics.log")
+    outputs.file(diagnostics).withPropertyName("statusListDiagnostics")
+}

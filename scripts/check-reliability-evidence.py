@@ -23,8 +23,8 @@ def locate(repository):
     other, check both and report both when neither has the evidence.
     """
     candidates = [
-        _build_root.resolve(repository) / MODULE / "reports" / "reliability",
-        Path(repository) / MODULE / "build" / "reports" / "reliability",
+        _build_root.resolve(repository) / MODULE / "qualification" / "reliability",
+        Path(repository) / MODULE / "build" / "qualification" / "reliability",
     ]
     for candidate in candidates:
         if (candidate / REQUIRED).is_file():

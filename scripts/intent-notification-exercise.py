@@ -365,7 +365,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sample",
         type=Path,
-        default=_build_root.resolve(ROOT) / "credentials/plugins/verifiable-intent/reports/intent-metrics.prom",
+        default=_build_root.resolve(ROOT) / "credentials/plugins/verifiable-intent/qualification/intent-metrics.prom",
     )
     parser.add_argument("--cache", type=Path, default=ROOT / ".gradle/intent-monitoring-tools")
     parser.add_argument("--output", type=Path, default=ROOT / "build/reports/intent-notifications")

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("reliability", Path(__file__).with_name("check-reliability-evidence.py"))
 module = importlib.util.module_from_spec(spec)
@@ -40,6 +41,15 @@ class ReliabilityEvidenceTest(unittest.TestCase):
         report = module.validate(self.root)
         self.assertTrue(report["passed"])
         self.assertEqual(7, len(report["sha256"]))
+
+    def test_locate_uses_the_centralized_qualification_directory(self):
+        repository = self.root / "repository"
+        build_root = self.root / "central-build"
+        expected = build_root / module.MODULE / "qualification" / "reliability"
+        expected.mkdir(parents=True)
+        (expected / module.REQUIRED).write_text("{}", encoding="utf-8")
+        with patch.object(module._build_root, "resolve", return_value=build_root):
+            self.assertEqual(expected, module.locate(repository))
 
     def test_missing_scenario_fails(self):
         (self.root / "history.json").unlink()

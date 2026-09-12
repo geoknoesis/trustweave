@@ -7,7 +7,7 @@ kotlinx-coroutines-test = "1.10.2"
 kotlinx-datetime = "0.6.2"
 
 # Testing
-junit = "5.14.4"
+junit = "6.0.3"
 junit-platform = "1.14.4"
 kotest = "5.9.1"
 testcontainers = "1.21.4"

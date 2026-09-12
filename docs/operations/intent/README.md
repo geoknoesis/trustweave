@@ -15,7 +15,7 @@ Run from the repository root:
 
 Docker is required. Only containers created by the fixture are stopped or removed. A temporary
 backup file is deleted by the fixture. Results are written to
-`credentials/plugins/verifiable-intent/build/reports/intent-operations.json` and retained by CI.
+`credentials/plugins/verifiable-intent/build/qualification/intent-operations.json` and retained by CI.
 The test uses 100 requests, concurrency 8, a 500-unit cap and 10-unit reservations. Exactly
 50 reservations must pass. It checks simultaneous idempotent settlement release, conflicting
 outcomes, HTTP 503 on storage failure, latency metrics, alert signals, and exact reservation

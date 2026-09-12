@@ -9,10 +9,10 @@ WORKFLOWS = ("ci.yml", "release-evidence.yml")
 class WorkflowEvidencePathTest(unittest.TestCase):
     def test_workflows_consume_module_build_outputs(self):
         required = (
-            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-immediate.json",
-            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-autonomous.json",
-            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-checkout.json",
-            "credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom",
+            "credentials/plugins/verifiable-intent/build/qualification/vi-kotlin-immediate.json",
+            "credentials/plugins/verifiable-intent/build/qualification/vi-kotlin-autonomous.json",
+            "credentials/plugins/verifiable-intent/build/qualification/vi-kotlin-checkout.json",
+            "credentials/plugins/verifiable-intent/build/qualification/intent-metrics.prom",
             "credentials/plugins/status-list/server/build/reports/status-list-diagnostics.log",
         )
         forbidden = (

@@ -47,7 +47,7 @@ python scripts/check-reliability-evidence.py
 ```
 
 Both CI and release-evidence run this profile and retain JSON measurements and PostgreSQL
-recovery logs under `credentials/plugins/verifiable-intent/build/reports/reliability/`.
+recovery logs under `credentials/plugins/verifiable-intent/build/qualification/reliability/`.
 The named-test contract also requires execution, so a skipped test cannot satisfy the gate
 using an old measurement file. Use a clean checkout/build for release evidence; running
 the Python checker alone only validates existing artifacts, not their execution freshness.

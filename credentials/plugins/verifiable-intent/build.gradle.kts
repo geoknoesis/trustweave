@@ -29,7 +29,10 @@ dependencies {
 // commit whose tests had all passed. Anchoring the path to the build directory and declaring it
 // as an output makes the evidence travel with the cache entry that produced it.
 tasks.test {
-    val evidence = layout.buildDirectory.dir("reports")
+    // Keep qualification output outside Gradle's report tree. The test reporter is free to clean
+    // build/reports after the test worker exits, which can otherwise erase evidence written by a
+    // passing test before the following CI step reads it.
+    val evidence = layout.buildDirectory.dir("qualification")
     systemProperty("trustweave.reports.dir", evidence.get().asFile.absolutePath)
     outputs.dir(evidence).withPropertyName("verifiableIntentEvidence")
 }

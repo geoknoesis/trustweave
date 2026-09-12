@@ -1,0 +1,33 @@
+{
+  "review_date": "2026-09-12",
+  "rubric": "Six equally weighted categories, scored from current source, local execution, and hosted CI evidence.",
+  "repositories": {
+    "trustweave": {
+      "commit": "8190a9ab47e5634d7ab4caa439f9c94adfae36e1",
+      "overall": 8.9,
+      "release_ready": false,
+      "categories": {
+        "security_and_access_control": 9.4,
+        "correctness_and_protocols": 9.1,
+        "architecture_and_maintainability": 9.0,
+        "testing_and_documentation": 9.1,
+        "supply_chain_and_ci": 8.0,
+        "operations_and_provider_maturity": 8.7
+      }
+    },
+    "trustweave_saas": {
+      "commit": "e2d1c474c89cc182eec08045455c669831be621f",
+      "overall": 8.1,
+      "release_ready": false,
+      "categories": {
+        "security_and_access_control": 8.8,
+        "correctness_and_protocols": 8.2,
+        "architecture_and_maintainability": 8.4,
+        "testing_and_documentation": 7.8,
+        "supply_chain_and_ci": 7.0,
+        "operations_and_provider_maturity": 8.1
+      }
+    }
+  },
+  "joint_score": 8.5
+}

@@ -31,5 +31,5 @@ dependencies {
 tasks.test {
     val evidence = layout.buildDirectory.dir("reports")
     systemProperty("trustweave.reports.dir", evidence.get().asFile.absolutePath)
-    outputs.dir(layout.buildDirectory.dir("reports/reliability")).withPropertyName("reliabilityEvidence")
+    outputs.dir(evidence).withPropertyName("verifiableIntentEvidence")
 }

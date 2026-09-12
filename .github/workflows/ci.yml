@@ -120,9 +120,9 @@ jobs:
           python3 -m venv .gradle/vi-python
           .gradle/vi-python/bin/python -m pip install cryptography==46.0.3 pytest==9.0.2
           PYTHONPATH="${PWD}/.gradle/vi-reference/src" .gradle/vi-python/bin/python -m pytest .gradle/vi-reference/tests -q --junitxml=.gradle/vi-reference-results.xml
-          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file build/credentials/plugins/verifiable-intent/reports/vi-kotlin-immediate.json > .gradle/vi-immediate-results.json
-          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file build/credentials/plugins/verifiable-intent/reports/vi-kotlin-autonomous.json > .gradle/vi-autonomous-results.json
-          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file build/credentials/plugins/verifiable-intent/reports/vi-kotlin-checkout.json > .gradle/vi-checkout-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-immediate.json > .gradle/vi-immediate-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-autonomous.json > .gradle/vi-autonomous-results.json
+          .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/build/reports/vi-kotlin-checkout.json > .gradle/vi-checkout-results.json
           .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/src/test/resources/vi_python_cross_stack.json > .gradle/vi-python-immediate-results.json
           .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/src/test/resources/vi_python_autonomous.json > .gradle/vi-python-autonomous-results.json
           python scripts/vi-stateful-model.py --check --file credentials/plugins/verifiable-intent/src/test/resources/vi_stateful_model.json
@@ -146,7 +146,7 @@ jobs:
         run: >-
           docker run --rm -i --network none --entrypoint promtool
           prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics
-          < build/credentials/plugins/verifiable-intent/reports/intent-metrics.prom
+          < credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom
 
       - name: Exercise intent notification delivery and recovery
         timeout-minutes: 15
@@ -186,10 +186,10 @@ jobs:
             .gradle/vi-python-autonomous-results.json
             build/reports/validation-manifest.json
             build/reports/vi-matrix.json
-            build/credentials/plugins/verifiable-intent/reports/intent-operations.json
-            build/credentials/plugins/verifiable-intent/reports/reliability/
-            build/credentials/plugins/verifiable-intent/reports/intent-metrics.prom
-            build/credentials/plugins/status-list/server/reports/status-list-diagnostics.log
+            credentials/plugins/verifiable-intent/build/reports/intent-operations.json
+            credentials/plugins/verifiable-intent/build/reports/reliability/
+            credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom
+            credentials/plugins/status-list/server/build/reports/status-list-diagnostics.log
             build/reports/intent-notifications/
             build/observability/reports/
             build/reports/documentation.json

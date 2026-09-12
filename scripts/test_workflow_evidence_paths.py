@@ -1,0 +1,31 @@
+from pathlib import Path
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+WORKFLOWS = ("ci.yml", "release-evidence.yml")
+
+
+class WorkflowEvidencePathTest(unittest.TestCase):
+    def test_workflows_consume_module_build_outputs(self):
+        required = (
+            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-immediate.json",
+            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-autonomous.json",
+            "credentials/plugins/verifiable-intent/build/reports/vi-kotlin-checkout.json",
+            "credentials/plugins/verifiable-intent/build/reports/intent-metrics.prom",
+            "credentials/plugins/status-list/server/build/reports/status-list-diagnostics.log",
+        )
+        forbidden = (
+            "build/credentials/plugins/verifiable-intent/reports/",
+            "build/credentials/plugins/status-list/server/reports/",
+        )
+        for workflow_name in WORKFLOWS:
+            workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
+            for path in required:
+                self.assertIn(path, workflow, f"{workflow_name} must retain {path}")
+            for path in forbidden:
+                self.assertNotIn(path, workflow, f"{workflow_name} uses obsolete root-relative {path}")
+
+
+if __name__ == "__main__":
+    unittest.main()

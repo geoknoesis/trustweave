@@ -183,6 +183,34 @@ class HostTelemetryTest {
         }
 
     @Test
+    fun `host admission returns a retryable 503 when capacity is exhausted`() =
+        runBlocking {
+            val telemetry = HostTelemetry(maxConcurrentRequests = 1)
+            val entered = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            testApplication {
+                application {
+                    HostObservability(telemetry).install(this, HostKind.VC_API)
+                    routing {
+                        get("/hold") {
+                            entered.complete(Unit)
+                            release.await()
+                            call.respondText("ok")
+                        }
+                    }
+                }
+                val admitted = async { client.get("/hold") }
+                entered.await()
+                val refused = client.get("/hold")
+                assertEquals(HttpStatusCode.ServiceUnavailable, refused.status)
+                assertEquals("1", refused.headers["Retry-After"])
+                release.complete(Unit)
+                assertEquals(HttpStatusCode.OK, admitted.await().status)
+            }
+            assertTrue(telemetry.prometheus().contains("outcome=\"rejected\"} 1"))
+        }
+
+    @Test
     fun `queue timeouts and cancellation races do not leak permits`() =
         runBlocking {
             val telemetry = HostTelemetry(maxConcurrentRequests = 1, maxQueuedRequests = 10, queueTimeoutMillis = 1)

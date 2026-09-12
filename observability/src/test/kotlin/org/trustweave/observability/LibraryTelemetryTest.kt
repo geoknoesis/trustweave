@@ -22,6 +22,11 @@ import kotlin.test.assertTrue
  * HTTP boundary and a host cannot join a slow request to the DID resolution inside it.
  */
 class LibraryTelemetryTest {
+    @Test
+    fun `default no-op telemetry remains usable without host configuration`() {
+        assertTrue(LibraryTelemetry().prometheus().contains("trustweave_library_operations_total"))
+    }
+
     private val exporter = InMemorySpanExporter.create()
     private val sdk =
         OpenTelemetrySdk

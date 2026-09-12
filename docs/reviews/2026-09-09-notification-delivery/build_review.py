@@ -39,7 +39,7 @@ shutil.copyfile(root / ".gradle/notification-rule-before.json", evidence / "rule
 shutil.copyfile(root / "docs/operations/intent/alerts.test.yml", evidence / "alerts.test.yml")
 assert rule_check["tests_sha256"] == hashlib.sha256((evidence / "alerts.test.yml").read_bytes()).hexdigest()
 assert sum(len(t["alert_rule_test"]) for t in yaml.safe_load((evidence / "alerts.test.yml").read_text())["tests"]) == 37
-shutil.copyfile(root / "credentials/plugins/verifiable-intent/build/qualification/intent-metrics.prom",
+shutil.copyfile(root / "build/credentials/plugins/verifiable-intent/qualification/intent-metrics.prom",
                 evidence / "runtime-input.prom")
 previous_dir = root / "docs/reviews/2026-09-08-observability"
 previous = json.loads((previous_dir / "validation.json").read_text())

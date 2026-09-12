@@ -47,7 +47,7 @@ for module in ['verifiable-intent', 'status-list/server']:
     source_paths += list((module_root / 'api').glob('*.api')) + [module_root/'build.gradle.kts']
 assert totals == dict(tests=96, failures=0, errors=0, skipped=0), totals
 for name in ['intent-operations.json', 'intent-metrics.prom']:
-    shutil.copyfile(root / 'credentials/plugins/verifiable-intent/build/qualification' / name, out/name)
+    shutil.copyfile(root / 'build/credentials/plugins/verifiable-intent/qualification' / name, out/name)
 metric_check = json.loads((root/'.gradle/observability-metrics-check.json').read_text())
 assert metric_check['exit_code'] == 0 and metric_check['input_sha256'] == sha(out/'intent-metrics.prom')
 shutil.copyfile(root/'.gradle/observability-metrics-check.json',out/'metric-exposition-check.json')

@@ -10,7 +10,7 @@ import java.nio.file.Path
  * relative fallback keeps the suite runnable outside Gradle.
  */
 internal fun evidenceDir(vararg segments: String): Path {
-    var path = Path.of(System.getProperty("trustweave.reports.dir") ?: "build/reports")
+    var path = Path.of(System.getProperty("trustweave.reports.dir") ?: "build/qualification")
     for (segment in segments) {
         path = path.resolve(segment)
     }

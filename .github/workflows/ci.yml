@@ -48,7 +48,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
       - name: Install Android SDK components
         run: '"${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-34" "build-tools;34.0.0"'
       - name: Compile Android and run app unit tests
@@ -67,7 +67,7 @@ jobs:
           java-version: "21"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+        uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
 
       - name: Configure isolated PKCS11 qualification token
         run: |
@@ -165,7 +165,7 @@ jobs:
       - name: Validate shared host alert rules and metric exposition
         run: |
           docker run --rm --network none --entrypoint promtool --mount "type=bind,source=${PWD}/docs/operations/host,target=/work,readonly" --workdir /work prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 test rules alerts.test.yml
-          docker run --rm -i --network none --entrypoint promtool prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics < build/observability/reports/host-metrics.prom
+          docker run --rm -i --network none --entrypoint promtool prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics < build/observability/qualification/host-metrics.prom
 
       - name: Generate dependency inventory
         run: ./gradlew cyclonedxBom --no-daemon --stacktrace
@@ -191,9 +191,10 @@ jobs:
             build/credentials/plugins/verifiable-intent/qualification/intent-operations.json
             build/credentials/plugins/verifiable-intent/qualification/reliability/
             build/credentials/plugins/verifiable-intent/qualification/intent-metrics.prom
-            build/credentials/plugins/status-list/server/reports/status-list-diagnostics.log
+            build/credentials/plugins/status-list/server/qualification/status-list-diagnostics.log
             build/reports/intent-notifications/
             build/observability/reports/
+            build/observability/qualification/
             build/reports/documentation.json
             build/reports/documentation-execution.log
             build/reports/junit-contract.json

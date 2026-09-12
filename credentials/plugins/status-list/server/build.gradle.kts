@@ -30,8 +30,8 @@ dependencies {
 // Evidence read back by CI gates has to be a declared output, or a build-cache hit restores the
 // test results without it. See the verifiable-intent module for the failure this prevents.
 tasks.test {
-    val evidence = layout.buildDirectory.dir("reports")
+    val evidence = layout.buildDirectory.dir("qualification")
     systemProperty("trustweave.reports.dir", evidence.get().asFile.absolutePath)
-    val diagnostics = layout.buildDirectory.file("reports/status-list-diagnostics.log")
+    val diagnostics = layout.buildDirectory.file("qualification/status-list-diagnostics.log")
     outputs.file(diagnostics).withPropertyName("statusListDiagnostics")
 }

@@ -13,12 +13,15 @@ class WorkflowEvidencePathTest(unittest.TestCase):
             "build/credentials/plugins/verifiable-intent/qualification/vi-kotlin-autonomous.json",
             "build/credentials/plugins/verifiable-intent/qualification/vi-kotlin-checkout.json",
             "build/credentials/plugins/verifiable-intent/qualification/intent-metrics.prom",
-            "build/credentials/plugins/status-list/server/reports/status-list-diagnostics.log",
+            "build/credentials/plugins/status-list/server/qualification/status-list-diagnostics.log",
+            "build/observability/qualification/host-metrics.prom",
         )
         forbidden = (
             "credentials/plugins/verifiable-intent/build/reports/",
             "credentials/plugins/verifiable-intent/build/qualification/",
             "credentials/plugins/status-list/server/build/reports/",
+            "build/credentials/plugins/status-list/server/reports/status-list-diagnostics.log",
+            "build/observability/reports/host-metrics.prom",
         )
         for workflow_name in WORKFLOWS:
             workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")

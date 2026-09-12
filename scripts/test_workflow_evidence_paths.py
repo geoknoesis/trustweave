@@ -18,6 +18,7 @@ class WorkflowEvidencePathTest(unittest.TestCase):
         forbidden = (
             "build/credentials/plugins/verifiable-intent/reports/",
             "build/credentials/plugins/status-list/server/reports/",
+            "credentials/plugins/verifiable-intent/build/reports/",
         )
         for workflow_name in WORKFLOWS:
             workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")

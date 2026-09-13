@@ -27,6 +27,11 @@
       "reason": "Requires an authorized AWS CloudHSM cluster, HSM identity and native library; no hardware custody qualification claimed."
     },
     {
+      "suite": "org.trustweave.awskms.AwsKmsLiveQualificationTest",
+      "name": "identified AWS KMS keys qualify signing denial restart and replacement recovery()",
+      "reason": "Runs only in the protected AWS KMS qualification workflow with GitHub OIDC and three identified non-production keys; ordinary credential-free CI does not qualify live custody."
+    },
+    {
       "suite": "org.trustweave.googlekms.GoogleKmsProviderTest",
       "name": "test create with valid options()",
       "reason": "Requires Google Cloud credentials; constructor checks are not live KMS qualification."

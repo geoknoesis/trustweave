@@ -1,15 +1,17 @@
 # Live custody and key-loss qualification
 
-Status: **software PKCS#11 boundary qualified in CI; live custody remains not
-qualified**. CI provisions an isolated SoftHSM2 token and verifies P-256 key
+Status: **software PKCS#11 boundary qualified in CI; executable AWS KMS live
+qualification is implemented and awaits an identified test-environment run**. CI provisions an isolated SoftHSM2 token and verifies P-256 key
 generation, lookup, signing, deletion, unsupported-algorithm handling and reuse of
 an existing key after recreating the KMS client. These named tests are mandatory in
 `config/testing-contract.json`; the skip policy does not permit them to be skipped.
 
 SoftHSM2 does not qualify a hosted or physical HSM, provider IAM, production audit
-delivery, dual-control recovery or a deployed Accountly wallet flow. No identified
-non-production KMS resource and credential profile has been recorded for those
-exercises. Accountly billing validation does not qualify custody. The reference
+delivery or dual-control recovery. The protected `AWS KMS custody qualification`
+workflow now exercises real signing, independent verification, denied access,
+client restart, and replacement-key continuity with immutable resource IDs. It does
+not become qualification evidence until it passes against recorded non-production
+resources. Accountly billing validation does not qualify custody. The reference
 wallet's managed and passkey adapters remain experimental; see [the implemented
 contract](../../reference-wallet/CUSTODY.md).
 
@@ -28,6 +30,38 @@ Use an isolated non-production resource. Do not infer permission to disable a
 shared key, change an account-wide policy or schedule deletion. A provider alias
 alone is insufficient: record the resolved immutable key ID before and after each
 exercise. The signing principal and recovery administrator must be distinct.
+
+## Configure the AWS KMS qualification environment
+
+Create the protected GitHub environment `aws-kms-qualification`, require an
+independent reviewer, and set these **environment variables** (not secrets):
+
+| Variable | Value |
+| --- | --- |
+| `AWS_KMS_QUALIFICATION_ROLE_ARN` | IAM role trusted only by this repository's GitHub OIDC subject and protected environment |
+| `AWS_KMS_QUALIFICATION_REGION` | Region containing all three test keys |
+| `AWS_KMS_PRIMARY_KEY_ARN` | Immutable ARN of a pre-provisioned P-256 `SIGN_VERIFY` key |
+| `AWS_KMS_REPLACEMENT_KEY_ARN` | Immutable ARN of a distinct P-256 replacement key |
+| `AWS_KMS_DENIED_KEY_ARN` | Immutable ARN on which the role has an explicit deny for signing and public-key access |
+
+The role needs only `kms:DescribeKey`, `kms:GetPublicKey`, and `kms:Sign` on the
+primary and replacement keys. Deny those operations on the denied key. Do not grant
+`kms:CreateKey`, `kms:DisableKey`, `kms:PutKeyPolicy`, `kms:ScheduleKeyDeletion`, or
+alias mutation. GitHub exchanges its OIDC token for short-lived credentials; no AWS
+access key is stored in GitHub.
+
+Run `.github/workflows/aws-kms-qualification.yml` manually after reviewing the
+candidate commit and resource scope. The workflow fails when any identifier is
+absent, an alias is supplied, the three resources are not distinct, a check is
+skipped, or evidence does not match the candidate commit. The retained JSON contains
+key ARNs and public-key fingerprints but no challenge, signature, credential, or
+provider token.
+
+The live test is read-only. It simulates lost-key replacement by proving a new
+binding with the replacement key and proving that the original public key remains
+available for historical verification after a fresh SDK client starts. It does not
+disable or destroy the old key and therefore does not claim a destructive recovery
+exercise.
 
 ## Acceptance matrix
 
@@ -84,3 +118,5 @@ load, process restart, isolated backup restore, and Alertmanager-sourced on-call
 acknowledgement. This is an executable qualification contract. It becomes evidence
 only after a successful run records the identified deployment revision, image digest,
 KMS resource, database version, region, recovery operations and alert acknowledgement.
+Accountly is TrustWeave SaaS billing/subscription infrastructure; it is not a wallet,
+signing service, or custody provider, so its run cannot close the SDK custody gate.

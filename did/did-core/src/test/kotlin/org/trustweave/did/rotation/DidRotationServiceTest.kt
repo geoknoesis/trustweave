@@ -1,6 +1,7 @@
 package org.trustweave.did.rotation
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -299,5 +300,103 @@ class DidRotationServiceTest {
                 service(resolution = DidResolutionResult.Failure.NotFound(did))
                     .rotateDid(did, NewDidOptions(method = "example"))
             assertFalse(result.success)
+        }
+
+    // ---------------------------------------------------------------- how a refusal is explained
+
+    @Test
+    fun `a resolution error is reported with the resolver's own reason`() =
+        runBlocking<Unit> {
+            // The error a caller sees should name what actually went wrong. Collapsing every
+            // resolution failure into one message is how an operator ends up checking DNS for a
+            // problem that was a timeout.
+            val result =
+                service(
+                    resolution =
+                        DidResolutionResult.Failure.ResolutionError(did = did, reason = "upstream registry timed out"),
+                ).rotateVerificationMethod(did, oldKeyId, newKey)
+
+            assertFalse(result.success)
+            assertTrue("upstream registry timed out" in (result.error ?: ""), result.error ?: "")
+        }
+
+    @Test
+    fun `a not-found DID says so rather than reporting an unknown error`() =
+        runBlocking<Unit> {
+            val result =
+                service(resolution = DidResolutionResult.Failure.NotFound(did))
+                    .rotateVerificationMethod(did, oldKeyId, newKey)
+            assertTrue("not found" in (result.error ?: "").lowercase(), result.error ?: "")
+        }
+
+    @Test
+    fun `a failure shape with no dedicated message still produces one`() =
+        runBlocking<Unit> {
+            // MethodNotRegistered has no branch of its own, so it takes the fallback. Asserting
+            // it produces *something* keeps the fallback from being a silent empty string.
+            val result =
+                service(
+                    resolution = DidResolutionResult.Failure.MethodNotRegistered(method = "example"),
+                ).rotateVerificationMethod(did, oldKeyId, newKey)
+
+            assertFalse(result.success)
+            assertTrue((result.error ?: "").isNotBlank(), "a refusal must explain itself")
+        }
+
+    @Test
+    fun `a registrar that throws during controller rotation is reported`() =
+        runBlocking<Unit> {
+            val result =
+                service(registrar = RecordingRegistrar(failWith = IllegalStateException("registrar down")))
+                    .rotateController(did, Did("did:example:new-controller"))
+            assertFalse(result.success)
+            assertTrue("registrar down" in (result.error ?: ""), result.error ?: "")
+        }
+
+    @Test
+    fun `a new DID that finishes without returning a DID is refused`() =
+        runBlocking<Unit> {
+            // FINISHED with no did is a registrar contract violation, and rotating onto a DID
+            // nobody named would leave the caller believing it had migrated somewhere.
+            val registrar =
+                object : DidRegistrar by RecordingRegistrar() {
+                    override suspend fun createDid(
+                        method: String,
+                        options: CreateDidOptions,
+                    ): DidRegistrationResponse = DidRegistrationResponse(didState = DidState(OperationState.FINISHED, did = null))
+                }
+            val result = service(registrar = registrar).rotateDid(did, NewDidOptions(method = "example"))
+
+            assertFalse(result.success)
+            assertTrue("no DID returned" in (result.error ?: ""), result.error ?: "")
+            assertEquals(did, result.oldDid, "the caller still needs to know which DID it tried to rotate")
+        }
+
+    @Test
+    fun `method-specific options are passed to the registrar`() =
+        runBlocking<Unit> {
+            var seen: CreateDidOptions? = null
+            val registrar =
+                object : DidRegistrar by RecordingRegistrar() {
+                    override suspend fun createDid(
+                        method: String,
+                        options: CreateDidOptions,
+                    ): DidRegistrationResponse {
+                        seen = options
+                        return DidRegistrationResponse(
+                            didState = DidState(state = OperationState.FINISHED, did = "did:example:new"),
+                        )
+                    }
+                }
+            val result =
+                service(registrar = registrar)
+                    .rotateDid(did, NewDidOptions(method = "example", options = mapOf("network" to JsonPrimitive("testnet"))))
+
+            assertTrue(result.success, result.error ?: "")
+            assertEquals("did:example:new", result.newDid?.value)
+            assertTrue(
+                assertNotNull(seen).methodSpecificOptions.containsKey("network"),
+                "a caller's method options must reach the registrar, or they are decoration",
+            )
         }
 }

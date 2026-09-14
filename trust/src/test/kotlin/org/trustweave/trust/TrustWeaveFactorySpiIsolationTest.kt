@@ -10,6 +10,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.trustweave.did.telemetry.TelemetryDidMethod
 
 /**
  * Verifies SPI error isolation in TrustWeaveFactory: a provider whose `create(...)` throws
@@ -45,7 +46,9 @@ class TrustWeaveFactorySpiIsolationTest {
                 // registered method must come from the working provider.
                 val method = trustWeave.getDidMethod(SPI_ISOLATION_DID_METHOD)
                 assertNotNull(method, "Working provider should have resolved '$SPI_ISOLATION_DID_METHOD'")
-                assertIs<SpiIsolationDidMethod>(method)
+                // The registry instruments methods as it registers them, so the entry wraps what
+                // the provider produced; TelemetryDidMethod.delegate is the way back to it.
+                assertIs<SpiIsolationDidMethod>((method as? TelemetryDidMethod)?.delegate ?: method)
 
                 val did = trustWeave.createDid(method = SPI_ISOLATION_DID_METHOD).getOrThrowDid()
                 assertTrue(did.value.startsWith("did:"), "Unexpected DID: ${did.value}")

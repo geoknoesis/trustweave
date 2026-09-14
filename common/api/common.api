@@ -638,7 +638,6 @@ public final class org/trustweave/core/telemetry/Operation : java/lang/Enum {
 	public static final field DID_UPDATE Lorg/trustweave/core/telemetry/Operation;
 	public static final field KMS_GENERATE_KEY Lorg/trustweave/core/telemetry/Operation;
 	public static final field KMS_SIGN Lorg/trustweave/core/telemetry/Operation;
-	public static final field KMS_VERIFY Lorg/trustweave/core/telemetry/Operation;
 	public static final field WALLET_DELETE Lorg/trustweave/core/telemetry/Operation;
 	public static final field WALLET_GET Lorg/trustweave/core/telemetry/Operation;
 	public static final field WALLET_QUERY Lorg/trustweave/core/telemetry/Operation;

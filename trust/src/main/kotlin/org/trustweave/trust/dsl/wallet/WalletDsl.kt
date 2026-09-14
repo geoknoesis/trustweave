@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.context.WalletDslContext
 import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.telemetry.withTelemetry
 import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
 
@@ -138,12 +139,16 @@ class WalletBuilder(
                 walletContext.getWalletFactory()
                     ?: throw WalletException.WalletFactoryNotConfigured()
 
-            return@withContext walletFactory.create(
-                providerName = provider,
-                walletId = walletIdStr,
-                walletDid = walletDidStr,
-                holderDid = holderDid,
-                options = finalOptions,
-            )
+            // Instrument on the way out, so any host-supplied factory's wallet is covered rather
+            // than only the ones that remembered to wrap themselves. withTelemetry is idempotent
+            // and costs one volatile read per call while no host has installed a sink.
+            return@withContext walletFactory
+                .create(
+                    providerName = provider,
+                    walletId = walletIdStr,
+                    walletDid = walletDidStr,
+                    holderDid = holderDid,
+                    options = finalOptions,
+                ).withTelemetry()
         }
 }

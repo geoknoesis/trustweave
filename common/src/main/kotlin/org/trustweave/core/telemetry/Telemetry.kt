@@ -137,7 +137,17 @@ public object Telemetry {
     private fun reasonOf(failure: Throwable): String = failure.javaClass.simpleName
 }
 
-/** What the SDK was doing. Kept coarse: these become metric labels. */
+/**
+ * What the SDK was doing. Kept coarse: these become metric labels.
+ *
+ * Every value here is emitted by at least one call site. That is a deliberate constraint rather
+ * than an accident: a host charting an operation that nothing ever reports sees a permanent zero
+ * series and cannot tell "not instrumented" from "never happened", which is worse than no series
+ * at all. A value with no emitter belongs in a commit that adds one, not in this enum.
+ *
+ * There is no `KMS_VERIFY`: `KeyManagementService` has no verify operation, so the value could
+ * only ever have been a zero series.
+ */
 public enum class Operation {
     DID_RESOLVE,
     DID_CREATE,
@@ -145,7 +155,6 @@ public enum class Operation {
     DID_DEACTIVATE,
     KMS_GENERATE_KEY,
     KMS_SIGN,
-    KMS_VERIFY,
     WALLET_STORE,
     WALLET_GET,
     WALLET_QUERY,

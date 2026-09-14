@@ -2013,6 +2013,22 @@ public final class org/trustweave/did/storage/StorageBackend : java/lang/Enum {
 	public static fun values ()[Lorg/trustweave/did/storage/StorageBackend;
 }
 
+public final class org/trustweave/did/telemetry/TelemetryDidMethod : org/trustweave/did/DidMethod {
+	public fun <init> (Lorg/trustweave/did/DidMethod;)V
+	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
+	public final fun getDelegate ()Lorg/trustweave/did/DidMethod;
+	public fun getMethod ()Ljava/lang/String;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/telemetry/TelemetryDidMethodKt {
+	public static final fun withTelemetry (Lorg/trustweave/did/DidMethod;)Lorg/trustweave/did/DidMethod;
+}
+
 public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun extractAllVerificationMethodIds (Lorg/trustweave/did/model/DidDocument;)Ljava/util/Set;
 	public static final fun findVerificationMethod (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/VerificationMethodId;)Lorg/trustweave/did/model/VerificationMethod;

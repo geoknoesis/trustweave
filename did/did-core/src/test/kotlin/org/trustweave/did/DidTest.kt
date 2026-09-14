@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.telemetry.TelemetryDidMethod
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
@@ -60,7 +61,8 @@ class DidRegistryTest {
             }
 
         registry.register(mockMethod)
-        assertEquals(mockMethod, registry.get("test"))
+        // register instruments on the way in, so the entry wraps what was registered.
+        assertEquals(mockMethod, (registry.get("test") as TelemetryDidMethod).delegate)
         assertNull(registry.get("nonexistent"))
 
         registry.clear()

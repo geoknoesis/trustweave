@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.RegistryBasedResolver
 import org.trustweave.did.spi.DidMethodProvider
+import org.trustweave.did.telemetry.withTelemetry
 import org.trustweave.kms.KeyManagementService
 import java.util.ServiceLoader
 import java.util.concurrent.ConcurrentHashMap
@@ -50,7 +51,13 @@ class DidMethodRegistry {
      * Registers a DID method.
      */
     fun register(method: DidMethod) {
-        methods[method.method] = method
+        // Instrument on the way in, so a plugin is covered the day it is registered rather than
+        // when someone remembers to wrap it. withTelemetry is idempotent and costs one volatile
+        // read per call while no host has installed a sink.
+        //
+        // This means [get] returns a TelemetryDidMethod wrapping what was registered, not that
+        // same instance. TelemetryDidMethod.delegate is the way back to it.
+        methods[method.method] = method.withTelemetry()
     }
 
     /**
@@ -235,7 +242,9 @@ class DidMethodRegistry {
                         failures.add(
                             DidMethodAutoRegisterFailure(
                                 phase = "environment",
-                                message = "Skipped method '$methodName': provider ${provider::class.java.name} missing required environment variables",
+                                message =
+                                    "Skipped method '$methodName': provider " +
+                                        "${provider::class.java.name} missing required environment variables",
                             ),
                         )
                         continue
@@ -258,7 +267,9 @@ class DidMethodRegistry {
                         failures.add(
                             DidMethodAutoRegisterFailure(
                                 phase = "create",
-                                message = "Provider ${provider::class.java.name} failed for method '$methodName': ${e.message ?: e::class.java.simpleName}",
+                                message =
+                                    "Provider ${provider::class.java.name} failed for method " +
+                                        "'$methodName': ${e.message ?: e::class.java.simpleName}",
                                 cause = e,
                             ),
                         )

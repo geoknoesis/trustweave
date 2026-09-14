@@ -50,11 +50,23 @@ Both labels are closed enums, so the series count is fixed no matter what traffi
 | `operation` | Emitted from |
 |---|---|
 | `did_resolve` | `CachingDidResolver.resolve` |
+| `did_create`, `did_update`, `did_deactivate` | `TelemetryDidMethod`, applied by `DidMethodRegistry.register` |
 | `kms_generate_key`, `kms_sign` | `TelemetryKeyManagementService` |
-| `credential_issue`, `credential_verify` | `DefaultCredentialService` |
+| `wallet_store`, `wallet_get`, `wallet_query`, `wallet_delete` | `TelemetryWallet`, applied when the wallet DSL builds a wallet |
+| `credential_issue`, `credential_verify`, `credential_verify_presentation` | `DefaultCredentialService` |
+| `credential_revocation_check` | `DefaultCredentialService.status` |
 
-Other `Operation` values are declared and carry a zero series until their call sites are
-instrumented; the enum is the contract, and a host can chart against it today.
+**Every declared operation appears in this table.** `scripts/check-telemetry-operations.py` fails
+the build if a value is declared with no main-source emitter, or emitted without being declared, so
+the enum stays a contract about what the library reports rather than a list of intentions. A value
+nothing emits is worse than no value: a host charting it sees a permanent zero series and cannot
+tell "not instrumented" from "never happened". Removing the value is always an acceptable fix.
+
+There is no `kms_verify`: `KeyManagementService` has no verify operation to report.
+
+`did.method` is attached to the DID operations, `kms.algorithm` to the KMS ones, and
+`wallet.read` (`list` or `query`) distinguishes the two shapes of `wallet_query`. Nothing that
+identifies a subject is ever attached — not a DID, not a credential id, not a result count.
 
 ### Outcomes
 

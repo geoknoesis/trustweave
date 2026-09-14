@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
+import org.trustweave.did.telemetry.TelemetryDidMethod
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
@@ -155,6 +156,9 @@ class DidMethodEdgeCasesTest {
             }
         }
 
+    /** The instance handed to `register`, recovered from the instrumented entry it is stored as. */
+    private fun registered(entry: DidMethod?): DidMethod? = (entry as? TelemetryDidMethod)?.delegate ?: entry
+
     @Test
     fun `test DidRegistry register multiple methods`() {
         val method1 = createMockDidMethod("method1")
@@ -163,8 +167,9 @@ class DidMethodEdgeCasesTest {
         registry.register(method1)
         registry.register(method2)
 
-        assertEquals(method1, registry.get("method1"))
-        assertEquals(method2, registry.get("method2"))
+        // register instruments on the way in, so the entry wraps what was registered.
+        assertEquals(method1, registered(registry.get("method1")))
+        assertEquals(method2, registered(registry.get("method2")))
     }
 
     @Test
@@ -175,7 +180,7 @@ class DidMethodEdgeCasesTest {
         registry.register(method1)
         registry.register(method2)
 
-        assertEquals(method2, registry.get("test"))
+        assertEquals(method2, registered(registry.get("test")))
     }
 
     @Test

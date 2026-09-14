@@ -136,15 +136,19 @@ internal class JsonSchemaValidator : SchemaValidator {
             }
         }
 
-        // Validate each property against its schema
-        if (properties != null) {
-            for ((key, value) in obj.entries) {
-                val propSchema = properties[key]?.jsonObject
-                if (propSchema != null) {
-                    errors.addAll(validateValue(value, propSchema, "$path/$key"))
-                } else if (additionalProperties is JsonPrimitive && additionalProperties.booleanOrNull == false) {
-                    errors.add(err("$path/$key", "Additional property '$key' is not allowed", "additional_properties"))
-                }
+        // Validate each property against its schema, and refuse the ones no schema matched.
+        //
+        // The additionalProperties check deliberately sits outside any "properties != null" guard:
+        // JSON Schema applies it to every property "properties" did not match, so a schema that
+        // declares additionalProperties:false and nothing else forbids *all* properties. Nesting
+        // this inside the properties loop used to mean such a schema constrained nothing at all.
+        val forbidsAdditional = additionalProperties is JsonPrimitive && additionalProperties.booleanOrNull == false
+        for ((key, value) in obj.entries) {
+            val propSchema = properties?.get(key)?.jsonObject
+            if (propSchema != null) {
+                errors.addAll(validateValue(value, propSchema, "$path/$key"))
+            } else if (forbidsAdditional) {
+                errors.add(err("$path/$key", "Additional property '$key' is not allowed", "additional_properties"))
             }
         }
 

@@ -65,6 +65,16 @@ class IssuanceRequestBuilder(
     private var validUntil: Instant? = null
 
     /**
+     * An expiry expressed as a duration, resolved against [issuedAt] at [build] time.
+     *
+     * Held rather than applied immediately so that the order of calls inside the builder block
+     * does not change the result: `expiresIn(30.days)` before `issuedAt(t)` used to measure from
+     * "now" and after it from `t`, which is not a distinction a caller writing a DSL block should
+     * have to think about.
+     */
+    private var expiresAfter: Duration? = null
+
+    /**
      * Set issuer from DID.
      */
     fun issuer(did: Did) {
@@ -178,11 +188,13 @@ class IssuanceRequestBuilder(
     }
 
     /**
-     * Set expiration duration from now.
+     * Set the expiry as a duration after [issuedAt], whenever that ends up being set.
+     *
+     * Resolved at [build] time, so calling this before or after `issuedAt` gives the same answer.
+     * An explicit [validUntil] wins: a caller who states the instant means the instant.
      */
     fun expiresIn(duration: JavaDuration) {
-        val kotlinDuration = Duration.parse(duration.toString())
-        this.validUntil = issuedAt.plus(kotlinDuration)
+        this.expiresAfter = Duration.parse(duration.toString())
     }
 
     /**
@@ -191,6 +203,7 @@ class IssuanceRequestBuilder(
     fun build(): IssuanceRequest {
         val finalIssuer = issuer ?: throw IllegalArgumentException("Issuer is required")
         val finalSubject = credentialSubject ?: throw IllegalArgumentException("Subject is required")
+        val finalValidUntil = validUntil ?: expiresAfter?.let { issuedAt.plus(it) }
 
         // Ensure VerifiableCredential type is included
         val finalTypes =
@@ -211,7 +224,7 @@ class IssuanceRequestBuilder(
             id = id,
             issuedAt = issuedAt,
             validFrom = validFrom,
-            validUntil = validUntil,
+            validUntil = finalValidUntil,
         )
     }
 }

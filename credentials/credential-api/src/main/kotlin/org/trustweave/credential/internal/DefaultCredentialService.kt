@@ -255,6 +255,19 @@ internal class DefaultCredentialService(
         presentation: VerifiablePresentation,
         trustEvaluator: TrustEvaluator?,
         options: VerificationOptions,
+    ): VerificationResult =
+        Telemetry.measure(Operation.CREDENTIAL_VERIFY_PRESENTATION) {
+            verifyPresentationInternal(presentation, trustEvaluator, options).also { result ->
+                if (result is VerificationResult.Invalid) {
+                    Telemetry.rejected(Operation.CREDENTIAL_VERIFY_PRESENTATION, result::class.simpleName ?: "Invalid")
+                }
+            }
+        }
+
+    private suspend fun verifyPresentationInternal(
+        presentation: VerifiablePresentation,
+        trustEvaluator: TrustEvaluator?,
+        options: VerificationOptions,
     ): VerificationResult {
         // Input validation for security and stability
         try {
@@ -583,13 +596,29 @@ internal class DefaultCredentialService(
 
         val revoked =
             if (credential.credentialStatus != null && revocationManager != null) {
-                try {
-                    val revocationStatus = revocationManager.checkRevocationStatus(credential)
-                    revocationStatus.revoked || revocationStatus.suspended
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    true // Fail-closed: treat revocation check errors as revoked
+                Telemetry.measure(Operation.CREDENTIAL_REVOCATION_CHECK) {
+                    try {
+                        val revocationStatus = revocationManager.checkRevocationStatus(credential)
+                        (revocationStatus.revoked || revocationStatus.suspended).also { withdrawn ->
+                            if (withdrawn) {
+                                Telemetry.rejected(
+                                    Operation.CREDENTIAL_REVOCATION_CHECK,
+                                    if (revocationStatus.revoked) "Revoked" else "Suspended",
+                                )
+                            }
+                        }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // Fail-closed: an unanswerable status question is treated as revoked, and
+                        // reported as such, so a host can see the difference between a credential
+                        // that was withdrawn and a status endpoint that stopped answering.
+                        Telemetry.rejected(
+                            Operation.CREDENTIAL_REVOCATION_CHECK,
+                            "Unresolved:${e.javaClass.simpleName}",
+                        )
+                        true
+                    }
                 }
             } else {
                 false

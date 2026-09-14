@@ -20,6 +20,22 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Provides comprehensive revocation and suspension management for testing and development.
  * For production use, consider implementing persistent storage.
+ *
+ * ## A status list this manager does not hold
+ *
+ * Asked about a status list it has never seen, this manager **throws** rather than answering.
+ *
+ * That is a deliberate change from returning "not revoked". This manager's state is one JVM's
+ * heap, so "I have no such list" is overwhelmingly likely to mean the list lives somewhere else —
+ * not that the credential is in good standing. Answering "not revoked" quietly passed the
+ * credential and, worse, did so *around* `RevocationFailurePolicy`: the host had configured how
+ * an unanswerable revocation check should be treated, and never got asked.
+ *
+ * Throwing routes the decision back to that policy. `RevocationChecker` catches it and applies
+ * FAIL_CLOSED, FAIL_WITH_WARNING or FAIL_OPEN as the host configured, and
+ * `CredentialService.status` treats it as revoked, which is what its own fail-closed comment
+ * always said it would do. A host that genuinely wants unknown lists to pass can still say so —
+ * it just has to say it.
  */
 internal class InMemoryCredentialRevocationManager : CredentialRevocationManager {
     // Status list metadata
@@ -165,6 +181,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             )
 
         val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
+        if (!statusLists.containsKey(statusListId)) throw unknownStatusList(statusListId)
         val index =
             credentialStatus.statusListIndex?.toIntOrNull()
                 ?: credential.id?.value?.let { getCredentialIndex(it, statusListId) }
@@ -184,13 +201,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         statusListId: StatusListId,
         index: Int,
     ): RevocationStatus {
-        val metadata =
-            statusLists[statusListId] ?: return RevocationStatus(
-                revoked = false,
-                suspended = false,
-                statusListId = statusListId,
-                index = index,
-            )
+        val metadata = statusLists[statusListId] ?: throw unknownStatusList(statusListId)
 
         val isRevoked = revocationData[statusListId]?.get(index) == true
         val isSuspended = suspensionData[statusListId]?.get(index) == true
@@ -207,6 +218,9 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         credentialId: String,
         statusListId: StatusListId,
     ): RevocationStatus {
+        if (!statusLists.containsKey(statusListId)) throw unknownStatusList(statusListId)
+        // A known list with no index for this credential is a real answer: the credential was
+        // never assigned a position on it, so nothing on it can have revoked the credential.
         val index =
             getCredentialIndex(credentialId, statusListId)
                 ?: return RevocationStatus(
@@ -428,6 +442,21 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             candidate
         }
     }
+
+    /**
+     * The credential names a status list this manager does not hold, so it cannot answer.
+     *
+     * [IllegalStateException] rather than a "not revoked" result, and rather than
+     * [IllegalArgumentException]: the caller's request is well-formed, this manager's state simply
+     * does not cover it. `RevocationChecker` maps it to "Revocation manager error" and then
+     * applies the host's configured failure policy.
+     */
+    private fun unknownStatusList(statusListId: StatusListId) =
+        IllegalStateException(
+            "Status list '${statusListId.value}' is not held by this in-memory revocation manager, so the " +
+                "credential's revocation status cannot be determined. Register the list, or configure a manager " +
+                "that can resolve it.",
+        )
 
     private fun updateMetadata(statusListId: StatusListId) {
         val metadata = statusLists[statusListId] ?: return

@@ -133,7 +133,7 @@ class ShaclValidator : SchemaValidator {
             val minCount = propertyShape["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
 
             if (path != null && minCount > 0) {
-                val fieldName = path.substringAfterLast("/").substringAfterLast(":")
+                val fieldName = fieldNameOf(path)
                 if (!claimsObject.containsKey(fieldName)) {
                     errors.add(
                         SchemaValidationError(
@@ -198,7 +198,7 @@ class ShaclValidator : SchemaValidator {
                 val minCount = propertyObj["sh:minCount"]?.jsonPrimitive?.intOrNull ?: 0
 
                 if (path != null && minCount > 0) {
-                    val fieldName = path.substringAfterLast("/").substringAfterLast(":")
+                    val fieldName = fieldNameOf(path)
                     if (!subjectClaimsObject.containsKey(fieldName)) {
                         errors.add(
                             SchemaValidationError(
@@ -225,8 +225,7 @@ class ShaclValidator : SchemaValidator {
     ): List<SchemaValidationError> {
         val errors = mutableListOf<SchemaValidationError>()
 
-        // Extract field name from path (e.g., "credentialSubject.degree" -> "degree")
-        val fieldName = path.substringAfterLast("/").substringAfterLast(":").substringAfterLast(".")
+        val fieldName = fieldNameOf(path)
 
         val fieldValue = subject[fieldName]
 
@@ -341,6 +340,23 @@ class ShaclValidator : SchemaValidator {
 
         return errors
     }
+
+    /**
+     * The claim name a `sh:path` refers to, e.g. `credentialSubject.degree` -> `degree`.
+     *
+     * This exists as one function because it used to exist as three expressions, and two of them
+     * omitted the trailing `.` segment. The consequence was that a shape whose path was written
+     * the way this class's own KDoc example writes it — `credentialSubject.degree` — had its
+     * `sh:minCount` check look for a claim literally named "credentialSubject.degree", so a
+     * required property was reported missing even when it was present, while the datatype and
+     * length checks on the same shape resolved the same path correctly. Every constraint has to
+     * agree about what a path names.
+     */
+    private fun fieldNameOf(path: String): String =
+        path
+            .substringAfterLast("/")
+            .substringAfterLast(":")
+            .substringAfterLast(".")
 
     /**
      * Validate datatype constraint.

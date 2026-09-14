@@ -99,8 +99,11 @@ dependencies {
         api(project(":credentials:plugins:status-list:publishing"))
         api(project(":credentials:plugins:status-list:server"))
         api(project(":credentials:plugins:anchor"))
-        api(project(":credentials:plugins:platforms:servicenow"))
-        api(project(":credentials:plugins:platforms:salesforce"))
+        // NOTE: credentials:plugins:platforms:salesforce and :servicenow are deliberately absent.
+        // Every public method in both throws: they are structure without an implementation, marked
+        // "stub" in trustweave-capabilities.json. Exporting them here advertised Salesforce and
+        // ServiceNow integration to anyone taking the BOM and delivered a thrown exception. A
+        // consumer who wants the skeleton can still depend on the module directly.
         api(project(":credentials:plugins:platforms:entra"))
         api(project(":credentials:plugins:oidc4vci"))
         api(project(":credentials:plugins:oidc4vp"))

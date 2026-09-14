@@ -28,11 +28,18 @@ import org.trustweave.core.exception.TrustWeaveException
  *     credentialType = "EmployeeCredential"
  * )
  * ```
+ *
+ * ## Status: stub
+ *
+ * This module is marked `stub` in `trustweave-capabilities.json` and is deliberately **not**
+ * exported by `distribution:bom`. Every method below throws; there is no ServiceNow client
+ * here, only the shape one would take. Depend on this module directly if the skeleton is
+ * useful; do not expect it to do anything.
  */
 class ServiceNowIntegration(
     val instanceUrl: String,
     val username: String,
-    val password: String
+    val password: String,
 ) {
     init {
         require(instanceUrl.isNotBlank()) { "ServiceNow instance URL must be specified" }
@@ -51,12 +58,13 @@ class ServiceNowIntegration(
     suspend fun issueCredential(
         tableName: String,
         recordId: String,
-        credentialType: String
+        credentialType: String,
     ): Any {
         // TODO: Implement ServiceNow credential issuance
         throw TrustWeaveException.Unknown(
-            message = "ServiceNow integration requires ServiceNow REST API implementation. " +
-            "Structure is ready for implementation."
+            message =
+                "ServiceNow integration requires ServiceNow REST API implementation. " +
+                    "Structure is ready for implementation.",
         )
     }
 
@@ -69,9 +77,9 @@ class ServiceNowIntegration(
     suspend fun verifyCredential(credentialId: String): Any {
         // TODO: Implement ServiceNow credential verification
         throw TrustWeaveException.Unknown(
-            message = "ServiceNow integration requires ServiceNow REST API implementation. " +
-            "Structure is ready for implementation."
+            message =
+                "ServiceNow integration requires ServiceNow REST API implementation. " +
+                    "Structure is ready for implementation.",
         )
     }
 }
-

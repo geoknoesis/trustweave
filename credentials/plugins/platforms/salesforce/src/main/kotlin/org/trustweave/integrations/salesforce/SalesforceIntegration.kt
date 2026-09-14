@@ -31,13 +31,20 @@ import org.trustweave.core.exception.TrustWeaveException
  *     credentialType = "IdentityCredential"
  * )
  * ```
+ *
+ * ## Status: stub
+ *
+ * This module is marked `stub` in `trustweave-capabilities.json` and is deliberately **not**
+ * exported by `distribution:bom`. Every method below throws; there is no Salesforce client
+ * here, only the shape one would take. Depend on this module directly if the skeleton is
+ * useful; do not expect it to do anything.
  */
 class SalesforceIntegration(
     val instanceUrl: String,
     val clientId: String,
     val clientSecret: String,
     val username: String,
-    val password: String
+    val password: String,
 ) {
     init {
         require(instanceUrl.isNotBlank()) { "Salesforce instance URL must be specified" }
@@ -58,12 +65,13 @@ class SalesforceIntegration(
     suspend fun issueCredential(
         objectName: String,
         recordId: String,
-        credentialType: String
+        credentialType: String,
     ): Any {
         // TODO: Implement Salesforce credential issuance
         throw TrustWeaveException.Unknown(
-            message = "Salesforce integration requires Salesforce REST API implementation. " +
-            "Structure is ready for implementation."
+            message =
+                "Salesforce integration requires Salesforce REST API implementation. " +
+                    "Structure is ready for implementation.",
         )
     }
 
@@ -76,9 +84,9 @@ class SalesforceIntegration(
     suspend fun verifyCredential(credentialId: String): Any {
         // TODO: Implement Salesforce credential verification
         throw TrustWeaveException.Unknown(
-            message = "Salesforce integration requires Salesforce REST API implementation. " +
-            "Structure is ready for implementation."
+            message =
+                "Salesforce integration requires Salesforce REST API implementation. " +
+                    "Structure is ready for implementation.",
         )
     }
 }
-

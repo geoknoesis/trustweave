@@ -1,21 +1,141 @@
 {
+  "anchors:anchor-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:algorand": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:arbitrum": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:base": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:bitcoin": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:cardano": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:ethereum": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:evm-base": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:ganache": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:indy": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:optimism": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "anchors:plugins:polygon": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
   "anchors:plugins:starknet": {
     "maturity": "stub",
     "operations": [],
     "formats": []
   },
-  "did:plugins:threebox": {
-    "maturity": "stub",
+  "anchors:plugins:zksync": {
+    "maturity": "experimental",
     "operations": [],
     "formats": []
   },
-  "did:plugins:tezos": {
-    "maturity": "stub",
+  "common": {
+    "maturity": "experimental",
     "operations": [],
     "formats": []
   },
-  "did:plugins:btcr": {
-    "maturity": "stub",
+  "common-mp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "contract": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:avp-authorization-server": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:credential-api": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:credential-models-mp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:oidc4vci-server": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:anchor": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:avp-micro": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:chapi": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:didcomm": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:eudiw": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:jades": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:mdl": {
+    "maturity": "experimental",
     "operations": [],
     "formats": []
   },
@@ -29,16 +149,391 @@
       "ldp_vc"
     ]
   },
-  "wallet:plugins:file": {
+  "credentials:plugins:oidc4vp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:openid-federation": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:platforms:entra": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:platforms:salesforce": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:platforms:servicenow": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:presentation-exchange": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:siop": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:status-list:bitstring": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:status-list:database": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:status-list:publishing": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:status-list:server": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:status-list:token": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:plugins:verifiable-intent": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "credentials:vc-api-server": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:did-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:did-identifiers-mp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:base": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:btcr": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:cheqd": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:ebsi": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:ens": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:ethr": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:godiddy": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:ion": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:jwk": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:key": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:orb": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:peer": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:plc": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:polygon": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:sidetree-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:sol": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:tezos": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:threebox": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "did:plugins:web": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:registrar": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:registrar-server-ktor": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "did:registrar-server-spring": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "distribution:all": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "distribution:bom": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "distribution:conformance": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "distribution:examples": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:kms-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:aws": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:azure": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:cloudhsm": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:cyberark": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:entrust": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:fortanix": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:google": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:hashicorp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:ibm": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:inmemory": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:pkcs11": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:thales": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:thales-luna": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:utimaco": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:venafi": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "kms:plugins:waltid": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "observability": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "reference-wallet:android": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "reference-wallet:android:app": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "reference-wallet:android:shared": {
+    "maturity": "stub",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:cades": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:etsi-validation": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:jades": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:pades": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:trust-lists": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:tsa-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "signatures:xades": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "testkit": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "trust": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "trust-registry:plugins:database": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "trust-registry:trust-registry-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "trust-registry:trust-registry-server": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "wallet:plugins:cloud": {
     "maturity": "experimental",
     "operations": [
       "store",
       "get",
       "list",
       "list-records",
+      "recover-records",
       "delete",
-      "query",
-      "recover-records"
+      "query"
     ],
     "formats": [
       "json-vc"
@@ -61,19 +556,34 @@
       "json-vc"
     ]
   },
-  "wallet:plugins:cloud": {
+  "wallet:plugins:file": {
     "maturity": "experimental",
     "operations": [
       "store",
       "get",
       "list",
       "list-records",
-      "recover-records",
       "delete",
-      "query"
+      "query",
+      "recover-records"
     ],
     "formats": [
       "json-vc"
     ]
+  },
+  "wallet:wallet-core": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "wallet:wallet-core-mp": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
+  },
+  "wallet:wallet-services": {
+    "maturity": "experimental",
+    "operations": [],
+    "formats": []
   }
 }

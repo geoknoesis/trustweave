@@ -1,0 +1,37 @@
+{
+  "source": "GitHub Actions CI run 34737199525 at 7eb96854 (green)",
+  "tests": {
+    "suites": 501,
+    "tests": 4005,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 11
+  },
+  "coverage": {
+    "INSTRUCTION": {
+      "covered": 196937,
+      "total": 346077,
+      "percent": 56.91
+    },
+    "BRANCH": {
+      "covered": 11483,
+      "total": 28129,
+      "percent": 40.82
+    },
+    "LINE": {
+      "covered": 28699,
+      "total": 49284,
+      "percent": 58.23
+    },
+    "METHOD": {
+      "covered": 4878,
+      "total": 7935,
+      "percent": 61.47
+    },
+    "CLASS": {
+      "covered": 1947,
+      "total": 2882,
+      "percent": 67.56
+    }
+  }
+}

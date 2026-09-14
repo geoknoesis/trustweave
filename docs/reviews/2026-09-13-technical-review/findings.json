@@ -1,0 +1,133 @@
+[
+  {
+    "id": "T1",
+    "severity": "high",
+    "category": "Security and access control",
+    "title": "The AVP authorization server enforces replay, single-use and spend caps in unbounded process memory",
+    "observation": "AuthorizationEngine's three state stores are plain ConcurrentHashMaps with no eviction and no persistence. NonceStore.recorded gains an entry per (credentialId, nonce) presented; ConsumptionLedger.used gains one per authorization id; DailyBudgetLedger.spend is keyed by (agent, credential, UTC date) and never drops an old date.",
+    "impact": "Two distinct failures. Availability: the keys are caller-supplied, so ordinary traffic — or an attacker — grows all three maps without bound until the process dies. Correctness: replay prevention, single-use enforcement and daily spend caps are process-local and reset on restart, so a restarted instance re-accepts every nonce it has ever seen, and a two-replica deployment enforces none of the three.",
+    "evidence": "credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/state/Stores.kt — 33 lines, no eviction path, no durable store. AuthorizationEngine lines 24-54 use them for the actual authorization decision.",
+    "contrast": "PostgresIntentLedger in credentials/plugins/verifiable-intent solves exactly this problem durably, with synchronous commit, FOR UPDATE locking and an occurrence trigger. The pattern already exists in this repository.",
+    "remediation": "Give the three stores a durable, shared backing with the same fail-closed semantics as the intent ledger, and bound the in-memory path with an eviction policy tied to nonce and authorization lifetimes. Until then, state the limitation in AvpAuthorizationServer's KDoc, which currently documents only the bind address.",
+    "status": "closed",
+    "resolution": "Closed. AuthorizationStore replaces the three ConcurrentHashMaps with one atomic check-and-record. InMemoryAuthorizationStore bounds retention by the authorization's own expiry, refuses at capacity rather than evicting a live nonce, and serializes on a fixed stripe array instead of the unbounded per-credential mutex map. PostgresAuthorizationStore makes the guarantees shared and durable; PostgresAuthorizationStoreTest proves against a real PostgreSQL that two instances against one database reject the second presentation of a nonce, that a restart does not forget, that one daily cap spans both, and that an unreachable database is a denial rather than an admission.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T2",
+    "severity": "medium",
+    "category": "Security and access control",
+    "title": "Half the shipped servers still have no authentication hook",
+    "observation": "withAuthentication and the fail-closed mutation default reached the DID registrar, VC API and status-list servers. The AVP authorization server, the OIDC4VCI server and the trust-registry server did not. The AVP route carries a comment saying it is 'unauthenticated by design (it expects a proxy in front)'.",
+    "impact": "The SDK now has a HostAuthentication primitive that half its servers do not use, so the same class of deployment mistake the primitive was built to prevent is still reachable — on the server that authorizes payments. trust-registry does gate mutations behind its own bearer token and OIDC4VCI checks protocol tokens, so AVP is the sharp case.",
+    "evidence": "grep for withAuthentication across the six server modules: three present, three absent. credentials/avp-authorization-server/.../AvpAuthorizationRoutes.kt line 42.",
+    "remediation": "Extend withAuthentication to the remaining three, defaulting to fail-closed on mutating routes, so a deployment that configures nothing refuses rather than accepts.",
+    "status": "closed",
+    "resolution": "Closed. withAuthentication now reaches all six servers. The AVP authorization server and the OID4VCI issuer refuse their mutating routes with 503 until the host declares what protects them; the trust registry composes the shared gate with its existing apiToken so a deployment using mTLS or a gateway no longer needs to invent a bearer token. OID4VCI's /token, /credential, /deferred_credential and /notification are exempt by the server's own declaration: their callers are wallets, which hold no host credential.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T3",
+    "severity": "medium",
+    "category": "Security and access control",
+    "title": "The live custody qualification records an authorization control it cannot establish",
+    "observation": "AwsKmsLiveQualificationTest asserts only `denied is SignResult.Failure`. SignResult.Failure covers KeyNotFound, UnsupportedAlgorithm and Error, so a mistyped ARN, a wrong region or a transient network fault all satisfy it. The test then writes \"unauthorizedKeyRejected\": true into the evidence unconditionally.",
+    "impact": "The evidence asserts that IAM denial is enforced when the test cannot tell denial from absence. check-custody-evidence.py requires that field to be present and true, so the gate inherits the same blind spot rather than catching it.",
+    "evidence": "kms/plugins/aws/src/test/kotlin/org/trustweave/awskms/AwsKmsLiveQualificationTest.kt, the denied-key assertion and the writeEvidence checks block.",
+    "remediation": "Assert on the failure shape and its reason — an AWS AccessDeniedException, not merely any Failure — and derive the evidence field from that assertion instead of writing a literal.",
+    "status": "closed",
+    "resolution": "Closed. The denial check now asserts an AWS AccessDeniedException and explicitly refuses KeyNotFound, which is what a mistyped ARN or wrong region produces. Every evidence boolean is derived from an assertion that ran, through an ObservedChecks recorder that refuses to emit a file missing any required check. check-custody-evidence.py additionally requires denialResultType Error and denialErrorCode AccessDeniedException, so the gate no longer inherits the blind spot.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T4",
+    "severity": "medium",
+    "category": "Security and access control",
+    "title": "The custody qualification has never been executed",
+    "observation": "aws-kms-qualification.yml is workflow_dispatch only and has zero runs. AwsKmsLiveQualificationTest is gated behind TRUSTWEAVE_LIVE_CUSTODY and sits in the approved skip list.",
+    "impact": "Live AWS KMS custody remains unqualified in fact, even though the machinery to qualify it now exists. No custody profile is qualified for any provider.",
+    "remediation": "Provision the three qualification keys and the IAM deny, run the workflow once, and retain the artifact. Then the custody runbook can name a qualified provider instead of stating that none is.",
+    "status": "open",
+    "also_found_by": "docs/reviews/2026-09-13-code-review TW-R15-01"
+  },
+  {
+    "id": "T5",
+    "severity": "medium",
+    "category": "Configuration and data",
+    "title": "The BOM exports modules whose every method throws",
+    "observation": "distribution/bom exports credentials:plugins:platforms:salesforce and :servicenow with api(project(...)). Every public method in both throws TrustWeaveException.Unknown(\"... requires ... implementation. Structure is ready for implementation\"). Both are in the unassessed ratchet but neither carries a maturity, while starknet, threebox, tezos and btcr — equally unimplemented — are correctly marked stub.",
+    "impact": "A consumer taking the BOM gets modules that advertise Salesforce and ServiceNow integration and deliver a thrown exception. The catalog has the vocabulary to say so and does not use it. Both also return Any rather than a typed result, so the signature carries no information either.",
+    "evidence": "distribution/bom/build.gradle.kts lines 102-103; SalesforceIntegration.kt lines 58-82; trustweave-capabilities.json.",
+    "remediation": "Mark both stub in the capability catalog, and either drop them from the BOM or make the BOM's own documentation state which of its members are stubs.",
+    "status": "closed",
+    "resolution": "Closed. Both modules are marked stub in trustweave-capabilities.json, removed from distribution/bom, and their KDoc says every method throws. The unassessed ratchet fell from 102 to 100.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T6",
+    "severity": "medium",
+    "category": "Testing and documentation",
+    "title": "Coverage is static and the issuance and verification core remains under half covered",
+    "observation": "Merged coverage is 58.23% line and 40.82% branch, against 58.05% and 40.72% two days earlier. The floors are 57.0 and 40.0 — set just under the measurement, so the gate ratchets nothing. credentials/credential-api, roughly 4,100 lines and the module that issues and verifies credentials, is under half covered; did/registrar is near 11%; didcomm near 32%.",
+    "impact": "The recently reviewed modules are excellent — observability 97.5%, verifiable-intent 90% — and the core the whole library rests on is not. The score cannot approach 9.5 while the primary module is the least tested large one.",
+    "remediation": "Work top-down by uncovered line count, starting with credential-api, then did-core and did/registrar. Raise each module's floor as it lands rather than raising the global floor at the end.",
+    "status": "open"
+  },
+  {
+    "id": "T7",
+    "severity": "low",
+    "category": "Observability and diagnosability",
+    "title": "Library instrumentation reaches ten call sites and declares operations that never fire",
+    "observation": "Telemetry.measure and Telemetry.rejected appear at ten call sites: DID resolve, credential issue and verify, and KMS generate and sign. The Operation enum also declares DID_CREATE, DID_UPDATE, DID_DEACTIVATE, KMS_VERIFY, WALLET_STORE, WALLET_GET, WALLET_QUERY, WALLET_DELETE, CREDENTIAL_VERIFY_PRESENTATION and CREDENTIAL_REVOCATION_CHECK, none of which is ever emitted. 33 of 792 main-source files reference a logger, unchanged.",
+    "impact": "A host charting trustweave_library_operations_total sees a permanent zero series for two thirds of the enum and cannot tell 'not instrumented' from 'never happened'. Wallet and revocation paths remain as silent as before.",
+    "remediation": "Instrument the declared operations, or drop the ones that are not going to be, so the enum is a contract rather than an aspiration.",
+    "status": "closed",
+    "resolution": "Closed. KMS_VERIFY is gone — KeyManagementService has no verify operation. The DID write lifecycle, all four wallet operations, presentation verification and revocation checks are now instrumented, wired at DidMethodRegistry.register and at the wallet DSL's build so a host-supplied plugin is covered without opting in. scripts/check-telemetry-operations.py fails the build if a declared operation has no main-source emitter, or an emitter has no declaration.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T8",
+    "severity": "low",
+    "category": "Deployment and release",
+    "title": "Nothing has been published",
+    "observation": "v0.7.0 is tagged. There is no GitHub release and no artifact on Maven Central. The reviewer-gated publish job exists and has never run.",
+    "impact": "Every consumer-facing claim about the library is untested against an actual consumer. The POM, signing and SBOM wiring is verified only by generation, never by a staging upload.",
+    "remediation": "Complete Sonatype namespace verification and the publish secrets, then rehearse against a staging repository before cutting a real release.",
+    "status": "open",
+    "also_found_by": "docs/reviews/2026-09-13-code-review TW-R15-03"
+  },
+  {
+    "id": "T9",
+    "severity": "low",
+    "category": "Deployment and release",
+    "title": "Recent CI history on main is unstable",
+    "observation": "The last five CI runs on main are success, failure, success, cancelled, failure. It is green at HEAD.",
+    "impact": "Nearly half of recent pushes to main were red. The causes were self-inflicted evidence-path churn rather than product defects, but a branch that is red half the time erodes the signal that makes the gates worth having.",
+    "remediation": "Rehearse evidence-path changes on a branch. The new test_workflow_evidence_paths.py is the right instinct and would have caught most of this churn earlier.",
+    "status": "partly-closed",
+    "resolution": "Partly closed. scripts/check-workflow-evidence-paths.py asserts the property rather than a list: every module-scoped evidence path a workflow reads must be backed by a declared Gradle task output. It also surfaced that test_workflow_evidence_paths.py had never run in CI — the discovery pattern was test_check_*.py — so all three workflows now discover test_*.py. Ten consecutive green runs remain to be observed.",
+    "resolved_in": "2026-09-13 remediation pass"
+  },
+  {
+    "id": "T10",
+    "severity": "informational",
+    "category": "Method",
+    "title": "The local build could not produce a valid signal",
+    "observation": "The machine had roughly 1.6 GB free. The Gradle daemon died with a native OOM (insufficient memory for Chunk::new) and, on a retry with a smaller heap, test executors died with socket write failures. Six hs_err_pid*.log files have accumulated in the repository root; they are gitignored by the *.log rule.",
+    "impact": "None on the product. It does mean this review's build, test and coverage evidence comes from CI rather than a local run, which is stated in scores.json. JAVA_HOME also points at JDK 17 while the toolchain requires 21; Gradle's auto-provisioned JDK covers compilation, so this is cosmetic.",
+    "remediation": "Nothing in the repository. Worth knowing that local full builds need headroom this box does not currently have.",
+    "status": "informational"
+  },
+  {
+    "id": "T11",
+    "severity": "medium",
+    "category": "Testing and documentation",
+    "title": "The SHACL validator parsed one sh:path three different ways, so a required property read as missing",
+    "observation": "ShaclValidator extracted the claim name from sh:path at three sites. validatePropertyConstraint used substringAfterLast(\"/\").substringAfterLast(\":\").substringAfterLast(\".\"); the two sh:minCount checks — one in validateClaims, one in validateShaclShape — omitted the trailing substringAfterLast(\".\").",
+    "impact": "A shape whose path is written with a dot, which is how this class's own KDoc example writes it (\"credentialSubject.degree\"), had its minCount check look for a claim literally named \"credentialSubject.degree\". A present, correct property was reported missing, while the datatype and length constraints on the same shape resolved the same path correctly and passed. The documented example did not work.",
+    "evidence": "credentials/credential-api/src/main/kotlin/org/trustweave/credential/schema/internal/ShaclValidator.kt lines 136, 201 and 229 before the fix. Found by writing the module's first SHACL tests, not by inspection.",
+    "remediation": "One fieldNameOf(path) function, used by all three sites, with a KDoc saying why it exists as a function. ShaclValidatorTest asserts that every constraint agrees about what a path names, across dotted, prefixed, slash-separated and bare paths.",
+    "status": "closed",
+    "resolved_in": "2026-09-13 remediation pass, A6"
+  }
+]

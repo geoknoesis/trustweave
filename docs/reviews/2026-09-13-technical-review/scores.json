@@ -1,0 +1,95 @@
+{
+  "assessment_type": "technical-review",
+  "date": "2026-09-13",
+  "repository": "trustweave",
+  "revision": "7eb96854e839ebefe5484dfbf3178a80af7e70e0",
+  "scope": "Clean working tree on main, in sync with origin. trustweave-saas is out of scope.",
+  "rubric": "The six equally weighted categories used since 2026-09-05, so these numbers are comparable with the 09-06 (6.6), 09-10 (9.3 composite) and 09-11 (8.6) rounds. Engineering judgement, not certification.",
+  "evidence_note": "The local machine had ~1.6 GB free memory; the Gradle daemon crashed with a native OOM and test workers died mid-run, so the local build is not a valid signal. Build, test and gate evidence is taken from CI run 34737199525 at this exact commit, which is fully green.",
+  "previous": {
+    "date": "2026-09-11",
+    "source": "docs/reviews/2026-09-11-full-codebase-review/scores.json",
+    "security_and_access_control": 8.8,
+    "observability_and_diagnosability": 9.0,
+    "reliability_and_scale": 9.2,
+    "configuration_and_data": 8.8,
+    "deployment_and_release": 7.0,
+    "testing_and_documentation": 8.5,
+    "overall": 8.6
+  },
+  "current": {
+    "verdict": "The evidence pipeline is now genuinely trustworthy and CI is green with twelve gates. What holds the score down is unchanged: nothing ships, coverage is static, and one shipped authorization server keeps its security state in unbounded process memory.",
+    "security_and_access_control": 8.6,
+    "observability_and_diagnosability": 9.2,
+    "reliability_and_scale": 9.2,
+    "configuration_and_data": 8.9,
+    "deployment_and_release": 8.0,
+    "testing_and_documentation": 8.7,
+    "overall": 8.8,
+    "unrounded": "8.77"
+  },
+  "why_it_moved": {
+    "security_and_access_control": "-0.2: T1 is a pre-existing defect this round found rather than a regression — the AVP authorization server enforces replay, single-use and daily spend caps in unbounded, non-durable process memory. T3 and T4 also apply: the new live custody qualification records a control it cannot establish, and has never run.",
+    "observability_and_diagnosability": "+0.2: the library telemetry SPI, its OpenTelemetry bridge and request correlation landed, and a host overload boundary test was added. Only ten call sites are instrumented and 33 of 792 main-source files reference a logger, so the library below the six hosts is still largely silent.",
+    "reliability_and_scale": "unchanged: PKCS11 custody recovery is now tested and the evidence pipeline is sound, offset by the AVP durability gap in T1.",
+    "configuration_and_data": "+0.1: the catalog and container-image gates hold. The BOM still exports two modules whose every method throws, and neither carries a maturity.",
+    "deployment_and_release": "+1.0: CI is green at HEAD with all twelve gates, evidence is a declared Gradle output in a dedicated qualification directory, and workflow evidence paths now have their own regression test. Still no published artifact and no GitHub release, so this cannot go higher.",
+    "testing_and_documentation": "+0.2: 4,005 tests with zero failures, skips down from 15 to 11 and each justified, 135 script unit tests. Merged coverage moved 58.05% to 58.23% in two days, which is static in practice, and the floors sit just under the measurement."
+  },
+  "verified_evidence": {
+    "ci": "run 34737199525 at 7eb96854 — Build and test, Reference wallet contracts, Android app tests all success; 28 steps green including ktlint, ABI, coverage policy, VI cross-stack, alert rules and notification exercise",
+    "tests": "4005 executed, 0 failures, 0 errors, 11 documented skips across 501 suites",
+    "coverage": "58.23% line, 40.82% branch, 56.91% instruction (merged Kover)",
+    "static_gates": "135 script unit tests pass; check-workflow-pinning, check-dependency-catalog, check-publication, check-capability-coverage, check-container-images, check-cancellation-guards and check-documentation all pass locally",
+    "capability_catalog": "8 entries for 110 modules, none supported; 102 recorded as explicitly unassessed",
+    "custody_qualification": "aws-kms-qualification.yml is workflow_dispatch only and has never been run",
+    "release": "v0.7.0 tagged; no GitHub release, nothing published"
+  },
+  "divergence_from_the_same_day_review": {
+    "other": "docs/reviews/2026-09-13-code-review/ scores this revision 9.4",
+    "explanation": "That round uses a different six-category rubric (security, correctness/protocols, architecture/maintainability, testing/documentation, supply-chain/CI, operations/provider-maturity). Its 'supply chain and CI' at 9.6 measures pipeline health, where this rubric's 'deployment and release' measures whether anything actually ships — which nothing does. Its rubric also has no category in which static coverage is the dominant term. Both readings are defensible; this one is the series the project has tracked since 2026-09-05, and the gap is almost entirely those two effects.",
+    "agreement": "Both rounds independently find the same three open items: the custody qualification has no completed run, several published surfaces are deliberate partial implementations, and green main evidence is not a promoted release."
+  },
+  "target": {
+    "overall": 9.5,
+    "required_mean": "at least 57.0 of 60",
+    "allocation": {
+      "security_and_access_control": 9.5,
+      "observability_and_diagnosability": 9.5,
+      "reliability_and_scale": 9.5,
+      "configuration_and_data": 9.6,
+      "deployment_and_release": 9.5,
+      "testing_and_documentation": 9.5,
+      "overall": 9.52
+    }
+  },
+  "after_remediation": {
+    "date": "2026-09-13",
+    "scope": "The same rubric, re-scored after the remediation pass that closed T1, T2, T3, T5 and T7 and partly closed T9.",
+    "verdict": "The one high finding is closed with durable, bounded, shared authorization state proven against a real PostgreSQL, and every server now refuses until a host says what protects it. What still holds the score down is what no code change could move: nothing has been published, coverage has not shifted, and the custody qualification still has no completed run.",
+    "security_and_access_control": 9.25,
+    "observability_and_diagnosability": 9.5,
+    "reliability_and_scale": 9.4,
+    "configuration_and_data": 9.3,
+    "deployment_and_release": 8.1,
+    "testing_and_documentation": 8.8,
+    "overall": 9.06,
+    "unrounded": "9.058",
+    "why_it_moved": {
+      "security_and_access_control": "+0.65: T1 closed (durable, shared, bounded admission with fail-closed semantics), T2 closed (all six servers gated), T3 closed (the denial check now proves denial and the gate no longer inherits the blind spot). Held under 9.5 by T4 — the custody qualification still has no completed run.",
+      "observability_and_diagnosability": "+0.3: every declared Operation now has a main-source emitter, wired where a host cannot miss it, and a new gate fails the build if that stops being true. Logging density is unchanged.",
+      "reliability_and_scale": "+0.2: the AVP durability gap is closed. Held under 9.5 by A10 — reliability still rests on a fixed local PostgreSQL fixture with no published RPO, RTO or replica-promotion figures.",
+      "configuration_and_data": "+0.4: the BOM no longer advertises modules whose every method throws, and the unassessed ratchet fell from 102 to 100. Held by A8 — 100 modules are still unassessed and none is supported.",
+      "deployment_and_release": "+0.1: the evidence-path defect class is now gated by a property rather than a list, and CI runs every script test rather than a subset chosen by filename. This cannot go higher: nothing has been published.",
+      "testing_and_documentation": "+0.1: about 35 tests were added, including five against a real PostgreSQL and three new gates with their own tests. Merged coverage did not move — 58.14% line against a 58.23% baseline, marginally diluted by the new main source — and coverage is what this category is mostly measuring, so the rise is for the gates, not for T6."
+    },
+    "what_remains": "A5 (publish), A6 (coverage), A3 (run the custody qualification), A8 (classify the remaining 100 modules) and A10 (deployment-scale ledger qualification). Two are blocked outside the repository and two are multi-week; none is a code change this pass could have made.",
+    "verification": {
+      "local_full_build": "./gradlew build succeeded in 18m54s: 2188 tasks, including checkKotlinAbi and koverVerify for every module, and the per-source-set ktlint checks. The box that could not build at review time now can, on JDK 21 with -Xmx900m and --max-workers=1.",
+      "tests": "500 suites, 3980 tests, 0 failures, 0 errors, 17 skipped. Fewer than CI's 4005 because several suites are environment-gated (live custody, PKCS#11) and do not run here.",
+      "coverage_merged": "LINE 58.14%, BRANCH 40.83%, INSTRUCTION 56.71%, regenerated at this working tree rather than read from the stale 09-11 report.",
+      "coverage_note": "Against the review's CI baseline of 58.23 / 40.82 / 56.91, line coverage is 0.09 points LOWER and branch 0.01 higher. The new code is well covered, but it is ~300 lines of new main source, so the merged line figure is marginally diluted rather than improved. T6 is untouched: this pass did not move coverage, and saying otherwise would be wrong.",
+      "script_tests": "150 pass, up from 135: 5 for the telemetry gate, 5 for the evidence-path gate, 4 for the custody gate, and one asserting CI discovers them all."
+    }
+  }
+}

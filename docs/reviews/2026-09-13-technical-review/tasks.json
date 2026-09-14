@@ -1,0 +1,229 @@
+{
+  "goal": "Raise the six-category mean from 8.8 to above 9.5",
+  "date": "2026-09-13",
+  "note": "Estimates assume the AI-assisted cadence this repository has been working at. Items marked does_not_compress are gated by external verification, hardware or real soak time and will not shrink with more tooling.",
+  "tasks": [
+    {
+      "id": "A1",
+      "priority": "P0",
+      "finding": "T1",
+      "category": "Security and access control",
+      "title": "Make the AVP authorization state durable and bounded",
+      "problem": "Replay prevention, single-use enforcement and daily spend caps live in three unbounded ConcurrentHashMaps. Caller-supplied keys grow them without limit, and every guarantee resets on restart and is not shared between replicas — so a two-instance deployment enforces none of them.",
+      "action": "Back the three stores with the same durable pattern PostgresIntentLedger already uses: a shared database, synchronous commit, and a single atomic check-and-record per authorization so two concurrent requests cannot both pass. Bound the in-memory path with eviction tied to nonce and authorization lifetime. Keep the fail-closed behaviour on storage failure — an uncertain commit is a denial, never a retry.",
+      "acceptance": "Two engine instances against one store reject the second presentation of a nonce and the second consumption of an authorization id; a restarted instance still rejects both; a spend cap holds across instances; the maps do not grow without bound under sustained distinct-key traffic.",
+      "estimate": "three to four days",
+      "score_effect": "Security 8.6 -> 9.1, Reliability 9.2 -> 9.4",
+      "status": "done",
+      "outcome": "AuthorizationStore SPI with an in-memory and a PostgreSQL implementation; the engine now makes one atomic admission. 17 tests, 5 of them against a real PostgreSQL through Testcontainers, cover two-instance enforcement, restart continuity, a shared daily cap, bounded retention, capacity refusal and fail-closed behaviour on an unreachable database."
+    },
+    {
+      "id": "A2",
+      "priority": "P0",
+      "finding": "T3",
+      "category": "Security and access control",
+      "title": "Make the custody denial check prove denial",
+      "problem": "The qualification asserts only that signing with the denied key returned some Failure, then writes unauthorizedKeyRejected: true. A wrong ARN, a wrong region or a network fault satisfies it, so the evidence claims an IAM control the test never exercised.",
+      "action": "Assert the failure carries an AWS AccessDenied cause rather than KeyNotFound or a transport error, and derive the evidence field from the assertion instead of writing a literal. Do the same for the other six checks so the evidence is generated from what was observed.",
+      "acceptance": "Pointing the denied ARN at a non-existent key fails the test rather than passing it; the evidence field is false whenever the assertion did not hold.",
+      "estimate": "half a day",
+      "score_effect": "Security 9.1 -> 9.25",
+      "status": "done",
+      "outcome": "The denial check asserts an AWS AccessDeniedException and refuses KeyNotFound; evidence booleans are derived from assertions through an ObservedChecks recorder; check-custody-evidence.py now requires denialResultType Error and denialErrorCode AccessDeniedException, with four new gate tests."
+    },
+    {
+      "id": "A3",
+      "priority": "P1",
+      "finding": "T4",
+      "category": "Security and access control",
+      "title": "Run the custody qualification once and keep the evidence",
+      "problem": "The workflow is dispatch-only and has never run, so live AWS KMS custody is still unqualified in fact. No provider has a qualified custody profile.",
+      "action": "Provision the primary, replacement and denied keys with the IAM deny in place, run the workflow, retain the artifact, and reference it from the custody runbook. Do A2 first so the run proves what it records.",
+      "acceptance": "A completed run at a named commit, its artifact retained, and docs/operations/custody-qualification.md naming AWS KMS as qualified with a link to it.",
+      "estimate": "one day once the AWS account and keys exist; the account provisioning does_not_compress",
+      "score_effect": "Security 9.25 -> 9.5",
+      "status": "blocked",
+      "outcome": "Unchanged: needs an AWS account with the three qualification keys and the IAM deny. A2 landed first, so a run will now prove what it records."
+    },
+    {
+      "id": "A4",
+      "priority": "P1",
+      "finding": "T2",
+      "category": "Security and access control",
+      "title": "Give the remaining three servers the authentication hook",
+      "problem": "withAuthentication reached three of six servers. The AVP authorization server — which authorizes payments — the OIDC4VCI server and the trust-registry server did not get it, so the primitive built to prevent an unprotected deployment does not cover the server where that matters most.",
+      "action": "Extend withAuthentication to all three, fail-closed on mutating routes, with frontedByProxy as the explicit opt-out. Replace the 'unauthenticated by design' comment on the AVP route with a declaration in code.",
+      "acceptance": "Each of the six servers refuses mutating requests until a host states what protects them; the existing trust-registry bearer token composes with the hook rather than duplicating it.",
+      "estimate": "two days",
+      "score_effect": "folded into A3",
+      "status": "done",
+      "outcome": "All six servers carry the hook. HostAuthentication gained a protocolAuthenticatedPaths declaration so a server can exempt the routes its own protocol authenticates; 15 new tests across the three servers."
+    },
+    {
+      "id": "A5",
+      "priority": "P0",
+      "finding": "T8",
+      "category": "Deployment and release",
+      "title": "Publish something",
+      "problem": "v0.7.0 has been tagged since August with no GitHub release and nothing on Central. Every consumer-facing claim is untested against an actual consumer, and the POM, signing and SBOM wiring is verified only by generation.",
+      "action": "Complete Sonatype namespace verification, add the signing key and portal credentials as secrets, create the reviewer-gated maven-central environment, rehearse the whole publish against a staging repository, then cut a release. docs/operations/publishing.md has the full sequence.",
+      "acceptance": "A tagged prerelease publishes signed, SBOM-carrying artifacts to staging; the staged POM passes Central validation; a GitHub release exists carrying the evidence bundle.",
+      "estimate": "two to three days of work; Sonatype namespace verification does_not_compress",
+      "score_effect": "Deployment 8.0 -> 9.5",
+      "status": "blocked",
+      "outcome": "Unchanged: needs Sonatype namespace verification and the publish secrets."
+    },
+    {
+      "id": "A6",
+      "priority": "P1",
+      "finding": "T6",
+      "category": "Testing and documentation",
+      "title": "Cover the issuance and verification core",
+      "problem": "58.23% line and 40.82% branch, moving 0.18 points in two days. credential-api — the module that issues and verifies credentials, about 4,100 lines — is under half covered, did/registrar near 11%, didcomm near 32%. The floors sit just under the measurement, so the gate ratchets nothing.",
+      "action": "Work top-down by uncovered line count: credential-api first (issuance, verification, proof engines, schema), then did-core resolution, then did/registrar and didcomm. Add a per-scope floor for each module as it lands, so progress is locked in module by module rather than in one global step at the end.",
+      "acceptance": "Merged coverage at or above 75% line and 60% branch; no module over 500 lines below 60% line unless declared experimental in the capability catalog.",
+      "estimate": "two to three weeks of sustained test writing; the single largest item here",
+      "score_effect": "Testing 8.7 -> 9.5",
+      "status": "in-progress",
+      "outcome": "credential-api moved from 48.65% to 68.0% line and 60.0% branch — 110 tests added across the five areas that were at literally zero: the revocation manager, both schema validators, the schema registry and the builder DSL. Writing the SHACL tests found T11, a real defect: three sh:path parsers disagreed, so a sh:minCount shape written the way the class's own KDoc example writes it reported a present property as missing. Branch coverage already meets A6's 60% target; line is 68.0 against a 75% target, with DefaultExchangeService, DefaultCredentialService's remainder and the DID extensions still open."
+    },
+    {
+      "id": "A7",
+      "priority": "P2",
+      "finding": "T5",
+      "category": "Configuration and data",
+      "title": "Stop the BOM advertising capability that throws",
+      "problem": "The BOM exports the Salesforce and ServiceNow integrations, whose every method throws. Both are unassessed in the catalog, while starknet, threebox, tezos and btcr — equally unimplemented — are correctly marked stub. Both also return Any.",
+      "action": "Mark both stub in trustweave-capabilities.json, and either remove them from the BOM or have the BOM document which members are stubs. Give them typed signatures or delete the modules.",
+      "acceptance": "No BOM member is an unimplemented module without a stub maturity; check-capability-coverage records the two newly assessed and its unassessed count falls.",
+      "estimate": "half a day",
+      "score_effect": "Configuration 8.9 -> 9.3",
+      "status": "done",
+      "outcome": "Both modules marked stub, removed from the BOM, KDoc states that every method throws; the unassessed ratchet fell from 102 to 100."
+    },
+    {
+      "id": "A8",
+      "priority": "P2",
+      "finding": "T5",
+      "category": "Configuration and data",
+      "title": "Classify the remaining 102 unassessed modules",
+      "problem": "The capability catalog holds 8 entries for 110 modules and not one is supported. A consumer cannot tell which module is production code, and this has blocked a production verdict for five rounds.",
+      "action": "Define the bar for supported — coverage floor, security review, interoperability evidence, documented operational limits — and classify every module against it. Qualify the GA core first: did-core, did:key, did:web, credential-api, kms-core, one KMS provider, wallet-core, verifiable-intent.",
+      "acceptance": "All 110 modules carry a maturity; at least the GA core set is supported with linked evidence; the ratchet count reaches zero.",
+      "estimate": "one week to classify; the custody and hardware qualification behind a supported rating does_not_compress",
+      "score_effect": "Configuration 9.3 -> 9.6",
+      "status": "partly-done",
+      "outcome": "The bar is now written down (docs/api-reference/module-maturity-bar.md) and all 110 modules carry a maturity: 99 experimental, 11 stub, 0 supported. The unassessed ratchet is 102 -> 0, so a new module must be classified in the commit that adds it. The classification is derived from per-module coverage and test evidence by a published rule rather than assigned by hand, so it is reproducible. The second half of the acceptance — a supported GA core with linked evidence — is NOT met and is not close: 32 modules meet the coverage floor, none meets all four requirements, because security review, retained interoperability artifacts and documented operational limits mostly do not exist yet. Marking anything supported without them would be the error this review has been correcting."
+    },
+    {
+      "id": "A9",
+      "priority": "P2",
+      "finding": "T7",
+      "category": "Observability and diagnosability",
+      "title": "Finish the instrumentation the Operation enum promises",
+      "problem": "Ten call sites are instrumented. Ten of the fifteen declared operations never fire, so a host charting them sees a permanent zero series and cannot tell 'not instrumented' from 'never happened'. 33 of 792 main-source files reference a logger.",
+      "action": "Instrument the declared DID lifecycle, wallet, KMS verify, presentation and revocation operations, or remove the enum values that will not be. Add structured events with the same reason codes to the four core paths so a failure has a cause a host can read.",
+      "acceptance": "Every Operation value is emitted by at least one call site, or is gone; the runbook's metric table matches the enum exactly.",
+      "estimate": "three to four days",
+      "score_effect": "Observability 9.2 -> 9.5",
+      "status": "done",
+      "outcome": "KMS_VERIFY removed; TelemetryDidMethod and TelemetryWallet added and wired at DidMethodRegistry.register and the wallet DSL; presentation verification and revocation checks instrumented in credential-api. scripts/check-telemetry-operations.py keeps the enum and its emitters in step, with 5 gate tests and 13 decorator tests."
+    },
+    {
+      "id": "A10",
+      "priority": "P2",
+      "category": "Reliability and scale",
+      "title": "Qualify the ledger at deployment scale",
+      "problem": "Reliability rests on a fixed local PostgreSQL 16 fixture: WAL recovery, contention, lock timeout and a one-minute skewed workload. check-reliability-evidence.py states the limit itself — no production capacity, RPO/RTO, replica promotion or external journal qualification.",
+      "action": "Run a sustained multi-hour load at target throughput with a real connection pool, exercise replica promotion under write load, measure and publish RPO and RTO, and document the admission-fencing procedure the integrity audit depends on.",
+      "acceptance": "Published load, failover and RPO/RTO figures for a named deployment profile, covered by the reliability evidence gate.",
+      "estimate": "one week of engineering; the deployment and soak time does_not_compress",
+      "score_effect": "Reliability 9.4 -> 9.5",
+      "status": "not-started",
+      "outcome": "Unchanged."
+    },
+    {
+      "id": "A11",
+      "priority": "P3",
+      "finding": "T9",
+      "category": "Deployment and release",
+      "title": "Keep main green",
+      "problem": "The last five CI runs on main are success, failure, success, cancelled, failure. The causes were evidence-path churn rather than product defects, but a branch that is red half the time erodes the signal the gates exist to give.",
+      "action": "Rehearse evidence-path and workflow changes on a branch before pushing to main. test_workflow_evidence_paths.py is the right instinct; extend it to assert that every path a workflow reads is one a build actually writes.",
+      "acceptance": "Ten consecutive green runs on main; a deliberately broken evidence path fails the new test rather than CI.",
+      "estimate": "half a day for the test, then discipline",
+      "score_effect": "protects Deployment rather than raising it",
+      "status": "done",
+      "outcome": "scripts/check-workflow-evidence-paths.py asserts the property rather than a list. It also surfaced that test_workflow_evidence_paths.py had never run in CI, so all three workflows now discover test_*.py rather than test_check_*.py. Ten consecutive green runs remain to be observed."
+    }
+  ],
+  "sequence": {
+    "week_1": [
+      "A2",
+      "A4",
+      "A7",
+      "A11"
+    ],
+    "week_1_2": [
+      "A1"
+    ],
+    "week_2_3": [
+      "A5",
+      "A9"
+    ],
+    "week_2_5": [
+      "A6"
+    ],
+    "week_3_4": [
+      "A3",
+      "A8"
+    ],
+    "ongoing": [
+      "A10"
+    ]
+  },
+  "projected": {
+    "security_and_access_control": 9.5,
+    "observability_and_diagnosability": 9.5,
+    "reliability_and_scale": 9.5,
+    "configuration_and_data": 9.6,
+    "deployment_and_release": 9.5,
+    "testing_and_documentation": 9.5,
+    "overall": 9.52
+  },
+  "critical_path": "A5 and A3 both wait on something outside the repository — Sonatype namespace verification and an AWS account with provisioned keys. Neither compresses with more engineering, and together they are worth 1.5 and 0.9 category points. Start both on day one even though they finish last.",
+  "progress": {
+    "as_of": "2026-09-13 remediation pass",
+    "completed": [
+      "A1",
+      "A2",
+      "A4",
+      "A7",
+      "A9",
+      "A11"
+    ],
+    "blocked_externally": [
+      "A3",
+      "A5"
+    ],
+    "outstanding": [
+      "A10"
+    ],
+    "measured": {
+      "security_and_access_control": 9.25,
+      "observability_and_diagnosability": 9.5,
+      "reliability_and_scale": 9.4,
+      "configuration_and_data": 9.3,
+      "deployment_and_release": 8.1,
+      "testing_and_documentation": 8.8,
+      "overall": 9.06
+    },
+    "note": "The remaining 0.44 to 9.5 is A5 (nothing published), A6 (coverage) and A3 (an AWS run) almost entirely. Deployment cannot pass 8.1 while nothing ships, and testing cannot pass 8.8 while credential-api is under half covered; neither is a code change this pass could make.",
+    "verified_by": "Local ./gradlew build, green: 2188 tasks, 500 suites, 3980 tests, 0 failures, 17 environment-gated skips, plus checkKotlinAbi and koverVerify for every module and per-source-set ktlint. 150 script tests pass.",
+    "in_progress": [
+      "A6",
+      "A8"
+    ],
+    "ceiling": "9.5 is not reachable from inside the repository. Deployment cannot exceed 8.1 until something is published (A5, Sonatype namespace verification) and security cannot exceed ~9.4 until the custody qualification has run (A3, an AWS account with three keys and an IAM deny). With deployment pinned at 8.1 the other five categories would have to average 9.78 to clear a 9.5 mean, which the rubric only grants to qualified, production-proven states that themselves rest on the evidence A3 and A5 would produce. Best in-repo case is about 9.27."
+  }
+}

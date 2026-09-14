@@ -32,6 +32,7 @@ class CustodyEvidenceTest(unittest.TestCase):
             "fingerprints": {"primarySha256": "a" * 64, "replacementSha256": "b" * 64},
             "checks": {name: True for name in MODULE.REQUIRED_CHECKS},
             "denialResultType": "Error",
+            "denialErrorCode": "AccessDeniedException",
         }
 
     def validate(self, document, expected="abc123"):
@@ -42,6 +43,32 @@ class CustodyEvidenceTest(unittest.TestCase):
 
     def test_valid_evidence_passes(self):
         self.assertEqual([], self.validate(self.evidence()))
+
+    def test_a_denial_the_run_could_not_distinguish_from_absence_is_rejected(self):
+        """KeyNotFound is what a mistyped ARN produces; it is not evidence that IAM refused."""
+        document = self.evidence()
+        document["denialResultType"] = "KeyNotFound"
+        errors = self.validate(document)
+        self.assertTrue(any("denialResultType" in error for error in errors), errors)
+
+    def test_a_transport_fault_is_not_accepted_as_a_denial(self):
+        document = self.evidence()
+        document["denialErrorCode"] = "none"
+        errors = self.validate(document)
+        self.assertTrue(any("denialErrorCode" in error for error in errors), errors)
+
+    def test_a_wrong_error_code_is_not_accepted_as_a_denial(self):
+        document = self.evidence()
+        document["denialErrorCode"] = "ThrottlingException"
+        errors = self.validate(document)
+        self.assertTrue(any("IAM enforcement" in error for error in errors), errors)
+
+    def test_evidence_carrying_an_invented_check_is_rejected(self):
+        """A run that renames a check must not slip a passing field past the required set."""
+        document = self.evidence()
+        document["checks"]["somethingElseEntirely"] = True
+        errors = self.validate(document)
+        self.assertTrue(any("unrecognized checks" in error for error in errors), errors)
 
     def test_mismatched_commit_and_failed_gate_fail(self):
         document = self.evidence()

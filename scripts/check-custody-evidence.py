@@ -21,6 +21,12 @@ REQUIRED_CHECKS = {
     "historicalPublicKeyResolvable",
 }
 FORBIDDEN_NAMES = {"secret", "token", "password", "privatekey", "accesskey"}
+# The evidence must show that IAM refused the denied key, not merely that something failed.
+# SignResult.Failure covers KeyNotFound, which is what a mistyped ARN or a wrong region produces,
+# so accepting it here would let a misconfigured run certify an authorization control it never
+# exercised. Only an AWS AccessDeniedException reaching an Error result demonstrates enforcement.
+ACCESS_DENIED_ERROR_CODE = "AccessDeniedException"
+REQUIRED_DENIAL_RESULT_TYPE = "Error"
 
 
 def validate(path: Path, expected_commit: str | None = None) -> list[str]:
@@ -67,6 +73,20 @@ def validate(path: Path, expected_commit: str | None = None) -> list[str]:
     for name in sorted(REQUIRED_CHECKS):
         if checks.get(name) is not True:
             errors.append(f"required check {name} did not pass")
+    unknown = sorted(set(checks) - REQUIRED_CHECKS)
+    if unknown:
+        errors.append(f"unrecognized checks in evidence: {unknown}")
+
+    if document.get("denialResultType") != REQUIRED_DENIAL_RESULT_TYPE:
+        errors.append(
+            f"denialResultType must be {REQUIRED_DENIAL_RESULT_TYPE}: a KeyNotFound result means "
+            "the denied key ARN or region is wrong, not that IAM denied the call"
+        )
+    if document.get("denialErrorCode") != ACCESS_DENIED_ERROR_CODE:
+        errors.append(
+            f"denialErrorCode must be {ACCESS_DENIED_ERROR_CODE}; "
+            f"got {document.get('denialErrorCode')!r}, which does not demonstrate IAM enforcement"
+        )
 
     try:
         started = datetime.fromisoformat(document["startedAt"].replace("Z", "+00:00"))

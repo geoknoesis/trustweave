@@ -2,118 +2,131 @@ package org.trustweave.did.resolver
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import kotlin.math.pow
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Performance tests for RetryConfig.
+ * Performance characteristics of [RetryConfig]: that retrying costs what it says it costs.
  *
- * Verifies that retry logic doesn't add significant overhead.
+ * ## Why these assertions are shaped the way they are
+ *
+ * This file used to assert a *ratio between two measured wall-clock delays*:
+ * `delays[1] >= delays[0] * 0.5`. That measures the machine, not the code. The first delay in a
+ * run also carries class loading and JIT warm-up for the coroutine machinery, so on a loaded
+ * runner it inflates — observed at 66ms against a configured 10ms — while the second delay is a
+ * normal 28ms, and the assertion fails on a build where nothing is wrong. It failed on CI and
+ * reproduced 3/3 locally against an unmodified tree.
+ *
+ * So the assertions here are **lower bounds and counts**, never ratios and never tight ceilings:
+ *
+ * - A lower bound is robust. Scheduling noise, a loaded runner and a cold JIT can only make an
+ *   operation take *longer*, so "at least the configured delay elapsed" cannot be broken by them.
+ * - A count is robust. How many times the block ran does not depend on the clock at all.
+ * - The ceilings that remain are deliberately an order of magnitude clear of anything observed,
+ *   so they still catch a real regression while staying silent about a slow afternoon.
  */
 class RetryConfigPerformanceTest {
     @Test
-    fun `test retry config performance with immediate success`() =
+    fun `an operation that succeeds first time is never delayed`() =
         runBlocking<Unit> {
             val config = RetryConfig.default()
+            var invocations = 0
 
-            val startTime = System.nanoTime()
-            repeat(1000) {
+            val startedAt = System.nanoTime()
+            repeat(OPERATIONS) {
                 config.executeWithRetry<String> {
+                    invocations++
                     "success"
                 }
             }
-            val endTime = System.nanoTime()
+            val elapsedMs = (System.nanoTime() - startedAt) / 1_000_000.0
 
-            val durationMs = (endTime - startTime) / 1_000_000.0
-            val avgMs = durationMs / 1000
+            // The property that matters: success costs exactly one call and no backoff at all.
+            assertEquals(OPERATIONS, invocations, "a successful operation must not be retried")
 
-            println("Executed 1000 retry operations in ${durationMs}ms (avg: ${avgMs}ms per operation)")
-
-            // Should be very fast for immediate success (no retries)
-            val isFast = avgMs < 1.0
-            assertTrue(isFast, "Retry overhead too high: ${avgMs}ms")
+            // RetryConfig.default() has an initial delay of 100ms. If the retry path were ever
+            // taken here, even once, this would be at least 100ms. Ten seconds for 1000 no-op
+            // operations is an order of magnitude clear of any machine this runs on, so it only
+            // fires for a real regression.
+            assertTrue(elapsedMs < 10_000, "1000 immediate successes should not take ${elapsedMs}ms")
         }
 
     @Test
-    fun `test retry config performance with one retry`() =
+    fun `a retried operation actually waits, and only for the attempts it needed`() =
         runBlocking<Unit> {
-            val config =
-                RetryConfig(
-                    maxRetries = 1,
-                    initialDelayMs = 10,
-                    maxDelayMs = 100,
-                )
+            val config = RetryConfig(maxRetries = 1, initialDelayMs = 10, maxDelayMs = 100)
 
             var attempts = 0
-            val startTime = System.nanoTime()
-            repeat(100) {
+            val startedAt = System.nanoTime()
+            repeat(RETRY_OPERATIONS) {
                 config.executeWithRetry<String> {
                     attempts++
-                    if (attempts % 2 == 1) {
-                        throw java.net.ConnectException("Retry")
-                    }
+                    if (attempts % 2 == 1) throw java.net.ConnectException("Retry")
                     "success"
                 }
             }
-            val endTime = System.nanoTime()
+            val elapsedMs = (System.nanoTime() - startedAt) / 1_000_000.0
 
-            val durationMs = (endTime - startTime) / 1_000_000.0
-            val avgMs = durationMs / 100
+            // Every operation failed once and succeeded once: two calls each, no more.
+            assertEquals(RETRY_OPERATIONS * 2, attempts, "each operation should need exactly one retry")
 
-            println("Executed 100 retry operations (50% retry rate) in ${durationMs}ms (avg: ${avgMs}ms per operation)")
-
-            // Should be reasonable even with retries
-            val isReasonable = avgMs < 50.0
-            assertTrue(isReasonable, "Retry overhead too high: ${avgMs}ms")
+            // A lower bound proves the backoff is real rather than skipped. Each of the 100
+            // operations retries once at >= 10ms, so >= 1000ms must have elapsed. A test that only
+            // set a ceiling here would still pass if the delay were removed entirely.
+            val minimumDelayMs = RETRY_OPERATIONS * 10.0
+            assertTrue(
+                elapsedMs >= minimumDelayMs,
+                "backoff appears not to have been applied: ${elapsedMs}ms elapsed, expected at least ${minimumDelayMs}ms",
+            )
         }
 
     @Test
-    fun `test exponential backoff timing`() =
+    fun `each backoff is at least the configured exponential delay`() =
         runBlocking<Unit> {
-            val config =
-                RetryConfig(
-                    maxRetries = 3,
-                    initialDelayMs = 10,
-                    maxDelayMs = 1000,
-                )
+            val initialDelayMs = 10L
+            val maxRetries = 3
+            val config = RetryConfig(maxRetries = maxRetries, initialDelayMs = initialDelayMs, maxDelayMs = 1000)
 
             val delays = mutableListOf<Long>()
-            var lastTime = System.currentTimeMillis()
-            var attemptCount = 0
+            var lastAt = System.currentTimeMillis()
+            var attempt = 0
 
-            try {
+            runCatching {
                 config.executeWithRetry<Unit> {
-                    attemptCount++
-                    val currentTime = System.currentTimeMillis()
-                    // Capture delay after first attempt (first retry happens after attempt 1)
-                    if (attemptCount > 1) {
-                        delays.add(currentTime - lastTime)
-                    }
-                    lastTime = currentTime
+                    val now = System.currentTimeMillis()
+                    if (attempt > 0) delays.add(now - lastAt)
+                    lastAt = now
+                    attempt++
                     throw java.net.ConnectException("Fail")
                 }
-            } catch (e: Exception) {
-                // Expected - all retries exhausted
             }
 
-            // Should have at least 2 retry delays (for 3 max retries, we get 3 retries = 3 delays)
-            // But due to timing precision, we might get fewer
-            println("Retry delays captured: $delays (attempts: $attemptCount)")
+            assertEquals(maxRetries + 1, attempt, "the block should run once plus one per retry")
+            assertEquals(maxRetries, delays.size, "one backoff should separate each pair of attempts")
 
-            // With maxRetries=3, we should have at least 1 delay (after first retry)
-            // But timing might be too fast to capture, so we'll be lenient
-            if (delays.isNotEmpty()) {
-                val firstDelayValid = delays[0] >= 5 || delays[0] >= 0 // Allow for very fast execution
-                assertTrue(firstDelayValid, "First delay captured: ${delays[0]}ms")
-
-                if (delays.size >= 2) {
-                    // Delays should generally increase (with jitter variance)
-                    val delaysIncrease = delays[1] >= delays[0] * 0.5 // Allow 50% variance for jitter
-                    assertTrue(delaysIncrease, "Delays should increase: ${delays[0]}ms -> ${delays[1]}ms")
-                }
-            } else {
-                // If no delays captured, it means execution was too fast
-                // This is acceptable for performance tests - just log it
-                println("Note: No delays captured - execution was very fast (acceptable)")
+            // executeWithRetry sleeps min(initial * 2^n, max) plus 1-20% jitter before retry n.
+            // Asserting each delay is at least its own configured minimum verifies the schedule
+            // grows exponentially, and does so in a form a slow machine cannot break: overhead
+            // only ever pushes a measurement further above its lower bound.
+            delays.forEachIndexed { index, measured ->
+                val configured = (initialDelayMs * 2.0.pow(index)).toLong()
+                assertTrue(
+                    measured >= configured,
+                    "backoff $index was ${measured}ms, below its configured ${configured}ms; delays were $delays",
+                )
             }
+
+            // And the schedule really is exponential rather than flat: the last wait is bounded
+            // below by four times the first one's configuration.
+            assertTrue(
+                delays.last() >= initialDelayMs * 4,
+                "the final backoff should be at least 4x the initial delay; delays were $delays",
+            )
         }
+
+    private companion object {
+        const val OPERATIONS = 1000
+        const val RETRY_OPERATIONS = 100
+    }
 }

@@ -19,6 +19,17 @@ data class OfferState(
     val credentialTypes: List<String>,
     val txCode: TxCode?,
     val txCodeValue: String?,
+    /**
+     * When the pre-authorized code was minted, so it can stop being redeemable.
+     *
+     * This used to be absent, which made a pre-authorized code valid forever. The code travels in
+     * a `credential_offer` URI — a QR image, an email, a link that ends up in server logs and
+     * browser history — and OID4VCI treats it as a short-lived, single-use secret precisely
+     * because it travels that way. Without an issue time there was nothing to expire against, and
+     * the rejection message already said "Unknown or expired pre-authorized_code" for a state the
+     * server could not detect.
+     */
+    val issuedAt: Long = System.currentTimeMillis(),
 )
 
 data class TokenEntry(
@@ -30,7 +41,9 @@ data class TokenEntry(
 )
 
 /** The access token is unknown or has outlived its advertised `expires_in` (→ `invalid_token`). */
-class InvalidTokenException(message: String) : SecurityException(message)
+class InvalidTokenException(
+    message: String,
+) : SecurityException(message)
 
 /**
  * The proof of possession is missing/invalid (→ OID4VCI `invalid_proof`).
@@ -58,9 +71,21 @@ private val ED25519_MULTICODEC_PREFIX = byteArrayOf(0xED.toByte(), 0x01)
  * `SEQUENCE(SEQUENCE(OID 1.3.101.112), BIT STRING(0x00 || raw 32-byte key))`.
  * Appending the raw key bytes yields an X.509-encoded public key consumable by JCA.
  */
-private val ED25519_SPKI_PREFIX = byteArrayOf(
-    0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
-)
+private val ED25519_SPKI_PREFIX =
+    byteArrayOf(
+        0x30,
+        0x2A,
+        0x30,
+        0x05,
+        0x06,
+        0x03,
+        0x2B,
+        0x65,
+        0x70,
+        0x03,
+        0x21,
+        0x00,
+    )
 
 class Oidc4VciIssuerService(
     val baseUrl: String,
@@ -70,21 +95,42 @@ class Oidc4VciIssuerService(
     val tokenTtlSeconds: Long = 3600,
     /** Lifetime of each issued `c_nonce`; an expired nonce yields `invalid_proof` with a fresh one. */
     val cNonceTtlSeconds: Long = 300,
+    /**
+     * How long a pre-authorized code stays redeemable. Five minutes by default.
+     *
+     * Short because the code is a bearer secret that travels through channels nobody controls,
+     * and because the wallet redeems it seconds after the holder scans the offer. Raise it only
+     * for a flow where the holder genuinely needs longer, and know that the window is exactly how
+     * long a leaked offer stays usable.
+     */
+    val offerTtlSeconds: Long = 300,
 ) {
     private val pendingOffers = ConcurrentHashMap<String, OfferState>()
     private val activeTokens = ConcurrentHashMap<String, TokenEntry>()
+
+    /**
+     * Deferred issuance is not implemented: nothing writes to this map, so
+     * [getDeferredCredential] always answers null. Kept as the seam a deferred flow would use,
+     * and called out here so a reader does not assume the endpoint does something.
+     */
     private val deferredCredentials = ConcurrentHashMap<String, String>() // transactionId -> credentialJson
 
-    fun getMetadata(): CredentialIssuerMetadata = CredentialIssuerMetadata(
-        credentialIssuer = baseUrl,
-        credentialEndpoint = "$baseUrl/credential",
-        tokenEndpoint = "$baseUrl/token",
-        deferredCredentialEndpoint = "$baseUrl/deferred_credential",
-        notificationEndpoint = "$baseUrl/notification",
-        credentialConfigurationsSupported = supportedConfigurations,
-    )
+    fun getMetadata(): CredentialIssuerMetadata =
+        CredentialIssuerMetadata(
+            credentialIssuer = baseUrl,
+            credentialEndpoint = "$baseUrl/credential",
+            tokenEndpoint = "$baseUrl/token",
+            deferredCredentialEndpoint = "$baseUrl/deferred_credential",
+            notificationEndpoint = "$baseUrl/notification",
+            credentialConfigurationsSupported = supportedConfigurations,
+        )
 
-    fun createOffer(credentialTypes: List<String>, txCode: TxCode? = null, txCodeValue: String? = null): CreateOfferResponse {
+    fun createOffer(
+        credentialTypes: List<String>,
+        txCode: TxCode? = null,
+        txCodeValue: String? = null,
+    ): CreateOfferResponse {
+        purgeExpired()
         val preAuthCode = UUID.randomUUID().toString()
         pendingOffers[preAuthCode] = OfferState(credentialTypes, txCode, txCodeValue)
         return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
@@ -103,29 +149,36 @@ class Oidc4VciIssuerService(
         preAuthCode: String,
         txCode: TxCode?,
     ): String {
-        val preAuthGrant = buildJsonObject {
-            put("pre-authorized_code", preAuthCode)
-            if (txCode != null) {
-                // encodeDefaults so the defaulted input_mode ("numeric") is still emitted
-                // in the offer; explicitNulls=false drops absent length/description.
-                val json = Json {
-                    encodeDefaults = true
-                    explicitNulls = false
+        val preAuthGrant =
+            buildJsonObject {
+                put("pre-authorized_code", preAuthCode)
+                if (txCode != null) {
+                    // encodeDefaults so the defaulted input_mode ("numeric") is still emitted
+                    // in the offer; explicitNulls=false drops absent length/description.
+                    val json =
+                        Json {
+                            encodeDefaults = true
+                            explicitNulls = false
+                        }
+                    put("tx_code", json.encodeToJsonElement(TxCode.serializer(), txCode))
                 }
-                put("tx_code", json.encodeToJsonElement(TxCode.serializer(), txCode))
             }
-        }
-        val offerJson = buildJsonObject {
-            put("credential_issuer", baseUrl)
-            put("credential_configuration_ids", JsonArray(credentialTypes.map { JsonPrimitive(it) }))
-            put("grants", buildJsonObject {
-                put(Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE, preAuthGrant)
-            })
-        }
-        val encodedOffer = URLEncoder.encode(
-            Json.encodeToString(JsonObject.serializer(), offerJson),
-            "UTF-8"
-        )
+        val offerJson =
+            buildJsonObject {
+                put("credential_issuer", baseUrl)
+                put("credential_configuration_ids", JsonArray(credentialTypes.map { JsonPrimitive(it) }))
+                put(
+                    "grants",
+                    buildJsonObject {
+                        put(Oidc4VciService.PRE_AUTHORIZED_CODE_GRANT_TYPE, preAuthGrant)
+                    },
+                )
+            }
+        val encodedOffer =
+            URLEncoder.encode(
+                Json.encodeToString(JsonObject.serializer(), offerJson),
+                "UTF-8",
+            )
         return "openid-credential-offer://?credential_offer=$encodedOffer"
     }
 
@@ -138,9 +191,19 @@ class Oidc4VciIssuerService(
      * The token response carries the initial `c_nonce` (+ expiry) the wallet must echo in
      * the proof-of-possession JWT at the credential endpoint.
      */
-    fun exchangePreAuthCode(preAuthCode: String, txCodeValue: String?): TokenResponse {
-        val offerState = pendingOffers.remove(preAuthCode)
-            ?: throw IllegalArgumentException("Unknown or expired pre-authorized_code")
+    fun exchangePreAuthCode(
+        preAuthCode: String,
+        txCodeValue: String?,
+    ): TokenResponse {
+        purgeExpired()
+        // Removed before it is judged, so a redemption attempt consumes the code either way: a
+        // wrong tx_code must not leave the offer available for another guess.
+        val offerState =
+            pendingOffers.remove(preAuthCode)
+                ?: throw IllegalArgumentException("Unknown or expired pre-authorized_code")
+        if (System.currentTimeMillis() - offerState.issuedAt >= offerTtlSeconds * 1000) {
+            throw IllegalArgumentException("Unknown or expired pre-authorized_code")
+        }
         if (offerState.txCode != null) {
             val expected = offerState.txCodeValue?.toByteArray(Charsets.UTF_8)
             val provided = txCodeValue?.toByteArray(Charsets.UTF_8)
@@ -183,10 +246,11 @@ class Oidc4VciIssuerService(
     ): CredentialServerResponse {
         val entry = requireValidToken(accessToken)
         val subjectDid = verifyProofOrThrow(accessToken, proofJwt)
-        val credentialJson = buildMinimalCredential(
-            types = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
-            subjectDid = subjectDid,
-        )
+        val credentialJson =
+            buildMinimalCredential(
+                types = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
+                subjectDid = subjectDid,
+            )
         // Rotate the c_nonce on success too (OID4VCI v1.0 §7.3): each proof is single-use.
         val freshNonce = rotateCNonce(accessToken)
         return CredentialServerResponse(
@@ -197,7 +261,10 @@ class Oidc4VciIssuerService(
         )
     }
 
-    fun getDeferredCredential(transactionId: String, accessToken: String): CredentialServerResponse? {
+    fun getDeferredCredential(
+        transactionId: String,
+        accessToken: String,
+    ): CredentialServerResponse? {
         runCatching { requireValidToken(accessToken) }.getOrNull() ?: return null
         val cred = deferredCredentials.remove(transactionId) ?: return null
         return CredentialServerResponse(credential = cred)
@@ -207,10 +274,33 @@ class Oidc4VciIssuerService(
         // no-op — extend to persist/emit events
     }
 
+    /**
+     * Drops offers and tokens that can no longer be redeemed, and reports how many went.
+     *
+     * Both maps were only ever emptied by a caller arriving with the right key: an offer on
+     * redemption, a token when someone happened to present an expired one. An offer nobody
+     * redeems and a token nobody reuses therefore stayed for the life of the process, which for a
+     * long-running issuer means every one of them.
+     *
+     * Called on the paths that add entries, so the steady-state size is bounded by issuance rate
+     * times TTL rather than by uptime. Public so a host can also run it on its own schedule, and
+     * so the bound is testable.
+     */
+    fun purgeExpired(now: Long = System.currentTimeMillis()): Int {
+        val before = pendingOffers.size + activeTokens.size
+        pendingOffers.values.removeIf { now - it.issuedAt >= offerTtlSeconds * 1000 }
+        activeTokens.values.removeIf { now - it.issuedAt >= tokenTtlSeconds * 1000 }
+        return before - (pendingOffers.size + activeTokens.size)
+    }
+
+    /** Retained offer and token counts, for a host metric or a test. Never the secrets themselves. */
+    fun retainedState(): Pair<Int, Int> = pendingOffers.size to activeTokens.size
+
     /** Returns the live [TokenEntry] or throws [InvalidTokenException] (unknown/expired). */
     private fun requireValidToken(accessToken: String): TokenEntry {
-        val entry = activeTokens[accessToken]
-            ?: throw InvalidTokenException("Invalid or expired access_token")
+        val entry =
+            activeTokens[accessToken]
+                ?: throw InvalidTokenException("Invalid or expired access_token")
         if (System.currentTimeMillis() - entry.issuedAt >= tokenTtlSeconds * 1000) {
             activeTokens.remove(accessToken)
             throw InvalidTokenException("access_token expired")
@@ -235,9 +325,11 @@ class Oidc4VciIssuerService(
      * - JOSE `jwk` header with an OKP/Ed25519 public key (`alg: EdDSA`), or
      * - JOSE `kid` header that is a `did:key` Ed25519 DID URL.
      */
-    private fun verifyProofOrThrow(accessToken: String, proofJwt: String?): String {
-        fun reject(reason: String): Nothing =
-            throw InvalidProofException(reason, rotateCNonce(accessToken), cNonceTtlSeconds)
+    private fun verifyProofOrThrow(
+        accessToken: String,
+        proofJwt: String?,
+    ): String {
+        fun reject(reason: String): Nothing = throw InvalidProofException(reason, rotateCNonce(accessToken), cNonceTtlSeconds)
 
         if (proofJwt.isNullOrBlank()) reject("Missing proof.jwt in credential request")
 
@@ -249,12 +341,14 @@ class Oidc4VciIssuerService(
 
         val decoder = Base64.getUrlDecoder()
         val lenientJson = Json { ignoreUnknownKeys = true }
-        val header = runCatching {
-            lenientJson.parseToJsonElement(String(decoder.decode(parts[0]), Charsets.UTF_8)).jsonObject
-        }.getOrNull() ?: reject("proof.jwt header is not valid base64url JSON")
-        val payload = runCatching {
-            lenientJson.parseToJsonElement(String(decoder.decode(parts[1]), Charsets.UTF_8)).jsonObject
-        }.getOrNull() ?: reject("proof.jwt payload is not valid base64url JSON")
+        val header =
+            runCatching {
+                lenientJson.parseToJsonElement(String(decoder.decode(parts[0]), Charsets.UTF_8)).jsonObject
+            }.getOrNull() ?: reject("proof.jwt header is not valid base64url JSON")
+        val payload =
+            runCatching {
+                lenientJson.parseToJsonElement(String(decoder.decode(parts[1]), Charsets.UTF_8)).jsonObject
+            }.getOrNull() ?: reject("proof.jwt payload is not valid base64url JSON")
 
         val alg = header["alg"]?.jsonPrimitive?.contentOrNull
         if (alg == null || alg.equals("none", ignoreCase = true)) {
@@ -265,21 +359,24 @@ class Oidc4VciIssuerService(
             if (typ != "openid4vci-proof+jwt") reject("proof.jwt typ must be 'openid4vci-proof+jwt', got '$typ'")
         }
 
-        val proofKey = extractProofKey(header)
-            ?: reject("proof.jwt carries no usable key (jwk header with OKP/Ed25519, or did:key kid, required)")
+        val proofKey =
+            extractProofKey(header)
+                ?: reject("proof.jwt carries no usable key (jwk header with OKP/Ed25519, or did:key kid, required)")
 
-        val signature = runCatching { decoder.decode(parts[2]) }.getOrNull()
-            ?: reject("proof.jwt signature is not valid base64url")
+        val signature =
+            runCatching { decoder.decode(parts[2]) }.getOrNull()
+                ?: reject("proof.jwt signature is not valid base64url")
         if (signature.size != ED25519_SIGNATURE_LENGTH_BYTES) {
             reject("proof.jwt signature has invalid length for Ed25519")
         }
-        val verified = runCatching {
-            Signature.getInstance("Ed25519").run {
-                initVerify(proofKey.publicKey)
-                update("${parts[0]}.${parts[1]}".toByteArray(Charsets.UTF_8))
-                verify(signature)
-            }
-        }.getOrDefault(false)
+        val verified =
+            runCatching {
+                Signature.getInstance("Ed25519").run {
+                    initVerify(proofKey.publicKey)
+                    update("${parts[0]}.${parts[1]}".toByteArray(Charsets.UTF_8))
+                    verify(signature)
+                }
+            }.getOrDefault(false)
         if (!verified) reject("proof.jwt signature verification failed against the key in its header")
 
         val aud = payload["aud"]?.jsonPrimitive?.contentOrNull
@@ -287,8 +384,9 @@ class Oidc4VciIssuerService(
             reject("proof.jwt aud '${aud ?: "<absent>"}' does not match credential issuer '$baseUrl'")
         }
 
-        val nonce = payload["nonce"]?.jsonPrimitive?.contentOrNull
-            ?: reject("proof.jwt is missing the nonce claim")
+        val nonce =
+            payload["nonce"]?.jsonPrimitive?.contentOrNull
+                ?: reject("proof.jwt is missing the nonce claim")
         // Atomic consume-and-rotate: the compare and the rotation happen inside one
         // computeIfPresent so a c_nonce is strictly single-use — two concurrent
         // credential requests echoing the same nonce cannot both pass.
@@ -303,14 +401,18 @@ class Oidc4VciIssuerService(
      * Atomically validates [presentedNonce] against the token's live, unexpired `c_nonce`
      * and rotates it in the same [ConcurrentHashMap.computeIfPresent] step (single-use).
      */
-    private fun consumeCNonce(accessToken: String, presentedNonce: String): Boolean {
+    private fun consumeCNonce(
+        accessToken: String,
+        presentedNonce: String,
+    ): Boolean {
         var consumed = false
         activeTokens.computeIfPresent(accessToken) { _, entry ->
             val live = System.currentTimeMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
-            val matches = MessageDigest.isEqual(
-                presentedNonce.toByteArray(Charsets.UTF_8),
-                entry.cNonce.toByteArray(Charsets.UTF_8)
-            )
+            val matches =
+                MessageDigest.isEqual(
+                    presentedNonce.toByteArray(Charsets.UTF_8),
+                    entry.cNonce.toByteArray(Charsets.UTF_8),
+                )
             if (live && matches) {
                 consumed = true
                 entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = System.currentTimeMillis())
@@ -322,7 +424,10 @@ class Oidc4VciIssuerService(
     }
 
     /** A verified proof key: the JCA public key plus the subject DID it binds the credential to. */
-    private data class ProofKey(val publicKey: PublicKey, val subjectDid: String)
+    private data class ProofKey(
+        val publicKey: PublicKey,
+        val subjectDid: String,
+    )
 
     /**
      * Extracts the holder's Ed25519 key from the proof JWT's JOSE header — either the
@@ -344,10 +449,12 @@ class Oidc4VciIssuerService(
             if (!kid.startsWith("did:key:z")) return null
             val didKey = kid.substringBefore("#")
             val multibase = didKey.removePrefix("did:key:")
-            val decoded = runCatching { multibase.removePrefix("z").decodeBase58() }.getOrNull()
-                ?: return null
+            val decoded =
+                runCatching { multibase.removePrefix("z").decodeBase58() }.getOrNull()
+                    ?: return null
             if (decoded.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES + 2 ||
-                decoded[0] != ED25519_MULTICODEC_PREFIX[0] || decoded[1] != ED25519_MULTICODEC_PREFIX[1]
+                decoded[0] != ED25519_MULTICODEC_PREFIX[0] ||
+                decoded[1] != ED25519_MULTICODEC_PREFIX[1]
             ) {
                 return null
             }
@@ -367,7 +474,8 @@ class Oidc4VciIssuerService(
     private fun createEd25519PublicKey(rawKeyBytes: ByteArray): PublicKey? {
         if (rawKeyBytes.size != ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES) return null
         return try {
-            KeyFactory.getInstance("Ed25519")
+            KeyFactory
+                .getInstance("Ed25519")
                 .generatePublic(X509EncodedKeySpec(ED25519_SPKI_PREFIX + rawKeyBytes))
         } catch (_: Exception) {
             null
@@ -381,19 +489,31 @@ class Oidc4VciIssuerService(
      * The credential's subject is bound to [subjectDid], the DID proven by the wallet's
      * proof-of-possession JWT.
      */
-    private fun buildMinimalCredential(types: List<String>, subjectDid: String): String {
-        val credential = buildJsonObject {
-            put("@context", JsonArray(listOf(JsonPrimitive("https://www.w3.org/2018/credentials/v1"))))
-            put("type", JsonArray(types.map { JsonPrimitive(it) }))
-            put("issuer", issuerDid)
-            put("issuanceDate", java.time.Instant.now().toString())
-            put("credentialSubject", buildJsonObject { put("id", subjectDid) })
-        }
+    private fun buildMinimalCredential(
+        types: List<String>,
+        subjectDid: String,
+    ): String {
+        val credential =
+            buildJsonObject {
+                put("@context", JsonArray(listOf(JsonPrimitive("https://www.w3.org/2018/credentials/v1"))))
+                put("type", JsonArray(types.map { JsonPrimitive(it) }))
+                put("issuer", issuerDid)
+                put(
+                    "issuanceDate",
+                    java.time.Instant
+                        .now()
+                        .toString(),
+                )
+                put("credentialSubject", buildJsonObject { put("id", subjectDid) })
+            }
         return Json.encodeToString(JsonObject.serializer(), credential)
     }
 }
 
-data class CreateOfferResponse(val offerUri: String, val preAuthCode: String)
+data class CreateOfferResponse(
+    val offerUri: String,
+    val preAuthCode: String,
+)
 
 data class TokenResponse(
     val accessToken: String,

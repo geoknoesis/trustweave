@@ -14,7 +14,7 @@ testcontainers = "1.21.4"
 wiremock = "2.35.2"
 
 # HTTP & Serialization
-ktor = "2.3.13"
+ktor = "3.4.3"
 okhttp = "4.12.0"
 jackson = "2.21.4"
 gson = "2.14.0"

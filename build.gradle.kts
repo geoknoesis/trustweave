@@ -301,6 +301,13 @@ subprojects {
         // Without this, Gradle defaults to JUnit 4, which doesn't match our JUnit Jupiter dependencies.
         tasks.withType<Test>().configureEach {
             useJUnitPlatform()
+            // Pinned rather than inherited. Thirty-seven assertions across eight test files are
+            // written as Kotlin's `assert(...)`, which the compiler guards behind the JVM's -ea
+            // flag: with assertions disabled every one of them becomes a no-op and the tests pass
+            // unconditionally, reporting green while checking nothing. Gradle enables them by
+            // default, so this changes no behaviour today — it stops that default being the only
+            // thing standing between those tests and silently passing.
+            enableAssertions = true
         }
 
         // Apply maven-publish plugin and configure publishing for all subprojects that produce JAR files

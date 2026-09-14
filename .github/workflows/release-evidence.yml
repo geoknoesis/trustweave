@@ -34,7 +34,7 @@ jobs:
           echo "SOFTHSM2_CONF=$RUNNER_TEMP/trustweave-softhsm2.conf" >> "$GITHUB_ENV"
       - name: Test validation tools and documentation contracts
         run: |
-          python -m unittest discover -s scripts -p 'test_check_*.py'
+          python -m unittest discover -s scripts -p 'test_*.py'
           python scripts/check-documentation.py --report build/reports/documentation.json
           python scripts/generate-capability-docs.py --check
           python scripts/check-workflow-pinning.py

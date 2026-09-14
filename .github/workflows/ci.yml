@@ -79,7 +79,7 @@ jobs:
 
       - name: Test validation tools and documentation contracts
         run: |
-          python -m unittest discover -s scripts -p 'test_check_*.py'
+          python -m unittest discover -s scripts -p 'test_*.py'
           python scripts/check-documentation.py --report build/reports/documentation.json
           python scripts/generate-capability-docs.py --check
           python scripts/check-workflow-pinning.py
@@ -88,6 +88,8 @@ jobs:
           python scripts/check-capability-coverage.py
           python scripts/check-container-images.py
           python scripts/check-cancellation-guards.py
+          python scripts/check-telemetry-operations.py
+          python scripts/check-workflow-evidence-paths.py
 
       - name: Lint with ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace

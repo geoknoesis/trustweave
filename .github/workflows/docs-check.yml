@@ -52,7 +52,7 @@ jobs:
           distribution: temurin
       - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
       - name: Test the documentation checker
-        run: python -m unittest discover -s scripts -p 'test_check_*.py'
+        run: python -m unittest discover -s scripts -p 'test_*.py'
       - name: Check maintained links, fences, API patterns and exact examples
         run: python scripts/check-documentation.py --report build/reports/documentation.json
       - name: Check generated capability documentation

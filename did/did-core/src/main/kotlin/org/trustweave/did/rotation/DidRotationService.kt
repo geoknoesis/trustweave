@@ -167,39 +167,21 @@ class DefaultDidRotationService(
                 .filter { it.id.value != oldKeyId }
                 .plus(newKey)
 
-        // 4. Update references in relationship arrays
+        // 4. Repoint every relationship that referenced the old key.
+        //
+        // All five, not the two that were easy. A rotation usually happens because the old key is
+        // compromised or retired, so leaving it listed under keyAgreement, capabilityInvocation or
+        // capabilityDelegation defeats the point of rotating: those relationships are exactly the
+        // ones that say what a key is still allowed to do. It also leaves the document internally
+        // inconsistent, because the id they point at is no longer in verificationMethod at all.
         val updatedDocument =
             currentDocument.copy(
                 verificationMethod = updatedVerificationMethods,
-                authentication =
-                    currentDocument.authentication.map { ref ->
-                        if (ref.value == oldKeyId) {
-                            org.trustweave.did.identifiers.VerificationMethodId(
-                                did = did,
-                                keyId =
-                                    org.trustweave.core.identifiers.KeyId(
-                                        newKey.id.value.substringAfter("#"),
-                                    ),
-                            )
-                        } else {
-                            ref
-                        }
-                    },
-                assertionMethod =
-                    currentDocument.assertionMethod.map { ref ->
-                        if (ref.value == oldKeyId) {
-                            org.trustweave.did.identifiers.VerificationMethodId(
-                                did = did,
-                                keyId =
-                                    org.trustweave.core.identifiers.KeyId(
-                                        newKey.id.value.substringAfter("#"),
-                                    ),
-                            )
-                        } else {
-                            ref
-                        }
-                    },
-                // Similar updates for other relationship arrays...
+                authentication = repoint(currentDocument.authentication, did, oldKeyId, newKey),
+                assertionMethod = repoint(currentDocument.assertionMethod, did, oldKeyId, newKey),
+                keyAgreement = repoint(currentDocument.keyAgreement, did, oldKeyId, newKey),
+                capabilityInvocation = repoint(currentDocument.capabilityInvocation, did, oldKeyId, newKey),
+                capabilityDelegation = repoint(currentDocument.capabilityDelegation, did, oldKeyId, newKey),
             )
 
         // 5. Update via registrar
@@ -223,6 +205,31 @@ class DefaultDidRotationService(
             )
         }
     }
+
+    /**
+     * Replaces references to [oldKeyId] with the new key, leaving every other reference alone.
+     *
+     * Factored out because it used to be written twice inline and omitted three times: the
+     * duplication was what made "and the other three arrays" easy to skip.
+     */
+    private fun repoint(
+        references: List<org.trustweave.did.identifiers.VerificationMethodId>,
+        did: Did,
+        oldKeyId: String,
+        newKey: VerificationMethod,
+    ): List<org.trustweave.did.identifiers.VerificationMethodId> =
+        references.map { reference ->
+            if (reference.value != oldKeyId) {
+                reference
+            } else {
+                org.trustweave.did.identifiers.VerificationMethodId(
+                    did = did,
+                    keyId =
+                        org.trustweave.core.identifiers
+                            .KeyId(newKey.id.value.substringAfter("#")),
+                )
+            }
+        }
 
     override suspend fun rotateDid(
         oldDid: Did,
@@ -274,11 +281,20 @@ class DefaultDidRotationService(
             )
 
         // 3. Generate migration guide
+        // Every relationship the old document declared, for the same reason rotation repoints all
+        // five: a guide that lists only authentication and assertionMethod tells an operator the
+        // migration is complete while capabilityInvocation and capabilityDelegation still point at
+        // the old DID. Distinct, because one key may hold several relationships.
         val migrationGuide =
             MigrationGuide(
                 relationshipsToUpdate =
-                    oldDocument.authentication.map { it.value } +
-                        oldDocument.assertionMethod.map { it.value },
+                    (
+                        oldDocument.authentication +
+                            oldDocument.assertionMethod +
+                            oldDocument.keyAgreement +
+                            oldDocument.capabilityInvocation +
+                            oldDocument.capabilityDelegation
+                    ).map { it.value }.distinct(),
                 servicesToUpdate = oldDocument.service.map { it.id },
             )
 

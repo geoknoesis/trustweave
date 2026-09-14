@@ -26,6 +26,14 @@ private val lenientJson = Json { ignoreUnknownKeys = true }
  */
 public const val DEFAULT_MAX_REQUEST_BYTES: Long = 256L * 1024
 
+/**
+ * Installs the authorization routes into an existing application.
+ *
+ * This is the route wiring on its own: it installs no authentication, because a host embedding
+ * these routes in its own Ktor application has its own. [AvpAuthorizationServer] is the standalone
+ * server, and it refuses until the host declares what protects it. If you call this directly, that
+ * declaration is yours to make.
+ */
 fun Application.configureAuthorization(
     engine: AuthorizationEngine,
     maxRequestBytes: Long = DEFAULT_MAX_REQUEST_BYTES,
@@ -39,9 +47,10 @@ fun Routing.authorizationRoutes(
     maxRequestBytes: Long = DEFAULT_MAX_REQUEST_BYTES,
 ) {
     post("/v1/authorizations/verify") {
-        // This route is unauthenticated by design (it expects a proxy in front), so anyone who can
-        // reach it can post to it. Reading the body whole would let one request drive allocation
-        // until the process dies, so bound it before parsing.
+        // What authenticates callers is declared by the host through
+        // AvpAuthorizationServer.withAuthentication, and refused until it is. This bound is the
+        // separate concern: an admitted caller reading the body whole would still let one request
+        // drive allocation until the process dies, so bound it before parsing.
         //
         // Content-Length is checked first as a cheap reject, but it is attacker-supplied and absent
         // under chunked encoding — so the read itself is bounded too, and that is what actually

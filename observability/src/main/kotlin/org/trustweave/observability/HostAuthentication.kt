@@ -181,11 +181,24 @@ public class HostAuthentication private constructor(
             internal fun retryAfterSeconds(): Long = maxOf(1, windowMillis / 1000)
         }
 
-    /** Installs the gate ahead of routing. Call before the server starts. */
-    public fun install(application: Application) {
+    /**
+     * Installs the gate ahead of routing. Call before the server starts.
+     *
+     * @param protocolAuthenticatedPaths routes the server itself authenticates through the
+     *   protocol it implements — an OAuth token endpoint that takes a pre-authorized code, a
+     *   credential endpoint that takes an access token. Those callers are wallets, which cannot
+     *   hold a host credential, so a host gate in front of them would refuse the protocol rather
+     *   than protect it. This is the server's declaration about its own routes, not a host
+     *   setting: a host that wants to narrow what it exposes does that in front of the server.
+     */
+    @JvmOverloads
+    public fun install(
+        application: Application,
+        protocolAuthenticatedPaths: Set<String> = emptySet(),
+    ) {
         application.intercept(ApplicationCallPipeline.Plugins) {
             val path = call.request.path()
-            if (path in exemptPaths) {
+            if (path in exemptPaths || path in protocolAuthenticatedPaths) {
                 proceed()
                 return@intercept
             }
@@ -235,26 +248,30 @@ public class HostAuthentication private constructor(
      * Mutating requests are refused with 503 and an actionable message. Reads still work, so a
      * resolver or status-list endpoint keeps serving while the operator decides what to do.
      */
-    public class Unconfigured(
-        private val serverName: String,
-    ) {
-        public fun install(application: Application) {
-            application.intercept(ApplicationCallPipeline.Plugins) {
-                if (call.request.httpMethod !in MUTATING) {
-                    proceed()
-                    return@intercept
+    public class Unconfigured
+        @JvmOverloads
+        constructor(
+            private val serverName: String,
+            /** See the [protocolAuthenticatedPaths] parameter of [HostAuthentication.install]. */
+            private val protocolAuthenticatedPaths: Set<String> = emptySet(),
+        ) {
+            public fun install(application: Application) {
+                application.intercept(ApplicationCallPipeline.Plugins) {
+                    if (call.request.httpMethod !in MUTATING || call.request.path() in protocolAuthenticatedPaths) {
+                        proceed()
+                        return@intercept
+                    }
+                    call.response.headers.append("Cache-Control", "no-store")
+                    call.respondText(
+                        """{"error":"authentication_not_configured","message":""" +
+                            """"$serverName refuses mutating requests until the host calls """ +
+                            """withAuthentication(...). Use HostAuthentication.bearerToken or custom to """ +
+                            """authenticate callers, or frontedByProxy to record what already does."}""",
+                        ContentType.Application.Json,
+                        HttpStatusCode.ServiceUnavailable,
+                    )
+                    finish()
                 }
-                call.response.headers.append("Cache-Control", "no-store")
-                call.respondText(
-                    """{"error":"authentication_not_configured","message":""" +
-                        """"$serverName refuses mutating requests until the host calls """ +
-                        """withAuthentication(...). Use HostAuthentication.bearerToken or custom to """ +
-                        """authenticate callers, or frontedByProxy to record what already does."}""",
-                    ContentType.Application.Json,
-                    HttpStatusCode.ServiceUnavailable,
-                )
-                finish()
             }
         }
-    }
 }

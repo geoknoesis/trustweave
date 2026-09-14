@@ -17,15 +17,25 @@ import java.security.MessageDigest
  * (register/update/revoke) require `Authorization: Bearer <apiToken>`.
  * If [apiToken] is null, mutating routes are disabled entirely (503) —
  * the server fails closed rather than allowing unauthenticated writes.
+ *
+ * @param hostAuthenticated true when a `HostAuthentication` gate has already admitted the call.
+ *   The two mechanisms compose rather than stack: a call the gate admitted is authorized, and
+ *   demanding [apiToken] as well would mean a host using mTLS or a gateway could never satisfy
+ *   the route. It never opens anything on its own — the gate refused everything it did not admit
+ *   before routing ran.
  */
-fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: String? = null) {
-
+fun Routing.configureTrustRegistryRoutes(
+    registry: TrustRegistry,
+    apiToken: String? = null,
+    hostAuthenticated: Boolean = false,
+) {
     /**
      * Guards a mutating handler. Returns true if the call may proceed;
      * otherwise responds (503 when no token is configured, 401 on a
      * missing/invalid token) and returns false.
      */
     suspend fun ApplicationCall.authorizeMutation(): Boolean {
+        if (hostAuthenticated) return true
         if (apiToken.isNullOrBlank()) {
             respond(
                 HttpStatusCode.ServiceUnavailable,
@@ -48,12 +58,12 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
     }
 
     route("/registry") {
-
         // Issuers
         route("/issuers") {
             get {
-                val status = call.request.queryParameters["status"]
-                    ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
+                val status =
+                    call.request.queryParameters["status"]
+                        ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
                 val credentialType = call.request.queryParameters["credentialType"]
                 val nameContains = call.request.queryParameters["nameContains"]
                 call.respond(registry.listIssuers(RegistryFilter(status, credentialType, nameContains)))
@@ -66,7 +76,8 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
             route("/{did}") {
                 get {
                     val did = call.parameters["did"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                    registry.getIssuer(did)
+                    registry
+                        .getIssuer(did)
                         ?.let { call.respond(it) }
                         ?: call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
                 }
@@ -82,8 +93,11 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
                     val revoked = registry.revokeIssuer(did)
-                    if (revoked) call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
-                    else call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    if (revoked) {
+                        call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    }
                 }
             }
         }
@@ -91,8 +105,9 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
         // Verifiers
         route("/verifiers") {
             get {
-                val status = call.request.queryParameters["status"]
-                    ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
+                val status =
+                    call.request.queryParameters["status"]
+                        ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
                 val nameContains = call.request.queryParameters["nameContains"]
                 call.respond(registry.listVerifiers(RegistryFilter(status = status, nameContains = nameContains)))
             }
@@ -104,7 +119,8 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
             route("/{did}") {
                 get {
                     val did = call.parameters["did"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                    registry.getVerifier(did)
+                    registry
+                        .getVerifier(did)
                         ?.let { call.respond(it) }
                         ?: call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
                 }
@@ -120,8 +136,11 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
                     val revoked = registry.revokeVerifier(did)
-                    if (revoked) call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
-                    else call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    if (revoked) {
+                        call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    }
                 }
             }
         }
@@ -130,7 +149,12 @@ fun Routing.configureTrustRegistryRoutes(registry: TrustRegistry, apiToken: Stri
         get("/status/{did}") {
             val did = call.parameters["did"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val status = registry.getAccreditationStatus(did)
-            call.respond(buildJsonObject { put("did", did); put("status", status.name) })
+            call.respond(
+                buildJsonObject {
+                    put("did", did)
+                    put("status", status.name)
+                },
+            )
         }
     }
 }

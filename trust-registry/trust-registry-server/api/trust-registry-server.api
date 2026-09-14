@@ -1,6 +1,6 @@
 public final class org/trustweave/registry/server/TrustRegistryRoutesKt {
-	public static final fun configureTrustRegistryRoutes (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;)V
-	public static synthetic fun configureTrustRegistryRoutes$default (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun configureTrustRegistryRoutes (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Z)V
+	public static synthetic fun configureTrustRegistryRoutes$default (Lio/ktor/server/routing/Routing;Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;ZILjava/lang/Object;)V
 }
 
 public final class org/trustweave/registry/server/TrustRegistryServer {
@@ -9,6 +9,7 @@ public final class org/trustweave/registry/server/TrustRegistryServer {
 	public final fun start (Z)V
 	public static synthetic fun start$default (Lorg/trustweave/registry/server/TrustRegistryServer;ZILjava/lang/Object;)V
 	public final fun stop ()V
+	public final fun withAuthentication (Lorg/trustweave/observability/HostAuthentication;)Lorg/trustweave/registry/server/TrustRegistryServer;
 	public final fun withObservability (Lorg/trustweave/observability/HostObservability;)Lorg/trustweave/registry/server/TrustRegistryServer;
 }
 

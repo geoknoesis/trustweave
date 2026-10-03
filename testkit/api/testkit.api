@@ -72,6 +72,18 @@ public final class org/trustweave/testkit/TrustWeaveTestFixture$Companion {
 	public final fun minimal ()Lorg/trustweave/testkit/TrustWeaveTestFixture;
 }
 
+public final class org/trustweave/testkit/anchor/FakeEvmJsonRpcServer : java/lang/AutoCloseable {
+	public static final field Companion Lorg/trustweave/testkit/anchor/FakeEvmJsonRpcServer$Companion;
+	public static final field DEFAULT_SENDER Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final class org/trustweave/testkit/anchor/FakeEvmJsonRpcServer$Companion {
+}
+
 public final class org/trustweave/testkit/anchor/InMemoryBlockchainAnchorClient : org/trustweave/anchor/BlockchainAnchorClient {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

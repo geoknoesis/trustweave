@@ -23,7 +23,10 @@ import java.nio.charset.StandardCharsets
  * chain-id validation happens before any client state is built.
  *
  * @param numericChainId The EIP-155 numeric chain id used for transaction signing
- * @param defaultRpcUrl RPC endpoint used when the `rpcUrl` option is absent
+ * @param defaultRpcUrl RPC endpoint used when the `rpcUrl` option is absent. Blank
+ *   ([EvmChainConfig.NO_DEFAULT_RPC_URL]) means there is no default and the `rpcUrl` option is
+ *   required — used for mainnets, which must never silently fall back to a shared public
+ *   endpoint whose answers a verifier would then trust
  * @param blockchainName Human-readable chain name for error messages
  * @param networkName Value of the `network` key in [org.trustweave.anchor.AnchorRef.extra]
  * @param credentialsRequired When true, a missing `privateKey` option fails
@@ -44,7 +47,12 @@ data class EvmChainConfig(
      * anchor that was just written. Public chains keep the default.
      */
     val defaultMinConfirmations: Long = AbstractEvmAnchorClient.DEFAULT_MIN_CONFIRMATIONS,
-)
+) {
+    public companion object {
+        /** [defaultRpcUrl] value meaning "no default: the `rpcUrl` option is required". */
+        public const val NO_DEFAULT_RPC_URL: String = ""
+    }
+}
 
 /**
  * Shared base class for EVM-compatible blockchain anchor clients.
@@ -77,6 +85,11 @@ data class EvmChainConfig(
  * - `privateKey` (String): hex private key, with or without `0x` prefix; required
  *   for real transactions
  * - `contractAddress` (String): optional registry contract recorded on anchor refs
+ * - `expectedSender` (String): address that must have sent every anchor this client reads
+ *   ([OPTION_EXPECTED_SENDER]); unset means any sender is accepted
+ * - `expectedRecipient` (String): address every anchor this client reads must be sent to
+ *   ([OPTION_EXPECTED_RECIPIENT]); unset means the anchor must be a self-send, the only
+ *   shape [submitTransaction] produces
  */
 abstract class AbstractEvmAnchorClient(
     chainId: String,
@@ -86,7 +99,18 @@ abstract class AbstractEvmAnchorClient(
     java.io.Closeable {
     /** The resolved JSON-RPC endpoint (the `rpcUrl` option or the chain default). */
     protected val rpcUrl: String =
-        requireTransportSecurity(options["rpcUrl"] as? String ?: chain.defaultRpcUrl)
+        requireTransportSecurity(
+            (options["rpcUrl"] as? String)?.takeIf { it.isNotBlank() }
+                ?: chain.defaultRpcUrl.takeIf { it.isNotBlank() }
+                ?: throw BlockchainException.ConfigurationFailed(
+                    chainId = chainId,
+                    configKey = "rpcUrl",
+                    reason =
+                        "rpcUrl is required for ${chain.blockchainName} ${chain.networkName}: there is no " +
+                            "default endpoint for this network. Configure your own (or your provider's) " +
+                            "JSON-RPC URL; anchors read through it are trusted for verification.",
+                ),
+        )
 
     /** The web3j client for [rpcUrl]. Shut down via [close]. */
     protected val web3j: Web3j = Web3j.build(HttpService(rpcUrl))
@@ -171,6 +195,15 @@ abstract class AbstractEvmAnchorClient(
 
         val receipt = ethGetTransactionReceipt.transactionReceipt.get()
         requireSameTransaction(requested = txHash, returned = receipt.transactionHash, source = "receipt")
+        // A reverted transaction still carries its calldata, but nothing was anchored by it.
+        if (!receipt.isStatusOK) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readTransaction",
+                reason = "Transaction reverted on chain (status=${receipt.status}); it is not an anchor",
+            )
+        }
 
         val tx =
             web3j
@@ -180,6 +213,7 @@ abstract class AbstractEvmAnchorClient(
                 .orElse(null)
                 ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
         requireSameTransaction(requested = txHash, returned = tx.hash, source = "transaction")
+        requireExpectedParties(txHash, from = tx.from, to = tx.to)
 
         requireBuried(txHash, receipt)
 
@@ -438,6 +472,48 @@ abstract class AbstractEvmAnchorClient(
     }
 
     /**
+     * Asserts the transaction was sent by the configured anchoring account and to the expected
+     * recipient.
+     *
+     * Anyone can put arbitrary calldata on chain, so without these checks a third party could
+     * publish a transaction with the right payload and have it accepted as "the" anchor. The
+     * sender is checked when [OPTION_EXPECTED_SENDER] is configured. The recipient must equal
+     * [OPTION_EXPECTED_RECIPIENT] when configured; otherwise the transaction must be a self-send
+     * (`to == from`), which is the only shape this client writes. Address case is not significant.
+     */
+    private fun requireExpectedParties(
+        txHash: String,
+        from: String?,
+        to: String?,
+    ) {
+        fun reject(reason: String): Nothing =
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readTransaction",
+                reason = reason,
+            )
+
+        if (from.isNullOrBlank()) reject("Transaction has no sender; refusing to treat it as an anchor")
+        expectedSender?.let { expected ->
+            if (!from.equals(expected, ignoreCase = true)) {
+                reject("Transaction was sent by $from, not the expected anchoring account $expected")
+            }
+        }
+        val expectedTo = expectedRecipient ?: from
+        if (to == null || !to.equals(expectedTo, ignoreCase = true)) {
+            val what = if (expectedRecipient != null) "the expected recipient" else "a self-send from $from"
+            reject("Transaction is sent to $to, not $what ($expectedTo)")
+        }
+    }
+
+    private val expectedSender: String?
+        get() = (options[OPTION_EXPECTED_SENDER] as? String)?.takeIf { it.isNotBlank() }
+
+    private val expectedRecipient: String?
+        get() = (options[OPTION_EXPECTED_RECIPIENT] as? String)?.takeIf { it.isNotBlank() }
+
+    /**
      * Asserts the containing block has at least [minConfirmations] blocks on top of it.
      *
      * A transaction in the current head block is not settled — a re-org of depth one removes it,
@@ -518,6 +594,18 @@ abstract class AbstractEvmAnchorClient(
          * will read it. 0 disables the check.
          */
         public const val OPTION_MIN_CONFIRMATIONS: String = "minConfirmations"
+
+        /**
+         * Address (0x-hex) that must be the sender of every anchor read by this client. Set it to
+         * the anchoring account when verifying anchors; unset accepts any sender.
+         */
+        public const val OPTION_EXPECTED_SENDER: String = "expectedSender"
+
+        /**
+         * Address (0x-hex) that must be the recipient of every anchor read by this client. Unset
+         * requires a self-send, which is what this client writes.
+         */
+        public const val OPTION_EXPECTED_RECIPIENT: String = "expectedRecipient"
 
         /** Excludes only the head block, where a depth-one re-org still removes the transaction. */
         public const val DEFAULT_MIN_CONFIRMATIONS: Long = 1L

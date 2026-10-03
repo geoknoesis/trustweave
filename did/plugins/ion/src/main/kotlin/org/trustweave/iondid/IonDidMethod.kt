@@ -151,8 +151,11 @@ class IonDidMethod(
                 val resolutionResult = sidetreeClient.resolveDid(didString)
 
                 if (!resolutionResult.success || resolutionResult.document == null) {
+                    // Only a 404 means "no such DID". Transport failures (-1), node errors and
+                    // unparseable answers are resolution errors, not a verdict on the DID.
+                    val notFound = resolutionResult.httpStatus == 404
                     return@withContext DidMethodUtils.createErrorResolutionResult(
-                        "notFound",
+                        if (notFound) "notFound" else "internalError",
                         resolutionResult.error ?: "DID not found in ION network",
                         method,
                         didString,
@@ -180,22 +183,19 @@ class IonDidMethod(
                 storeDocument(convertedDocument.id.value, convertedDocument)
 
                 DidMethodUtils.createSuccessResolutionResult(convertedDocument, method)
+            } catch (e: org.trustweave.did.exception.DidException.InvalidDidFormat) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (e: TrustWeaveException) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (e: kotlinx.serialization.SerializationException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDidDocument", e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
+                // A node answer missing required members (for example no `id`) is a bad document.
+                DidMethodUtils.createErrorResolutionResult("invalidDidDocument", e.message, method, did.value)
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 

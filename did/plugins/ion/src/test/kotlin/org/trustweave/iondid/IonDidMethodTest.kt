@@ -70,6 +70,27 @@ class IonDidMethodTest {
         }
 
     @Test
+    fun `a node error is an internal error, only a 404 is notFound`() =
+        runBlocking<Unit> {
+            server.enqueue(MockResponse().setResponseCode(500).setBody("boom"))
+            val failure = method.resolveDid(Did("did:ion:EiAbc"))
+            assertIs<DidResolutionResult.Failure.ResolutionError>(failure)
+            assertEquals(DidErrorType.INTERNAL_ERROR, failure.errorType)
+
+            server.enqueue(MockResponse().setResponseCode(404))
+            assertIs<DidResolutionResult.Failure.NotFound>(method.resolveDid(Did("did:ion:EiAbc")))
+        }
+
+    @Test
+    fun `a node answer without a document id is an invalid document, not an invalid DID`() =
+        runBlocking<Unit> {
+            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"didDocument":{"verificationMethod":[]}}"""))
+            val failure = method.resolveDid(Did("did:ion:EiAbc"))
+            assertIs<DidResolutionResult.Failure>(failure)
+            assertEquals(DidErrorType.INVALID_DID_DOCUMENT, failure.errorType)
+        }
+
+    @Test
     fun `config requires a node url`() {
         assertThrows<IllegalArgumentException> { IonDidConfig.fromMap(emptyMap()) }
         assertThrows<IllegalArgumentException> { IonDidConfig.builder().build() }

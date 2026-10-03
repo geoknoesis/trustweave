@@ -303,4 +303,16 @@ class OrbDidMethodTest {
 
             assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:EiTest:eyJkZWx0YSI6e319")))
         }
+
+    @Test
+    fun `a node error is an internal error, only a 404 is notFound`() =
+        runBlocking<Unit> {
+            server.enqueue(MockResponse().setResponseCode(500).setBody("boom"))
+            val failure = method.resolveDid(Did("did:orb:EiTest"))
+            assertIs<DidResolutionResult.Failure.ResolutionError>(failure)
+            assertEquals(org.trustweave.did.resolver.DidErrorType.INTERNAL_ERROR, failure.errorType)
+
+            server.enqueue(MockResponse().setResponseCode(404))
+            assertIs<DidResolutionResult.Failure.NotFound>(method.resolveDid(Did("did:orb:EiTest")))
+        }
 }

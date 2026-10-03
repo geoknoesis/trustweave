@@ -219,13 +219,12 @@ class PolygonDidMethod(
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (e: org.trustweave.did.exception.DidException.InvalidDidFormat) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 

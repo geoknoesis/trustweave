@@ -215,8 +215,9 @@ class OrbDidMethod(
                 )
             }
 
+            // Only a 404 means "no such DID"; transport failures and node errors are resolution errors.
             DidMethodUtils.createErrorResolutionResult(
-                "notFound",
+                if (response.httpStatus == 404) "notFound" else "internalError",
                 response.error ?: "Orb DID not found: ${did.value}",
                 method,
                 did.value,

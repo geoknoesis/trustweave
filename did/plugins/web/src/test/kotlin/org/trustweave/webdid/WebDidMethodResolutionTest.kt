@@ -29,9 +29,9 @@ import kotlin.test.assertTrue
  */
 class WebDidMethodResolutionTest {
     private companion object {
-        // TEST-NET-3 literals: no DNS needed, and not on the SSRF deny-list.
-        const val HOST = "203.0.113.10"
-        const val OTHER_HOST = "203.0.113.11"
+        // Public IPv4 literals: no DNS needed, and not on the SSRF deny-list.
+        const val HOST = "8.8.8.8"
+        const val OTHER_HOST = "8.8.4.4"
         const val DID = "did:web:$HOST"
     }
 

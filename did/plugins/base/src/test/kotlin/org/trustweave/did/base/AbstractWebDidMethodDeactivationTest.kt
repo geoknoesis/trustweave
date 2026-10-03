@@ -45,12 +45,12 @@ import kotlin.test.assertTrue
  */
 class AbstractWebDidMethodDeactivationTest {
     private companion object {
-        // TEST-NET-3 (RFC 5737): a public, non-routable-by-policy IPv4 literal. InetAddress
+        // A public IPv4 literal. InetAddress
         // parses IP literals without a real DNS lookup, so PrivateNetworkGuard's resolution
         // check (loopback/private/link-local/multicast) passes offline and deterministically —
         // unlike a hostname, which would need real DNS, and unlike 127.0.0.1/10.x/169.254.x,
         // which the SSRF guard (see AbstractWebDidMethodSsrfTest) deliberately rejects.
-        const val HOST = "203.0.113.10"
+        const val HOST = "8.8.8.8"
         const val DID = "did:web:$HOST"
     }
 

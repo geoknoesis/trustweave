@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -20,7 +21,7 @@ import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import java.io.IOException
-import java.net.URL
+import java.net.Proxy
 import kotlin.time.Duration
 
 /**
@@ -98,14 +99,11 @@ abstract class AbstractWebDidMethod(
      * @throws IllegalArgumentException if URL doesn't use HTTPS
      */
     protected fun validateHttps(url: String) {
-        val parsedUrl =
-            try {
-                URL(url)
-            } catch (e: Exception) {
-                throw IllegalArgumentException("Invalid URL: $url", e)
-            }
-
-        if (parsedUrl.protocol != "https") {
+        // Parse with OkHttp's HttpUrl, the same parser the request itself goes through, so the
+        // pre-flight check and the connection cannot disagree about scheme or host (for example
+        // on backslashes, which java.net.URL and OkHttp treat differently).
+        val parsedUrl = url.toHttpUrlOrNull() ?: throw IllegalArgumentException("Invalid URL: $url")
+        if (!parsedUrl.isHttps) {
             throw IllegalArgumentException("did:web requires HTTPS: $url")
         }
     }
@@ -114,16 +112,14 @@ abstract class AbstractWebDidMethod(
      * SSRF guard for resolution. A did:web identifier's host is attacker-controlled (it comes from
      * the DID being resolved, e.g. an issuer or holder DID), so reject any host that resolves to a
      * loopback / private / link-local / cloud-metadata address before opening a connection.
+     * The host is taken from OkHttp's [okhttp3.HttpUrl] parse, the one the connection uses.
      *
      * @throws TrustWeaveException.Unknown if the host is disallowed or unresolvable.
      */
     protected fun assertHostAllowed(url: String) {
         val host =
-            try {
-                URL(url).host
-            } catch (e: Exception) {
-                throw IllegalArgumentException("Invalid URL: $url", e)
-            }
+            url.toHttpUrlOrNull()?.host
+                ?: throw IllegalArgumentException("Invalid URL: $url")
         ResolutionNetworkGuard.rejectionReason(host)?.let { reason ->
             throw TrustWeaveException.Unknown(
                 message = "did:web SSRF guard rejected resolution: $reason",
@@ -159,16 +155,32 @@ abstract class AbstractWebDidMethod(
      * The client used for resolution: [httpClient] with automatic redirects disabled and its DNS
      * wrapped in [ResolutionGuardedDns], so the addresses actually connected to are checked too
      * (closing the DNS-rebinding gap the pre-flight [assertHostAllowed] check leaves open).
+     *
+     * **Proxies are stripped.** With an HTTP/SOCKS proxy the proxy, not this process, resolves the
+     * target host, so [ResolutionGuardedDns] would never see the address and the SSRF guard would
+     * be bypassed. The client is therefore rebuilt with [Proxy.NO_PROXY] (which also overrides any
+     * proxy selector and authenticator): did:web resolution always connects directly. A network
+     * that only allows egress through a proxy will fail loudly with a connect error instead of
+     * silently losing SSRF protection.
      */
-    private val resolutionClient: OkHttpClient by lazy {
+    internal val resolutionClient: OkHttpClient by lazy { buildGuardedClient(forResolution = true) }
+
+    /**
+     * Client used for publishing (update/deactivate/create). Same guarantees as [resolutionClient]
+     * (direct connection, guarded DNS, no automatic redirects) because the publish URL is derived
+     * from the DID being updated, so its host is just as untrusted as on resolution.
+     */
+    internal val publishClient: OkHttpClient by lazy { buildGuardedClient(forResolution = false) }
+
+    private fun buildGuardedClient(forResolution: Boolean): OkHttpClient =
         httpClient
             .newBuilder()
-            .also { configureResolutionClient(it) }
+            .also { if (forResolution) configureResolutionClient(it) }
             .followRedirects(false)
             .followSslRedirects(false)
+            .proxy(Proxy.NO_PROXY)
             .dns(ResolutionGuardedDns(httpClient.dns))
             .build()
-    }
 
     /**
      * Fetches the document at [initialUrl], following at most [maxRedirects] redirects and
@@ -501,11 +513,18 @@ abstract class AbstractWebDidMethod(
      * Helper function to execute an HTTP request.
      *
      * @param request The HTTP request
+     * Sends through [publishClient] (guarded DNS, no proxy, no redirects) after asserting the
+     * request URL is HTTPS and its host passes the SSRF guard.
+     *
      * @return Response
      * @throws IOException if request fails
+     * @throws TrustWeaveException if the target host is disallowed
      */
     protected suspend fun executeRequest(request: Request): Response =
         withContext(Dispatchers.IO) {
-            httpClient.newCall(request).execute()
+            val target = request.url.toString()
+            validateHttps(target)
+            assertHostAllowed(target)
+            publishClient.newCall(request).execute()
         }
 }

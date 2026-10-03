@@ -62,7 +62,7 @@ class WebDidMethod(
          * Characters that must never appear in a percent-decoded HOST segment.
          * `:` is deliberately allowed (port separator, `%3A`).
          */
-        private const val HOST_FORBIDDEN_CHARS = "@/?#"
+        private const val HOST_FORBIDDEN_CHARS = "@/\\?#"
 
         /**
          * Characters that must never appear in a percent-decoded PATH segment.

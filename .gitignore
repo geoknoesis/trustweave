@@ -104,3 +104,9 @@ docs/reviews/**/*.zip
 docs/reviews/**/jacoco*.xml
 docs/reviews/**/test-results/
 docs/reviews/**/build/
+docs/reviews/**/TEST-*.xml
+docs/reviews/**/remediation-evidence/
+docs/reviews/**/test-results*.json
+docs/reviews/**/coverage-final.json
+docs/reviews/**/*sbom*.json
+docs/reviews/**/*bom*.json

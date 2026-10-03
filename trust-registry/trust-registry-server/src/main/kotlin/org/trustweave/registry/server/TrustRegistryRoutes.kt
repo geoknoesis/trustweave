@@ -5,9 +5,17 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.trustweave.registry.*
+import org.trustweave.registry.AccreditationStatus
+import org.trustweave.registry.IssuerRegistration
+import org.trustweave.registry.IssuerUpdate
+import org.trustweave.registry.ParticipantAlreadyRegisteredException
+import org.trustweave.registry.RegistryFilter
+import org.trustweave.registry.TrustRegistry
+import org.trustweave.registry.VerifierRegistration
+import org.trustweave.registry.VerifierUpdate
 import java.security.MessageDigest
 
 /**
@@ -17,6 +25,9 @@ import java.security.MessageDigest
  * (register/update/revoke) require `Authorization: Bearer <apiToken>`.
  * If [apiToken] is null, mutating routes are disabled entirely (503) —
  * the server fails closed rather than allowing unauthenticated writes.
+ *
+ * Registering an already-registered DID answers 409; revoke accepts an optional `reason` query
+ * parameter that is stored on the record.
  *
  * @param hostAuthenticated true when a `HostAuthentication` gate has already admitted the call.
  *   The two mechanisms compose rather than stack: a call the gate admitted is authorized, and
@@ -57,6 +68,40 @@ fun Routing.configureTrustRegistryRoutes(
         return true
     }
 
+    /**
+     * Runs a mutating registry call and maps its failure: cancellation is rethrown, an unknown
+     * DID is 404, a duplicate registration is 409, anything else is a logged 500 — never a 404
+     * that would hide a real fault.
+     */
+    suspend fun ApplicationCall.respondRegistryCall(
+        success: HttpStatusCode = HttpStatusCode.OK,
+        block: suspend () -> Any,
+    ) {
+        val result =
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: NoSuchElementException) {
+                respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                return
+            } catch (e: ParticipantAlreadyRegisteredException) {
+                respond(
+                    HttpStatusCode.Conflict,
+                    buildJsonObject {
+                        put("error", "already_registered")
+                        put("did", e.did)
+                    },
+                )
+                return
+            } catch (e: Exception) {
+                application.log.error("Trust registry operation failed", e)
+                respond(HttpStatusCode.InternalServerError, buildJsonObject { put("error", "internal_error") })
+                return
+            }
+        respond(success, result)
+    }
+
     route("/registry") {
         // Issuers
         route("/issuers") {
@@ -71,7 +116,7 @@ fun Routing.configureTrustRegistryRoutes(
             post {
                 if (!call.authorizeMutation()) return@post
                 val reg = call.receive<IssuerRegistration>()
-                call.respond(HttpStatusCode.Created, registry.registerIssuer(reg))
+                call.respondRegistryCall(HttpStatusCode.Created) { registry.registerIssuer(reg) }
             }
             route("/{did}") {
                 get {
@@ -85,14 +130,12 @@ fun Routing.configureTrustRegistryRoutes(
                     if (!call.authorizeMutation()) return@put
                     val did = call.parameters["did"] ?: return@put call.respond(HttpStatusCode.BadRequest)
                     val update = call.receive<IssuerUpdate>()
-                    runCatching { registry.updateIssuer(did, update) }
-                        .onSuccess { call.respond(it) }
-                        .onFailure { call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") }) }
+                    call.respondRegistryCall { registry.updateIssuer(did, update) }
                 }
                 post("/revoke") {
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val revoked = registry.revokeIssuer(did)
+                    val revoked = registry.revokeIssuer(did, call.request.queryParameters["reason"])
                     if (revoked) {
                         call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
                     } else {
@@ -114,7 +157,7 @@ fun Routing.configureTrustRegistryRoutes(
             post {
                 if (!call.authorizeMutation()) return@post
                 val reg = call.receive<VerifierRegistration>()
-                call.respond(HttpStatusCode.Created, registry.registerVerifier(reg))
+                call.respondRegistryCall(HttpStatusCode.Created) { registry.registerVerifier(reg) }
             }
             route("/{did}") {
                 get {
@@ -128,14 +171,12 @@ fun Routing.configureTrustRegistryRoutes(
                     if (!call.authorizeMutation()) return@put
                     val did = call.parameters["did"] ?: return@put call.respond(HttpStatusCode.BadRequest)
                     val update = call.receive<VerifierUpdate>()
-                    runCatching { registry.updateVerifier(did, update) }
-                        .onSuccess { call.respond(it) }
-                        .onFailure { call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") }) }
+                    call.respondRegistryCall { registry.updateVerifier(did, update) }
                 }
                 post("/revoke") {
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val revoked = registry.revokeVerifier(did)
+                    val revoked = registry.revokeVerifier(did, call.request.queryParameters["reason"])
                     if (revoked) {
                         call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
                     } else {

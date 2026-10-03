@@ -54,6 +54,9 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
     // Per-status-list next available index
     private val nextIndex = ConcurrentHashMap<StatusListId, Int>()
 
+    // Indices whose status was ever written (revoked, suspended or cleared): never releasable
+    private val touchedIndices = ConcurrentHashMap<StatusListId, MutableSet<Int>>()
+
     // Per-status-list mutex to serialize BitSet mutations and index allocation
     private val listMutexes = ConcurrentHashMap<StatusListId, Mutex>()
 
@@ -148,7 +151,10 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         val bitSet = revocationData[statusListId] ?: return false
         val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
         val index = getCredentialIndex(credentialId, statusListId) ?: return false
-        mutex.withLock { bitSet.set(index, false) }
+        mutex.withLock {
+            markTouched(statusListId, index)
+            bitSet.set(index, false)
+        }
         updateMetadata(statusListId)
 
         return true
@@ -167,7 +173,10 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         val bitSet = suspensionData[statusListId] ?: return false
         val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
         val index = getCredentialIndex(credentialId, statusListId) ?: return false
-        mutex.withLock { bitSet.set(index, false) }
+        mutex.withLock {
+            markTouched(statusListId, index)
+            bitSet.set(index, false)
+        }
         updateMetadata(statusListId)
 
         return true
@@ -270,6 +279,26 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         }
     }
 
+    override suspend fun releaseStatusListIndex(
+        statusListId: StatusListId,
+        index: Int,
+    ): Boolean {
+        if (index < 0 || !statusLists.containsKey(statusListId)) return false
+        val mutex = listMutexes.getOrPut(statusListId) { Mutex() }
+        return mutex.withLock {
+            val reverseIndices = indexToCredential[statusListId] ?: return@withLock false
+            val credentialId = reverseIndices[index] ?: return@withLock false
+            // An index whose status was ever written, or whose bit is set, was put to use.
+            if (touchedIndices[statusListId]?.contains(index) == true) return@withLock false
+            if (revocationData[statusListId]?.get(index) == true) return@withLock false
+            if (suspensionData[statusListId]?.get(index) == true) return@withLock false
+            reverseIndices.remove(index)
+            credentialToIndex[statusListId]?.remove(credentialId, index)
+            nextIndex[statusListId] = minOf(nextIndex[statusListId] ?: index, index)
+            true
+        }
+    }
+
     override suspend fun revokeCredentials(
         credentialIds: List<String>,
         statusListId: StatusListId,
@@ -313,6 +342,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
                 // Copy nullable properties to locals — cross-module smart cast not possible.
                 val revoked = update.revoked
                 val suspended = update.suspended
+                if (revoked != null || suspended != null) markTouched(statusListId, update.index)
                 if (revoked != null && metadata.purpose == StatusPurpose.REVOCATION) {
                     revocationBitSet?.set(update.index, revoked)
                 }
@@ -381,6 +411,7 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
             credentialToIndex.remove(statusListId)
             indexToCredential.remove(statusListId)
             nextIndex.remove(statusListId)
+            touchedIndices.remove(statusListId)
         }
         return removed
     }
@@ -431,16 +462,26 @@ internal class InMemoryCredentialRevocationManager : CredentialRevocationManager
         val indices = credentialToIndex.getOrPut(statusListId) { ConcurrentHashMap() }
         val reverseIndices = indexToCredential.getOrPut(statusListId) { ConcurrentHashMap() }
 
-        return indices.getOrPut(credentialId) {
-            val next = nextIndex.getOrPut(statusListId) { 0 }
-            var candidate = next
-            while (reverseIndices.containsKey(candidate)) {
-                candidate++
+        val index =
+            indices.getOrPut(credentialId) {
+                val next = nextIndex.getOrPut(statusListId) { 0 }
+                var candidate = next
+                while (reverseIndices.containsKey(candidate)) {
+                    candidate++
+                }
+                reverseIndices[candidate] = credentialId
+                nextIndex[statusListId] = candidate + 1
+                candidate
             }
-            reverseIndices[candidate] = credentialId
-            nextIndex[statusListId] = candidate + 1
-            candidate
-        }
+        markTouched(statusListId, index)
+        return index
+    }
+
+    private fun markTouched(
+        statusListId: StatusListId,
+        index: Int,
+    ) {
+        touchedIndices.getOrPut(statusListId) { ConcurrentHashMap.newKeySet() }.add(index)
     }
 
     /**

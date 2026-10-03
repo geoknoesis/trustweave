@@ -409,9 +409,9 @@ class IssuanceBuilder(
             }
 
             // Capture status-list coordinates (if allocated above) so that if issuance fails the
-            // caller can learn which index was orphaned. CredentialRevocationManager has no API to
-            // release an assigned index, so the slot cannot be returned automatically; the failure
-            // carries a warning naming it (see orphanedIndexWarning below).
+            // index can be handed back via CredentialRevocationManager.releaseStatusListIndex. A
+            // manager that cannot (or will not) release it leaves the slot allocated, and the failure
+            // then carries a warning naming it.
             val allocatedStatusListId =
                 if (autoRevocation && credentialToIssue.credentialStatus != null) {
                     credentialToIssue.credentialStatus?.statusListCredential
@@ -481,18 +481,33 @@ class IssuanceBuilder(
             // Issue credential using CredentialService
             val issueResult = credentialService.issue(request)
 
-            // If issuance failed after a status-list index was allocated, keep the original failure
-            // (its subtype, reason and cause are what the caller needs to act on) and attach the
-            // orphaned coordinates as a warning, since the index cannot be released automatically.
+            // If issuance failed after a status-list index was allocated, hand the index back (the
+            // credential bound to it was never delivered) and keep the original failure: its
+            // subtype, reason and cause are what the caller needs to act on. When the manager
+            // cannot release the index, say so in a warning.
             val settledResult =
-                when {
-                    issueResult is IssuanceResult.Failure && allocatedStatusListId != null ->
+                if (issueResult is IssuanceResult.Failure && allocatedStatusListId != null && allocatedStatusIndex != null) {
+                    val released =
+                        try {
+                            allocatedStatusIndex.toIntOrNull()?.let {
+                                revocationManager?.releaseStatusListIndex(allocatedStatusListId, it)
+                            } ?: false
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            false
+                        }
+                    if (released) {
+                        issueResult
+                    } else {
                         issueResult.withWarning(
                             "Credential issuance failed after status-list index $allocatedStatusIndex was " +
-                                "assigned in status list ${allocatedStatusListId.value}; that index is now " +
-                                "unused (CredentialRevocationManager offers no way to release it).",
+                                "assigned in status list ${allocatedStatusListId.value}; that index could not be " +
+                                "released and stays allocated but unused.",
                         )
-                    else -> issueResult
+                    }
+                } else {
+                    issueResult
                 }
 
             // Auto-anchor. Follows the withRevocation() precedent above: an opt-in side-effect that

@@ -162,7 +162,7 @@ class CredentialAnchorService(
                             .isEnvelope(anchored.payload)
                     ) {
                         org.trustweave.anchor.AnchorDigest
-                            .matches(anchored.payload.jsonObject, expectedBytes.toByteArray(Charsets.UTF_8)) &&
+                            .matches(anchored.payload.jsonObject, expected) &&
                             anchored.payload.jsonObject["mediaType"]
                                 ?.jsonPrimitive
                                 ?.content == "application/vc+json"

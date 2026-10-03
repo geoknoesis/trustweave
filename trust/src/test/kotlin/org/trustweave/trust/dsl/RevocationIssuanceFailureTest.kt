@@ -25,8 +25,7 @@ import kotlin.time.Duration
 
 /**
  * When issuance fails after withRevocation() assigned a status-list index, the caller must get the
- * original failure (subtype, reason) back — not a generic AdapterError — plus a warning naming the
- * index that could not be released.
+ * original failure (subtype, reason) back — not a generic AdapterError — and the assigned status-list index handed back to the revocation manager.
  */
 class RevocationIssuanceFailureTest {
     /** Rejects every issuance with a specific, non-adapter failure. */
@@ -92,8 +91,10 @@ class RevocationIssuanceFailureTest {
 
                 val failure = assertIs<IssuanceResult.Failure.InvalidRequest>(result)
                 assertEquals("rejected by policy", failure.reason)
+                // The default in-memory revocation manager can give the index back, so the failure
+                // carries no "leaked index" warning.
                 assertTrue(
-                    failure.warnings.any { it.contains("status-list index") && it.contains("unused") },
+                    failure.warnings.none { it.contains("status-list index") },
                     "warnings: ${failure.warnings}",
                 )
             } finally {

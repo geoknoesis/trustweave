@@ -78,7 +78,7 @@ class CredentialServiceExtensionsTest {
 
             // Convert to JWT and back
             val jwt = service.toJwt(originalCredential)
-            val recoveredCredential = service.fromJwt(jwt)
+            val recoveredCredential = service.fromJwt(jwt, allowUnsecured = true)
 
             assertNotNull(recoveredCredential, "Credential should be recovered from JWT")
             assertEquals(originalCredential.type, recoveredCredential.type, "Type should match")
@@ -98,7 +98,7 @@ class CredentialServiceExtensionsTest {
             val originalCredential = createTestCredential()
 
             val jwt = service.toJwt(originalCredential)
-            val recoveredCredential = service.fromJwt(jwt)
+            val recoveredCredential = service.fromJwt(jwt, allowUnsecured = true)
 
             // Verify claims
             val originalClaims = originalCredential.credentialSubject.claims
@@ -216,7 +216,7 @@ class CredentialServiceExtensionsTest {
 
             // Test JWT round trip
             val jwt = service.toJwt(originalCredential)
-            val fromJwt = service.fromJwt(jwt)
+            val fromJwt = service.fromJwt(jwt, allowUnsecured = true)
             assertEquals(originalCredential.type, fromJwt.type, "JWT round trip should preserve type")
 
             // Test JSON-LD round trip

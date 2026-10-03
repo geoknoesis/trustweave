@@ -69,7 +69,7 @@ class CredentialTransformerJwtTest {
                 )
 
             val jwt = originalCredential.toJwt()
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
 
             assertNotNull(recoveredCredential, "Credential should be recovered")
             assertEquals(originalCredential.type, recoveredCredential.type, "Type should match")
@@ -97,7 +97,7 @@ class CredentialTransformerJwtTest {
                 )
 
             val jwt = originalCredential.toJwt()
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
 
             val originalClaims = originalCredential.credentialSubject.claims
             val recoveredClaims = recoveredCredential.credentialSubject.claims
@@ -118,7 +118,7 @@ class CredentialTransformerJwtTest {
             val jwt = credential.toJwt()
 
             assertNotNull(jwt, "JWT should be created even with empty claims")
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
             assertEquals(0, recoveredCredential.credentialSubject.claims.size, "Recovered credential should have empty claims")
         }
 
@@ -144,7 +144,7 @@ class CredentialTransformerJwtTest {
                 )
 
             val jwt = credential.toJwt()
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
 
             assertEquals(credential.type.size, recoveredCredential.type.size, "Type count should match")
             assertTrue(
@@ -200,7 +200,7 @@ class CredentialTransformerJwtTest {
                 )
 
             val jwt = credential.toJwt()
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
 
             assertEquals(credential.issuer.id.value, recoveredCredential.issuer.id.value, "DID issuer should be preserved")
         }
@@ -234,7 +234,7 @@ class CredentialTransformerJwtTest {
                 )
 
             val jwt = credential.toJwt()
-            val recoveredCredential = jwt.fromJwt()
+            val recoveredCredential = jwt.fromJwt(allowUnsecured = true)
 
             assertTrue(
                 recoveredCredential.credentialSubject.claims.containsKey("profile"),

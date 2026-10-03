@@ -97,78 +97,82 @@ interface DidCommService {
  * Suitable for testing and simple use cases.
  * For production, use a persistent storage implementation.
  */
-class InMemoryDidCommService(
-    private val packer: DidCommPacker,
-    private val resolveDid: suspend (String) -> DidDocument?,
-    private val storage: org.trustweave.credential.didcomm.storage.DidCommMessageStorage? = null,
-) : DidCommService {
-    private val inMemoryStorage =
-        storage
-            ?: org.trustweave.credential.didcomm.storage
-                .InMemoryDidCommMessageStorage()
+class InMemoryDidCommService
+    @JvmOverloads
+    constructor(
+        private val packer: DidCommPacker,
+        private val resolveDid: suspend (String) -> DidDocument?,
+        private val storage: org.trustweave.credential.didcomm.storage.DidCommMessageStorage? = null,
+        /** Where accepted message ids are remembered for replay protection (see [DidCommReplayStore]). */
+        replayStore: DidCommReplayStore = InMemoryDidCommReplayStore(),
+    ) : DidCommService {
+        private val inMemoryStorage =
+            storage
+                ?: org.trustweave.credential.didcomm.storage
+                    .InMemoryDidCommMessageStorage()
 
-    private val receiveGuards = DidCommReceiveGuards()
+        private val receiveGuards = DidCommReceiveGuards(replayStore)
 
-    override suspend fun sendMessage(
-        message: DidCommMessage,
-        fromDid: String,
-        fromKeyId: String,
-        toDid: String,
-        toKeyId: String,
-        encrypt: Boolean,
-    ): String =
-        withContext(Dispatchers.IO) {
-            // Pack the message
-            val packed =
-                packer.pack(
-                    message = message,
-                    fromDid = fromDid,
-                    fromKeyId = fromKeyId,
-                    toDid = toDid,
-                    toKeyId = toKeyId,
-                    encrypt = encrypt,
-                )
+        override suspend fun sendMessage(
+            message: DidCommMessage,
+            fromDid: String,
+            fromKeyId: String,
+            toDid: String,
+            toKeyId: String,
+            encrypt: Boolean,
+        ): String =
+            withContext(Dispatchers.IO) {
+                // Pack the message
+                val packed =
+                    packer.pack(
+                        message = message,
+                        fromDid = fromDid,
+                        fromKeyId = fromKeyId,
+                        toDid = toDid,
+                        toKeyId = toKeyId,
+                        encrypt = encrypt,
+                    )
 
-            // Store the message
-            storeMessage(message)
+                // Store the message
+                storeMessage(message)
 
-            // In a real implementation, this would deliver the message via HTTP, WebSocket, etc.
-            // For now, we just store it
+                // In a real implementation, this would deliver the message via HTTP, WebSocket, etc.
+                // For now, we just store it
 
-            message.id
-        }
+                message.id
+            }
 
-    override suspend fun receiveMessage(
-        packedMessage: String,
-        recipientDid: String,
-        recipientKeyId: String,
-        senderDid: String?,
-        requireSigned: Boolean,
-    ): DidCommMessage =
-        withContext(Dispatchers.IO) {
-            // Unpack the message
-            val message =
-                packer.unpack(
-                    packedMessage = packedMessage,
-                    recipientDid = recipientDid,
-                    recipientKeyId = recipientKeyId,
-                    senderDid = senderDid,
-                    requireSigned = requireSigned,
-                )
+        override suspend fun receiveMessage(
+            packedMessage: String,
+            recipientDid: String,
+            recipientKeyId: String,
+            senderDid: String?,
+            requireSigned: Boolean,
+        ): DidCommMessage =
+            withContext(Dispatchers.IO) {
+                // Unpack the message
+                val message =
+                    packer.unpack(
+                        packedMessage = packedMessage,
+                        recipientDid = recipientDid,
+                        recipientKeyId = recipientKeyId,
+                        senderDid = senderDid,
+                        requireSigned = requireSigned,
+                    )
 
-            receiveGuards.check(message)
+                receiveGuards.check(message)
 
-            // Store the received message
-            storeMessage(message)
+                // Store the received message
+                storeMessage(message)
 
-            message
-        }
+                message
+            }
 
-    override suspend fun storeMessage(message: DidCommMessage): String = inMemoryStorage.store(message)
+        override suspend fun storeMessage(message: DidCommMessage): String = inMemoryStorage.store(message)
 
-    override suspend fun getMessage(messageId: String): DidCommMessage? = inMemoryStorage.get(messageId)
+        override suspend fun getMessage(messageId: String): DidCommMessage? = inMemoryStorage.get(messageId)
 
-    override suspend fun getMessagesForDid(did: String): List<DidCommMessage> = inMemoryStorage.getMessagesForDid(did)
+        override suspend fun getMessagesForDid(did: String): List<DidCommMessage> = inMemoryStorage.getMessagesForDid(did)
 
-    override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = inMemoryStorage.getThreadMessages(thid)
-}
+        override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = inMemoryStorage.getThreadMessages(thid)
+    }

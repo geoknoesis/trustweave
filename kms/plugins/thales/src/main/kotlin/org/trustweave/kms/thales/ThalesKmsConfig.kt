@@ -24,6 +24,14 @@ data class ThalesKmsConfig(
     val accessToken: String? = null,
     val scope: String? = null,
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String =
+        "ThalesKmsConfig(baseUrl=$baseUrl, apiKey=${redactSecret(apiKey)}, username=$username, " +
+            "password=${redactSecret(password)}, clientId=$clientId, clientSecret=${redactSecret(clientSecret)}, " +
+            "accessToken=${redactSecret(accessToken)}, scope=$scope)"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         org.trustweave.core.net.TransportSecurity
             .requireSecureForPublicHosts(baseUrl, "Thales credentials")

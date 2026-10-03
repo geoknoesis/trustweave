@@ -20,8 +20,15 @@ data class IbmKmsConfig(
     val instanceId: String,
     val region: String = "us-south",
     val serviceUrl: String? = null,
-    val endpointOverride: String? = null
+    val endpointOverride: String? = null,
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String =
+        "IbmKmsConfig(apiKey=${redactSecret(apiKey)}, instanceId=$instanceId, region=$region, " +
+            "serviceUrl=$serviceUrl, endpointOverride=$endpointOverride)"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         require(apiKey.isNotBlank()) { "IBM API key must be specified" }
         require(instanceId.isNotBlank()) { "IBM service instance ID must be specified" }
@@ -45,17 +52,20 @@ data class IbmKmsConfig(
          * @return IbmKmsConfig instance, or null if required values are not set
          */
         fun fromEnvironment(): IbmKmsConfig? {
-            val apiKey = System.getenv("IBM_API_KEY")
-                ?: System.getenv("IBMCLOUD_API_KEY")
-                ?: return null
+            val apiKey =
+                System.getenv("IBM_API_KEY")
+                    ?: System.getenv("IBMCLOUD_API_KEY")
+                    ?: return null
 
-            val instanceId = System.getenv("IBM_INSTANCE_ID")
-                ?: System.getenv("KMS_INSTANCE_ID")
-                ?: return null
+            val instanceId =
+                System.getenv("IBM_INSTANCE_ID")
+                    ?: System.getenv("KMS_INSTANCE_ID")
+                    ?: return null
 
-            val region = System.getenv("IBM_REGION")
-                ?: System.getenv("IBMCLOUD_REGION")
-                ?: "us-south"
+            val region =
+                System.getenv("IBM_REGION")
+                    ?: System.getenv("IBMCLOUD_REGION")
+                    ?: "us-south"
 
             return Builder()
                 .apiKey(apiKey)
@@ -73,13 +83,15 @@ data class IbmKmsConfig(
          * @throws IllegalArgumentException if required values are not provided
          */
         fun fromMap(options: Map<String, Any?>): IbmKmsConfig {
-            val apiKey = options["apiKey"] as? String
-                ?: options["api_key"] as? String
-                ?: throw IllegalArgumentException("IBM API key must be specified in options")
+            val apiKey =
+                options["apiKey"] as? String
+                    ?: options["api_key"] as? String
+                    ?: throw IllegalArgumentException("IBM API key must be specified in options")
 
-            val instanceId = options["instanceId"] as? String
-                ?: options["instance_id"] as? String
-                ?: throw IllegalArgumentException("IBM service instance ID must be specified in options")
+            val instanceId =
+                options["instanceId"] as? String
+                    ?: options["instance_id"] as? String
+                    ?: throw IllegalArgumentException("IBM service instance ID must be specified in options")
 
             return Builder()
                 .apiKey(apiKey)
@@ -134,9 +146,8 @@ data class IbmKmsConfig(
                 instanceId = instanceId,
                 region = region,
                 serviceUrl = serviceUrl,
-                endpointOverride = endpointOverride
+                endpointOverride = endpointOverride,
             )
         }
     }
 }
-

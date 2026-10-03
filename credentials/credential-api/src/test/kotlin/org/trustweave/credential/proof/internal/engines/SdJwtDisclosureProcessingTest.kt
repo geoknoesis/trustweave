@@ -105,7 +105,7 @@ class SdJwtDisclosureProcessingTest {
                     },
                 )
             }
-        val header = b64.encodeToString("""{"alg":"EdDSA","kid":"$keyId"}""".toByteArray())
+        val header = b64.encodeToString("""{"typ":"dc+sd-jwt","alg":"EdDSA","kid":"$keyId"}""".toByteArray())
         val body = b64.encodeToString(payload.toString().toByteArray())
         val sig = (kms.sign(KeyId(keyId), "$header.$body".toByteArray()) as SignResult.Success).signature
         return VerifiableCredential(

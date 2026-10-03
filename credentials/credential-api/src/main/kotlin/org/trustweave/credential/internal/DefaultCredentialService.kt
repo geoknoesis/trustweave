@@ -510,6 +510,23 @@ internal class DefaultCredentialService(
         // Verify domain if required
         PresentationVerification.verifyDomain(presentation, options)?.let { return it }
 
+        // Optional single-use KB-JWT nonce (PresentationNonceStore). Consumed last, so a
+        // presentation rejected above can never burn a nonce. The nonce is only trustworthy
+        // when the presentation proof was actually verified.
+        if (options.additionalOptions.containsKey(
+                org.trustweave.credential.proof.PresentationNonceStore.OPTION_KEY,
+            )
+        ) {
+            if (!options.verifyPresentationProof) {
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = null,
+                    reason = "A KB-JWT nonce store requires presentation proof verification",
+                    errors = listOf("verifyPresentationProof must be true when a PresentationNonceStore is configured"),
+                )
+            }
+            PresentationVerification.consumeKbJwtNonce(presentation, options)?.let { return it }
+        }
+
         // All checks passed - return success
         val firstValidResult =
             credentialResults.firstOrNull { it is VerificationResult.Valid }

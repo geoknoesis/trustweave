@@ -145,7 +145,15 @@ internal class SdJwtProofEngine(
             claimsBuilder.claim("cnf", mapOf("kid" to holder.value))
         }
 
-        val header = JWSHeader.Builder(JWSAlgorithm.EdDSA).keyID(keyId).build()
+        // `typ` marks the token as an SD-JWT VC (draft-ietf-oauth-sd-jwt-vc); verifiers refuse
+        // an issuer JWT whose typ is anything else, so a JWT minted for another purpose by the
+        // same key cannot be replayed as a credential.
+        val header =
+            JWSHeader
+                .Builder(JWSAlgorithm.EdDSA)
+                .type(com.nimbusds.jose.JOSEObjectType(SD_JWT_TYP_DC))
+                .keyID(keyId)
+                .build()
         val signerFn =
             getSignerFunctionOrKms()
                 ?: throw IllegalArgumentException(
@@ -196,6 +204,7 @@ internal class SdJwtProofEngine(
             // (`<JWT>~<Disclosure 1>~...~[<KB-JWT>]`, e.g. after presentation); the
             // issuer-signed JWT is always the first '~'-separated segment.
             val signedJWT = SignedJWT.parse(proof.sdJwtVc.substringBefore("~"))
+            checkIssuerJwtType(credential, signedJWT, options)?.let { return it }
             val issuerIri =
                 when (val issuer = credential.issuer) {
                     is Issuer.IriIssuer -> issuer.id
@@ -943,7 +952,48 @@ internal class SdJwtProofEngine(
         )
     }
 
-    private companion object {
-        const val SD_ALG_SHA256 = "sha-256"
+    /**
+     * The issuer-signed JWT must declare `typ` `dc+sd-jwt` or `vc+sd-jwt`. A token without `typ`
+     * (issued before this engine set it) is refused unless the verifier opts in with
+     * `additionalOptions["allowLegacySdJwtTyp"] = true`; any other `typ` is always refused.
+     */
+    private fun checkIssuerJwtType(
+        credential: VerifiableCredential,
+        jwt: SignedJWT,
+        options: VerificationOptions,
+    ): VerificationResult.Invalid.InvalidProof? {
+        val typ = jwt.header.type?.toString()
+        val acceptable =
+            when {
+                typ == null -> options.additionalOptions[ALLOW_LEGACY_TYP_OPTION] == true
+                else -> SD_JWT_TYPS.any { it.equals(typ, ignoreCase = true) }
+            }
+        if (acceptable) return null
+        return VerificationResult.Invalid.InvalidProof(
+            credential = credential,
+            reason =
+                if (typ == null) {
+                    "SD-JWT-VC issuer JWT has no 'typ' header (expected one of $SD_JWT_TYPS)"
+                } else {
+                    "SD-JWT-VC issuer JWT 'typ' is '$typ' (expected one of $SD_JWT_TYPS)"
+                },
+            errors =
+                listOf(
+                    "Unexpected issuer JWT typ: $typ. Credentials issued before typ was emitted can be " +
+                        "accepted with VerificationOptions.additionalOptions[\"$ALLOW_LEGACY_TYP_OPTION\"] = true",
+                ),
+            warnings = emptyList(),
+        )
+    }
+
+    companion object {
+        const val SD_JWT_TYP_DC = "dc+sd-jwt"
+        const val SD_JWT_TYP_VC = "vc+sd-jwt"
+
+        /** `additionalOptions` key; set to `true` to accept issuer JWTs that carry no `typ` header. */
+        const val ALLOW_LEGACY_TYP_OPTION = "allowLegacySdJwtTyp"
+
+        private val SD_JWT_TYPS = listOf(SD_JWT_TYP_DC, SD_JWT_TYP_VC)
+        private const val SD_ALG_SHA256 = "sha-256"
     }
 }

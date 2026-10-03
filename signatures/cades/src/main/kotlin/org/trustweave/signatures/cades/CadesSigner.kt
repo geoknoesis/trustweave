@@ -2,14 +2,18 @@ package org.trustweave.signatures.cades
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import org.bouncycastle.asn1.ASN1Primitive
+import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.DERSet
 import org.bouncycastle.asn1.cms.Attribute
 import org.bouncycastle.asn1.cms.AttributeTable
 import org.bouncycastle.asn1.cms.CMSAttributes
+import org.bouncycastle.asn1.cms.CMSObjectIdentifiers
+import org.bouncycastle.asn1.cms.ContentInfo
+import org.bouncycastle.asn1.cms.SignedData
+import org.bouncycastle.asn1.cms.SignerInfo
 import org.bouncycastle.asn1.cms.Time
 import org.bouncycastle.asn1.ess.ESSCertIDv2
 import org.bouncycastle.asn1.ess.SigningCertificateV2
@@ -27,7 +31,6 @@ import org.bouncycastle.cms.SignerInformation
 import org.bouncycastle.cms.SignerInformationStore
 import org.bouncycastle.operator.ContentSigner
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider
-import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GetPublicKeyResult
@@ -63,8 +66,10 @@ interface CadesSigner {
 }
 
 /** Thrown by [DefaultCadesSigner] on unrecoverable failures during signing. */
-class CadesSignerException(message: String, cause: Throwable? = null) :
-    RuntimeException(message, cause)
+class CadesSignerException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)
 
 /**
  * Default [CadesSigner] implementation using Bouncy Castle's CMS package.
@@ -78,63 +83,77 @@ class DefaultCadesSigner(
     private val kms: KeyManagementService,
     private val tsaClientFactory: (TsaConfig) -> TsaClient = ::BouncyCastleTsaClient,
 ) : CadesSigner {
+    override suspend fun sign(request: CadesSigningRequest): CadesSignature =
+        withContext(Dispatchers.IO) {
+            val publicKey =
+                when (val r = kms.getPublicKey(request.keyId)) {
+                    is GetPublicKeyResult.Success -> r.keyHandle
+                    else -> throw CadesSignerException("Cannot resolve public key for ${request.keyId}: $r")
+                }
+            val algorithm =
+                Algorithm.parse(publicKey.algorithm)
+                    ?: throw CadesSignerException("Unknown key algorithm '${publicKey.algorithm}'")
+            val mapping =
+                AlgorithmMapping.forAlgorithm(algorithm)
+                    ?: throw CadesSignerException(
+                        "Algorithm $algorithm has no CAdES mapping — MVP supports ECDSA P-256/384/521 and Ed25519",
+                    )
 
-    override suspend fun sign(request: CadesSigningRequest): CadesSignature = withContext(Dispatchers.IO) {
-        val publicKey = when (val r = kms.getPublicKey(request.keyId)) {
-            is GetPublicKeyResult.Success -> r.keyHandle
-            else -> throw CadesSignerException("Cannot resolve public key for ${request.keyId}: $r")
-        }
-        val algorithm = Algorithm.parse(publicKey.algorithm)
-            ?: throw CadesSignerException("Unknown key algorithm '${publicKey.algorithm}'")
-        val mapping = AlgorithmMapping.forAlgorithm(algorithm)
-            ?: throw CadesSignerException(
-                "Algorithm $algorithm has no CAdES mapping — MVP supports ECDSA P-256/384/521 and Ed25519",
+            val chain = decodeChain(request.signerCertificateChain)
+            val signerCert = chain.first()
+            val signingTime = request.signingTime ?: Clock.System.now()
+
+            // Bouncy Castle's ContentSigner SPI is synchronous, so the KMS cannot be called from
+            // inside it without blocking a thread. Instead: pass 1 lets BC assemble the CMS with a
+            // capturing signer that records the DER SignedAttributes (the exact signing input);
+            // the suspending KMS call happens here, in the coroutine; pass 2 splices the real
+            // signature value into the SignerInfo.
+            val contentSigner = CapturingContentSigner(mapping.signatureAlgorithmIdentifier())
+            val signedAttrGen =
+                CadesSignedAttributeTableGenerator(
+                    signingTimeMillis = signingTime.toEpochMilliseconds(),
+                    signerCert = signerCert,
+                )
+            // Lower-level SignerInfoGeneratorBuilder lets us pin the SignerInfo's digestAlgorithm
+            // explicitly via setContentDigest(). This is necessary because BC's default digest
+            // finder doesn't always derive a digest for Ed25519 (RFC 8419 says id-Ed25519 has no
+            // companion "withHash" OID; the SignerInfo MUST use id-sha512).
+            val signerInfoGen: SignerInfoGenerator =
+                SignerInfoGeneratorBuilder(BcDigestCalculatorProvider())
+                    .setContentDigest(mapping.digestAlgorithmIdentifier())
+                    .setSignedAttributeGenerator(signedAttrGen)
+                    .build(contentSigner, X509CertificateHolder(signerCert.encoded))
+
+            val cmsGenerator = CMSSignedDataGenerator()
+            cmsGenerator.addSignerInfoGenerator(signerInfoGen)
+            cmsGenerator.addCertificates(JcaCertStore(chain))
+            val content = CMSProcessableByteArray(request.payload)
+            val unsignedCms = cmsGenerator.generate(content, !request.detached)
+            val toBeSigned = contentSigner.capturedSigningInput()
+            val signatureValue =
+                when (val r = kms.sign(request.keyId, toBeSigned, mapping.algorithm)) {
+                    is SignResult.Success -> r.signature
+                    else -> throw CadesSignerException("KMS sign failed: $r")
+                }
+            val cms = withSignatureValue(unsignedCms, signatureValue, if (request.detached) content else null)
+
+            val finalCms =
+                if (request.profile == CadesProfile.B_T) {
+                    val tsaConfig =
+                        request.tsaConfig
+                            ?: throw CadesSignerException("tsaConfig is required for CadesProfile.B_T")
+                    val tsa = tsaClientFactory(tsaConfig)
+                    addSignatureTimeStamp(cms, tsa)
+                } else {
+                    cms
+                }
+
+            CadesSignature(
+                encoded = finalCms.encoded,
+                detached = request.detached,
+                profile = request.profile,
             )
-
-        val chain = decodeChain(request.signerCertificateChain)
-        val signerCert = chain.first()
-        val signingTime = request.signingTime ?: Clock.System.now()
-
-        val contentSigner = KmsContentSigner(
-            kms = kms,
-            keyId = request.keyId,
-            algorithm = mapping.algorithm,
-            sigAlgId = mapping.signatureAlgorithmIdentifier(),
-        )
-        val signedAttrGen = CadesSignedAttributeTableGenerator(
-            signingTimeMillis = signingTime.toEpochMilliseconds(),
-            signerCert = signerCert,
-        )
-        // Lower-level SignerInfoGeneratorBuilder lets us pin the SignerInfo's digestAlgorithm
-        // explicitly via setContentDigest(). This is necessary because BC's default digest
-        // finder doesn't always derive a digest for Ed25519 (RFC 8419 says id-Ed25519 has no
-        // companion "withHash" OID; the SignerInfo MUST use id-sha512).
-        val signerInfoGen: SignerInfoGenerator = SignerInfoGeneratorBuilder(BcDigestCalculatorProvider())
-            .setContentDigest(mapping.digestAlgorithmIdentifier())
-            .setSignedAttributeGenerator(signedAttrGen)
-            .build(contentSigner, X509CertificateHolder(signerCert.encoded))
-
-        val cmsGenerator = CMSSignedDataGenerator()
-        cmsGenerator.addSignerInfoGenerator(signerInfoGen)
-        cmsGenerator.addCertificates(JcaCertStore(chain))
-        val content = CMSProcessableByteArray(request.payload)
-        val cms = cmsGenerator.generate(content, !request.detached)
-
-        val finalCms = if (request.profile == CadesProfile.B_T) {
-            val tsaConfig = request.tsaConfig
-                ?: throw CadesSignerException("tsaConfig is required for CadesProfile.B_T")
-            val tsa = tsaClientFactory(tsaConfig)
-            addSignatureTimeStamp(cms, tsa)
-        } else {
-            cms
         }
-
-        CadesSignature(
-            encoded = finalCms.encoded,
-            detached = request.detached,
-            profile = request.profile,
-        )
-    }
 
     // ---------------------------------------------------------------- sigTst (B-T)
 
@@ -145,18 +164,20 @@ class DefaultCadesSigner(
         val signerInfo = cms.signerInfos.signers.single()
         val signatureValue = signerInfo.signature
         val imprint = MessageDigest.getInstance("SHA-256").digest(signatureValue)
-        val token = try {
-            tsa.requestTimeStamp(imprint, TsaHashAlgorithm.SHA_256)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (t: Throwable) {
-            throw CadesSignerException("TSA request failed: ${t.message}", t)
-        }
+        val token =
+            try {
+                tsa.requestTimeStamp(imprint, TsaHashAlgorithm.SHA_256)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (t: Throwable) {
+                throw CadesSignerException("TSA request failed: ${t.message}", t)
+            }
         val tokenAsn1 = ASN1Primitive.fromByteArray(token.encoded)
-        val sigTstAttr = Attribute(
-            PKCSObjectIdentifiers.id_aa_signatureTimeStampToken,
-            DERSet(tokenAsn1),
-        )
+        val sigTstAttr =
+            Attribute(
+                PKCSObjectIdentifiers.id_aa_signatureTimeStampToken,
+                DERSet(tokenAsn1),
+            )
         val unsignedAttrs = AttributeTable(sigTstAttr)
         val updatedSigner = SignerInformation.replaceUnsignedAttributes(signerInfo, unsignedAttrs)
         val updatedStore = SignerInformationStore(listOf(updatedSigner))
@@ -170,39 +191,68 @@ class DefaultCadesSigner(
         return chain.map { factory.generateCertificate(ByteArrayInputStream(it)) as X509Certificate }
     }
 
-    // ---------------------------------------------------------------- ContentSigner over KMS
+    // ---------------------------------------------------------------- two-pass KMS signing
 
     /**
-     * A Bouncy Castle [ContentSigner] whose `getSignature()` defers to the configured KMS.
-     *
-     * Bouncy Castle assembles the signing input by writing the DER-encoded `SignedAttributes`
-     * to [getOutputStream]; we buffer those bytes and, on [getSignature], hand them to the KMS.
-     * For ECDSA keys the KMS returns a DER signature, which is exactly what CMS expects — no
-     * extra conversion is needed (CAdES/CMS uses DER ECDSA, unlike JAdES which wants raw R||S).
+     * Replaces the (placeholder) signature value of the single SignerInfo in [cms] with
+     * [signatureValue]. The signed attributes — and therefore the signing input — are unchanged.
+     * For ECDSA keys the KMS returns a DER signature, which is exactly what CMS expects (unlike
+     * JAdES, which wants raw R||S).
      */
-    private class KmsContentSigner(
-        private val kms: KeyManagementService,
-        private val keyId: KeyId,
-        private val algorithm: Algorithm,
+    private fun withSignatureValue(
+        cms: CMSSignedData,
+        signatureValue: ByteArray,
+        detachedContent: CMSProcessableByteArray?,
+    ): CMSSignedData {
+        val signedData = SignedData.getInstance(cms.toASN1Structure().content)
+        val signerInfos = signedData.signerInfos
+        if (signerInfos.size() != 1) {
+            throw CadesSignerException("Internal: expected exactly one SignerInfo, found ${signerInfos.size()}")
+        }
+        val original = SignerInfo.getInstance(signerInfos.getObjectAt(0))
+        val signed =
+            SignerInfo(
+                original.sid,
+                original.digestAlgorithm,
+                original.authenticatedAttributes,
+                original.digestEncryptionAlgorithm,
+                DEROctetString(signatureValue),
+                original.unauthenticatedAttributes,
+            )
+        val rebuilt =
+            SignedData(
+                signedData.digestAlgorithms,
+                signedData.encapContentInfo,
+                signedData.certificates,
+                signedData.crLs,
+                DERSet(signed),
+            )
+        val contentInfo = ContentInfo(CMSObjectIdentifiers.signedData, rebuilt)
+        return if (detachedContent != null) CMSSignedData(detachedContent, contentInfo) else CMSSignedData(contentInfo)
+    }
+
+    /**
+     * A Bouncy Castle [ContentSigner] that only records the signing input BC writes to it (the
+     * DER-encoded `SignedAttributes`) and returns an empty placeholder signature. The real
+     * signature is produced afterwards by the suspending KMS call — see [withSignatureValue].
+     */
+    private class CapturingContentSigner(
         private val sigAlgId: AlgorithmIdentifier,
     ) : ContentSigner {
         private val buffer = ByteArrayOutputStream()
+        private var captured: ByteArray? = null
 
         override fun getAlgorithmIdentifier(): AlgorithmIdentifier = sigAlgId
+
         override fun getOutputStream(): OutputStream = buffer
+
         override fun getSignature(): ByteArray {
-            val toSign = buffer.toByteArray()
-            // runBlocking bridges the synchronous Bouncy Castle ContentSigner SPI (getSignature()
-            // is non-suspend) to the suspend KMS.sign() call. This is safe here because the whole
-            // signing flow already runs on Dispatchers.IO (see DefaultCadesSigner.sign), so we are
-            // not blocking a thread we shouldn't.
-            return runBlocking {
-                when (val r = kms.sign(keyId, toSign, algorithm)) {
-                    is SignResult.Success -> r.signature
-                    else -> throw CadesSignerException("KMS sign failed: $r")
-                }
-            }
+            captured = buffer.toByteArray()
+            return ByteArray(0)
         }
+
+        fun capturedSigningInput(): ByteArray =
+            captured ?: throw CadesSignerException("Internal: Bouncy Castle did not request a signature")
     }
 
     // ---------------------------------------------------------------- signed-attributes
@@ -218,7 +268,6 @@ class DefaultCadesSigner(
         private val signingTimeMillis: Long,
         private val signerCert: X509Certificate,
     ) : DefaultSignedAttributeTableGenerator() {
-
         override fun createStandardAttributeTable(parameters: MutableMap<*, *>?): Hashtable<*, *> {
             // Java raw Hashtable comes back here; we re-cast to a usable mutable map and add the
             // two CAdES baseline attributes.
@@ -228,19 +277,21 @@ class DefaultCadesSigner(
             // signing-time (RFC 5652 §11.3) — the BC base class would default this to "now";
             // overwrite with the caller-supplied instant so the wire signature carries the
             // claimed signing time the request asked for.
-            base[CMSAttributes.signingTime] = Attribute(
-                CMSAttributes.signingTime,
-                DERSet(Time(java.util.Date(signingTimeMillis))),
-            )
+            base[CMSAttributes.signingTime] =
+                Attribute(
+                    CMSAttributes.signingTime,
+                    DERSet(Time(java.util.Date(signingTimeMillis))),
+                )
 
             // signing-certificate-v2 (RFC 5035 §3 / ETSI EN 319 122-1 §5.2.2.3)
             val digest = MessageDigest.getInstance("SHA-256").digest(signerCert.encoded)
             val essIdV2 = ESSCertIDv2(digest)
             val scV2 = SigningCertificateV2(arrayOf(essIdV2))
-            base[PKCSObjectIdentifiers.id_aa_signingCertificateV2] = Attribute(
-                PKCSObjectIdentifiers.id_aa_signingCertificateV2,
-                DERSet(scV2),
-            )
+            base[PKCSObjectIdentifiers.id_aa_signingCertificateV2] =
+                Attribute(
+                    PKCSObjectIdentifiers.id_aa_signingCertificateV2,
+                    DERSet(scV2),
+                )
 
             return base
         }

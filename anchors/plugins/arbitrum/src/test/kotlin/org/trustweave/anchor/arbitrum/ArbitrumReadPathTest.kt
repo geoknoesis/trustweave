@@ -18,7 +18,10 @@ class ArbitrumReadPathTest {
     private fun client(
         rpc: FakeEvmJsonRpcServer,
         extra: Map<String, Any?> = emptyMap(),
-    ) = ArbitrumBlockchainAnchorClient(ArbitrumBlockchainAnchorClient.ARBITRUM_SEPOLIA, mapOf("rpcUrl" to rpc.url) + extra)
+    ) = ArbitrumBlockchainAnchorClient(
+        ArbitrumBlockchainAnchorClient.ARBITRUM_SEPOLIA,
+        mapOf("rpcUrl" to rpc.url, AbstractEvmAnchorClient.OPTION_ACCEPT_ANY_SELF_SEND to true) + extra,
+    )
 
     private fun assertRejected(
         rpc: FakeEvmJsonRpcServer,

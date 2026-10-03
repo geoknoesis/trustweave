@@ -45,6 +45,14 @@ Remediation of the 11 September 2026 full-codebase review
   is recorded rather than hidden. `scripts/check-dependency-catalog.py` fails the build on a new
   literal coordinate.
 
+- The cloud SDK BOMs in `kms:plugins:aws`, `kms:plugins:cloudhsm`, `kms:plugins:azure`,
+  `kms:plugins:google` and `wallet:plugins:cloud` were still literals the catalog check could not
+  see (nested in `platform(...)`). They now come from the catalog: AWS SDK 2.20.0 → 2.43.0, Azure
+  SDK BOM 1.2.15 → 1.3.6, Google Cloud libraries-bom 26.22.0/26.38.0 → 26.80.0. Consumers of those
+  modules resolve the newer cloud SDKs.
+
+- Published `-javadoc` jars now contain Dokka-generated API documentation instead of being empty.
+
 ### Added
 
 - `HostAuthentication` in `observability`: constant-time bearer tokens, host-supplied authorizers,
@@ -181,6 +189,20 @@ Verifiable-Intent amount bounds / configuration leakage.
 - **`wallet:wallet-services` ships with no tests.** It is exported via the BOM; treat it as
   Experimental.
 
+### Earlier migration notes
+
+These entries were kept under a second "Unreleased" heading at the end of this file. They were
+written before the 0.7.0 release (2026-08-29) and shipped in it.
+
+- Presentations: use **`presentationResult`** / **`presentationFromWalletResult`** and **`buildResult()`** only; throwing helpers **`TrustWeave.presentation`**, **`presentationFromWallet`**, **`PresentationBuilder.build()`**, and **`WalletPresentationBuilder.build()`** have been removed.
+- Configuration: use **`credentialService`** and **`getCredentialService()`**; **`TrustWeaveConfig.issuer`** and **`TrustWeave.getIssuer()`** have been removed.
+- Test sources: legacy **`TrustLayer*`** / **`InMemoryTrustLayer*`** class and file names renamed to **`TrustWeave*`** / **`InMemoryTrustWeave*`** for consistent terminology.
+- **`docs/README.md`**: examples now use **`TrustWeave`** / **`trustWeave`** and current result-style APIs (aligned with the root **`README.md`** quick start).
+- **Documentation**: contributing test templates consolidated as **`trustweave-test-templates.md`** (links updated from **`trust-layer-test-templates.md`** in **`writing-tests.md`** and **`modules/trustweave-testkit.md`**); **`atlas-parametric-architecture-overview.md`** snippets aligned with **`DidCreationResult`**, **`DidResolutionResult`**, **`IssuanceResult.getOrThrow()`**, and **`BlockchainService.anchor(..., serializer, chainId)`**; **`wallet-api.md`**, **`parametric-insurance-mga-implementation-guide.md`**, and example **`println`** copy avoid the deprecated product name “Trust Layer” where **TrustWeave** is meant.
+- **Documentation (sweep)**: Source **`docs/**/*.md`** (and mirrored **`docs/_site/**/*.md`**) updated for **`TrustWeave.build { }`** instead of assigning **`trustWeave { }`** to a facade variable; removed **`getDslContext()`** in favor of **`trustWeave.configuration`**, **`resolveDid`**, and **`trustWeave.revocation { }`**; **`org.trustweave.credential.model.vc.*`** imports; **`core-api.md`** quick reference, DID resolve/update, anchoring **`read`**, and advanced sections aligned with current APIs; **`architecture-overview.md`**, **`dsl-guide.md`**, **`trust-registry.md`**, **`mental-model.md`**, and **`STYLE_GUIDE.md`** terminology refreshed.
+- **Documentation (follow-up)**: **`api-patterns.md`** DID update/rotate examples match **`DidDocument`** returns; **`mental-model`** / **`architecture-overview`** diagrams drop **`TrustWeaveContext`**; **`blockchain-anchoring.md`** fixes read/anchor examples (**`BlockchainException`**, not **`Result`+`TrustWeaveError`**); **`readAnchor`** renamed to **`blockchains.read`** across scenarios/tutorials; **`api-reference/README.md`**, **`error-handling.md`** (wallet **`WalletCreationResult`**, **`signedBy(did)`**), **`dids.md`**, and **`smart-contracts.md`** error text aligned with current behavior.
+- Removed historical / internal audit markdown from **`docs/`** (phase summaries, documentation-improvement trackers, navigation meta, VC API cleanup logs, protocol code-review notes, **`API_SCORE`**, duplicate production-readiness evaluations under **`features/credential-exchange-protocols/`**, etc.); user-facing guides under **`getting-started`**, **`how-to`**, **`introduction`**, **`api-reference`**, and **`scenarios`** are unchanged.
+
 ## [0.6.0] - 2025-03-23
 
 ### Added
@@ -205,16 +227,3 @@ Verifiable-Intent amount bounds / configuration leakage.
 
 - README links (GETTING_STARTED.md, API_GUIDE.md, etc.) now point to existing docs
 - Documentation artifact coordinates aligned with build (org.trustweave:anchors-plugins-*, kms-plugins-*, did-plugins-*)
-
----
-
-## Unreleased
-
-- Presentations: use **`presentationResult`** / **`presentationFromWalletResult`** and **`buildResult()`** only; throwing helpers **`TrustWeave.presentation`**, **`presentationFromWallet`**, **`PresentationBuilder.build()`**, and **`WalletPresentationBuilder.build()`** have been removed.
-- Configuration: use **`credentialService`** and **`getCredentialService()`**; **`TrustWeaveConfig.issuer`** and **`TrustWeave.getIssuer()`** have been removed.
-- Test sources: legacy **`TrustLayer*`** / **`InMemoryTrustLayer*`** class and file names renamed to **`TrustWeave*`** / **`InMemoryTrustWeave*`** for consistent terminology.
-- **`docs/README.md`**: examples now use **`TrustWeave`** / **`trustWeave`** and current result-style APIs (aligned with the root **`README.md`** quick start).
-- **Documentation**: contributing test templates consolidated as **`trustweave-test-templates.md`** (links updated from **`trust-layer-test-templates.md`** in **`writing-tests.md`** and **`modules/trustweave-testkit.md`**); **`atlas-parametric-architecture-overview.md`** snippets aligned with **`DidCreationResult`**, **`DidResolutionResult`**, **`IssuanceResult.getOrThrow()`**, and **`BlockchainService.anchor(..., serializer, chainId)`**; **`wallet-api.md`**, **`parametric-insurance-mga-implementation-guide.md`**, and example **`println`** copy avoid the deprecated product name “Trust Layer” where **TrustWeave** is meant.
-- **Documentation (sweep)**: Source **`docs/**/*.md`** (and mirrored **`docs/_site/**/*.md`**) updated for **`TrustWeave.build { }`** instead of assigning **`trustWeave { }`** to a facade variable; removed **`getDslContext()`** in favor of **`trustWeave.configuration`**, **`resolveDid`**, and **`trustWeave.revocation { }`**; **`org.trustweave.credential.model.vc.*`** imports; **`core-api.md`** quick reference, DID resolve/update, anchoring **`read`**, and advanced sections aligned with current APIs; **`architecture-overview.md`**, **`dsl-guide.md`**, **`trust-registry.md`**, **`mental-model.md`**, and **`STYLE_GUIDE.md`** terminology refreshed.
-- **Documentation (follow-up)**: **`api-patterns.md`** DID update/rotate examples match **`DidDocument`** returns; **`mental-model`** / **`architecture-overview`** diagrams drop **`TrustWeaveContext`**; **`blockchain-anchoring.md`** fixes read/anchor examples (**`BlockchainException`**, not **`Result`+`TrustWeaveError`**); **`readAnchor`** renamed to **`blockchains.read`** across scenarios/tutorials; **`api-reference/README.md`**, **`error-handling.md`** (wallet **`WalletCreationResult`**, **`signedBy(did)`**), **`dids.md`**, and **`smart-contracts.md`** error text aligned with current behavior.
-- Removed historical / internal audit markdown from **`docs/`** (phase summaries, documentation-improvement trackers, navigation meta, VC API cleanup logs, protocol code-review notes, **`API_SCORE`**, duplicate production-readiness evaluations under **`features/credential-exchange-protocols/`**, etc.); user-facing guides under **`getting-started`**, **`how-to`**, **`introduction`**, **`api-reference`**, and **`scenarios`** are unchanged.

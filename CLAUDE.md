@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-TrustWeave is a Kotlin library for decentralized identity and trust management. It is structured around five domains, each with a `-core` module defining SPI interfaces and multiple plugin modules providing implementations:
+TrustWeave is a Kotlin library for decentralized identity and trust management. Its main domains each have a `-core` module defining SPI interfaces and plugin modules providing implementations:
 
 | Domain | Core Module | What it does |
 |---|---|---|
@@ -36,6 +36,10 @@ TrustWeave is a Kotlin library for decentralized identity and trust management. 
 | **KMS** | `kms:kms-core` | Key management (sign, verify, generate) |
 | **Anchors** | `anchors:anchor-core` | Blockchain anchoring for DIDs/credentials |
 | **Credentials** | `credentials:credential-api` | VC issuance, verification, exchange protocols |
+| **Signatures** | `signatures:tsa-core` | ETSI advanced signatures (JAdES, CAdES, XAdES, PAdES), timestamping, trust lists, validation |
+| **Trust registry** | `trust-registry:trust-registry-core` | Trust anchors/registries, with a database plugin and a server |
+
+`observability` is a single module of shared host telemetry and authentication used by the Ktor servers.
 
 ### Entry Point
 
@@ -72,7 +76,7 @@ Type-safe builders are the primary configuration API: `DidBuilder`, `DidDocument
 
 ## Module Map
 
-106 modules across five domains. Key modules:
+107 modules (`include(...)` lines in `settings.gradle.kts`). Key modules:
 
 - **`common`** — shared utilities, exceptions, plugin infrastructure
 - **`trust`** — main facade (`TrustWeave.kt`), integration tests
@@ -91,10 +95,11 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 | File | Purpose |
 |---|---|
-| `settings.gradle.kts` | Module definitions (all 106 includes) |
+| `settings.gradle.kts` | Module definitions (all 107 includes) |
 | `build.gradle.kts` | Central config, publishing, Windows JAR handling |
 | `gradle/libs.versions.toml` | Centralized dependency versions and bundles |
 | `gradle.properties` | JVM args, parallel builds, Kotlin daemon settings |
+| `.github/workflows/` | `ci.yml` (parallel lint / build+coverage / docs / interop jobs), `security.yml` (dependency review + OSV-Scanner), `codeql.yml`, `release-evidence.yml` |
 
 ## Tech Stack
 
@@ -104,7 +109,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 - **HTTP**: Ktor 2.3.x (internal servers), OkHttp (client)
 - **Security**: Bouncy Castle 1.84, Nimbus JOSE JWT
 - **Blockchain**: Web3j, Algorand SDK, Bitcoin-j
-- **Spring Boot**: 3.5.x (registrar server variant only)
+- **Spring Boot**: 4.1.x (`did:registrar-server-spring` only; a library module, so its `bootJar` is disabled on purpose)
 - **Coroutines**: kotlinx-coroutines 1.10.x throughout
 
 ## Coding Conventions
@@ -112,7 +117,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 - KTLint **is enforced**: the `org.jlleitschuh.gradle.ktlint` plugin is applied to every subproject
   (`build.gradle.kts`'s `subprojects {}` block), and `.github/workflows/ci.yml` runs
   `./gradlew ktlintCheck` on every PR. Each module carries a `config/ktlint/baseline.xml` recording
-  the pre-existing violations from before the gate was wired up (~35.7k entries repo-wide) — those
+  the pre-existing violations from before the gate was wired up (~27k entries repo-wide) — those
   are grandfathered in and won't fail the build. New and changed code is held to the real ktlint
   rules with no baseline cover, so `ktlintCheck` fails on anything you introduce. Run
   `./gradlew ktlintFormat` before committing to auto-fix what it can; regenerate a module's baseline
@@ -120,4 +125,9 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
   hide new violations
 - Compiler flags: `-Xjsr305=strict` (strict null-safety for JSR-305 annotations)
 - Conventional Commits are required for PRs
-- Configuration cache is enabled; the Kotlin circular dep is mitigated via `kotlin.build.archivesTaskOutputAsFriendModule=false` in `gradle.properties`
+- Configuration cache is **disabled** (`org.gradle.configuration-cache=false` in `gradle.properties`) while
+  the Kotlin compile/jar circular dependency workaround (`kotlin.build.archivesTaskOutputAsFriendModule=false`)
+  is being confirmed; the build cache and parallel execution are on
+- Every dependency and plugin version lives in `gradle/libs.versions.toml`; `scripts/check-dependency-catalog.py`
+  fails CI on a literal `group:artifact:version` in a build file
+- `-javadoc` jars are filled by Dokka only for publish tasks or with `-Ptrustweave.dokka=true`

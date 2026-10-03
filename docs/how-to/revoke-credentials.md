@@ -31,7 +31,7 @@ Revocation is essential for credential lifecycle management. It allows issuers t
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.revocation.StatusPurpose
+import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.revocation.RevocationStatus
 import kotlinx.coroutines.runBlocking
 ```
@@ -267,7 +267,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.revocation.RevocationStatus
-import org.trustweave.credential.revocation.StatusPurpose
+import org.trustweave.credential.model.StatusPurpose
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days

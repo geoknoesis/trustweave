@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     // Google Cloud KMS SDK
-    implementation(platform("com.google.cloud:libraries-bom:26.38.0"))
+    implementation(platform(libs.google.cloud.bom))
     implementation("com.google.cloud:google-cloud-kms")
 
     // Google Auth for credentials

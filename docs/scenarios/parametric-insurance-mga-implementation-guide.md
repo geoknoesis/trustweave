@@ -113,7 +113,7 @@ import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.core.json.jsonData
 import java.time.Instant
-import org.trustweave.core.Did
+import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
@@ -387,7 +387,7 @@ import org.trustweave.core.util.DigestUtils
 import org.trustweave.core.json.jsonData
 import java.time.Instant
 import java.time.Duration
-import org.trustweave.core.Did
+import org.trustweave.did.identifiers.Did
 
 class HeatwaveProduct(
     private val TrustWeave: TrustWeave,
@@ -612,7 +612,7 @@ import org.trustweave.core.*
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.core.json.jsonData
 import java.time.Instant
-import org.trustweave.core.Did
+import org.trustweave.did.identifiers.Did
 
 class SolarAttenuationProduct(
     private val TrustWeave: TrustWeave,

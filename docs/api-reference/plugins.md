@@ -128,7 +128,7 @@ Credential plugins provide format support (SD-JWT VC, mdoc / mDL, BBS+), status 
 | **StatusList (server)** | `org.trustweave:credentials-plugins-status-list-server` | HTTP server for status list documents |
 | **Anchor adapter** | `org.trustweave:credentials-plugins-anchor` | Anchor credentials / status data to a configured chain |
 
-For application-level helpers (audit logging, metrics, notifications, rendering, etc.) referenced in the legacy "feature plugins" tables, see the [Features Usage Guide](features/USAGE_GUIDE.md) — those are integration patterns, not separate Gradle modules in this release.
+Audit logging, metrics, notifications, rendering and similar application-level helpers are not shipped as TrustWeave APIs; the [Features Usage Guide](features/USAGE_GUIDE.md) lists what ships and how to build the rest.
 
 ---
 

@@ -140,7 +140,7 @@ interface BlockchainAnchorClient {
 package com.example.TrustWeave.plugins
 
 import org.trustweave.anchor.*
-import org.trustweave.core.exception.NotFoundException
+import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.JsonElement
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -190,7 +190,7 @@ class ExampleBlockchainAnchorClient(
         }
 
         return storage[ref.txHash]
-            ?: throw NotFoundException("Anchor not found: ${ref.txHash}")
+            ?: throw TrustWeaveException.NotFound(resource = "anchor ${ref.txHash}")
     }
 }
 ```
@@ -590,7 +590,7 @@ fun `test plugin with TrustWeave`() = runTest {
 
 ## Best Practices
 
-1. **Error Handling**: Always throw appropriate exceptions (`KeyNotFoundException`, `NotFoundException`, etc.)
+1. **Error Handling**: Always throw appropriate exceptions (`KeyNotFoundException`, `TrustWeaveException.NotFound`, etc.)
 2. **Thread Safety**: Use concurrent collections for in-memory storage
 3. **Resource Management**: Implement `PluginLifecycle` for plugins that need initialization/cleanup
 4. **Documentation**: Document any method-specific options or requirements

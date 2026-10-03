@@ -207,8 +207,6 @@ import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.proof.Ed25519ProofGenerator
-import org.trustweave.credential.proof.ProofGeneratorRegistry
 import org.trustweave.credential.proof.proofOptions
 import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
@@ -225,7 +223,7 @@ import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.did.identifiers.Did
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.anchor.anchorTyped
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

@@ -95,12 +95,17 @@ Full documentation is available in the [`docs/`](docs/) directory:
 
 ## License
 
-TrustWeave is available under a dual-licensing model:
+TrustWeave is dual-licensed by Geoknoesis LLC:
 
-- **Community License (AGPL v3.0)** - Free for open-source, educational, and non-commercial use
-- **Commercial License** - For proprietary and commercial use
+- **GNU Affero General Public License v3.0 (AGPL-3.0)** - Free of charge for any purpose, including
+  commercial use, as long as you meet its conditions. In particular, if you distribute TrustWeave or
+  a work based on it, or let users interact with a modified version over a network, you must make the
+  corresponding source code available to them under the AGPL-3.0.
+- **Commercial License** - For using TrustWeave in proprietary products or services without the
+  AGPL-3.0's source-sharing obligations, and for commercial support.
 
 See [LICENSE](LICENSE) for the full AGPL v3.0 license text, or [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for commercial license terms.
+This summary is not legal advice; the license texts govern.
 
 **Commercial licensing inquiries:** licensing@geoknoesis.com
 

@@ -268,14 +268,17 @@ suspend fun debugSystemState(trustWeave: TrustWeave) {
 Always validate inputs to catch errors early:
 
 ```kotlin
-import org.trustweave.core.util.DidValidator
+import org.trustweave.core.util.ValidationResult as DidValidationResult
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.validation.CredentialValidator
+import org.trustweave.credential.validation.ValidationResult as CredentialValidationResult
+import org.trustweave.did.validation.DidValidator
 
 fun validateBeforeOperation(did: String, credential: VerifiableCredential? = null) {
     // Validate DID format
     val didValidation = DidValidator.validateFormat(did)
     if (!didValidation.isValid()) {
-        val error = didValidation as ValidationResult.Invalid
+        val error = didValidation as DidValidationResult.Invalid
         println("❌ Invalid DID format: ${error.message}")
         println("   Field: ${error.field}")
         println("   Value: ${error.value}")
@@ -296,7 +299,7 @@ fun validateBeforeOperation(did: String, credential: VerifiableCredential? = nul
     credential?.let {
         val credValidation = CredentialValidator.validateStructure(it)
         if (!credValidation.isValid()) {
-            val error = credValidation as ValidationResult.Invalid
+            val error = credValidation as CredentialValidationResult.Invalid
             println("❌ Invalid credential structure: ${error.message}")
             println("   Field: ${error.field}")
             return

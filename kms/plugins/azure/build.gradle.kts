@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     // Azure SDK for Key Vault
-    implementation(platform("com.azure:azure-sdk-bom:1.2.15"))
+    implementation(platform(libs.azure.sdk.bom))
     implementation("com.azure:azure-security-keyvault-keys")
     implementation("com.azure:azure-identity")
 

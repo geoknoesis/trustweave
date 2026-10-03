@@ -155,7 +155,7 @@ class YourProtocolService {
 package org.trustweave.credential.yourprotocol.exchange.spi
 
 import org.trustweave.credential.exchange.CredentialExchangeProtocol
-import org.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider
+import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 
 class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     override val name = "yourprotocol"

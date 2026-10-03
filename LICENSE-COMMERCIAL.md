@@ -1,6 +1,6 @@
 # TrustWeave Commercial License
 
-Copyright (c) 2024 GeoKnoesis. All rights reserved.
+Copyright (c) 2024 Geoknoesis LLC. All rights reserved.
 
 ## Commercial License Terms
 
@@ -8,7 +8,7 @@ This Commercial License Agreement ("Agreement") grants you, the Licensee, a non-
 
 ### 1. License Grant
 
-Subject to the terms and conditions of this Agreement, GeoKnoesis hereby grants you a limited, non-exclusive, non-transferable, non-sublicensable license to:
+Subject to the terms and conditions of this Agreement, Geoknoesis LLC hereby grants you a limited, non-exclusive, non-transferable, non-sublicensable license to:
 
 - Use TrustWeave in proprietary and commercial software applications
 - Distribute TrustWeave as part of your commercial products and services
@@ -31,7 +31,7 @@ The following restrictions apply to your use of TrustWeave under this Commercial
 
 - **No Removal of Notices**: You may not remove or alter any copyright notices, license terms, or attribution requirements
 - **No Competing Products**: You may not use TrustWeave to create products that directly compete with TrustWeave's core functionality
-- **No Transfer**: This license is non-transferable without written consent from GeoKnoesis
+- **No Transfer**: This license is non-transferable without written consent from Geoknoesis LLC
 - **No Sublicensing**: You may not sublicense, rent, lease, or lend TrustWeave to third parties
 - **No Reverse Engineering**: You may not reverse engineer, decompile, or disassemble TrustWeave except as permitted by applicable law
 
@@ -83,13 +83,13 @@ EXCEPT AS EXPRESSLY SET FORTH IN YOUR LICENSE AGREEMENT, TrustWeave IS PROVIDED 
 
 ### 9. Limitation of Liability
 
-IN NO EVENT SHALL GEOKNOESIS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT, REGARDLESS OF THE THEORY OF LIABILITY.
+IN NO EVENT SHALL GEOKNOESIS LLC BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT, REGARDLESS OF THE THEORY OF LIABILITY.
 
 ### 10. Intellectual Property
 
-- **Ownership**: GeoKnoesis retains all right, title, and interest in TrustWeave
+- **Ownership**: Geoknoesis LLC retains all right, title, and interest in TrustWeave
 - **No Transfer**: This Agreement does not transfer any ownership rights to you
-- **Attribution**: You must maintain appropriate attribution to GeoKnoesis and TrustWeave
+- **Attribution**: You must maintain appropriate attribution to Geoknoesis LLC and TrustWeave
 
 ### 11. Export Compliance
 
@@ -101,23 +101,30 @@ This Agreement shall be governed by and construed in accordance with the laws of
 
 ### 13. Entire Agreement
 
-This Agreement, together with your specific license agreement, constitutes the entire agreement between you and GeoKnoesis regarding the commercial use of trustweave.
+This Agreement, together with your specific license agreement, constitutes the entire agreement between you and Geoknoesis LLC regarding the commercial use of trustweave.
 
 ---
 
 ## Community License Alternative
 
-If you are using TrustWeave in an open-source project (as defined by OSI-approved licenses), for educational purposes, or in a non-commercial capacity, you may use TrustWeave under the **GNU Affero General Public License v3.0** (AGPL v3.0) found in the [LICENSE](LICENSE) file, free of charge.
+Anyone may use TrustWeave free of charge under the **GNU Affero General Public License v3.0**
+(AGPL v3.0) found in the [LICENSE](LICENSE) file, for any purpose, including commercial use, provided
+they comply with its terms. Among other things, the AGPL v3.0 requires that if you distribute
+TrustWeave or a work based on it, or let users interact with a modified version over a network, you
+make the corresponding source code available to them under the AGPL v3.0.
+
+This Commercial License is for those who want to use TrustWeave without those AGPL v3.0 obligations.
 
 ## Determining Which License You Need
 
-- **Open-source project** (OSI-approved license) → Use AGPL v3.0 (free)
-- **Educational/Research** → Use AGPL v3.0 (free)
-- **Personal/Non-commercial** → Use AGPL v3.0 (free)
-- **Proprietary/Commercial software** → Purchase Commercial License
-- **SaaS application** → Purchase Commercial License
-- **Enterprise deployment** → Purchase Commercial License
+- **You can release your application's source under the AGPL v3.0** (open-source, educational,
+  research, personal or commercial) → Use AGPL v3.0 (free)
+- **Proprietary software you distribute without releasing its source** → Purchase Commercial License
+- **SaaS or network service built on a modified TrustWeave whose source you will not publish** → Purchase Commercial License
+- **You want commercial support, warranties or custom terms** → Purchase Commercial License
 - **Unsure?** → Contact us at licensing@geoknoesis.com
+
+This section is a summary, not legal advice; the AGPL v3.0 text and this Agreement govern.
 
 ---
 

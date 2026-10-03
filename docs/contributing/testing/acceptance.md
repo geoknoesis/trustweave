@@ -18,7 +18,7 @@ that software has no defects. It requires evidence for every gate below. Do not 
 
 ## Remaining qualification work
 
-The [candidate qualification review](../../reviews/2026-09-10-testing-qualification/index.html)
+The [candidate qualification review](https://github.com/geoknoesis/trustweave/tree/main/docs/reviews/2026-09-10-testing-qualification)
 raises this category to **9.5/10** with retained evidence and explicit limits.
 
 1. Add meaningful tests for uncovered critical branches using the merged coverage report.

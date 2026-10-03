@@ -13,16 +13,18 @@ import re
 import sys
 from pathlib import Path
 
-# group:name:version inside a dependency declaration. Version-less coordinates (platform BOM
-# members, project accessors) are not matched, and neither is `libs.`-style catalog access.
-COORDINATE = re.compile(
-    r"""^\s*(?:\w+\s*\(\s*)?                       # optional configuration name
-        ["']([A-Za-z][\w.\-]*):([\w.\-]+):([^"']+)["']""",
-    re.X,
-)
+# group:name:version anywhere in a dependency declaration, however deeply it is wrapped:
+# `implementation("g:a:v")`, `implementation(platform("g:a:v"))`,
+# `api(enforcedPlatform("g:a:v"))`, `add("x", "g:a:v")`, `force("g:a:v")` and so on. Version-less
+# coordinates (platform BOM members, project accessors) are not matched, and neither is
+# `libs.`-style catalog access.
+COORDINATE = re.compile(r"""["']([A-Za-z][\w.\-]*):([\w.\-]+):([^"']+)["']""")
+# A call to any dependency configuration (the standard ones, source-set prefixed variants such
+# as `testFixturesImplementation` or `integrationTestRuntimeOnly`, plugin classpaths) or to one of
+# the resolution-strategy helpers that also pins a version.
 DECLARATION = re.compile(
-    r"""^\s*(api|implementation|testImplementation|testRuntimeOnly|runtimeOnly
-        |compileOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s*\(""",
+    r"""^\s*(?:\w*(?:[Ii]mplementation|[Aa]pi|[Rr]untimeOnly|[Cc]ompileOnly|[Cc]lasspath|Plugins)
+        |api|annotationProcessor|kapt|ksp|classpath|add|force|constraints)\s*\(""",
     re.X,
 )
 SKIPPED = ("reference-wallet/android",)
@@ -55,14 +57,12 @@ def offenders(root, skipped=SKIPPED):
         for number, line in enumerate(script.read_text(encoding="utf-8-sig").splitlines(), start=1):
             if not DECLARATION.match(line):
                 continue
-            match = COORDINATE.search(line)
-            if not match:
-                continue
-            version = match.group(3)
-            if CATALOG_INTERPOLATION.match(version):
-                continue
-            if any(character.isdigit() for character in version):
-                found.append((relative, number, ":".join(match.groups())))
+            for match in COORDINATE.finditer(line):
+                version = match.group(3)
+                if CATALOG_INTERPOLATION.match(version):
+                    continue
+                if any(character.isdigit() for character in version):
+                    found.append((relative, number, ":".join(match.groups())))
     return found
 
 

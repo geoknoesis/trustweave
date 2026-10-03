@@ -42,7 +42,7 @@ dependencies {
 The Algorand adapter supports type-safe configuration using `AlgorandOptions`:
 
 ```kotlin
-import org.trustweave.algorand.*
+import org.trustweave.anchor.algorand.*
 import org.trustweave.anchor.*
 import org.trustweave.anchor.options.AlgorandOptions
 

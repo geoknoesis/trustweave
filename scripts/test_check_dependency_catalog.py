@@ -36,6 +36,25 @@ class DependencyCatalogTest(unittest.TestCase):
                 root = self.build(folder, f'dependencies {{\n    {configuration}("a.b:c:1.0")\n}}\n')
                 self.assertEqual(1, len(checker.offenders(root)))
 
+    def test_wrapped_coordinates_are_reported(self):
+        for line in [
+            'implementation(platform("software.amazon.awssdk:bom:2.20.0"))',
+            'api(enforcedPlatform("com.azure:azure-sdk-bom:1.2.15"))',
+            'testImplementation(platform( "a.b:bom:1.0" ))',
+            'testFixturesImplementation("a.b:c:1.0")',
+            'integrationTestRuntimeOnly("a.b:c:1.0")',
+            'add("detektPlugins", "a.b:c:1.0")',
+            'force("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")',
+        ]:
+            with self.subTest(line=line), tempfile.TemporaryDirectory() as folder:
+                root = self.build(folder, f"dependencies {{\n    {line}\n}}\n")
+                self.assertEqual(1, len(checker.offenders(root)), line)
+
+    def test_wrapped_catalog_accessors_pass(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = self.build(folder, "dependencies {\n    implementation(platform(libs.aws.sdk.bom))\n}\n")
+            self.assertEqual([], checker.offenders(root))
+
     def test_version_less_coordinates_are_allowed(self):
         with tempfile.TemporaryDirectory() as folder:
             root = self.build(folder, 'dependencies {\n    implementation("com.google.cloud:google-cloud-kms")\n}\n')

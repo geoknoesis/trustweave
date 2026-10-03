@@ -159,7 +159,7 @@ dependencies {
 ```kotlin
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.trust.dsl.credential.DidMethods.KEY

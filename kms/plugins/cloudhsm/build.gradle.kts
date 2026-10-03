@@ -18,7 +18,7 @@ dependencies {
     implementation(libs.slf4j.api)
 
     // AWS CloudHSM SDK (cluster management; cryptography goes through PKCS#11)
-    implementation(platform("software.amazon.awssdk:bom:2.20.0"))
+    implementation(platform(libs.aws.sdk.bom))
     implementation("software.amazon.awssdk:cloudhsmv2")
     implementation("software.amazon.awssdk:cloudhsm")
 

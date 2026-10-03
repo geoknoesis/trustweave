@@ -13,4 +13,5 @@ dependencies {
 
     testImplementation(project(":testkit"))
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotest.assertions.core)
 }

@@ -6,8 +6,11 @@ package org.trustweave.kms.entrust
 data class EntrustKmsConfig(
     val hsmAddress: String,
     val partitionId: String,
-    val partitionPassword: String
+    val partitionPassword: String,
 ) {
+    /** Redacts the partition password so it never reaches logs. */
+    override fun toString(): String = "EntrustKmsConfig(hsmAddress=$hsmAddress, partitionId=$partitionId, partitionPassword=<redacted>)"
+
     init {
         require(hsmAddress.isNotBlank()) { "Entrust nShield HSM address must be specified" }
         require(partitionId.isNotBlank()) { "Entrust partition ID must be specified" }
@@ -18,12 +21,15 @@ data class EntrustKmsConfig(
         fun builder(): Builder = Builder()
 
         fun fromMap(options: Map<String, Any?>): EntrustKmsConfig {
-            val hsmAddress = options["hsmAddress"] as? String
-                ?: throw IllegalArgumentException("Entrust nShield HSM address must be specified")
-            val partitionId = options["partitionId"] as? String
-                ?: throw IllegalArgumentException("Entrust partition ID must be specified")
-            val partitionPassword = options["partitionPassword"] as? String
-                ?: throw IllegalArgumentException("Entrust partition password must be specified")
+            val hsmAddress =
+                options["hsmAddress"] as? String
+                    ?: throw IllegalArgumentException("Entrust nShield HSM address must be specified")
+            val partitionId =
+                options["partitionId"] as? String
+                    ?: throw IllegalArgumentException("Entrust partition ID must be specified")
+            val partitionPassword =
+                options["partitionPassword"] as? String
+                    ?: throw IllegalArgumentException("Entrust partition password must be specified")
 
             return Builder()
                 .hsmAddress(hsmAddress)
@@ -61,4 +67,3 @@ data class EntrustKmsConfig(
         }
     }
 }
-

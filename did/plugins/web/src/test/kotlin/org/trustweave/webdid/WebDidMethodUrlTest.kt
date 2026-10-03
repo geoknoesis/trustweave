@@ -1,9 +1,9 @@
 package org.trustweave.webdid
 
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
 
 /**
@@ -13,7 +13,6 @@ import kotlin.test.assertEquals
  * - percent-encoded ports in the host segment
  */
 class WebDidMethodUrlTest {
-
     private val method = WebDidMethod(InMemoryKeyManagementService(), OkHttpClient())
 
     @Test
@@ -45,7 +44,7 @@ class WebDidMethodUrlTest {
     fun `bare domain resolves to well-known location`() {
         assertEquals(
             "https://example.com/.well-known/did.json",
-            method.getDocumentUrl("did:web:example.com")
+            method.getDocumentUrl("did:web:example.com"),
         )
     }
 
@@ -53,7 +52,7 @@ class WebDidMethodUrlTest {
     fun `path-based did uses path plus did json without well-known`() {
         assertEquals(
             "https://example.com/user/alice/did.json",
-            method.getDocumentUrl("did:web:example.com:user:alice")
+            method.getDocumentUrl("did:web:example.com:user:alice"),
         )
     }
 
@@ -61,7 +60,7 @@ class WebDidMethodUrlTest {
     fun `single path segment`() {
         assertEquals(
             "https://w3c-ccg.github.io/user/did.json",
-            method.getDocumentUrl("did:web:w3c-ccg.github.io:user")
+            method.getDocumentUrl("did:web:w3c-ccg.github.io:user"),
         )
     }
 
@@ -69,7 +68,7 @@ class WebDidMethodUrlTest {
     fun `percent-encoded port on bare domain`() {
         assertEquals(
             "https://example.com:8080/.well-known/did.json",
-            method.getDocumentUrl("did:web:example.com%3A8080")
+            method.getDocumentUrl("did:web:example.com%3A8080"),
         )
     }
 
@@ -77,7 +76,7 @@ class WebDidMethodUrlTest {
     fun `percent-encoded port with path`() {
         assertEquals(
             "https://example.com:8080/user/did.json",
-            method.getDocumentUrl("did:web:example.com%3A8080:user")
+            method.getDocumentUrl("did:web:example.com%3A8080:user"),
         )
     }
 
@@ -95,6 +94,17 @@ class WebDidMethodUrlTest {
         // Would otherwise build https://foo@evil.com/... — actual fetch host is evil.com
         assertThrows<IllegalArgumentException> {
             method.getDocumentUrl("did:web:foo%40evil.com")
+        }
+    }
+
+    @Test
+    fun `percent-encoded backslash in host is rejected`() {
+        // OkHttp treats a backslash in the authority like a slash, java.net.URL does not.
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:evil.com%5C@good.com")
+        }
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:good.com%5Cevil.com")
         }
     }
 
@@ -145,7 +155,7 @@ class WebDidMethodUrlTest {
     fun `literal at-sign in path segment is allowed`() {
         assertEquals(
             "https://example.com/user@org/did.json",
-            method.getDocumentUrl("did:web:example.com:user%40org")
+            method.getDocumentUrl("did:web:example.com:user%40org"),
         )
     }
 

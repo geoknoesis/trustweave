@@ -10,7 +10,9 @@ import org.trustweave.did.base.AbstractBlockchainDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.rebasedTo
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.ethrdid.EthrDidMethod
 import org.trustweave.kms.KeyManagementService
 
@@ -105,7 +107,17 @@ class EnsDidMethod(
                 when (ethrResult) {
                     is DidResolutionResult.Success -> {
                         val ethrDoc = ethrResult.document
-                        val ensDocument = ethrDoc.copy(id = did)
+                        ResolvedDocumentId.mismatchReason(ethrDidString, ethrDoc.id.value)?.let { reason ->
+                            return@withContext DidMethodUtils.createErrorResolutionResult(
+                                "invalidDidDocument",
+                                reason,
+                                method,
+                                didString,
+                            )
+                        }
+                        // Rewrite id, controllers, verification method ids and relationship
+                        // references together; a bare copy(id = ...) would leave did:ethr keys.
+                        val ensDocument = ethrDoc.rebasedTo(from = ethrDoc.id, to = did)
                         storeDocument(ensDocument.id.value, ensDocument)
 
                         DidMethodUtils.createSuccessResolutionResult(

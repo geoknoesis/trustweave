@@ -1,6 +1,9 @@
 package org.trustweave.did.orb
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyPurpose
@@ -14,10 +17,8 @@ import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeKeyPair
 import org.trustweave.did.sidetree.SidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeP256KeyPair
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
 /**
@@ -56,12 +57,13 @@ class OrbDidMethod(
     httpClient: OkHttpClient? = null,
     private val keyStore: SidetreeKeyStore = InMemorySidetreeKeyStore(),
 ) : AbstractDidMethod("orb", kms) {
-
-    private val client: OkHttpClient = httpClient ?: OkHttpClient.Builder()
-        .connectTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .readTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .writeTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient =
+        httpClient ?: OkHttpClient
+            .Builder()
+            .connectTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .writeTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .build()
 
     private val sidetree = SidetreeOrbClient(client, config)
 
@@ -73,65 +75,70 @@ class OrbDidMethod(
      * the operation. Callers can resolve it immediately via [resolveDid] (Orb
      * accepts long-form DIDs and returns the deterministic resolution).
      */
-    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            val algorithm = options.algorithm.algorithmName
-            val keyHandle = generateKey(algorithm, options.additionalProperties)
+    override suspend fun createDid(options: DidCreationOptions): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                val algorithm = options.algorithm.algorithmName
+                val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            val publicKeyJwk = keyHandle.publicKeyJwk
-                ?: throw OrbException(
-                    code = "ORB_MISSING_JWK",
-                    message = "Public key JWK is required for did:orb (KMS returned a key with no JWK).",
+                val publicKeyJwk =
+                    keyHandle.publicKeyJwk
+                        ?: throw OrbException(
+                            code = "ORB_MISSING_JWK",
+                            message = "Public key JWK is required for did:orb (KMS returned a key with no JWK).",
+                        )
+
+                val created = sidetree.buildCreateOperation(publicKeyJwk)
+                val response = sidetree.submitOperation(created.operation)
+
+                val resolvedDid: String = response.did ?: created.longFormDid
+
+                keyStore.put(
+                    created.didSuffix,
+                    SidetreeKeyPair(
+                        updatePrivateJwk = created.updateKeyPair.privateJwk,
+                        updatePublicJwk = created.updateKeyPair.publicJwk,
+                        recoveryPrivateJwk = created.recoveryKeyPair.privateJwk,
+                        recoveryPublicJwk = created.recoveryKeyPair.publicJwk,
+                    ),
                 )
 
-            val created = sidetree.buildCreateOperation(publicKeyJwk)
-            val response = sidetree.submitOperation(created.operation)
+                val verificationMethod =
+                    DidMethodUtils.createVerificationMethod(
+                        did = resolvedDid,
+                        keyHandle = keyHandle,
+                        algorithm = options.algorithm,
+                    )
 
-            val resolvedDid: String = response.did ?: created.longFormDid
+                val document =
+                    DidMethodUtils.buildDidDocument(
+                        did = resolvedDid,
+                        verificationMethod = listOf(verificationMethod),
+                        authentication = listOf(verificationMethod.id.value),
+                        assertionMethod =
+                            if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                                listOf(verificationMethod.id.value)
+                            } else {
+                                null
+                            },
+                    )
 
-            keyStore.put(
-                created.didSuffix,
-                SidetreeKeyPair(
-                    updatePrivateJwk = created.updateKeyPair.privateJwk,
-                    updatePublicJwk = created.updateKeyPair.publicJwk,
-                    recoveryPrivateJwk = created.recoveryKeyPair.privateJwk,
-                    recoveryPublicJwk = created.recoveryKeyPair.publicJwk,
-                ),
-            )
-
-            val verificationMethod = DidMethodUtils.createVerificationMethod(
-                did = resolvedDid,
-                keyHandle = keyHandle,
-                algorithm = options.algorithm,
-            )
-
-            val document = DidMethodUtils.buildDidDocument(
-                did = resolvedDid,
-                verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else {
-                    null
-                },
-            )
-
-            storeDocument(resolvedDid, document)
-            document
-        } catch (e: OrbException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "ORB_CREATE_FAILED",
-                message = "Failed to create did:orb: ${e.message}",
-                cause = e,
-            )
+                storeDocument(resolvedDid, document)
+                document
+            } catch (e: OrbException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "ORB_CREATE_FAILED",
+                    message = "Failed to create did:orb: ${e.message}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     /**
      * Resolves a did:orb DID by querying the Orb identifiers endpoint.
@@ -143,64 +150,79 @@ class OrbDidMethod(
      *    them.
      * 3. Otherwise returns a `notFound` failure.
      */
-    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            return@withContext DidMethodUtils.createErrorResolutionResult(
-                "invalidDid",
-                e.message,
-                method,
-                did.value,
-            )
-        }
-
-        val response = sidetree.resolveDid(did.value)
-        val document = response.document
-        if (response.success && document != null) {
-            val parsed = try {
-                DidDocumentJsonParser.parse(document)
+    override suspend fun resolveDid(did: Did): DidResolutionResult =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
                 return@withContext DidMethodUtils.createErrorResolutionResult(
                     "invalidDid",
-                    "Failed to parse Orb DID document: ${e.message}",
+                    e.message,
                     method,
                     did.value,
                 )
             }
-            storeDocument(did, parsed)
-            return@withContext DidMethodUtils.createSuccessResolutionResult(
-                parsed,
+
+            val response = sidetree.resolveDid(did.value)
+            val document = response.document
+            if (response.success && document != null) {
+                val parsed =
+                    try {
+                        DidDocumentJsonParser.parse(document)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (e: Exception) {
+                        return@withContext DidMethodUtils.createErrorResolutionResult(
+                            "invalidDid",
+                            "Failed to parse Orb DID document: ${e.message}",
+                            method,
+                            did.value,
+                        )
+                    }
+                // Reject (never rewrite or cache) a document that answers for a different DID. A
+                // long-form request may legitimately come back under its canonical short form.
+                ResolvedDocumentId
+                    .mismatchReason(did.value, parsed.id.value, allowCanonicalOfLongForm = true)
+                    ?.let { reason ->
+                        return@withContext DidMethodUtils.createErrorResolutionResult(
+                            "invalidDidDocument",
+                            reason,
+                            method,
+                            did.value,
+                        )
+                    }
+                storeDocument(did, parsed)
+                return@withContext DidMethodUtils.createSuccessResolutionResult(
+                    parsed,
+                    method,
+                    getDocumentMetadata(did)?.created,
+                    getDocumentMetadata(did)?.updated,
+                    retrieved = getLastFetched(did),
+                )
+            }
+
+            // Fallback: locally cached document (newly-created long-form DIDs, offline scenarios).
+            val cached = getStoredDocument(did)
+            if (cached != null) {
+                return@withContext DidMethodUtils.createSuccessResolutionResult(
+                    cached,
+                    method,
+                    getDocumentMetadata(did)?.created,
+                    getDocumentMetadata(did)?.updated,
+                    retrieved = getLastFetched(did),
+                )
+            }
+
+            // Only a 404 means "no such DID"; transport failures and node errors are resolution errors.
+            DidMethodUtils.createErrorResolutionResult(
+                if (response.httpStatus == 404) "notFound" else "internalError",
+                response.error ?: "Orb DID not found: ${did.value}",
                 method,
-                getDocumentMetadata(did)?.created,
-                getDocumentMetadata(did)?.updated,
-                retrieved = getLastFetched(did),
+                did.value,
             )
         }
-
-        // Fallback: locally cached document (newly-created long-form DIDs, offline scenarios).
-        val cached = getStoredDocument(did)
-        if (cached != null) {
-            return@withContext DidMethodUtils.createSuccessResolutionResult(
-                cached,
-                method,
-                getDocumentMetadata(did)?.created,
-                getDocumentMetadata(did)?.updated,
-                retrieved = getLastFetched(did),
-            )
-        }
-
-        DidMethodUtils.createErrorResolutionResult(
-            "notFound",
-            response.error ?: "Orb DID not found: ${did.value}",
-            method,
-            did.value,
-        )
-    }
 
     /**
      * Updates a did:orb DID by building a Sidetree update operation and
@@ -209,68 +231,74 @@ class OrbDidMethod(
     override suspend fun updateDid(
         did: Did,
         updater: (DidDocument) -> DidDocument,
-    ): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val current = when (val r = resolveDid(did)) {
-                is DidResolutionResult.Success -> r.document
-                else -> throw TrustWeaveException.NotFound(
-                    resource = did.value,
-                    message = "DID document not found: ${did.value}",
+                val current =
+                    when (val r = resolveDid(did)) {
+                        is DidResolutionResult.Success -> r.document
+                        else -> throw TrustWeaveException.NotFound(
+                            resource = did.value,
+                            message = "DID document not found: ${did.value}",
+                        )
+                    }
+
+                val updated = updater(current)
+
+                val suffix = extractSuffixOrThrow(did.value)
+                val previousKeys =
+                    keyStore.get(suffix)
+                        ?: throw OrbException(
+                            code = "ORB_KEYS_NOT_FOUND",
+                            message =
+                                "Update keys for $did are not in the key store. " +
+                                    "Updates can only be issued by the instance that created the DID, " +
+                                    "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
+                        )
+                val nextUpdateKeyPair = sidetree.generateP256KeyPair()
+                val previousUpdateKeyPair =
+                    SidetreeP256KeyPair(
+                        privateJwk = previousKeys.updatePrivateJwk,
+                        publicJwk = previousKeys.updatePublicJwk,
+                    )
+
+                val updateOp =
+                    sidetree.buildUpdateOperation(
+                        did = did.value,
+                        updatedDocument = updated,
+                        previousUpdateKeyPair = previousUpdateKeyPair,
+                        nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
+                    )
+                val response = sidetree.submitOperation(updateOp)
+                if (!response.success) {
+                    throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
+                }
+
+                keyStore.put(
+                    suffix,
+                    previousKeys.copy(
+                        updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                        updatePublicJwk = nextUpdateKeyPair.publicJwk,
+                    ),
+                )
+                storeDocument(did, updated)
+                updated
+            } catch (e: OrbException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "ORB_UPDATE_FAILED",
+                    message = "Failed to update did:orb: ${e.message}",
+                    cause = e,
                 )
             }
-
-            val updated = updater(current)
-
-            val suffix = extractSuffixOrThrow(did.value)
-            val previousKeys = keyStore.get(suffix)
-                ?: throw OrbException(
-                    code = "ORB_KEYS_NOT_FOUND",
-                    message = "Update keys for $did are not in the key store. " +
-                        "Updates can only be issued by the instance that created the DID, " +
-                        "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
-                )
-            val nextUpdateKeyPair = sidetree.generateP256KeyPair()
-            val previousUpdateKeyPair = SidetreeP256KeyPair(
-                privateJwk = previousKeys.updatePrivateJwk,
-                publicJwk = previousKeys.updatePublicJwk,
-            )
-
-            val updateOp = sidetree.buildUpdateOperation(
-                did = did.value,
-                updatedDocument = updated,
-                previousUpdateKeyPair = previousUpdateKeyPair,
-                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
-            )
-            val response = sidetree.submitOperation(updateOp)
-            if (!response.success) {
-                throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
-            }
-
-            keyStore.put(
-                suffix,
-                previousKeys.copy(
-                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
-                    updatePublicJwk = nextUpdateKeyPair.publicJwk,
-                ),
-            )
-            storeDocument(did, updated)
-            updated
-        } catch (e: OrbException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "ORB_UPDATE_FAILED",
-                message = "Failed to update did:orb: ${e.message}",
-                cause = e,
-            )
         }
-    }
 
     /**
      * Recovers a did:orb DID. Used when the update key has been lost or
@@ -285,71 +313,77 @@ class OrbDidMethod(
     suspend fun recoverDid(
         did: Did,
         updater: (DidDocument) -> DidDocument,
-    ): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val current = when (val r = resolveDid(did)) {
-                is DidResolutionResult.Success -> r.document
-                else -> throw TrustWeaveException.NotFound(
-                    resource = did.value,
-                    message = "DID document not found: ${did.value}",
+                val current =
+                    when (val r = resolveDid(did)) {
+                        is DidResolutionResult.Success -> r.document
+                        else -> throw TrustWeaveException.NotFound(
+                            resource = did.value,
+                            message = "DID document not found: ${did.value}",
+                        )
+                    }
+                val recovered = updater(current)
+
+                val suffix = extractSuffixOrThrow(did.value)
+                val previousKeys =
+                    keyStore.get(suffix)
+                        ?: throw OrbException(
+                            code = "ORB_KEYS_NOT_FOUND",
+                            message =
+                                "Recovery keys for $did are not in the key store. " +
+                                    "Recover can only be issued by the instance that created the DID, " +
+                                    "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
+                        )
+                val previousRecoveryKeyPair =
+                    SidetreeP256KeyPair(
+                        privateJwk = previousKeys.recoveryPrivateJwk,
+                        publicJwk = previousKeys.recoveryPublicJwk,
+                    )
+                val nextUpdateKeyPair = sidetree.generateP256KeyPair()
+                val nextRecoveryKeyPair = sidetree.generateP256KeyPair()
+
+                val recoverOp =
+                    sidetree.buildRecoverOperation(
+                        did = did.value,
+                        newDocument = recovered,
+                        previousRecoveryKeyPair = previousRecoveryKeyPair,
+                        nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
+                        nextRecoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
+                    )
+                val response = sidetree.submitOperation(recoverOp)
+                if (!response.success) {
+                    throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
+                }
+
+                keyStore.put(
+                    suffix,
+                    SidetreeKeyPair(
+                        updatePrivateJwk = nextUpdateKeyPair.privateJwk,
+                        updatePublicJwk = nextUpdateKeyPair.publicJwk,
+                        recoveryPrivateJwk = nextRecoveryKeyPair.privateJwk,
+                        recoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
+                    ),
+                )
+                storeDocument(did, recovered)
+                recovered
+            } catch (e: OrbException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "ORB_RECOVER_FAILED",
+                    message = "Failed to recover did:orb: ${e.message}",
+                    cause = e,
                 )
             }
-            val recovered = updater(current)
-
-            val suffix = extractSuffixOrThrow(did.value)
-            val previousKeys = keyStore.get(suffix)
-                ?: throw OrbException(
-                    code = "ORB_KEYS_NOT_FOUND",
-                    message = "Recovery keys for $did are not in the key store. " +
-                        "Recover can only be issued by the instance that created the DID, " +
-                        "or one configured with a persistent SidetreeKeyStore containing the prior keys.",
-                )
-            val previousRecoveryKeyPair = SidetreeP256KeyPair(
-                privateJwk = previousKeys.recoveryPrivateJwk,
-                publicJwk = previousKeys.recoveryPublicJwk,
-            )
-            val nextUpdateKeyPair = sidetree.generateP256KeyPair()
-            val nextRecoveryKeyPair = sidetree.generateP256KeyPair()
-
-            val recoverOp = sidetree.buildRecoverOperation(
-                did = did.value,
-                newDocument = recovered,
-                previousRecoveryKeyPair = previousRecoveryKeyPair,
-                nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
-                nextRecoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
-            )
-            val response = sidetree.submitOperation(recoverOp)
-            if (!response.success) {
-                throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
-            }
-
-            keyStore.put(
-                suffix,
-                SidetreeKeyPair(
-                    updatePrivateJwk = nextUpdateKeyPair.privateJwk,
-                    updatePublicJwk = nextUpdateKeyPair.publicJwk,
-                    recoveryPrivateJwk = nextRecoveryKeyPair.privateJwk,
-                    recoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
-                ),
-            )
-            storeDocument(did, recovered)
-            recovered
-        } catch (e: OrbException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "ORB_RECOVER_FAILED",
-                message = "Failed to recover did:orb: ${e.message}",
-                cause = e,
-            )
         }
-    }
 
     /**
      * Deactivates a did:orb DID by building a Sidetree deactivate operation
@@ -358,45 +392,49 @@ class OrbDidMethod(
      * Returns `false` if the Orb node rejected the deactivation or the DID was
      * not previously known to this instance.
      */
-    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    override suspend fun deactivateDid(did: Did): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val suffix = extractSuffixOrThrow(did.value)
-            val previousKeys = keyStore.get(suffix)
-                ?: return@withContext false
+                val suffix = extractSuffixOrThrow(did.value)
+                val previousKeys =
+                    keyStore.get(suffix)
+                        ?: return@withContext false
 
-            val previousRecoveryKeyPair = SidetreeP256KeyPair(
-                privateJwk = previousKeys.recoveryPrivateJwk,
-                publicJwk = previousKeys.recoveryPublicJwk,
-            )
+                val previousRecoveryKeyPair =
+                    SidetreeP256KeyPair(
+                        privateJwk = previousKeys.recoveryPrivateJwk,
+                        publicJwk = previousKeys.recoveryPublicJwk,
+                    )
 
-            val deactivateOp = sidetree.buildDeactivateOperation(
-                did = did.value,
-                previousRecoveryKeyPair = previousRecoveryKeyPair,
-            )
-            val response = sidetree.submitOperation(deactivateOp)
-            if (!response.success) {
-                return@withContext false
+                val deactivateOp =
+                    sidetree.buildDeactivateOperation(
+                        did = did.value,
+                        previousRecoveryKeyPair = previousRecoveryKeyPair,
+                    )
+                val response = sidetree.submitOperation(deactivateOp)
+                if (!response.success) {
+                    return@withContext false
+                }
+
+                keyStore.remove(suffix)
+                removeStoredDocument(did)
+                true
+            } catch (e: OrbException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "ORB_DEACTIVATE_FAILED",
+                    message = "Failed to deactivate did:orb: ${e.message}",
+                    cause = e,
+                )
             }
-
-            keyStore.remove(suffix)
-            removeStoredDocument(did)
-            true
-        } catch (e: OrbException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            false
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "ORB_DEACTIVATE_FAILED",
-                message = "Failed to deactivate did:orb: ${e.message}",
-                cause = e,
-            )
         }
-    }
 
     /**
      * Pick the Sidetree suffix out of any of the canonical Orb DID forms — including
@@ -404,8 +442,7 @@ class OrbDidMethod(
      * `/sidetree/v1/operations` response returns. Delegates to the shared
      * [org.trustweave.did.sidetree.SidetreeOperationBuilder.extractDidSuffix].
      */
-    private fun extractSuffixOrThrow(did: String): String =
-        sidetree.builderForExtraction.extractDidSuffix(did)
+    private fun extractSuffixOrThrow(did: String): String = sidetree.builderForExtraction.extractDidSuffix(did)
 
     /**
      * Internal access to the underlying Sidetree client for tests and advanced users.

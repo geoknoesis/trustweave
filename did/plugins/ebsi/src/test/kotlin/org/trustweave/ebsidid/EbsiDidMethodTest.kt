@@ -1,16 +1,17 @@
 package org.trustweave.ebsidid
 
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import org.trustweave.did.KeyAlgorithm
-import org.trustweave.did.didCreationOptions
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.trustweave.did.KeyAlgorithm
+import org.trustweave.did.didCreationOptions
+import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.resolver.errorType
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -30,7 +31,6 @@ import kotlin.test.assertTrue
  *    stored document for a DID that was created in this session.
  */
 class EbsiDidMethodTest {
-
     private lateinit var kms: InMemoryKeyManagementService
     private lateinit var server: MockWebServer
     private lateinit var method: EbsiDidMethod
@@ -41,17 +41,20 @@ class EbsiDidMethodTest {
         server = MockWebServer()
         server.start()
 
-        val testClient = OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .build()
+        val testClient =
+            OkHttpClient
+                .Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
 
-        val config = EbsiDidConfig(
-            apiBaseUrl = server.url("").toString().trimEnd('/'),
-            network = EbsiNetwork.PILOT,
-            bearerToken = "test-bearer-token",
-            timeoutSeconds = 5,
-        )
+        val config =
+            EbsiDidConfig(
+                apiBaseUrl = server.url("").toString().trimEnd('/'),
+                network = EbsiNetwork.PILOT,
+                bearerToken = "test-bearer-token",
+                timeoutSeconds = 5,
+            )
         method = EbsiDidMethod(kms, config, testClient)
     }
 
@@ -67,8 +70,8 @@ class EbsiDidMethodTest {
     @Test
     fun `deriveEbsiIdentifier produces correct did from known P256 coordinates`() {
         // Given: fixed P-256 x/y coordinates (32 bytes each, all-zero for determinism in tests)
-        val xBytes = ByteArray(32) { it.toByte() }  // 0x00..0x1F
-        val yBytes = ByteArray(32) { (it + 32).toByte() }  // 0x20..0x3F
+        val xBytes = ByteArray(32) { it.toByte() } // 0x00..0x1F
+        val yBytes = ByteArray(32) { (it + 32).toByte() } // 0x20..0x3F
         val xB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(xBytes)
         val yB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(yBytes)
 
@@ -109,99 +112,108 @@ class EbsiDidMethodTest {
     // ──────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid returns success when EBSI API returns a valid DID document`() = runBlocking<Unit> {
-        // Given: a locally created DID so we know its value
-        // We stub the registry POST so createDid succeeds remotely
-        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
-        val document = method.createDid(
-            didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
-        )
-        val did = document.id.value
+    fun `resolveDid returns success when EBSI API returns a valid DID document`() =
+        runBlocking<Unit> {
+            // Given: a locally created DID so we know its value
+            // We stub the registry POST so createDid succeeds remotely
+            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
+            val document =
+                method.createDid(
+                    didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
+                )
+            val did = document.id.value
 
-        // Given: mock the GET resolution endpoint to return the DID document JSON
-        val didDocJson = buildMinimalDidDocJson(did)
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .addHeader("Content-Type", "application/json")
-                .setBody(didDocJson),
-        )
+            // Given: mock the GET resolution endpoint to return the DID document JSON
+            val didDocJson = buildMinimalDidDocJson(did)
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .addHeader("Content-Type", "application/json")
+                    .setBody(didDocJson),
+            )
 
-        // When
-        val result = method.resolveDid(document.id)
+            // When
+            val result = method.resolveDid(document.id)
 
-        // Then
-        assertIs<DidResolutionResult.Success>(result)
-        val successResult = result as DidResolutionResult.Success
-        assertEquals(did, successResult.document.id.value)
-        assertNotNull(successResult.documentMetadata)
-    }
+            // Then
+            assertIs<DidResolutionResult.Success>(result)
+            val successResult = result as DidResolutionResult.Success
+            assertEquals(did, successResult.document.id.value)
+            assertNotNull(successResult.documentMetadata)
+        }
 
     @Test
-    fun `resolveDid sends correct Accept header and path to EBSI API`() = runBlocking<Unit> {
-        // Given: create a DID (stub the POST)
-        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
-        val document = method.createDid(
-            didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
-        )
-        val did = document.id.value
+    fun `resolveDid sends correct Accept header and path to EBSI API`() =
+        runBlocking<Unit> {
+            // Given: create a DID (stub the POST)
+            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
+            val document =
+                method.createDid(
+                    didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
+                )
+            val did = document.id.value
 
-        // Stub the resolution endpoint
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(buildMinimalDidDocJson(did)),
-        )
+            // Stub the resolution endpoint
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .setBody(buildMinimalDidDocJson(did)),
+            )
 
-        method.resolveDid(document.id)
+            method.resolveDid(document.id)
 
-        // Verify the GET request had the right path
-        server.takeRequest() // consume the POST from createDid
-        val resolveRequest = server.takeRequest()
-        assertTrue(
-            resolveRequest.path?.contains("/did-registry/v5/identifiers/") == true,
-            "Expected /did-registry/v5/identifiers/ in path, got: ${resolveRequest.path}",
-        )
-        assertEquals("application/json", resolveRequest.getHeader("Accept"))
-    }
+            // Verify the GET request had the right path
+            server.takeRequest() // consume the POST from createDid
+            val resolveRequest = server.takeRequest()
+            assertTrue(
+                resolveRequest.path?.contains("/did-registry/v5/identifiers/") == true,
+                "Expected /did-registry/v5/identifiers/ in path, got: ${resolveRequest.path}",
+            )
+            assertEquals("application/json", resolveRequest.getHeader("Accept"))
+        }
 
     // ──────────────────────────────────────────────────────────────────────────────
     // Test 3 — Fallback to in-memory on 404
     // ──────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid falls back to in-memory document when API returns 404`() = runBlocking<Unit> {
-        // Given: create a DID and cache it locally (stub the POST for registration)
-        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
-        val document = method.createDid(
-            didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
-        )
+    fun `resolveDid falls back to in-memory document when API returns 404`() =
+        runBlocking<Unit> {
+            // Given: create a DID and cache it locally (stub the POST for registration)
+            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
+            val document =
+                method.createDid(
+                    didCreationOptions { algorithm = KeyAlgorithm.ED25519 },
+                )
 
-        // Stub the resolution endpoint with 404
-        server.enqueue(MockResponse().setResponseCode(404))
+            // Stub the resolution endpoint with 404
+            server.enqueue(MockResponse().setResponseCode(404))
 
-        // When
-        val result = method.resolveDid(document.id)
+            // When
+            val result = method.resolveDid(document.id)
 
-        // Then: should fall back to the in-memory cached document
-        assertIs<DidResolutionResult.Success>(result)
-        val successResult = result as DidResolutionResult.Success
-        assertEquals(document.id.value, successResult.document.id.value)
-    }
+            // Then: should fall back to the in-memory cached document
+            assertIs<DidResolutionResult.Success>(result)
+            val successResult = result as DidResolutionResult.Success
+            assertEquals(document.id.value, successResult.document.id.value)
+        }
 
     @Test
-    fun `resolveDid returns notFound failure when API returns 404 and no local cache`() = runBlocking<Unit> {
-        // Given: a DID that was never created locally
-        val unknownDid = org.trustweave.did.identifiers.Did("did:ebsi:unknownidentifier123")
+    fun `resolveDid returns notFound failure when API returns 404 and no local cache`() =
+        runBlocking<Unit> {
+            // Given: a DID that was never created locally
+            val unknownDid =
+                org.trustweave.did.identifiers
+                    .Did("did:ebsi:unknownidentifier123")
 
-        server.enqueue(MockResponse().setResponseCode(404))
+            server.enqueue(MockResponse().setResponseCode(404))
 
-        // When
-        val result = method.resolveDid(unknownDid)
+            // When
+            val result = method.resolveDid(unknownDid)
 
-        // Then
-        assertIs<DidResolutionResult.Failure>(result)
-    }
+            // Then
+            assertIs<DidResolutionResult.Failure>(result)
+        }
 
     // ──────────────────────────────────────────────────────────────────────────────
     // Test 4 — Method name
@@ -246,7 +258,8 @@ class EbsiDidMethodTest {
      * Builds a minimal DID document JSON string for the given DID (enough to parse via
      * [org.trustweave.did.parser.DidDocumentJsonParser]).
      */
-    private fun buildMinimalDidDocJson(did: String): String = """
+    private fun buildMinimalDidDocJson(did: String): String =
+        """
         {
           "@context": ["https://www.w3.org/ns/did/v1"],
           "id": "$did",
@@ -254,5 +267,21 @@ class EbsiDidMethodTest {
           "authentication": [],
           "assertionMethod": []
         }
-    """.trimIndent()
+        """.trimIndent()
+
+    @Test
+    fun `resolveDid rejects a document whose id differs and does not fall back to the cache`() =
+        runBlocking<Unit> {
+            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
+            val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
+            server.enqueue(MockResponse().setResponseCode(200).setBody(buildMinimalDidDocJson("did:ebsi:zOtherSubject")))
+
+            val result = method.resolveDid(document.id)
+
+            assertIs<DidResolutionResult.Failure>(result)
+            assertEquals(
+                org.trustweave.did.resolver.DidErrorType.INVALID_DID_DOCUMENT,
+                result.errorType,
+            )
+        }
 }

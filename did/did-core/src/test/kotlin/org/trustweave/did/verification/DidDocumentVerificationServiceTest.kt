@@ -188,7 +188,58 @@ class DidDocumentVerificationServiceTest {
         runBlocking<Unit> {
             val result = service(failWith = IllegalStateException("must not be called")).verifyDocument(document(), metadata())
             assertTrue(result.valid, result.errors.toString())
-            assertTrue(result.warnings.isEmpty())
+            // Valid is not "integrity verified": say so explicitly.
+            assertFalse(result.integrityVerified)
+            assertTrue(result.warnings.any { "integrity was not verified" in it.lowercase() }, result.warnings.toString())
+        }
+
+    @Test
+    fun `a matching digest sets integrityVerified and mismatches never do`() =
+        runBlocking<Unit> {
+            val digest = multibase(byteArrayOf(1, 2, 3))
+            val ok = service(digest = digest).verifyDocument(document(), metadata(digest))
+            assertTrue(ok.integrityVerified)
+            assertTrue(ok.warnings.none { "integrity" in it.lowercase() })
+
+            val bad = service(digest = digest).verifyDocument(document(), metadata(multibase(byteArrayOf(9))))
+            assertFalse(bad.integrityVerified)
+        }
+
+    @Test
+    fun `expectedDid must equal the document id`() =
+        runBlocking<Unit> {
+            val svc = service()
+            assertTrue(svc.verifyDocument(document(), metadata(), did.value).valid)
+            assertTrue(svc.verifyDocument(document(), metadata(), null).valid)
+
+            val wrong = svc.verifyDocument(document(), metadata(), "did:key:z6MkOther")
+            assertFalse(wrong.valid)
+            assertTrue(wrong.errors.any { "does not match the expected DID" in it }, wrong.errors.toString())
+        }
+
+    @Test
+    fun `the default interface implementation also enforces expectedDid`() =
+        runBlocking<Unit> {
+            val legacy =
+                object : DidDocumentVerificationService {
+                    override suspend fun verifyDocument(
+                        document: DidDocument,
+                        resolutionMetadata: DidResolutionMetadata,
+                    ) = VerificationResult(valid = true)
+
+                    override suspend fun verifyDocumentSignature(
+                        document: DidDocument,
+                        method: String,
+                    ) = false
+
+                    override suspend fun verifyVerificationMethod(
+                        method: VerificationMethod,
+                        signature: String,
+                        data: ByteArray,
+                    ) = false
+                }
+            assertTrue(legacy.verifyDocument(document(), metadata(), did.value).valid)
+            assertFalse(legacy.verifyDocument(document(), metadata(), "did:key:z6MkOther").valid)
         }
 
     // ---------------------------------------------------------------- signatures, all fail-closed

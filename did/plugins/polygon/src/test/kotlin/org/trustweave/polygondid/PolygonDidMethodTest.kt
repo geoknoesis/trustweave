@@ -44,4 +44,29 @@ class PolygonDidMethodTest {
         assertFalse(key.removePrefix("0x") in text, text)
         assertTrue("<redacted>" in text, text)
     }
+
+    private fun assertNoEthrLeak(document: org.trustweave.did.model.DidDocument) {
+        val did = document.id.value
+        assertTrue(document.verificationMethod.isNotEmpty())
+        document.verificationMethod.forEach {
+            assertTrue(it.id.value.startsWith("$did#"), "vm id ${it.id.value}")
+            assertEquals(did, it.controller.value)
+        }
+        val refs =
+            document.authentication + document.assertionMethod + document.keyAgreement +
+                document.capabilityInvocation + document.capabilityDelegation
+        assertTrue(refs.isNotEmpty())
+        refs.forEach { assertTrue(it.value.startsWith("$did#"), "ref ${it.value}") }
+        assertFalse("did:ethr" in document.toString(), document.toString())
+    }
+
+    @Test
+    fun `created and resolved documents are consistently rewritten to did-polygon`() =
+        runBlocking<Unit> {
+            val method = method()
+            val created = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.SECP256K1))
+            assertNoEthrLeak(created)
+            val resolved = assertIs<DidResolutionResult.Success>(method.resolveDid(created.id))
+            assertNoEthrLeak(resolved.document)
+        }
 }

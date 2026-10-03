@@ -1,6 +1,13 @@
 package org.trustweave.ebsidid
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyPurpose
@@ -9,14 +16,8 @@ import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
@@ -49,12 +50,13 @@ class EbsiDidMethod(
     private val config: EbsiDidConfig,
     httpClient: OkHttpClient? = null,
 ) : AbstractDidMethod("ebsi", kms) {
-
-    private val client: OkHttpClient = httpClient ?: OkHttpClient.Builder()
-        .connectTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .readTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .writeTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient =
+        httpClient ?: OkHttpClient
+            .Builder()
+            .connectTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .writeTimeout(config.timeoutSeconds, TimeUnit.SECONDS)
+            .build()
 
     // ──────────────────────────────────────────────────────────────────────────────
     // DID identifier derivation
@@ -75,21 +77,32 @@ class EbsiDidMethod(
         publicKeyJwk: Map<String, Any?>?,
         keyIdFallback: ByteArray,
     ): String {
-        val keyBytes: ByteArray = if (publicKeyJwk != null) {
-            val xB64 = publicKeyJwk["x"] as? String
-            val yB64 = publicKeyJwk["y"] as? String
-            if (xB64 != null && yB64 != null) {
-                val x = java.util.Base64.getUrlDecoder().decode(xB64)
-                val y = java.util.Base64.getUrlDecoder().decode(yB64)
-                x + y
+        val keyBytes: ByteArray =
+            if (publicKeyJwk != null) {
+                val xB64 = publicKeyJwk["x"] as? String
+                val yB64 = publicKeyJwk["y"] as? String
+                if (xB64 != null && yB64 != null) {
+                    val x =
+                        java.util.Base64
+                            .getUrlDecoder()
+                            .decode(xB64)
+                    val y =
+                        java.util.Base64
+                            .getUrlDecoder()
+                            .decode(yB64)
+                    x + y
+                } else {
+                    // OKP key (Ed25519) or unknown — use raw x bytes if available
+                    val xB64Only = publicKeyJwk["x"] as? String
+                    xB64Only?.let {
+                        java.util.Base64
+                            .getUrlDecoder()
+                            .decode(it)
+                    } ?: keyIdFallback
+                }
             } else {
-                // OKP key (Ed25519) or unknown — use raw x bytes if available
-                val xB64Only = publicKeyJwk["x"] as? String
-                xB64Only?.let { java.util.Base64.getUrlDecoder().decode(it) } ?: keyIdFallback
+                keyIdFallback
             }
-        } else {
-            keyIdFallback
-        }
 
         val hash = MessageDigest.getInstance("SHA-256").digest(keyBytes)
         val first16 = hash.sliceArray(0 until 16)
@@ -131,56 +144,61 @@ class EbsiDidMethod(
      * Callers may pass an existing key ID via `options.additionalProperties["keyId"]` to reuse a
      * key that was already generated in the KMS instead of creating a new one.
      */
-    override suspend fun createDid(options: DidCreationOptions): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            val algorithm = options.algorithm.algorithmName
-            val keyHandle = generateKey(algorithm, options.additionalProperties)
+    override suspend fun createDid(options: DidCreationOptions): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                val algorithm = options.algorithm.algorithmName
+                val keyHandle = generateKey(algorithm, options.additionalProperties)
 
-            val did = deriveEbsiIdentifier(
-                publicKeyJwk = keyHandle.publicKeyJwk,
-                keyIdFallback = keyHandle.id.value.toByteArray(),
-            )
+                val did =
+                    deriveEbsiIdentifier(
+                        publicKeyJwk = keyHandle.publicKeyJwk,
+                        keyIdFallback = keyHandle.id.value.toByteArray(),
+                    )
 
-            val verificationMethod = DidMethodUtils.createVerificationMethod(
-                did = did,
-                keyHandle = keyHandle,
-                algorithm = options.algorithm,
-            )
+                val verificationMethod =
+                    DidMethodUtils.createVerificationMethod(
+                        did = did,
+                        keyHandle = keyHandle,
+                        algorithm = options.algorithm,
+                    )
 
-            val document = DidMethodUtils.buildDidDocument(
-                did = did,
-                verificationMethod = listOf(verificationMethod),
-                authentication = listOf(verificationMethod.id.value),
-                assertionMethod = if (options.purposes.contains(KeyPurpose.ASSERTION)) {
-                    listOf(verificationMethod.id.value)
-                } else {
-                    null
-                },
-            )
+                val document =
+                    DidMethodUtils.buildDidDocument(
+                        did = did,
+                        verificationMethod = listOf(verificationMethod),
+                        authentication = listOf(verificationMethod.id.value),
+                        assertionMethod =
+                            if (options.purposes.contains(KeyPurpose.ASSERTION)) {
+                                listOf(verificationMethod.id.value)
+                            } else {
+                                null
+                            },
+                    )
 
-            // Register on EBSI if a bearer token is configured
-            if (config.bearerToken != null) {
-                registerOnEbsi(document)
+                // Register on EBSI if a bearer token is configured
+                if (config.bearerToken != null) {
+                    registerOnEbsi(document)
+                }
+
+                // Cache locally for fallback resolution
+                storeDocument(did, document)
+
+                document
+            } catch (e: EbsiException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "EBSI_CREATE_FAILED",
+                    message = "Failed to create did:ebsi: ${e.message}",
+                    cause = e,
+                )
             }
-
-            // Cache locally for fallback resolution
-            storeDocument(did, document)
-
-            document
-        } catch (e: EbsiException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "EBSI_CREATE_FAILED",
-                message = "Failed to create did:ebsi: ${e.message}",
-                cause = e,
-            )
         }
-    }
 
     /**
      * Resolves a did:ebsi DID.
@@ -190,68 +208,82 @@ class EbsiDidMethod(
      * 2. On 404, returns the locally cached document (for DIDs created in this session).
      * 3. On network error, falls back to the locally cached document.
      */
-    override suspend fun resolveDid(did: Did): DidResolutionResult = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            return@withContext DidMethodUtils.createErrorResolutionResult(
-                "invalidDid",
-                e.message,
-                method,
-                did.value,
-            )
-        }
-
-        // Try EBSI registry first
-        val apiResult = runCatching { resolveFromEbsiApi(did.value) }
-
-        when {
-            apiResult.isSuccess && apiResult.getOrNull() != null -> {
-                val document = requireNotNull(apiResult.getOrNull())
-                storeDocument(did, document)
-                DidMethodUtils.createSuccessResolutionResult(
-                    document,
+    override suspend fun resolveDid(did: Did): DidResolutionResult =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                return@withContext DidMethodUtils.createErrorResolutionResult(
+                    "invalidDid",
+                    e.message,
                     method,
-                    getDocumentMetadata(did)?.created,
-                    getDocumentMetadata(did)?.updated,
-                    retrieved = getLastFetched(did),
+                    did.value,
                 )
             }
 
-            else -> {
-                // Check if the API returned a "not found" (null) or threw an error
-                val stored = getStoredDocument(did)
-                if (stored != null) {
+            // Try EBSI registry first
+            val apiResult = runCatching { resolveFromEbsiApi(did.value) }
+
+            // A document that answers for a different DID is rejected outright: no fallback to the
+            // cache, no rewrite, no caching of the foreign document.
+            (apiResult.exceptionOrNull() as? EbsiException)
+                ?.takeIf { it.code == DOCUMENT_ID_MISMATCH }
+                ?.let {
+                    return@withContext DidMethodUtils.createErrorResolutionResult(
+                        "invalidDidDocument",
+                        it.message,
+                        method,
+                        did.value,
+                    )
+                }
+
+            when {
+                apiResult.isSuccess && apiResult.getOrNull() != null -> {
+                    val document = requireNotNull(apiResult.getOrNull())
+                    storeDocument(did, document)
                     DidMethodUtils.createSuccessResolutionResult(
-                        stored,
+                        document,
                         method,
                         getDocumentMetadata(did)?.created,
                         getDocumentMetadata(did)?.updated,
                         retrieved = getLastFetched(did),
                     )
-                } else {
-                    val cause = apiResult.exceptionOrNull()
-                    if (cause is EbsiException && cause.httpStatus == 404) {
-                        DidMethodUtils.createErrorResolutionResult(
-                            "notFound",
-                            "DID document not found on EBSI: ${did.value}",
+                }
+
+                else -> {
+                    // Check if the API returned a "not found" (null) or threw an error
+                    val stored = getStoredDocument(did)
+                    if (stored != null) {
+                        DidMethodUtils.createSuccessResolutionResult(
+                            stored,
                             method,
-                            did.value,
+                            getDocumentMetadata(did)?.created,
+                            getDocumentMetadata(did)?.updated,
+                            retrieved = getLastFetched(did),
                         )
                     } else {
-                        DidMethodUtils.createErrorResolutionResult(
-                            "notFound",
-                            cause?.message ?: "DID document not found: ${did.value}",
-                            method,
-                            did.value,
-                        )
+                        val cause = apiResult.exceptionOrNull()
+                        if (cause is EbsiException && cause.httpStatus == 404) {
+                            DidMethodUtils.createErrorResolutionResult(
+                                "notFound",
+                                "DID document not found on EBSI: ${did.value}",
+                                method,
+                                did.value,
+                            )
+                        } else {
+                            DidMethodUtils.createErrorResolutionResult(
+                                "notFound",
+                                cause?.message ?: "DID document not found: ${did.value}",
+                                method,
+                                did.value,
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
     /**
      * Updates a did:ebsi DID document.
@@ -262,41 +294,43 @@ class EbsiDidMethod(
     override suspend fun updateDid(
         did: Did,
         updater: (DidDocument) -> DidDocument,
-    ): DidDocument = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    ): DidDocument =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            val currentResult = resolveDid(did)
-            val currentDocument = when (currentResult) {
-                is DidResolutionResult.Success -> currentResult.document
-                else -> throw TrustWeaveException.NotFound(
-                    resource = did.value,
-                    message = "DID document not found: ${did.value}",
+                val currentResult = resolveDid(did)
+                val currentDocument =
+                    when (currentResult) {
+                        is DidResolutionResult.Success -> currentResult.document
+                        else -> throw TrustWeaveException.NotFound(
+                            resource = did.value,
+                            message = "DID document not found: ${did.value}",
+                        )
+                    }
+
+                val updatedDocument = updater(currentDocument)
+
+                if (config.bearerToken != null) {
+                    patchOnEbsi(did.value, updatedDocument)
+                }
+
+                storeDocument(did, updatedDocument)
+                updatedDocument
+            } catch (e: EbsiException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "EBSI_UPDATE_FAILED",
+                    message = "Failed to update did:ebsi: ${e.message}",
+                    cause = e,
                 )
             }
-
-            val updatedDocument = updater(currentDocument)
-
-            if (config.bearerToken != null) {
-                patchOnEbsi(did.value, updatedDocument)
-            }
-
-            storeDocument(did, updatedDocument)
-            updatedDocument
-        } catch (e: EbsiException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "EBSI_UPDATE_FAILED",
-                message = "Failed to update did:ebsi: ${e.message}",
-                cause = e,
-            )
         }
-    }
 
     /**
      * Deactivates a did:ebsi DID.
@@ -304,41 +338,43 @@ class EbsiDidMethod(
      * If a bearer token is configured, sends a PATCH to the EBSI registry marking the DID
      * as deactivated (empty verification methods), then removes the local cache entry.
      */
-    override suspend fun deactivateDid(did: Did): Boolean = withContext(Dispatchers.IO) {
-        try {
-            validateDidFormat(did)
+    override suspend fun deactivateDid(did: Did): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                validateDidFormat(did)
 
-            if (config.bearerToken != null) {
-                val currentResult = resolveDid(did)
-                if (currentResult is DidResolutionResult.Success) {
-                    val deactivated = currentResult.document.copy(
-                        verificationMethod = emptyList(),
-                        authentication = emptyList(),
-                        assertionMethod = emptyList(),
-                        keyAgreement = emptyList(),
-                        capabilityInvocation = emptyList(),
-                        capabilityDelegation = emptyList(),
-                    )
-                    patchOnEbsi(did.value, deactivated)
+                if (config.bearerToken != null) {
+                    val currentResult = resolveDid(did)
+                    if (currentResult is DidResolutionResult.Success) {
+                        val deactivated =
+                            currentResult.document.copy(
+                                verificationMethod = emptyList(),
+                                authentication = emptyList(),
+                                assertionMethod = emptyList(),
+                                keyAgreement = emptyList(),
+                                capabilityInvocation = emptyList(),
+                                capabilityDelegation = emptyList(),
+                            )
+                        patchOnEbsi(did.value, deactivated)
+                    }
                 }
-            }
 
-            // Remove from local cache regardless
-            removeStoredDocument(did)
-        } catch (e: EbsiException) {
-            throw e
-        } catch (e: TrustWeaveException) {
-            false
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "EBSI_DEACTIVATE_FAILED",
-                message = "Failed to deactivate did:ebsi: ${e.message}",
-                cause = e,
-            )
+                // Remove from local cache regardless
+                removeStoredDocument(did)
+            } catch (e: EbsiException) {
+                throw e
+            } catch (e: TrustWeaveException) {
+                false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "EBSI_DEACTIVATE_FAILED",
+                    message = "Failed to deactivate did:ebsi: ${e.message}",
+                    cause = e,
+                )
+            }
         }
-    }
 
     // ──────────────────────────────────────────────────────────────────────────────
     // EBSI REST API helpers
@@ -354,11 +390,13 @@ class EbsiDidMethod(
      */
     private fun resolveFromEbsiApi(did: String): DidDocument? {
         val url = "${config.apiBaseUrl}/did-registry/v5/identifiers/$did"
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .addHeader("Accept", "application/json")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .get()
+                .addHeader("Accept", "application/json")
+                .build()
 
         client.newCall(request).execute().use { response ->
             if (response.code == 404) return null
@@ -366,10 +404,15 @@ class EbsiDidMethod(
                 val body = response.body?.string() ?: ""
                 throw EbsiException.httpError(response.code, body)
             }
-            val body = response.body?.string()
-                ?: throw EbsiException("EBSI_EMPTY_BODY", "EBSI API returned empty body for $did")
+            val body =
+                response.body?.string()
+                    ?: throw EbsiException("EBSI_EMPTY_BODY", "EBSI API returned empty body for $did")
             val jsonElement = Json.parseToJsonElement(body)
-            return jsonElementToDocument(jsonElement)
+            val document = jsonElementToDocument(jsonElement)
+            ResolvedDocumentId.mismatchReason(did, document.id.value)?.let { reason ->
+                throw EbsiException(DOCUMENT_ID_MISMATCH, reason)
+            }
+            return document
         }
     }
 
@@ -381,23 +424,26 @@ class EbsiDidMethod(
     private fun registerOnEbsi(document: DidDocument) {
         requireBearerToken("create")
         val docJson = documentToJsonElement(document)
-        val jsonRpcBody = """
+        val jsonRpcBody =
+            """
             {
               "jsonrpc": "2.0",
               "method": "insertDidDocument",
               "id": 1,
               "params": [$docJson]
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val url = "${config.apiBaseUrl}/did-registry/v5/jsonrpc"
         val requestBody = jsonRpcBody.toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .addHeader("Authorization", "Bearer ${config.bearerToken}")
-            .addHeader("Content-Type", "application/json")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer ${config.bearerToken}")
+                .addHeader("Content-Type", "application/json")
+                .build()
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
@@ -412,17 +458,22 @@ class EbsiDidMethod(
      *
      * `PATCH {apiBaseUrl}/did-registry/v5/identifiers/{did}`
      */
-    private fun patchOnEbsi(did: String, document: DidDocument) {
+    private fun patchOnEbsi(
+        did: String,
+        document: DidDocument,
+    ) {
         requireBearerToken("update/deactivate")
         val docJson = documentToJsonElement(document)
         val url = "${config.apiBaseUrl}/did-registry/v5/identifiers/$did"
         val requestBody = docJson.toString().toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder()
-            .url(url)
-            .patch(requestBody)
-            .addHeader("Authorization", "Bearer ${config.bearerToken}")
-            .addHeader("Content-Type", "application/json")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .patch(requestBody)
+                .addHeader("Authorization", "Bearer ${config.bearerToken}")
+                .addHeader("Content-Type", "application/json")
+                .build()
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
@@ -441,6 +492,7 @@ class EbsiDidMethod(
     // ──────────────────────────────────────────────────────────────────────────────
 
     companion object {
+        private const val DOCUMENT_ID_MISMATCH = "EBSI_DOCUMENT_ID_MISMATCH"
         private const val BASE58_ALPHABET =
             "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()

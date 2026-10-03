@@ -115,7 +115,12 @@ data class DriverConfig(
      * Additional driver-specific configuration
      */
     val config: Map<String, String> = emptyMap(),
-)
+) {
+    /** Redacts [apiKey] and the values of [config] (which may carry credentials). */
+    override fun toString(): String =
+        "DriverConfig(type=$type, baseUrl=$baseUrl, registrarUrl=$registrarUrl, protocolAdapter=$protocolAdapter, " +
+            "apiKey=${if (apiKey == null) "null" else "<redacted>"}, timeout=$timeout, config=${config.keys} <redacted values>)"
+}
 
 /**
  * Companion object with parsing utilities.

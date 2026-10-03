@@ -23,6 +23,7 @@ dependencies {
     implementation(platform(libs.spring.boot.dependencies))
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.kotlinx.coroutines.reactor)
+    implementation(libs.slf4j.api)
 
     // Test dependencies
     testImplementation(project(":testkit"))
@@ -38,4 +39,3 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
 tasks.named<Jar>("jar") {
     enabled = true
 }
-

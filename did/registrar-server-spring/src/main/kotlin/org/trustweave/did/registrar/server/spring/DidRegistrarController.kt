@@ -45,7 +45,8 @@ import org.trustweave.did.registrar.server.spring.dto.UpdateDidRequest
  *
  * **Authentication:** POST, PUT and DELETE are key custody operations and are refused (503)
  * until [authentication] is configured, and refused (401) when the caller's bearer token does not
- * match; see [RegistrarAuthentication]. Job status reads are not gated.
+ * match; see [RegistrarAuthentication]. Job status reads need the same credentials unless
+ * `trustweave.registrar.auth.public-job-status=true` ([RegistrarAuthentication.publicJobStatus]).
  *
  * @param service The service that handles DID Registrar operations
  * @param authentication What authenticates callers of the mutating endpoints
@@ -179,9 +180,10 @@ class DidRegistrarController(
      */
     @GetMapping("/jobs/{jobId}")
     fun getJobStatus(
+        @RequestHeader(HttpHeaders.AUTHORIZATION, required = false) authorization: String?,
         @PathVariable jobId: String,
     ): ResponseEntity<Any> =
-        try {
+        authentication.jobStatusRefusal(authorization) ?: try {
             val response =
                 service.getJobStatus(jobId)
                     ?: throw TrustWeaveException.NotFound(resource = "job:$jobId")

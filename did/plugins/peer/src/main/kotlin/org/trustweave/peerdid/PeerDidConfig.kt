@@ -29,6 +29,10 @@ data class PeerDidConfig(
      */
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Prints only the keys of [additionalProperties]: its values may carry credentials. */
+    override fun toString(): String =
+        "PeerDidConfig(numalgo=$numalgo, includeServices=$includeServices, additionalProperties=${additionalProperties.keys})"
+
     companion object {
         /**
          * Numalgo versions.

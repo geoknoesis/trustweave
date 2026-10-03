@@ -8,8 +8,13 @@ data class ThalesLunaKmsConfig(
     val partitionId: String,
     val partitionPassword: String,
     val clientCertificatePath: String? = null,
-    val clientKeyPath: String? = null
+    val clientKeyPath: String? = null,
 ) {
+    /** Redacts the partition password so it never reaches logs. */
+    override fun toString(): String =
+        "ThalesLunaKmsConfig(hsmAddress=$hsmAddress, partitionId=$partitionId, partitionPassword=<redacted>, " +
+            "clientCertificatePath=$clientCertificatePath, clientKeyPath=$clientKeyPath)"
+
     init {
         require(hsmAddress.isNotBlank()) { "Thales Luna HSM address must be specified" }
         require(partitionId.isNotBlank()) { "Thales Luna partition ID must be specified" }
@@ -20,12 +25,15 @@ data class ThalesLunaKmsConfig(
         fun builder(): Builder = Builder()
 
         fun fromMap(options: Map<String, Any?>): ThalesLunaKmsConfig {
-            val hsmAddress = options["hsmAddress"] as? String
-                ?: throw IllegalArgumentException("Thales Luna HSM address must be specified")
-            val partitionId = options["partitionId"] as? String
-                ?: throw IllegalArgumentException("Thales Luna partition ID must be specified")
-            val partitionPassword = options["partitionPassword"] as? String
-                ?: throw IllegalArgumentException("Thales Luna partition password must be specified")
+            val hsmAddress =
+                options["hsmAddress"] as? String
+                    ?: throw IllegalArgumentException("Thales Luna HSM address must be specified")
+            val partitionId =
+                options["partitionId"] as? String
+                    ?: throw IllegalArgumentException("Thales Luna partition ID must be specified")
+            val partitionPassword =
+                options["partitionPassword"] as? String
+                    ?: throw IllegalArgumentException("Thales Luna partition password must be specified")
 
             return Builder()
                 .hsmAddress(hsmAddress)
@@ -77,4 +85,3 @@ data class ThalesLunaKmsConfig(
         }
     }
 }
-

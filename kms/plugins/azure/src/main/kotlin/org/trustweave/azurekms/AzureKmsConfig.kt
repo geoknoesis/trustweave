@@ -33,9 +33,52 @@ data class AzureKmsConfig(
     init {
         require(vaultUrl.isNotBlank()) { "Azure Key Vault URL must be specified" }
         require(vaultUrl.startsWith("https://")) { "Azure Key Vault URL must use HTTPS" }
+        endpointOverride?.let { requireSecureEndpointOverride(it) }
     }
 
     companion object {
+        /**
+         * Validates an [endpointOverride]: an absolute URL with a host and no embedded
+         * credentials, using `https`, or plaintext `http` **only for a loopback host**
+         * (`localhost`, `127.0.0.0/8`, `::1`; typically a local Key Vault emulator). The client
+         * sends real Azure AD tokens to this endpoint, so a cleartext connection to anything that
+         * is not on this machine is refused.
+         *
+         * @throws IllegalArgumentException when the override is not acceptable
+         */
+        @JvmStatic
+        fun requireSecureEndpointOverride(override: String) {
+            val uri =
+                try {
+                    java.net.URI(override)
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Invalid Azure Key Vault endpointOverride: $override", e)
+                }
+            val scheme = uri.scheme?.lowercase()
+            require(uri.isAbsolute && scheme in setOf("http", "https") && !uri.host.isNullOrBlank()) {
+                "Azure Key Vault endpointOverride must be an absolute http(s) URL, got: $override"
+            }
+            require(uri.userInfo == null) { "Azure Key Vault endpointOverride must not embed credentials" }
+            if (scheme == "https") return
+            require(isLoopbackHost(uri.host)) {
+                "Azure Key Vault endpointOverride must use https unless the host is loopback " +
+                    "(localhost, 127.0.0.0/8, ::1); refusing to send credentials over cleartext http to '${uri.host}'"
+            }
+        }
+
+        private fun isLoopbackHost(rawHost: String): Boolean {
+            val host = rawHost.removePrefix("[").removeSuffix("]").lowercase()
+            if (host == "localhost" || host.endsWith(".localhost")) return true
+            // Only IP literals are inspected: no DNS lookup decides whether a name is "local".
+            val ipv4 = Regex("""^\d{1,3}(\.\d{1,3}){3}$""")
+            if (!ipv4.matches(host) && !host.contains(':')) return false
+            return runCatching {
+                java.net.InetAddress
+                    .getByName(host)
+                    .isLoopbackAddress
+            }.getOrDefault(false)
+        }
+
         /**
          * Creates a builder for AzureKmsConfig.
          */

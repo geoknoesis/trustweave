@@ -1,27 +1,28 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package org.trustweave.godiddy.resolver
 
+import io.ktor.client.call.*
+import io.ktor.http.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.*
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
-import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.serviceEndpointFromJsonElement
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.UniversalResolver
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.godiddy.GodiddyClient
-import org.trustweave.godiddy.models.GodiddyResolutionResponse
-import io.ktor.client.call.*
-import io.ktor.http.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 /**
  * GoDiddy implementation of Universal Resolver.
@@ -40,113 +41,130 @@ import kotlinx.datetime.Clock
  * ```
  */
 class GodiddyResolver(
-    private val client: GodiddyClient
+    private val client: GodiddyClient,
 ) : UniversalResolver {
-
     override val baseUrl: String
         get() = client.config.baseUrl
-    override suspend fun resolveDid(did: String): DidResolutionResult = withContext(Dispatchers.IO) {
-        try {
-            // Universal Resolver endpoint: GET /1.0.0/universal-resolver/identifiers/{did}
-            val path = "/1.0.0/universal-resolver/identifiers/$did"
-            val response = client.getJson(path)
-            val status = response.status
 
-            if (status == HttpStatusCode.NotFound) {
-                return@withContext DidResolutionResult.Failure.NotFound(
-                    did = Did(did),
-                    reason = "notFound",
-                    resolutionMetadata = DidResolutionMetadata(
-                        error = DidResolutionError.notFound("notFound"),
-                        properties = mapOf("provider" to "godiddy")
+    override suspend fun resolveDid(did: String): DidResolutionResult =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Resolver endpoint: GET /1.0.0/universal-resolver/identifiers/{did}
+                val path = "/1.0.0/universal-resolver/identifiers/$did"
+                val response = client.getJson(path)
+                val status = response.status
+
+                if (status == HttpStatusCode.NotFound) {
+                    return@withContext DidResolutionResult.Failure.NotFound(
+                        did = Did(did),
+                        reason = "notFound",
+                        resolutionMetadata =
+                            DidResolutionMetadata(
+                                error = DidResolutionError.notFound("notFound"),
+                                properties = mapOf("provider" to "godiddy"),
+                            ),
                     )
-                )
-            }
+                }
 
-            if (!status.isSuccess()) {
-                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                    message = "Failed to resolve DID $did: HTTP $status",
-                    context = mapOf("did" to did, "status" to status.toString(), "provider" to "godiddy")
-                )
-            }
+                if (!status.isSuccess()) {
+                    throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                        message = "Failed to resolve DID $did: HTTP $status",
+                        context = mapOf("did" to did, "status" to status.toString(), "provider" to "godiddy"),
+                    )
+                }
 
-            val jsonResponse: JsonObject = response.body()
+                val jsonResponse: JsonObject = response.body()
 
-            // Universal Resolver returns the DID document directly or wrapped
-            // Check if it's a wrapped response or direct document
-            // Use `as?` rather than the `.jsonObject` extension: a deactivated DID's response
-            // carries "didDocument": null (JsonNull, not Kotlin null — `?.jsonObject` would
-            // still invoke on it and throw IllegalArgumentException instead of falling through).
-            val didDocumentJson = (jsonResponse["didDocument"] as? JsonObject) ?: jsonResponse
-            val didDocumentMetadata = jsonResponse["didDocumentMetadata"] as? JsonObject
-            val didResolutionMetadata = jsonResponse["didResolutionMetadata"] as? JsonObject
+                // Universal Resolver returns the DID document directly or wrapped
+                // Check if it's a wrapped response or direct document
+                // Use `as?` rather than the `.jsonObject` extension: a deactivated DID's response
+                // carries "didDocument": null (JsonNull, not Kotlin null — `?.jsonObject` would
+                // still invoke on it and throw IllegalArgumentException instead of falling through).
+                val didDocumentJson = (jsonResponse["didDocument"] as? JsonObject) ?: jsonResponse
+                val didDocumentMetadata = jsonResponse["didDocumentMetadata"] as? JsonObject
+                val didResolutionMetadata = jsonResponse["didResolutionMetadata"] as? JsonObject
 
-            // Convert godiddy response to TrustWeave DidResolutionResult
-            val document = try {
-                convertToDidDocument(didDocumentJson)
+                // Convert godiddy response to TrustWeave DidResolutionResult
+                val document =
+                    try {
+                        convertToDidDocument(didDocumentJson)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (e: Exception) {
+                        null // Document might be missing or invalid
+                    }
+
+                val documentMetadata = convertToDidDocumentMetadata(didDocumentMetadata)
+
+                val resolutionMetadataMap =
+                    (didResolutionMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap())
+                        .plus("provider" to "godiddy")
+                val resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
+
+                if (documentMetadata.deactivated) {
+                    // §4.4/§12.1: deactivation is checked before document-presence. The upstream
+                    // Universal Resolver may signal a deactivated DID either with `didDocument: null`
+                    // plus `didDocumentMetadata.deactivated: true` (the body a conforming resolver
+                    // would send with HTTP 410), or with a *non-null* `didDocument` alongside
+                    // `deactivated: true` (the shape a DID Resolution v0.3-era resolver emits).
+                    // Checking deactivation first — ahead of the document != null branch below —
+                    // means both shapes yield Deactivated, never a Success carrying a revoked
+                    // document.
+                    DidResolutionResult.Deactivated(
+                        did = Did(did),
+                        documentMetadata = documentMetadata,
+                        resolutionMetadata = resolutionMetadata,
+                    )
+                } else if (document != null && ResolvedDocumentId.mismatchReason(did, document.id.value) != null) {
+                    // The upstream answered for a different DID. Reject; never rewrite the id.
+                    val reason = ResolvedDocumentId.mismatchReason(did, document.id.value) ?: "Document id mismatch"
+                    DidResolutionResult.Failure.ResolutionError(
+                        did = Did(did),
+                        reason = reason,
+                        resolutionMetadata =
+                            resolutionMetadata.copy(
+                                error = DidResolutionError.invalidDidDocument(reason),
+                            ),
+                    )
+                } else if (document != null) {
+                    DidResolutionResult.Success(
+                        document = document,
+                        documentMetadata = documentMetadata,
+                        resolutionMetadata = resolutionMetadata,
+                    )
+                } else {
+                    // §4 / Failure's invariant: every Failure MUST carry a non-null error.
+                    // `resolutionMetadata` here is parsed straight from an upstream body that may
+                    // carry no structured error member at all — synthesize one rather than pass
+                    // resolutionMetadata through unchanged.
+                    //
+                    // This is NOT "the DID does not exist" (NOT_FOUND/404): the upstream *did* return
+                    // a document, it just failed to convert (e.g. a malformed or incomplete body).
+                    // INVALID_DID_DOCUMENT (500) reflects what actually happened, mirroring
+                    // RegistryBasedResolver's handling of a structurally invalid resolved document.
+                    DidResolutionResult.Failure.ResolutionError(
+                        did = Did(did),
+                        reason = "Document conversion failed",
+                        resolutionMetadata =
+                            resolutionMetadata.copy(
+                                error =
+                                    resolutionMetadata.error
+                                        ?: DidResolutionError.invalidDidDocument("Document conversion failed"),
+                            ),
+                    )
+                }
+            } catch (e: TrustWeaveException) {
+                throw e
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
-                null // Document might be missing or invalid
-            }
-
-            val documentMetadata = convertToDidDocumentMetadata(didDocumentMetadata)
-
-            val resolutionMetadataMap = (didResolutionMetadata?.entries?.associate { it.key to convertJsonElement(it.value) } ?: emptyMap())
-                .plus("provider" to "godiddy")
-            val resolutionMetadata = DidResolutionMetadata.fromMap(resolutionMetadataMap)
-
-            if (documentMetadata.deactivated) {
-                // §4.4/§12.1: deactivation is checked before document-presence. The upstream
-                // Universal Resolver may signal a deactivated DID either with `didDocument: null`
-                // plus `didDocumentMetadata.deactivated: true` (the body a conforming resolver
-                // would send with HTTP 410), or with a *non-null* `didDocument` alongside
-                // `deactivated: true` (the shape a DID Resolution v0.3-era resolver emits).
-                // Checking deactivation first — ahead of the document != null branch below —
-                // means both shapes yield Deactivated, never a Success carrying a revoked
-                // document.
-                DidResolutionResult.Deactivated(
-                    did = Did(did),
-                    documentMetadata = documentMetadata,
-                    resolutionMetadata = resolutionMetadata
-                )
-            } else if (document != null) {
-                DidResolutionResult.Success(
-                    document = document,
-                    documentMetadata = documentMetadata,
-                    resolutionMetadata = resolutionMetadata
-                )
-            } else {
-                // §4 / Failure's invariant: every Failure MUST carry a non-null error.
-                // `resolutionMetadata` here is parsed straight from an upstream body that may
-                // carry no structured error member at all — synthesize one rather than pass
-                // resolutionMetadata through unchanged.
-                //
-                // This is NOT "the DID does not exist" (NOT_FOUND/404): the upstream *did* return
-                // a document, it just failed to convert (e.g. a malformed or incomplete body).
-                // INVALID_DID_DOCUMENT (500) reflects what actually happened, mirroring
-                // RegistryBasedResolver's handling of a structurally invalid resolved document.
-                DidResolutionResult.Failure.ResolutionError(
-                    did = Did(did),
-                    reason = "Document conversion failed",
-                    resolutionMetadata = resolutionMetadata.copy(
-                        error = resolutionMetadata.error
-                            ?: DidResolutionError.invalidDidDocument("Document conversion failed")
-                    )
+                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to resolve DID $did: ${e.message ?: "Unknown error"}",
+                    context = mapOf("did" to did, "provider" to "godiddy"),
+                    cause = e,
                 )
             }
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to resolve DID $did: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did, "provider" to "godiddy"),
-                cause = e
-            )
         }
-    }
 
     /**
      * Converts JsonObject to DidDocument.
@@ -154,87 +172,103 @@ class GodiddyResolver(
     private fun convertToDidDocument(json: JsonObject): DidDocument {
         // This is a simplified conversion - in practice, you'd need full JSON-LD parsing
         // For now, we'll extract basic fields
-        val id = json["id"]?.jsonPrimitive?.content ?: throw org.trustweave.did.exception.DidException.InvalidDidFormat(
-            did = "unknown",
-            reason = "DID document missing 'id' field"
-        )
+        val id =
+            json["id"]?.jsonPrimitive?.content ?: throw org.trustweave.did.exception.DidException.InvalidDidFormat(
+                did = "unknown",
+                reason = "DID document missing 'id' field",
+            )
 
         // Extract @context (can be string or array in JSON-LD)
-        val context = when {
-            json["@context"] != null -> {
-                when (val ctx = json["@context"]) {
-                    is JsonPrimitive -> listOf(ctx.content)
-                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
-                    else -> listOf("https://www.w3.org/ns/did/v1")
+        val context =
+            when {
+                json["@context"] != null -> {
+                    when (val ctx = json["@context"]) {
+                        is JsonPrimitive -> listOf(ctx.content)
+                        is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
+                        else -> listOf("https://www.w3.org/ns/did/v1")
+                    }
                 }
+                else -> listOf("https://www.w3.org/ns/did/v1")
             }
-            else -> listOf("https://www.w3.org/ns/did/v1")
-        }
 
         // Extract verification methods
-        val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
-            val vmObj = vmJson.jsonObject
-            val vmId = vmObj["id"]?.jsonPrimitive?.content
-            val vmType = vmObj["type"]?.jsonPrimitive?.content
-            val controller = vmObj["controller"]?.jsonPrimitive?.content ?: id
-            val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
-                jwk.entries.associate { it.key to convertJsonElement(it.value) }
-            }
-            val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
+        val verificationMethod =
+            json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
+                val vmObj = vmJson.jsonObject
+                val vmId = vmObj["id"]?.jsonPrimitive?.content
+                val vmType = vmObj["type"]?.jsonPrimitive?.content
+                val controller = vmObj["controller"]?.jsonPrimitive?.content ?: id
+                val publicKeyJwk =
+                    vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
+                        jwk.entries.associate { it.key to convertJsonElement(it.value) }
+                    }
+                val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
-            if (vmId != null && vmType != null) {
-                val didObj = Did(id)
-                VerificationMethod(
-                    id = VerificationMethodId.parse(vmId, didObj),
-                    type = vmType,
-                    controller = Did(controller),
-                    publicKeyJwk = publicKeyJwk,
-                    publicKeyMultibase = publicKeyMultibase
-                )
-            } else null
-        } ?: emptyList()
+                if (vmId != null && vmType != null) {
+                    val didObj = Did(id)
+                    VerificationMethod(
+                        id = VerificationMethodId.parse(vmId, didObj),
+                        type = vmType,
+                        controller = Did(controller),
+                        publicKeyJwk = publicKeyJwk,
+                        publicKeyMultibase = publicKeyMultibase,
+                    )
+                } else {
+                    null
+                }
+            } ?: emptyList()
 
         // Extract authentication references
-        val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val authentication =
+            json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
         // Extract assertion method references
-        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val assertionMethod =
+            json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
         // Extract key agreement references
-        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val keyAgreement =
+            json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
         // Extract capability invocation references
-        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityInvocation =
+            json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
         // Extract capability delegation references
-        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityDelegation =
+            json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
         // Extract services
-        val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
-            val sObj = sJson.jsonObject
-            val sId = sObj["id"]?.jsonPrimitive?.content
-            val sTypes = org.trustweave.did.model.parseServiceTypesFromJson(sObj["type"])
-            val sEndpoint = sObj["serviceEndpoint"]
+        val service =
+            json["service"]?.jsonArray?.mapNotNull { sJson ->
+                val sObj = sJson.jsonObject
+                val sId = sObj["id"]?.jsonPrimitive?.content
+                val sTypes =
+                    org.trustweave.did.model
+                        .parseServiceTypesFromJson(sObj["type"])
+                val sEndpoint = sObj["serviceEndpoint"]
 
-            if (sId != null && sTypes != null && sEndpoint != null) {
-                val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
-                DidService(
-                    id = sId,
-                    type = sTypes,
-                    serviceEndpoint = endpoint
-                )
-            } else null
-        } ?: emptyList()
+                if (sId != null && sTypes != null && sEndpoint != null) {
+                    val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
+                    DidService(
+                        id = sId,
+                        type = sTypes,
+                        serviceEndpoint = endpoint,
+                    )
+                } else {
+                    null
+                }
+            } ?: emptyList()
 
         val didObj = Did(id)
         return DidDocument(
@@ -246,7 +280,7 @@ class GodiddyResolver(
             keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
             capabilityInvocation = capabilityInvocation.map { VerificationMethodId.parse(it, didObj) },
             capabilityDelegation = capabilityDelegation.map { VerificationMethodId.parse(it, didObj) },
-            service = service
+            service = service,
         )
     }
 
@@ -256,17 +290,32 @@ class GodiddyResolver(
     private fun convertToDidDocumentMetadata(json: JsonObject?): DidDocumentMetadata {
         if (json == null) return DidDocumentMetadata()
 
-        val created = json["created"]?.jsonPrimitive?.content?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
-        val updated = json["updated"]?.jsonPrimitive?.content?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
+        val created =
+            json["created"]?.jsonPrimitive?.content?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        val updated =
+            json["updated"]?.jsonPrimitive?.content?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
         val deactivated = json["deactivated"]?.jsonPrimitive?.booleanOrNull ?: false
         val versionId = json["versionId"]?.jsonPrimitive?.content
-        val nextUpdate = json["nextUpdate"]?.jsonPrimitive?.content?.let {
-            try { Instant.parse(it) } catch (e: Exception) { null }
-        }
+        val nextUpdate =
+            json["nextUpdate"]?.jsonPrimitive?.content?.let {
+                try {
+                    Instant.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
         val nextVersionId = json["nextVersionId"]?.jsonPrimitive?.content
         val canonicalId = json["canonicalId"]?.jsonPrimitive?.content
         val equivalentId = json["equivalentId"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content } ?: emptyList()
@@ -283,15 +332,15 @@ class GodiddyResolver(
             nextVersionId = nextVersionId,
             canonicalId = canonicalId?.let { Did(it) },
             equivalentId = equivalentId.map { Did(it) },
-            proof = proof
+            proof = proof,
         )
     }
 
     /**
      * Converts JsonElement to Any for metadata maps.
      */
-    private fun convertJsonElement(element: JsonElement): Any? {
-        return when (element) {
+    private fun convertJsonElement(element: JsonElement): Any? =
+        when (element) {
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -305,7 +354,6 @@ class GodiddyResolver(
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
             is JsonNull -> null
         }
-    }
 
     override suspend fun getSupportedMethods(): List<String>? {
         // GoDiddy supports many methods, but doesn't expose a standard API endpoint
@@ -315,4 +363,3 @@ class GodiddyResolver(
         return null
     }
 }
-

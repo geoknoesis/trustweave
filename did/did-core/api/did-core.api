@@ -553,6 +553,10 @@ public final class org/trustweave/did/model/DidDocumentMetadata$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class org/trustweave/did/model/DidDocumentRebasingKt {
+	public static final fun rebasedTo (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/model/DidDocument;
+}
+
 public abstract class org/trustweave/did/model/DidOrUrl {
 	public static final field Companion Lorg/trustweave/did/model/DidOrUrl$Companion;
 	public final fun toStringValue ()Ljava/lang/String;
@@ -1955,6 +1959,13 @@ public final class org/trustweave/did/rotation/RotationResult {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/did/serialization/DidJsonSerialization {
+	public static final field INSTANCE Lorg/trustweave/did/serialization/DidJsonSerialization;
+	public final fun getModule ()Lkotlinx/serialization/modules/SerializersModule;
+	public final fun json (Lkotlin/jvm/functions/Function1;)Lkotlinx/serialization/json/Json;
+	public static synthetic fun json$default (Lorg/trustweave/did/serialization/DidJsonSerialization;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/serialization/json/Json;
+}
+
 public abstract interface class org/trustweave/did/spi/DidMethodProvider {
 	public abstract fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
 	public static synthetic fun create$default (Lorg/trustweave/did/spi/DidMethodProvider;Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/did/DidMethod;
@@ -2040,6 +2051,12 @@ public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun validateDid (Ljava/lang/String;)Z
 }
 
+public final class org/trustweave/did/util/ResolvedDocumentId {
+	public static final field INSTANCE Lorg/trustweave/did/util/ResolvedDocumentId;
+	public final fun mismatchReason (Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;
+	public static synthetic fun mismatchReason$default (Lorg/trustweave/did/util/ResolvedDocumentId;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
+}
+
 public final class org/trustweave/did/util/XmlDateTimeKt {
 	public static final fun toXmlDateTime (Lkotlinx/datetime/Instant;)Ljava/lang/String;
 }
@@ -2055,6 +2072,7 @@ public final class org/trustweave/did/util/XmlDateTimeSerializer : kotlinx/seria
 
 public final class org/trustweave/did/verification/DefaultDidDocumentVerificationService : org/trustweave/did/verification/DidDocumentVerificationService {
 	public fun <init> (Lorg/trustweave/did/verification/DidDocumentCanonicalizationService;)V
+	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyVerificationMethod (Lorg/trustweave/did/model/VerificationMethod;Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2072,9 +2090,14 @@ public final class org/trustweave/did/verification/DidDocumentCanonicalizationSe
 }
 
 public abstract interface class org/trustweave/did/verification/DidDocumentVerificationService {
+	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun verifyVerificationMethod (Lorg/trustweave/did/model/VerificationMethod;Ljava/lang/String;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/verification/DidDocumentVerificationService$DefaultImpls {
+	public static fun verifyDocument (Lorg/trustweave/did/verification/DidDocumentVerificationService;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/trustweave/did/verification/JsonLdCanonicalizationService : org/trustweave/did/verification/DidDocumentCanonicalizationService {
@@ -2086,17 +2109,19 @@ public final class org/trustweave/did/verification/JsonLdCanonicalizationService
 }
 
 public final class org/trustweave/did/verification/VerificationResult {
-	public fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;)V
-	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Z)V
+	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Ljava/util/List;
 	public final fun component4 ()Lkotlinx/datetime/Instant;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;)Lorg/trustweave/did/verification/VerificationResult;
-	public static synthetic fun copy$default (Lorg/trustweave/did/verification/VerificationResult;ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/verification/VerificationResult;
+	public final fun component6 ()Z
+	public final fun copy (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Z)Lorg/trustweave/did/verification/VerificationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/verification/VerificationResult;ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ZILjava/lang/Object;)Lorg/trustweave/did/verification/VerificationResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getErrors ()Ljava/util/List;
+	public final fun getIntegrityVerified ()Z
 	public final fun getValid ()Z
 	public final fun getVerificationMethod ()Ljava/lang/String;
 	public final fun getVerifiedAt ()Lkotlinx/datetime/Instant;

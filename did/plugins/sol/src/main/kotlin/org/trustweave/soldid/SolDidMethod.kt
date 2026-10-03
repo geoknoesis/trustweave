@@ -151,15 +151,19 @@ class SolDidMethod(
                 val accountData = solanaClient.getAccountData(solanaAddress)
 
                 if (accountData == null) {
-                    // Try stored document as fallback
+                    // The on-chain account is gone (or never existed). A cached copy must NOT be
+                    // served in its place: that would keep a removed document resolving as live.
+                    // The only thing the cache may still contribute is fail-safe: if this
+                    // instance itself recorded the DID as deactivated, say so.
                     val stored = getStoredDocument(did)
-                    if (stored != null) {
+                    val metadata = getDocumentMetadata(did)
+                    if (stored != null && metadata?.deactivated == true) {
                         return@withContext DidMethodUtils.createSuccessResolutionResult(
                             stored,
                             method,
-                            getDocumentMetadata(did)?.created,
-                            getDocumentMetadata(did)?.updated,
-                            getDocumentMetadata(did)?.deactivated ?: false,
+                            metadata.created,
+                            metadata.updated,
+                            true,
                             retrieved = getLastFetched(did),
                         )
                     }
@@ -310,8 +314,15 @@ class SolDidMethod(
 
         val identifier = parsed.second
 
-        // Check if network prefix exists
+        // Check if network prefix exists. The network the DID names must be the network this
+        // instance talks to: a devnet DID is never answered from a mainnet RPC (or the reverse),
+        // since the same address on two clusters is two unrelated accounts. A DID without a
+        // network segment is a mainnet DID.
         val colonIndex = identifier.indexOf(':')
+        val didNetwork = if (colonIndex >= 0) identifier.substring(0, colonIndex) else SolDidConfig.MAINNET
+        require(didNetwork == config.network) {
+            "did:sol network '$didNetwork' does not match the configured network '${config.network}': $did"
+        }
         val address =
             if (colonIndex >= 0) {
                 // Network-prefixed: did:sol:mainnet:address

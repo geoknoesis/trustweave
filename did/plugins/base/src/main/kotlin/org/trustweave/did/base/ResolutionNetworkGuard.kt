@@ -17,6 +17,8 @@ import java.net.UnknownHostException
  * - `100.64.0.0/10` (RFC 6598 carrier-grade NAT, used for internal cloud networks)
  * - `192.0.0.0/24` (IETF protocol assignments), `198.18.0.0/15` (benchmarking)
  * - `240.0.0.0/4` (reserved) and the `255.255.255.255` broadcast address
+ * - TEST-NET documentation ranges `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` and
+ *   IPv6 documentation `2001:db8::/32`, Teredo `2001::/32`, and the local-use NAT64 `64:ff9b:1::/48`
  * - `fc00::/7` and `fe80::/10` checked explicitly from the raw bytes
  * - IPv6 addresses that embed an IPv4 address (IPv4-mapped `::ffff:0:0/96`, IPv4-compatible
  *   `::/96`, NAT64 `64:ff9b::/96`, 6to4 `2002::/16`): the embedded IPv4 address is checked
@@ -65,6 +67,9 @@ public object ResolutionNetworkGuard {
             (b0 == 172 && b1 in 16..31) ||
             (b0 == 192 && b1 == 0 && b2 == 0) ||
             (b0 == 192 && b1 == 168) ||
+            (b0 == 192 && b1 == 0 && b2 == 2) ||
+            (b0 == 198 && b1 == 51 && b2 == 100) ||
+            (b0 == 203 && b1 == 0 && b2 == 113) ||
             (b0 == 198 && (b1 == 18 || b1 == 19)) ||
             b0 >= 224
     }
@@ -85,6 +90,22 @@ public object ResolutionNetworkGuard {
             if ((b10 == 0 && b11 == 0) || (b10 == 0xFF && b11 == 0xFF)) {
                 return isDisallowedIpv4(b.copyOfRange(12, 16))
             }
+        }
+        // 2001:db8::/32 documentation, 2001::/32 Teredo.
+        if (b0 == 0x20 && b1 == 0x01) {
+            val b2 = b[2].toInt() and 0xFF
+            val b3 = b[3].toInt() and 0xFF
+            if ((b2 == 0x0D && b3 == 0xB8) || (b2 == 0 && b3 == 0)) return true
+        }
+        // 64:ff9b:1::/48 local-use NAT64 (RFC 8215).
+        if (b0 == 0x00 &&
+            b1 == 0x64 &&
+            (b[2].toInt() and 0xFF) == 0xFF &&
+            (b[3].toInt() and 0xFF) == 0x9B &&
+            b[4].toInt() == 0 &&
+            (b[5].toInt() and 0xFF) == 0x01
+        ) {
+            return true
         }
         // 64:ff9b::/96 NAT64.
         val nat64Prefix = byteArrayOf(0, 0x64, 0xFF.toByte(), 0x9B.toByte(), 0, 0, 0, 0, 0, 0, 0, 0)

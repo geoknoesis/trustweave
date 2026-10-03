@@ -147,6 +147,76 @@ class CheqdDidMethodTest {
         }
 
     @Test
+    fun `a DID on another network is refused`() =
+        runBlocking<Unit> {
+            val result = method().resolveDid(Did("did:cheqd:testnet:${UUID.randomUUID()}"))
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(result)
+
+            val testnet =
+                CheqdDidMethod(
+                    InMemoryKeyManagementService(),
+                    InMemoryBlockchainAnchorClient(chainId = "cheqd:testnet"),
+                    CheqdDidConfig(network = "testnet"),
+                )
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(testnet.resolveDid(Did("did:cheqd:mainnet:${UUID.randomUUID()}")))
+            // A DID with no network segment is a mainnet DID.
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(testnet.resolveDid(Did("did:cheqd:${UUID.randomUUID()}")))
+        }
+
+    @Test
+    fun `an oversized API response is refused`() =
+        runBlocking<Unit> {
+            val padding = "x".repeat(1024 * 1024 + 10)
+            val url = api(200, """{"id":"did:cheqd:mainnet:x","pad":"$padding"}""")
+
+            val result = method(apiUrl = url).resolveDid(Did("did:cheqd:mainnet:${UUID.randomUUID()}"))
+
+            val failure = assertIs<DidResolutionResult.Failure.ResolutionError>(result)
+            assertTrue(failure.reason.contains("exceeds"), failure.reason)
+        }
+
+    @Test
+    fun `an API result flagged deactivated resolves as deactivated`() =
+        runBlocking<Unit> {
+            val id = "did:cheqd:mainnet:${UUID.randomUUID()}"
+            val url =
+                api(
+                    200,
+                    """{"didDocument":{"@context":"https://www.w3.org/ns/did/v1","id":"$id"},""" +
+                        """"didDocumentMetadata":{"deactivated":true}}""",
+                )
+
+            assertIs<DidResolutionResult.Deactivated>(method(apiUrl = url).resolveDid(Did(id)))
+        }
+
+    @Test
+    fun `a wrapped API result for the DID resolves`() =
+        runBlocking<Unit> {
+            val id = "did:cheqd:mainnet:${UUID.randomUUID()}"
+            val url = api(200, """{"didDocument":{"@context":"https://www.w3.org/ns/did/v1","id":"$id"},"didDocumentMetadata":{}}""")
+
+            assertIs<DidResolutionResult.Success>(method(apiUrl = url).resolveDid(Did(id)))
+        }
+
+    @Test
+    fun `deactivation is recorded and then reported as deactivated`() =
+        runBlocking<Unit> {
+            val method = method()
+            val document = method.createDid(DidCreationOptions())
+
+            assertTrue(method.deactivateDid(document.id))
+
+            val result = assertIs<DidResolutionResult.Deactivated>(method.resolveDid(document.id))
+            assertTrue(result.documentMetadata.deactivated)
+        }
+
+    @Test
+    fun `deactivating an unknown DID reports false`() =
+        runBlocking<Unit> {
+            assertFalse(method().deactivateDid(Did("did:cheqd:mainnet:${UUID.randomUUID()}")))
+        }
+
+    @Test
     fun `config toString redacts the private key`() {
         val text = CheqdDidConfig(network = "mainnet", privateKey = "super-secret-mnemonic words").toString()
         assertFalse("super-secret" in text, text)

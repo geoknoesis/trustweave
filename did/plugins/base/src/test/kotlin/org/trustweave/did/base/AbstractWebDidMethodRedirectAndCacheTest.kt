@@ -38,9 +38,9 @@ import kotlin.time.Duration.Companion.hours
  */
 class AbstractWebDidMethodRedirectAndCacheTest {
     private companion object {
-        // TEST-NET-3 (RFC 5737): parsed without DNS, and not on the SSRF deny-list.
-        const val HOST = "203.0.113.10"
-        const val OTHER_HOST = "203.0.113.11"
+        // Public literal IP: parsed without DNS, and not on the SSRF deny-list.
+        const val HOST = "8.8.8.8"
+        const val OTHER_HOST = "8.8.4.4"
         const val DID = "did:web:$HOST"
     }
 
@@ -261,12 +261,18 @@ class AbstractWebDidMethodRedirectAndCacheTest {
             "::ffff:10.0.0.1",
             "64:ff9b::a00:1",
             "2002:a00:1::1",
+            "192.0.2.1",
+            "198.51.100.7",
+            "203.0.113.10",
+            "2001:db8::1",
+            "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+            "64:ff9b:1::1",
         ).forEach { assertEquals(true, ResolutionNetworkGuard.isDisallowed(ip(it)), it) }
     }
 
     @Test
     fun `public addresses are allowed`() {
-        listOf("8.8.8.8", "100.128.0.1", "203.0.113.10", "2001:4860:4860::8888", "2002:808:808::1")
+        listOf("8.8.8.8", "100.128.0.1", "198.51.101.1", "2001:4860:4860::8888", "2002:808:808::1")
             .forEach { assertEquals(false, ResolutionNetworkGuard.isDisallowed(ip(it)), it) }
     }
 }

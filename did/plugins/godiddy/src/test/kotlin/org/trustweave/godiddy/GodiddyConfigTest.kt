@@ -7,7 +7,6 @@ import kotlin.test.*
  * Tests for GodiddyConfig data class and companion object methods.
  */
 class GodiddyConfigTest {
-
     @Test
     fun `test GodiddyConfig with default values`() {
         val config = GodiddyConfig()
@@ -19,11 +18,12 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig with all fields`() {
-        val config = GodiddyConfig(
-            baseUrl = "https://custom.godiddy.com",
-            timeout = 60000L,
-            apiKey = "api-key-123"
-        )
+        val config =
+            GodiddyConfig(
+                baseUrl = "https://custom.godiddy.com",
+                timeout = 60000L,
+                apiKey = "api-key-123",
+            )
 
         assertEquals("https://custom.godiddy.com", config.baseUrl)
         assertEquals(60000L, config.timeout)
@@ -41,11 +41,12 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig fromOptions with all fields`() {
-        val options = didCreationOptions {
-            property("baseUrl", "https://custom.godiddy.com")
-            property("timeout", 60000L)
-            property("apiKey", "api-key-123")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://custom.godiddy.com")
+                property("timeout", 60000L)
+                property("apiKey", "api-key-123")
+            }
 
         val config = GodiddyConfig.fromOptions(options)
 
@@ -56,9 +57,10 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig fromOptions with partial fields`() {
-        val options = didCreationOptions {
-            property("baseUrl", "https://custom.godiddy.com")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://custom.godiddy.com")
+            }
 
         val config = GodiddyConfig.fromOptions(options)
 
@@ -78,11 +80,12 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig fromOptions with null values`() {
-        val options = didCreationOptions {
-            property("baseUrl", null)
-            property("timeout", null)
-            property("apiKey", null)
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", null)
+                property("timeout", null)
+                property("apiKey", null)
+            }
 
         val config = GodiddyConfig.fromOptions(options)
 
@@ -93,9 +96,10 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig fromOptions with timeout as Int`() {
-        val options = didCreationOptions {
-            property("timeout", 45000) // Int instead of Long
-        }
+        val options =
+            didCreationOptions {
+                property("timeout", 45000) // Int instead of Long
+            }
 
         val config = GodiddyConfig.fromOptions(options)
 
@@ -104,9 +108,10 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig fromOptions with timeout as Double`() {
-        val options = didCreationOptions {
-            property("timeout", 45000.0) // Double
-        }
+        val options =
+            didCreationOptions {
+                property("timeout", 45000.0) // Double
+            }
 
         val config = GodiddyConfig.fromOptions(options)
 
@@ -115,16 +120,18 @@ class GodiddyConfigTest {
 
     @Test
     fun `test GodiddyConfig equality`() {
-        val config1 = GodiddyConfig(
-            baseUrl = "https://custom.godiddy.com",
-            timeout = 60000L,
-            apiKey = "api-key-123"
-        )
-        val config2 = GodiddyConfig(
-            baseUrl = "https://custom.godiddy.com",
-            timeout = 60000L,
-            apiKey = "api-key-123"
-        )
+        val config1 =
+            GodiddyConfig(
+                baseUrl = "https://custom.godiddy.com",
+                timeout = 60000L,
+                apiKey = "api-key-123",
+            )
+        val config2 =
+            GodiddyConfig(
+                baseUrl = "https://custom.godiddy.com",
+                timeout = 60000L,
+                apiKey = "api-key-123",
+            )
 
         assertEquals(config1, config2)
     }
@@ -148,5 +155,11 @@ class GodiddyConfigTest {
     }
 }
 
-
-
+class GodiddyConfigRedactionTest {
+    @kotlin.test.Test
+    fun `toString redacts the api key`() {
+        val text = GodiddyConfig(apiKey = "GODIDDY-SECRET").toString()
+        kotlin.test.assertFalse("GODIDDY-SECRET" in text, text)
+        kotlin.test.assertTrue("<redacted>" in text, text)
+    }
+}

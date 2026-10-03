@@ -33,6 +33,7 @@ import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeKeyPair
 import org.trustweave.did.sidetree.SidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeP256KeyPair
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.kms.KeyManagementService
 
 /**
@@ -150,8 +151,11 @@ class IonDidMethod(
                 val resolutionResult = sidetreeClient.resolveDid(didString)
 
                 if (!resolutionResult.success || resolutionResult.document == null) {
+                    // Only a 404 means "no such DID". Transport failures (-1), node errors and
+                    // unparseable answers are resolution errors, not a verdict on the DID.
+                    val notFound = resolutionResult.httpStatus == 404
                     return@withContext DidMethodUtils.createErrorResolutionResult(
-                        "notFound",
+                        if (notFound) "notFound" else "internalError",
                         resolutionResult.error ?: "DID not found in ION network",
                         method,
                         didString,
@@ -161,26 +165,37 @@ class IonDidMethod(
                 // Convert ION document to TrustWeave format
                 val convertedDocument = convertIonDocument(resolutionResult.document!!)
 
-                // Store locally for caching
+                // The node's answer must be about the DID we asked for: reject, never rewrite, and
+                // never cache a foreign document.
+                ResolvedDocumentId
+                    .mismatchReason(didString, convertedDocument.id.value, allowCanonicalOfLongForm = true)
+                    ?.let { reason ->
+                        return@withContext DidMethodUtils.createErrorResolutionResult(
+                            "invalidDidDocument",
+                            reason,
+                            method,
+                            didString,
+                        )
+                    }
+
+                // Store locally for caching (under the verified id, which is the requested DID or
+                // its canonical form)
                 storeDocument(convertedDocument.id.value, convertedDocument)
 
                 DidMethodUtils.createSuccessResolutionResult(convertedDocument, method)
+            } catch (e: org.trustweave.did.exception.DidException.InvalidDidFormat) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (e: TrustWeaveException) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (e: kotlinx.serialization.SerializationException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDidDocument", e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
+                // A node answer missing required members (for example no `id`) is a bad document.
+                DidMethodUtils.createErrorResolutionResult("invalidDidDocument", e.message, method, did.value)
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 

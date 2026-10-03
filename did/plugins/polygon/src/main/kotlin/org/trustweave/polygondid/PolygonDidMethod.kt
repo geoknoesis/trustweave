@@ -11,7 +11,9 @@ import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.createDid
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import org.trustweave.did.model.rebasedTo
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.ethrdid.EthrDidMethod
 import org.trustweave.kms.KeyManagementService
 
@@ -89,7 +91,7 @@ class PolygonDidMethod(
                 val polygonDid = Did(polygonDidString)
 
                 // Rebuild document with polygon DID
-                val polygonDocument = ethrDocument.copy(id = polygonDid)
+                val polygonDocument = ethrDocument.rebasedTo(from = ethrDocument.id, to = polygonDid)
 
                 // Store locally
                 storeDocument(polygonDocument.id, polygonDocument)
@@ -123,10 +125,18 @@ class PolygonDidMethod(
                 return@withContext when (ethrResult) {
                     is DidResolutionResult.Success -> {
                         val ethrDoc = ethrResult.document
-                        val polygonDocument =
-                            ethrDoc.copy(
-                                id = did,
+                        // The delegate must have answered for the DID we asked it about.
+                        ResolvedDocumentId.mismatchReason(ethrDidString, ethrDoc.id.value)?.let { reason ->
+                            return@withContext DidMethodUtils.createErrorResolutionResult(
+                                "invalidDidDocument",
+                                reason,
+                                method,
+                                didString,
                             )
+                        }
+                        // Rewrite id, controllers, verification method ids and relationship
+                        // references together; a bare copy(id = ...) would leave did:ethr keys.
+                        val polygonDocument = ethrDoc.rebasedTo(from = ethrDoc.id, to = did)
 
                         storeDocument(polygonDocument.id.value, polygonDocument)
 
@@ -209,13 +219,12 @@ class PolygonDidMethod(
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (e: org.trustweave.did.exception.DidException.InvalidDidFormat) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 
@@ -235,13 +244,14 @@ class PolygonDidMethod(
                 // Update using delegate
                 val ethrUpdated =
                     delegate.updateDid(ethrDid) { ethrDoc ->
-                        // Apply updater with polygon DID
-                        val polygonDoc = ethrDoc.copy(id = did)
-                        updater(polygonDoc)
+                        // Apply updater on the polygon view of the document, then hand the
+                        // delegate back an ethr-form document.
+                        val polygonDoc = ethrDoc.rebasedTo(from = ethrDoc.id, to = did)
+                        updater(polygonDoc).rebasedTo(from = did, to = ethrDoc.id)
                     }
 
                 // Convert back to polygon format
-                val polygonUpdated = ethrUpdated.copy(id = did)
+                val polygonUpdated = ethrUpdated.rebasedTo(from = ethrUpdated.id, to = did)
                 storeDocument(polygonUpdated.id.value, polygonUpdated)
 
                 polygonUpdated

@@ -159,6 +159,94 @@ class SolDidMethodTest {
         }
 }
 
+class SolDidRemovedAccountAndNetworkTest {
+    private var server: HttpServer? = null
+
+    @Volatile
+    private var account: String? = null
+
+    @AfterEach
+    fun stop() {
+        server?.stop(0)
+    }
+
+    private fun rpc(): String {
+        val s = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        s.createContext("/") { exchange ->
+            val current = account
+            val value =
+                if (current == null) {
+                    "null"
+                } else {
+                    val data = Base64.getEncoder().encodeToString(current.toByteArray())
+                    """{"data":["$data","base64"],"owner":"11111111111111111111111111111111"}"""
+                }
+            val body = """{"jsonrpc":"2.0","id":1,"result":{"context":{"slot":1},"value":$value}}""".toByteArray()
+            exchange.sendResponseHeaders(200, body.size.toLong())
+            exchange.responseBody.use { it.write(body) }
+        }
+        s.start()
+        server = s
+        return "http://127.0.0.1:${s.address.port}"
+    }
+
+    private fun method(config: (String) -> SolDidConfig = { SolDidConfig.mainnet(it) }) =
+        SolDidMethod(
+            InMemoryKeyManagementService(),
+            InMemoryBlockchainAnchorClient(chainId = "solana:mainnet-beta"),
+            config(rpc()),
+        )
+
+    private fun json(document: org.trustweave.did.model.DidDocument): String =
+        kotlinx.serialization.json.Json.encodeToString(
+            kotlinx.serialization.json.JsonElement
+                .serializer(),
+            org.trustweave.did.representation.DidDocumentJsonProducer
+                .toJsonObject(document, useV1_1Context = true),
+        )
+
+    @Test
+    fun `a cached document is not served once the on-chain account is gone`() =
+        runBlocking<Unit> {
+            val method = method()
+            val document = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+            account = json(document)
+            assertIs<DidResolutionResult.Success>(method.resolveDid(document.id))
+
+            account = null // the account is removed on chain
+
+            assertIs<DidResolutionResult.Failure.NotFound>(method.resolveDid(document.id))
+        }
+
+    @Test
+    fun `a locally recorded deactivation is still reported when the account is gone`() =
+        runBlocking<Unit> {
+            val method = method()
+            val document = method.createDid(DidCreationOptions(algorithm = KeyAlgorithm.ED25519))
+            account = json(document)
+            assertTrue(method.deactivateDid(document.id))
+
+            account = null
+
+            assertIs<DidResolutionResult.Deactivated>(method.resolveDid(document.id))
+        }
+
+    @Test
+    fun `a DID naming another network is refused`() =
+        runBlocking<Unit> {
+            val address = ByteArray(32) { 7 }.encodeBase58()
+            val mainnet = method()
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(mainnet.resolveDid(Did("did:sol:devnet:$address")))
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(mainnet.resolveDid(Did("did:sol:testnet:$address")))
+
+            val devnet = method { SolDidConfig.devnet(it) }
+            // No network segment means mainnet, which a devnet instance must not answer.
+            assertIs<DidResolutionResult.Failure.InvalidFormat>(devnet.resolveDid(Did("did:sol:$address")))
+            account = null
+            assertIs<DidResolutionResult.Failure.NotFound>(devnet.resolveDid(Did("did:sol:devnet:$address")))
+        }
+}
+
 class SolDidConfigTest {
     @Test
     fun `toString redacts the private key`() {

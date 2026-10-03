@@ -13,3 +13,18 @@ class UnsupportedProviderTest {
             assertFailsWith<TrustWeaveException> { provider.issueCredentialWithCertificate("certificate", "Employee") }
         }
 }
+
+class VenafiRedactionTest {
+    @Test
+    fun `toString redacts the api key`() {
+        val text = VenafiIntegration("https://example.test", "VENAFI-SECRET").toString()
+        kotlin.test.assertFalse("VENAFI-SECRET" in text, text)
+        kotlin.test.assertTrue("<redacted>" in text, text)
+    }
+
+    @Test
+    fun `blank credentials are rejected`() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> { VenafiIntegration("https://example.test", " ") }
+        kotlin.test.assertFailsWith<IllegalArgumentException> { VenafiIntegration(" ", "key") }
+    }
+}

@@ -1,30 +1,29 @@
 package org.trustweave.credential.proof.internal.engines
 
-import com.nimbusds.jose.JOSEException
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jose.JWSSigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.internal.RevocationChecker
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.Issuer
@@ -147,17 +146,16 @@ internal class SdJwtProofEngine(
         }
 
         val header = JWSHeader.Builder(JWSAlgorithm.EdDSA).keyID(keyId).build()
-        val signedJWT = SignedJWT(header, claimsBuilder.build())
-        val signer =
-            getSigner(keyId)
+        val signerFn =
+            getSignerFunctionOrKms()
                 ?: throw IllegalArgumentException(
                     "No signer available for key $keyId. Configure KMS via ProofEngineConfig.",
                 )
-        signedJWT.sign(signer)
+        val compactJwt = signJws(header, claimsBuilder.build(), keyId, signerFn)
 
         val proof =
             CredentialProof.SdJwtVcProof(
-                sdJwtVc = signedJWT.serialize(),
+                sdJwtVc = compactJwt,
                 disclosures = disclosures.toList(),
             )
 
@@ -246,37 +244,36 @@ internal class SdJwtProofEngine(
             // envelope dates are only metadata and can be stripped or rewritten.
             validateSignedTemporalClaims(credential, claimsSet, options)?.let { return it }
 
-            // Verify disclosure integrity: every disclosed claim must hash to an _sd entry,
-            // and collect the verified claim values for envelope reconciliation below.
-            val disclosures = proof.disclosures ?: emptyList()
-            val disclosedClaims = mutableMapOf<String, JsonElement>()
-            if (disclosures.isNotEmpty()) {
-                val sdHashes = extractSdHashes(signedJWT)
-                for (discB64 in disclosures) {
-                    val hashB64 = sha256B64(discB64.toByteArray())
-                    if (hashB64 !in sdHashes) {
-                        return VerificationResult.Invalid.InvalidProof(
-                            credential = credential,
-                            reason = "Disclosure hash not found in _sd array",
-                            errors = listOf("Tampered disclosure detected: hash $hashB64 not in _sd"),
-                            warnings = emptyList(),
-                        )
-                    }
-                    val parsed =
-                        parseDisclosure(discB64)
-                            ?: return VerificationResult.Invalid.InvalidProof(
-                                credential = credential,
-                                reason = "Malformed disclosure",
-                                errors = listOf("Disclosure could not be decoded as [salt, name, value]"),
-                                warnings = emptyList(),
-                            )
-                    disclosedClaims[parsed.first] = parsed.second
-                }
+            // _sd_alg: absent means sha-256 (SD-JWT §4.1.1); only sha-256 is supported.
+            val sdAlg = claimsSet.getClaim("_sd_alg")
+            if (sdAlg != null && sdAlg != SD_ALG_SHA256) {
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Unsupported _sd_alg '$sdAlg'",
+                    errors = listOf("Only '$SD_ALG_SHA256' is supported for _sd_alg, got '$sdAlg'"),
+                    warnings = emptyList(),
+                )
             }
+
+            // Resolve disclosures against the signed payload (SD-JWT §7.1): every disclosure
+            // must be referenced exactly once, digests and claim names must be unique, and
+            // nested `_sd` objects / `{"...": digest}` array elements are resolved recursively.
+            val disclosures = proof.disclosures ?: emptyList()
+            val processedSubjectClaims =
+                try {
+                    processSdPayload(claimsSet, disclosures)
+                } catch (e: SdJwtDisclosureException) {
+                    return VerificationResult.Invalid.InvalidProof(
+                        credential = credential,
+                        reason = e.message ?: "Invalid SD-JWT disclosures",
+                        errors = listOf("Invalid disclosures: ${e.message}"),
+                        warnings = emptyList(),
+                    )
+                }
 
             // Finding 4c: every envelope credentialSubject claim must be backed by a verified
             // disclosure or a non-selectively-disclosed signed claim — name AND value.
-            reconcileEnvelopeClaims(credential, signedJWT, disclosedClaims)?.let { return it }
+            reconcileEnvelopeClaims(credential, signedJWT, processedSubjectClaims)?.let { return it }
 
             val subjectIri =
                 claimsSet.subject?.takeIf { it.isNotBlank() }?.let { Iri(it) }
@@ -295,10 +292,16 @@ internal class SdJwtProofEngine(
                     ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
                     ?: credential.expirationDate
 
-            // Revocation / suspension check
+            // Revocation / suspension check. An undeterminable status is routed through the
+            // configured RevocationFailurePolicy (fail closed by default).
+            val statusWarnings = mutableListOf<String>()
             val checker = config.properties["statusChecker"] as? CredentialStatusChecker
             if (checker != null && credential.credentialStatus != null) {
-                when (val status = checker.checkStatus(credential)) {
+                val outcome =
+                    RevocationChecker.checkWithStatusChecker(credential, checker, options.revocationFailurePolicy)
+                outcome.failure?.let { return it }
+                statusWarnings += outcome.warnings
+                when (val status = outcome.status) {
                     is CredentialStatusCheckResult.Revoked -> return VerificationResult.Invalid.Revoked(
                         credential = credential,
                         revokedAt = null,
@@ -309,7 +312,6 @@ internal class SdJwtProofEngine(
                         reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
                         errors = listOf("Credential suspended"),
                     )
-                    is CredentialStatusCheckResult.CheckFailed -> { /* warn but don't fail */ }
                     else -> {}
                 }
             }
@@ -320,7 +322,7 @@ internal class SdJwtProofEngine(
                 subjectIri = subjectIri,
                 issuedAt = issuedAt,
                 expiresAt = expiresAt,
-                warnings = emptyList(),
+                warnings = statusWarnings,
                 formatMetadata =
                     buildJsonObject {
                         put("jwt_id", claimsSet.jwtid ?: "")
@@ -481,38 +483,140 @@ internal class SdJwtProofEngine(
 
     private fun sha256B64(input: ByteArray): String = b64url.encodeToString(MessageDigest.getInstance("SHA-256").digest(input))
 
-    private fun extractSdHashes(signedJWT: SignedJWT): Set<String> {
-        val claimsSet = signedJWT.jwtClaimsSet
+    /** A decoded disclosure: `[salt, name, value]` (object property) or `[salt, value]` (array element). */
+    private data class ParsedDisclosure(
+        val name: String?,
+        val value: JsonElement,
+    )
 
-        @Suppress("UNCHECKED_CAST")
-        val vcClaim = claimsSet.getJSONObjectClaim("vc") as? Map<String, Any?> ?: return emptySet()
-
-        @Suppress("UNCHECKED_CAST")
-        val credSubject = vcClaim["credentialSubject"] as? Map<String, Any?> ?: return emptySet()
-
-        @Suppress("UNCHECKED_CAST")
-        val sdList = credSubject["_sd"] as? List<*> ?: return emptySet()
-        return sdList.filterIsInstance<String>().toSet()
-    }
-
-    /** Decodes a disclosure and returns the claim name (index 1 in the array). */
-    private fun parseDisclosureClaimName(discB64: String): String? = parseDisclosure(discB64)?.first
+    private class SdJwtDisclosureException(
+        message: String,
+    ) : Exception(message)
 
     /**
-     * Decodes a disclosure (`base64url(["<salt>", "<name>", <value>])`) and returns the
-     * claim name and claim value, or null if the disclosure is malformed.
+     * Processes the signed payload with the presented [disclosures] (SD-JWT §7.1) and returns the
+     * resulting `vc.credentialSubject` claims (without `id`).
+     *
+     * @throws SdJwtDisclosureException on a malformed, duplicate, unreferenced or misplaced
+     *         disclosure, a duplicate digest, or a disclosed claim name that collides with an
+     *         existing one.
      */
-    private fun parseDisclosure(discB64: String): Pair<String, JsonElement>? {
-        return try {
-            val json = String(b64urlDec.decode(discB64), Charsets.UTF_8)
-            val array = Json.parseToJsonElement(json).jsonArray
-            val name = array.getOrNull(1)?.jsonPrimitive?.content ?: return null
-            val value = array.getOrNull(2) ?: return null
-            name to value
+    private fun processSdPayload(
+        claimsSet: JWTClaimsSet,
+        disclosures: List<String>,
+    ): Map<String, JsonElement> {
+        val byDigest = LinkedHashMap<String, ParsedDisclosure>()
+        for (discB64 in disclosures) {
+            val digest = sha256B64(discB64.toByteArray(Charsets.US_ASCII))
+            val parsed =
+                parseDisclosureStrict(discB64)
+                    ?: throw SdJwtDisclosureException("Malformed disclosure: not [salt, name, value] or [salt, value]")
+            if (byDigest.put(digest, parsed) != null) {
+                throw SdJwtDisclosureException("Duplicate disclosure with digest $digest")
+            }
+        }
+        val seenDigests = HashSet<String>()
+        val used = HashSet<String>()
+
+        val processor =
+            object {
+                fun processValue(value: JsonElement): JsonElement =
+                    when (value) {
+                        is JsonObject -> processObject(value)
+                        is JsonArray -> processArray(value)
+                        else -> value
+                    }
+
+                fun processObject(obj: JsonObject): JsonObject {
+                    val result = LinkedHashMap<String, JsonElement>()
+                    for ((k, v) in obj) {
+                        if (k != "_sd") result[k] = processValue(v)
+                    }
+                    val sd = obj["_sd"] ?: return JsonObject(result)
+                    val digests =
+                        (sd as? JsonArray)?.map { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
+                            ?: throw SdJwtDisclosureException("_sd must be an array of digest strings")
+                    for (digest in digests) {
+                        if (digest == null) throw SdJwtDisclosureException("_sd must be an array of digest strings")
+                        if (!seenDigests.add(digest)) throw SdJwtDisclosureException("Digest $digest appears more than once")
+                        val disclosure = byDigest[digest] ?: continue // undisclosed claim or decoy
+                        val name =
+                            disclosure.name
+                                ?: throw SdJwtDisclosureException("Array-element disclosure referenced from an object _sd")
+                        if (name == "_sd" || name == "...") {
+                            throw SdJwtDisclosureException("Disclosure uses reserved claim name '$name'")
+                        }
+                        if (result.containsKey(name)) {
+                            throw SdJwtDisclosureException("Disclosed claim name '$name' collides with an existing claim")
+                        }
+                        used += digest
+                        result[name] = processValue(disclosure.value)
+                    }
+                    return JsonObject(result)
+                }
+
+                fun processArray(arr: JsonArray): JsonArray {
+                    val out = mutableListOf<JsonElement>()
+                    for (element in arr) {
+                        val ref = (element as? JsonObject)?.takeIf { it.size == 1 && it.containsKey("...") }
+                        if (ref == null) {
+                            out += processValue(element)
+                            continue
+                        }
+                        val digest =
+                            (ref["..."] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                                ?: throw SdJwtDisclosureException("Array element digest must be a string")
+                        if (!seenDigests.add(digest)) throw SdJwtDisclosureException("Digest $digest appears more than once")
+                        val disclosure = byDigest[digest] ?: continue // undisclosed element or decoy: removed
+                        if (disclosure.name != null) {
+                            throw SdJwtDisclosureException("Object-property disclosure referenced from an array element")
+                        }
+                        used += digest
+                        out += processValue(disclosure.value)
+                    }
+                    return JsonArray(out)
+                }
+            }
+
+        val payload =
+            anyToJsonElement(claimsSet.toJSONObject()) as? JsonObject
+                ?: throw SdJwtDisclosureException("JWT payload is not a JSON object")
+        val processed = processor.processObject(JsonObject(payload.filterKeys { it != "_sd_alg" }))
+
+        val unreferenced = byDigest.keys - used
+        if (unreferenced.isNotEmpty()) {
+            throw SdJwtDisclosureException(
+                "Disclosure hash not found in _sd array: ${unreferenced.first()} (tampered or misplaced disclosure)",
+            )
+        }
+
+        val subject = (processed["vc"] as? JsonObject)?.get("credentialSubject") as? JsonObject
+        return subject?.filterKeys { it != "id" } ?: emptyMap()
+    }
+
+    /** Strict disclosure decoding: exactly `[salt, name, value]` or `[salt, value]`. */
+    private fun parseDisclosureStrict(discB64: String): ParsedDisclosure? =
+        try {
+            val array = Json.parseToJsonElement(String(b64urlDec.decode(discB64), Charsets.UTF_8)).jsonArray
+            val salt = array.getOrNull(0) as? JsonPrimitive
+            if (salt == null || !salt.isString) {
+                null
+            } else {
+                when (array.size) {
+                    3 -> {
+                        val name = (array[1] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                        name?.let { ParsedDisclosure(it, array[2]) }
+                    }
+                    2 -> ParsedDisclosure(null, array[1])
+                    else -> null
+                }
+            }
         } catch (e: Exception) {
             null
         }
-    }
+
+    /** Decodes a disclosure and returns the claim name, or null for array-element / malformed disclosures. */
+    private fun parseDisclosureClaimName(discB64: String): String? = parseDisclosureStrict(discB64)?.name
 
     // -------------------------------------------------------------------------
     // Signed-claim validation (the signed JWT is authoritative; the unsigned
@@ -604,7 +708,7 @@ internal class SdJwtProofEngine(
     private fun reconcileEnvelopeClaims(
         credential: VerifiableCredential,
         signedJWT: SignedJWT,
-        disclosedClaims: Map<String, JsonElement>,
+        verifiedSubjectClaims: Map<String, JsonElement>,
     ): VerificationResult.Invalid.InvalidProof? {
         // Subject identifier: the signed 'sub' claim is authoritative (issuance writes
         // the subject id, or "" when absent, into 'sub').
@@ -624,10 +728,9 @@ internal class SdJwtProofEngine(
             )
         }
 
-        val signedSubjectClaims = extractSignedSubjectClaims(signedJWT)
         for ((name, envelopeValue) in credential.credentialSubject.claims) {
             val backedValue =
-                disclosedClaims[name] ?: signedSubjectClaims[name]
+                verifiedSubjectClaims[name]
                     ?: return VerificationResult.Invalid.InvalidProof(
                         credential = credential,
                         reason =
@@ -651,23 +754,6 @@ internal class SdJwtProofEngine(
             }
         }
         return null
-    }
-
-    /**
-     * Extracts the non-selectively-disclosed claims from the signed `vc.credentialSubject`
-     * structure (everything except `id` and `_sd`).
-     */
-    private fun extractSignedSubjectClaims(signedJWT: SignedJWT): Map<String, JsonElement> {
-        @Suppress("UNCHECKED_CAST")
-        val vcClaim =
-            signedJWT.jwtClaimsSet.getJSONObjectClaim("vc") as? Map<String, Any?>
-                ?: return emptyMap()
-
-        @Suppress("UNCHECKED_CAST")
-        val credSubject = vcClaim["credentialSubject"] as? Map<String, Any?> ?: return emptyMap()
-        return credSubject
-            .filterKeys { it != "id" && it != "_sd" }
-            .mapValues { (_, value) -> anyToJsonElement(value) }
     }
 
     /** Converts Nimbus' untyped JSON values to kotlinx [JsonElement] for comparison. */
@@ -745,9 +831,7 @@ internal class SdJwtProofEngine(
                 .claim("sd_hash", sdHash)
         audience?.let { claimsBuilder.audience(it) }
 
-        val kbJwt = SignedJWT(header, claimsBuilder.build())
-        kbJwt.sign(KmsJwsSigner(keyId, createKmsSigner(kms)))
-        return kbJwt.serialize()
+        return signJws(header, claimsBuilder.build(), keyId, createKmsSigner(kms))
     }
 
     // -------------------------------------------------------------------------
@@ -814,13 +898,24 @@ internal class SdJwtProofEngine(
             }
         }
 
-    private fun getSigner(keyId: String): JWSSigner? {
-        val signerFn =
-            getSignerFunction() ?: run {
-                val kms = getKms() ?: return null
-                createKmsSigner(kms)
-            }
-        return KmsJwsSigner(keyId, signerFn)
+    private fun getSignerFunctionOrKms(): (suspend (ByteArray, String) -> ByteArray)? =
+        getSignerFunction() ?: getKms()?.let { createKmsSigner(it) }
+
+    /**
+     * Produces a compact JWS without blocking: the JWS signing input is computed up front, the
+     * (suspending) KMS signature is awaited in the caller's coroutine, and the compact form is
+     * assembled by hand. Nimbus' synchronous [com.nimbusds.jose.JWSSigner] is deliberately not
+     * used — bridging it to the suspending KMS would need `runBlocking` on the caller's thread.
+     */
+    private suspend fun signJws(
+        header: JWSHeader,
+        claims: JWTClaimsSet,
+        keyId: String,
+        signer: suspend (ByteArray, String) -> ByteArray,
+    ): String {
+        val signingInput = SignedJWT(header, claims).signingInput
+        val signature = signer(signingInput, keyId)
+        return String(signingInput, Charsets.US_ASCII) + "." + b64url.encodeToString(signature)
     }
 
     private suspend fun getIssuerVerificationMethod(
@@ -848,31 +943,7 @@ internal class SdJwtProofEngine(
         )
     }
 
-    /**
-     * JWSSigner adapter bridging async KMS signing into Nimbus JOSE's synchronous interface.
-     */
-    private class KmsJwsSigner(
-        private val keyId: String,
-        private val signer: suspend (ByteArray, String) -> ByteArray,
-    ) : JWSSigner {
-        override fun sign(
-            header: JWSHeader,
-            signingInput: ByteArray,
-        ): com.nimbusds.jose.util.Base64URL =
-            try {
-                val signature = runBlocking { signer(signingInput, keyId) }
-                com.nimbusds.jose.util.Base64URL
-                    .encode(signature)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (e: Exception) {
-                throw JOSEException("KMS signing failed: ${e.message}", e)
-            }
-
-        override fun supportedJWSAlgorithms(): MutableSet<JWSAlgorithm> = mutableSetOf(JWSAlgorithm.EdDSA)
-
-        override fun getJCAContext(): com.nimbusds.jose.jca.JCAContext =
-            com.nimbusds.jose.jca
-                .JCAContext()
+    private companion object {
+        const val SD_ALG_SHA256 = "sha-256"
     }
 }

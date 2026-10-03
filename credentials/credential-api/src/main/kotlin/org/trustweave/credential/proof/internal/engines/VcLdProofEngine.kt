@@ -3,8 +3,8 @@ package org.trustweave.credential.proof.internal.engines
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.util.Base64URL
-import kotlinx.datetime.Clock
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -15,6 +15,7 @@ import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.internal.CredentialConstants
+import org.trustweave.credential.internal.RevocationChecker
 import org.trustweave.credential.internal.infrastructure.DefaultEd25519SignatureVerificationAdapter
 import org.trustweave.credential.internal.infrastructure.DefaultJsonLdCanonicalizationAdapter
 import org.trustweave.credential.internal.infrastructure.DefaultJsonWebSignature2020Adapter
@@ -300,8 +301,14 @@ internal class VcLdProofEngine(
             val effectiveChecker =
                 statusChecker
                     ?: (config.properties["statusChecker"] as? CredentialStatusChecker)
+            val statusWarnings = mutableListOf<String>()
             if (effectiveChecker != null && credential.credentialStatus != null) {
-                when (val status = effectiveChecker.checkStatus(credential)) {
+                // An undeterminable status follows options.revocationFailurePolicy (fail closed by default).
+                val outcome =
+                    RevocationChecker.checkWithStatusChecker(credential, effectiveChecker, options.revocationFailurePolicy)
+                outcome.failure?.let { return it }
+                statusWarnings += outcome.warnings
+                when (val status = outcome.status) {
                     is CredentialStatusCheckResult.Revoked -> return VerificationResult.Invalid.Revoked(
                         credential = credential,
                         revokedAt = null,
@@ -312,18 +319,14 @@ internal class VcLdProofEngine(
                         reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
                         errors = listOf("Credential suspended"),
                     )
-                    is CredentialStatusCheckResult.CheckFailed ->
-                        logger.warn(
-                            "Status check failed for credential {}: {}",
-                            credential.id?.value,
-                            status.reason,
-                        )
                     else -> {}
                 }
             }
 
             // Create valid result
-            createValidVerificationResult(credential, issuerIri, proof)
+            createValidVerificationResult(credential, issuerIri, proof).let { valid ->
+                if (statusWarnings.isEmpty()) valid else valid.copy(warnings = valid.warnings + statusWarnings)
+            }
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (e: Exception) {

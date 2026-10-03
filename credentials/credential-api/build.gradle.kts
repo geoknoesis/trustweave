@@ -39,6 +39,7 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(libs.kotest.assertions.core)
 }
 
 // Configure Kover for test coverage

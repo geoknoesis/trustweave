@@ -6,6 +6,8 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.requests.RevocationFailurePolicy
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.spi.status.CredentialStatusCheckResult
+import org.trustweave.credential.spi.status.CredentialStatusChecker
 
 /**
  * Revocation checking utilities.
@@ -159,6 +161,55 @@ internal object RevocationChecker {
                 policy = policy,
             )
         }
+    }
+
+    /**
+     * Outcome of [checkWithStatusChecker].
+     *
+     * @property status   The checker's result, or `null` when the checker threw.
+     * @property failure  Policy-mandated failure when the status could not be determined.
+     * @property warnings Warnings to attach to a successful verification.
+     */
+    data class StatusCheckOutcome(
+        val status: CredentialStatusCheckResult?,
+        val failure: VerificationResult.Invalid?,
+        val warnings: List<String>,
+    )
+
+    /**
+     * Runs an engine-level [CredentialStatusChecker] and applies [policy] when the status could
+     * not be determined — a [CredentialStatusCheckResult.CheckFailed] result or an exception from
+     * the checker. Those are routed through the same [RevocationFailurePolicy] handling as
+     * [checkRevocationStatus]: fail closed by default, warn under `FAIL_WITH_WARNING`, log under
+     * `FAIL_OPEN`. Conclusive outcomes (valid, revoked, suspended, no status) are returned in
+     * [StatusCheckOutcome.status] so the calling engine keeps producing its own typed result.
+     */
+    suspend fun checkWithStatusChecker(
+        credential: VerifiableCredential,
+        checker: CredentialStatusChecker,
+        policy: RevocationFailurePolicy,
+    ): StatusCheckOutcome {
+        val status =
+            try {
+                checker.checkStatus(credential)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                val (failure, warnings) =
+                    handleRevocationFailure(credential, e, "Status check error: ${e.message}", policy)
+                return StatusCheckOutcome(null, failure, warnings)
+            }
+        if (status is CredentialStatusCheckResult.CheckFailed) {
+            val (failure, warnings) =
+                handleRevocationFailure(
+                    credential,
+                    IllegalStateException(status.reason),
+                    "Status check failed: ${status.reason}",
+                    policy,
+                )
+            return StatusCheckOutcome(status, failure, warnings)
+        }
+        return StatusCheckOutcome(status, null, emptyList())
     }
 
     /**

@@ -1,6 +1,5 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
-import kotlinx.coroutines.runBlocking
 import org.didcommx.didcomm.secret.Secret
 import org.didcommx.didcomm.secret.SecretResolver
 import org.trustweave.kms.KeyManagementService
@@ -17,6 +16,10 @@ import java.util.concurrent.ConcurrentHashMap
  * - An optional [cloudKms] can be provided for other operations, but it is not
  *   consulted for DIDComm secrets since cloud KMS typically cannot export private keys.
  *
+ * **Threading:** didcomm-java calls [findKey] synchronously. Call [preload] (or [preloadAll])
+ * from suspend code before packing/unpacking so lookups are pure cache reads. A cache miss falls
+ * back to a bounded blocking lookup on `Dispatchers.IO`, never on the caller's dispatcher.
+ *
  * Populate [localKeyStore] via
  * [org.trustweave.credential.didcomm.crypto.rotation.KeyRotationManager].
  */
@@ -24,21 +27,31 @@ class HybridKmsSecretResolver(
     private val localKeyStore: LocalKeyStore,
     @Suppress("unused") private val cloudKms: KeyManagementService? = null,
 ) : SecretResolver {
-
     private val keyCache = ConcurrentHashMap<String, Secret>()
 
     override fun findKey(kid: String): Optional<Secret> = Optional.ofNullable(resolveKey(kid))
 
-    override fun findKeys(kids: List<String>): Set<String> =
-        kids.filter { findKey(it).isPresent }.toSet()
+    override fun findKeys(kids: List<String>): Set<String> = kids.filter { findKey(it).isPresent }.toSet()
 
     /**
      * Clears the in-memory key cache (call after key rotation).
      */
     fun clearCache() = keyCache.clear()
 
-    private fun resolveKey(secretId: String): Secret? = runBlocking {
-        keyCache[secretId]?.let { return@runBlocking it }
-        localKeyStore.get(secretId)?.also { keyCache[secretId] = it }
+    /** Loads [kids] from the local key store into the cache without blocking. */
+    suspend fun preload(kids: Collection<String>) {
+        for (kid in kids) {
+            localKeyStore.get(kid)?.let { keyCache[kid] = it }
+        }
+    }
+
+    /** Loads every key of the local key store into the cache without blocking. */
+    suspend fun preloadAll() = preload(localKeyStore.list())
+
+    private fun resolveKey(secretId: String): Secret? {
+        keyCache[secretId]?.let { return it }
+        return BlockingSecretLookup
+            .lookup(secretId) { localKeyStore.get(secretId) }
+            ?.also { keyCache[secretId] = it }
     }
 }

@@ -246,6 +246,24 @@ class AnchorVerificationTest {
         }
 
     @Test
+    fun `Boolean verifyAnchor is true for memory anchors only under explicit test mode`() =
+        runBlocking<Unit> {
+            val testClient = TestAnchorClient()
+            val ref = testClient.writePayload(payload).ref
+            assertTrue(testClient.verifyAnchor(payload, ref), "explicit inMemoryTestMode keeps working")
+
+            // A client WITHOUT explicit test mode must not call a test-mode flagged anchor verified.
+            val prod = TestAnchorClient(canSubmit = true, testMode = false, claimTestModeOnRead = true)
+            val txHash = "fake_tx_0"
+            prod.submittedBytes[txHash] = payload.toString().toByteArray(StandardCharsets.UTF_8)
+            val flagged = AnchorRef("test:unit", txHash)
+            val detail = prod.verifyAnchorDetailed(payload, flagged, requireCanonicalEnvelope = false)
+            assertTrue(detail.verified)
+            assertTrue(detail.testMode)
+            assertFalse(prod.verifyAnchor(payload, flagged), "memory-served anchor is not chain evidence")
+        }
+
+    @Test
     fun `memory fallback is never served when test mode is off`() =
         runBlocking<Unit> {
             val prod = TestAnchorClient(canSubmit = false, testMode = false)
@@ -428,6 +446,7 @@ class AnchorVerificationTest {
         payloadMode: String? = if (digestMode) AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST else null,
         private val canSubmit: Boolean = false,
         testMode: Boolean = true,
+        private val claimTestModeOnRead: Boolean = false,
         extraOptions: Map<String, Any?> = emptyMap(),
     ) : AbstractBlockchainAnchorClient(
             chainId = "test:unit",
@@ -455,7 +474,14 @@ class AnchorVerificationTest {
                 submittedBytes[txHash]
                     ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
             return AnchorResult(
-                ref = buildAnchorRef(txHash),
+                ref =
+                    buildAnchorRef(txHash).let {
+                        if (claimTestModeOnRead) {
+                            it.copy(extra = it.extra + (AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to "true"))
+                        } else {
+                            it
+                        }
+                    },
                 payload = Json.parseToJsonElement(String(bytes, StandardCharsets.UTF_8)),
                 mediaType = "application/json",
             )

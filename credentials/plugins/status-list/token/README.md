@@ -25,7 +25,7 @@ referenced from credentials via a compact `status.status_list` claim carrying `i
 
 | Concept | Description |
 |---|---|
-| `status_list` claim | JWT payload claim with `bits` (1 or 2) and `lst` (base64url byte array, no padding) |
+| `status_list` claim | JWT payload claim with `bits` (1 or 2) and `lst` (ZLIB-compressed byte array, base64url, no padding) |
 | `typ = "statuslist+jwt"` | JOSE header type identifying the token |
 | `bitsPerEntry = 1` | Single-purpose list: 8 credentials per byte, bit 0 of each entry encodes revoked **or** suspended |
 | `bitsPerEntry = 2` | Combined list: 4 credentials per byte, bit 0 = revoked, bit 1 = suspended |
@@ -46,7 +46,16 @@ A credential references the list with a `status` claim in its SD-JWT VC body, fo
 ```
 
 The verifier resolves the URI, validates the returned JWT, reads byte `floor(42 / 8)` of
-the decoded `lst`, and inspects bit `42 % 8` to determine the credential's status.
+the decompressed `lst`, and inspects bit `42 % 8` to determine the credential's status.
+
+### `lst` encoding
+
+`lst` follows `draft-ietf-oauth-status-list`: the packed bytes (status index `i` starts at the
+least significant bit of byte `i / (8 / bits)`) are ZLIB-compressed (RFC 1950) and base64url-encoded
+without padding. `TokenStatusListCodec.encode` / `decode` implement this. `decode` also accepts the
+legacy uncompressed form earlier versions emitted (a list is read as ZLIB only when it has a valid
+ZLIB header and inflates to a complete, checksum-valid stream) and caps the decompressed size at
+16 MiB to defuse decompression bombs.
 
 ## Usage
 
@@ -259,7 +268,7 @@ proof engines can gate `VerificationResult` on live status data.
 |---|---|---|
 | Spec | IETF `draft-ietf-oauth-status-list` | W3C Bitstring Status List v1.0 |
 | Envelope | Compact JWT (`statuslist+jwt`) | Verifiable Credential (JSON-LD) |
-| Encoding | Raw base64url, optional DEFLATE (not applied here) | GZIP-compressed base64 inside a VC |
+| Encoding | ZLIB-compressed, base64url (no padding) | GZIP-compressed base64 inside a VC |
 | Best fit | SD-JWT VC, ISO mdoc, OAuth flows | W3C VC Data Model 2.0 issuance |
 | Provider name | `"token"` | `"bitstring"` |
 
@@ -269,7 +278,7 @@ behind a router if you mint multiple credential formats.
 
 ## Limitations
 
-- DEFLATE compression of `lst` is not applied (the draft marks it OPTIONAL).
+- Tokens issued before the ZLIB change carry an uncompressed `lst`; strict third-party verifiers need a re-issued token.
 - CWT output is not implemented; only the JWT variant is produced.
 - `buildStatusListToken` generates a new signing key from the KMS on every call — wire in
   your own key strategy if you need stable `kid` references.

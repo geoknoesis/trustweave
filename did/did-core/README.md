@@ -88,7 +88,7 @@ import org.trustweave.did.dsl.resolveOrThrow
 import org.trustweave.did.dsl.resolveWith
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
-import org.trustweave.did.resolver.universalResolver
+import org.trustweave.did.dsl.universalResolver
 import org.trustweave.did.registry.didMethodRegistry
 import org.trustweave.did.resolver.RegistryBasedResolver
 

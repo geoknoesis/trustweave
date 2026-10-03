@@ -15,6 +15,57 @@ ROOT = Path(__file__).resolve().parents[1]
 HISTORICAL = {'.internal', 'superpowers', 'reviews', 'archive'}
 
 
+MAIN_SOURCE = re.compile(r'(?:^|/)src/(?:main|[a-zA-Z0-9]*Main)/(?:kotlin|java)/.+\.(?:kt|java)$')
+DECLARATION = re.compile(
+    r'^(?:(?:public|internal|private|protected|open|abstract|sealed|final|data|enum|annotation|value|inline|'
+    r'fun|const|lateinit|expect|actual|suspend|operator|infix|tailrec|external|override)\s+)*'
+    r'(?:class|interface|object|typealias|fun|val|var)\s+(?:<[^>]*>\s*)?(?:[\w.<>?, ]+\.)?`?(\w+)`?', re.M)
+IMPORT = re.compile(r'^import\s+(org\.trustweave\.[\w.`]+?)(?:\.\*)?(?:\s+as\s+\w+)?\s*$', re.M)
+
+
+def source_symbols(root, names):
+    """Map package -> set of top-level declaration names, for every main-source file in the repository."""
+    packages = {}
+    for name in names:
+        if not MAIN_SOURCE.search(name) or not (root / name).is_file():
+            continue
+        code = (root / name).read_text(encoding='utf-8-sig', errors='replace')
+        package = re.search(r'^package\s+([\w.`]+)', code, re.M)
+        if not package:
+            continue
+        declared = packages.setdefault(package[1].replace('`', ''), set())
+        if name.endswith('.java'):
+            declared.add(Path(name).stem)
+        else:
+            declared.update(DECLARATION.findall(re.sub(r'(?m)^[ \t]+.*$', '', code)))
+    return packages
+
+
+def documented_imports(code):
+    """org.trustweave imports in a code block, skipping ones the text itself labels as wrong."""
+    lines = code.splitlines()
+    for index, line in enumerate(lines):
+        previous = lines[index - 1] if index else ''
+        if re.search(r'❌|[Ww]rong|[Ii]ncorrect', previous):
+            continue
+        found = IMPORT.match(line)
+        if found:
+            yield found[1]
+
+
+def unresolved_import(target, packages):
+    """True when no package or top-level symbol in main sources matches an org.trustweave import."""
+    target = target.replace('`', '')
+    if target in packages or any(package.startswith(target + '.') for package in packages):
+        return False
+    parts = target.split('.')
+    for cut in range(len(parts) - 1, 0, -1):
+        package, symbol = '.'.join(parts[:cut]), parts[cut]
+        if symbol in packages.get(package, ()):
+            return False
+    return True
+
+
 def inspect(root, require_contract=False):
     names = subprocess.check_output(
         ['git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']
@@ -24,6 +75,7 @@ def inspect(root, require_contract=False):
     modules = set(re.findall(r'^include\("([^"]+)"\)', settings.read_text(encoding='utf-8'), re.M)) if settings.exists() else None
     paths = sorted({Path(name) for name in names if name.endswith('.md') and
                     not {'node_modules', '_site', 'build', '.next'}.intersection(Path(name).parts)})
+    packages = source_symbols(root, names)
     errors, snippets, source_examples = [], [], []
     for relative in paths:
         path = root / relative
@@ -49,6 +101,11 @@ def inspect(root, require_contract=False):
                 errors.append(f'{relative}: source-backed example drift: {match[1]}')
         if historical:
             continue
+        if packages:
+            for match in re.finditer(r'^```(?:kotlin|kts|java)[^\n]*\n(.*?)^```', content, re.M | re.S):
+                for target in documented_imports(match[1]):
+                    if unresolved_import(target, packages):
+                        errors.append(f'{relative}: import does not resolve to a class, function or package in main sources: {target}')
         if modules is not None:
             for module in re.findall(r'project\(\s*["\'](:[^"\']+)["\']\s*\)', content):
                 if module.lstrip(':') not in modules:

@@ -53,6 +53,32 @@ class DocumentationCheckTest(unittest.TestCase):
         self.assertEqual(1, len(self.errors()))
         self.assertIn('missing.md', self.errors()[0])
 
+    def seed_sources(self):
+        self.write('did/src/main/kotlin/org/trustweave/did/Did.kt',
+                   'package org.trustweave.did\n\nclass Did(val value: String) {\n    class Nested\n}\n'
+                   'fun resolveAll() = Unit\ntypealias Alias = String\n')
+
+    def test_unresolved_trustweave_import_is_rejected(self):
+        self.seed_sources()
+        self.write('README.md', '```kotlin\nimport org.trustweave.did.Missing\n```\n')
+        self.assertTrue(any('import does not resolve' in error for error in self.errors()))
+
+    def test_resolvable_imports_pass(self):
+        self.seed_sources()
+        self.write('README.md', '```kotlin\nimport org.trustweave.did.Did\nimport org.trustweave.did.Did.Nested\n'
+                   'import org.trustweave.did.resolveAll\nimport org.trustweave.did.Alias\nimport org.trustweave.did.*\n```\n')
+        self.assertEqual([], self.errors())
+
+    def test_import_labelled_wrong_is_ignored(self):
+        self.seed_sources()
+        self.write('README.md', '```kotlin\n// Wrong import\nimport org.trustweave.core.types.Did\n```\n')
+        self.assertEqual([], self.errors())
+
+    def test_historical_imports_are_not_checked(self):
+        self.seed_sources()
+        self.write('docs/archive/old.md', '```kotlin\nimport org.trustweave.gone.Thing\n```\n')
+        self.assertEqual([], self.errors())
+
     def test_unclosed_fence_is_detected(self):
         self.write('README.md', '```kotlin\nval x = 1\n')
         self.assertTrue(any('unclosed' in error for error in self.errors()))

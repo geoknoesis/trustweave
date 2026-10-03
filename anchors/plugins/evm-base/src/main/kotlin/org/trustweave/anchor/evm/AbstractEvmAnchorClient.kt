@@ -86,7 +86,10 @@ data class EvmChainConfig(
  *   for real transactions
  * - `contractAddress` (String): optional registry contract recorded on anchor refs
  * - `expectedSender` (String): address that must have sent every anchor this client reads
- *   ([OPTION_EXPECTED_SENDER]); unset means any sender is accepted
+ *   ([OPTION_EXPECTED_SENDER]); defaults to the address of the configured `privateKey` account.
+ *   A client without credentials (verify-only) must set it, or explicitly opt in to
+ *   `acceptAnySelfSend=true` ([OPTION_ACCEPT_ANY_SELF_SEND]); otherwise reads fail with a clear
+ *   error, because any third party can self-send arbitrary calldata
  * - `expectedRecipient` (String): address every anchor this client reads must be sent to
  *   ([OPTION_EXPECTED_RECIPIENT]); unset means the anchor must be a self-send, the only
  *   shape [submitTransaction] produces
@@ -477,7 +480,7 @@ abstract class AbstractEvmAnchorClient(
      *
      * Anyone can put arbitrary calldata on chain, so without these checks a third party could
      * publish a transaction with the right payload and have it accepted as "the" anchor. The
-     * sender is checked when [OPTION_EXPECTED_SENDER] is configured. The recipient must equal
+     * sender must equal [OPTION_EXPECTED_SENDER], or the client's own account when it has credentials. The recipient must equal
      * [OPTION_EXPECTED_RECIPIENT] when configured; otherwise the transaction must be a self-send
      * (`to == from`), which is the only shape this client writes. Address case is not significant.
      */
@@ -495,10 +498,18 @@ abstract class AbstractEvmAnchorClient(
             )
 
         if (from.isNullOrBlank()) reject("Transaction has no sender; refusing to treat it as an anchor")
-        expectedSender?.let { expected ->
-            if (!from.equals(expected, ignoreCase = true)) {
-                reject("Transaction was sent by $from, not the expected anchoring account $expected")
+        val senderToCheck = expectedSender ?: credentials?.address
+        if (senderToCheck != null) {
+            if (!from.equals(senderToCheck, ignoreCase = true)) {
+                reject("Transaction was sent by $from, not the expected anchoring account $senderToCheck")
             }
+        } else if (!acceptAnySelfSend) {
+            reject(
+                "No expected sender is known: this client has no signing credentials and no " +
+                    "'$OPTION_EXPECTED_SENDER' option, so it cannot tell the anchoring account's " +
+                    "transactions from a third party's. Set '$OPTION_EXPECTED_SENDER' to the anchoring " +
+                    "account, or set '$OPTION_ACCEPT_ANY_SELF_SEND'=true to accept any sender explicitly",
+            )
         }
         val expectedTo = expectedRecipient ?: from
         if (to == null || !to.equals(expectedTo, ignoreCase = true)) {
@@ -509,6 +520,14 @@ abstract class AbstractEvmAnchorClient(
 
     private val expectedSender: String?
         get() = (options[OPTION_EXPECTED_SENDER] as? String)?.takeIf { it.isNotBlank() }
+
+    private val acceptAnySelfSend: Boolean
+        get() =
+            when (val v = options[OPTION_ACCEPT_ANY_SELF_SEND]) {
+                is Boolean -> v
+                is String -> v.equals("true", ignoreCase = true)
+                else -> false
+            }
 
     private val expectedRecipient: String?
         get() = (options[OPTION_EXPECTED_RECIPIENT] as? String)?.takeIf { it.isNotBlank() }
@@ -597,9 +616,17 @@ abstract class AbstractEvmAnchorClient(
 
         /**
          * Address (0x-hex) that must be the sender of every anchor read by this client. Set it to
-         * the anchoring account when verifying anchors; unset accepts any sender.
+         * the anchoring account when verifying anchors; unset falls back to the configured signing account
+         * (see [OPTION_ACCEPT_ANY_SELF_SEND] for verify-only clients).
          */
         public const val OPTION_EXPECTED_SENDER: String = "expectedSender"
+
+        /**
+         * Explicit opt-in (`true`) for a verify-only client (no `privateKey`, no
+         * [OPTION_EXPECTED_SENDER]) to accept an anchor sent by any account. Insecure: anyone can
+         * self-send a transaction carrying a chosen payload. Ignored when a sender is known.
+         */
+        public const val OPTION_ACCEPT_ANY_SELF_SEND: String = "acceptAnySelfSend"
 
         /**
          * Address (0x-hex) that must be the recipient of every anchor read by this client. Unset

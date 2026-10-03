@@ -1,6 +1,7 @@
 public abstract class org/trustweave/anchor/evm/AbstractEvmAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient, java/io/Closeable {
 	public static final field Companion Lorg/trustweave/anchor/evm/AbstractEvmAnchorClient$Companion;
 	public static final field DEFAULT_MIN_CONFIRMATIONS J
+	public static final field OPTION_ACCEPT_ANY_SELF_SEND Ljava/lang/String;
 	public static final field OPTION_EXPECTED_RECIPIENT Ljava/lang/String;
 	public static final field OPTION_EXPECTED_SENDER Ljava/lang/String;
 	public static final field OPTION_MIN_CONFIRMATIONS Ljava/lang/String;

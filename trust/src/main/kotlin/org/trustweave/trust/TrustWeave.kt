@@ -52,6 +52,9 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.DidCreationWithKeyResult
 import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.IssuerIdentity
+import org.trustweave.trust.types.KeyIdResult
+import org.trustweave.trust.types.RevocationResult
+import org.trustweave.trust.types.TrustOperationResult
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import org.trustweave.trust.types.WalletCreationResult
@@ -518,7 +521,22 @@ class TrustWeave internal constructor(
      * `Result.failure` carrying an [IllegalStateException] with the reason. Coroutine
      * cancellation is rethrown, never captured. Unwrap with `getOrElse` / `fold`.
      */
+    @Deprecated(
+        message = "Returns kotlin.Result instead of a sealed TrustWeave result; use getKeyIdResult(did).",
+        replaceWith = ReplaceWith("getKeyIdResult(did)"),
+    )
     suspend fun getKeyId(did: Did): Result<String> = didService.getKeyId(did)
+
+    /**
+     * Sealed-result form of [getKeyId]: the ID of the key [did] issues with (first `assertionMethod`,
+     * else first `authentication`, else first verification method not reserved for `keyAgreement`).
+     * Never throws for domain failures; coroutine cancellation is rethrown.
+     */
+    suspend fun getKeyIdResult(did: Did): KeyIdResult =
+        didService.getKeyId(did).fold(
+            onSuccess = { KeyIdResult.Success(it) },
+            onFailure = { KeyIdResult.Failure(it.message ?: it::class.simpleName ?: "Key lookup failed", it) },
+        )
 
     suspend fun resolveDid(
         did: String,
@@ -626,6 +644,10 @@ class TrustWeave internal constructor(
      * @param block DSL block for trust operations
      * @return [TrustPath.NotConfigured] if the trust registry is not configured, null on success
      */
+    @Deprecated(
+        message = "Nullable NotConfigured return and propagating exceptions; use trustResult { }.",
+        replaceWith = ReplaceWith("trustResult(block)"),
+    )
     suspend fun trust(block: suspend TrustBuilder.() -> Unit): TrustPath.NotConfigured? {
         val service =
             trustService
@@ -634,6 +656,28 @@ class TrustWeave internal constructor(
                 )
         service.trust(block)
         return null
+    }
+
+    /**
+     * Sealed-result form of [trust]: [TrustOperationResult.Completed] when [block] ran,
+     * [TrustOperationResult.NotConfigured] without a trust registry (block not run) and
+     * [TrustOperationResult.Failure] when [block] or the registry threw. Coroutine cancellation is
+     * rethrown.
+     */
+    suspend fun trustResult(block: suspend TrustBuilder.() -> Unit): TrustOperationResult {
+        val service =
+            trustService
+                ?: return TrustOperationResult.NotConfigured(
+                    "Trust registry is not configured. Configure it in trustWeave { trust { provider(\"inMemory\") } }",
+                )
+        return try {
+            service.trust(block)
+            TrustOperationResult.Completed
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            TrustOperationResult.Failure(e.message ?: e::class.simpleName ?: "Trust operation failed", e)
+        }
     }
 
     /**
@@ -656,10 +700,42 @@ class TrustWeave internal constructor(
      * @throws org.trustweave.core.exception.TrustWeaveException.OperationTimedOut if the
      *   operation exceeds [timeout]
      */
+    @Deprecated(
+        message = "Boolean return with thrown failures; use revokeResult { } for a sealed result.",
+        replaceWith = ReplaceWith("revokeResult(timeout, block)"),
+    )
     suspend fun revoke(
         timeout: Duration = 10.seconds,
         block: RevocationBuilder.() -> Unit,
     ): Boolean = revocationService.revoke(timeout, block)
+
+    /**
+     * Sealed-result form of [revoke]. Missing configuration, incomplete requests and timeouts are
+     * variants instead of exceptions; coroutine cancellation is rethrown.
+     *
+     * @param timeout maximum time to wait; exceeding it yields [RevocationResult.TimedOut]
+     */
+    suspend fun revokeResult(
+        timeout: Duration = 10.seconds,
+        block: RevocationBuilder.() -> Unit,
+    ): RevocationResult {
+        if (configuration.revocationManager == null) {
+            return RevocationResult.NotConfigured(
+                "CredentialRevocationManager is required for revocation operations.",
+            )
+        }
+        return try {
+            if (revocationService.revoke(timeout, block)) RevocationResult.Revoked else RevocationResult.NotRevoked
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: org.trustweave.core.exception.TrustWeaveException.OperationTimedOut) {
+            RevocationResult.TimedOut(timeout, e.cause)
+        } catch (e: IllegalStateException) {
+            RevocationResult.InvalidRequest(e.message ?: "Incomplete revocation request")
+        } catch (e: Exception) {
+            RevocationResult.Failure(e.message ?: e::class.simpleName ?: "Revocation failed", e)
+        }
+    }
 
     /** Guards [close] so repeated calls are no-ops (idempotent close). */
     private val closed = AtomicBoolean(false)

@@ -88,6 +88,7 @@ public final class org/trustweave/trust/TrustWeave : java/io/Closeable, org/trus
 	public fun getDidRegistry ()Lorg/trustweave/did/registry/DidMethodRegistry;
 	public fun getDidResolver ()Lorg/trustweave/did/resolver/DidResolver;
 	public final fun getKeyId-gIAlu-s (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getKeyIdResult (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
 	public fun getWalletFactory ()Lorg/trustweave/wallet/services/WalletFactory;
 	public final fun issue-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -100,9 +101,12 @@ public final class org/trustweave/trust/TrustWeave : java/io/Closeable, org/trus
 	public static synthetic fun resolveDid-8Mi8wO0$default (Lorg/trustweave/trust/TrustWeave;Lorg/trustweave/did/identifiers/Did;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun revoke-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun revoke-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun revokeResult-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revokeResult-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun rotateKey-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun rotateKey-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun trust (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun trustResult (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun updateDid-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun updateDid-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun verify-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -1644,6 +1648,10 @@ public final class org/trustweave/trust/types/DidResultKt {
 	public static final fun getOrThrow (Lorg/trustweave/trust/types/DidCreationWithKeyResult;)Lkotlin/Pair;
 }
 
+public final class org/trustweave/trust/types/FacadeResultsKt {
+	public static final fun getOrThrow (Lorg/trustweave/trust/types/KeyIdResult;)Ljava/lang/String;
+}
+
 public final class org/trustweave/trust/types/HolderIdentity {
 	public static final field Companion Lorg/trustweave/trust/types/HolderIdentity$Companion;
 	public static final synthetic fun box-impl (Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/trust/types/HolderIdentity;
@@ -1680,6 +1688,34 @@ public final class org/trustweave/trust/types/IssuerIdentity {
 
 public final class org/trustweave/trust/types/IssuerIdentity$Companion {
 	public final fun invoke-2PGuBWI (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
+}
+
+public abstract class org/trustweave/trust/types/KeyIdResult {
+}
+
+public final class org/trustweave/trust/types/KeyIdResult$Failure : org/trustweave/trust/types/KeyIdResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/KeyIdResult$Failure;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/KeyIdResult$Failure;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/KeyIdResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/KeyIdResult$Success : org/trustweave/trust/types/KeyIdResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/KeyIdResult$Success;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/KeyIdResult$Success;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/KeyIdResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/trustweave/trust/types/PresentationResult {
@@ -1760,6 +1796,72 @@ public final class org/trustweave/trust/types/ResultExtensionsKt {
 	public static final fun getOrThrowDocument (Lorg/trustweave/trust/types/DidCreationResult;)Lorg/trustweave/did/model/DidDocument;
 }
 
+public abstract class org/trustweave/trust/types/RevocationResult {
+}
+
+public final class org/trustweave/trust/types/RevocationResult$Failure : org/trustweave/trust/types/RevocationResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/RevocationResult$Failure;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/RevocationResult$Failure;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/RevocationResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/RevocationResult$InvalidRequest : org/trustweave/trust/types/RevocationResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/RevocationResult$InvalidRequest;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/RevocationResult$InvalidRequest;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/RevocationResult$InvalidRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/RevocationResult$NotConfigured : org/trustweave/trust/types/RevocationResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/RevocationResult$NotConfigured;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/RevocationResult$NotConfigured;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/RevocationResult$NotConfigured;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/RevocationResult$NotRevoked : org/trustweave/trust/types/RevocationResult {
+	public static final field INSTANCE Lorg/trustweave/trust/types/RevocationResult$NotRevoked;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/RevocationResult$Revoked : org/trustweave/trust/types/RevocationResult {
+	public static final field INSTANCE Lorg/trustweave/trust/types/RevocationResult$Revoked;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/RevocationResult$TimedOut : org/trustweave/trust/types/RevocationResult {
+	public synthetic fun <init> (JLjava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLjava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy-VtjQ1oo (JLjava/lang/Throwable;)Lorg/trustweave/trust/types/RevocationResult$TimedOut;
+	public static synthetic fun copy-VtjQ1oo$default (Lorg/trustweave/trust/types/RevocationResult$TimedOut;JLjava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/RevocationResult$TimedOut;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getTimeout-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/trust/types/TrustAnchor {
 	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/trust/TrustAnchorMetadata;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
@@ -1769,6 +1871,40 @@ public final class org/trustweave/trust/types/TrustAnchor {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getMetadata ()Lorg/trustweave/trust/TrustAnchorMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/trustweave/trust/types/TrustOperationResult {
+}
+
+public final class org/trustweave/trust/types/TrustOperationResult$Completed : org/trustweave/trust/types/TrustOperationResult {
+	public static final field INSTANCE Lorg/trustweave/trust/types/TrustOperationResult$Completed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/TrustOperationResult$Failure : org/trustweave/trust/types/TrustOperationResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lorg/trustweave/trust/types/TrustOperationResult$Failure;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/TrustOperationResult$Failure;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/trustweave/trust/types/TrustOperationResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/trust/types/TrustOperationResult$NotConfigured : org/trustweave/trust/types/TrustOperationResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/trust/types/TrustOperationResult$NotConfigured;
+	public static synthetic fun copy$default (Lorg/trustweave/trust/types/TrustOperationResult$NotConfigured;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/trust/types/TrustOperationResult$NotConfigured;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

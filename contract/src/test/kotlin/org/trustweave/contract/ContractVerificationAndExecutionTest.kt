@@ -58,9 +58,10 @@ class ContractVerificationAndExecutionTest {
     private val chainId = "test:chain"
 
     /** Issues credentials by copying the request; verification outcome is configurable. */
-    private class FakeCredentialService(
+    internal class FakeCredentialService(
         var valid: Boolean = true,
         val tamper: (CredentialSubject) -> CredentialSubject = { it },
+        val issuerOverride: ((org.trustweave.credential.model.vc.Issuer) -> org.trustweave.credential.model.vc.Issuer)? = null,
     ) : CredentialService {
         val verifyCalls = AtomicInteger()
 
@@ -69,7 +70,7 @@ class ContractVerificationAndExecutionTest {
                 VerifiableCredential(
                     id = request.id,
                     type = request.type,
-                    issuer = request.issuer,
+                    issuer = issuerOverride?.invoke(request.issuer) ?: request.issuer,
                     issuanceDate = request.issuedAt,
                     credentialSubject = tamper(request.credentialSubject),
                 ),

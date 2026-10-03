@@ -138,9 +138,10 @@ class WalletHolderOfferVerificationTest {
         wallet: BasicWallet,
         issued: (ExchangeRequest.Issue) -> VerifiableCredential,
         verifier: CredentialService? = Verifier(valid = true),
+        policy: IssuerTrustPolicy? = null,
     ): WalletHolder {
         val registry = ExchangeProtocolRegistries.default().apply { register(FixedIssuer(issued)) }
-        return WalletHolder(wallet, holderDid, registry, null, verifier)
+        return WalletHolder(wallet, holderDid, registry, null, verifier, policy)
     }
 
     @Test
@@ -214,5 +215,51 @@ class WalletHolderOfferVerificationTest {
         assertEquals("did:web:issuer.example.com%3A8443:tenants:a", issuerDidFor("https://issuer.example.com:8443/tenants/a"))
         assertEquals("did:key:z6Mk", issuerDidFor("did:key:z6Mk"))
         assertFailsWith<IllegalArgumentException> { issuerDidFor("http://issuer.example.com") }
+    }
+
+    @Test
+    fun `an issuer rejected by the trust policy is not stored even though it verifies`() =
+        runBlocking<Unit> {
+            val wallet = BasicWallet()
+            assertFailsWith<CredentialRejectedException> {
+                holder(wallet, { credential() }, policy = IssuerTrustPolicy.allowList(setOf("did:web:other.example.com")))
+                    .acceptCredentialOffer(offerUrl)
+            }
+            assertTrue(wallet.list().isEmpty())
+        }
+
+    @Test
+    fun `an issuer allowed by the trust policy is stored`() =
+        runBlocking<Unit> {
+            val wallet = BasicWallet()
+            holder(wallet, { credential() }, policy = IssuerTrustPolicy.allowList(setOf(issuerDid))).acceptCredentialOffer(offerUrl)
+            assertEquals(1, wallet.list().size)
+        }
+
+    @Test
+    fun `a lookup based trust policy is consulted with the credential issuer`() =
+        runBlocking<Unit> {
+            val wallet = BasicWallet()
+            val seen = mutableListOf<String>()
+            holder(
+                wallet,
+                { credential() },
+                policy =
+                    IssuerTrustPolicy.fromLookup {
+                        seen += it
+                        true
+                    },
+            ).acceptCredentialOffer(offerUrl)
+            assertEquals(listOf(issuerDid), seen)
+        }
+
+    @Test
+    fun `issuer host is lowercased, IPv6 is encoded and userinfo is rejected`() {
+        assertEquals("did:web:issuer.example.com", issuerDidFor("https://Issuer.EXAMPLE.com"))
+        assertEquals("did:web:%5B%3A%3A1%5D%3A8443", issuerDidFor("https://[::1]:8443"))
+        assertEquals("did:web:%5B2001%3Adb8%3A%3A1%5D", issuerDidFor("https://[2001:DB8::1]/"))
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://user:pw@issuer.example.com") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://issuer.example.com@evil.example.com") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://issuer.example.com/?x=1") }
     }
 }

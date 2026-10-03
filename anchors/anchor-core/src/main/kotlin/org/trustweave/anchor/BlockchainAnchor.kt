@@ -47,6 +47,21 @@ data class AnchorResult(
 )
 
 /**
+ * Outcome of [BlockchainAnchorClient.verifyAnchorDetailed].
+ *
+ * @param verified whether the on-chain data attests to the payload
+ * @param testMode true when the anchor was served from a client's in-memory test fallback
+ *   (`inMemoryTestMode`): such an anchor is NOT on any blockchain, so a `verified` result must not
+ *   be treated as chain evidence
+ * @param reason why verification failed, when it did and the cause is known
+ */
+data class AnchorVerification(
+    val verified: Boolean,
+    val testMode: Boolean = false,
+    val reason: String? = null,
+)
+
+/**
  * Interface for blockchain anchoring operations.
  * This interface is chain-agnostic; specific blockchain implementations
  * will be provided in separate adapter modules.
@@ -136,20 +151,45 @@ interface BlockchainAnchorClient {
     suspend fun verifyAnchor(
         payload: JsonElement,
         ref: AnchorRef,
-    ): Boolean {
+    ): Boolean = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope = false).verified
+
+    /**
+     * [verifyAnchor] with an explanation of the outcome: whether the anchor came from a client's
+     * in-memory test fallback ([AnchorVerification.testMode]) and why verification failed.
+     *
+     * @param requireCanonicalEnvelope when true, legacy digest envelopes (no `canon` member,
+     *   key-order sensitive) are rejected so only RFC 8785 anchors verify
+     */
+    suspend fun verifyAnchorDetailed(
+        payload: JsonElement,
+        ref: AnchorRef,
+        requireCanonicalEnvelope: Boolean,
+    ): AnchorVerification {
         val onChain =
             try {
                 readPayload(ref)
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
-                return false
+            } catch (e: Exception) {
+                return AnchorVerification(false, reason = "anchor could not be read: ${e.message}")
             }
+        val testMode = onChain.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE] == "true"
         val anchored = onChain.payload
-        return if (AnchorDigest.isEnvelope(anchored)) {
-            AnchorDigest.matches(anchored.jsonObject, payload)
-        } else {
-            anchored == payload
-        }
+        val verified =
+            if (AnchorDigest.isEnvelope(anchored)) {
+                AnchorDigest.matches(anchored.jsonObject, payload, requireCanonicalEnvelope)
+            } else {
+                anchored == payload
+            }
+        val reason =
+            when {
+                verified -> null
+                requireCanonicalEnvelope &&
+                    AnchorDigest.isEnvelope(anchored) &&
+                    !AnchorDigest.isCanonicalized(anchored.jsonObject) ->
+                    "legacy (non-canonical) digest envelope rejected by requireCanonicalEnvelope"
+                else -> "anchored data does not match the payload"
+            }
+        return AnchorVerification(verified, testMode, reason)
     }
 }

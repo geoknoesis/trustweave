@@ -196,6 +196,65 @@ class AnchorVerificationTest {
         }
 
     @Test
+    fun `requireCanonicalEnvelope rejects legacy envelopes but accepts JCS ones`() =
+        runBlocking<Unit> {
+            val strict =
+                TestAnchorClient(
+                    canSubmit = true,
+                    extraOptions = mapOf(AbstractBlockchainAnchorClient.OPTION_REQUIRE_CANONICAL_ENVELOPE to true),
+                )
+            val legacyBytes = Json.encodeToString(JsonElement.serializer(), payload).toByteArray(StandardCharsets.UTF_8)
+            val legacyRef = strict.writePayload(AnchorDigest.envelope(legacyBytes, "application/json")).ref
+            val jcsRef = strict.writePayload(AnchorDigest.envelope(payload, "application/json")).ref
+
+            assertFalse(strict.verifyAnchor(payload, legacyRef), "legacy envelope must be rejected when strict")
+            val detail = strict.verifyAnchorDetailed(payload, legacyRef, requireCanonicalEnvelope = true)
+            assertFalse(detail.verified)
+            assertTrue(detail.reason!!.contains("legacy"))
+            assertTrue(strict.verifyAnchor(payload, jcsRef), "JCS envelopes still verify")
+
+            // The default (non-strict) client keeps accepting the legacy envelope.
+            val lenient = TestAnchorClient(canSubmit = true)
+            val ref = lenient.writePayload(AnchorDigest.envelope(legacyBytes, "application/json")).ref
+            assertTrue(lenient.verifyAnchor(payload, ref))
+        }
+
+    @Test
+    fun `AnchorDigest matches with requireCanonicalEnvelope rejects legacy envelopes`() {
+        val legacyBytes = Json.encodeToString(JsonElement.serializer(), payload).toByteArray(StandardCharsets.UTF_8)
+        val legacy = AnchorDigest.envelope(legacyBytes, "application/json")
+        assertTrue(AnchorDigest.matches(legacy, payload))
+        assertTrue(AnchorDigest.matches(legacy, payload, requireCanonicalEnvelope = false))
+        assertFalse(AnchorDigest.matches(legacy, payload, requireCanonicalEnvelope = true))
+        assertTrue(AnchorDigest.matches(AnchorDigest.envelope(payload, "application/json"), payload, requireCanonicalEnvelope = true))
+    }
+
+    @Test
+    fun `verifyAnchorDetailed flags anchors served from the in-memory test fallback`() =
+        runBlocking<Unit> {
+            val testClient = TestAnchorClient()
+            val inMemory = testClient.writePayload(payload).ref
+            val detail = testClient.verifyAnchorDetailed(payload, inMemory, requireCanonicalEnvelope = false)
+            assertTrue(detail.verified)
+            assertTrue(detail.testMode, "a test-mode memory anchor is not chain evidence and must say so")
+
+            val chain = TestAnchorClient(canSubmit = true, testMode = false)
+            val real = chain.writePayload(payload).ref
+            val realDetail = chain.verifyAnchorDetailed(payload, real, requireCanonicalEnvelope = false)
+            assertTrue(realDetail.verified)
+            assertFalse(realDetail.testMode)
+        }
+
+    @Test
+    fun `memory fallback is never served when test mode is off`() =
+        runBlocking<Unit> {
+            val prod = TestAnchorClient(canSubmit = false, testMode = false)
+            assertFailsWith<BlockchainException.ConfigurationFailed> { prod.writePayload(payload) }
+            val ref = AnchorRef("test:unit", "test_tx_unknown")
+            assertFalse(prod.verifyAnchor(payload, ref))
+        }
+
+    @Test
     fun `isEnvelope rejects an unknown canonicalization`() {
         val jcs = AnchorDigest.envelope(payload, "application/json")
         assertTrue(AnchorDigest.isEnvelope(jcs))
@@ -369,12 +428,14 @@ class AnchorVerificationTest {
         payloadMode: String? = if (digestMode) AbstractBlockchainAnchorClient.PAYLOAD_MODE_DIGEST else null,
         private val canSubmit: Boolean = false,
         testMode: Boolean = true,
+        extraOptions: Map<String, Any?> = emptyMap(),
     ) : AbstractBlockchainAnchorClient(
             chainId = "test:unit",
             options =
                 buildMap {
                     put(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE, testMode)
                     payloadMode?.let { put(AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE, it) }
+                    putAll(extraOptions)
                 },
         ) {
         /** Exact bytes "anchored on-chain" by tx hash, for the canSubmit path. */

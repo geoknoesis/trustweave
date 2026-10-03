@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.math.BigDecimal
+import java.math.BigInteger
 
 /**
  * JSON Canonicalization Scheme (JCS), RFC 8785.
@@ -20,13 +21,25 @@ import java.math.BigDecimal
  *   and lowercase `\u00xx` otherwise; everything else (including non-ASCII) is emitted as is,
  * - numbers are parsed as IEEE-754 doubles and serialized like ECMAScript
  *   `Number.prototype.toString` (RFC 8785 §3.2.2.3), so `1.0`, `1`, and `1e0` are all `1`.
- *   Consequently integers beyond 2^53 lose precision exactly as they do in RFC 8785;
- *   non-finite numbers are rejected.
+ *   The literal must match the JSON number grammar (RFC 8259 §6): forms Kotlin/Java would
+ *   accept but JSON does not (`1d`, `1f`, hex floats, `NaN`, `Infinity`, `+1`, leading zeros)
+ *   are rejected, as are non-finite values. Integer literals (no fraction or exponent) whose
+ *   magnitude exceeds 2^53 are REJECTED too: the double conversion RFC 8785 prescribes would
+ *   silently map distinct integers to the same canonical bytes (and so the same digest), so such
+ *   values must be carried as JSON strings,
+ * - strings must be well-formed UTF-16: a lone surrogate cannot be encoded as UTF-8 and is
+ *   rejected instead of being replaced by `?`.
+ *
+ * All rejections throw [IllegalArgumentException].
  *
  * Unlike [DigestUtils.canonicalizeJson] (key sorting only, numbers emitted verbatim), this output
  * is interoperable with any RFC 8785 implementation.
  */
 object JsonCanonicalization {
+    private val JSON_NUMBER = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?")
+    private val JSON_INTEGER = Regex("-?(0|[1-9][0-9]*)")
+    private val MAX_EXACT_INTEGER = BigInteger.valueOf(1L shl 53)
+
     /** Canonical JSON text of [element] per RFC 8785. */
     @JvmStatic
     fun canonicalize(element: JsonElement): String = StringBuilder().also { write(it, element) }.toString()
@@ -74,7 +87,21 @@ object JsonCanonicalization {
         value: String,
     ) {
         sb.append('"')
-        for (ch in value) {
+        var index = 0
+        while (index < value.length) {
+            val ch = value[index]
+            if (Character.isHighSurrogate(ch)) {
+                require(index + 1 < value.length && Character.isLowSurrogate(value[index + 1])) {
+                    "RFC 8785 requires well-formed Unicode: lone high surrogate at index $index"
+                }
+                sb.append(ch).append(value[index + 1])
+                index += 2
+                continue
+            }
+            require(!Character.isLowSurrogate(ch)) {
+                "RFC 8785 requires well-formed Unicode: lone low surrogate at index $index"
+            }
+            index++
             when (ch) {
                 '"' -> sb.append("\\\"")
                 '\\' -> sb.append("\\\\")
@@ -102,6 +129,12 @@ object JsonCanonicalization {
      * ECMAScript rules (ECMA-262 §6.1.6.1.20).
      */
     internal fun serializeNumber(literal: String): String {
+        require(JSON_NUMBER.matches(literal)) { "Not a JSON number: '$literal'" }
+        if (JSON_INTEGER.matches(literal)) {
+            require(BigInteger(literal).abs() <= MAX_EXACT_INTEGER) {
+                "Integer '$literal' exceeds 2^53; RFC 8785 would lose precision. Carry it as a JSON string instead"
+            }
+        }
         val value =
             literal.toDoubleOrNull()
                 ?: throw IllegalArgumentException("Not a JSON number: '$literal'")

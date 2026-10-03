@@ -8,6 +8,7 @@ import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertTrue
 
 /**
  * What a verifier is entitled to conclude from a single RPC node.
@@ -30,6 +31,11 @@ class EvmAnchorReadIntegrityTest {
     private val otherTxHash = "0x" + "cd".repeat(32)
     private val sender = "0x" + "22".repeat(20)
     private val stranger = "0x" + "33".repeat(20)
+    private val anySender = mapOf(AbstractEvmAnchorClient.OPTION_ACCEPT_ANY_SELF_SEND to true)
+
+    // Well-known throwaway test key (hardhat account #0) and its address.
+    private val testKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    private val testAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 
     private class TestEvmClient(
         chain: EvmChainConfig,
@@ -168,7 +174,7 @@ class EvmAnchorReadIntegrityTest {
             headBlockHex = "0x64",
         ) { url ->
             runBlocking {
-                TestEvmClient(chain.copy(defaultRpcUrl = url)).use { client ->
+                TestEvmClient(chain.copy(defaultRpcUrl = url), anySender).use { client ->
                     val result = client.read(requestedTxHash)
 
                     assertEquals("application/json", result.mediaType)
@@ -178,7 +184,7 @@ class EvmAnchorReadIntegrityTest {
 
     private fun assertReadRejected(
         message: String,
-        options: Map<String, Any?> = emptyMap(),
+        options: Map<String, Any?> = anySender,
         status: String = "0x1",
         from: String = sender,
         to: String? = sender,
@@ -238,4 +244,48 @@ class EvmAnchorReadIntegrityTest {
                 assertEquals("application/json", runBlocking { client.read(requestedTxHash) }.mediaType)
             }
         }
+
+    @Test
+    fun `a verify-only client with no expected sender fails with a clear error`() =
+        withRpc(
+            receiptTxHash = requestedTxHash,
+            transactionTxHash = requestedTxHash,
+            blockNumberHex = "0x1",
+            headBlockHex = "0x64",
+        ) { url ->
+            TestEvmClient(chain.copy(defaultRpcUrl = url)).use { client ->
+                val failure = assertFails { runBlocking { client.read(requestedTxHash) } }
+                assertTrue(failure.toString().contains(AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER), failure.toString())
+            }
+        }
+
+    @Test
+    fun `a client with credentials defaults the expected sender to its own account`() {
+        // A self-send from a stranger must be rejected without any expectedSender option.
+        withRpc(
+            receiptTxHash = requestedTxHash,
+            transactionTxHash = requestedTxHash,
+            blockNumberHex = "0x1",
+            headBlockHex = "0x64",
+            from = stranger,
+            to = stranger,
+        ) { url ->
+            TestEvmClient(chain.copy(defaultRpcUrl = url), mapOf("privateKey" to testKey)).use { client ->
+                assertFails { runBlocking { client.read(requestedTxHash) } }
+            }
+        }
+        // ... and a self-send from the client's own account is accepted.
+        withRpc(
+            receiptTxHash = requestedTxHash,
+            transactionTxHash = requestedTxHash,
+            blockNumberHex = "0x1",
+            headBlockHex = "0x64",
+            from = testAddress,
+            to = testAddress,
+        ) { url ->
+            TestEvmClient(chain.copy(defaultRpcUrl = url), mapOf("privateKey" to testKey)).use { client ->
+                assertEquals("application/json", runBlocking { client.read(requestedTxHash) }.mediaType)
+            }
+        }
+    }
 }

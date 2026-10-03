@@ -143,7 +143,7 @@ internal object IndyRequestCodec {
                 keys.forEachIndexed { idx, key ->
                     if (idx > 0) out.append('|')
                     out.append(key).append(':')
-                    appendSorted(out, element[key]!!)
+                    appendSorted(out, element.getValue(key))
                 }
             }
             is kotlinx.serialization.json.JsonArray -> {

@@ -80,6 +80,7 @@ fun ReceiveScreen(onDone: () -> Unit) {
                                         credential = offer.credential,
                                         format = offer.format,
                                         selectivelyDisclosable = offer.selectivelyDisclosable,
+                                        offerIssuer = offer.issuer, // the demo issuer of the configured backend
                                     )
                                     status = ReceiveStatus.Success(stored, offer.format, offer.selectivelyDisclosable)
                                 } catch (e: Exception) {

@@ -34,7 +34,13 @@ class EthereumReadPathTest {
     @Test
     fun `mainnet reads a well-formed self-send anchor`() =
         FakeEvmJsonRpcServer(txHash).use { rpc ->
-            EthereumBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET, mapOf("rpcUrl" to rpc.url)).use { client ->
+            EthereumBlockchainAnchorClient(
+                EthereumBlockchainAnchorClient.MAINNET,
+                mapOf(
+                    "rpcUrl" to rpc.url,
+                    AbstractEvmAnchorClient.OPTION_ACCEPT_ANY_SELF_SEND to true,
+                ),
+            ).use { client ->
                 val result = runBlocking { client.readPayload(AnchorRef(EthereumBlockchainAnchorClient.MAINNET, txHash)) }
                 assertEquals(Json.parseToJsonElement("""{"anchored":"payload"}"""), result.payload)
             }

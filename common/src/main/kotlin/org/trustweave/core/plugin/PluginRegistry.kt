@@ -1,9 +1,11 @@
 package org.trustweave.core.plugin
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.PluginException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Internal interface for plugin registry operations.
@@ -39,6 +41,17 @@ internal interface PluginRegistry {
     )
 
     /**
+     * Suspending variant of [register]: the plugin lifecycle is awaited without blocking a
+     * thread. Same contract and exceptions as [register]. Prefer this from coroutines; the
+     * blocking [register] parks the calling thread (via `runBlocking`) until the plugin's
+     * `initialize`/`start` complete.
+     */
+    suspend fun registerSuspending(
+        metadata: PluginMetadata,
+        instance: Any,
+    )
+
+    /**
      * Unregister a plugin.
      *
      * If the registered instance implements [PluginLifecycle], `stop()` and `cleanup()`
@@ -48,6 +61,9 @@ internal interface PluginRegistry {
      * @param pluginId Plugin ID to unregister
      */
     fun unregister(pluginId: String)
+
+    /** Suspending variant of [unregister]; `stop`/`cleanup` are awaited without blocking a thread. */
+    suspend fun unregisterSuspending(pluginId: String)
 
     /**
      * Get plugin metadata.
@@ -133,6 +149,9 @@ internal interface PluginRegistry {
      * Useful for testing.
      */
     fun clear()
+
+    /** Suspending variant of [clear]; teardown of every plugin is awaited without blocking a thread. */
+    suspend fun clearSuspending()
 }
 
 /**
@@ -144,7 +163,9 @@ internal interface PluginRegistry {
  * [PluginException.InitializationFailed] propagates), and [PluginLifecycle.stop] +
  * [PluginLifecycle.cleanup] during [unregister]/[clear] (teardown failures are logged,
  * never propagated, so unregistration always completes). Lifecycle methods are suspend
- * functions driven through [runBlocking] because this registry's API is synchronous; they run
+ * functions. The `...Suspending` variants await them without blocking; the plain `register` /
+ * `unregister` / `clear` are BLOCKING (they park the calling thread in [runBlocking] until the
+ * lifecycle finishes) and exist for synchronous callers only. Lifecycle methods run
  * OUTSIDE the mutation lock (the plugin ID is reserved while it initializes), so a slow or
  * suspending lifecycle never blocks other registry mutations while holding a monitor, and a
  * lifecycle method may safely call back into the registry.
@@ -175,8 +196,15 @@ internal class DefaultPluginRegistry(
      */
     private val mutationLock = Any()
 
-    /** IDs reserved by a [register] whose lifecycle is still running. Guarded by [mutationLock]. */
-    private val pendingRegistrations = HashSet<String>()
+    /**
+     * IDs reserved by a [register] whose lifecycle is still running, mapped to that registration's
+     * generation token. Guarded by [mutationLock]. The token lets phase 3 consume only its OWN
+     * reservation: if [clear] wiped it and another registration of the same ID reserved the slot
+     * meanwhile, the first registration must neither publish nor release the second one's slot.
+     */
+    private val pendingRegistrations = HashMap<String, Long>()
+
+    private val registrationGenerations = AtomicLong()
 
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
@@ -196,83 +224,92 @@ internal class DefaultPluginRegistry(
         metadata: PluginMetadata,
         instance: Any,
     ) {
+        // Blocking entry point: drives the (suspending) lifecycle with runBlocking.
+        runBlocking { registerSuspending(metadata, instance) }
+    }
+
+    override suspend fun registerSuspending(
+        metadata: PluginMetadata,
+        instance: Any,
+    ) {
         if (metadata.id.isBlank()) {
             throw PluginException.BlankId
         }
 
         // Phase 1 (locked): validate and reserve the ID so no concurrent register can claim it.
-        synchronized(mutationLock) {
-            val existing = plugins[metadata.id]
-            if (existing != null) {
-                throw PluginException.AlreadyRegistered(
-                    pluginId = metadata.id,
-                    existingPlugin = existing.name,
-                )
-            }
-            if (metadata.id in pendingRegistrations) {
-                throw PluginException.AlreadyRegistered(
-                    pluginId = metadata.id,
-                    existingPlugin = "${metadata.name} (registration in progress)",
-                )
-            }
+        val token =
+            synchronized(mutationLock) {
+                val existing = plugins[metadata.id]
+                if (existing != null) {
+                    throw PluginException.AlreadyRegistered(
+                        pluginId = metadata.id,
+                        existingPlugin = existing.name,
+                    )
+                }
+                if (metadata.id in pendingRegistrations.keys) {
+                    throw PluginException.AlreadyRegistered(
+                        pluginId = metadata.id,
+                        existingPlugin = "${metadata.name} (registration in progress)",
+                    )
+                }
 
-            val module = metadata.moduleId ?: metadata.id
-            val assessed = ModuleCapabilities.get(module)
-            if (requireSupportedProviders) {
-                ModuleCapabilities.requireDeployment(module, metadata.capabilities.features)
-            }
-            if (assessed != null) {
-                require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
-                require(metadata.maturity == PluginMaturity.valueOf(assessed.maturity.uppercase())) {
-                    "Plugin ${metadata.id} advertises maturity outside the assessed catalog"
+                val module = metadata.moduleId ?: metadata.id
+                val assessed = ModuleCapabilities.get(module)
+                if (requireSupportedProviders) {
+                    ModuleCapabilities.requireDeployment(module, metadata.capabilities.features)
                 }
-                require(assessed.operations.containsAll(metadata.capabilities.features)) {
-                    "Plugin ${metadata.id} advertises operations outside the assessed catalog"
+                if (assessed != null) {
+                    require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
+                    require(metadata.maturity == PluginMaturity.valueOf(assessed.maturity.uppercase())) {
+                        "Plugin ${metadata.id} advertises maturity outside the assessed catalog"
+                    }
+                    require(assessed.operations.containsAll(metadata.capabilities.features)) {
+                        "Plugin ${metadata.id} advertises operations outside the assessed catalog"
+                    }
                 }
-            }
-            requiredCapabilities[metadata.id]?.let { required ->
-                ModuleCapabilities.requireOperations(module, required)
-                require(
-                    metadata.capabilities.features.containsAll(required),
-                ) { "Plugin ${metadata.id} lacks application-required operations" }
-            }
-            val required = metadata.configuration["requiredCapabilities"]
-            if (required != null) {
-                require(
-                    required is Collection<*> && required.all { it is String },
-                ) { "requiredCapabilities must be a collection of feature names" }
-                require(
-                    metadata.maturity != PluginMaturity.STUB &&
-                        metadata.capabilities.features.containsAll(required.filterIsInstance<String>()),
-                ) {
-                    "Plugin ${metadata.id} cannot supply required capabilities $required"
+                requiredCapabilities[metadata.id]?.let { required ->
+                    ModuleCapabilities.requireOperations(module, required)
+                    require(
+                        metadata.capabilities.features.containsAll(required),
+                    ) { "Plugin ${metadata.id} lacks application-required operations" }
                 }
+                val required = metadata.configuration["requiredCapabilities"]
+                if (required != null) {
+                    require(
+                        required is Collection<*> && required.all { it is String },
+                    ) { "requiredCapabilities must be a collection of feature names" }
+                    require(
+                        metadata.maturity != PluginMaturity.STUB &&
+                            metadata.capabilities.features.containsAll(required.filterIsInstance<String>()),
+                    ) {
+                        "Plugin ${metadata.id} cannot supply required capabilities $required"
+                    }
+                }
+                checkDependencyVersionRanges(metadata)
+                registrationGenerations.incrementAndGet().also { pendingRegistrations[metadata.id] = it }
             }
-            checkDependencyVersionRanges(metadata)
-            pendingRegistrations += metadata.id
-        }
 
         // Phase 2 (unlocked): drive the plugin lifecycle. A plugin that fails initialize()/start()
         // never becomes visible; the reservation is released and a PluginException propagates.
         if (instance is PluginLifecycle) {
             try {
-                runBlocking {
-                    if (!instance.initialize(metadata.configuration)) {
-                        throw PluginException.InitializationFailed(
-                            pluginId = metadata.id,
-                            reason = "initialize() returned false",
-                        )
-                    }
-                    if (!instance.start()) {
-                        throw PluginException.InitializationFailed(
-                            pluginId = metadata.id,
-                            reason = "start() returned false",
-                        )
-                    }
+                if (!instance.initialize(metadata.configuration)) {
+                    throw PluginException.InitializationFailed(
+                        pluginId = metadata.id,
+                        reason = "initialize() returned false",
+                    )
+                }
+                if (!instance.start()) {
+                    throw PluginException.InitializationFailed(
+                        pluginId = metadata.id,
+                        reason = "start() returned false",
+                    )
                 }
             } catch (t: Throwable) {
-                synchronized(mutationLock) { pendingRegistrations -= metadata.id }
+                // Release only OUR reservation: after a clear() another registration may own the slot.
+                synchronized(mutationLock) { pendingRegistrations.remove(metadata.id, token) }
                 when (t) {
+                    is CancellationException -> throw t // cancellation is not an initialization failure
                     is Error -> throw t // OOM/StackOverflow etc. must propagate as-is
                     is PluginException -> throw t
                     else -> throw PluginException.InitializationFailed(
@@ -288,7 +325,7 @@ internal class DefaultPluginRegistry(
         // reservation is gone: undo the lifecycle and fail rather than resurrect the plugin.
         val published =
             synchronized(mutationLock) {
-                if (pendingRegistrations.remove(metadata.id)) {
+                if (pendingRegistrations.remove(metadata.id, token)) {
                     publish(metadata, instance)
                     true
                 } else {
@@ -381,31 +418,34 @@ internal class DefaultPluginRegistry(
      * retracted. Teardown failures must never break unregistration: every exception is
      * logged and swallowed, and cleanup() still runs when stop() fails.
      */
-    private fun teardownQuietly(
+    private suspend fun teardownQuietly(
         pluginId: String,
         lifecycle: PluginLifecycle,
     ) {
         try {
-            runBlocking {
-                try {
-                    if (!lifecycle.stop()) {
-                        logger.warn("Plugin '{}' stop() returned false during unregistration", pluginId)
-                    }
-                } catch (e: Exception) {
-                    logger.warn("Plugin '{}' stop() failed during unregistration; continuing with cleanup", pluginId, e)
-                }
-                try {
-                    lifecycle.cleanup()
-                } catch (e: Exception) {
-                    logger.warn("Plugin '{}' cleanup() failed during unregistration", pluginId, e)
-                }
+            if (!lifecycle.stop()) {
+                logger.warn("Plugin '{}' stop() returned false during unregistration", pluginId)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.warn("Plugin '{}' lifecycle teardown failed during unregistration", pluginId, e)
+            logger.warn("Plugin '{}' stop() failed during unregistration; continuing with cleanup", pluginId, e)
+        }
+        try {
+            lifecycle.cleanup()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("Plugin '{}' cleanup() failed during unregistration", pluginId, e)
         }
     }
 
+    /** Blocking: parks the calling thread until the plugin's stop/cleanup complete. */
     override fun unregister(pluginId: String) {
+        runBlocking { unregisterSuspending(pluginId) }
+    }
+
+    override suspend fun unregisterSuspending(pluginId: String) {
         require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
         val retracted =
             synchronized(mutationLock) {
@@ -505,7 +545,12 @@ internal class DefaultPluginRegistry(
 
     override fun getAllPlugins(): List<PluginMetadata> = plugins.values.toList()
 
+    /** Blocking: parks the calling thread until every plugin's stop/cleanup complete. */
     override fun clear() {
+        runBlocking { clearSuspending() }
+    }
+
+    override suspend fun clearSuspending() {
         val lifecycleInstances =
             synchronized(mutationLock) {
                 // Snapshot lifecycle-bearing instances before retraction so they can be

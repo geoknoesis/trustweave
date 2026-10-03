@@ -86,6 +86,14 @@ abstract class AbstractBlockchainAnchorClient(
          */
         const val OPTION_PAYLOAD_MODE: String = "payloadMode"
 
+        /**
+         * Options key (Boolean, default `false`): when `true`, [verifyAnchor] rejects legacy digest
+         * envelopes (those without `canon = "JCS"`, whose digest depends on key order and number
+         * spelling) so only RFC 8785 canonical anchors verify. Leave unset to keep verifying
+         * anchors written before canonicalization existed.
+         */
+        const val OPTION_REQUIRE_CANONICAL_ENVELOPE: String = "requireCanonicalEnvelope"
+
         /** [OPTION_PAYLOAD_MODE] value: anchor the full payload JSON (default). */
         const val PAYLOAD_MODE_FULL: String = "full"
 
@@ -109,6 +117,16 @@ abstract class AbstractBlockchainAnchorClient(
     protected val inMemoryTestMode: Boolean =
         options[OPTION_IN_MEMORY_TEST_MODE] == true ||
             (options[OPTION_IN_MEMORY_TEST_MODE] as? String)?.toBoolean() == true
+
+    /** Whether [verifyAnchor] enforces canonical (JCS) digest envelopes only. */
+    protected val requireCanonicalEnvelope: Boolean =
+        options[OPTION_REQUIRE_CANONICAL_ENVELOPE] == true ||
+            (options[OPTION_REQUIRE_CANONICAL_ENVELOPE] as? String)?.toBoolean() == true
+
+    override suspend fun verifyAnchor(
+        payload: JsonElement,
+        ref: AnchorRef,
+    ): Boolean = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope).verified
 
     private val testModeLogger = LoggerFactory.getLogger(AbstractBlockchainAnchorClient::class.java)
 

@@ -1,11 +1,11 @@
 package org.trustweave.referencewallet.lib
 
-import android.util.Base64
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.Signature
+import java.util.Base64
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
@@ -89,10 +89,10 @@ object Crypto {
 
     /** Base64url (RFC 4648 §5) without padding. */
     fun b64uEncode(bytes: ByteArray): String =
-        Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
 
     fun b64uDecode(s: String): ByteArray =
-        Base64.decode(s, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        Base64.getUrlDecoder().decode(s) // java.util.Base64 (API 26+): also keeps this object JVM-testable
 
     fun b64uEncodeString(s: String): String = b64uEncode(s.toByteArray(Charsets.UTF_8))
     fun b64uDecodeString(s: String): String = String(b64uDecode(s), Charsets.UTF_8)
@@ -167,9 +167,10 @@ object Crypto {
     private fun rawPrivateToKey(raw: ByteArray): PrivateKey {
         require(raw.size == 32) { "Ed25519 private key must be 32 bytes" }
         val params = Ed25519PrivateKeyParameters(raw, 0)
-        // Inner DER OCTET STRING per RFC 8410.
-        val inner = byteArrayOf(0x04, 0x20) + params.encoded
-        val pki = PrivateKeyInfo(AlgorithmIdentifier(ASN1ObjectIdentifier(ED25519_OID)), org.bouncycastle.asn1.DEROctetString(inner).toASN1Primitive())
+        // RFC 8410: PrivateKeyInfo.privateKey is an OCTET STRING holding CurvePrivateKey, itself an
+        // OCTET STRING of the 32-byte seed; PrivateKeyInfo adds the outer wrapper, so pass only the
+        // inner OCTET STRING (a second wrapper makes strict providers reject the key).
+        val pki = PrivateKeyInfo(AlgorithmIdentifier(ASN1ObjectIdentifier(ED25519_OID)), org.bouncycastle.asn1.DEROctetString(params.encoded))
         val kf = KeyFactory.getInstance("Ed25519", "BC")
         return kf.generatePrivate(java.security.spec.PKCS8EncodedKeySpec(pki.encoded))
     }

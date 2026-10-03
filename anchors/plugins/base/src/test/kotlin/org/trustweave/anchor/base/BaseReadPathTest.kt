@@ -18,7 +18,10 @@ class BaseReadPathTest {
     private fun client(
         rpc: FakeEvmJsonRpcServer,
         extra: Map<String, Any?> = emptyMap(),
-    ) = BaseBlockchainAnchorClient(BaseBlockchainAnchorClient.BASE_SEPOLIA, mapOf("rpcUrl" to rpc.url) + extra)
+    ) = BaseBlockchainAnchorClient(
+        BaseBlockchainAnchorClient.BASE_SEPOLIA,
+        mapOf("rpcUrl" to rpc.url, AbstractEvmAnchorClient.OPTION_ACCEPT_ANY_SELF_SEND to true) + extra,
+    )
 
     private fun assertRejected(
         rpc: FakeEvmJsonRpcServer,

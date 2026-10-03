@@ -14,7 +14,7 @@ configurations.configureEach {
 dependencies {
     // Credential API (includes exchange API)
     implementation(project(":credentials:credential-api"))
-    
+
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":common"))
@@ -51,5 +51,5 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
+    testImplementation(libs.kotest.assertions.core)
 }
-

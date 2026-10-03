@@ -1,18 +1,16 @@
 package org.trustweave.did.base
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import kotlinx.coroutines.sync.withLock
 
 /**
  * Abstract base class for blockchain-based DID method implementations.
@@ -78,6 +76,14 @@ abstract class AbstractBlockchainDidMethod(
     method: String,
     kms: KeyManagementService,
 ) : AbstractDidMethod(method, kms) {
+    public companion object {
+        /**
+         * Error code [resolveFromBlockchain] throws when the anchored document's `id` is not the
+         * DID being resolved.
+         */
+        public const val DOCUMENT_ID_MISMATCH: String = "DID_DOCUMENT_ID_MISMATCH"
+    }
+
     /**
      * Gets the blockchain anchor client for this method.
      *
@@ -205,13 +211,28 @@ abstract class AbstractBlockchainDidMethod(
                 // Convert JsonElement to DidDocument
                 val document = jsonElementToDocument(result.payload)
 
+                // The anchored payload is untrusted data: anyone can anchor any document under
+                // some tx hash. A document whose `id` is not the DID being resolved is rejected —
+                // never served as this DID's document and never cached, neither under the
+                // requested DID nor under the payload's own `id` (that would let one anchor
+                // poison the cache entry of an unrelated DID).
+                if (document.id.value != did) {
+                    throw TrustWeaveException(
+                        code = DOCUMENT_ID_MISMATCH,
+                        message =
+                            "Anchored DID document id mismatch: expected $did, got ${document.id.value} " +
+                                "(tx $hash on $chainId)",
+                        context = mapOf("did" to did, "documentId" to document.id.value, "txHash" to hash),
+                    )
+                }
+
                 // Store locally for caching. storeDocument() is a cache-store, not a DID operation:
                 // it leaves existing §4.3 metadata untouched (see its KDoc), so any deactivation
                 // this instance has already recorded survives — local state stays authoritative
                 // even though the chain read just succeeded — and `updated` keeps reporting the
                 // last real Update operation instead of this read's clock reading. The read time is
                 // reported separately, as §4.2 `retrieved`.
-                storeDocument(document.id.value, document)
+                storeDocument(did, document)
 
                 val metadata = getDocumentMetadata(did)
                 org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
@@ -229,16 +250,20 @@ abstract class AbstractBlockchainDidMethod(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
-                // Try fallback to stored document
+                // The chain read failed. A cached copy of a *live* document is deliberately NOT
+                // served here: that would silently mask a chain outage (or a deliberately failing
+                // read) and keep a since-rotated document verifying indefinitely. The one
+                // exception is fail-safe: if this instance itself recorded the DID as
+                // deactivated, report Deactivated — that can never make anything verify.
+                val metadata = getDocumentMetadata(did)
                 val stored = getStoredDocument(did)
-                if (stored != null) {
-                    val metadata = getDocumentMetadata(did)
+                if (stored != null && metadata?.deactivated == true) {
                     return@withContext DidMethodUtils.createSuccessResolutionResult(
                         stored,
                         method,
-                        metadata?.created,
-                        metadata?.updated,
-                        metadata?.deactivated ?: false,
+                        metadata.created,
+                        metadata.updated,
+                        true,
                         retrieved = getLastFetched(did),
                     )
                 }

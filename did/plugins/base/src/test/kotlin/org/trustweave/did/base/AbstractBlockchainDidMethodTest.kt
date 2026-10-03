@@ -70,6 +70,8 @@ class AbstractBlockchainDidMethodTest {
         fun closeStoreWindow() = updateMutex.unlock()
 
         fun metadataOf(did: String) = getDocumentMetadata(did)
+
+        fun storedOf(did: String) = getStoredDocument(did)
     }
 
     /** Anchor client whose reads always fail, to force the exception-fallback path. */
@@ -355,5 +357,52 @@ class AbstractBlockchainDidMethodTest {
                 method.metadataOf(DID)?.deactivated == true,
                 "deactivation must land once the store window closes",
             )
+        }
+
+    @Test
+    fun `a chain read failure does not serve a cached live document`() =
+        runBlocking {
+            val method =
+                TestBlockchainDidMethod(
+                    InMemoryKeyManagementService(),
+                    FailingReadAnchorClient(InMemoryBlockchainAnchorClient(chainId = CHAIN_ID)),
+                    txHashLookup = { "tx_known" },
+                )
+            method.anchor(document(DID))
+
+            val failure =
+                runCatching { method.resolveDid(Did(DID)) }.exceptionOrNull()
+
+            assertTrue(
+                failure is org.trustweave.core.exception.TrustWeaveException &&
+                    failure.code == "DID_RESOLUTION_FAILED",
+                "a failed chain read must fail loudly, not silently serve the cache; got $failure",
+            )
+        }
+
+    @Test
+    fun `an anchored document whose id is a different DID is rejected and not cached`() =
+        runBlocking {
+            val chain = InMemoryBlockchainAnchorClient(chainId = CHAIN_ID)
+            val otherDid = "did:testchain:attacker"
+            val attacker = TestBlockchainDidMethod(InMemoryKeyManagementService(), chain)
+            val foreignTx = attacker.anchor(document(otherDid))
+
+            val victim =
+                TestBlockchainDidMethod(
+                    InMemoryKeyManagementService(),
+                    chain,
+                    txHashLookup = { foreignTx },
+                )
+
+            val failure = runCatching { victim.resolveDid(Did(DID)) }.exceptionOrNull()
+
+            assertTrue(
+                failure is org.trustweave.core.exception.TrustWeaveException &&
+                    failure.code == AbstractBlockchainDidMethod.DOCUMENT_ID_MISMATCH,
+                "expected an id-mismatch failure, got $failure",
+            )
+            assertNull(victim.storedOf(DID), "a mismatched document must not be cached under the requested DID")
+            assertNull(victim.storedOf(otherDid), "a mismatched document must not be cached under its own id")
         }
 }

@@ -61,8 +61,10 @@ interface XadesSigner {
 }
 
 /** Thrown by [DefaultXadesSigner] on unrecoverable failures during signing. */
-class XadesSignerException(message: String, cause: Throwable? = null) :
-    RuntimeException(message, cause)
+class XadesSignerException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)
 
 /**
  * Default [XadesSigner] implementation using the JDK's `javax.xml.crypto.dsig` package.
@@ -77,101 +79,110 @@ class DefaultXadesSigner(
     @Suppress("unused") private val kms: KeyManagementService,
     private val privateKey: PrivateKey,
 ) : XadesSigner {
+    override suspend fun sign(request: XadesSigningRequest): XadesSignature =
+        withContext(Dispatchers.IO) {
+            val chain = decodeChain(request.signerCertificateChain)
+            val signerCert = chain.first()
+            val signingTime = request.signingTime ?: Clock.System.now()
+            val signatureMethodUri = signatureMethodForKey(signerCert)
+            val digestMethodUri = DigestMethod.SHA256
 
-    override suspend fun sign(request: XadesSigningRequest): XadesSignature = withContext(Dispatchers.IO) {
-        val chain = decodeChain(request.signerCertificateChain)
-        val signerCert = chain.first()
-        val signingTime = request.signingTime ?: Clock.System.now()
-        val signatureMethodUri = signatureMethodForKey(signerCert)
-        val digestMethodUri = DigestMethod.SHA256
+            val factory = XMLSignatureFactory.getInstance("DOM")
+            val keyInfoFactory = factory.keyInfoFactory
 
-        val factory = XMLSignatureFactory.getInstance("DOM")
-        val keyInfoFactory = factory.keyInfoFactory
+            val document: Document = request.document
+            val root =
+                document.documentElement
+                    ?: throw XadesSignerException("source document has no root element")
 
-        val document: Document = request.document
-        val root = document.documentElement
-            ?: throw XadesSignerException("source document has no root element")
+            // XAdES QualifyingProperties — minimal SignedProperties carrying SigningTime and
+            // SigningCertificateV2 (ETSI EN 319 132-1 §5.2). Built by hand because the JDK XMLDSig
+            // API does not understand XAdES namespaces.
+            val signatureId = "xades-sig-${java.util.UUID.randomUUID()}"
+            val signedPropertiesId = "$signatureId-signedprops"
+            val qualifyingProperties =
+                buildQualifyingProperties(
+                    document = document,
+                    signatureId = signatureId,
+                    signedPropertiesId = signedPropertiesId,
+                    signingTime = signingTime,
+                    signerCert = signerCert,
+                )
+            val signedPropertiesElement =
+                firstElementChild(qualifyingProperties)
+                    ?: throw XadesSignerException("Internal: QualifyingProperties has no element children")
 
-        // XAdES QualifyingProperties — minimal SignedProperties carrying SigningTime and
-        // SigningCertificateV2 (ETSI EN 319 132-1 §5.2). Built by hand because the JDK XMLDSig
-        // API does not understand XAdES namespaces.
-        val signatureId = "xades-sig-${java.util.UUID.randomUUID()}"
-        val signedPropertiesId = "$signatureId-signedprops"
-        val qualifyingProperties = buildQualifyingProperties(
-            document = document,
-            signatureId = signatureId,
-            signedPropertiesId = signedPropertiesId,
-            signingTime = signingTime,
-            signerCert = signerCert,
-        )
-        val signedPropertiesElement = firstElementChild(qualifyingProperties)
-            ?: throw XadesSignerException("Internal: QualifyingProperties has no element children")
+            // Two references: one over the document root (enveloped) and one over the
+            // SignedProperties block (XAdES baseline §5.2.1).
+            val envelopedTransform: Transform =
+                factory.newTransform(
+                    Transform.ENVELOPED,
+                    null as TransformParameterSpec?,
+                )
+            val rootReference: Reference =
+                factory.newReference(
+                    "",
+                    factory.newDigestMethod(digestMethodUri, null),
+                    listOf(envelopedTransform),
+                    null,
+                    null,
+                )
+            val signedPropertiesReference: Reference =
+                factory.newReference(
+                    "#$signedPropertiesId",
+                    factory.newDigestMethod(digestMethodUri, null),
+                    null,
+                    "http://uri.etsi.org/01903#SignedProperties",
+                    null,
+                )
 
-        // Two references: one over the document root (enveloped) and one over the
-        // SignedProperties block (XAdES baseline §5.2.1).
-        val envelopedTransform: Transform = factory.newTransform(
-            Transform.ENVELOPED,
-            null as TransformParameterSpec?,
-        )
-        val rootReference: Reference = factory.newReference(
-            "",
-            factory.newDigestMethod(digestMethodUri, null),
-            listOf(envelopedTransform),
-            null,
-            null,
-        )
-        val signedPropertiesReference: Reference = factory.newReference(
-            "#$signedPropertiesId",
-            factory.newDigestMethod(digestMethodUri, null),
-            null,
-            "http://uri.etsi.org/01903#SignedProperties",
-            null,
-        )
+            val signedInfo: SignedInfo =
+                factory.newSignedInfo(
+                    factory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        null as C14NMethodParameterSpec?,
+                    ),
+                    factory.newSignatureMethod(signatureMethodUri, null),
+                    listOf(rootReference, signedPropertiesReference),
+                )
 
-        val signedInfo: SignedInfo = factory.newSignedInfo(
-            factory.newCanonicalizationMethod(
-                CanonicalizationMethod.INCLUSIVE,
-                null as C14NMethodParameterSpec?,
-            ),
-            factory.newSignatureMethod(signatureMethodUri, null),
-            listOf(rootReference, signedPropertiesReference),
-        )
+            // KeyInfo carries the signer X.509 chain.
+            val x509Data: X509Data = keyInfoFactory.newX509Data(chain)
+            val keyInfo: KeyInfo = keyInfoFactory.newKeyInfo(listOf(x509Data))
 
-        // KeyInfo carries the signer X.509 chain.
-        val x509Data: X509Data = keyInfoFactory.newX509Data(chain)
-        val keyInfo: KeyInfo = keyInfoFactory.newKeyInfo(listOf(x509Data))
+            // Wrap the XAdES QualifyingProperties as an XMLObject so JDK XMLDSig serialises it as a
+            // child of <ds:Signature> alongside <ds:Object>.
+            val xadesObject: XMLObject =
+                factory.newXMLObject(
+                    listOf(DOMStructure(qualifyingProperties)),
+                    null,
+                    null,
+                    null,
+                )
 
-        // Wrap the XAdES QualifyingProperties as an XMLObject so JDK XMLDSig serialises it as a
-        // child of <ds:Signature> alongside <ds:Object>.
-        val xadesObject: XMLObject = factory.newXMLObject(
-            listOf(DOMStructure(qualifyingProperties)),
-            null,
-            null,
-            null,
-        )
+            val xmlSignature =
+                factory.newXMLSignature(
+                    signedInfo,
+                    keyInfo,
+                    listOf(xadesObject),
+                    signatureId,
+                    null,
+                )
 
-        val xmlSignature = factory.newXMLSignature(
-            signedInfo,
-            keyInfo,
-            listOf(xadesObject),
-            signatureId,
-            null,
-        )
+            val signContext = DOMSignContext(privateKey, root)
+            // Tell JDK XMLDSig that the SignedProperties element's "Id" attribute is the XML ID it
+            // can resolve "#signedPropertiesId" against during reference resolution.
+            signContext.setIdAttributeNS(signedPropertiesElement, null, "Id")
+            try {
+                xmlSignature.sign(signContext)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (t: Throwable) {
+                throw XadesSignerException("XML-DSig signing failed: ${t.message}", t)
+            }
 
-        val signContext = DOMSignContext(privateKey, root)
-        // Tell JDK XMLDSig that the SignedProperties element's "Id" attribute is the XML ID it
-        // can resolve "#signedPropertiesId" against during reference resolution.
-        signContext.setIdAttributeNS(signedPropertiesElement, null, "Id")
-        try {
-            xmlSignature.sign(signContext)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (t: Throwable) {
-            throw XadesSignerException("XML-DSig signing failed: ${t.message}", t)
+            XadesSignature(document = document, profile = XadesProfile.B_B)
         }
-
-        XadesSignature(document = document, profile = XadesProfile.B_B)
-    }
 
     // ---------------------------------------------------------------- helpers
 
@@ -183,11 +194,12 @@ class DefaultXadesSigner(
     /**
      * Map signer-cert public-key algorithm to the XML-DSig SignatureMethod URI.
      *
-     * TODO(Ed25519): the W3C URI for Ed25519 XMLDSig is
-     *   `http://www.w3.org/2021/04/xmldsig-more#eddsa-ed25519` but JDK 21's default
-     *   XMLDSig DOM provider (`com.sun.org.apache.xml.internal.security`) does not register
-     *   that algorithm. Wiring Ed25519 requires either Apache Santuario or a custom
-     *   provider; deferred to the next milestone.
+     * **Ed25519 is not supported, and fails explicitly.** RFC 9231 defines
+     * `http://www.w3.org/2021/04/xmldsig-more#eddsa-ed25519`, but the JDK's built-in XML-DSig
+     * provider (Apache Santuario fork, JDK 21) does not register it, so a signature could not be
+     * produced or verified. Signing with an Ed25519 certificate throws [XadesSignerException]
+     * rather than silently falling back to another algorithm. Supporting it needs a standalone
+     * Santuario (xmlsec 3.x+) provider; use an EC (P-256) or RSA signing certificate.
      */
     private fun signatureMethodForKey(signerCert: X509Certificate): String {
         val keyAlg = signerCert.publicKey.algorithm
@@ -195,8 +207,9 @@ class DefaultXadesSigner(
             "EC", "ECDSA" -> "http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"
             "RSA" -> SignatureMethod.RSA_SHA256
             else -> throw XadesSignerException(
-                "XAdES MVP scaffold supports EC / RSA only (got '$keyAlg'). " +
-                    "Ed25519 + JDK XMLDSig: see TODO in XadesSigner.",
+                "XAdES signing supports EC and RSA certificates only (got '$keyAlg'). " +
+                    "Ed25519 (RFC 9231) is not available in the JDK XML-DSig provider; " +
+                    "use an EC P-256 or RSA signing certificate.",
             )
         }
     }
@@ -232,9 +245,10 @@ class DefaultXadesSigner(
         val digestMethod = document.createElementNS(ds, "ds:DigestMethod")
         digestMethod.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#sha256")
         val digestValue = document.createElementNS(ds, "ds:DigestValue")
-        digestValue.textContent = Base64.getEncoder().encodeToString(
-            MessageDigest.getInstance("SHA-256").digest(signerCert.encoded),
-        )
+        digestValue.textContent =
+            Base64.getEncoder().encodeToString(
+                MessageDigest.getInstance("SHA-256").digest(signerCert.encoded),
+            )
         certDigest.appendChild(digestMethod)
         certDigest.appendChild(digestValue)
         cert.appendChild(certDigest)

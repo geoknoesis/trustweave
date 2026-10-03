@@ -16,6 +16,7 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.ByteArrayInputStream
 import java.math.BigInteger
+import java.security.GeneralSecurityException
 import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -68,8 +69,14 @@ interface XadesVerifier {
  *   signature is validated with *that* certificate's public key — never with whatever key the
  *   `KeyInfo` happens to list first.
  * - `SigningTime` is read only from the signed `SignedSignatureProperties`. A malformed value is
- *   [Invalid.Malformed]; when it is missing the certificate validity window is checked against
- *   the current time.
+ *   [Invalid.Malformed]. When it is missing, the certificate validity window is checked against
+ *   the CURRENT time (so a signature by a since-expired certificate is rejected, and the result's
+ *   `signingTime` is `null`); set [XadesVerificationOptions.requireSigningTime] to reject such
+ *   signatures outright instead.
+ * - Only `<ds:KeyInfo>` certificates that chain to the signer (issuer DN == subject DN and a valid
+ *   signature) are passed to the [org.trustweave.signatures.trustlists.TrustAnchorResolver]; unrelated
+ *   certificates are ignored. The trust result is handled by an exhaustive `when`, so a new
+ *   `TrustAnchorMatch` subtype cannot be accepted by default.
  */
 class DefaultXadesVerifier : XadesVerifier {
     override suspend fun verify(
@@ -152,6 +159,11 @@ class DefaultXadesVerifier : XadesVerifier {
                 return@withContext Invalid.Malformed("more than one <xades:SigningTime>")
             }
             val signingTimeText = signingTimeElements.singleOrNull()?.textContent?.trim()
+            if (signingTimeText == null && options.requireSigningTime) {
+                return@withContext Invalid.Malformed(
+                    "<xades:SigningTime> is absent from the signed properties and requireSigningTime is set",
+                )
+            }
             val signingTime: Instant? =
                 if (signingTimeText == null) {
                     null
@@ -202,11 +214,16 @@ class DefaultXadesVerifier : XadesVerifier {
                 if (at < notBefore) return@withContext Invalid.CertificateNotYetValid(notBefore)
             }
 
-            // 9. Trust anchor resolution.
-            val otherCerts = keyInfoCerts.filter { it != signerCert }
-            val trust = options.trustAnchorResolver.resolve(signerCert, otherCerts)
-            if (trust is TrustAnchorMatch.NotTrusted) {
-                return@withContext Invalid.UntrustedSigner(signerCert)
+            // 9. Trust anchor resolution. Only KeyInfo certificates that actually chain to the
+            //    signer (issuer/subject linkage + signature) are offered to the resolver; unrelated
+            //    certificates an attacker appended to <ds:KeyInfo> are ignored.
+            val chainCerts = chainToSigner(signerCert, keyInfoCerts)
+            val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts)
+            // Exhaustive on purpose: a future TrustAnchorMatch subtype must be classified here
+            // (accepted or refused) before this compiles, so it can never pass by default.
+            when (trust) {
+                is TrustAnchorMatch.NotTrusted -> return@withContext Invalid.UntrustedSigner(signerCert)
+                is TrustAnchorMatch.QualifiedActive, is TrustAnchorMatch.QualifiedWithdrawn -> Unit
             }
 
             // 10. Profile check — MVP supports only B-B.
@@ -316,6 +333,41 @@ class DefaultXadesVerifier : XadesVerifier {
         }
         return CertBinding.Bound(signerCert)
     }
+
+    /**
+     * The `<ds:KeyInfo>` certificates that form a chain upwards from [signer]: each one is the
+     * issuer of the previous (subject == issuer DN AND the previous certificate's signature verifies
+     * under its key). Self-signed certificates end the walk; unrelated certificates are dropped.
+     */
+    private fun chainToSigner(
+        signer: X509Certificate,
+        candidates: List<X509Certificate>,
+    ): List<X509Certificate> {
+        val chain = mutableListOf<X509Certificate>()
+        var current = signer
+        val remaining = candidates.filter { it != signer }.distinct().toMutableList()
+        while (current.subjectX500Principal != current.issuerX500Principal) {
+            val issuer =
+                remaining.firstOrNull { candidate ->
+                    candidate.subjectX500Principal == current.issuerX500Principal && signedBy(current, candidate)
+                } ?: break
+            remaining.remove(issuer)
+            chain.add(issuer)
+            current = issuer
+        }
+        return chain
+    }
+
+    private fun signedBy(
+        cert: X509Certificate,
+        issuer: X509Certificate,
+    ): Boolean =
+        try {
+            cert.verify(issuer.publicKey)
+            true
+        } catch (_: GeneralSecurityException) {
+            false
+        }
 
     private fun issuerSerialV2Matches(
         b64: String,

@@ -428,6 +428,23 @@ By contributing to TrustWeave, you agree that your contributions will be license
 - **Community contributions** are licensed under the AGPL v3.0 license (see [LICENSE](LICENSE))
 - **Commercial licensing** is available for proprietary use (see [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md))
 
+### Contributor licensing (TODO for maintainers)
+
+> **Not yet a requirement.** This is an open policy decision for the maintainers, recorded here so
+> it is not forgotten; until it is decided, nothing below is binding on contributors.
+
+TrustWeave is dual-licensed (AGPL v3.0 and a commercial license), so Geoknoesis LLC needs the right
+to offer contributed code under both. The AGPL alone does not grant that, and the repository has no
+Contributor License Agreement or sign-off check today. Options to decide between:
+
+- **Developer Certificate of Origin (DCO):** contributors sign off each commit with `git commit -s`
+  (adds `Signed-off-by:`), certifying they may submit it under the project's license. Lightweight,
+  enforceable with a DCO check on pull requests, but on its own does not grant relicensing rights.
+- **Contributor License Agreement (CLA):** a signed agreement granting Geoknoesis LLC the right to
+  license contributions commercially as well. Needs legal review and a CLA-signing tool.
+
+Until then, signing off your commits with `git commit -s` is welcome and costs nothing.
+
 ## Getting Help
 
 - **GitHub Discussions** - Ask questions and discuss ideas

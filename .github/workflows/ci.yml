@@ -48,34 +48,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
       - name: Install Android SDK components
         run: '"${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-34" "build-tools;34.0.0"'
       - name: Compile Android and run app unit tests
         run: ./gradlew :app:testDebugUnitTest :shared:jvmTest --max-workers=2 --no-daemon
-  build:
-    name: Build and test
+  # ---------------------------------------------------------------------------------------------
+  # SDK checks. Formerly one serial job; now independent jobs that run in parallel. Each sets up
+  # Gradle with the same pinned action, so dependency and build caches are shared between them.
+  # ---------------------------------------------------------------------------------------------
+  contracts:
+    name: Validation tools and documentation contracts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
-
-      - name: Configure isolated PKCS11 qualification token
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends softhsm2
-          test -f /usr/lib/softhsm/libsofthsm2.so
-          echo "SOFTHSM2_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
-          echo "SOFTHSM2_CONF=$RUNNER_TEMP/trustweave-softhsm2.conf" >> "$GITHUB_ENV"
 
       - name: Test validation tools and documentation contracts
         run: |
@@ -91,11 +78,63 @@ jobs:
           python scripts/check-telemetry-operations.py
           python scripts/check-workflow-evidence-paths.py
 
+      - name: Upload documentation report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: documentation-contracts
+          path: build/reports/documentation.json
+          if-no-files-found: warn
+
+  lint:
+    name: Lint and API compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
       - name: Lint with ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
 
+      - name: Verify API compatibility
+        run: ./gradlew checkKotlinAbi --no-daemon --stacktrace
+
+  build:
+    name: Build, test and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
+      - name: Configure isolated PKCS11 qualification token
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends softhsm2
+          test -f /usr/lib/softhsm/libsofthsm2.so
+          echo "SOFTHSM2_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
+          echo "SOFTHSM2_CONF=$RUNNER_TEMP/trustweave-softhsm2.conf" >> "$GITHUB_ENV"
+
+      # ktlint and the ABI check run in the `lint` job; excluding them here avoids doing them twice.
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon --stacktrace
+        run: ./gradlew build -x ktlintCheck -x checkKotlinAbi --no-daemon --stacktrace
 
       - name: Reject undiscoverable tests and verify required regression evidence
         run: |
@@ -103,11 +142,79 @@ jobs:
           python scripts/check-test-evidence.py --report build/reports/test-evidence.json
           python scripts/check-reliability-evidence.py
 
-      - name: Verify API compatibility
-        run: ./gradlew checkKotlinAbi --no-daemon --stacktrace
+      - name: Generate merged coverage
+        run: ./gradlew koverXmlReport koverHtmlReport --no-daemon --stacktrace
+
+      - name: Enforce coverage policy
+        run: |
+          python -m unittest discover -s scripts -p test_check_coverage_policy.py
+          python scripts/check-coverage-policy.py
+
+      - name: Bind validation to the candidate commit
+        run: python scripts/record-validation-manifest.py
+
+      - name: Upload coverage and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sdk-validation
+          include-hidden-files: true
+          path: |
+            build/reports/validation-manifest.json
+            build/credentials/plugins/verifiable-intent/qualification/intent-operations.json
+            build/credentials/plugins/verifiable-intent/qualification/reliability/
+            build/credentials/plugins/status-list/server/qualification/status-list-diagnostics.log
+            build/reports/junit-contract.json
+            build/reports/test-evidence.json
+            build/reports/kover/
+            build/**/test-results/
+          if-no-files-found: warn
+
+  documentation-examples:
+    name: Compiled documentation entry points
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
 
       - name: Execute compiled documentation entry points
-        run: ./gradlew :distribution:examples:checkDocumentationExamples --no-daemon --stacktrace | tee build/reports/documentation-execution.log
+        run: |
+          mkdir -p build/reports
+          set -o pipefail
+          ./gradlew :distribution:examples:checkDocumentationExamples --no-daemon --stacktrace | tee build/reports/documentation-execution.log
+
+      - name: Upload execution log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: documentation-execution
+          path: build/reports/documentation-execution.log
+          if-no-files-found: warn
+
+  verifiable-intent:
+    name: Verifiable Intent interoperability and operations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
 
       - name: Checkout pinned VI interoperability reference
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -117,6 +224,9 @@ jobs:
           path: .gradle/vi-reference
           persist-credentials: false
 
+      # --rerun-tasks/--no-build-cache are intentional: the qualification files are evidence and
+      # must be regenerated by this run, never restored from a historical cache entry
+      # (scripts/test_workflow_evidence_paths.py enforces this).
       - name: Verify Kotlin tokens with the Python reference
         run: |
           rm -rf build/credentials/plugins/verifiable-intent/qualification
@@ -131,14 +241,6 @@ jobs:
           .gradle/vi-python/bin/python scripts/vi-cross-stack.py verify --reference .gradle/vi-reference --file credentials/plugins/verifiable-intent/src/test/resources/vi_python_autonomous.json > .gradle/vi-python-autonomous-results.json
           python scripts/vi-stateful-model.py --check --file credentials/plugins/verifiable-intent/src/test/resources/vi_stateful_model.json
           python scripts/check-vi-matrix.py
-
-      - name: Generate merged coverage
-        run: ./gradlew koverXmlReport koverHtmlReport --no-daemon --stacktrace
-
-      - name: Enforce coverage policy
-        run: |
-          python -m unittest discover -s scripts -p test_check_coverage_policy.py
-          python scripts/check-coverage-policy.py
 
       - name: Validate intent host alert rules
         run: >-
@@ -159,6 +261,44 @@ jobs:
           python -m unittest discover -s scripts -p test_intent_notification_exercise.py
           python scripts/intent-notification-exercise.py
 
+      - name: Upload interoperability evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vi-validation
+          include-hidden-files: true
+          path: |
+            .gradle/vi-reference-results.xml
+            .gradle/vi-immediate-results.json
+            .gradle/vi-autonomous-results.json
+            .gradle/vi-checkout-results.json
+            .gradle/vi-python-immediate-results.json
+            .gradle/vi-python-autonomous-results.json
+            build/reports/vi-matrix.json
+            build/credentials/plugins/verifiable-intent/qualification/intent-operations.json
+            build/credentials/plugins/verifiable-intent/qualification/reliability/
+            build/credentials/plugins/verifiable-intent/qualification/intent-metrics.prom
+            build/reports/intent-notifications/
+          if-no-files-found: warn
+
+  host-observability:
+    name: Shared host coverage and telemetry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
+      # --rerun-tasks/--no-build-cache are intentional: host-metrics.prom and the coverage report
+      # are evidence and must come from this run (scripts/test_workflow_evidence_paths.py).
       - name: Enforce shared host coverage floors
         run: |
           ./gradlew :observability:test :observability:koverXmlReport --rerun-tasks --no-build-cache --no-daemon
@@ -169,41 +309,40 @@ jobs:
           docker run --rm --network none --entrypoint promtool --mount "type=bind,source=${PWD}/docs/operations/host,target=/work,readonly" --workdir /work prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 test rules alerts.test.yml
           docker run --rm -i --network none --entrypoint promtool prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996 check metrics < build/observability/qualification/host-metrics.prom
 
-      - name: Generate dependency inventory
-        run: ./gradlew cyclonedxBom --no-daemon --stacktrace
-
-      - name: Bind validation to the candidate commit
-        run: python scripts/record-validation-manifest.py
-
-      - name: Upload coverage and test evidence
+      - name: Upload host evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sdk-validation
-          include-hidden-files: true
+          name: host-observability
           path: |
-            .gradle/vi-reference-results.xml
-            .gradle/vi-immediate-results.json
-            .gradle/vi-autonomous-results.json
-            .gradle/vi-checkout-results.json
-            .gradle/vi-python-immediate-results.json
-            .gradle/vi-python-autonomous-results.json
-            build/reports/validation-manifest.json
-            build/reports/vi-matrix.json
-            build/credentials/plugins/verifiable-intent/qualification/intent-operations.json
-            build/credentials/plugins/verifiable-intent/qualification/reliability/
-            build/credentials/plugins/verifiable-intent/qualification/intent-metrics.prom
-            build/credentials/plugins/status-list/server/qualification/status-list-diagnostics.log
-            build/reports/intent-notifications/
             build/observability/reports/
             build/observability/qualification/
-            build/reports/documentation.json
-            build/reports/documentation-execution.log
-            build/reports/junit-contract.json
-            build/reports/test-evidence.json
-            build/observability/reports/kover/
-            build/reports/kover/
+          if-no-files-found: warn
+
+  sbom:
+    name: Dependency inventory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
+      - name: Generate dependency inventory
+        run: ./gradlew cyclonedxBom --no-daemon --stacktrace
+
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom
+          path: |
             build/reports/cyclonedx/
-            build/**/test-results/
             build/**/reports/cyclonedx*/
           if-no-files-found: warn

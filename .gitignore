@@ -39,6 +39,7 @@ compile-error*.txt
 test-*.txt
 *-output*.txt
 *-errors.txt
+*_errors.txt
 
 # GitBook
 _book/
@@ -49,7 +50,9 @@ node_modules/
 package-lock.json
 
 # Ruby/Jekyll
-Gemfile.lock
+# docs/Gemfile.lock is committed so the Pages build resolves the same gems every time.
+docs/vendor/
+docs/.jekyll-cache/
 
 # Python
 __pycache__/
@@ -93,3 +96,11 @@ docs/**/*.pdf
 
 # Personal multi-root editor workspace; it points at sibling checkouts.
 *.code-workspace
+
+# Review evidence: docs/reviews keeps the written review records, but raw build output belongs in
+# CI artifacts (see .github/workflows/release-evidence.yml), not in git. Files already committed stay
+# tracked as the historical record; these rules stop new ones being added.
+docs/reviews/**/*.zip
+docs/reviews/**/jacoco*.xml
+docs/reviews/**/test-results/
+docs/reviews/**/build/

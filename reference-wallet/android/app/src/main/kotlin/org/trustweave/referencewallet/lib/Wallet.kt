@@ -20,7 +20,15 @@ import kotlinx.serialization.json.put
  * whether the holder's private key lives in AndroidKeyStore (API 33+) or in
  * EncryptedSharedPreferences (older). Sign operations delegate to the backend.
  */
-class Wallet(private val context: Context) {
+class Wallet(
+    private val context: Context,
+    /**
+     * Issuer DIDs this wallet stores credentials from, in addition to the issuer named by the
+     * offer passed to [store]. Empty by default, so the only trusted issuer is the demo issuer
+     * of the demo backend the user configured.
+     */
+    private val trustedIssuers: Set<String> = emptySet(),
+) {
 
     private val storage = Storage(context)
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
@@ -58,6 +66,7 @@ class Wallet(private val context: Context) {
         credential: String,
         format: String,
         selectivelyDisclosable: List<String> = emptyList(),
+        offerIssuer: String? = null,
     ): Storage.StoredCredential {
         // Never store what was not verified: issuer signature, holder binding, validity window
         // and (for SD-JWT VC) that every disclosure is covered by the signed digests.
@@ -67,6 +76,7 @@ class Wallet(private val context: Context) {
             format = format,
             holderDid = holder.did,
             nowEpochSeconds = Clock.System.now().epochSeconds,
+            issuerPolicy = IssuerTrustPolicy.allowList(trustedIssuers + listOfNotNull(offerIssuer)),
         )
         val meta = when (format) {
             "vc+sd-jwt" -> extractSdJwtMeta(credential)

@@ -16,10 +16,16 @@ import kotlinx.serialization.json.jsonObject
  * Anything else fails closed — this wallet has no resolver for other DID methods.
  *
  * Checks, in order: format/serialization shape; the issuer JWS signature against the issuer's
- * did:key; the payload profile; that the credential is bound to [holderDid] (`sub`, and for
+ * did:key; that the issuer is trusted by the supplied [IssuerTrustPolicy] (fail closed: the
+ * default policy trusts nobody, because a did:key issuer signature proves nothing about who the
+ * issuer is); the payload profile; that the credential is bound to [holderDid] (`sub`, and for
  * SD-JWT VC the `cnf.kid`); `exp`/`nbf`/`iat`; and for SD-JWT VC that every disclosure's digest
  * is listed once in the signed `_sd` array (so no disclosure can be added or swapped after
  * issuance).
+ *
+ * Holder binding of a plain VC-JWT is by `sub` only, so it is a bearer credential: nothing
+ * proves possession of the holder key at import. Pass `requireHolderKeyBinding = true` to demand a
+ * `cnf.kid` equal to `sub` (as SD-JWT VC credentials always carry) for VC-JWT too.
  */
 object CredentialVerification {
     private const val MAX_BYTES = 1_048_576
@@ -35,6 +41,8 @@ object CredentialVerification {
         format: String,
         holderDid: String,
         nowEpochSeconds: Long,
+        issuerPolicy: IssuerTrustPolicy = IssuerTrustPolicy.NONE,
+        requireHolderKeyBinding: Boolean = false,
     ) {
         if (format != "vc+jwt" && format != "vc+sd-jwt") reject("Unsupported credential format")
         if (compact.toByteArray(Charsets.UTF_8).size > MAX_BYTES) reject("Credential exceeds the 1 MiB import limit")
@@ -77,6 +85,8 @@ object CredentialVerification {
         val signingInput = "${parts[0]}.${parts[1]}".toByteArray(Charsets.US_ASCII)
         if (!Crypto.verifyEd25519(signature, signingInput, issuerKey)) reject("Issuer signature is invalid")
 
+        if (!issuerPolicy.isTrusted(iss)) reject("Issuer $iss is not trusted by this wallet")
+
         val sub = payload.string("sub")?.takeIf { it.isNotEmpty() } ?: reject("Credential holder is missing")
         if (sub != holderDid) reject("Credential is bound to $sub, not to this wallet's holder $holderDid")
 
@@ -86,6 +96,12 @@ object CredentialVerification {
             val types = vc["type"] as? JsonArray
             if (types == null || types.isEmpty() || types.any { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content.isNullOrEmpty() }) {
                 reject("Invalid credential types")
+            }
+            if (requireHolderKeyBinding) {
+                val cnf = payload["cnf"] as? JsonObject
+                if (cnf == null || cnf.string("kid") != sub || cnf.keys.any { it != "kid" }) {
+                    reject("Credential has no holder key binding (cnf.kid) for ${holderDid}")
+                }
             }
             vc["issuer"]?.let { issuer ->
                 val id = (issuer as? JsonPrimitive)?.content ?: (issuer as? JsonObject)?.string("id")

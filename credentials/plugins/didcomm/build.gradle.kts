@@ -17,7 +17,7 @@ configurations.configureEach {
 dependencies {
     // Credential API (includes exchange API)
     implementation(project(":credentials:credential-api"))
-    
+
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":common"))
@@ -55,4 +55,3 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(project(":kms:kms-core"))
 }
-

@@ -11,6 +11,7 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.exception.WalletException
+import org.trustweave.wallet.services.WalletCreationOptions
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Base64
@@ -67,17 +68,84 @@ class FileWalletTest {
     /** Base64-encoded 32-byte (AES-256) key. */
     private val validKey: String = Base64.getEncoder().encodeToString(ByteArray(32) { it.toByte() })
 
+    /** `encryptionKey = null` means the explicit plaintext opt-in. */
     private fun wallet(
         dir: Path,
         encryptionKey: String? = validKey,
     ): FileWallet =
-        FileWallet(
-            walletId = "wallet-test",
-            walletDid = "did:key:z6MkWallet",
-            holderDid = "did:key:z6MkHolder",
-            walletDir = dir,
-            encryptionKey = encryptionKey,
-        )
+        if (encryptionKey == null) {
+            FileWallet.unencrypted("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir)
+        } else {
+            FileWallet(
+                walletId = "wallet-test",
+                walletDid = "did:key:z6MkWallet",
+                holderDid = "did:key:z6MkHolder",
+                walletDir = dir,
+                encryptionKey = encryptionKey,
+            )
+        }
+
+    // ========== Encryption is required ==========
+
+    @Test
+    fun `a wallet without a key is refused instead of silently storing plaintext`() {
+        val dir = tempDir.resolve("no-key")
+        assertFailsWith<org.trustweave.wallet.exception.WalletException.WalletCreationFailed> {
+            FileWallet("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir)
+        }
+        assertFailsWith<org.trustweave.wallet.exception.WalletException.WalletCreationFailed> {
+            FileWallet("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir, encryptionKey = null)
+        }
+    }
+
+    @Test
+    fun `factory refuses a missing key unless plaintext is explicitly allowed`() =
+        runBlocking<Unit> {
+            val factory = FileWalletFactory()
+            assertFailsWith<IllegalArgumentException> {
+                factory.create(
+                    "file",
+                    walletId = "nokey",
+                    holderDid = subjectDid,
+                    options = WalletCreationOptions(storagePath = tempDir.toString()),
+                )
+            }
+            assertTrue(!Files.exists(tempDir.resolve("nokey")), "nothing may be created for a refused wallet")
+            val plaintext =
+                factory.create(
+                    "file",
+                    walletId = "optin",
+                    holderDid = subjectDid,
+                    options =
+                        WalletCreationOptions(
+                            storagePath = tempDir.toString(),
+                            additionalProperties = mapOf("allowPlaintext" to true),
+                        ),
+                )
+            plaintext.store(credential())
+            val onDisk = String(Files.readAllBytes(credentialFiles(tempDir.resolve("optin")).single()), Charsets.UTF_8)
+            assertTrue(onDisk.contains(issuerDid))
+        }
+
+    @Test
+    fun `byte and char array keys open the same wallet as the Base64 string and can be zeroed`() =
+        runBlocking<Unit> {
+            val dir = tempDir.resolve("array-keys")
+            val raw = ByteArray(32) { it.toByte() }
+            val credential = credential()
+            val id = FileWallet("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir, raw).store(credential)
+            raw.fill(0) // the caller zeroes its copy; the wallet keeps working
+
+            val chars = validKey.toCharArray()
+            val viaChars = FileWallet("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir, chars)
+            chars.fill('\u0000')
+            assertEquals(credential, viaChars.get(id))
+            assertEquals(credential, wallet(dir).get(id))
+
+            assertFailsWith<org.trustweave.wallet.exception.WalletException.WalletCreationFailed> {
+                FileWallet("wallet-test", "did:key:z6MkWallet", "did:key:z6MkHolder", dir, ByteArray(20))
+            }
+        }
 
     private fun credential(id: String = "urn:uuid:${UUID.randomUUID()}"): VerifiableCredential =
         VerifiableCredential(

@@ -14,10 +14,14 @@ import java.util.UUID
  * Supports local file storage with encryption for wallet data.
  * Suitable for desktop and mobile applications.
  *
- * The optional `encryptionKey` property must be a Base64-encoded AES key that decodes
- * to 16, 24, or 32 bytes (AES-128/192/256); invalid keys are rejected at creation.
- * Credentials are encrypted with AES-GCM (see [FileWallet] for the on-disk format).
- * When the key is omitted, credentials are stored in plaintext and a warning is logged.
+ * The `encryptionKey` (typed option or `additionalProperties["encryptionKey"]`) must be a
+ * Base64-encoded AES key that decodes to 16, 24, or 32 bytes (AES-128/192/256); invalid
+ * keys are rejected at creation. Credentials are encrypted with AES-GCM (see [FileWallet]
+ * for the on-disk format).
+ *
+ * A key is **required**. Plaintext storage needs the explicit opt-in
+ * `additionalProperties["allowPlaintext"] = true` (Boolean or `"true"`); without a key and
+ * without that opt-in, creation fails instead of silently writing plaintext.
  *
  * **Example:**
  * ```kotlin
@@ -68,11 +72,26 @@ class FileWalletFactory(
             "Conflicting typed and legacy encryption keys"
         }
         val encryptionKey = options.encryptionKey ?: legacyKey as? String
+        val allowPlaintext = options.additionalProperties["allowPlaintext"].let { it == true || it == "true" }
+        require(encryptionKey != null || allowPlaintext) {
+            "FileWallet requires an encryptionKey (Base64 of 16, 24 or 32 bytes). To store credentials in " +
+                "plaintext deliberately, set additionalProperties[allowPlaintext] = true."
+        }
         val walletDir = Paths.get(storagePath, finalWalletId)
 
         // Create wallet directory if it doesn't exist
         if (!Files.exists(walletDir)) {
             Files.createDirectories(walletDir)
+        }
+
+        if (encryptionKey == null) {
+            return FileWallet.unencrypted(
+                walletId = finalWalletId,
+                walletDid = finalWalletDid,
+                holderDid = finalHolderDid,
+                walletDir = walletDir,
+                statusResolver = statusResolver,
+            )
         }
 
         return FileWallet(

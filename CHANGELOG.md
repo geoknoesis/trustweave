@@ -5,11 +5,13 @@ All notable API changes are described here. The project does not yet follow stri
 ## [Unreleased]
 
 Remediation of the 11 September 2026 full-codebase review
-(`docs/reviews/2026-09-11-full-codebase-review/`).
+(`docs/reviews/2026-09-11-full-codebase-review/`) and of the follow-up build, security and
+documentation review.
 
-**Read this section before upgrading — it contains one breaking change.**
+**Read "Breaking and behaviour changes" before upgrading — it lists changes that make previously
+working code fail until it is adjusted.**
 
-### Changed
+### Breaking and behaviour changes
 
 - **BREAKING — `DidRegistrarServer`, `VcApiServer` and the status-list server refuse mutating
   requests until authentication is configured.** These servers create and deactivate DIDs and sign
@@ -27,6 +29,94 @@ Remediation of the 11 September 2026 full-codebase review
   `frontedByProxy` admits everything, exactly as before. It exists so that "a proxy handles it" is
   a recorded decision in the host's own code rather than the accidental result of configuring
   nothing.
+
+- **Ethereum mainnet needs an explicit `rpcUrl`.** The anchor client no longer defaults to a free
+  public node (and Sepolia no longer defaults to Alchemy's shared demo key); construction fails with
+  `ConfigurationFailed` without one, because reads through it are trusted for verification. Sepolia
+  defaults to a keyless public node. The StarkNet stub drops its retired testnet URLs and remains
+  unregistered for SPI discovery.
+
+- **`FileWallet` needs an encryption key or `FileWallet.unencrypted(...)`.** A `FileWallet` built
+  without a key used to store credentials in plaintext with only a log warning; construction now
+  fails. Plaintext needs the explicit `unencrypted(...)` factory, or
+  `additionalProperties["allowPlaintext"] = true` through `FileWalletFactory`, which also refuses
+  before creating any directory. Existing constructor signatures are kept; new `ByteArray` and
+  `CharArray` key constructors copy the key and zero their intermediate buffers.
+
+- **`WalletHolder.acceptCredentialOffer` needs a `credentialVerifier`** (a `CredentialService`,
+  new optional constructor parameter; the old four-argument constructor is kept). It rejects with
+  `CredentialRejectedException`, storing nothing, unless the credential verifies, names the offer's
+  issuer and is bound to the holder DID; without a verifier it fails before contacting the issuer.
+  did:web derivation from the issuer URL now follows the did:web spec (percent-encoded port, https only).
+
+- **`fromJwt` rejects unsecured (`alg: none`) JWTs** unless the caller passes `allowUnsecured = true`,
+  and there is no raw-JSON fallback. `toJwt` throws instead of silently returning plain JSON.
+
+- **Trust registry `register` throws `ParticipantAlreadyRegisteredException`** for a DID that is
+  already registered, in both the in-memory and database registries, and leaves the existing
+  (possibly revoked) record untouched. `IssuerRecord`/`VerifierRecord` keep their previous full
+  constructors; `copy()` gains the new `revocationReason` parameter (ABI dump updated).
+
+- **did:web no longer follows redirects by default.** Resolution follows at most `maxRedirects`
+  hops itself (0 by default); `WebDidConfig.followRedirects` now defaults to `false` and enables 5
+  hops. HTTPS and the SSRF guard are re-checked on every hop.
+
+- **did:plc write operations fail with `PLC_NOT_IMPLEMENTED`.** Create, update and deactivate used
+  to post to endpoints the PLC directory does not have and fall back to a local store; they now fail
+  before any key is generated. Resolution uses the directory's real `GET /{did}` endpoint.
+
+- **The Spring registrar needs a bearer token or a proxy declaration.** `did:registrar-server-spring`
+  refuses every POST/PUT/DELETE with 503 until `trustweave.registrar.auth.bearer-token` (at least 32
+  characters, compared in constant time; 401 on mismatch) or
+  `trustweave.registrar.auth.fronted-by-proxy` is set. The controller's constructor and endpoint
+  signatures gain the authentication and `Authorization` header parameters (ABI dump updated).
+
+- **`DidCommExamples` is no longer part of the public API.** It used `runBlocking` and now lives in
+  the plugin's test sources (ABI dump updated).
+
+- **Digest anchors hash an RFC 8785 (JCS) envelope.** New digest-mode envelopes carry `canon=JCS`
+  and hash the canonical form, so a structurally equal payload verifies regardless of key order or
+  number spelling. Legacy envelopes (no `canon` member) are still recognised and verified against
+  the bytes the old write path hashed.
+
+- Other behaviour changes: Ed25519 signatures in did-core are verified and an unchecked digest is
+  never passed through; remote JSON-LD contexts are restricted to `https:` (`http:` needs a second
+  explicit opt-in; `file:`, `jar:` and other schemes are refused) and cached in a bounded LRU;
+  SD-JWT and VC-LD verification honour `VerificationOptions.revocationFailurePolicy` (fail closed
+  by default) and process disclosures strictly; did:ethr fails fast on a bad private key and no
+  longer fakes anchors, did:polygon drops its fake transaction hash, did:ens reports the missing
+  lookup as method-not-supported, did:cheqd derives identifiers per spec, did:sol derives its address
+  from the Ed25519 public key; the waltid KMS no longer registers placeholder did:key/did:web methods
+  through SPI.
+
+### Added
+
+- `HostAuthentication` in `observability`: constant-time bearer tokens, host-supplied authorizers,
+  an explicit `frontedByProxy` declaration, and per-caller fixed-window rate limiting with bounded
+  caller tracking.
+
+- A real publication path — a declared Maven repository, `scm` and `issueManagement` in every POM,
+  and a reviewer-gated publish job on `v*` tags. See `docs/operations/publishing.md`.
+
+- RFC 8785 JSON canonicalization in `common`.
+
+- Remote Bitstring Status List resolution: `BitstringStatusListManager` accepts a
+  `RemoteStatusListResolver`. Lists are fetched over HTTPS (public addresses only, no redirects,
+  size-capped), verified through an injected `StatusListCredentialVerifier`, checked for type,
+  issuer, `statusPurpose` and minimum length, decompressed under a cap and briefly cached; every
+  failure throws a specific code, and without a resolver unknown lists still fail closed.
+
+- `closeAsync` on the `trust` facade, with the non-sealed facade contracts documented.
+
+- A pluggable, expiry-based DIDComm replay store that never evicts live ids; `purge` for the Azure KMS.
+
+- `docs/reviews/README.md`, `.github/CODEOWNERS`, recommended branch protection in `CONTRIBUTING.md`,
+  CodeQL analysis of the security-critical modules (also on pull requests that touch them), and
+  dependency review plus OSV-Scanner over the SBOM and resolved JARs. The OSV job fails for advisories
+  outside `config/osv/baseline.json` (`scripts/check-osv-baseline.py`). The documentation check now
+  verifies that `org.trustweave.*` imports in docs resolve to main sources.
+
+### Changed
 
 - `BitstringStatusListManager`'s bitstring encode and decode are now `suspend` and check
   cooperative cancellation every 8192 bits. A cancelled status-list refresh previously ran the full
@@ -51,16 +141,18 @@ Remediation of the 11 September 2026 full-codebase review
   SDK BOM 1.2.15 → 1.3.6, Google Cloud libraries-bom 26.22.0/26.38.0 → 26.80.0. Consumers of those
   modules resolve the newer cloud SDKs.
 
+- Security-relevant dependency updates inside the same major: Jackson 2.21.4 → 2.22.3 and Bouncy
+  Castle 1.84 → 1.86 (each cleared advisories reported by OSV), SLF4J 2.0.17 → 2.0.20, MongoDB BSON
+  4.11.0 → 4.11.5, Azure Identity 1.18.2 → 1.18.7. WireMock moved from `wiremock-jre8` 2.35.2 to
+  `org.wiremock` 3.13.2.
+
 - Published `-javadoc` jars now contain Dokka-generated API documentation instead of being empty.
 
-### Added
+- `docs/reviews` no longer carries raw generated evidence (about 32 MB of JUnit, JaCoCo, SBOM and
+  coverage output); it is a CI artifact. Git history still holds the blobs. Stale one-off
+  migration scripts and superseded root reports moved to `docs/archive` or were deleted.
 
-- `HostAuthentication` in `observability`: constant-time bearer tokens, host-supplied authorizers,
-  an explicit `frontedByProxy` declaration, and per-caller fixed-window rate limiting with bounded
-  caller tracking.
-
-- A real publication path — a declared Maven repository, `scm` and `issueManagement` in every POM,
-  and a reviewer-gated publish job on `v*` tags. See `docs/operations/publishing.md`.
+- CI is split into parallel jobs; `TRUSTWEAVE_INDY_INTEGRATION` applies to the build job only.
 
 ### Fixed
 
@@ -77,9 +169,37 @@ Remediation of the 11 September 2026 full-codebase review
   not exist. They now resolve the build root the way the build does and refuse a root with no
   results rather than reporting on it.
 
+- `PrivateNetworkGuard` blocks CGNAT, reserved and IPv4-embedding IPv6 ranges, and did:web checks
+  the addresses actually connected to (DNS rebinding).
+- Status-list resolver and `close` rethrow `CancellationException` before broad catches;
+  `trustweaveCatching` never captures fatal JVM errors; plugin lifecycles run outside the registry monitor.
+- XAdES rejects signature wrapping and binds the signer to `SigningCertificateV2`; CAdES signs
+  through the KMS without `runBlocking`; PAdES fails with `UnsupportedOperationException`.
+- `KmsBasedRegistrar` delegates operations instead of faking them; the trust-registry server maps
+  registry failures to the right status codes and the revocation reason survives re-activation.
+- OIDC4VP populates `requestedClaims` from what the verifier asked for; `expectedChallenge` and
+  `expectedDomain` are honoured without the flag; the Android reference wallet verifies credentials
+  before storing them; the trust facade keeps the original issuance failure when a status index is
+  orphaned and picks the `assertionMethod` key in `getKeyId`.
+- DIDComm no longer blocks the caller's dispatcher in secret resolvers and does not rotate on
+  invented key ages; Vault public keys are parsed strictly and curve-checked; the Azure KMS honours
+  `endpointOverride`; KMS, anchor and Azure configuration redact secrets in `toString`; the
+  Salesforce/ServiceNow stubs fail with typed errors; EVM reads reject reverted and foreign
+  transactions; contract credentials are verified and contract execution is serialised.
+- Verifiable Intent states plainly that multi-pair L2 is unsupported.
+
+### Security
+
+- The fixes above in the "Breaking and behaviour changes" and "Fixed" sections that close
+  authentication, SSRF, signature-validation and fail-open paths (registrar servers, Spring
+  registrar, did:web, JSON-LD contexts, JWT, SD-JWT, XAdES, wallet storage, offer acceptance).
 - All 14 remaining unpinned GitHub Actions references are pinned to commit SHAs, and the two
   workflows that declared no `permissions` block now do. The nightly conformance job's
   `issues: write` moved to a separate job that runs no repository code.
+
+- Dependency scanning: OSV-Scanner and dependency review run on every push and pull request; the
+  `org.didcommx:didcomm` 0.3.2 embedded-Nimbus risk is documented in `SECURITY.md`.
+
 
 ## [0.7.0] - 2026-08-29
 

@@ -71,14 +71,16 @@ adb shell am start -n org.trustweave.referencewallet/.ui.MainActivity
 
 ### Real device
 
-Set the backend URL to your machine's LAN IP:
+Cleartext HTTP is only permitted to `10.0.2.2`, `localhost` and `127.0.0.1`
+(`res/xml/network_security_config.xml`), so forward the backend port over USB and use loopback:
 
 ```bash
-./gradlew :app:installDebug -PDEMO_BACKEND_BASE_URL=http://192.168.1.42:3000
+adb reverse tcp:3000 tcp:3000
+./gradlew :app:installDebug -PDEMO_BACKEND_BASE_URL=http://localhost:3000
 ```
 
-Make sure the dev machine and device are on the same network and the Next.js server is
-listening on `0.0.0.0` (Next.js does by default on `npm run dev`).
+To reach the backend over the network instead, serve it over HTTPS and pass that URL; plain
+`http://<LAN-IP>` is refused by the app's network security config.
 
 ## Architecture
 

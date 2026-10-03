@@ -170,8 +170,13 @@ class DefaultJadesVerifier : JadesVerifier {
 
             // 7. Trust-anchor resolution.
             val trustMatch = options.trustAnchorResolver.resolve(signerCert, chain.drop(1))
-            if (trustMatch is org.trustweave.signatures.trustlists.TrustAnchorMatch.NotTrusted) {
-                return@withContext Invalid.UntrustedSigner(signerCert)
+            // Exhaustive: a new TrustAnchorMatch subtype must be classified here, never pass by default.
+            when (trustMatch) {
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.NotTrusted ->
+                    return@withContext Invalid.UntrustedSigner(signerCert)
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedActive,
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedWithdrawn,
+                -> Unit
             }
 
             // 8. Signature time-stamp validation (B-T and above).

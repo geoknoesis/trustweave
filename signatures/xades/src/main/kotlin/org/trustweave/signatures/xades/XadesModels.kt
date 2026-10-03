@@ -75,11 +75,19 @@ data class XadesSignature(
  *                                                 `false` (default) the validity window is checked
  *                                                 against the signed `SigningTime`, or against the
  *                                                 current time when the producer omitted it.
+ * @property requireSigningTime                    When `true`, a signature whose signed properties
+ *                                                 carry no `SigningTime` is rejected as
+ *                                                 [XadesValidationResult.Invalid.Malformed]. When
+ *                                                 `false` (default) it is accepted and certificate
+ *                                                 validity is judged at verification time, which
+ *                                                 cannot show the certificate was valid when the
+ *                                                 document was actually signed.
  */
 data class XadesVerificationOptions(
     val requiredProfile: XadesProfile,
     val trustAnchorResolver: TrustAnchorResolver,
     val allowExpiredCertificateAtSigningTime: Boolean = false,
+    val requireSigningTime: Boolean = false,
 )
 
 /**

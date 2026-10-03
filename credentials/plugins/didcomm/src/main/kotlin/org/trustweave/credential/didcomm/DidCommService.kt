@@ -96,6 +96,13 @@ interface DidCommService {
  *
  * Suitable for testing and simple use cases.
  * For production, use a persistent storage implementation.
+ *
+ * **Replay protection and multiple replicas.** The default [InMemoryDidCommReplayStore] is
+ * per-process: it forgets accepted message ids on restart and is not shared between replicas, so a
+ * message accepted by one replica can be replayed to another (or after a restart) until it expires.
+ * Single-process and test deployments are fine; anything running more than one instance must pass a
+ * shared [DidCommReplayStore] such as [DatabaseDidCommReplayStore] (which
+ * [DatabaseDidCommService] uses by default).
  */
 class InMemoryDidCommService
     @JvmOverloads

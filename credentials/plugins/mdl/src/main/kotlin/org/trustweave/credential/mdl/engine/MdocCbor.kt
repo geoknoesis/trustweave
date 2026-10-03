@@ -2,8 +2,16 @@ package org.trustweave.credential.mdl.engine
 
 import com.upokecenter.cbor.CBORObject
 import com.upokecenter.cbor.CBORType
-import org.trustweave.credential.mdl.model.*
 import kotlinx.datetime.Instant
+import org.trustweave.credential.mdl.MdocException
+import org.trustweave.credential.mdl.model.DeviceAuth
+import org.trustweave.credential.mdl.model.DeviceKeyInfo
+import org.trustweave.credential.mdl.model.DeviceSigned
+import org.trustweave.credential.mdl.model.IssuerSigned
+import org.trustweave.credential.mdl.model.IssuerSignedItem
+import org.trustweave.credential.mdl.model.MobileDocument
+import org.trustweave.credential.mdl.model.MobileSecurityObject
+import org.trustweave.credential.mdl.model.ValidityInfo
 import java.security.MessageDigest
 import java.security.SecureRandom
 
@@ -14,7 +22,6 @@ import java.security.SecureRandom
  * indefinite-length encoding, and full CBOR tag compliance required by ISO 18013-5.
  */
 internal object MdocCbor {
-
     private val random = SecureRandom()
 
     // CBOR tag 6 = CBOR-encoded data item (bstr-wrapped CBOR)
@@ -35,20 +42,22 @@ internal object MdocCbor {
     }
 
     /** Decode CBOR bytes back to an [IssuerSignedItem]. */
-    fun decodeIssuerSignedItem(bytes: ByteArray): IssuerSignedItem {
-        val map = CBORObject.DecodeFromBytes(bytes)
-        return IssuerSignedItem(
-            digestId = map["digestID"].AsInt32(),
-            random = map["random"].GetByteString(),
-            elementIdentifier = map["elementIdentifier"].AsString(),
-            elementValue = fromCborValue(map["elementValue"])
-        )
-    }
+    fun decodeIssuerSignedItem(bytes: ByteArray): IssuerSignedItem =
+        decoding("IssuerSignedItem") {
+            val map = CBORObject.DecodeFromBytes(bytes)
+            IssuerSignedItem(
+                digestId = required(map, "digestID").AsInt32(),
+                random = required(map, "random").GetByteString(),
+                elementIdentifier = required(map, "elementIdentifier").AsString(),
+                elementValue = fromCborValue(required(map, "elementValue")),
+            )
+        }
 
     /** Compute SHA-256 digest of an encoded IssuerSignedItem. */
-    fun digestItem(itemBytes: ByteArray, algorithm: String = "SHA-256"): ByteArray {
-        return MessageDigest.getInstance(algorithm).digest(itemBytes)
-    }
+    fun digestItem(
+        itemBytes: ByteArray,
+        algorithm: String = "SHA-256",
+    ): ByteArray = MessageDigest.getInstance(algorithm).digest(itemBytes)
 
     /** Generate a 16-byte random salt for an IssuerSignedItem. */
     fun generateSalt(): ByteArray {
@@ -80,11 +89,12 @@ internal object MdocCbor {
 
         // deviceKeyInfo
         val dki = CBORObject.NewOrderedMap()
-        dki["deviceKey"] = if (mso.deviceKeyInfo.deviceKey.isEmpty()) {
-            CBORObject.NewOrderedMap()  // empty COSE_Key placeholder when no device key is bound
-        } else {
-            CBORObject.DecodeFromBytes(mso.deviceKeyInfo.deviceKey)
-        }
+        dki["deviceKey"] =
+            if (mso.deviceKeyInfo.deviceKey.isEmpty()) {
+                CBORObject.NewOrderedMap() // empty COSE_Key placeholder when no device key is bound
+            } else {
+                CBORObject.DecodeFromBytes(mso.deviceKeyInfo.deviceKey)
+            }
         map["deviceKeyInfo"] = dki
 
         map["docType"] = CBORObject.FromObject(mso.docType)
@@ -101,35 +111,37 @@ internal object MdocCbor {
     }
 
     /** Decode an [MobileSecurityObject] from CBOR bytes. */
-    fun decodeMso(bytes: ByteArray): MobileSecurityObject {
-        val map = CBORObject.DecodeFromBytes(bytes)
-        val vd = map["valueDigests"]
-        val valueDigests = mutableMapOf<String, Map<Int, ByteArray>>()
-        vd.entries.forEach { entry ->
-            val ns = entry.key.AsString()
-            val digestMap = mutableMapOf<Int, ByteArray>()
-            entry.value.entries.forEach { d ->
-                digestMap[d.key.AsInt32()] = d.value.GetByteString()
+    fun decodeMso(bytes: ByteArray): MobileSecurityObject =
+        decoding("MobileSecurityObject") {
+            val map = CBORObject.DecodeFromBytes(bytes)
+            val vd = required(map, "valueDigests")
+            val valueDigests = mutableMapOf<String, Map<Int, ByteArray>>()
+            vd.entries.forEach { entry ->
+                val ns = entry.key.AsString()
+                val digestMap = mutableMapOf<Int, ByteArray>()
+                entry.value.entries.forEach { d ->
+                    digestMap[d.key.AsInt32()] = d.value.GetByteString()
+                }
+                valueDigests[ns] = digestMap
             }
-            valueDigests[ns] = digestMap
-        }
-        val dki = map["deviceKeyInfo"]
-        val deviceKey = dki["deviceKey"].EncodeToBytes()
-        val vi = map["validityInfo"]
-        return MobileSecurityObject(
-            version = map["version"].AsString(),
-            digestAlgorithm = map["digestAlgorithm"].AsString(),
-            valueDigests = valueDigests,
-            deviceKeyInfo = DeviceKeyInfo(deviceKey = deviceKey),
-            docType = map["docType"].AsString(),
-            validityInfo = ValidityInfo(
-                signed = decodeInstant(vi["signed"]),
-                validFrom = decodeInstant(vi["validFrom"]),
-                validUntil = decodeInstant(vi["validUntil"]),
-                expectedUpdate = vi["expectedUpdate"]?.let { decodeInstant(it) }
+            val dki = required(map, "deviceKeyInfo")
+            val deviceKey = required(dki, "deviceKey").EncodeToBytes()
+            val vi = required(map, "validityInfo")
+            MobileSecurityObject(
+                version = required(map, "version").AsString(),
+                digestAlgorithm = required(map, "digestAlgorithm").AsString(),
+                valueDigests = valueDigests,
+                deviceKeyInfo = DeviceKeyInfo(deviceKey = deviceKey),
+                docType = required(map, "docType").AsString(),
+                validityInfo =
+                    ValidityInfo(
+                        signed = decodeInstant(required(vi, "signed")),
+                        validFrom = decodeInstant(required(vi, "validFrom")),
+                        validUntil = decodeInstant(required(vi, "validUntil")),
+                        expectedUpdate = vi["expectedUpdate"]?.let { decodeInstant(it) },
+                    ),
             )
-        )
-    }
+        }
 
     // ---------------------------------------------------------------------------
     // MobileDocument encoding
@@ -141,7 +153,7 @@ internal object MdocCbor {
         map["docType"] = CBORObject.FromObject(doc.docType)
 
         // issuerSigned
-        val is_ = CBORObject.NewOrderedMap()
+        val issuerSignedMap = CBORObject.NewOrderedMap()
         val nsMap = CBORObject.NewOrderedMap()
         doc.issuerSigned.nameSpaces.forEach { (ns, items) ->
             val arr = CBORObject.NewArray()
@@ -152,86 +164,115 @@ internal object MdocCbor {
             }
             nsMap[ns] = arr
         }
-        is_["nameSpaces"] = nsMap
-        is_["issuerAuth"] = CBORObject.DecodeFromBytes(doc.issuerSigned.issuerAuth)
-        map["issuerSigned"] = is_
+        issuerSignedMap["nameSpaces"] = nsMap
+        issuerSignedMap["issuerAuth"] = CBORObject.DecodeFromBytes(doc.issuerSigned.issuerAuth)
+        map["issuerSigned"] = issuerSignedMap
 
         doc.deviceSigned?.let { ds ->
-            val ds_ = CBORObject.NewOrderedMap()
-            ds_["nameSpaces"] = CBORObject.DecodeFromBytes(ds.nameSpaces)
+            val deviceSignedMap = CBORObject.NewOrderedMap()
+            deviceSignedMap["nameSpaces"] = CBORObject.DecodeFromBytes(ds.nameSpaces)
             val da = CBORObject.NewOrderedMap()
             ds.deviceAuth.deviceSignature?.let { da["deviceSignature"] = CBORObject.DecodeFromBytes(it) }
             ds.deviceAuth.deviceMac?.let { da["deviceMac"] = CBORObject.DecodeFromBytes(it) }
-            ds_["deviceAuth"] = da
-            map["deviceSigned"] = ds_
+            deviceSignedMap["deviceAuth"] = da
+            map["deviceSigned"] = deviceSignedMap
         }
 
         return map.EncodeToBytes()
     }
 
     /** Decode a [MobileDocument] from CBOR bytes. */
-    fun decodeMobileDocument(bytes: ByteArray): MobileDocument {
-        val map = CBORObject.DecodeFromBytes(bytes)
-        val docType = map["docType"].AsString()
-        val is_ = map["issuerSigned"]
-        val nsMap = is_["nameSpaces"]
-        val nameSpaces = mutableMapOf<String, List<IssuerSignedItem>>()
-        nsMap.entries.forEach { entry ->
-            val ns = entry.key.AsString()
-            val items = (0 until entry.value.size()).map { i ->
-                val taggedItem = entry.value[i]
-                val itemBytes = if (taggedItem.HasMostOuterTag(TAG_ENCODED_CBOR)) {
-                    taggedItem.GetByteString()
-                } else {
-                    taggedItem.EncodeToBytes()
-                }
-                decodeIssuerSignedItem(itemBytes)
+    fun decodeMobileDocument(bytes: ByteArray): MobileDocument =
+        decoding("MobileDocument") {
+            val map = CBORObject.DecodeFromBytes(bytes)
+            val docType = required(map, "docType").AsString()
+            val issuerSignedMap = required(map, "issuerSigned")
+            val nsMap = required(issuerSignedMap, "nameSpaces")
+            val nameSpaces = mutableMapOf<String, List<IssuerSignedItem>>()
+            nsMap.entries.forEach { entry ->
+                val ns = entry.key.AsString()
+                val items =
+                    (0 until entry.value.size()).map { i ->
+                        val taggedItem = entry.value[i]
+                        val itemBytes =
+                            if (taggedItem.HasMostOuterTag(TAG_ENCODED_CBOR)) {
+                                taggedItem.GetByteString()
+                            } else {
+                                taggedItem.EncodeToBytes()
+                            }
+                        decodeIssuerSignedItem(itemBytes)
+                    }
+                nameSpaces[ns] = items
             }
-            nameSpaces[ns] = items
-        }
-        val issuerAuthBytes = is_["issuerAuth"].EncodeToBytes()
-        val issuerSigned = IssuerSigned(nameSpaces = nameSpaces, issuerAuth = issuerAuthBytes)
+            val issuerAuthBytes = required(issuerSignedMap, "issuerAuth").EncodeToBytes()
+            val issuerSigned = IssuerSigned(nameSpaces = nameSpaces, issuerAuth = issuerAuthBytes)
 
-        val deviceSigned = map["deviceSigned"]?.let { ds ->
-            val da = ds["deviceAuth"]
-            DeviceSigned(
-                nameSpaces = ds["nameSpaces"].EncodeToBytes(),
-                deviceAuth = DeviceAuth(
-                    deviceSignature = da["deviceSignature"]?.EncodeToBytes(),
-                    deviceMac = da["deviceMac"]?.EncodeToBytes()
-                )
-            )
+            val deviceSigned =
+                map["deviceSigned"]?.let { ds ->
+                    val da = ds["deviceAuth"]
+                    DeviceSigned(
+                        nameSpaces = ds["nameSpaces"].EncodeToBytes(),
+                        deviceAuth =
+                            DeviceAuth(
+                                deviceSignature = da["deviceSignature"]?.EncodeToBytes(),
+                                deviceMac = da["deviceMac"]?.EncodeToBytes(),
+                            ),
+                    )
+                }
+            MobileDocument(docType = docType, issuerSigned = issuerSigned, deviceSigned = deviceSigned)
         }
-        return MobileDocument(docType = docType, issuerSigned = issuerSigned, deviceSigned = deviceSigned)
-    }
 
     // ---------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------
 
-    private fun toCborValue(value: Any): CBORObject = when (value) {
-        is String -> CBORObject.FromObject(value)
-        is Int -> CBORObject.FromObject(value)
-        is Long -> CBORObject.FromObject(value)
-        is Boolean -> CBORObject.FromObject(value)
-        is ByteArray -> CBORObject.FromObject(value)
-        is Double -> CBORObject.FromObject(value)
-        is Float -> CBORObject.FromObject(value)
-        else -> CBORObject.FromObject(value.toString())
+    /** Runs a decoder, turning any structural failure (missing field, wrong type, bad CBOR) into a typed [MdocException]. */
+    private inline fun <T> decoding(
+        what: String,
+        block: () -> T,
+    ): T =
+        try {
+            block()
+        } catch (e: MdocException) {
+            throw e
+        } catch (e: RuntimeException) {
+            throw MdocException.malformed(what, e)
+        }
+
+    /** The value at [key]; a missing field is an error, never a silent null. */
+    private fun required(
+        map: CBORObject,
+        key: String,
+    ): CBORObject {
+        if (map.type != CBORType.Map) throw IllegalStateException("expected a CBOR map when reading '$key'")
+        return map[key] ?: throw IllegalStateException("missing required field '$key'")
     }
 
-    private fun fromCborValue(obj: CBORObject): Any = when {
-        obj.type == CBORType.TextString -> obj.AsString()
-        obj.type == CBORType.Integer -> obj.AsInt64Value()
-        obj.type == CBORType.Boolean -> obj.AsBoolean()
-        obj.type == CBORType.ByteString -> obj.GetByteString()
-        obj.type == CBORType.FloatingPoint -> obj.AsDouble()
-        else -> obj.ToJSONString()
-    }
+    private fun toCborValue(value: Any): CBORObject =
+        when (value) {
+            is String -> CBORObject.FromObject(value)
+            is Int -> CBORObject.FromObject(value)
+            is Long -> CBORObject.FromObject(value)
+            is Boolean -> CBORObject.FromObject(value)
+            is ByteArray -> CBORObject.FromObject(value)
+            is Double -> CBORObject.FromObject(value)
+            is Float -> CBORObject.FromObject(value)
+            else -> CBORObject.FromObject(value.toString())
+        }
+
+    private fun fromCborValue(obj: CBORObject): Any =
+        when {
+            obj.type == CBORType.TextString -> obj.AsString()
+            obj.type == CBORType.Integer -> obj.AsInt64Value()
+            obj.type == CBORType.Boolean -> obj.AsBoolean()
+            obj.type == CBORType.ByteString -> obj.GetByteString()
+            obj.type == CBORType.FloatingPoint -> obj.AsDouble()
+            else -> obj.ToJSONString()
+        }
 
     // ISO 8601 full-date encoding: CBOR tdate (tag 0) or full-date string
     private fun encodeInstant(instant: Instant): CBORObject =
-        CBORObject.FromObjectAndTag(instant.toString(), 0)  // tag 0 = ISO 8601 datetime string
+        CBORObject.FromObjectAndTag(instant.toString(), 0) // tag 0 = ISO 8601 datetime string
 
     private fun decodeInstant(obj: CBORObject): Instant =
         Instant.parse(if (obj.HasMostOuterTag(0)) obj.Untag().AsString() else obj.AsString())

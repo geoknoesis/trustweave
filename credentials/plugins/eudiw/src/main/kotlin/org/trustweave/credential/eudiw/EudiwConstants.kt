@@ -15,7 +15,6 @@ package org.trustweave.credential.eudiw
  * - ISO/IEC 18013-5 (mDL)
  */
 object EudiwConstants {
-
     // -------------------------------------------------------------------------
     // EU PID namespace and doctype
     // -------------------------------------------------------------------------
@@ -45,6 +44,9 @@ object EudiwConstants {
 
     /** SD-JWT VC format identifier, as used in OID4VCI `credential_configurations_supported`. */
     const val CREDENTIAL_FORMAT_SD_JWT_VC = "vc+sd-jwt"
+
+    /** Current SD-JWT VC format identifier (`dc+sd-jwt`), which replaced [CREDENTIAL_FORMAT_SD_JWT_VC]. */
+    const val CREDENTIAL_FORMAT_DC_SD_JWT = "dc+sd-jwt"
 
     /** ISO mDoc / mDL format identifier, as used in OID4VCI `credential_configurations_supported`. */
     const val CREDENTIAL_FORMAT_MSO_MDOC = "mso_mdoc"

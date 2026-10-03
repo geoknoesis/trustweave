@@ -11,6 +11,7 @@ import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.proof.PresentationNonceStore
 import org.trustweave.credential.proof.internal.engines.ProofEngineUtils
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
@@ -751,6 +752,47 @@ internal object PresentationVerification {
             "Verification option '$KB_JWT_MAX_AGE_OPTION' must be positive, got $configured"
         }
         return configured
+    }
+
+    /**
+     * Single-use enforcement of the SD-JWT KB-JWT `nonce` when the verifier configured a
+     * [PresentationNonceStore] under [PresentationNonceStore.OPTION_KEY]; a no-op otherwise.
+     *
+     * Call it only after every other presentation check has passed, so a request that is rejected
+     * for another reason cannot consume a nonce. Presentations whose proof is not an SD-JWT-VC are
+     * unaffected (the option is KB-JWT specific).
+     *
+     * @return null when no store is configured or the nonce was fresh, otherwise the failure
+     */
+    suspend fun consumeKbJwtNonce(
+        presentation: VerifiablePresentation,
+        options: VerificationOptions,
+    ): VerificationResult.Invalid.InvalidProof? {
+        val raw = options.additionalOptions[PresentationNonceStore.OPTION_KEY] ?: return null
+        val credential = presentation.verifiableCredential.first()
+        val store =
+            raw as? PresentationNonceStore
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Verification option '${PresentationNonceStore.OPTION_KEY}' is not a PresentationNonceStore",
+                    errors = listOf("Got ${raw::class.simpleName}; refusing to verify without the requested replay guard"),
+                )
+        val proof = presentation.proof as? CredentialProof.SdJwtVcProof ?: return null
+        val nonce =
+            kbJwtBoundField(proof.sdJwtVc, "challenge")?.takeIf { it.isNotBlank() }
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Key Binding JWT carries no nonce but a nonce store is configured",
+                    errors = listOf("A single-use nonce store requires every KB-JWT to carry a non-blank 'nonce'"),
+                )
+        if (!store.consume(nonce)) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = credential,
+                reason = "Key Binding JWT nonce has already been used (replayed presentation)",
+                errors = listOf("KB-JWT nonce was already consumed; the presentation is a replay"),
+            )
+        }
+        return null
     }
 
     /**

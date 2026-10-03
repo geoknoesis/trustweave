@@ -1,11 +1,11 @@
 package org.trustweave.revocation.token.spi
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.revocation.services.StatusListRegistryFactory
 import org.trustweave.revocation.token.TokenStatusListManagerFactory
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 
 /**
  * SPI provider for the IETF Token Status List implementation.
@@ -24,9 +24,11 @@ import com.zaxxer.hikari.HikariDataSource
  * - `trustweave.statuslist.jdbc.password`
  * - `trustweave.statuslist.issuer.did`
  * - `trustweave.statuslist.token.uri`
+ * - `trustweave.statuslist.token.issuerKeyId` (optional): verification method ID of the Ed25519 key,
+ *   held in [kms], that signs tokens. Without it the manager tracks status but building a token
+ *   fails with a ConfigException.
  */
 class TokenStatusListManagerProvider : StatusListRegistryFactory {
-
     companion object {
         const val PROVIDER_NAME = "token"
     }
@@ -46,31 +48,42 @@ class TokenStatusListManagerProvider : StatusListRegistryFactory {
         check(providerName == PROVIDER_NAME) {
             "TokenStatusListManagerProvider does not support provider '$providerName'. Expected '$PROVIDER_NAME'."
         }
-        val resolvedKms = checkNotNull(kms) {
-            "TokenStatusListManagerProvider: kms must be set before calling create()."
-        }
+        val resolvedKms =
+            checkNotNull(kms) {
+                "TokenStatusListManagerProvider: kms must be set before calling create()."
+            }
 
-        val jdbcUrl = System.getProperty("trustweave.statuslist.jdbc.url")
-            ?: "jdbc:h2:mem:token_status;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        val jdbcUrl =
+            System.getProperty("trustweave.statuslist.jdbc.url")
+                ?: "jdbc:h2:mem:token_status;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
         val username = System.getProperty("trustweave.statuslist.jdbc.username") ?: "sa"
         val password = System.getProperty("trustweave.statuslist.jdbc.password") ?: ""
         val issuerDid = System.getProperty("trustweave.statuslist.issuer.did") ?: "did:key:default"
-        val statusListUri = System.getProperty("trustweave.statuslist.token.uri")
-            ?: "https://example.com/statuslists/default"
+        val statusListUri =
+            System.getProperty("trustweave.statuslist.token.uri")
+                ?: "https://example.com/statuslists/default"
 
-        val config = HikariConfig().apply {
-            this.jdbcUrl = jdbcUrl
-            this.username = username
-            this.password = password
-            maximumPoolSize = 5
-        }
+        val config =
+            HikariConfig().apply {
+                this.jdbcUrl = jdbcUrl
+                this.username = username
+                this.password = password
+                maximumPoolSize = 5
+            }
         val dataSource = HikariDataSource(config)
 
         return TokenStatusListManagerFactory.create(
             dataSource = dataSource,
             kms = resolvedKms,
             issuerDid = issuerDid,
-            statusListUri = statusListUri
+            statusListUri = statusListUri,
+            issuerKeyId =
+                System
+                    .getProperty("trustweave.statuslist.token.issuerKeyId")
+                    ?.let {
+                        org.trustweave.did.identifiers.VerificationMethodId
+                            .parse(it)
+                    },
         )
     }
 }

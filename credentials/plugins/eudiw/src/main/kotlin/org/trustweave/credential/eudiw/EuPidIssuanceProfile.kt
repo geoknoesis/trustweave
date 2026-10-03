@@ -14,40 +14,42 @@ package org.trustweave.credential.eudiw
  * - EUDIW ARF: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
  */
 object EuPidIssuanceProfile {
-
     /**
      * Mandatory top-level claims for an EU PID credential as specified in
      * eIDAS 2.0 Annex V. All of these MUST be present and non-null in the
      * credential claims map before issuance.
      */
-    val REQUIRED_CLAIMS: Set<String> = setOf(
-        EudiwConstants.CLAIM_FAMILY_NAME,
-        EudiwConstants.CLAIM_GIVEN_NAME,
-        EudiwConstants.CLAIM_BIRTH_DATE,
-        EudiwConstants.CLAIM_ISSUING_AUTHORITY,
-        EudiwConstants.CLAIM_ISSUING_COUNTRY,
-        EudiwConstants.CLAIM_ISSUANCE_DATE,
-        EudiwConstants.CLAIM_EXPIRY_DATE,
-    )
+    val REQUIRED_CLAIMS: Set<String> =
+        setOf(
+            EudiwConstants.CLAIM_FAMILY_NAME,
+            EudiwConstants.CLAIM_GIVEN_NAME,
+            EudiwConstants.CLAIM_BIRTH_DATE,
+            EudiwConstants.CLAIM_ISSUING_AUTHORITY,
+            EudiwConstants.CLAIM_ISSUING_COUNTRY,
+            EudiwConstants.CLAIM_ISSUANCE_DATE,
+            EudiwConstants.CLAIM_EXPIRY_DATE,
+        )
 
     /**
      * Canonical VC `type` array for an EU PID issued as an SD-JWT VC.
      * The first element is always `"VerifiableCredential"` (W3C base type).
      */
-    val PID_VC_TYPES: List<String> = listOf(
-        "VerifiableCredential",
-        EudiwConstants.PID_VC_TYPE,
-    )
+    val PID_VC_TYPES: List<String> =
+        listOf(
+            "VerifiableCredential",
+            EudiwConstants.PID_VC_TYPE,
+        )
 
     /**
      * Canonical `@context` array for an EU PID issued as an SD-JWT VC.
      * The W3C VC 2.0 context is required; the status list context enables
      * RevocationList2020 / StatusList2021 entries.
      */
-    val PID_VC_CONTEXTS: List<String> = listOf(
-        EudiwConstants.EUDIW_CONTEXT,
-        "https://www.w3.org/ns/credentials/status/v1",
-    )
+    val PID_VC_CONTEXTS: List<String> =
+        listOf(
+            EudiwConstants.EUDIW_CONTEXT,
+            "https://www.w3.org/ns/credentials/status/v1",
+        )
 
     // -------------------------------------------------------------------------
     // Validation
@@ -63,12 +65,15 @@ object EuPidIssuanceProfile {
     /**
      * Validates that [claims] contains all mandatory EU PID claims.
      *
+     * A claim counts as missing when it is absent or is a blank string: an empty `family_name`
+     * satisfies the key check but not Annex V.
+     *
      * @param claims The flat claims map keyed by claim name (as returned by
      *   [EuPidCredential.toClaims] or assembled by an issuer).
      * @return A [ValidationResult] describing any missing required claims.
      */
     fun validateClaims(claims: Map<String, Any>): ValidationResult {
-        val missing = REQUIRED_CLAIMS.filter { it !in claims }
+        val missing = REQUIRED_CLAIMS.filter { name -> claims[name].let { it == null || (it is CharSequence && it.isBlank()) } }
         val violations = missing.map { "Required EU PID claim is missing: '$it'" }
         return ValidationResult(
             valid = missing.isEmpty(),

@@ -91,8 +91,26 @@ class Oidc4VciExchangeProtocol(
                 grants = grants ?: emptyMap(),
             )
 
-        // Convert OIDC4VCI offer to JSON
-        val offerJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(offer) as JsonObject
+        // The model classes are not @Serializable (grants is Map<String, Any?>), so the wire form
+        // is built explicitly.
+        val offerJson =
+            buildJsonObject {
+                put("offerId", offer.offerId)
+                put("credentialIssuer", offer.credentialIssuer)
+                put("credentialTypes", JsonArray(offer.credentialTypes.map { JsonPrimitive(it) }))
+                put("offerUri", offer.offerUri)
+                put("grants", anyToJson(offer.grants))
+                offer.txCode?.let { tx ->
+                    put(
+                        "txCode",
+                        buildJsonObject {
+                            put("input_mode", tx.inputMode)
+                            tx.length?.let { put("length", it) }
+                            tx.description?.let { put("description", it) }
+                        },
+                    )
+                }
+            }
 
         return ExchangeMessageEnvelope(
             protocolName = protocolName,
@@ -131,8 +149,19 @@ class Oidc4VciExchangeProtocol(
                 authorizationCode = authorizationCode,
             )
 
-        // Convert OIDC4VCI request to JSON
-        val requestJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(credentialRequest) as JsonObject
+        // The access token and tx_code are secrets and are deliberately NOT copied into the
+        // envelope; only whether they are present is reported.
+        val requestJson =
+            buildJsonObject {
+                put("requestId", credentialRequest.requestId)
+                put("holderDid", credentialRequest.holderDid)
+                put("offerId", credentialRequest.offerId)
+                put("credentialIssuer", credentialRequest.credentialIssuer)
+                put("credentialTypes", JsonArray(credentialRequest.credentialTypes.map { JsonPrimitive(it) }))
+                credentialRequest.redirectUri?.let { put("redirectUri", it) }
+                put("hasAccessToken", credentialRequest.accessToken != null)
+                put("hasTxCode", credentialRequest.txCodeValue != null)
+            }
 
         return ExchangeMessageEnvelope(
             protocolName = protocolName,
@@ -163,7 +192,7 @@ class Oidc4VciExchangeProtocol(
             )
 
         // Convert issue result to JSON
-        val issueJson = Json { ignoreUnknownKeys = true }.encodeToJsonElement(issueResult.credentialResponse) as JsonObject
+        val issueJson = anyToJson(issueResult.credentialResponse)
 
         val envelope =
             ExchangeMessageEnvelope(
@@ -212,3 +241,16 @@ class Oidc4VciExchangeProtocol(
                 ),
         )
 }
+
+/** Converts the loosely-typed maps the OID4VCI service returns into JSON, recursively. */
+private fun anyToJson(value: Any?): JsonElement =
+    when (value) {
+        null -> JsonNull
+        is JsonElement -> value
+        is String -> JsonPrimitive(value)
+        is Boolean -> JsonPrimitive(value)
+        is Number -> JsonPrimitive(value)
+        is Map<*, *> -> JsonObject(value.entries.associate { (k, v) -> k.toString() to anyToJson(v) })
+        is Iterable<*> -> JsonArray(value.map { anyToJson(it) })
+        else -> JsonPrimitive(value.toString())
+    }

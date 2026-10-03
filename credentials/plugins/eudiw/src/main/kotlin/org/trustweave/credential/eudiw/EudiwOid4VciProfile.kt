@@ -12,15 +12,16 @@ package org.trustweave.credential.eudiw
  * - OpenID for Verifiable Credential Issuance (OID4VCI) spec
  */
 object EudiwOid4VciProfile {
-
     /**
      * Credential formats mandated by EUDIW (ARF §6.3).
      * Issuers must support at least one; wallets must support both.
      */
-    val SUPPORTED_FORMATS: Set<String> = setOf(
-        EudiwConstants.CREDENTIAL_FORMAT_SD_JWT_VC,
-        EudiwConstants.CREDENTIAL_FORMAT_MSO_MDOC,
-    )
+    val SUPPORTED_FORMATS: Set<String> =
+        setOf(
+            EudiwConstants.CREDENTIAL_FORMAT_SD_JWT_VC,
+            EudiwConstants.CREDENTIAL_FORMAT_DC_SD_JWT,
+            EudiwConstants.CREDENTIAL_FORMAT_MSO_MDOC,
+        )
 
     /**
      * Proof types that wallets may use to prove possession of a key
@@ -38,23 +39,27 @@ object EudiwOid4VciProfile {
      * Maximum validity period for a Credential Offer (EUDIW ARF §6.3.2).
      * Offers older than this MUST be rejected by wallets.
      */
-    const val MAX_OFFER_VALIDITY_SECONDS: Long = 86400L  // 24 hours
+    const val MAX_OFFER_VALIDITY_SECONDS: Long = 86400L // 24 hours
 
     /**
      * Client authentication methods required when a wallet presents itself as a
      * client to a EUDIW-conformant Credential Issuer.
      */
-    val REQUIRED_CLIENT_AUTH_METHODS: Set<String> = setOf(
-        "attest_jwt_client_auth",
-        "private_key_jwt",
-    )
+    val REQUIRED_CLIENT_AUTH_METHODS: Set<String> =
+        setOf(
+            "attest_jwt_client_auth",
+            "private_key_jwt",
+        )
 
     // -------------------------------------------------------------------------
     // Validation
     // -------------------------------------------------------------------------
 
     /** Outcome of a profile validation check. */
-    data class ValidationResult(val valid: Boolean, val violations: List<String>)
+    data class ValidationResult(
+        val valid: Boolean,
+        val violations: List<String>,
+    )
 
     /**
      * Validates that a Credential Offer URI conforms to EUDIW constraints.
@@ -81,14 +86,15 @@ object EudiwOid4VciProfile {
      * @param format Credential format identifier, e.g. `"vc+sd-jwt"`.
      */
     fun validateFormat(format: String): ValidationResult {
-        val violations = if (format !in SUPPORTED_FORMATS) {
-            listOf(
-                "Format '$format' is not supported by the EUDIW profile. " +
-                    "Allowed formats: $SUPPORTED_FORMATS",
-            )
-        } else {
-            emptyList()
-        }
+        val violations =
+            if (format !in SUPPORTED_FORMATS) {
+                listOf(
+                    "Format '$format' is not supported by the EUDIW profile. " +
+                        "Allowed formats: $SUPPORTED_FORMATS",
+                )
+            } else {
+                emptyList()
+            }
         return ValidationResult(violations.isEmpty(), violations)
     }
 
@@ -98,14 +104,15 @@ object EudiwOid4VciProfile {
      * @param algorithm JWA algorithm identifier, e.g. `"ES256"`.
      */
     fun validateAlgorithm(algorithm: String): ValidationResult {
-        val violations = if (algorithm !in SUPPORTED_ALGORITHMS) {
-            listOf(
-                "Algorithm '$algorithm' is not in the EUDIW supported algorithm set. " +
-                    "Allowed algorithms: $SUPPORTED_ALGORITHMS",
-            )
-        } else {
-            emptyList()
-        }
+        val violations =
+            if (algorithm !in SUPPORTED_ALGORITHMS) {
+                listOf(
+                    "Algorithm '$algorithm' is not in the EUDIW supported algorithm set. " +
+                        "Allowed algorithms: $SUPPORTED_ALGORITHMS",
+                )
+            } else {
+                emptyList()
+            }
         return ValidationResult(violations.isEmpty(), violations)
     }
 }

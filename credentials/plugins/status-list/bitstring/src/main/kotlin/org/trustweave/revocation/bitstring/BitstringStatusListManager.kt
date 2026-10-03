@@ -93,6 +93,22 @@ import javax.sql.DataSource
  *   that is unknown locally is fetched, its proof verified and its bitstring decoded; any failure
  *   fails closed. When null (default), unknown status lists fail closed with
  *   `STATUS_LIST_UNAVAILABLE`.
+ *
+ * **Remote status lists — operational notes.**
+ * - *Enabling:* build a [RemoteStatusListResolver] (`RemoteStatusListResolver.create(credentialService)`
+ *   or the constructor with your own [StatusListCredentialVerifier]) and pass it here, to
+ *   [BitstringStatusListManagerFactory.create], or set `BitstringStatusListManagerProvider.remoteStatusLists`.
+ * - *Revocation latency:* verified remote lists are cached by the resolver (5 minutes by default,
+ *   or the list's own `ttl` if shorter), so a revocation at the remote issuer can take up to that
+ *   long to be observed here.
+ * - *Local shadows remote:* a status list row held in THIS manager's database is authoritative.
+ *   If a credential names an `https:` status list URL that also exists locally (same id), the local
+ *   row is used and the remote URL is never fetched. Whether an id is local is cached for a minute
+ *   per manager instance (created/deleted lists are reflected immediately on the same instance).
+ *
+ * **Index release.** [releaseStatusListIndex] returns an index that was allocated for a credential
+ * that was then never issued (e.g. signing failed). An index whose status was ever changed, or
+ * whose bit is set, is never released or reused.
  */
 class BitstringStatusListManager(
     private val dataSource: DataSource,
@@ -138,6 +154,9 @@ class BitstringStatusListManager(
          */
         private const val MAX_INDEX_ASSIGNMENT_RETRIES: Int = 5
 
+        private const val MAX_LOCAL_MEMBERSHIP_ENTRIES: Int = 1024
+        private const val LOCAL_MEMBERSHIP_TTL_NANOS: Long = 60_000_000_000L
+
         /**
          * Bits between cooperative-cancellation probes when encoding or decoding a bitstring.
          *
@@ -156,6 +175,9 @@ class BitstringStatusListManager(
     }
 
     private val logger = LoggerFactory.getLogger(BitstringStatusListManager::class.java)
+
+    /** status list id -> (held locally?, expiry in [System.nanoTime] terms); see [isLocalList]. */
+    private val localListMembership = java.util.concurrent.ConcurrentHashMap<String, Pair<Boolean, Long>>()
 
     init {
         require(bitsPerEntry == 1 || bitsPerEntry == 2) {
@@ -253,6 +275,32 @@ class BitstringStatusListManager(
                         """.trimIndent(),
                     ).execute()
 
+                // Free list of indices that were allocated but never issued (see releaseStatusListIndex).
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE TABLE IF NOT EXISTS bitstring_released_indices (
+                            status_list_id VARCHAR(255) NOT NULL,
+                            entry_index INT NOT NULL,
+                            released_at TIMESTAMP NOT NULL,
+                            PRIMARY KEY (status_list_id, entry_index)
+                        )
+                        """.trimIndent(),
+                    ).execute()
+
+                // Indices whose status was ever written. Such an index was demonstrably in use by an
+                // issued credential, so it can never be released for reuse, even if its bit is clear now.
+                conn
+                    .prepareStatement(
+                        """
+                        CREATE TABLE IF NOT EXISTS bitstring_touched_indices (
+                            status_list_id VARCHAR(255) NOT NULL,
+                            entry_index INT NOT NULL,
+                            PRIMARY KEY (status_list_id, entry_index)
+                        )
+                        """.trimIndent(),
+                    ).execute()
+
                 conn.commit()
             } catch (e: Exception) {
                 conn.rollback()
@@ -333,6 +381,7 @@ class BitstringStatusListManager(
                 }
             }
 
+            localListMembership.remove(id)
             StatusListId(id)
         }
 
@@ -547,6 +596,13 @@ class BitstringStatusListManager(
                                     setString(2, sid)
                                     setInt(3, index)
                                 }.executeUpdate()
+                            conn
+                                .prepareStatement(
+                                    "DELETE FROM bitstring_released_indices WHERE status_list_id = ? AND entry_index = ?",
+                                ).apply {
+                                    setString(1, sid)
+                                    setInt(2, index)
+                                }.executeUpdate()
                             index
                         } else {
                             insertNextAvailableIndex(credentialId, sid, row, conn)
@@ -593,6 +649,7 @@ class BitstringStatusListManager(
                         requireIndexInRange(entryIndex, lockedRow, statusListId)
                         val bitIndex = if (lockedRow.bitsPerEntry == 2) entryIndex * 2 else entryIndex
                         bitSet.set(bitIndex, true)
+                        markTouched(conn, statusListId.toString(), entryIndex)
                         results[credentialId] = true
                     }
 
@@ -661,6 +718,9 @@ class BitstringStatusListManager(
                 val bitSet = decodeBitSet(locked.encodedList)
 
                 for (update in updates) {
+                    if (update.revoked != null || update.suspended != null) {
+                        markTouched(conn, statusListId.toString(), update.index)
+                    }
                     if (row.bitsPerEntry == 2) {
                         update.revoked?.let { bitSet.set(update.index * 2, it) }
                         update.suspended?.let { bitSet.set(update.index * 2 + 1, it) }
@@ -793,6 +853,12 @@ class BitstringStatusListManager(
                 conn.autoCommit = false
                 try {
                     val id = statusListId.toString()
+                    for (table in listOf("bitstring_released_indices", "bitstring_touched_indices")) {
+                        conn
+                            .prepareStatement("DELETE FROM $table WHERE status_list_id = ?")
+                            .apply { setString(1, id) }
+                            .executeUpdate()
+                    }
                     conn
                         .prepareStatement(
                             "DELETE FROM bitstring_credential_indices WHERE status_list_id = ?",
@@ -810,12 +876,17 @@ class BitstringStatusListManager(
                             ).apply { setString(1, id) }
                             .executeUpdate() > 0
                     conn.commit()
+                    localListMembership.remove(id)
                     deleted
                 } catch (cancelled: CancellationException) {
                     throw cancelled
-                } catch (e: Exception) {
+                } catch (e: SQLException) {
                     conn.rollback()
-                    false
+                    logger.error("Failed to delete bitstring status list {}: {}", statusListId, e.message, e)
+                    throw TrustWeaveException.InvalidState(
+                        message = "Failed to delete bitstring status list $statusListId: ${e.message}",
+                        cause = e,
+                    )
                 }
             }
         }
@@ -1048,6 +1119,7 @@ class BitstringStatusListManager(
                 val entryIndex = getOrAssignIndex(credentialId, statusListId, lockedRow, conn)
                 requireIndexInRange(entryIndex, lockedRow, StatusListId(statusListId))
                 val bitSet = decodeBitSet(locked.encodedList)
+                markTouched(conn, statusListId, entryIndex)
 
                 if (row.bitsPerEntry == 2) {
                     revoked?.let { bitSet.set(entryIndex * 2, it) }
@@ -1082,6 +1154,121 @@ class BitstringStatusListManager(
             }
         }
     }
+
+    /** Records that [index]'s status was written, which permanently bars it from release. */
+    private fun markTouched(
+        conn: Connection,
+        statusListId: String,
+        index: Int,
+    ) {
+        val exists =
+            conn
+                .prepareStatement(
+                    "SELECT 1 FROM bitstring_touched_indices WHERE status_list_id = ? AND entry_index = ?",
+                ).apply {
+                    setString(1, statusListId)
+                    setInt(2, index)
+                }.executeQuery()
+                .next()
+        if (exists) return
+        conn
+            .prepareStatement("INSERT INTO bitstring_touched_indices (status_list_id, entry_index) VALUES (?, ?)")
+            .apply {
+                setString(1, statusListId)
+                setInt(2, index)
+            }.executeUpdate()
+    }
+
+    /**
+     * Release an index allocated for a credential that was never issued.
+     *
+     * Releases only when ALL hold, checked under the list and counter row locks:
+     * the index is currently bound to a credential; its status was never written
+     * (no revoke/suspend/unrevoke/unsuspend, batch or otherwise, ever touched it);
+     * and its bit(s) are clear. On success the binding is removed and the index goes
+     * on a free list that the next allocation consumes before advancing the counter.
+     * Anything else (unknown list, unallocated, out of range, ever-touched, bit set)
+     * returns `false` and changes nothing.
+     */
+    override suspend fun releaseStatusListIndex(
+        statusListId: StatusListId,
+        index: Int,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            val id = statusListId.toString()
+            val row = loadStatusListRow(id) ?: return@withContext false
+            if (index < 0 || index >= row.size / row.bitsPerEntry) return@withContext false
+
+            dataSource.connection.use { conn ->
+                conn.autoCommit = false
+                try {
+                    val locked = lockAndReadStatusList(id, conn)
+                    // Same lock order as updateCredentialStatus (list row, then counter row); the
+                    // counter row lock also fences concurrent allocators.
+                    conn
+                        .prepareStatement("SELECT next_index FROM bitstring_next_index WHERE status_list_id = ? FOR UPDATE")
+                        .apply { setString(1, id) }
+                        .executeQuery()
+                        .next()
+
+                    val bound =
+                        conn
+                            .prepareStatement(
+                                "SELECT 1 FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
+                            ).apply {
+                                setString(1, id)
+                                setInt(2, index)
+                            }.executeQuery()
+                            .next()
+                    val touched =
+                        conn
+                            .prepareStatement(
+                                "SELECT 1 FROM bitstring_touched_indices WHERE status_list_id = ? AND entry_index = ?",
+                            ).apply {
+                                setString(1, id)
+                                setInt(2, index)
+                            }.executeQuery()
+                            .next()
+                    if (!bound || touched) {
+                        conn.rollback()
+                        return@withContext false
+                    }
+                    val bits = decodeBitSet(locked.encodedList)
+                    val anySet = (0 until row.bitsPerEntry).any { bits.get(index * row.bitsPerEntry + it) }
+                    if (anySet) {
+                        conn.rollback()
+                        return@withContext false
+                    }
+
+                    conn
+                        .prepareStatement(
+                            "DELETE FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
+                        ).apply {
+                            setString(1, id)
+                            setInt(2, index)
+                        }.executeUpdate()
+                    conn
+                        .prepareStatement(
+                            "INSERT INTO bitstring_released_indices (status_list_id, entry_index, released_at) VALUES (?, ?, ?)",
+                        ).apply {
+                            setString(1, id)
+                            setInt(2, index)
+                            setTimestamp(3, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                        }.executeUpdate()
+                    conn.commit()
+                    true
+                } catch (cancelled: CancellationException) {
+                    conn.rollback()
+                    throw cancelled
+                } catch (e: SQLException) {
+                    conn.rollback()
+                    throw TrustWeaveException.InvalidState(
+                        message = "Failed to release index $index of bitstring status list $statusListId: ${e.message}",
+                        cause = e,
+                    )
+                }
+            }
+        }
 
     private fun getOrAssignIndex(
         credentialId: String,
@@ -1169,7 +1356,30 @@ class BitstringStatusListManager(
                     setString(1, statusListId)
                 }.executeQuery()
 
-        val next = if (rs.next()) rs.getInt("next_index") else 0
+        val counterRowExists = rs.next()
+        val next = if (counterRowExists) rs.getInt("next_index") else 0
+
+        // Prefer an index released because its credential was never issued. The counter row lock
+        // taken above serializes concurrent allocators, so the delete below claims it exactly once.
+        if (counterRowExists) {
+            val released =
+                conn
+                    .prepareStatement(
+                        "SELECT MIN(entry_index) AS idx FROM bitstring_released_indices WHERE status_list_id = ?",
+                    ).apply { setString(1, statusListId) }
+                    .executeQuery()
+                    .let { r -> if (r.next()) r.getInt("idx").takeUnless { r.wasNull() } else null }
+            if (released != null) {
+                conn
+                    .prepareStatement(
+                        "DELETE FROM bitstring_released_indices WHERE status_list_id = ? AND entry_index = ?",
+                    ).apply {
+                        setString(1, statusListId)
+                        setInt(2, released)
+                    }.executeUpdate()
+                return released
+            }
+        }
 
         // UPDATE-then-INSERT rather than an upsert: `MERGE ... KEY (...)` is H2-only and is a
         // syntax error on PostgreSQL ("syntax error at or near \"(\""), while `ON CONFLICT` and
@@ -1358,7 +1568,17 @@ class BitstringStatusListManager(
     /** A status list is resolved remotely when it is not held locally and is an https URL. */
     private fun isRemoteCandidate(statusListId: StatusListId): Boolean {
         val id = statusListId.toString()
-        return id.startsWith("https://", ignoreCase = true) && loadStatusListRow(id) == null
+        return id.startsWith("https://", ignoreCase = true) && !isLocalList(id)
+    }
+
+    /** Local-row membership with a short TTL, so a remote status check does not cost a DB hit. */
+    private fun isLocalList(id: String): Boolean {
+        val now = System.nanoTime()
+        localListMembership[id]?.let { (local, expiresAt) -> if (now - expiresAt < 0) return local }
+        val local = loadStatusListRow(id) != null
+        if (localListMembership.size >= MAX_LOCAL_MEMBERSHIP_ENTRIES) localListMembership.clear()
+        localListMembership[id] = local to (now + LOCAL_MEMBERSHIP_TTL_NANOS)
+        return local
     }
 
     private suspend fun checkRemote(

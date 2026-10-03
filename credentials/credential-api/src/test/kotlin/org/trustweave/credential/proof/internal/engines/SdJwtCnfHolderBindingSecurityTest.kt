@@ -181,7 +181,7 @@ class SdJwtCnfHolderBindingSecurityTest {
             val keyId = verificationMethodId.substringAfter("#")
             val header =
                 b64.encodeToString(
-                    """{"alg":"EdDSA","kid":"$keyId"}""".toByteArray(Charsets.UTF_8),
+                    """{"typ":"dc+sd-jwt","alg":"EdDSA","kid":"$keyId"}""".toByteArray(Charsets.UTF_8),
                 )
             val sdArray = sdHashes.joinToString(",") { "\"$it\"" }
             val payload =

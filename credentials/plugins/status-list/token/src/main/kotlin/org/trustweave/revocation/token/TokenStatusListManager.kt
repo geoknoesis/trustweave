@@ -13,7 +13,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
+import org.trustweave.core.exception.ConfigException
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -22,9 +24,10 @@ import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.revocation.StatusListMetadata
 import org.trustweave.credential.revocation.StatusListStatistics
 import org.trustweave.credential.revocation.StatusUpdate
+import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import java.sql.Connection
 import java.sql.Timestamp
@@ -64,6 +67,21 @@ import javax.sql.DataSource
  *
  * **Storage:** Three SQL tables (`token_status_lists`, `token_credential_indices`,
  * `token_next_index`) are created on construction if absent.
+ *
+ * **Signing:** the token is signed with the issuer's real key, [issuerKeyId] (a verification
+ * method published in the issuer's DID document, held in [kms]); that id is the JWT `kid`. With no
+ * [issuerKeyId], [buildStatusListToken] fails with a [ConfigException]: a token signed by a key
+ * nobody can resolve verifies for no one, so none is ever fabricated.
+ *
+ * **Fail-closed semantics** (as in the Bitstring manager): a status lookup against an unknown
+ * status list, an out-of-range index, or a credential whose index cannot be determined throws
+ * instead of reporting "not revoked".
+ *
+ * Note: `lst` is the raw bit array in base64url, LSB-first, uncompressed. The IETF draft's final
+ * form requires ZLIB (DEFLATE) compression, which this class does not apply; do not hand these
+ * tokens to a strict third-party verifier without checking that interoperability.
+ *
+ * @param issuerKeyId Issuer verification method used to sign tokens (`kid`)
  */
 class TokenStatusListManager(
     private val dataSource: DataSource,
@@ -71,7 +89,17 @@ class TokenStatusListManager(
     private val issuerDid: String,
     private val statusListUri: String,
     private val bitsPerEntry: Int = 1,
+    private val issuerKeyId: VerificationMethodId? = null,
 ) : CredentialRevocationManager {
+    /** Binary-compatible constructor from before [issuerKeyId] existed. */
+    constructor(
+        dataSource: DataSource,
+        kms: KeyManagementService,
+        issuerDid: String,
+        statusListUri: String,
+        bitsPerEntry: Int,
+    ) : this(dataSource, kms, issuerDid, statusListUri, bitsPerEntry, null)
+
     private val logger = LoggerFactory.getLogger(TokenStatusListManager::class.java)
 
     init {
@@ -247,22 +275,19 @@ class TokenStatusListManager(
                 credential.credentialStatus
                     ?: return@withContext RevocationStatus(revoked = false, suspended = false)
 
+            // Fail closed: once a credential declares a status entry, an undeterminable index
+            // must surface as an error, never as "valid".
             val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
             val index =
                 credentialStatus.statusListIndex?.toIntOrNull()
-                    ?: getCredentialIndex(
-                        credential.id?.toString()
-                            ?: return@withContext RevocationStatus(
-                                revoked = false,
-                                suspended = false,
-                                statusListId = statusListId,
-                            ),
-                        statusListId,
-                    )
-                    ?: return@withContext RevocationStatus(
-                        revoked = false,
-                        suspended = false,
-                        statusListId = statusListId,
+                    ?: credential.id?.toString()?.let { getCredentialIndex(it, statusListId) }
+                    ?: throw TrustWeaveException.InvalidState(
+                        code = "STATUS_LIST_INDEX_UNKNOWN",
+                        message =
+                            "Credential declares a status entry in status list $statusListId but its " +
+                                "status list index cannot be determined; failing closed instead of reporting " +
+                                "a valid status",
+                        context = mapOf("statusListId" to statusListId.toString()),
                     )
 
             checkStatusByIndex(statusListId, index)
@@ -273,13 +298,15 @@ class TokenStatusListManager(
         index: Int,
     ): RevocationStatus =
         withContext(Dispatchers.IO) {
-            val row =
-                loadRow(statusListId.toString())
-                    ?: return@withContext RevocationStatus(
-                        revoked = false,
-                        suspended = false,
-                        statusListId = statusListId,
-                    )
+            val row = loadRow(statusListId.toString()) ?: throw statusListUnavailable(statusListId)
+
+            if (index < 0 || index >= row.size) {
+                throw TrustWeaveException.InvalidOperation(
+                    code = "RANGE_ERROR",
+                    message = "Status list index $index is out of range [0, ${row.size - 1}] for status list $statusListId",
+                    context = mapOf("statusListId" to statusListId.toString(), "index" to index, "capacity" to row.size),
+                )
+            }
 
             val purpose = parsePurpose(row.purpose)
             val (revoked, suspended) = readBits(row.statusArray, index, purpose)
@@ -297,15 +324,24 @@ class TokenStatusListManager(
         statusListId: StatusListId,
     ): RevocationStatus =
         withContext(Dispatchers.IO) {
+            if (loadRow(statusListId.toString()) == null) throw statusListUnavailable(statusListId)
+            // Fail closed: without an index assignment the status cannot be determined.
             val index =
                 getCredentialIndex(credentialId, statusListId)
-                    ?: return@withContext RevocationStatus(
-                        revoked = false,
-                        suspended = false,
-                        statusListId = statusListId,
+                    ?: throw TrustWeaveException.NotFound(
+                        resource = "status list index for credential '$credentialId' in status list '$statusListId'",
                     )
             checkStatusByIndex(statusListId, index)
         }
+
+    private fun statusListUnavailable(statusListId: StatusListId): TrustWeaveException =
+        TrustWeaveException.InvalidState(
+            code = "STATUS_LIST_UNAVAILABLE",
+            message =
+                "Status list $statusListId could not be retrieved (unknown to this manager). " +
+                    "Failing closed: credential status is unknown, not valid.",
+            context = mapOf("statusListId" to statusListId.toString()),
+        )
 
     override suspend fun getCredentialIndex(
         credentialId: String,
@@ -678,27 +714,49 @@ class TokenStatusListManager(
                 }
             val payloadJson = json.encodeToString(JsonObject.serializer(), payloadObj)
 
-            // Generate a signing key and sign
-            val keyResult = kms.generateKey(Algorithm.Ed25519)
-            val keyHandle =
-                when (keyResult) {
-                    is GenerateKeyResult.Success -> keyResult.keyHandle
-                    else -> throw RuntimeException("Failed to generate signing key for token status list")
-                }
+            val signingKey =
+                issuerKeyId ?: throw ConfigException.InvalidFormat(
+                    parseError =
+                        "No issuer signing key configured for token status lists. Provide the issuer's " +
+                            "verification method ID (issuerKeyId) when constructing TokenStatusListManager; " +
+                            "tokens are never signed with fabricated keys.",
+                    field = "issuerKeyId",
+                )
+            if (signingKey.did.value != row.issuerDid) {
+                throw ConfigException.InvalidFormat(
+                    parseError =
+                        "Configured issuerKeyId belongs to '${signingKey.did.value}' but the status list is " +
+                            "issued by '${row.issuerDid}'; refusing to sign.",
+                    field = "issuerKeyId",
+                )
+            }
+            val kmsKeyId = KeyId(signingKey.keyId.value.removePrefix("#"))
+            val publicKey = kms.getPublicKey(kmsKeyId)
+            if (publicKey !is GetPublicKeyResult.Success || publicKey.keyHandle.algorithm != Algorithm.Ed25519.name) {
+                throw ConfigException.InvalidFormat(
+                    parseError =
+                        "Issuer signing key '${signingKey.value}' must be an Ed25519 key present in the " +
+                            "configured KMS to sign token status lists (got: $publicKey).",
+                    field = "issuerKeyId",
+                )
+            }
 
-            val jwsAlgorithm = JWSAlgorithm.EdDSA
             val header =
                 JWSHeader
-                    .Builder(jwsAlgorithm)
+                    .Builder(JWSAlgorithm.EdDSA)
                     .type(com.nimbusds.jose.JOSEObjectType("statuslist+jwt"))
+                    .keyID(signingKey.value)
                     .build()
 
             val signingInput = "${header.toBase64URL()}.${Base64URL.encode(payloadJson)}"
-            val signResult = kms.sign(keyHandle.id, signingInput.toByteArray(Charsets.US_ASCII))
+            val signResult = kms.sign(kmsKeyId, signingInput.toByteArray(Charsets.US_ASCII))
             val rawSignature =
                 when (signResult) {
                     is SignResult.Success -> signResult.signature
-                    else -> throw RuntimeException("Failed to sign token status list JWT")
+                    else ->
+                        throw TrustWeaveException.InvalidState(
+                            message = "Failed to sign token status list JWT with '${signingKey.value}': $signResult",
+                        )
                 }
 
             val signatureB64 =
@@ -982,12 +1040,11 @@ class TokenStatusListManager(
         try {
             StatusPurpose.valueOf(value.uppercase())
         } catch (e: IllegalArgumentException) {
-            logger.warn(
-                "Unknown stored status purpose '{}'; defaulting to {}",
-                value,
-                StatusPurpose.REVOCATION,
+            throw TrustWeaveException.InvalidState(
+                code = "STATUS_LIST_CORRUPT",
+                message = "Stored status purpose '$value' is not recognised; failing closed",
+                cause = e,
             )
-            StatusPurpose.REVOCATION
         }
 
     private fun Timestamp.toKotlinInstant(): Instant = Instant.fromEpochMilliseconds(this.time)

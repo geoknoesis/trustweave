@@ -21,7 +21,6 @@ import javax.sql.DataSource
  * ```
  */
 object BitstringStatusListManagerFactory {
-
     /**
      * Create a new [BitstringStatusListManager].
      *
@@ -36,6 +35,9 @@ object BitstringStatusListManagerFactory {
      *   `credentialSubject.id` becomes `"<baseUrl>/<statusListId>"`, otherwise it defaults to
      *   `"urn:uuid:<statusListId>"`. Either way the id is an absolute IRI so the subject's
      *   triples are covered by the proof signature.
+     * @param remoteStatusLists Optional [RemoteStatusListResolver] enabling verified resolution of
+     *   status lists published by other issuers (`RemoteStatusListResolver.create(credentialService)`).
+     *   Without it, a status list unknown locally fails closed.
      * @return Configured [BitstringStatusListManager]
      */
     fun create(
@@ -45,14 +47,17 @@ object BitstringStatusListManagerFactory {
         bitsPerEntry: Int = 1,
         proofEngine: ProofEngine? = null,
         issuerKeyId: VerificationMethodId? = null,
-        baseUrl: String? = null
-    ): BitstringStatusListManager = BitstringStatusListManager(
-        dataSource = dataSource,
-        kms = kms,
-        issuerDid = issuerDid,
-        bitsPerEntry = bitsPerEntry,
-        proofEngine = proofEngine,
-        issuerKeyId = issuerKeyId,
-        baseUrl = baseUrl
-    )
+        baseUrl: String? = null,
+        remoteStatusLists: RemoteStatusListResolver? = null,
+    ): BitstringStatusListManager =
+        BitstringStatusListManager(
+            dataSource = dataSource,
+            kms = kms,
+            issuerDid = issuerDid,
+            bitsPerEntry = bitsPerEntry,
+            proofEngine = proofEngine,
+            issuerKeyId = issuerKeyId,
+            baseUrl = baseUrl,
+            remoteStatusLists = remoteStatusLists,
+        )
 }

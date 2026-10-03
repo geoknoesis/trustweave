@@ -261,6 +261,50 @@ class BitstringStatusChecker(
 Register the adapter under the `"statusChecker"` key in
 `ProofEngineConfig.properties` so the surrounding proof engine consults it during verification.
 
+## Remote status lists (other issuers' lists)
+
+By default a status list this manager does not hold locally **fails closed** (`STATUS_LIST_UNAVAILABLE`):
+the credential's status is unknown, never "valid". To check credentials whose `statusListCredential` is an
+`https:` URL published by another issuer, hand the manager a `RemoteStatusListResolver`:
+
+```kotlin
+val resolver = RemoteStatusListResolver.create(credentialService)   // verifies via credentialService.verify(checkRevocation = false)
+
+val manager = BitstringStatusListManagerFactory.create(
+    dataSource = dataSource,
+    kms = kms,
+    issuerDid = issuerDid,
+    remoteStatusLists = resolver,
+)
+// or: BitstringStatusListManagerProvider().apply { this.kms = kms; remoteStatusLists = resolver }
+```
+
+What the resolver enforces (every failure is a typed `STATUS_LIST_*` error, so the check fails closed):
+
+- **Fetch:** `https:` only, no user-info, no redirects, no proxy; every address the host resolves to must be public
+  (loopback, RFC 1918, ULA, link-local incl. cloud metadata, CGNAT, TEST-NET, NAT64/6to4-embedded private addresses
+  are refused) and **the connection is pinned to those vetted addresses**, so DNS rebinding cannot swap in an
+  internal one. The body is capped at 2 MiB and the decoded bitstring at 16 MiB.
+- **Authenticity:** the status list credential's proof is verified (by your `StatusListCredentialVerifier`, or the
+  `CredentialService` adapter above); its `id` must be present and equal the URL it was fetched from; its issuer must
+  equal the issuer of the credential being checked; the `statusPurpose` must match the entry's.
+- **Caching and latency:** verified lists are cached for 5 minutes (or the list's own `ttl` if shorter), so **a
+  revocation at the remote issuer can take up to that long to be seen here**; tune `cacheTtl` for your risk. Failed
+  fetches are negative-cached for 30 s. Concurrent misses for one URL are fetched and verified once.
+- **Local rows win:** if a status list with the same id exists in this manager's own database, it is used and the
+  remote URL is never fetched. Whether an id is local is cached for 1 minute per manager instance.
+
+Pass your own `StatusListCredentialFetcher` to the resolver to route fetches through a different transport
+(for example an egress proxy you control); its SSRF protection is then yours.
+
+## Releasing a never-issued index
+
+`releaseStatusListIndex(statusListId, index)` returns an index that was allocated (`assignCredentialIndex`) for a
+credential that was then **never issued** (signing failed, delivery aborted) so capacity is not leaked. It returns
+`true` only when the index is bound, its status has never been written (not even revoke-then-restore, including via
+batch updates) and its bit is clear; the freed index is handed out again before the counter advances. Any index that
+may have reached a holder is never released. `false` means "stays allocated".
+
 ## Limitations
 
 - `buildStatusListVc` generates a fresh Ed25519 key via the configured `KeyManagementService` on

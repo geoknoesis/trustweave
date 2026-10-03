@@ -22,12 +22,15 @@ public final class org/trustweave/registry/InMemoryTrustRegistry : org/trustweav
 	public fun getIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun listCredentialTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listIssuers (Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun listIssuers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun registerIssuer (Lorg/trustweave/registry/IssuerRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun registerVerifier (Lorg/trustweave/registry/VerifierRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun revokeIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun revokeVerifier (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun statusHistory (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun updateIssuer (Ljava/lang/String;Lorg/trustweave/registry/IssuerUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun updateVerifier (Ljava/lang/String;Lorg/trustweave/registry/VerifierUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -160,6 +163,19 @@ public final class org/trustweave/registry/ParticipantAlreadyRegisteredException
 	public final fun getRole ()Ljava/lang/String;
 }
 
+public final class org/trustweave/registry/ParticipantRole : java/lang/Enum {
+	public static final field Companion Lorg/trustweave/registry/ParticipantRole$Companion;
+	public static final field ISSUER Lorg/trustweave/registry/ParticipantRole;
+	public static final field VERIFIER Lorg/trustweave/registry/ParticipantRole;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/registry/ParticipantRole;
+	public static fun values ()[Lorg/trustweave/registry/ParticipantRole;
+}
+
+public final class org/trustweave/registry/ParticipantRole$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class org/trustweave/registry/RegistryFilter {
 	public static final field Companion Lorg/trustweave/registry/RegistryFilter$Companion;
 	public fun <init> ()V
@@ -193,6 +209,44 @@ public final class org/trustweave/registry/RegistryFilter$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class org/trustweave/registry/StatusChange {
+	public static final field Companion Lorg/trustweave/registry/StatusChange$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/trustweave/registry/ParticipantRole;
+	public final fun component3 ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun component4 ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/registry/StatusChange;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/StatusChange;Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/registry/StatusChange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChangedAt ()Lkotlinx/datetime/Instant;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getFrom ()Lorg/trustweave/registry/AccreditationStatus;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getRole ()Lorg/trustweave/registry/ParticipantRole;
+	public final fun getTo ()Lorg/trustweave/registry/AccreditationStatus;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class org/trustweave/registry/StatusChange$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lorg/trustweave/registry/StatusChange$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lorg/trustweave/registry/StatusChange;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lorg/trustweave/registry/StatusChange;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class org/trustweave/registry/StatusChange$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public abstract interface class org/trustweave/registry/TrustRegistry {
 	public abstract fun activateIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun activateVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -200,8 +254,10 @@ public abstract interface class org/trustweave/registry/TrustRegistry {
 	public abstract fun getIssuer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getVerifier (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun listCredentialTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listIssuers (Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun listIssuers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listIssuers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun listVerifiers (Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listVerifiers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun registerIssuer (Lorg/trustweave/registry/IssuerRegistration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -210,15 +266,23 @@ public abstract interface class org/trustweave/registry/TrustRegistry {
 	public static synthetic fun revokeIssuer$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun revokeVerifier (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun revokeVerifier$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun statusHistory (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateIssuer (Ljava/lang/String;Lorg/trustweave/registry/IssuerUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateVerifier (Ljava/lang/String;Lorg/trustweave/registry/VerifierUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/trustweave/registry/TrustRegistry$DefaultImpls {
+	public static fun listIssuers (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listIssuers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun listVerifiers (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;IILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun listVerifiers$default (Lorg/trustweave/registry/TrustRegistry;Lorg/trustweave/registry/RegistryFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun revokeIssuer$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun revokeVerifier$default (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun statusHistory (Lorg/trustweave/registry/TrustRegistry;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/registry/TrustRegistryKt {
+	public static final fun requirePage (II)V
 }
 
 public abstract interface class org/trustweave/registry/TrustRegistryProvider {

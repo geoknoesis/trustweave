@@ -2,6 +2,7 @@ package org.trustweave.credential.didcomm
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.packing.DidCommPacker
 import org.trustweave.credential.didcomm.storage.DidCommMessageStorage
@@ -27,13 +28,16 @@ class DatabaseDidCommService
         private val resolveDid: suspend (String) -> DidDocument?,
         private val storage: DidCommMessageStorage,
         /**
-         * Where accepted message ids are remembered for replay protection. The in-memory default
-         * is per-process; supply a durable [DidCommReplayStore] to keep the guarantee across
-         * restarts and replicas.
+         * Where accepted message ids are remembered for replay protection. When omitted, the
+         * storage's own durable store is used ([DidCommMessageStorage.replayStore], e.g. a table in
+         * the same PostgreSQL database), which survives restarts and is shared by all replicas. Only
+         * a storage that offers none (e.g. MongoDB) falls back to a per-process
+         * [InMemoryDidCommReplayStore], with a warning: that guarantee does not hold across restarts
+         * or replicas, so supply a shared [DidCommReplayStore] there.
          */
-        replayStore: DidCommReplayStore = InMemoryDidCommReplayStore(),
+        replayStore: DidCommReplayStore? = null,
     ) : DidCommService {
-        private val receiveGuards = DidCommReceiveGuards(replayStore)
+        private val receiveGuards = DidCommReceiveGuards(replayStore ?: defaultReplayStore(storage))
 
         override suspend fun sendMessage(
             message: DidCommMessage,
@@ -97,4 +101,18 @@ class DatabaseDidCommService
         override suspend fun getMessagesForDid(did: String): List<DidCommMessage> = storage.getMessagesForDid(did)
 
         override suspend fun getThreadMessages(thid: String): List<DidCommMessage> = storage.getThreadMessages(thid)
+
+        private companion object {
+            private val logger = LoggerFactory.getLogger(DatabaseDidCommService::class.java)
+
+            fun defaultReplayStore(storage: DidCommMessageStorage): DidCommReplayStore =
+                storage.replayStore()
+                    ?: InMemoryDidCommReplayStore().also {
+                        logger.warn(
+                            "{} offers no durable replay store; DIDComm replay protection is per-process and is lost on " +
+                                "restart / not shared between replicas. Pass a DatabaseDidCommReplayStore explicitly.",
+                            storage::class.java.simpleName,
+                        )
+                    }
+        }
     }

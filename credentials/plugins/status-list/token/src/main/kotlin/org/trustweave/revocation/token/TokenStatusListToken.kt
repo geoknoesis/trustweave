@@ -10,5 +10,5 @@ package org.trustweave.revocation.token
 data class TokenStatusListToken(
     val jwt: String,
     val statusListId: String,
-    val uri: String
+    val uri: String,
 )

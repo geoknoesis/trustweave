@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.hikaricp)
 
     implementation(libs.nimbus.jose.jwt)
+    implementation(libs.okhttp)
 
     // Logging
     implementation(libs.slf4j.api)

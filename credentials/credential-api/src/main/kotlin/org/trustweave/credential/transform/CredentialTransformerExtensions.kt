@@ -105,6 +105,12 @@ suspend fun VerifiableCredential.toCbor(): ByteArray = defaultTransformer.toCbor
 suspend fun String.fromJwt(): VerifiableCredential = defaultTransformer.fromJwt(this)
 
 /**
+ * Convert JWT string to credential, accepting unsecured (`alg: none`) JWTs only when
+ * [allowUnsecured] is `true`.
+ */
+suspend fun String.fromJwt(allowUnsecured: Boolean): VerifiableCredential = defaultTransformer.fromJwt(this, allowUnsecured)
+
+/**
  * Convert JSON-LD object to credential.
  *
  * Parses a JSON-LD object and converts it to a VerifiableCredential.
@@ -161,7 +167,7 @@ suspend fun ByteArray.fromCbor(): VerifiableCredential = defaultTransformer.from
  *
  * @return Credential recovered from JWT transformation
  */
-suspend fun VerifiableCredential.roundTripJwt(): VerifiableCredential = this.toJwt().fromJwt()
+suspend fun VerifiableCredential.roundTripJwt(): VerifiableCredential = defaultTransformer.fromJwt(this.toJwt(), allowUnsecured = true)
 
 /**
  * Round-trip transformation: credential -> CBOR -> credential.

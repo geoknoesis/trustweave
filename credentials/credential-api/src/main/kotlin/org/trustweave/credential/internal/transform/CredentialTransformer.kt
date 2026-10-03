@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
-import kotlinx.serialization.json.Json
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -24,7 +25,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
-import kotlinx.serialization.serializer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.spi.transform.CredentialFormatConverter
 import java.time.Instant as JavaInstant
@@ -102,8 +102,13 @@ class CredentialTransformer : CredentialFormatConverter {
      * Creates a JWT with the credential in the 'vc' claim.
      * Note: This creates an unsigned JWT. For signed JWTs, use CredentialService.issue().
      *
+     * The result is an *unsecured* JWT (`alg: none`); reading it back requires
+     * [fromJwt] with `allowUnsecured = true`.
+     *
      * @param credential Credential to convert
      * @return JWT string (unsigned)
+     * @throws IllegalStateException if the credential cannot be encoded as JWT claims. The method
+     *         never falls back to another representation.
      */
     override suspend fun toJwt(credential: VerifiableCredential): String {
         try {
@@ -144,8 +149,7 @@ class CredentialTransformer : CredentialFormatConverter {
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (e: Exception) {
-            // Fallback to JSON representation on any error
-            return json.encodeToString(serializer(), credential)
+            throw IllegalStateException("Failed to encode credential as JWT: ${e.message}", e)
         }
     }
 
@@ -197,43 +201,57 @@ class CredentialTransformer : CredentialFormatConverter {
      * @return Verifiable credential
      * @see org.trustweave.credential.internal.transform.fromJwt Extension function
      */
-    override suspend fun fromJwt(jwt: String): VerifiableCredential {
-        try {
-            // Use nimbus-jose-jwt library directly (it's a required dependency)
-            // Try parsing as SignedJWT first, then PlainJWT
-            val jwtObject =
-                try {
-                    SignedJWT.parse(jwt)
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (e: Exception) {
-                    // Try PlainJWT
-                    PlainJWT.parse(jwt)
-                }
+    override suspend fun fromJwt(jwt: String): VerifiableCredential = fromJwt(jwt, allowUnsecured = false)
 
-            // Get claims set
-            val claimsSet = jwtObject.jwtClaimsSet
-
-            // Get vc claim
-            val vcClaim = claimsSet.getClaim("vc")
-
-            if (vcClaim == null) {
-                throw IllegalArgumentException("JWT does not contain 'vc' claim")
+    /**
+     * Convert JWT to credential.
+     *
+     * Parses a JWS-secured JWT and extracts the credential from the `vc` claim. The signature is
+     * **not** verified here — use `CredentialService.verify()` for that.
+     *
+     * Unsecured JWTs (`alg: none`, such as the output of [toJwt]) are rejected unless
+     * [allowUnsecured] is `true`. Input that is not a JWT at all is rejected; there is no
+     * fallback to parsing raw JSON.
+     *
+     * @throws IllegalArgumentException if the input is not a JWT, is unsecured without opt-in,
+     *         or carries no valid `vc` claim.
+     */
+    suspend fun fromJwt(
+        jwt: String,
+        allowUnsecured: Boolean,
+    ): VerifiableCredential {
+        val parsed =
+            try {
+                JWTParser.parse(jwt)
+            } catch (e: java.text.ParseException) {
+                throw IllegalArgumentException("Input is not a JWT: ${e.message}", e)
             }
+        when (parsed) {
+            is SignedJWT -> Unit
+            is PlainJWT ->
+                if (!allowUnsecured) {
+                    throw IllegalArgumentException(
+                        "Refusing unsecured JWT (alg: none); pass allowUnsecured = true to read one explicitly",
+                    )
+                }
+            else -> throw IllegalArgumentException("Unsupported JWT type: ${parsed::class.simpleName}")
+        }
+        val claimsSet =
+            try {
+                parsed.jwtClaimsSet
+            } catch (e: java.text.ParseException) {
+                throw IllegalArgumentException("JWT payload is not a valid claims set: ${e.message}", e)
+            }
+        val vcMap =
+            claimsSet.getClaim("vc") as? Map<*, *>
+                ?: throw IllegalArgumentException("JWT does not contain a 'vc' object claim")
 
-            // Convert claim to JsonObject
-            val vcMap = vcClaim as? Map<*, *> ?: throw IllegalArgumentException("'vc' claim is not a valid object")
-
-            @Suppress("UNCHECKED_CAST")
-            val vcJson = mapToJsonObject(vcMap as Map<String, Any?>)
-
-            // Parse as VerifiableCredential
-            return json.decodeFromJsonElement<VerifiableCredential>(vcJson)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            // Fallback: try parsing as JSON
-            return json.decodeFromString<VerifiableCredential>(jwt)
+        @Suppress("UNCHECKED_CAST")
+        val vcJson = mapToJsonObject(vcMap as Map<String, Any?>)
+        return try {
+            json.decodeFromJsonElement<VerifiableCredential>(vcJson)
+        } catch (e: kotlinx.serialization.SerializationException) {
+            throw IllegalArgumentException("'vc' claim is not a valid credential: ${e.message}", e)
         }
     }
 

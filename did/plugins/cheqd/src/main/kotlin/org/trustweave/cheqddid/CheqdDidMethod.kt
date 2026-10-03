@@ -144,7 +144,7 @@ class CheqdDidMethod(
                     return@withContext resolveFromBlockchain(didString, txHash)
                 }
 
-                val resolved =
+                val apiResolution =
                     resolveFromCheqdApi(didString)
                         ?: return@withContext DidMethodUtils.createErrorResolutionResult(
                             "notFound",
@@ -156,6 +156,16 @@ class CheqdDidMethod(
                             method,
                             didString,
                         )
+                val resolved = apiResolution.document
+                if (apiResolution.deactivated) {
+                    // The network says this DID is deactivated: report that, and do not cache the
+                    // document as if it were live.
+                    return@withContext DidMethodUtils.createSuccessResolutionResult(
+                        resolved,
+                        method,
+                        deactivated = true,
+                    )
+                }
                 storeDocument(resolved.id.value, resolved)
                 DidMethodUtils.createSuccessResolutionResult(resolved, method, retrieved = getLastFetched(did))
             } catch (e: TrustWeaveException.NotFound) {
@@ -245,6 +255,16 @@ class CheqdDidMethod(
                 // Deactivate on Cheqd blockchain
                 deactivateDocumentOnBlockchain(didString, deactivatedDocument)
 
+                // Deactivation must be recorded as such (DID Core §7.3 / Resolution §4.3
+                // `deactivated`): without it the DID would keep resolving as a live,
+                // key-stripped document. Fail loudly rather than report success.
+                if (getDocumentMetadata(did)?.deactivated != true) {
+                    throw TrustWeaveException.Unknown(
+                        code = "DEACTIVATION_NOT_RECORDED",
+                        message = "did:cheqd deactivation of $didString was anchored but not recorded as deactivated",
+                    )
+                }
+
                 true
             } catch (e: TrustWeaveException.NotFound) {
                 false
@@ -296,25 +316,43 @@ class CheqdDidMethod(
 
     /**
      * Checks the method-specific id: `[network:]identifier`, where the identifier is a UUID or
-     * the base58btc encoding of 16 bytes.
+     * the base58btc encoding of 16 bytes. The network segment must be this instance's
+     * [CheqdDidConfig.network]: a `did:cheqd:testnet:...` DID is not resolved against a mainnet
+     * instance (or the reverse), because the two namespaces are unrelated ledgers. A DID with no
+     * network segment is read as `mainnet`, as the did:cheqd specification does.
      */
     private fun validateCheqdIdentifier(did: String) {
         val msid = did.removePrefix("did:cheqd:")
         val parts = msid.split(":")
         require(parts.size in 1..2 && parts.none { it.isEmpty() }) { "Invalid did:cheqd identifier: $did" }
+        val network = if (parts.size == 2) parts.first() else DEFAULT_NETWORK
+        require(network == config.network) {
+            "did:cheqd network '$network' does not match the configured network '${config.network}': $did"
+        }
         val id = parts.last()
         val isUuid = runCatching { UUID.fromString(id) }.isSuccess && id.length == 36
         val isBase58 = runCatching { id.decodeBase58().size == 16 }.getOrDefault(false)
         require(isUuid || isBase58) { "Invalid did:cheqd identifier (expected a UUID or base58 of 16 bytes): $did" }
     }
 
+    /** A document read from the Cheqd REST API and whether the API reports the DID deactivated. */
+    private data class ApiResolution(
+        val document: DidDocument,
+        val deactivated: Boolean,
+    )
+
     /**
      * Resolves a DID document from the Cheqd REST API.
      *
+     * The body is read with a hard cap of [MAX_API_RESPONSE_BYTES] (a hostile or broken endpoint
+     * cannot exhaust memory), accepting either a bare DID document or a DID Resolution result
+     * (`didDocument` / `didDocumentMetadata`), whose `deactivated` flag is honoured.
+     *
      * @return the document, or `null` when no API is configured or the API answers 404
-     * @throws TrustWeaveException when the API fails or returns a document for a different DID
+     * @throws TrustWeaveException when the API fails, the response is too large, or it returns a
+     *   document for a different DID
      */
-    private suspend fun resolveFromCheqdApi(did: String): DidDocument? =
+    private suspend fun resolveFromCheqdApi(did: String): ApiResolution? =
         withContext(Dispatchers.IO) {
             val apiUrl = config.cheqdApiUrl ?: return@withContext null
 
@@ -335,11 +373,33 @@ class CheqdDidMethod(
                             message = "Cheqd API returned HTTP ${response.code} for $did",
                         )
                     }
-                    response.body?.string()
-                        ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty Cheqd API response")
+                    val body =
+                        response.body
+                            ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty Cheqd API response")
+                    if (body.contentLength() > MAX_API_RESPONSE_BYTES) {
+                        throw TrustWeaveException.Unknown(
+                            code = "RESPONSE_TOO_LARGE",
+                            message = "Cheqd API response exceeds $MAX_API_RESPONSE_BYTES bytes for $did",
+                        )
+                    }
+                    // Streamed and capped: never buffer more than the cap plus one byte.
+                    val bytes = body.byteStream().readNBytes(MAX_API_RESPONSE_BYTES + 1)
+                    if (bytes.size > MAX_API_RESPONSE_BYTES) {
+                        throw TrustWeaveException.Unknown(
+                            code = "RESPONSE_TOO_LARGE",
+                            message = "Cheqd API response exceeds $MAX_API_RESPONSE_BYTES bytes for $did",
+                        )
+                    }
+                    String(bytes, Charsets.UTF_8)
                 }
 
-            val document = jsonElementToDocument(Json.parseToJsonElement(jsonString))
+            val root = Json.parseToJsonElement(jsonString)
+            val resultObject = (root as? kotlinx.serialization.json.JsonObject)
+            val wrapped = resultObject?.get("didDocument") as? kotlinx.serialization.json.JsonObject
+            val metadata = resultObject?.get("didDocumentMetadata") as? kotlinx.serialization.json.JsonObject
+            val deactivated =
+                (metadata?.get("deactivated") as? kotlinx.serialization.json.JsonPrimitive)?.content == "true"
+            val document = jsonElementToDocument(wrapped ?: root)
             // A document for a different DID is rejected, never rewritten to the requested DID.
             if (document.id.value != did) {
                 throw TrustWeaveException(
@@ -347,6 +407,12 @@ class CheqdDidMethod(
                     message = "Cheqd API returned a document for ${document.id.value}, expected $did",
                 )
             }
-            document
+            ApiResolution(document, deactivated)
         }
+
+    private companion object {
+        /** Largest Cheqd API response body accepted (1 MiB). */
+        const val MAX_API_RESPONSE_BYTES = 1024 * 1024
+        const val DEFAULT_NETWORK = "mainnet"
+    }
 }

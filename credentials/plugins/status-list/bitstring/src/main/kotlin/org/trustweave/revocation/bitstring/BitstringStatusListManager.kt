@@ -88,6 +88,11 @@ import javax.sql.DataSource
  *   list VC's `credentialSubject.id` is `"<baseUrl>/<statusListId>"` (an absolute http(s) URL);
  *   when null it defaults to `"urn:uuid:<statusListId>"`. Either way the id is an ABSOLUTE IRI,
  *   so the subject's triples survive JSON-LD canonicalization and are covered by the signature.
+ * @param remoteStatusLists Optional resolver for status lists this manager does not hold locally
+ *   (status list credentials published by other issuers). When set, an `https:` status list URL
+ *   that is unknown locally is fetched, its proof verified and its bitstring decoded; any failure
+ *   fails closed. When null (default), unknown status lists fail closed with
+ *   `STATUS_LIST_UNAVAILABLE`.
  */
 class BitstringStatusListManager(
     private val dataSource: DataSource,
@@ -97,7 +102,19 @@ class BitstringStatusListManager(
     private val proofEngine: ProofEngine? = null,
     private val issuerKeyId: VerificationMethodId? = null,
     private val baseUrl: String? = null,
+    private val remoteStatusLists: RemoteStatusListResolver? = null,
 ) : CredentialRevocationManager {
+    /** Binary-compatible constructor from before [remoteStatusLists] existed. */
+    constructor(
+        dataSource: DataSource,
+        kms: KeyManagementService,
+        issuerDid: String,
+        bitsPerEntry: Int,
+        proofEngine: ProofEngine?,
+        issuerKeyId: VerificationMethodId?,
+        baseUrl: String?,
+    ) : this(dataSource, kms, issuerDid, bitsPerEntry, proofEngine, issuerKeyId, baseUrl, null)
+
     companion object {
         /**
          * Spec minimum: the uncompressed bitstring MUST be at least 16KB (131,072 bits).
@@ -360,6 +377,29 @@ class BitstringStatusListManager(
             // Fail closed: once a credential declares a status entry, an undeterminable
             // index or an unknown status list must surface as an error, never as "valid".
             val statusListId = credentialStatus.statusListCredential ?: credentialStatus.id
+            if (remoteStatusLists != null && isRemoteCandidate(statusListId)) {
+                val statusSize = credentialStatus.formatData["statusSize"]
+                if (statusSize != null && (statusSize as? kotlinx.serialization.json.JsonPrimitive)?.content != "1") {
+                    throw TrustWeaveException.InvalidState(
+                        code = "STATUS_SIZE_UNSUPPORTED",
+                        message = "Remote status entries with statusSize $statusSize are not supported; failing closed",
+                        context = mapOf("statusListId" to statusListId.toString()),
+                    )
+                }
+                val remoteIndex =
+                    credentialStatus.statusListIndex?.toIntOrNull()
+                        ?: throw TrustWeaveException.InvalidState(
+                            code = "STATUS_LIST_INDEX_UNKNOWN",
+                            message = "Credential status entry for remote list $statusListId has no numeric statusListIndex",
+                            context = mapOf("statusListId" to statusListId.toString()),
+                        )
+                return@withContext checkRemote(
+                    statusListId,
+                    remoteIndex,
+                    expectedIssuer = credential.issuer.id.value,
+                    entryPurpose = credentialStatus.statusPurpose,
+                )
+            }
             val index =
                 credentialStatus.statusListIndex?.toIntOrNull()
                     ?: credential.id?.toString()?.let { getCredentialIndex(it, statusListId) }
@@ -384,6 +424,9 @@ class BitstringStatusListManager(
         index: Int,
     ): RevocationStatus =
         withContext(Dispatchers.IO) {
+            if (remoteStatusLists != null && isRemoteCandidate(statusListId)) {
+                return@withContext checkRemote(statusListId, index, expectedIssuer = null, entryPurpose = null)
+            }
             val row =
                 loadStatusListRow(statusListId.toString())
                     ?: throw statusListUnavailable(statusListId)
@@ -1299,18 +1342,57 @@ class BitstringStatusListManager(
      * Error raised when a referenced status list cannot be obtained and verified.
      *
      * Per W3C Bitstring Status List v1.0, an unavailable status list must surface
-     * as an error — never as a "valid" status. Remote fetch + signature verification
-     * of external status list credentials is not implemented; unknown lists fail closed.
+     * as an error — never as a "valid" status. Lists not held locally are only consulted
+     * through a configured [RemoteStatusListResolver]; without one they fail closed.
      */
     private fun statusListUnavailable(statusListId: StatusListId): TrustWeaveException =
         TrustWeaveException.InvalidState(
             code = "STATUS_LIST_UNAVAILABLE",
             message =
                 "Status list $statusListId could not be retrieved and verified " +
-                    "(unknown locally; remote fetch and verification is not supported). " +
+                    "(unknown locally and no remote status list resolver is configured for it). " +
                     "Failing closed: credential status is unknown, not valid.",
             context = mapOf("statusListId" to statusListId.toString()),
         )
+
+    /** A status list is resolved remotely when it is not held locally and is an https URL. */
+    private fun isRemoteCandidate(statusListId: StatusListId): Boolean {
+        val id = statusListId.toString()
+        return id.startsWith("https://", ignoreCase = true) && loadStatusListRow(id) == null
+    }
+
+    private suspend fun checkRemote(
+        statusListId: StatusListId,
+        index: Int,
+        expectedIssuer: String?,
+        entryPurpose: StatusPurpose?,
+    ): RevocationStatus {
+        val resolver = remoteStatusLists ?: throw statusListUnavailable(statusListId)
+        val list = resolver.resolve(statusListId.toString(), expectedIssuer)
+        if (entryPurpose != null && entryPurpose != list.purpose) {
+            throw TrustWeaveException.InvalidState(
+                code = "STATUS_PURPOSE_MISMATCH",
+                message =
+                    "Credential status entry purpose ${entryPurpose.stringValue} does not match the " +
+                        "status list purpose ${list.purpose.stringValue}; failing closed",
+                context = mapOf("statusListId" to statusListId.toString()),
+            )
+        }
+        if (index < 0 || index >= list.sizeBits) {
+            throw TrustWeaveException.InvalidOperation(
+                code = "RANGE_ERROR",
+                message = "Status list index $index is out of range [0, ${list.sizeBits - 1}] for status list $statusListId",
+                context = mapOf("statusListId" to statusListId.toString(), "index" to index, "capacity" to list.sizeBits),
+            )
+        }
+        val set = list.isSet(index)
+        return RevocationStatus(
+            revoked = list.purpose == StatusPurpose.REVOCATION && set,
+            suspended = list.purpose == StatusPurpose.SUSPENSION && set,
+            statusListId = statusListId,
+            index = index,
+        )
+    }
 
     /**
      * Validate that [index] addresses an entry within the status list (RANGE_ERROR

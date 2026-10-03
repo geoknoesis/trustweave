@@ -21,7 +21,8 @@ This guide helps you migrate from the service layer API (`dids`, `credentials`, 
 
 Phase 4 simplifies the TrustWeave API by removing the service layer indirection. Common operations are now available as direct methods on `TrustWeave`, making the API more intuitive and discoverable.
 
-**Snippet convention:** Blocks labeled **Before** still show the legacy service API (e.g. **`trustweave.credentials.verify`** and a boolean-style **`verification.valid`**). Prefer the **After** patterns: sealed **`VerificationResult`** (`is VerificationResult.Valid` / exhaustive **`when`**) and **`allErrors`** for messages—not the old **`valid`** flag.
+**Snippet convention:** Blocks labeled **Before** show the legacy service API, which has been
+removed and no longer compiles (each such block is marked `REMOVED API`) (e.g. **`trustweave.credentials.verify`** and a boolean-style **`verification.valid`**). Prefer the **After** patterns: sealed **`VerificationResult`** (`is VerificationResult.Valid` / exhaustive **`when`**) and **`allErrors`** for messages—not the old **`valid`** flag.
 
 ### What Changed
 
@@ -47,6 +48,8 @@ Phase 4 simplifies the TrustWeave API by removing the service layer indirection.
 
 #### Before (Service Layer)
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 val trustweave = TrustWeave.quickStart()
 
 // Create DID
@@ -58,10 +61,13 @@ val result = trustweave.dids.resolve("did:key:...")
 
 #### After (Direct Methods)
 ```kotlin
+import org.trustweave.trust.quickStart
+import org.trustweave.trust.types.getOrThrowDid
+
 val trustweave = TrustWeave.quickStart()
 
-// Create DID - Direct method
-val did = trustweave.createDid()
+// Create DID - Direct method returning a sealed DidCreationResult (unwrapped here)
+val did = trustweave.createDid().getOrThrowDid()
 
 // Resolve DID - Direct method with sealed result
 when (val result = trustweave.resolveDid("did:key:...")) {
@@ -82,6 +88,8 @@ when (val result = trustweave.resolveDid("did:key:...")) {
 
 #### Before (Service Layer)
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 // Issue credential
 val credential = trustweave.credentials.issue(
     issuer = issuerDid.id,
@@ -141,6 +149,8 @@ when (verification) {
 
 #### Before (Service Layer)
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 // Create wallet
 val wallet = trustweave.wallets.create(
     holderDid = holderDid.id,
@@ -170,6 +180,8 @@ wallet.store(credential)
 
 ### Before (Service Layer API)
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 val trustweave = TrustWeave.quickStart()
 
 // DIDs
@@ -252,6 +264,8 @@ wallet.store(credential)
 
 #### Before
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 val result = trustweave.dids.resolve("did:key:...")
 if (result.document != null) {
     // Success
@@ -282,6 +296,8 @@ when (val result = trustweave.resolveDid("did:key:...")) {
 
 #### Before
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 val verification = trustweave.credentials.verify(credential)
 if (verification.valid) {
     // Success
@@ -316,6 +332,8 @@ when (verification) {
 
 1. **Simpler API**: Direct methods are more intuitive
    ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
    // Before: trustweave.dids.create()
    // After: trustweave.createDid()
    ```
@@ -403,6 +421,8 @@ Unresolved reference 'dids'
 **Solution:**
 Replace with direct methods:
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 // Before
 val did = trustweave.dids.create()
 
@@ -440,6 +460,8 @@ Type mismatch: expected DidResolutionResult, found ...
 **Solution:**
 Update to handle sealed result:
 ```kotlin
+// REMOVED API, shown only for comparison. `dids`, `credentials` and `wallets` no longer exist
+// on TrustWeave; this block does not compile against the current release.
 // Before
 val result = trustweave.dids.resolve(did)
 if (result.document != null) { ... }

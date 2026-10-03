@@ -172,7 +172,7 @@ import org.trustweave.testkit.credential.InMemoryWallet
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import org.trustweave.anchor.AnchorResult

@@ -371,7 +371,7 @@ So far, we've used an in-memory blockchain client for testing. For production, y
 Replace the in-memory client with Algorand:
 
 ```kotlin
-import org.trustweave.algorand.AlgorandBlockchainAnchorClient
+import org.trustweave.anchor.algorand.AlgorandBlockchainAnchorClient
 
 // Replace this:
 // val anchorClient = InMemoryBlockchainAnchorClient(chainId)

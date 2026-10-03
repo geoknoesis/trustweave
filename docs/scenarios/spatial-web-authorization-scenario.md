@@ -225,7 +225,7 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
 import org.trustweave.anchor.AnchorResult
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

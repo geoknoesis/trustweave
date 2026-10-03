@@ -67,8 +67,6 @@ issuance DSL (`trustWeave.issue { credentialStatus(...) }`) wires this through; 
 ## Step 4 — Revoke / suspend
 
 ```kotlin
-import org.trustweave.trust.dsl.credential.revoke
-
 trustWeave.revoke {
     credential("urn:uuid:cred-123")
     statusList(statusListId.value)

@@ -671,8 +671,6 @@ equivalent for `StatusPurpose.SUSPENSION` lists. Both require `credential(...)` 
 `statusList(...)` on the builder.
 
 ```kotlin
-import org.trustweave.trust.dsl.credential.revoke
-
 val revoked: Boolean = trustWeave.revoke {
     credential("urn:uuid:credential-123")
     statusList(statusListId.value)

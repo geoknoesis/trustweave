@@ -8,82 +8,51 @@ grand_parent: API Reference
 
 # Features Usage Guide
 
-This guide explains how to use TrustWeave's feature plugins.
+Where the application-level features around credential issuance and exchange live, and which of
+them TrustWeave actually ships.
 
-> **TODO (audit, 0.6.0):** Many examples below reference packages such as
-> `org.trustweave.audit`, `org.trustweave.metrics`, `org.trustweave.notifications`,
-> `org.trustweave.versioning`, `org.trustweave.backup`, `org.trustweave.expiration`,
-> `org.trustweave.analytics`, `org.trustweave.oidc4vci`,
-> `org.trustweave.didcomm`, `org.trustweave.chapi`, `org.trustweave.multiparty`,
-> `org.trustweave.health`, and `org.trustweave.rendering`. These are **not** shipped as
-> Gradle modules in 0.6.0 — they document the interface shapes / in-memory implementations
-> that integrators are expected to write today.
->
-> Sections that **do** match real, shipped code are:
-> - Section 3 (QR / deep-link content via `org.trustweave.credential.oidc4vci.qr.QrCodeGenerator`)
-> - The Integration Example at the bottom (`TrustWeave.build { ... }`, `trustWeave.issue { ... }`)
->
-> For the actually-shipped exchange / format plugins (DIDComm v2, OIDC4VCI, OIDC4VP, CHAPI, BBS+, mDL, status lists, etc.), see [../plugins.md](../plugins.md).
+Earlier versions of this page showed code for packages such as `org.trustweave.audit`,
+`org.trustweave.metrics` or `org.trustweave.notifications`. **Those packages do not exist**, and
+the examples did not compile. They have been removed; the table below says what to use instead.
 
-## Overview
+## Shipped features
 
-All features are implemented as standalone plugins that can be instantiated and used independently. They follow TrustWeave's plugin architecture and can be integrated into your application as needed.
+| Feature | Gradle module | Entry point | Guide |
+| ------- | ------------- | ----------- | ----- |
+| OIDC4VCI issuance | `credentials:plugins:oidc4vci` | `org.trustweave.credential.oidc4vci.Oidc4VciService` | [OIDC4VCI](credential-exchange-protocols/oidc4vci.md) |
+| Credential-offer URLs for QR codes | `credentials:plugins:oidc4vci` | `org.trustweave.credential.oidc4vci.qr.QrCodeGenerator` | [below](#qr--deep-link-content-oidc4vci) |
+| OIDC4VP presentation | `credentials:plugins:oidc4vp` | see guide | [OIDC4VP](credential-exchange-protocols/oidc4vp.md) |
+| DIDComm v2 messaging | `credentials:plugins:didcomm` | `org.trustweave.credential.didcomm.DidCommService`, `DidCommFactory` | [DIDComm quick start](credential-exchange-protocols/didcomm-quick-start.md) |
+| CHAPI (browser wallets) | `credentials:plugins:chapi` | `org.trustweave.credential.chapi.ChapiService` | [CHAPI](credential-exchange-protocols/chapi.md) |
+| Revocation / status lists | `credentials:plugins:status-list:*` | `trustWeave.revoke { }`, `trustWeave.revocation { }` | [Revoke credentials](../../how-to/revoke-credentials.md) |
+| Library telemetry (OpenTelemetry) | `observability` | `org.trustweave.observability.LibraryTelemetry` | [Library telemetry](../../operations/library-telemetry.md) |
+| Host metrics, health and authentication for the bundled servers | `observability` | `org.trustweave.observability.HostObservability`, `HostAuthentication` | [Host operations](../../operations/host/README.md) |
 
-## 1. Audit Logging
+The DIDComm plugin embeds an outdated JOSE library; read
+[SECURITY.md, Known Dependency Risks](https://github.com/geoknoesis/trustweave/blob/main/SECURITY.md#known-dependency-risks)
+before exposing it to untrusted messages.
 
-Track all operations with immutable audit logs.
+## Not shipped: implement in your application
 
-```kotlin
-import org.trustweave.audit.AuditLogger
-import org.trustweave.audit.InMemoryAuditLogger
-import org.trustweave.audit.AuditEvent
+TrustWeave has no API for the following. Build them on your own infrastructure, typically around the
+results of `trustWeave.issue { }`, `trustWeave.verify(...)` and the wallet APIs:
 
-val auditLogger: AuditLogger = InMemoryAuditLogger()
+| Feature | Suggested approach |
+| ------- | ------------------ |
+| Audit logging | Record issuance, verification and revocation results in your audit store. |
+| Metrics | Use `LibraryTelemetry` (OpenTelemetry) for TrustWeave's own spans and metrics; add your own counters around calls. |
+| Notifications | Send from your application when an issuance, revocation or expiry event occurs. |
+| Credential versioning, backup and recovery | Store issued credentials in your database or a wallet storage plugin (`wallet:plugins:*`) and use its backup tooling. |
+| Expiration management | Query stored credentials by `validUntil`/`expirationDate` and re-issue or notify. |
+| Analytics and reporting | Aggregate your own audit records. |
+| Multi-party issuance | Orchestrate approvals before calling `trustWeave.issue { }`; the credential is signed once by the issuing DID. |
+| Health checks | For the bundled servers use `HostObservability`; for your application, expose health from your framework. |
+| Credential rendering | Render `VerifiableCredential` fields in your UI; no renderer is provided. |
 
-// Log an event
-auditLogger.logEvent(
-    AuditEvent(
-        id = UUID.randomUUID().toString(),
-        timestamp = Instant.now(),
-        actor = "did:key:alice",
-        action = "ISSUE_CREDENTIAL",
-        target = "credential-123",
-        status = "SUCCESS",
-        details = mapOf("credentialType" to "EducationCredential")
-    )
-)
+## QR / deep-link content (OIDC4VCI)
 
-// Query events
-val events = auditLogger.getEvents(
-    startTime = Instant.now().minusSeconds(3600),
-    endTime = Instant.now(),
-    action = "ISSUE_CREDENTIAL"
-)
-```
-
-## 2. Metrics & Telemetry
-
-Collect performance and usage metrics.
-
-```kotlin
-import org.trustweave.metrics.MetricsCollector
-import org.trustweave.metrics.InMemoryMetricsCollector
-
-val metrics: MetricsCollector = InMemoryMetricsCollector()
-
-// Record metrics
-metrics.increment("credentials.issued")
-metrics.recordLatency("credential.issue", 150L) // milliseconds
-
-// Get metrics
-val counter = metrics.getMetric("credentials.issued")
-val latency = metrics.getMetric("credential.issue")
-println("Issued: ${counter?.value}, Avg latency: ${latency?.average}ms")
-```
-
-## 3. QR / deep-link content (OIDC4VCI)
-
-TrustWeave does not ship a generic QR image API in core. The **OIDC4VCI plugin** builds **credential-offer and authorization URLs** you can encode with any QR library (ZXing, etc.):
+TrustWeave does not ship a QR image API. The **OIDC4VCI plugin** builds **credential-offer URLs** you
+can encode with any QR library (ZXing, etc.):
 
 ```kotlin
 import org.trustweave.credential.oidc4vci.qr.QrCodeGenerator
@@ -96,356 +65,49 @@ val offerUrl = QrCodeGenerator.generateCredentialOfferUrl(
 // Encode `offerUrl` with ZXing or another QR library for PNG/SVG bytes
 ```
 
-## 4. Notifications
+## Integration example
 
-Send push notifications and webhooks for credential events.
-
-```kotlin
-import org.trustweave.notifications.NotificationService
-import org.trustweave.notifications.InMemoryNotificationService
-
-val notifications: NotificationService = InMemoryNotificationService()
-
-// Send push notification
-notifications.sendPushNotification(
-    recipient = "did:key:alice",
-    title = "New Credential",
-    body = "You have received a new EducationCredential",
-    data = mapOf("credentialId" to "cred-123")
-)
-
-// Send webhook
-notifications.sendWebhook(
-    url = "https://example.com/webhook",
-    event = "CREDENTIAL_RECEIVED",
-    payload = mapOf("credentialId" to "cred-123")
-)
-```
-
-## 5. Credential Versioning
-
-Track credential versions and rollback if needed.
+Issue a credential and hand the holder an OIDC4VCI offer URL, with your own audit and metrics hooks
+around the call:
 
 ```kotlin
-import org.trustweave.versioning.CredentialVersioning
-import org.trustweave.versioning.InMemoryCredentialVersioning
-
-val versioning: CredentialVersioning = InMemoryCredentialVersioning()
-
-// Save version
-versioning.saveVersion(
-    credentialId = "cred-123",
-    version = 1,
-    credential = credential,
-    changeReason = "Initial issuance"
-)
-
-// Get version history
-val history = versioning.getHistory("cred-123")
-
-// Rollback to previous version
-val rolledBack = versioning.rollback("cred-123", targetVersion = 1)
-```
-
-## 6. Backup & Recovery
-
-Export and import credentials.
-
-```kotlin
-import org.trustweave.backup.CredentialBackup
-import org.trustweave.backup.InMemoryCredentialBackup
-
-val backup: CredentialBackup = InMemoryCredentialBackup()
-
-// Export credentials
-val exportData = backup.exportCredentials(
-    wallet = wallet,
-    credentialIds = listOf("cred-1", "cred-2")
-)
-
-// Import credentials
-backup.importCredentials(
-    wallet = wallet,
-    backupData = exportData
-)
-```
-
-## 7. Expiration Management
-
-Monitor and manage expiring credentials.
-
-```kotlin
-import org.trustweave.expiration.ExpirationManager
-import org.trustweave.expiration.InMemoryExpirationManager
-
-val expiration: ExpirationManager = InMemoryExpirationManager()
-
-// Monitor expirations
-expiration.monitorExpirations(
-    wallet = wallet,
-    onExpiring = { credential ->
-        println("Credential ${credential.id} expires soon!")
-    },
-    onExpired = { credential ->
-        println("Credential ${credential.id} has expired!")
-    }
-)
-
-// Renew credential
-val renewed = expiration.renewCredential(
-    credentialId = "cred-123",
-    newExpirationDate = Instant.now().plusSeconds(86400 * 365)
-)
-```
-
-## 8. Analytics & Reporting
-
-Generate analytics reports.
-
-```kotlin
-import org.trustweave.analytics.AnalyticsService
-import org.trustweave.analytics.InMemoryAnalyticsService
-import org.trustweave.analytics.ReportPeriod
-
-val analytics: AnalyticsService = InMemoryAnalyticsService()
-
-// Record events
-analytics.recordEvent("credential.issued", mapOf("type" to "EducationCredential"))
-analytics.recordEvent("credential.verified", mapOf("issuer" to "did:key:university"))
-
-// Get report
-val report = analytics.getReport(ReportPeriod.DAILY)
-println("Issued: ${report.issuanceCount}")
-println("Verified: ${report.verificationCount}")
-println("Top issuers: ${report.topIssuers}")
-```
-
-## 9. OIDC4VCI
-
-OpenID Connect for Verifiable Credential Issuance.
-
-```kotlin
-import org.trustweave.oidc4vci.Oidc4VciService
-import org.trustweave.oidc4vci.InMemoryOidc4VciService
-
-val oidc4vci: Oidc4VciService = InMemoryOidc4VciService()
-
-// Issue credential via OIDC4VCI
-val credential = oidc4vci.issueCredential(
-    issuerEndpoint = "https://issuer.example.com",
-    credentialOffer = credentialOffer,
-    accessToken = accessToken
-)
-```
-
-## 10. DIDComm v2
-
-DIDComm credential exchange protocol.
-
-```kotlin
-import org.trustweave.didcomm.DidCommService
-import org.trustweave.didcomm.InMemoryDidCommService
-import org.trustweave.didcomm.DidCommMessage
-
-val didcomm: DidCommService = InMemoryDidCommService()
-
-// Send credential offer
-val offerMessage = DidCommMessage(
-    id = UUID.randomUUID().toString(),
-    type = DidCommMessageTypes.CREDENTIAL_OFFER,
-    from = "did:key:issuer",
-    to = listOf("did:key:holder"),
-    body = jsonData { /* offer data */ }
-)
-didcomm.sendMessage(offerMessage)
-
-// Receive and process message
-val received = didcomm.receiveMessage(messageJson)
-```
-
-## 11. CHAPI
-
-Credential Handler API support.
-
-```kotlin
-import org.trustweave.chapi.ChapiService
-import org.trustweave.chapi.InMemoryChapiService
-
-val chapi: ChapiService = InMemoryChapiService()
-
-// Handle credential request
-val response = chapi.handleGetRequest(
-    request = chapiRequest,
-    wallet = wallet
-)
-
-// Handle credential storage
-chapi.handleStoreRequest(
-    request = storeRequest,
-    wallet = wallet
-)
-```
-
-## 12. Multi-Party Issuance
-
-Collaborative credential issuance.
-
-```kotlin
-import org.trustweave.multiparty.MultiPartyIssuance
-import org.trustweave.multiparty.InMemoryMultiPartyIssuance
-import org.trustweave.multiparty.ConsensusType
-
-val multiParty: MultiPartyIssuance = InMemoryMultiPartyIssuance()
-
-// Initiate issuance
-val issuanceId = multiParty.initiateIssuance(
-    credential = credential,
-    participants = listOf("did:key:issuer1", "did:key:issuer2"),
-    consensusType = ConsensusType.ALL
-)
-
-// Add signatures
-multiParty.addSignature(issuanceId, "did:key:issuer1", signature1)
-multiParty.addSignature(issuanceId, "did:key:issuer2", signature2)
-
-// Finalize when consensus reached
-val finalCredential = multiParty.finalizeIssuance(issuanceId)
-```
-
-## 13. Health Checks
-
-System health monitoring.
-
-```kotlin
-import org.trustweave.health.HealthCheckService
-import org.trustweave.health.InMemoryHealthCheckService
-
-val health: HealthCheckService = InMemoryHealthCheckService()
-
-// Run health checks
-val healthStatus = health.runHealthChecks()
-println("Status: ${healthStatus.status}") // HEALTHY, DEGRADED, UNHEALTHY
-println("Components: ${healthStatus.components}")
-```
-
-## 14. Credential Rendering
-
-Render credentials as HTML or PDF.
-
-```kotlin
-import org.trustweave.rendering.CredentialRenderer
-import org.trustweave.rendering.InMemoryCredentialRenderer
-import org.trustweave.rendering.RenderingFormat
-
-val renderer: CredentialRenderer = InMemoryCredentialRenderer()
-
-// Render as HTML
-val html = renderer.renderHtml(credential)
-
-// Render as PDF
-val pdf = renderer.renderPdf(credential)
-
-// Render presentation
-val htmlPresentation = renderer.renderHtml(presentation)
-```
-
-## Integration Example
-
-Here's how to integrate multiple features together:
-
-```kotlin
-import org.trustweave.trust.TrustWeave
-import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.oidc4vci.qr.QrCodeGenerator
-import org.trustweave.audit.*
-import org.trustweave.metrics.*
-import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.oidc4vci.qr.QrCodeGenerator
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
-import java.time.Instant
-import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
-import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
-import org.trustweave.trust.dsl.credential.DidMethods.KEY
+import org.trustweave.trust.TrustWeave
 
-val trustWeave = TrustWeave.build {
-    // Configure TrustWeave instance
-    keys { provider(IN_MEMORY); algorithm(ED25519) }
-    did { method(KEY) { algorithm(ED25519) } }
-}
-val auditLogger = InMemoryAuditLogger()
-val metrics = InMemoryMetricsCollector()
+// Your application's own audit and metrics hooks.
+fun interface AuditSink { fun record(action: String, target: String) }
+fun interface Counter { fun increment(name: String) }
 
-// Issue credential with audit logging and metrics
 suspend fun issueCredentialWithTracking(
     trustWeave: TrustWeave,
-    issuerDid: String,
-    subjectDid: String
-): VerifiableCredential {
-    val startTime = System.currentTimeMillis()
-
-    val issuanceResult = trustWeave.issue {
+    issuerDid: Did,
+    issuerKeyId: String,
+    subjectDid: String,
+    audit: AuditSink,
+    metrics: Counter,
+): Pair<VerifiableCredential, String> {
+    val credential = trustWeave.issue {
         credential {
+            type("PersonCredential")
             issuer(issuerDid)
             subject {
                 id(subjectDid)
-                // credential data
+                "name" to "Alice"
             }
         }
-        signedBy(issuerDid = Did(issuerDid), keyId = "key-1")
-    }
+        signedBy(issuerDid = issuerDid, keyId = issuerKeyId)
+    }.getOrThrow()
 
-    val credential = issuanceResult.getOrThrow()
-
-    // Track metrics
     metrics.increment("credentials.issued")
-    metrics.recordLatency("credential.issue", System.currentTimeMillis() - startTime)
+    audit.record("ISSUE_CREDENTIAL", credential.id?.toString() ?: "unknown")
 
-    // Audit log
-    auditLogger.logEvent(
-        AuditEvent(
-            id = UUID.randomUUID().toString(),
-            timestamp = Instant.now(),
-            actor = issuerDid,
-            action = "ISSUE_CREDENTIAL",
-            target = credential.id ?: "unknown",
-            status = "SUCCESS"
-        )
-    )
-
-    // Example: OIDC4VCI offer URL string (encode with your QR library)
     val offerUrl = QrCodeGenerator.generateCredentialOfferUrl(
         credentialIssuer = "https://issuer.example.com",
-        credentialConfigurationIds = listOf("PersonCredential")
+        credentialConfigurationIds = listOf("PersonCredential"),
     )
-
-    return credential
+    return credential to offerUrl
 }
 ```
-
-## Database-Backed Implementations
-
-For production use, you'll want to create database-backed implementations. Each feature has an interface that you can implement:
-
-- `AuditLogger` -> `DatabaseAuditLogger`
-- `MetricsCollector` -> `DatabaseMetricsCollector`
-- `CredentialVersioning` -> `DatabaseCredentialVersioning`
-- etc.
-
-These can use your preferred database (PostgreSQL, MySQL, MongoDB, etc.) and follow the same interface contracts.
-
-## Extending Features
-
-All features are designed to be:
-- **Pluggable**: Easy to swap implementations
-- **Testable**: In-memory implementations for testing
-- **Extensible**: Easy to add new functionality
-- **Production-ready**: Can be extended with database-backed implementations
-
-To extend features for production:
-1. **Choose features**: Select which features you need for your use case
-2. **Create implementations**: Build database-backed implementations as needed
-3. **Integrate**: Add feature instances to your application
-4. **Test**: Write tests for your integrations
-5. **Monitor**: Use metrics and audit logs to monitor your system
-

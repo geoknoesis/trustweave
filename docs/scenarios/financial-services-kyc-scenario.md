@@ -215,7 +215,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.anchor.anchorTyped
-import org.trustweave.did.DidMethodRegistry
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId

@@ -1,8 +1,8 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.PluginException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.trustweave.core.exception.PluginException
 import kotlin.test.*
 
 /**
@@ -12,7 +12,6 @@ import kotlin.test.*
  * version-range checks at registration time.
  */
 class PluginLifecycleInvocationTest {
-
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -24,7 +23,7 @@ class PluginLifecycleInvocationTest {
         id: String,
         version: String = "1.0.0",
         dependencies: List<PluginDependency> = emptyList(),
-        configuration: Map<String, Any?> = emptyMap()
+        configuration: Map<String, Any?> = emptyMap(),
     ) = PluginMetadata(
         id = id,
         name = "Plugin $id",
@@ -32,7 +31,7 @@ class PluginLifecycleInvocationTest {
         provider = "test",
         capabilities = PluginCapabilities(features = setOf("feature-$id")),
         dependencies = dependencies,
-        configuration = configuration
+        configuration = configuration,
     )
 
     /** Records every lifecycle call in order; each phase's outcome is scriptable. */
@@ -40,7 +39,7 @@ class PluginLifecycleInvocationTest {
         private val initializeResult: () -> Boolean = { true },
         private val startResult: () -> Boolean = { true },
         private val stopResult: () -> Boolean = { true },
-        private val cleanupAction: () -> Unit = {}
+        private val cleanupAction: () -> Unit = {},
     ) : PluginLifecycle {
         val calls = mutableListOf<String>()
         var receivedConfig: Map<String, Any?>? = null
@@ -94,9 +93,10 @@ class PluginLifecycleInvocationTest {
         val plugin = RecordingLifecyclePlugin(initializeResult = { false })
         val meta = metadata("bad-init")
 
-        val ex = assertFailsWith<PluginException.InitializationFailed> {
-            registry.register(meta, plugin)
-        }
+        val ex =
+            assertFailsWith<PluginException.InitializationFailed> {
+                registry.register(meta, plugin)
+            }
         assertEquals("bad-init", ex.pluginId)
 
         // Rolled back: nothing visible through any read surface.
@@ -116,9 +116,10 @@ class PluginLifecycleInvocationTest {
         val boom = IllegalStateException("connection refused")
         val plugin = RecordingLifecyclePlugin(initializeResult = { throw boom })
 
-        val ex = assertFailsWith<PluginException.InitializationFailed> {
-            registry.register(metadata("throwing-init"), plugin)
-        }
+        val ex =
+            assertFailsWith<PluginException.InitializationFailed> {
+                registry.register(metadata("throwing-init"), plugin)
+            }
         assertSame(boom, ex.cause)
         assertFalse(registry.isRegistered("throwing-init"))
         assertNull(registry.getInstance<RecordingLifecyclePlugin>("throwing-init"))
@@ -139,14 +140,15 @@ class PluginLifecycleInvocationTest {
     @Test
     fun `failed registration can be retried`() {
         var failFirst = true
-        val plugin = RecordingLifecyclePlugin(initializeResult = {
-            if (failFirst) {
-                failFirst = false
-                false
-            } else {
-                true
-            }
-        })
+        val plugin =
+            RecordingLifecyclePlugin(initializeResult = {
+                if (failFirst) {
+                    failFirst = false
+                    false
+                } else {
+                    true
+                }
+            })
         val meta = metadata("retry")
 
         assertFailsWith<PluginException.InitializationFailed> { registry.register(meta, plugin) }
@@ -215,9 +217,9 @@ class PluginLifecycleInvocationTest {
         registry.register(
             metadata(
                 "consumer",
-                dependencies = listOf(PluginDependency("dep", versionRange = ">=1.0.0,<2.0.0"))
+                dependencies = listOf(PluginDependency("dep", versionRange = ">=1.0.0,<2.0.0")),
             ),
-            Any()
+            Any(),
         )
         assertTrue(registry.isRegistered("consumer"))
     }
@@ -226,15 +228,16 @@ class PluginLifecycleInvocationTest {
     fun `register fails when required dependency version is out of range`() {
         registry.register(metadata("dep", version = "2.1.0"), Any())
 
-        val ex = assertFailsWith<PluginException.DependencyVersionMismatch> {
-            registry.register(
-                metadata(
-                    "consumer",
-                    dependencies = listOf(PluginDependency("dep", versionRange = ">=1.0.0,<2.0.0"))
-                ),
-                Any()
-            )
-        }
+        val ex =
+            assertFailsWith<PluginException.DependencyVersionMismatch> {
+                registry.register(
+                    metadata(
+                        "consumer",
+                        dependencies = listOf(PluginDependency("dep", versionRange = ">=1.0.0,<2.0.0")),
+                    ),
+                    Any(),
+                )
+            }
         assertEquals("consumer", ex.pluginId)
         assertEquals("dep", ex.dependencyId)
         assertEquals("2.1.0", ex.actualVersion)
@@ -248,11 +251,12 @@ class PluginLifecycleInvocationTest {
         registry.register(
             metadata(
                 "consumer",
-                dependencies = listOf(
-                    PluginDependency("dep", versionRange = "<2.0.0", isOptional = true)
-                )
+                dependencies =
+                    listOf(
+                        PluginDependency("dep", versionRange = "<2.0.0", isOptional = true),
+                    ),
             ),
-            Any()
+            Any(),
         )
         assertTrue(registry.isRegistered("consumer"))
     }
@@ -263,9 +267,9 @@ class PluginLifecycleInvocationTest {
         registry.register(
             metadata(
                 "consumer",
-                dependencies = listOf(PluginDependency("absent", versionRange = ">=1.0.0"))
+                dependencies = listOf(PluginDependency("absent", versionRange = ">=1.0.0")),
             ),
-            Any()
+            Any(),
         )
         assertTrue(registry.isRegistered("consumer"))
     }
@@ -277,9 +281,9 @@ class PluginLifecycleInvocationTest {
         registry.register(
             metadata(
                 "consumer",
-                dependencies = listOf(PluginDependency("dep", versionRange = "~> nonsense"))
+                dependencies = listOf(PluginDependency("dep", versionRange = "~> nonsense")),
             ),
-            Any()
+            Any(),
         )
         assertTrue(registry.isRegistered("consumer"))
     }
@@ -291,15 +295,63 @@ class PluginLifecycleInvocationTest {
         // "1.2" == "1.2.0" (missing segments compare as zero)
         registry.register(
             metadata("ok", dependencies = listOf(PluginDependency("dep", versionRange = "1.2"))),
-            Any()
+            Any(),
         )
         assertTrue(registry.isRegistered("ok"))
 
         assertFailsWith<PluginException.DependencyVersionMismatch> {
             registry.register(
                 metadata("bad", dependencies = listOf(PluginDependency("dep", versionRange = "1.3.0"))),
-                Any()
+                Any(),
             )
         }
+    }
+
+    // ── lifecycle runs outside the registry lock ─────────────────────────────
+
+    @Test
+    fun `lifecycle does not hold the registry lock - other threads can mutate while it initializes`() {
+        var otherRegistered = false
+        val slow =
+            object : RecordingLifecyclePlugin(initializeResult = {
+                val t = kotlin.concurrent.thread { registry.register(metadata("other"), Any()) }
+                t.join(5_000)
+                otherRegistered = registry.isRegistered("other")
+                true
+            }) {}
+
+        registry.register(metadata("slow"), slow)
+
+        assertTrue(otherRegistered, "a concurrent register must not block on a running lifecycle")
+        assertTrue(registry.isRegistered("slow"))
+    }
+
+    @Test
+    fun `an ID whose lifecycle is still running cannot be registered twice`() {
+        var duplicate: Throwable? = null
+        val first =
+            object : RecordingLifecyclePlugin(initializeResult = {
+                duplicate = runCatching { registry.register(metadata("dup"), Any()) }.exceptionOrNull()
+                true
+            }) {}
+
+        registry.register(metadata("dup"), first)
+
+        assertIs<PluginException.AlreadyRegistered>(duplicate)
+        assertSame(first, registry.getInstance("dup", Any::class.java))
+    }
+
+    @Test
+    fun `clear during initialization fails the registration and tears the plugin down`() {
+        val plugin =
+            object : RecordingLifecyclePlugin(initializeResult = {
+                registry.clear()
+                true
+            }) {}
+
+        assertFailsWith<PluginException.InitializationFailed> { registry.register(metadata("cleared"), plugin) }
+
+        assertFalse(registry.isRegistered("cleared"))
+        assertEquals(listOf("initialize", "start", "stop", "cleanup"), plugin.calls)
     }
 }

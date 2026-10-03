@@ -20,8 +20,10 @@ data class SidetreeP256KeyPair(
     val privateJwk: Map<String, Any?>,
     val publicJwk: Map<String, Any?>,
 ) {
-    companion object {
+    /** The private JWK carries the `d` scalar: never print it. */
+    override fun toString(): String = "SidetreeP256KeyPair(privateJwk=<redacted>, publicJwk=$publicJwk)"
 
+    companion object {
         private val b64url: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
 
         /**
@@ -39,21 +41,23 @@ data class SidetreeP256KeyPair(
             val yBytes = w.affineY.toByteArray().padCoord()
             val dBytes = priv.s.toByteArray().padCoord()
 
-            val publicJwk: Map<String, Any?> = mapOf(
-                "kty" to "EC",
-                "crv" to "P-256",
-                "x" to b64url.encodeToString(xBytes),
-                "y" to b64url.encodeToString(yBytes),
-            )
+            val publicJwk: Map<String, Any?> =
+                mapOf(
+                    "kty" to "EC",
+                    "crv" to "P-256",
+                    "x" to b64url.encodeToString(xBytes),
+                    "y" to b64url.encodeToString(yBytes),
+                )
             val privateJwk = publicJwk + ("d" to b64url.encodeToString(dBytes))
             return SidetreeP256KeyPair(privateJwk = privateJwk, publicJwk = publicJwk)
         }
 
-        private fun ByteArray.padCoord(): ByteArray = when {
-            size > 32 -> sliceArray(size - 32 until size)
-            size < 32 -> ByteArray(32 - size) + this
-            else -> this
-        }
+        private fun ByteArray.padCoord(): ByteArray =
+            when {
+                size > 32 -> sliceArray(size - 32 until size)
+                size < 32 -> ByteArray(32 - size) + this
+                else -> this
+            }
     }
 }
 
@@ -61,5 +65,4 @@ data class SidetreeP256KeyPair(
  * Strip the `d` (private scalar) component from a JWK before embedding it in a
  * publicly-anchored Sidetree document patch.
  */
-fun Map<String, Any?>.withoutPrivateD(): Map<String, Any?> =
-    if (containsKey("d")) filterKeys { it != "d" } else this
+fun Map<String, Any?>.withoutPrivateD(): Map<String, Any?> = if (containsKey("d")) filterKeys { it != "d" } else this

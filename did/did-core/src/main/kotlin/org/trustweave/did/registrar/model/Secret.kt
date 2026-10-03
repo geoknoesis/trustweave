@@ -43,7 +43,14 @@ data class Secret(
      * Allows DID methods to include additional secret material.
      */
     val methodSpecificSecrets: Map<String, String>? = null,
-)
+) {
+    /** Never prints key material: only which secrets are present. */
+    override fun toString(): String =
+        "Secret(keys=${keys?.size ?: 0} entries, recoveryKey=${redact(recoveryKey)}, updateKey=${redact(updateKey)}, " +
+            "methodSpecificSecrets=${methodSpecificSecrets?.keys ?: emptySet<String>()} <redacted values>)"
+
+    private fun redact(value: String?): String = if (value == null) "null" else "<redacted>"
+}
 
 /**
  * Represents a single key material entry.
@@ -72,4 +79,10 @@ data class KeyMaterial(
      * Additional key-specific properties.
      */
     val additionalProperties: Map<String, String>? = null,
-)
+) {
+    /** Never prints private key material. */
+    override fun toString(): String =
+        "KeyMaterial(id=$id, type=$type, privateKeyJwk=${if (privateKeyJwk == null) "null" else "<redacted>"}, " +
+            "privateKeyMultibase=${if (privateKeyMultibase == null) "null" else "<redacted>"}, " +
+            "additionalProperties=${additionalProperties?.keys ?: emptySet<String>()} <redacted values>)"
+}

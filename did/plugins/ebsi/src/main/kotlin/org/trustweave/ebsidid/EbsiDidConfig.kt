@@ -23,9 +23,12 @@ data class EbsiDidConfig(
     val bearerToken: String? = null,
     val timeoutSeconds: Long = 30,
 ) {
+    /** Redacts the bearer token so it never reaches logs. */
+    override fun toString(): String =
+        "EbsiDidConfig(apiBaseUrl=$apiBaseUrl, network=$network, " +
+            "bearerToken=${if (bearerToken == null) "null" else "<redacted>"}, timeoutSeconds=$timeoutSeconds)"
 
     companion object {
-
         /** EBSI pilot API base URL. */
         const val PILOT_URL = "https://api-pilot.ebsi.eu"
 
@@ -40,24 +43,21 @@ data class EbsiDidConfig(
          *
          * @param bearerToken Optional bearer token for write operations.
          */
-        fun pilot(bearerToken: String? = null): EbsiDidConfig =
-            EbsiDidConfig(PILOT_URL, EbsiNetwork.PILOT, bearerToken)
+        fun pilot(bearerToken: String? = null): EbsiDidConfig = EbsiDidConfig(PILOT_URL, EbsiNetwork.PILOT, bearerToken)
 
         /**
          * Creates a configuration targeting the EBSI conformance environment.
          *
          * @param bearerToken Optional bearer token for write operations.
          */
-        fun conformance(bearerToken: String? = null): EbsiDidConfig =
-            EbsiDidConfig(CONFORMANCE_URL, EbsiNetwork.CONFORMANCE, bearerToken)
+        fun conformance(bearerToken: String? = null): EbsiDidConfig = EbsiDidConfig(CONFORMANCE_URL, EbsiNetwork.CONFORMANCE, bearerToken)
 
         /**
          * Creates a configuration targeting the EBSI production environment.
          *
          * @param bearerToken Optional bearer token for write operations.
          */
-        fun production(bearerToken: String? = null): EbsiDidConfig =
-            EbsiDidConfig(PRODUCTION_URL, EbsiNetwork.PRODUCTION, bearerToken)
+        fun production(bearerToken: String? = null): EbsiDidConfig = EbsiDidConfig(PRODUCTION_URL, EbsiNetwork.PRODUCTION, bearerToken)
 
         /**
          * Creates a configuration from a property map (for SPI provider use).
@@ -65,14 +65,16 @@ data class EbsiDidConfig(
          * Recognised keys: `apiBaseUrl`, `network`, `bearerToken`, `timeoutSeconds`.
          */
         fun fromMap(map: Map<String, Any?>): EbsiDidConfig {
-            val network = (map["network"] as? String)
-                ?.let { runCatching { EbsiNetwork.valueOf(it.uppercase()) }.getOrNull() }
-                ?: EbsiNetwork.PILOT
-            val defaultUrl = when (network) {
-                EbsiNetwork.PILOT -> PILOT_URL
-                EbsiNetwork.CONFORMANCE -> CONFORMANCE_URL
-                EbsiNetwork.PRODUCTION -> PRODUCTION_URL
-            }
+            val network =
+                (map["network"] as? String)
+                    ?.let { runCatching { EbsiNetwork.valueOf(it.uppercase()) }.getOrNull() }
+                    ?: EbsiNetwork.PILOT
+            val defaultUrl =
+                when (network) {
+                    EbsiNetwork.PILOT -> PILOT_URL
+                    EbsiNetwork.CONFORMANCE -> CONFORMANCE_URL
+                    EbsiNetwork.PRODUCTION -> PRODUCTION_URL
+                }
             return EbsiDidConfig(
                 apiBaseUrl = map["apiBaseUrl"] as? String ?: defaultUrl,
                 network = network,

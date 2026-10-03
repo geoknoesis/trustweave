@@ -41,6 +41,12 @@ data class IonDidConfig(
      */
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Prints only the keys of [additionalProperties] and omits [bitcoinRpcUrl] credentials. */
+    override fun toString(): String =
+        "IonDidConfig(ionNodeUrl=$ionNodeUrl, bitcoinRpcUrl=${if (bitcoinRpcUrl == null) "null" else "<redacted>"}, " +
+            "bitcoinNetwork=$bitcoinNetwork, batchSize=$batchSize, timeoutSeconds=$timeoutSeconds, " +
+            "additionalProperties=${additionalProperties.keys})"
+
     companion object {
         /**
          * Common ION node endpoints.

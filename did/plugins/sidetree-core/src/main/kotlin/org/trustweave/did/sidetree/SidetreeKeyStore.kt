@@ -17,8 +17,13 @@ import java.util.concurrent.ConcurrentHashMap
  * tests and short-lived applications only.
  */
 interface SidetreeKeyStore {
-    suspend fun put(didSuffix: String, keys: SidetreeKeyPair)
+    suspend fun put(
+        didSuffix: String,
+        keys: SidetreeKeyPair,
+    )
+
     suspend fun get(didSuffix: String): SidetreeKeyPair?
+
     suspend fun remove(didSuffix: String)
 }
 
@@ -35,7 +40,12 @@ data class SidetreeKeyPair(
     val updatePublicJwk: Map<String, Any?>,
     val recoveryPrivateJwk: Map<String, Any?>,
     val recoveryPublicJwk: Map<String, Any?>,
-)
+) {
+    /** The private JWKs carry the `d` scalar: never print them. */
+    override fun toString(): String =
+        "SidetreeKeyPair(updatePrivateJwk=<redacted>, updatePublicJwk=$updatePublicJwk, " +
+            "recoveryPrivateJwk=<redacted>, recoveryPublicJwk=$recoveryPublicJwk)"
+}
 
 /**
  * In-memory implementation used by default. Suitable for tests and ephemeral
@@ -45,7 +55,10 @@ data class SidetreeKeyPair(
 class InMemorySidetreeKeyStore : SidetreeKeyStore {
     private val store = ConcurrentHashMap<String, SidetreeKeyPair>()
 
-    override suspend fun put(didSuffix: String, keys: SidetreeKeyPair) {
+    override suspend fun put(
+        didSuffix: String,
+        keys: SidetreeKeyPair,
+    ) {
         store[didSuffix] = keys
     }
 

@@ -54,6 +54,11 @@ data class OrbDidConfig(
     val anchorOrigin: String? = null,
     val operatorId: String? = null,
 ) {
+    /** Redacts the value of [authHeader] (a credential) so it never reaches logs. */
+    override fun toString(): String =
+        "OrbDidConfig(baseUrl=$baseUrl, namespace=$namespace, operationsPath=$operationsPath, " +
+            "identifiersPath=$identifiersPath, authHeader=${authHeader?.let { "${it.first}=<redacted>" }}, " +
+            "timeoutSeconds=$timeoutSeconds, anchorOrigin=$anchorOrigin, operatorId=$operatorId)"
 
     init {
         require(baseUrl.isNotBlank()) { "OrbDidConfig.baseUrl must not be blank" }
@@ -74,10 +79,11 @@ data class OrbDidConfig(
      * URI parsing fails (defensive; init already rejects blank values).
      */
     val effectiveOperatorId: String
-        get() = operatorId ?: runCatching { java.net.URI(baseUrl).host }
-            .getOrNull()
-            ?.takeIf { it.isNotBlank() }
-            ?: baseUrl.trimEnd('/')
+        get() =
+            operatorId ?: runCatching { java.net.URI(baseUrl).host }
+                .getOrNull()
+                ?.takeIf { it.isNotBlank() }
+                ?: baseUrl.trimEnd('/')
 
     /**
      * CAIP-2-style chain identifier for this Orb node. Synthesised as
@@ -98,11 +104,12 @@ data class OrbDidConfig(
          * `identifiersPath`, `authHeaderName` + `authHeaderValue`, `timeoutSeconds`.
          */
         fun fromMap(map: Map<String, Any?>): OrbDidConfig {
-            val baseUrl = map["baseUrl"] as? String
-                ?: map["orbBaseUrl"] as? String
-                ?: throw IllegalArgumentException(
-                    "did:orb requires 'baseUrl' (Orb node URL) in DidCreationOptions.additionalProperties",
-                )
+            val baseUrl =
+                map["baseUrl"] as? String
+                    ?: map["orbBaseUrl"] as? String
+                    ?: throw IllegalArgumentException(
+                        "did:orb requires 'baseUrl' (Orb node URL) in DidCreationOptions.additionalProperties",
+                    )
             val authName = map["authHeaderName"] as? String
             val authValue = map["authHeaderValue"] as? String
             val authHeader: Pair<String, String>? =

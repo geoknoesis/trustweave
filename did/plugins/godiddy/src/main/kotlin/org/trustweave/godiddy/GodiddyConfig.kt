@@ -10,17 +10,19 @@ data class GodiddyConfig(
      * Can be overridden for self-hosted instances.
      */
     val baseUrl: String = "https://api.godiddy.com",
-
     /**
      * HTTP request timeout in milliseconds.
      */
     val timeout: Long = 30000,
-
     /**
      * API key for authentication (if required).
      */
-    val apiKey: String? = null
+    val apiKey: String? = null,
 ) {
+    /** Redacts [apiKey] so it never reaches logs. */
+    override fun toString(): String =
+        "GodiddyConfig(baseUrl=$baseUrl, timeout=$timeout, apiKey=${if (apiKey == null) "null" else "<redacted>"})"
+
     companion object {
         /**
          * Default configuration using public godiddy service.
@@ -32,9 +34,8 @@ data class GodiddyConfig(
             return GodiddyConfig(
                 baseUrl = props["baseUrl"] as? String ?: default().baseUrl,
                 timeout = (props["timeout"] as? Number)?.toLong() ?: default().timeout,
-                apiKey = props["apiKey"] as? String
+                apiKey = props["apiKey"] as? String,
             )
         }
     }
 }
-

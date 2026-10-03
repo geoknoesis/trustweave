@@ -90,3 +90,18 @@ class IonDidMethodTest {
         assertEquals(1, back.additionalProperties["x"])
     }
 }
+
+class IonDidConfigRedactionTest {
+    @kotlin.test.Test
+    fun `toString hides bitcoin rpc credentials and additional property values`() {
+        val text =
+            IonDidConfig(
+                ionNodeUrl = "https://node.example",
+                bitcoinRpcUrl = "http://user:RPC-PASS@btc:8332",
+                additionalProperties = mapOf("apiKey" to "PROP-SECRET"),
+            ).toString()
+        kotlin.test.assertFalse("RPC-PASS" in text, text)
+        kotlin.test.assertFalse("PROP-SECRET" in text, text)
+        kotlin.test.assertTrue("apiKey" in text, text)
+    }
+}

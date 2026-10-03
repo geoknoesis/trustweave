@@ -41,6 +41,11 @@ data class WebDidConfig(
      */
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Prints only the keys of [additionalProperties]: its values may carry credentials. */
+    override fun toString(): String =
+        "WebDidConfig(requireHttps=$requireHttps, documentPath=$documentPath, timeoutSeconds=$timeoutSeconds, " +
+            "followRedirects=$followRedirects, additionalProperties=${additionalProperties.keys})"
+
     companion object {
         /**
          * Creates a default configuration.

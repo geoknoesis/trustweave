@@ -1959,6 +1959,13 @@ public final class org/trustweave/did/rotation/RotationResult {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/did/serialization/DidJsonSerialization {
+	public static final field INSTANCE Lorg/trustweave/did/serialization/DidJsonSerialization;
+	public final fun getModule ()Lkotlinx/serialization/modules/SerializersModule;
+	public final fun json (Lkotlin/jvm/functions/Function1;)Lkotlinx/serialization/json/Json;
+	public static synthetic fun json$default (Lorg/trustweave/did/serialization/DidJsonSerialization;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/serialization/json/Json;
+}
+
 public abstract interface class org/trustweave/did/spi/DidMethodProvider {
 	public abstract fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;
 	public static synthetic fun create$default (Lorg/trustweave/did/spi/DidMethodProvider;Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;ILjava/lang/Object;)Lorg/trustweave/did/DidMethod;

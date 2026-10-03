@@ -12,6 +12,7 @@ import kotlinx.serialization.json.Json
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.storage.InMemoryJobStorage
 import org.trustweave.did.registrar.storage.JobStorage
+import org.trustweave.did.serialization.DidJsonSerialization
 import org.trustweave.observability.HostAuthentication
 import org.trustweave.observability.HostKind
 import org.trustweave.observability.HostObservability
@@ -48,6 +49,11 @@ import org.trustweave.observability.HostObservability
  * [withAuthentication] before starting it; until you do, every mutating request is refused with
  * 503 and reads keep working. `HostAuthentication.frontedByProxy("...")` records the case where
  * something in front already authenticates callers.
+ *
+ * **Job status reads are open by default** (`HostAuthentication` gates only mutating methods
+ * unless told otherwise). Job records can carry DID state, so pass
+ * `HostAuthentication.bearerToken(token, protect = HostAuthentication.ALL)` to require the same
+ * credential for `GET /1.0/jobs/{jobId}`.
  * @param jobStorage Storage for tracking long-running operations (default: InMemoryJobStorage)
  */
 class DidRegistrarServer(
@@ -111,13 +117,7 @@ class DidRegistrarServer(
             ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
         // Configure JSON serialization
         install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                    prettyPrint = true
-                },
-            )
+            json(registrarJson())
         }
 
         // Configure routing
@@ -126,3 +126,15 @@ class DidRegistrarServer(
         }
     }
 }
+
+/**
+ * The JSON configuration of the registrar API. It carries [DidJsonSerialization.module]:
+ * without it, any response holding a verification method with a `publicKeyJwk` cannot be
+ * encoded and every such create/update would answer 500.
+ */
+internal fun registrarJson(): Json =
+    DidJsonSerialization.json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        prettyPrint = true
+    }

@@ -1,6 +1,7 @@
 package org.trustweave.did.verification
 
 import kotlinx.datetime.Clock
+import org.trustweave.core.util.decodeBase58
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionMetadata
 
@@ -126,12 +127,13 @@ class DefaultDidDocumentVerificationService(
         // operates on the actual digest bytes, not on the ASCII encoding of the encoded form.
         resolutionMetadata.properties["digest"]?.let { expectedDigest ->
             if (!canonicalizationService.isConformant) {
-                // Skip digest check — the canonicalization service is not URDNA2015-conformant.
-                // Performing the check with a non-conformant implementation would always produce
-                // a misleading "digest mismatch" error against any external resolver.
-                warnings.add(
-                    "Document digest check skipped: canonicalization service is not URDNA2015-conformant. " +
-                        "Digest verification requires a conformant implementation.",
+                // The integrity check cannot be performed: comparing against a digest computed by
+                // a non-conformant canonicalizer would report a mismatch against any external
+                // resolver. But a digest was supplied and not checked, so the document must not
+                // be reported as valid either: "could not check" is not "checked and fine".
+                errors.add(
+                    "Document digest could not be verified: the canonicalization service is not " +
+                        "URDNA2015-conformant, and digest verification requires a conformant implementation.",
                 )
             } else {
                 // digestChecked tracks whether a byte-level comparison was actually performed so
@@ -190,21 +192,29 @@ class DefaultDidDocumentVerificationService(
         }
     }
 
+    /**
+     * Verifies [signature] over [data] with the key of [method].
+     *
+     * Supported: Ed25519 keys, as `Ed25519VerificationKey2020` / `Ed25519VerificationKey2018` /
+     * `Multikey` (`publicKeyMultibase`, with or without the `0xed01` multicodec prefix) or as an
+     * OKP/Ed25519 JWK (`JsonWebKey2020`, or any type carrying such a JWK). The signature is the
+     * raw 64-byte Ed25519 signature, encoded as multibase base58btc (`z…`), multibase base64url
+     * (`u…`), base64url, base64 or hex.
+     *
+     * Every other key type, an undecodable key or signature, and a wrong signature return `false`.
+     */
     override suspend fun verifyVerificationMethod(
         method: org.trustweave.did.model.VerificationMethod,
         signature: String,
         data: ByteArray,
     ): Boolean {
-        // Extract public key and verify signature
-        // Implementation depends on key type
-        return when (method.type) {
-            "Ed25519VerificationKey2020" -> {
-                verifyEd25519Signature(method, signature, data)
-            }
-            else -> {
-                false // Unsupported key type
-            }
+        val publicKey = Ed25519Verifier.publicKeyOf(method)
+        if (publicKey == null) {
+            logger.warn("verifyVerificationMethod: unsupported or unreadable key for ${method.id} (type ${method.type})")
+            return false
         }
+        val signatureBytes = Ed25519Verifier.decodeSignature(signature) ?: return false
+        return Ed25519Verifier.verify(publicKey, signatureBytes, data)
     }
 
     private fun verifyVerificationMethodStructure(method: org.trustweave.did.model.VerificationMethod): Boolean =
@@ -295,13 +305,102 @@ class DefaultDidDocumentVerificationService(
             else -> throw IllegalArgumentException("Unsupported multibase prefix: ${encoded[0]}")
         }
     }
+}
 
-    private suspend fun verifyEd25519Signature(
-        method: org.trustweave.did.model.VerificationMethod,
-        signature: String,
+/**
+ * Ed25519 signature verification through the JDK's EdDSA provider (JDK 15+).
+ */
+internal object Ed25519Verifier {
+    private const val KEY_SIZE = 32
+    private const val SIGNATURE_SIZE = 64
+
+    /** DER prefix of an X.509 SubjectPublicKeyInfo for an Ed25519 key (OID 1.3.101.112). */
+    private val X509_PREFIX =
+        byteArrayOf(0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00)
+
+    private val ED25519_TYPES = setOf("Ed25519VerificationKey2020", "Ed25519VerificationKey2018", "Multikey")
+
+    /** The raw 32-byte Ed25519 public key of [method], or null if it has none. */
+    fun publicKeyOf(method: org.trustweave.did.model.VerificationMethod): ByteArray? {
+        method.publicKeyJwk?.let { jwk ->
+            if (jwk["kty"] == "OKP" && jwk["crv"] == "Ed25519") {
+                val x = jwk["x"] as? String ?: return null
+                return decodeBase64Url(x)?.takeIf { it.size == KEY_SIZE }
+            }
+        }
+        if (method.type !in ED25519_TYPES) return null
+        val multibase = method.publicKeyMultibase ?: return null
+        if (!multibase.startsWith("z")) return null
+        val bytes =
+            try {
+                multibase.substring(1).decodeBase58()
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
+        return when {
+            bytes.size == KEY_SIZE + 2 && bytes[0] == 0xed.toByte() && bytes[1] == 0x01.toByte() ->
+                bytes.copyOfRange(2, bytes.size)
+            // Multikey always carries the multicodec prefix; the older types may hold the raw key.
+            bytes.size == KEY_SIZE && method.type != "Multikey" -> bytes
+            else -> null
+        }
+    }
+
+    /** Decodes a 64-byte signature from the encodings listed on verifyVerificationMethod. */
+    fun decodeSignature(signature: String): ByteArray? {
+        if (signature.isEmpty()) return null
+        val candidates =
+            sequence<() -> ByteArray?> {
+                if (signature.startsWith("z")) yield { signature.substring(1).decodeBase58() }
+                if (signature.startsWith("u")) yield { decodeBase64Url(signature.substring(1)) }
+                yield { decodeBase64Url(signature) }
+                yield {
+                    java.util.Base64
+                        .getDecoder()
+                        .decode(signature)
+                }
+                if (signature.length == SIGNATURE_SIZE * 2) yield { decodeHex(signature) }
+            }
+        return candidates
+            .mapNotNull { decode ->
+                try {
+                    decode()
+                } catch (e: IllegalArgumentException) {
+                    null
+                }
+            }.firstOrNull { it.size == SIGNATURE_SIZE }
+    }
+
+    fun verify(
+        publicKey: ByteArray,
+        signature: ByteArray,
         data: ByteArray,
-    ): Boolean {
-        logger.warn("Ed25519 signature verification is not yet implemented. Returning false.")
-        return false
+    ): Boolean =
+        try {
+            val key =
+                java.security.KeyFactory
+                    .getInstance("Ed25519")
+                    .generatePublic(java.security.spec.X509EncodedKeySpec(X509_PREFIX + publicKey))
+            java.security.Signature.getInstance("Ed25519").run {
+                initVerify(key)
+                update(data)
+                verify(signature)
+            }
+        } catch (e: java.security.GeneralSecurityException) {
+            false
+        }
+
+    private fun decodeBase64Url(value: String): ByteArray? =
+        try {
+            java.util.Base64
+                .getUrlDecoder()
+                .decode(value.trimEnd('='))
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+
+    private fun decodeHex(value: String): ByteArray? {
+        if (value.length % 2 != 0 || !value.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }) return null
+        return value.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
     }
 }

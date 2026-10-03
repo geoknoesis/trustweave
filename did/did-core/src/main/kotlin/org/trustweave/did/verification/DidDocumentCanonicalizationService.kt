@@ -32,9 +32,10 @@ interface DidDocumentCanonicalizationService {
      * Whether this implementation is fully URDNA2015-conformant.
      *
      * Returns `false` by default. A production URDNA2015 implementation should override
-     * this to `true`. When `false`, the digest integrity check in
-     * [DefaultDidDocumentVerificationService.verifyDocument] is skipped with a warning
-     * rather than always producing a misleading "digest mismatch" error.
+     * this to `true`. When `false` and a digest is supplied, the integrity check in
+     * [DefaultDidDocumentVerificationService.verifyDocument] cannot be performed, so the document
+     * is reported invalid with an error saying so — rather than a misleading "digest mismatch",
+     * and rather than `valid = true` for a check that never ran.
      */
     val isConformant: Boolean get() = false
 

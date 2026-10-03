@@ -745,11 +745,18 @@ public final class org/trustweave/core/util/ExpiringStore : java/lang/AutoClosea
 public final class org/trustweave/core/util/ExpiringStore$Companion {
 }
 
+public final class org/trustweave/core/util/JsonCanonicalization {
+	public static final field INSTANCE Lorg/trustweave/core/util/JsonCanonicalization;
+	public static final fun canonicalize (Lkotlinx/serialization/json/JsonElement;)Ljava/lang/String;
+	public static final fun canonicalizeToBytes (Lkotlinx/serialization/json/JsonElement;)[B
+}
+
 public final class org/trustweave/core/util/ResultExtensionsKt {
 	public static final fun combine (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun getOrThrowException (Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun mapError (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public static final fun mapSequential (Ljava/util/List;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun rethrowIfFatal (Ljava/lang/Throwable;)V
 	public static final fun trustweaveCatching (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

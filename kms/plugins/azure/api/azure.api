@@ -64,6 +64,7 @@ public final class org/trustweave/azurekms/AzureKmsConfig {
 	public final fun getTenantId ()Ljava/lang/String;
 	public final fun getVaultUrl ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static final fun requireSecureEndpointOverride (Ljava/lang/String;)V
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -81,5 +82,6 @@ public final class org/trustweave/azurekms/AzureKmsConfig$Companion {
 	public final fun builder ()Lorg/trustweave/azurekms/AzureKmsConfig$Builder;
 	public final fun fromEnvironment ()Lorg/trustweave/azurekms/AzureKmsConfig;
 	public final fun fromMap (Ljava/util/Map;)Lorg/trustweave/azurekms/AzureKmsConfig;
+	public final fun requireSecureEndpointOverride (Ljava/lang/String;)V
 }
 

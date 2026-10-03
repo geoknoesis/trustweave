@@ -5,7 +5,6 @@ import com.azure.identity.ClientSecretCredentialBuilder
 import com.azure.identity.DefaultAzureCredentialBuilder
 import com.azure.security.keyvault.keys.KeyClient
 import com.azure.security.keyvault.keys.KeyClientBuilder
-import java.net.URI
 
 /**
  * Factory for creating Azure Key Vault KeyClient instances.
@@ -19,11 +18,12 @@ object AzureKmsClientFactory {
      * When [AzureKmsConfig.endpointOverride] is set (e.g. a local Key Vault emulator), the client
      * talks to that endpoint instead of [AzureKmsConfig.vaultUrl], and the challenge-resource
      * check (which requires the token audience to match a `*.vault.azure.net` host) is disabled
-     * for it. The override must be an absolute `http(s)` URL.
+     * for it. The override must be an absolute `https` URL, or `http` only for a loopback host
+     * (see [AzureKmsConfig.requireSecureEndpointOverride]).
      *
      * @param config Azure Key Vault configuration
      * @return Configured KeyClient
-     * @throws IllegalArgumentException if the endpoint override is not an absolute http(s) URL
+     * @throws IllegalArgumentException if the endpoint override is not an absolute https URL (or loopback http)
      */
     fun createClient(config: AzureKmsConfig): KeyClient {
         val builder =
@@ -41,15 +41,7 @@ object AzureKmsClientFactory {
     /** The URL the client talks to: the endpoint override if set, else the vault URL. */
     internal fun effectiveVaultUrl(config: AzureKmsConfig): String {
         val override = config.endpointOverride ?: return config.vaultUrl
-        val uri =
-            try {
-                URI(override)
-            } catch (e: Exception) {
-                throw IllegalArgumentException("Invalid Azure Key Vault endpointOverride: $override", e)
-            }
-        require(uri.isAbsolute && uri.scheme in setOf("http", "https") && !uri.host.isNullOrBlank()) {
-            "Azure Key Vault endpointOverride must be an absolute http(s) URL, got: $override"
-        }
+        AzureKmsConfig.requireSecureEndpointOverride(override)
         return override
     }
 

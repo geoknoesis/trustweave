@@ -424,4 +424,54 @@ class RemoteStatusListTest {
         assertEquals(vetted, dns.lookup("status.example.org"))
         assertEquals(1, lookups)
     }
+
+    @Test
+    fun `a local status list shadows a remote one with the same url and is never fetched`() =
+        runBlocking<Unit> {
+            val fetcher = CountingFetcher { statusListVc(encodedList(16_384, 42)) }
+            val m = manager(RemoteStatusListResolver(acceptAll, fetcher))
+            val local = m.createStatusList("did:example:local", StatusPurpose.REVOCATION, customId = listUrl)
+            assertEquals(listUrl, local.value)
+            // The local row is authoritative: bit 42 is clear locally although the remote copy has it set.
+            assertFalse(m.checkStatusByIndex(StatusListId(listUrl), 42).revoked)
+            assertEquals(0, fetcher.calls)
+        }
+
+    @Test
+    fun `creating a local list after a remote check switches to the local row on the same instance`() =
+        runBlocking<Unit> {
+            val fetcher = CountingFetcher { statusListVc(encodedList(16_384, 42)) }
+            val m = manager(RemoteStatusListResolver(acceptAll, fetcher))
+            assertTrue(m.checkStatusByIndex(StatusListId(listUrl), 42).revoked) // remote, now cached as non-local
+            m.createStatusList("did:example:local", StatusPurpose.REVOCATION, customId = listUrl)
+            assertFalse(m.checkStatusByIndex(StatusListId(listUrl), 42).revoked)
+        }
+
+    @Test
+    fun `the factory and provider accept a remote resolver`() =
+        runBlocking<Unit> {
+            val resolver = RemoteStatusListResolver(acceptAll, CountingFetcher { statusListVc(encodedList(16_384, 7)) })
+            val viaFactory =
+                BitstringStatusListManagerFactory.create(
+                    dataSource = dataSource,
+                    kms = InMemoryKeyManagementService(),
+                    issuerDid = "did:example:local",
+                    remoteStatusLists = resolver,
+                )
+            assertTrue(viaFactory.checkStatusByIndex(StatusListId(listUrl), 7).revoked)
+
+            val provider =
+                org.trustweave.revocation.bitstring.spi.BitstringStatusListManagerProvider().also {
+                    it.kms = InMemoryKeyManagementService()
+                    it.remoteStatusLists = resolver
+                }
+            val viaProvider = provider.create("bitstring")
+            assertTrue(viaProvider.checkStatusByIndex(StatusListId(listUrl), 7).revoked)
+        }
+
+    @Test
+    fun `without a resolver the factory-built manager still fails closed on a remote list`() {
+        val m = BitstringStatusListManagerFactory.create(dataSource, InMemoryKeyManagementService(), "did:example:local")
+        assertFailsClosed("STATUS_LIST_UNAVAILABLE") { m.checkStatusByIndex(StatusListId(listUrl), 1) }
+    }
 }

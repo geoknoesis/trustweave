@@ -247,7 +247,11 @@ class AlgorandBlockchainAnchorClient(
                             anchoredBytes = submittedBytes,
                             mediaType = mediaType,
                             senderAccount = acct,
-                            sponsor = sponsor!!,
+                            sponsor =
+                                sponsor ?: throw TreasuryException.SponsorNotAllowed(
+                                    domainId = ctx.domainId,
+                                    sponsorDid = (ctx.feeStrategy as FeeStrategy.Sponsored).sponsorDid,
+                                ),
                         )
                     else -> {
                         val (txHash, feeMicroAlgos) = submitTransaction(submittedBytes)

@@ -47,11 +47,14 @@ class DidRegistrarConfiguration {
      * Authentication for the mutating registrar endpoints, from
      * `trustweave.registrar.auth.bearer-token` (32-256 printable ASCII characters) or
      * `trustweave.registrar.auth.fronted-by-proxy` (a statement of what authenticates callers in
-     * front of this server). With neither set, every create/update/deactivate is refused.
+     * front of this server; it must be a real statement, not `true`, and logs a startup warning).
+     * With neither set, every request is refused. `trustweave.registrar.auth.public-job-status=true`
+     * additionally lets `GET /1.0/jobs/{id}` through without credentials.
      */
     @Bean
     fun registrarAuthentication(
         @Value("\${trustweave.registrar.auth.bearer-token:}") bearerToken: String,
         @Value("\${trustweave.registrar.auth.fronted-by-proxy:}") frontedByProxy: String,
-    ): RegistrarAuthentication = RegistrarAuthentication.fromProperties(bearerToken, frontedByProxy)
+        @Value("\${trustweave.registrar.auth.public-job-status:false}") publicJobStatus: Boolean,
+    ): RegistrarAuthentication = RegistrarAuthentication.fromProperties(bearerToken, frontedByProxy, publicJobStatus)
 }

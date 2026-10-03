@@ -28,6 +28,14 @@ class PrivateNetworkGuardTest {
             "::1", // IPv6 loopback
             "fe80::1", // IPv6 link-local
             "fc00::1", // IPv6 unique-local (ULA)
+            "100.64.0.1", // CGNAT 100.64/10
+            "100.127.255.254", // CGNAT upper bound
+            "0.1.2.3", // 0/8
+            "198.18.0.1", // benchmarking 198.18/15
+            "240.0.0.1", // reserved 240/4
+            "64:ff9b::a9fe:a9fe", // NAT64 embedding 169.254.169.254
+            "2002:a9fe:a9fe::1", // 6to4 embedding 169.254.169.254
+            "::7f00:1", // IPv4-compatible embedding 127.0.0.1
         )
         for (ip in disallowed) {
             assertTrue(PrivateNetworkGuard.isDisallowed(addr(ip)), "$ip must be disallowed")
@@ -36,7 +44,7 @@ class PrivateNetworkGuardTest {
 
     @Test
     fun `public addresses are allowed`() {
-        for (ip in listOf("8.8.8.8", "1.1.1.1", "93.184.216.34", "2606:4700:4700::1111")) {
+        for (ip in listOf("8.8.8.8", "1.1.1.1", "93.184.216.34", "100.128.0.1", "2606:4700:4700::1111", "64:ff9b::808:808")) {
             assertFalse(PrivateNetworkGuard.isDisallowed(addr(ip)), "$ip must be allowed")
         }
     }

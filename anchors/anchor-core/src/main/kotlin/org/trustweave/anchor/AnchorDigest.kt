@@ -156,8 +156,25 @@ object AnchorDigest {
     fun matches(
         envelope: JsonObject,
         payload: JsonElement,
+    ): Boolean = matches(envelope, payload, requireCanonicalEnvelope = false)
+
+    /**
+     * Like [matches] with an option for verifiers that accept only RFC 8785 anchors.
+     *
+     * @param requireCanonicalEnvelope when true, a legacy envelope (no `canon` member) never
+     *   matches. Legacy digests cover the kotlinx serialization bytes, which depend on key
+     *   order and number spelling, so a strict verifier may prefer to reject them outright.
+     *   Default behaviour ([matches] without this flag) keeps accepting legacy envelopes so old
+     *   anchors keep verifying.
+     */
+    @JvmStatic
+    fun matches(
+        envelope: JsonObject,
+        payload: JsonElement,
+        requireCanonicalEnvelope: Boolean,
     ): Boolean {
         if (!isEnvelope(envelope)) return false
+        if (requireCanonicalEnvelope && !isCanonicalized(envelope)) return false
         val bytes =
             if (isCanonicalized(envelope)) {
                 try {

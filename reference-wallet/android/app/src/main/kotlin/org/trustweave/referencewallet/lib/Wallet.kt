@@ -59,6 +59,15 @@ class Wallet(private val context: Context) {
         format: String,
         selectivelyDisclosable: List<String> = emptyList(),
     ): Storage.StoredCredential {
+        // Never store what was not verified: issuer signature, holder binding, validity window
+        // and (for SD-JWT VC) that every disclosure is covered by the signed digests.
+        val holder = storage.loadHolder() ?: throw IllegalStateException("Wallet not bootstrapped")
+        CredentialVerification.verifyImportedCredential(
+            compact = credential,
+            format = format,
+            holderDid = holder.did,
+            nowEpochSeconds = Clock.System.now().epochSeconds,
+        )
         val meta = when (format) {
             "vc+sd-jwt" -> extractSdJwtMeta(credential)
             else -> extractVcJwtMeta(credential)

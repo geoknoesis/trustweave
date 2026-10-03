@@ -8,7 +8,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CardanoAnchorConfigTest {
-
     @Test
     fun `defaults to CIP-20 label 674 on Preview`() {
         val cfg = CardanoAnchorConfig(blockfrostProjectId = "preview123")
@@ -20,19 +19,21 @@ class CardanoAnchorConfigTest {
 
     @Test
     fun `canSubmit is true when mnemonic provided`() {
-        val cfg = CardanoAnchorConfig(
-            blockfrostProjectId = "preview123",
-            submitterMnemonic = "abandon abandon abandon",
-        )
+        val cfg =
+            CardanoAnchorConfig(
+                blockfrostProjectId = "preview123",
+                submitterMnemonic = "abandon abandon abandon",
+            )
         assertTrue(cfg.canSubmit())
     }
 
     @Test
     fun `canSubmit is true when secret key provided`() {
-        val cfg = CardanoAnchorConfig(
-            blockfrostProjectId = "preview123",
-            submitterSecretKey = "deadbeef",
-        )
+        val cfg =
+            CardanoAnchorConfig(
+                blockfrostProjectId = "preview123",
+                submitterSecretKey = "deadbeef",
+            )
         assertTrue(cfg.canSubmit())
     }
 
@@ -59,23 +60,25 @@ class CardanoAnchorConfigTest {
 
     @Test
     fun `base URL override wins over network default`() {
-        val cfg = CardanoAnchorConfig(
-            blockfrostProjectId = "preview123",
-            blockfrostBaseUrlOverride = "http://localhost:9999/api/v0",
-        )
+        val cfg =
+            CardanoAnchorConfig(
+                blockfrostProjectId = "preview123",
+                blockfrostBaseUrlOverride = "http://localhost:9999/api/v0",
+            )
         assertEquals("http://localhost:9999/api/v0", cfg.blockfrostBaseUrl())
     }
 
     @Test
     fun `toMap and fromMap round-trip`() {
-        val cfg = CardanoAnchorConfig(
-            blockfrostProjectId = "preview123",
-            network = CardanoNetwork.Preprod,
-            submitterMnemonic = "test test test",
-            metadataLabel = 1234L,
-            blockfrostBaseUrlOverride = "http://localhost:8080/api/v0",
-            confirmationTimeoutSeconds = 30L,
-        )
+        val cfg =
+            CardanoAnchorConfig(
+                blockfrostProjectId = "preview123",
+                network = CardanoNetwork.Preprod,
+                submitterMnemonic = "test test test",
+                metadataLabel = 1234L,
+                blockfrostBaseUrlOverride = "http://localhost:8080/api/v0",
+                confirmationTimeoutSeconds = 30L,
+            )
         val map = cfg.toMap()
         val restored = CardanoAnchorConfig.fromMap("cardano:preprod", map)
         assertEquals(cfg, restored)
@@ -83,10 +86,11 @@ class CardanoAnchorConfigTest {
 
     @Test
     fun `fromMap derives network from chainId when missing in map`() {
-        val cfg = CardanoAnchorConfig.fromMap(
-            "cardano:mainnet",
-            mapOf(CardanoAnchorConfig.KEY_PROJECT_ID to "mainnet123"),
-        )
+        val cfg =
+            CardanoAnchorConfig.fromMap(
+                "cardano:mainnet",
+                mapOf(CardanoAnchorConfig.KEY_PROJECT_ID to "mainnet123"),
+            )
         assertEquals(CardanoNetwork.Mainnet, cfg.network)
         assertEquals(CardanoAnchorConfig.CIP20_MESSAGE_LABEL, cfg.metadataLabel)
     }
@@ -94,5 +98,17 @@ class CardanoAnchorConfigTest {
     @Test
     fun `network fromChainId returns null for unknown`() {
         assertNull(CardanoNetwork.fromChainId("cardano:bogus"))
+    }
+
+    @Test
+    fun `toString never prints the project id or submitter secrets`() {
+        val text =
+            CardanoAnchorConfig(
+                blockfrostProjectId = "previewSECRETproject",
+                submitterMnemonic = "SECRET mnemonic words",
+                submitterSecretKey = "SECRETKEYHEX",
+            ).toString()
+        assertFalse(text.contains("SECRET"), text)
+        assertTrue(text.contains("network=Preview"), text)
     }
 }

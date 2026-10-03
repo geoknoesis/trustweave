@@ -1,3 +1,7 @@
+public abstract interface class org/trustweave/contract/ContractCredentialResolver {
+	public abstract fun resolve (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class org/trustweave/contract/ContractDraftRequest {
 	public fun <init> (Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
 	public synthetic fun <init> (Lorg/trustweave/contract/models/ContractType;Lorg/trustweave/contract/models/ExecutionModel;Lorg/trustweave/contract/models/ContractParties;Lorg/trustweave/contract/models/ContractTerms;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -35,7 +39,8 @@ public final class org/trustweave/contract/ContractValidator {
 public final class org/trustweave/contract/DefaultSmartContractService : org/trustweave/contract/SmartContractService {
 	public fun <init> ()V
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;)V
-	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun activateContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun anchorContract-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun bindContract-yxL6bBk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

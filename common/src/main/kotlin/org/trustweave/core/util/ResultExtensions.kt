@@ -14,12 +14,11 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param transform Function to transform the error
  * @return Result with transformed error, or the original success result
  */
-inline fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T> {
-    return fold(
+inline fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T> =
+    fold(
         onSuccess = { Result.success(it) },
-        onFailure = { throwable -> Result.failure(transform(throwable)) }
+        onFailure = { throwable -> Result.failure(transform(throwable)) },
     )
-}
 
 /**
  * Gets the result value or throws a TrustWeaveException.
@@ -30,13 +29,11 @@ inline fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T
  * @return The result value
  * @throws TrustWeaveException if the result is a failure
  */
-fun <T> Result<T>.getOrThrowException(): T {
-    return getOrElse { throwable ->
+fun <T> Result<T>.getOrThrowException(): T =
+    getOrElse { throwable ->
         if (throwable is CancellationException) throw throwable
         throw throwable.toTrustWeaveException()
     }
-}
-
 
 /**
  * Combines multiple Results into a single Result containing a list of values.
@@ -51,16 +48,18 @@ fun <T> Result<T>.getOrThrowException(): T {
  * @param transform Function to transform the list of values
  * @return Result containing the transformed value, or failure if any input Result failed
  */
-fun <T, R> List<Result<T>>.combine(transform: (List<T>) -> R): Result<R> = try {
-    // getOrThrow() will throw on first failure, short-circuiting the map operation.
-    // This ensures we don't process remaining items if one has already failed.
-    Result.success(transform(map { it.getOrThrow() }))
-} catch (e: CancellationException) {
-    // Never capture coroutine cancellation in a Result — rethrow so it propagates.
-    throw e
-} catch (e: Throwable) {
-    Result.failure(e)
-}
+fun <T, R> List<Result<T>>.combine(transform: (List<T>) -> R): Result<R> =
+    try {
+        // getOrThrow() will throw on first failure, short-circuiting the map operation.
+        // This ensures we don't process remaining items if one has already failed.
+        Result.success(transform(map { it.getOrThrow() }))
+    } catch (e: CancellationException) {
+        // Never capture coroutine cancellation in a Result — rethrow so it propagates.
+        throw e
+    } catch (e: Throwable) {
+        e.rethrowIfFatal()
+        Result.failure(e)
+    }
 
 /**
  * Maps a list of items to Results and combines them sequentially.
@@ -93,15 +92,15 @@ fun <T, R> List<Result<T>>.combine(transform: (List<T>) -> R): Result<R> = try {
  * @param transform Function to transform each item to a Result
  * @return Result containing the list of transformed values, or failure if any transform fails
  */
-suspend fun <T, R> List<T>.mapSequential(
-    transform: suspend (T) -> Result<R>
-): Result<List<R>> = try {
-    Result.success(map { transform(it).getOrThrow() })
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Throwable) {
-    Result.failure(e)
-}
+suspend fun <T, R> List<T>.mapSequential(transform: suspend (T) -> Result<R>): Result<List<R>> =
+    try {
+        Result.success(map { transform(it).getOrThrow() })
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        e.rethrowIfFatal()
+        Result.failure(e)
+    }
 
 /**
  * Executes a suspend block and automatically converts any exceptions to TrustWeaveException.
@@ -127,18 +126,38 @@ suspend fun <T, R> List<T>.mapSequential(
  * @param block The suspend block to execute
  * @return Result with the block result or a TrustWeaveException
  */
-suspend inline fun <T> trustweaveCatching(
-    crossinline block: suspend () -> T
-): Result<T> = try {
-    Result.success(block())
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Throwable) {
-    Result.failure(e.toTrustWeaveException())
+suspend inline fun <T> trustweaveCatching(crossinline block: suspend () -> T): Result<T> =
+    try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        e.rethrowIfFatal()
+        Result.failure(e.toTrustWeaveException())
+    }
+
+/**
+ * Rethrows errors that no `Result` should ever capture: the JVM is in trouble
+ * ([VirtualMachineError] — out of memory, stack overflow, internal error), the classpath is broken
+ * ([LinkageError]), or the thread was interrupted ([InterruptedException]; the interrupt flag is
+ * restored first). Everything else returns normally so the caller can wrap it.
+ *
+ * Mirrors Scala's `NonFatal` classification. Used by [trustweaveCatching], [combine] and
+ * [mapSequential].
+ */
+@PublishedApi
+internal fun Throwable.rethrowIfFatal() {
+    when (this) {
+        is VirtualMachineError, is LinkageError -> throw this
+        is InterruptedException -> {
+            Thread.currentThread().interrupt()
+            throw this
+        }
+        else -> Unit
+    }
 }
 
 // Note: this file intentionally does NOT define `Result.onSuccess` / `Result.onFailure`.
 // The Kotlin standard library already provides them; redefining them here shadowed the
 // stdlib versions inside this package and silently skipped `null` success values
 // (`getOrNull()?.let(action)`). Use the stdlib `kotlin.onSuccess` / `kotlin.onFailure`.
-

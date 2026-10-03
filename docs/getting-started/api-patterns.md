@@ -21,6 +21,15 @@ Use **sealed results** for credential flows so production code can handle failur
 | `verify` / `verify(credential)` | `VerificationResult` | `Invalid.AdapterNotReady` if not configured; **`verify { }` without service** carries an internal placeholder VC in that result—**do not** treat it as real holder data (handle `AdapterNotReady` first) |
 | `presentationResult` / `presentationFromWalletResult` | `PresentationResult` | `Failure.AdapterNotReady` if not configured; `Failure.InvalidRequest` for missing holder / no credentials |
 | `issueBatch` / `verifyBatch` | `Flow` of `IssuanceResult` / `VerificationResult` | Each element is independent; misconfiguration yields `AdapterNotReady` per item |
+| `getKeyId(did)` | `kotlin.Result<String>` | **Not** a sealed result. Picks the first `assertionMethod`, else `authentication`, else the first non-`keyAgreement` method. Resolution failure or no usable key is `Result.failure(IllegalStateException)`; never throws for those. Unwrap with `getOrElse` / `fold` |
+| `trust { }` | `TrustPath.NotConfigured?` | Non-null **only** when no trust registry is configured (the block is not run). `null` means the block ran — it is not a trust verdict. Exceptions thrown inside the block propagate |
+| `findTrustPath` | `TrustPath` | `Verified`, `NotFound`, or `NotConfigured`; never throws for a missing registry |
+| `revoke { }` | `Boolean` | `true`/`false` is the revocation manager's answer. **Throws** `IllegalStateException` when no revocation manager is configured or `credential(...)`/`statusList(...)` is missing, and `TrustWeaveException.OperationTimedOut` on timeout (outcome unknown — re-check status before retrying) |
+| `close()` / `closeAsync()` | `Unit` | Never throw; idempotent across both. `close()` blocks while plugin lifecycles stop; from a coroutine prefer `closeAsync()` |
+
+These three non-sealed shapes (`getKeyId`, `trust { }`, `revoke { }`) are kept for source and binary
+compatibility; their contracts above are stable and covered by tests, so code can rely on them as
+documented rather than wrapping them in broad `try`/`catch`.
 
 **Unwrapping:** Most `getOrThrow()` extensions throw `IllegalStateException` with context; **`PresentationResult.getOrThrow()`** throws **`TrustWeaveException.InvalidState`**. Prefer `when` on sealed results in user-facing code.
 

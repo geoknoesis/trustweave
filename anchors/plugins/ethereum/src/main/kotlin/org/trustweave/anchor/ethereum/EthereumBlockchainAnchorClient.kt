@@ -29,6 +29,11 @@ import java.nio.charset.StandardCharsets
  * [AbstractEvmAnchorClient]; this plugin adds the payment plane
  * (fee estimation and treasury-managed writes).
  *
+ * **RPC endpoint:** mainnet has no default — the `rpcUrl` option is required (a missing one fails
+ * construction with [BlockchainException.ConfigurationFailed]) so production anchoring never
+ * silently runs through a shared, rate-limited public node that a verifier would then trust.
+ * Sepolia defaults to a keyless public endpoint for development; set `rpcUrl` to override it.
+ *
  * **Example Usage:**
  * ```kotlin
  * val options = mapOf(
@@ -40,16 +45,15 @@ import java.nio.charset.StandardCharsets
  */
 class EthereumBlockchainAnchorClient(
     chainId: String,
-    options: Map<String, Any?> = emptyMap()
+    options: Map<String, Any?> = emptyMap(),
 ) : AbstractEvmAnchorClient(chainId, options, resolveChain(chainId)) {
-
     companion object {
-        const val MAINNET = "eip155:1"  // Ethereum mainnet
+        const val MAINNET = "eip155:1" // Ethereum mainnet
         const val SEPOLIA = "eip155:11155111" // Sepolia testnet
 
-        // Network RPC endpoints
-        private const val MAINNET_RPC_URL = "https://eth.llamarpc.com"
-        private const val SEPOLIA_RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo"
+        // Network RPC endpoints. Mainnet deliberately has none (see class KDoc); the Sepolia
+        // default is a keyless public node, never a shared provider API key such as Alchemy's "demo".
+        private const val SEPOLIA_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com"
 
         private fun resolveChain(chainId: String): EvmChainConfig {
             require(chainId.startsWith("eip155:")) {
@@ -60,60 +64,67 @@ class EthereumBlockchainAnchorClient(
                 "Unsupported Ethereum chain ID: $chainId. Use 'eip155:1' (mainnet) or 'eip155:11155111' (Sepolia testnet)"
             }
             return when (chainId) {
-                MAINNET -> EvmChainConfig(
-                    numericChainId = 1L,
-                    defaultRpcUrl = MAINNET_RPC_URL,
-                    blockchainName = "Ethereum",
-                    networkName = "ethereum-mainnet"
-                )
-                else -> EvmChainConfig(
-                    numericChainId = 11155111L,
-                    defaultRpcUrl = SEPOLIA_RPC_URL,
-                    blockchainName = "Ethereum",
-                    networkName = "sepolia-testnet"
-                )
+                MAINNET ->
+                    EvmChainConfig(
+                        numericChainId = 1L,
+                        defaultRpcUrl = EvmChainConfig.NO_DEFAULT_RPC_URL,
+                        blockchainName = "Ethereum",
+                        networkName = "ethereum-mainnet",
+                    )
+                else ->
+                    EvmChainConfig(
+                        numericChainId = 11155111L,
+                        defaultRpcUrl = SEPOLIA_RPC_URL,
+                        blockchainName = "Ethereum",
+                        networkName = "sepolia-testnet",
+                    )
             }
         }
     }
 
-    override suspend fun estimate(op: OperationDescriptor): TokenAmount = withContext(Dispatchers.IO) {
-        val gasPrice = web3j.ethGasPrice().send().gasPrice
-        val gasLimit = op.contractCall?.let {
-            // eth_estimateGas is authoritative for contract calls; fall back to
-            // calldata math (never a blanket multi-million default) on failure.
-            try {
-                val from = credentials?.address ?: "0x0000000000000000000000000000000000000000"
-                val tx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
-                    from,
-                    null,
-                    null,
-                    null,
-                    it.contractAddress,
-                    it.value?.amount ?: BigInteger.ZERO,
-                    org.web3j.utils.Numeric.toHexString(it.callData),
-                )
-                web3j.ethEstimateGas(tx).send().amountUsed
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                EvmGas.txGasLimit(it.callData)
-            }
-        } ?: run {
-            // Plain anchor tx: a data-carrying value transfer costs exactly the
-            // intrinsic gas of its calldata — size it from the payload bytes.
-            val payloadBytes = op.payload?.let {
-                Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8)
-            }
-            when {
-                payloadBytes != null -> EvmGas.txGasLimit(payloadBytes)
-                else -> EvmGas.txGasLimitForSize(op.payloadSizeBytes ?: 0L)
-            }
-        }
+    override suspend fun estimate(op: OperationDescriptor): TokenAmount =
+        withContext(Dispatchers.IO) {
+            val gasPrice = web3j.ethGasPrice().send().gasPrice
+            val gasLimit =
+                op.contractCall?.let {
+                    // eth_estimateGas is authoritative for contract calls; fall back to
+                    // calldata math (never a blanket multi-million default) on failure.
+                    try {
+                        val from = credentials?.address ?: "0x0000000000000000000000000000000000000000"
+                        val tx =
+                            org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
+                                from,
+                                null,
+                                null,
+                                null,
+                                it.contractAddress,
+                                it.value?.amount ?: BigInteger.ZERO,
+                                org.web3j.utils.Numeric
+                                    .toHexString(it.callData),
+                            )
+                        web3j.ethEstimateGas(tx).send().amountUsed
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        EvmGas.txGasLimit(it.callData)
+                    }
+                } ?: run {
+                    // Plain anchor tx: a data-carrying value transfer costs exactly the
+                    // intrinsic gas of its calldata — size it from the payload bytes.
+                    val payloadBytes =
+                        op.payload?.let {
+                            Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8)
+                        }
+                    when {
+                        payloadBytes != null -> EvmGas.txGasLimit(payloadBytes)
+                        else -> EvmGas.txGasLimitForSize(op.payloadSizeBytes ?: 0L)
+                    }
+                }
 
-        val gasCost = gasPrice.multiply(gasLimit)
-        val valueWei = op.contractCall?.value?.amount ?: BigInteger.ZERO
-        TokenAmount(op.chainId, AssetRef.Native, gasCost + valueWei)
-    }
+            val gasCost = gasPrice.multiply(gasLimit)
+            val valueWei = op.contractCall?.value?.amount ?: BigInteger.ZERO
+            TokenAmount(op.chainId, AssetRef.Native, gasCost + valueWei)
+        }
 
     override suspend fun writePayload(
         payload: JsonElement,
@@ -129,14 +140,15 @@ class EthereumBlockchainAnchorClient(
         // on-chain, so estimation and submission must both use the anchored bytes.
         val submittedBytes = encodeAnchoredBytes(payload, mediaType)
 
-        val estimate = estimate(
-            OperationDescriptor(
-                kind = "anchor.writePayload",
-                chainId = chainId,
-                payload = if (digestPayloadMode) null else payload,
-                payloadSizeBytes = submittedBytes.size.toLong(),
-            ),
-        )
+        val estimate =
+            estimate(
+                OperationDescriptor(
+                    kind = "anchor.writePayload",
+                    chainId = chainId,
+                    payload = if (digestPayloadMode) null else payload,
+                    payloadSizeBytes = submittedBytes.size.toLong(),
+                ),
+            )
         ctx.maxFee?.let { cap ->
             if (estimate > cap) {
                 throw TreasuryException.CallerCapExceeded(
@@ -150,17 +162,19 @@ class EthereumBlockchainAnchorClient(
 
         return withContext(Dispatchers.IO) {
             try {
-                val creds = credentials
-                    ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
+                val creds =
+                    credentials
+                        ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
                 val receipt = submitTransaction(submittedBytes)
                 val feePaid = computeActualFee(receipt)
 
                 AnchorResult(
-                    ref = buildAnchorRef(
-                        txHash = receipt.transactionHash,
-                        contract = getContractAddress(),
-                        extra = anchorExtraMetadata(mediaType),
-                    ),
+                    ref =
+                        buildAnchorRef(
+                            txHash = receipt.transactionHash,
+                            contract = getContractAddress(),
+                            extra = anchorExtraMetadata(mediaType),
+                        ),
                     payload = payload,
                     mediaType = mediaType,
                     timestamp = System.currentTimeMillis() / 1000,

@@ -143,8 +143,11 @@ internal interface PluginRegistry {
  * that fails either never becomes visible — the registration is rolled back and a
  * [PluginException.InitializationFailed] propagates), and [PluginLifecycle.stop] +
  * [PluginLifecycle.cleanup] during [unregister]/[clear] (teardown failures are logged,
- * never propagated, so unregistration always completes). Lifecycle methods run inside
- * the mutation lock via [runBlocking]; they must not re-enter this registry.
+ * never propagated, so unregistration always completes). Lifecycle methods are suspend
+ * functions driven through [runBlocking] because this registry's API is synchronous; they run
+ * OUTSIDE the mutation lock (the plugin ID is reserved while it initializes), so a slow or
+ * suspending lifecycle never blocks other registry mutations while holding a monitor, and a
+ * lifecycle method may safely call back into the registry.
  *
  * **Dependency version ranges:** at [register] time, each declared
  * [PluginDependency.versionRange] is checked against the version of the dependency
@@ -172,6 +175,9 @@ internal class DefaultPluginRegistry(
      */
     private val mutationLock = Any()
 
+    /** IDs reserved by a [register] whose lifecycle is still running. Guarded by [mutationLock]. */
+    private val pendingRegistrations = HashSet<String>()
+
     private val plugins = ConcurrentHashMap<String, PluginMetadata>()
     private val instances = ConcurrentHashMap<String, Any>()
 
@@ -194,12 +200,19 @@ internal class DefaultPluginRegistry(
             throw PluginException.BlankId
         }
 
+        // Phase 1 (locked): validate and reserve the ID so no concurrent register can claim it.
         synchronized(mutationLock) {
             val existing = plugins[metadata.id]
             if (existing != null) {
                 throw PluginException.AlreadyRegistered(
                     pluginId = metadata.id,
                     existingPlugin = existing.name,
+                )
+            }
+            if (metadata.id in pendingRegistrations) {
+                throw PluginException.AlreadyRegistered(
+                    pluginId = metadata.id,
+                    existingPlugin = "${metadata.name} (registration in progress)",
                 )
             }
 
@@ -236,81 +249,86 @@ internal class DefaultPluginRegistry(
                 }
             }
             checkDependencyVersionRanges(metadata)
+            pendingRegistrations += metadata.id
+        }
 
-            // Populate instance state and indexes BEFORE publishing metadata, so a
-            // concurrent reader that observes getMetadata(id) != null is guaranteed
-            // to also observe the instance via getInstance(id, ...).
-            instances[metadata.id] = instance
-            instanceTypes[metadata.id] = instance.javaClass
-
-            metadata.capabilities.features.forEach { capability ->
-                capabilityIndex
-                    .computeIfAbsent(capability) {
-                        ConcurrentHashMap.newKeySet()
-                    }.add(metadata.id)
-            }
-            providerIndex
-                .computeIfAbsent(metadata.provider) {
-                    ConcurrentHashMap.newKeySet()
-                }.add(metadata.id)
-
-            // Drive the plugin lifecycle BEFORE publishing metadata: a plugin that
-            // fails initialize()/start() must never become visible. On failure the
-            // partial registration above is rolled back and a PluginException
-            // propagates to the caller.
-            if (instance is PluginLifecycle) {
-                try {
-                    runBlocking {
-                        if (!instance.initialize(metadata.configuration)) {
-                            throw PluginException.InitializationFailed(
-                                pluginId = metadata.id,
-                                reason = "initialize() returned false",
-                            )
-                        }
-                        if (!instance.start()) {
-                            throw PluginException.InitializationFailed(
-                                pluginId = metadata.id,
-                                reason = "start() returned false",
-                            )
-                        }
-                    }
-                } catch (t: Throwable) {
-                    rollbackRegistration(metadata)
-                    when (t) {
-                        is Error -> throw t // OOM/StackOverflow etc. must propagate as-is
-                        is PluginException -> throw t
-                        else -> throw PluginException.InitializationFailed(
+        // Phase 2 (unlocked): drive the plugin lifecycle. A plugin that fails initialize()/start()
+        // never becomes visible; the reservation is released and a PluginException propagates.
+        if (instance is PluginLifecycle) {
+            try {
+                runBlocking {
+                    if (!instance.initialize(metadata.configuration)) {
+                        throw PluginException.InitializationFailed(
                             pluginId = metadata.id,
-                            reason = t.message ?: t::class.simpleName ?: "Unknown error",
-                            cause = t,
+                            reason = "initialize() returned false",
+                        )
+                    }
+                    if (!instance.start()) {
+                        throw PluginException.InitializationFailed(
+                            pluginId = metadata.id,
+                            reason = "start() returned false",
                         )
                     }
                 }
+            } catch (t: Throwable) {
+                synchronized(mutationLock) { pendingRegistrations -= metadata.id }
+                when (t) {
+                    is Error -> throw t // OOM/StackOverflow etc. must propagate as-is
+                    is PluginException -> throw t
+                    else -> throw PluginException.InitializationFailed(
+                        pluginId = metadata.id,
+                        reason = t.message ?: t::class.simpleName ?: "Unknown error",
+                        cause = t,
+                    )
+                }
             }
+        }
 
-            // Publish last: metadata visibility is the signal that the plugin is registered.
-            plugins[metadata.id] = metadata
+        // Phase 3 (locked): publish. If clear() ran while the plugin was initializing, the
+        // reservation is gone: undo the lifecycle and fail rather than resurrect the plugin.
+        val published =
+            synchronized(mutationLock) {
+                if (pendingRegistrations.remove(metadata.id)) {
+                    publish(metadata, instance)
+                    true
+                } else {
+                    false
+                }
+            }
+        if (!published) {
+            if (instance is PluginLifecycle) teardownQuietly(metadata.id, instance)
+            throw PluginException.InitializationFailed(
+                pluginId = metadata.id,
+                reason = "registry was cleared while the plugin was initializing",
+            )
         }
     }
 
     /**
-     * Undo the instance/index population performed by [register] before a lifecycle
-     * failure. Must be called while holding [mutationLock]; metadata was never
-     * published, so readers cannot have observed the plugin.
+     * Makes a fully initialized plugin visible. Must be called while holding [mutationLock].
+     * Instance state and indexes are populated BEFORE metadata, so a concurrent reader that
+     * observes getMetadata(id) != null is guaranteed to also observe the instance.
      */
-    private fun rollbackRegistration(metadata: PluginMetadata) {
-        instances.remove(metadata.id)
-        instanceTypes.remove(metadata.id)
+    private fun publish(
+        metadata: PluginMetadata,
+        instance: Any,
+    ) {
+        instances[metadata.id] = instance
+        instanceTypes[metadata.id] = instance.javaClass
+
         metadata.capabilities.features.forEach { capability ->
-            capabilityIndex.computeIfPresent(capability) { _, ids ->
-                ids.remove(metadata.id)
-                if (ids.isEmpty()) null else ids
-            }
+            capabilityIndex
+                .computeIfAbsent(capability) {
+                    ConcurrentHashMap.newKeySet()
+                }.add(metadata.id)
         }
-        providerIndex.computeIfPresent(metadata.provider) { _, ids ->
-            ids.remove(metadata.id)
-            if (ids.isEmpty()) null else ids
-        }
+        providerIndex
+            .computeIfAbsent(metadata.provider) {
+                ConcurrentHashMap.newKeySet()
+            }.add(metadata.id)
+
+        // Publish last: metadata visibility is the signal that the plugin is registered.
+        plugins[metadata.id] = metadata
     }
 
     /**
@@ -389,36 +407,38 @@ internal class DefaultPluginRegistry(
 
     override fun unregister(pluginId: String) {
         require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
-        synchronized(mutationLock) {
-            // Idempotent operation: silently return if plugin not found
-            val metadata = plugins[pluginId] ?: return
+        val retracted =
+            synchronized(mutationLock) {
+                // Idempotent operation: silently return if plugin not found
+                val metadata = plugins[pluginId] ?: return
 
-            // Mirror of register: retract metadata FIRST so readers never observe
-            // metadata for a plugin whose instance has already been removed.
-            plugins.remove(pluginId)
+                // Mirror of register: retract metadata FIRST so readers never observe
+                // metadata for a plugin whose instance has already been removed.
+                plugins.remove(pluginId)
 
-            // Remove from capability index, pruning empty sets to avoid unbounded growth.
-            metadata.capabilities.features.forEach { capability ->
-                capabilityIndex.computeIfPresent(capability) { _, ids ->
+                // Remove from capability index, pruning empty sets to avoid unbounded growth.
+                metadata.capabilities.features.forEach { capability ->
+                    capabilityIndex.computeIfPresent(capability) { _, ids ->
+                        ids.remove(pluginId)
+                        if (ids.isEmpty()) null else ids
+                    }
+                }
+
+                // Remove from provider index, pruning empty sets.
+                providerIndex.computeIfPresent(metadata.provider) { _, ids ->
                     ids.remove(pluginId)
                     if (ids.isEmpty()) null else ids
                 }
+
+                val instance = instances.remove(pluginId)
+                instanceTypes.remove(pluginId)
+                instance
             }
 
-            // Remove from provider index, pruning empty sets.
-            providerIndex.computeIfPresent(metadata.provider) { _, ids ->
-                ids.remove(pluginId)
-                if (ids.isEmpty()) null else ids
-            }
-
-            val instance = instances.remove(pluginId)
-            instanceTypes.remove(pluginId)
-
-            // Teardown AFTER full retraction: the plugin is no longer observable, and
-            // any stop()/cleanup() failure is logged but never breaks unregistration.
-            if (instance is PluginLifecycle) {
-                teardownQuietly(pluginId, instance)
-            }
+        // Teardown AFTER full retraction and outside the lock: the plugin is no longer
+        // observable, and any stop()/cleanup() failure is logged but never breaks unregistration.
+        if (retracted is PluginLifecycle) {
+            teardownQuietly(pluginId, retracted)
         }
     }
 
@@ -486,26 +506,30 @@ internal class DefaultPluginRegistry(
     override fun getAllPlugins(): List<PluginMetadata> = plugins.values.toList()
 
     override fun clear() {
-        synchronized(mutationLock) {
-            // Snapshot lifecycle-bearing instances before retraction so they can be
-            // torn down once they are no longer observable.
-            val lifecycleInstances =
-                instances.mapNotNull { (id, instance) ->
-                    (instance as? PluginLifecycle)?.let { id to it }
-                }
+        val lifecycleInstances =
+            synchronized(mutationLock) {
+                // Snapshot lifecycle-bearing instances before retraction so they can be
+                // torn down once they are no longer observable.
+                val snapshot =
+                    instances.mapNotNull { (id, instance) ->
+                        (instance as? PluginLifecycle)?.let { id to it }
+                    }
 
-            // Retract metadata first (mirrors unregister) so readers never observe
-            // metadata without a corresponding instance.
-            plugins.clear()
-            capabilityIndex.clear()
-            providerIndex.clear()
-            instances.clear()
-            instanceTypes.clear()
-
-            // Teardown after retraction; failures are logged, never propagated.
-            lifecycleInstances.forEach { (id, lifecycle) ->
-                teardownQuietly(id, lifecycle)
+                // Retract metadata first (mirrors unregister) so readers never observe
+                // metadata without a corresponding instance.
+                plugins.clear()
+                capabilityIndex.clear()
+                providerIndex.clear()
+                instances.clear()
+                instanceTypes.clear()
+                // In-flight registrations must not resurrect plugins after a clear().
+                pendingRegistrations.clear()
+                snapshot
             }
+
+        // Teardown after retraction and outside the lock; failures are logged, never propagated.
+        lifecycleInstances.forEach { (id, lifecycle) ->
+            teardownQuietly(id, lifecycle)
         }
     }
 

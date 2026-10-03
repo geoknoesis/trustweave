@@ -509,6 +509,15 @@ class TrustWeave internal constructor(
         block: DidBuilder.() -> Unit = {},
     ): DidCreationWithKeyResult = didService.createDidWithKey(method, timeout, block)
 
+    /**
+     * The ID of the key [did] issues with: its first `assertionMethod`, else its first
+     * `authentication` method, else its first verification method not reserved for `keyAgreement`.
+     *
+     * **Result contract:** returns [kotlin.Result] (not a TrustWeave sealed result) and never
+     * throws for domain failures — an unresolvable DID or a document without a usable key is
+     * `Result.failure` carrying an [IllegalStateException] with the reason. Coroutine
+     * cancellation is rethrown, never captured. Unwrap with `getOrElse` / `fold`.
+     */
     suspend fun getKeyId(did: Did): Result<String> = didService.getKeyId(did)
 
     suspend fun resolveDid(
@@ -608,6 +617,12 @@ class TrustWeave internal constructor(
      * }
      * ```
      *
+     * **Result contract:** the only failure reported through the return value is a missing trust
+     * registry ([TrustPath.NotConfigured]); [block] is then not run. Anything [block] or the
+     * registry throws (for example an invalid anchor DID) propagates as an exception. `null`
+     * means [block] ran to completion — it is not a "trusted" verdict; use `isTrusted` /
+     * [findTrustPath] inside or outside the block for that.
+     *
      * @param block DSL block for trust operations
      * @return [TrustPath.NotConfigured] if the trust registry is not configured, null on success
      */
@@ -629,6 +644,11 @@ class TrustWeave internal constructor(
      * return cannot honestly express a timeout (mapping it to `false` would silently report
      * an unknown outcome as "not revoked"). On timeout, the revocation outcome is unknown;
      * re-check the credential's status before retrying.
+     *
+     * **Result contract:** `true`/`false` is the revocation manager's answer for a well-formed
+     * request (`false`: the manager did not change the entry, e.g. unknown index). Everything
+     * else throws: a missing revocation manager or missing `credential(...)` / `statusList(...)`
+     * ([IllegalStateException]), manager errors (propagated as thrown), and timeouts (below).
      *
      * @param timeout Maximum time to wait for revocation (default: 10 seconds)
      * @param block DSL block for specifying revocation parameters
@@ -663,7 +683,9 @@ class TrustWeave internal constructor(
      *
      * For each owned component, [AutoCloseable.close] is invoked when implemented;
      * otherwise, if the component implements [PluginLifecycle], `stop()` + `cleanup()`
-     * are driven (blocking).
+     * are driven. Because [AutoCloseable.close] cannot suspend, this method drives those
+     * suspend functions with `runBlocking` (no lock or monitor is held while it does). From a
+     * coroutine, prefer [closeAsync], which suspends instead of blocking the calling thread.
      *
      * **Error handling:** exceptions thrown by individual components are logged and do
      * not prevent the remaining components from being closed; in keeping with the
@@ -681,10 +703,30 @@ class TrustWeave internal constructor(
      * ```
      */
     override fun close() {
+        if (!beginClose()) return
+        runBlocking { closeOwnedComponents() }
+    }
+
+    /**
+     * Suspending form of [close] with the same ownership, error-handling and idempotence
+     * semantics: `stop()` + `cleanup()` of [PluginLifecycle] components are awaited instead of
+     * blocking the calling thread. Calling either [close] or [closeAsync] more than once (in any
+     * combination) closes the components only once.
+     */
+    suspend fun closeAsync() {
+        if (!beginClose()) return
+        closeOwnedComponents()
+    }
+
+    private fun beginClose(): Boolean {
         if (!closed.compareAndSet(false, true)) {
             logger.debug("TrustWeave instance already closed: ${config.name}")
-            return
+            return false
         }
+        return true
+    }
+
+    private suspend fun closeOwnedComponents() {
         logger.debug("Closing TrustWeave instance: ${config.name}")
 
         val ownership = config.ownership
@@ -731,7 +773,7 @@ class TrustWeave internal constructor(
      * to [PluginLifecycle] `stop()` + `cleanup()`. Failures are logged, never propagated,
      * so every remaining component still gets closed.
      */
-    private fun closeComponent(
+    private suspend fun closeComponent(
         name: String,
         component: Any?,
     ) {
@@ -740,15 +782,15 @@ class TrustWeave internal constructor(
             when (component) {
                 is AutoCloseable -> component.close()
                 is PluginLifecycle ->
-                    runBlocking {
-                        try {
-                            component.stop()
-                        } finally {
-                            component.cleanup()
-                        }
+                    try {
+                        component.stop()
+                    } finally {
+                        component.cleanup()
                     }
                 else -> Unit
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.warn("Error closing $name: ${e.message}", e)
         }

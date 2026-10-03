@@ -1,6 +1,12 @@
 public final class org/trustweave/wallet/file/FileWallet : org/trustweave/wallet/CredentialRecordStorage, org/trustweave/wallet/CredentialRecovery, org/trustweave/wallet/CredentialStorage, org/trustweave/wallet/Wallet {
+	public static final field Companion Lorg/trustweave/wallet/file/FileWallet$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljavax/crypto/spec/SecretKeySpec;Lorg/trustweave/wallet/WalletStatusResolver;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[BLorg/trustweave/wallet/WalletStatusResolver;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[BLorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[CLorg/trustweave/wallet/WalletStatusResolver;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[CLorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
 	public fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -14,6 +20,14 @@ public final class org/trustweave/wallet/file/FileWallet : org/trustweave/wallet
 	public fun query (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun recoverRecords (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun store (Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun unencrypted (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;)Lorg/trustweave/wallet/file/FileWallet;
+	public static final fun unencrypted (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Lorg/trustweave/wallet/WalletStatusResolver;)Lorg/trustweave/wallet/file/FileWallet;
+}
+
+public final class org/trustweave/wallet/file/FileWallet$Companion {
+	public final fun unencrypted (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;)Lorg/trustweave/wallet/file/FileWallet;
+	public final fun unencrypted (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Lorg/trustweave/wallet/WalletStatusResolver;)Lorg/trustweave/wallet/file/FileWallet;
+	public static synthetic fun unencrypted$default (Lorg/trustweave/wallet/file/FileWallet$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Lorg/trustweave/wallet/WalletStatusResolver;ILjava/lang/Object;)Lorg/trustweave/wallet/file/FileWallet;
 }
 
 public final class org/trustweave/wallet/file/FileWalletFactory : org/trustweave/wallet/services/WalletFactory {

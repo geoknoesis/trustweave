@@ -409,9 +409,9 @@ class IssuanceBuilder(
             }
 
             // Capture status-list coordinates (if allocated above) so that if issuance fails the
-            // caller can learn which index was orphaned and attempt manual cleanup.
-            // Known limitation: TrustWeave does not yet expose a releaseIndex() API; the caller
-            // must interact with the CredentialRevocationManager directly to free the slot.
+            // caller can learn which index was orphaned. CredentialRevocationManager has no API to
+            // release an assigned index, so the slot cannot be returned automatically; the failure
+            // carries a warning naming it (see orphanedIndexWarning below).
             val allocatedStatusListId =
                 if (autoRevocation && credentialToIssue.credentialStatus != null) {
                     credentialToIssue.credentialStatus?.statusListCredential
@@ -481,21 +481,17 @@ class IssuanceBuilder(
             // Issue credential using CredentialService
             val issueResult = credentialService.issue(request)
 
-            // If issuance failed after a status-list index was allocated, surface the orphaned
-            // coordinates in the failure message so callers can release the slot manually via
-            // CredentialRevocationManager (no built-in releaseIndex() exists yet — see TODO above).
+            // If issuance failed after a status-list index was allocated, keep the original failure
+            // (its subtype, reason and cause are what the caller needs to act on) and attach the
+            // orphaned coordinates as a warning, since the index cannot be released automatically.
             val settledResult =
                 when {
-                    issueResult is IssuanceResult.Failure && allocatedStatusListId != null -> {
-                        IssuanceResult.Failure.AdapterError(
-                            format = proofSuiteToUse,
-                            reason =
-                                "Credential issuance failed after status-list index was allocated " +
-                                    "(statusList=${allocatedStatusListId.value}, index=$allocatedStatusIndex). " +
-                                    "Original error: ${(issueResult as? IssuanceResult.Failure.AdapterError)?.reason ?: issueResult.toString()}",
-                            cause = (issueResult as? IssuanceResult.Failure.AdapterError)?.cause,
+                    issueResult is IssuanceResult.Failure && allocatedStatusListId != null ->
+                        issueResult.withWarning(
+                            "Credential issuance failed after status-list index $allocatedStatusIndex was " +
+                                "assigned in status list ${allocatedStatusListId.value}; that index is now " +
+                                "unused (CredentialRevocationManager offers no way to release it).",
                         )
-                    }
                     else -> issueResult
                 }
 
@@ -528,16 +524,11 @@ class IssuanceBuilder(
 
             try {
                 // A digest envelope, not the credential — see the [autoAnchor] KDoc.
-                // Canonicalized first so the digest is reproducible: a verifier can take the same
-                // credential, canonicalize, hash, and compare against what is on-chain. Hashing an
-                // ad-hoc serialization would make the anchor unverifiable by anyone else.
-                val canonical =
-                    org.trustweave.core.util.DigestUtils.canonicalizeJson(
-                        settledResult.credential.toJsonLd(),
-                    )
+                // The digest is over the RFC 8785 (JCS) canonical form, so any verifier can take the
+                // same credential, in any key order, and check it with BlockchainAnchorClient.verifyAnchor.
                 val envelope =
                     org.trustweave.anchor.AnchorDigest.envelope(
-                        canonical.toByteArray(Charsets.UTF_8),
+                        settledResult.credential.toJsonLd(),
                         "application/vc+json",
                     )
                 anchorService.anchor(
@@ -562,3 +553,13 @@ class IssuanceBuilder(
             settledResult
         }
 }
+
+/** The same failure with [warning] appended to its warnings; subtype, reason and cause are kept. */
+internal fun IssuanceResult.Failure.withWarning(warning: String): IssuanceResult.Failure =
+    when (this) {
+        is IssuanceResult.Failure.UnsupportedFormat -> copy(warnings = warnings + warning)
+        is IssuanceResult.Failure.AdapterNotReady -> copy(warnings = warnings + warning)
+        is IssuanceResult.Failure.InvalidRequest -> copy(warnings = warnings + warning)
+        is IssuanceResult.Failure.AdapterError -> copy(warnings = warnings + warning)
+        is IssuanceResult.Failure.MultipleFailures -> copy(warnings = warnings + warning)
+    }

@@ -1,8 +1,10 @@
 package org.trustweave.testkit.anchor
 
-import org.trustweave.anchor.*
-import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.json.JsonElement
+import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorClient
+import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -12,28 +14,29 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class InMemoryBlockchainAnchorClient(
     private val chainId: String,
-    private val contract: String? = null
+    private val contract: String? = null,
 ) : BlockchainAnchorClient {
-
     private val storage = ConcurrentHashMap<String, AnchorResult>()
     private val txCounter = AtomicLong(0)
 
     override suspend fun writePayload(
         payload: JsonElement,
-        mediaType: String
+        mediaType: String,
     ): AnchorResult {
         val txHash = "tx_${txCounter.incrementAndGet()}_${System.currentTimeMillis()}"
-        val ref = AnchorRef(
-            chainId = chainId,
-            txHash = txHash,
-            contract = contract
-        )
-        val result = AnchorResult(
-            ref = ref,
-            payload = payload,
-            mediaType = mediaType,
-            timestamp = System.currentTimeMillis() / 1000
-        )
+        val ref =
+            AnchorRef(
+                chainId = chainId,
+                txHash = txHash,
+                contract = contract,
+            )
+        val result =
+            AnchorResult(
+                ref = ref,
+                payload = payload,
+                mediaType = mediaType,
+                timestamp = System.currentTimeMillis() / 1000,
+            )
         storage[txHash] = result
         return result
     }
@@ -58,5 +61,7 @@ class InMemoryBlockchainAnchorClient(
      * Gets the number of stored anchors.
      */
     fun size(): Int = storage.size
-}
 
+    /** References of every stored anchor, so tests can verify what was anchored. */
+    fun anchoredRefs(): List<AnchorRef> = storage.values.map { it.ref }
+}

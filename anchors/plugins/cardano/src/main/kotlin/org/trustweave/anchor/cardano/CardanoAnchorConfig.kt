@@ -62,6 +62,13 @@ data class CardanoAnchorConfig(
         require(confirmationTimeoutSeconds > 0) { "confirmationTimeoutSeconds must be positive" }
     }
 
+    /** Never prints the Blockfrost project ID or submitter secrets. */
+    override fun toString(): String =
+        "CardanoAnchorConfig(blockfrostProjectId=***, network=$network, " +
+            "submitterMnemonic=${submitterMnemonic?.let { "***" }}, submitterSecretKey=${submitterSecretKey?.let { "***" }}, " +
+            "metadataLabel=$metadataLabel, blockfrostBaseUrlOverride=$blockfrostBaseUrlOverride, " +
+            "confirmationTimeoutSeconds=$confirmationTimeoutSeconds)"
+
     /** Returns true if this config can submit transactions (has a submitter key). */
     fun canSubmit(): Boolean = !submitterMnemonic.isNullOrBlank() || !submitterSecretKey.isNullOrBlank()
 

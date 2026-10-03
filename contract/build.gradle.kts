@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":did:did-core"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.coroutines.core)
 
     // Test dependencies
     testImplementation(project(":testkit"))
@@ -20,5 +21,3 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
 }
-
-

@@ -18,4 +18,3 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.platform.launcher)
 }
-

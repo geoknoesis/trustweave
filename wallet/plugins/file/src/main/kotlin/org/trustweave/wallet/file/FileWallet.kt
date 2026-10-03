@@ -53,10 +53,17 @@ import kotlin.concurrent.withLock
  * stored bytes is detected during decryption and surfaces as a
  * [WalletException.StorageError] instead of returning corrupted data.
  *
- * **Key material:** [encryptionKey] must be a Base64-encoded AES key that decodes to
- * exactly 16, 24, or 32 bytes (AES-128/192/256). Invalid keys are rejected at
- * construction time. When no key is provided, credentials are stored in **plaintext**
- * and a warning is logged — provide a key for any sensitive deployment.
+ * **Key material:** the key must be 16, 24, or 32 bytes of AES key material
+ * (AES-128/192/256), given either Base64-encoded (`String` or `CharArray`) or raw
+ * (`ByteArray`). Invalid keys are rejected at construction time. The `ByteArray` and
+ * `CharArray` constructors copy the key, so the caller can — and should — zero its own
+ * array right after construction; a `String` cannot be wiped.
+ *
+ * **Encryption is required.** Constructing a wallet without a key fails with
+ * [WalletException.WalletCreationFailed]. Plaintext storage is available only through the
+ * explicit [FileWallet.unencrypted] opt-in (tests, throwaway demos), which logs a warning.
+ * Earlier versions silently fell back to plaintext when the key was omitted; existing
+ * plaintext wallets can still be opened with [FileWallet.unencrypted].
  *
  * **File naming:** credential files are named after the SHA-256 hex digest of the
  * credential id (`<sha256(id)>.json`), never the raw id, so attacker-controlled ids
@@ -73,24 +80,148 @@ import kotlin.concurrent.withLock
  *     walletDid = "did:key:wallet-1",
  *     holderDid = "did:key:holder",
  *     walletDir = Paths.get("/path/to/wallet"),
- *     encryptionKey = "base64-encoded-16/24/32-byte-key" // optional but strongly recommended
+ *     encryptionKey = keyBytes // ByteArray (zero it afterwards), CharArray or Base64 String
  * )
+ * keyBytes.fill(0)
  * ```
  */
-class FileWallet(
+class FileWallet private constructor(
     override val walletId: String,
     val walletDid: String,
     val holderDid: String,
     walletDir: Path,
-    private val encryptionKey: String? = null,
-    private val statusResolver: WalletStatusResolver? = null,
+    /** AES key; null only for the explicit [unencrypted] opt-in. */
+    private val secretKey: SecretKeySpec?,
+    private val statusResolver: WalletStatusResolver?,
 ) : Wallet,
     CredentialStorage,
     CredentialRecordStorage,
     CredentialRecovery {
+    /**
+     * Opens an AES-GCM encrypted wallet with a Base64-encoded key.
+     *
+     * @param encryptionKey Base64 of 16, 24 or 32 key bytes. Required: `null` fails with
+     *   [WalletException.WalletCreationFailed] (use [unencrypted] to opt into plaintext).
+     */
+    constructor(
+        walletId: String,
+        walletDid: String,
+        holderDid: String,
+        walletDir: Path,
+        encryptionKey: String? = null,
+        statusResolver: WalletStatusResolver? = null,
+    ) : this(
+        walletId,
+        walletDid,
+        holderDid,
+        walletDir,
+        keyFromBase64(requireKey(encryptionKey, walletId).toByteArray(Charsets.US_ASCII), walletId),
+        statusResolver,
+    )
+
+    /**
+     * Opens an AES-GCM encrypted wallet with raw key bytes. The bytes are copied; zero
+     * [encryptionKey] after this returns.
+     */
+    constructor(
+        walletId: String,
+        walletDid: String,
+        holderDid: String,
+        walletDir: Path,
+        encryptionKey: ByteArray,
+        statusResolver: WalletStatusResolver? = null,
+    ) : this(walletId, walletDid, holderDid, walletDir, keyFromBytes(encryptionKey, walletId), statusResolver)
+
+    /**
+     * Opens an AES-GCM encrypted wallet with a Base64-encoded key held in a [CharArray]. The
+     * characters are copied and every intermediate buffer is zeroed; zero [encryptionKey] after
+     * this returns.
+     */
+    constructor(
+        walletId: String,
+        walletDid: String,
+        holderDid: String,
+        walletDir: Path,
+        encryptionKey: CharArray,
+        statusResolver: WalletStatusResolver? = null,
+    ) : this(walletId, walletDid, holderDid, walletDir, keyFromBase64Chars(encryptionKey, walletId), statusResolver)
+
     private val normalizedWalletDir = walletDir.toAbsolutePath().normalize()
 
-    private companion object {
+    companion object {
+        /**
+         * Opens a wallet that stores credentials in **plaintext**. This is the only way to get an
+         * unencrypted [FileWallet]; use it for tests, throwaway demos, or to read wallets written
+         * by versions that defaulted to plaintext. A warning is logged on every open.
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun unencrypted(
+            walletId: String,
+            walletDid: String,
+            holderDid: String,
+            walletDir: Path,
+            statusResolver: WalletStatusResolver? = null,
+        ): FileWallet = FileWallet(walletId, walletDid, holderDid, walletDir, null as SecretKeySpec?, statusResolver)
+
+        private fun requireKey(
+            encryptionKey: String?,
+            walletId: String,
+        ): String =
+            encryptionKey ?: throw WalletException.WalletCreationFailed(
+                reason =
+                    "FileWallet requires an encryptionKey (Base64 of 16, 24 or 32 bytes) so credentials are " +
+                        "encrypted at rest. To store plaintext deliberately, use FileWallet.unencrypted(...).",
+                provider = "file",
+                walletId = walletId,
+            )
+
+        /** Decodes Base64 key text given as ASCII bytes; [base64] is zeroed afterwards. */
+        private fun keyFromBase64(
+            base64: ByteArray,
+            walletId: String,
+        ): SecretKeySpec {
+            val keyBytes =
+                try {
+                    Base64.getDecoder().decode(base64)
+                } catch (e: IllegalArgumentException) {
+                    throw WalletException.WalletCreationFailed(
+                        reason = "encryptionKey must be valid Base64-encoded AES key material",
+                        provider = "file",
+                        walletId = walletId,
+                    )
+                } finally {
+                    base64.fill(0)
+                }
+            return try {
+                keyFromBytes(keyBytes, walletId)
+            } finally {
+                keyBytes.fill(0)
+            }
+        }
+
+        private fun keyFromBase64Chars(
+            base64: CharArray,
+            walletId: String,
+        ): SecretKeySpec = keyFromBase64(ByteArray(base64.size) { base64[it].code.toByte() }, walletId)
+
+        /** Validates the length and copies the key into a [SecretKeySpec] (which keeps its own copy). */
+        private fun keyFromBytes(
+            keyBytes: ByteArray,
+            walletId: String,
+        ): SecretKeySpec {
+            if (keyBytes.size !in VALID_AES_KEY_LENGTHS) {
+                throw WalletException.WalletCreationFailed(
+                    reason =
+                        "encryptionKey must decode to 16, 24, or 32 bytes (AES-128/192/256), " +
+                            "but decoded to ${keyBytes.size} bytes",
+                    provider = "file",
+                    walletId = walletId,
+                )
+            }
+            return SecretKeySpec(keyBytes, "AES")
+        }
+
         private val ioLocks =
             Array(64) {
                 java.util.concurrent.locks
@@ -106,32 +237,6 @@ class FileWallet(
     }
 
     private val secureRandom = SecureRandom()
-
-    /**
-     * AES key derived from [encryptionKey], validated at construction.
-     * Null means plaintext storage (legacy/default behavior — discouraged).
-     */
-    private val secretKey: SecretKeySpec? =
-        encryptionKey?.let { key ->
-            val keyBytes =
-                try {
-                    Base64.getDecoder().decode(key)
-                } catch (e: IllegalArgumentException) {
-                    throw WalletException.WalletCreationFailed(
-                        reason = "encryptionKey must be valid Base64-encoded AES key material",
-                        provider = "file",
-                        walletId = walletId,
-                    )
-                }
-            if (keyBytes.size !in VALID_AES_KEY_LENGTHS) {
-                throw WalletException.WalletCreationFailed(
-                    reason = "encryptionKey must decode to 16, 24, or 32 bytes (AES-128/192/256), but decoded to ${keyBytes.size} bytes",
-                    provider = "file",
-                    walletId = walletId,
-                )
-            }
-            SecretKeySpec(keyBytes, "AES")
-        }
 
     private val json =
         Json {
@@ -150,9 +255,8 @@ class FileWallet(
         initializeDirectories()
         if (secretKey == null) {
             logger.warn(
-                "FileWallet '{}' was created WITHOUT an encryption key: credentials will be stored " +
-                    "in plaintext under {}. Provide a Base64-encoded 16/24/32-byte 'encryptionKey' " +
-                    "to enable AES-GCM encryption at rest.",
+                "FileWallet '{}' was opened with FileWallet.unencrypted(): credentials are stored " +
+                    "in PLAINTEXT under {}. Use an encryptionKey for anything but tests and demos.",
                 walletId,
                 walletDir,
             )

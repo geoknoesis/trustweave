@@ -36,6 +36,12 @@ import org.trustweave.core.exception.TrustWeaveException
  * here, only the shape one would take. Depend on this module directly if the skeleton is
  * useful; do not expect it to do anything.
  */
+@Deprecated(
+    message =
+        "ServiceNow integration is a stub: every operation throws TrustWeaveException.InvalidOperation " +
+            "(code SERVICENOW_INTEGRATION_NOT_IMPLEMENTED). It is not SPI-registered and not exported by the BOM.",
+    level = DeprecationLevel.WARNING,
+)
 class ServiceNowIntegration(
     val instanceUrl: String,
     val username: String,
@@ -53,33 +59,28 @@ class ServiceNowIntegration(
      * @param tableName ServiceNow table name (e.g., "sys_user")
      * @param recordId ServiceNow record sys_id
      * @param credentialType Type of credential to issue
-     * @return Issued verifiable credential
+     * @return never returns
+     * @throws TrustWeaveException.InvalidOperation always — the integration is not implemented.
      */
     suspend fun issueCredential(
         tableName: String,
         recordId: String,
         credentialType: String,
-    ): Any {
-        // TODO: Implement ServiceNow credential issuance
-        throw TrustWeaveException.Unknown(
-            message =
-                "ServiceNow integration requires ServiceNow REST API implementation. " +
-                    "Structure is ready for implementation.",
-        )
-    }
+    ): Nothing = throw notImplemented("issueCredential")
 
     /**
      * Verifies a verifiable credential from ServiceNow.
      *
      * @param credentialId ServiceNow credential record ID
-     * @return Verification result
+     * @return never returns
+     * @throws TrustWeaveException.InvalidOperation always — the integration is not implemented.
      */
-    suspend fun verifyCredential(credentialId: String): Any {
-        // TODO: Implement ServiceNow credential verification
-        throw TrustWeaveException.Unknown(
-            message =
-                "ServiceNow integration requires ServiceNow REST API implementation. " +
-                    "Structure is ready for implementation.",
+    suspend fun verifyCredential(credentialId: String): Nothing = throw notImplemented("verifyCredential")
+
+    private fun notImplemented(operation: String): TrustWeaveException =
+        TrustWeaveException.InvalidOperation(
+            code = "SERVICENOW_INTEGRATION_NOT_IMPLEMENTED",
+            message = "ServiceNow integration is not implemented: $operation has no ServiceNow REST API client behind it",
+            context = mapOf("integration" to "servicenow", "operation" to operation),
         )
-    }
 }

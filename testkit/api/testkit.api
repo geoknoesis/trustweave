@@ -93,6 +93,7 @@ public final class org/trustweave/testkit/anchor/InMemoryBlockchainAnchorClient 
 	public fun readPayload (Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun size ()I
 	public fun verifyAnchor (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun verifyAnchorDetailed (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/AnchorRef;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun writePayload (Lkotlinx/serialization/json/JsonElement;Lorg/trustweave/anchor/payment/PaymentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

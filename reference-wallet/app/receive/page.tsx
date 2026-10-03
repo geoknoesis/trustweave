@@ -48,6 +48,7 @@ export default function ReceivePage() {
         body.credential,
         body.format,
         body.selectivelyDisclosable ?? [],
+        body.issuer, // the demo issuer of the configured backend
       )
       if (!isCredentialBoundToHolder(credential, wallet.holder.did)) {
         throw new Error(

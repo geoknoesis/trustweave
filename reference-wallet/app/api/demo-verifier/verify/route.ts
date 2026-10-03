@@ -22,9 +22,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyJws, didKeyToPublicKey, b64uDecodeString } from '@/lib/crypto'
 import { decodeSdJwtVc } from '@/lib/sdjwt'
 import { sha256 } from '@noble/hashes/sha256'
-import { getVerifier } from '@/lib/server-keys'
+import { getCacIssuer, getFaaIssuer, getIssuer, getVerifier } from '@/lib/server-keys'
 import { recordVerification } from '@/lib/verification-inbox'
-import { verifyImportedCredential } from '@/lib/credential-verification'
+import { IssuerTrustPolicy, verifyImportedCredential } from '@/lib/credential-verification'
 
 interface VerificationCheck { step: string; passed: boolean; detail?: string }
 
@@ -102,6 +102,15 @@ export async function POST(req: NextRequest): Promise<NextResponse<VerificationR
 }
 
 // ============================================================
+/**
+ * Issuers this verifier accepts: the demo issuers of this backend plus any DIDs listed in
+ * TRUSTED_ISSUERS (comma-separated). A did:key signature alone proves nothing about the issuer.
+ */
+function verifierIssuerPolicy(): IssuerTrustPolicy {
+  const configured = (process.env.TRUSTED_ISSUERS ?? '').split(',').map(id => id.trim())
+  return IssuerTrustPolicy.allowList([getIssuer().did, getFaaIssuer().did, getCacIssuer().did, ...configured])
+}
+
 // SD-JWT VC verification (Phase 2.5)
 // ============================================================
 async function verifySdJwtVc(
@@ -114,7 +123,7 @@ async function verifySdJwtVc(
   let decoded: ReturnType<typeof decodeSdJwtVc>
   try {
     decoded = decodeSdJwtVc(sdJwtVc)
-    verifyImportedCredential([decoded.issuerJwt, ...decoded.disclosures.map(d => d.raw), ''].join('~'), 'vc+sd-jwt')
+    verifyImportedCredential([decoded.issuerJwt, ...decoded.disclosures.map(d => d.raw), ''].join('~'), 'vc+sd-jwt', { issuerPolicy: verifierIssuerPolicy() })
     recordCheck('Parse SD-JWT VC structure', true, `${decoded.disclosures.length} disclosure(s), kb-jwt: ${decoded.kbJwt ? 'present' : 'missing'}`)
   } catch (e) {
     recordCheck('Parse SD-JWT VC structure', false, errorMessage(e))
@@ -294,7 +303,7 @@ async function verifyVpJwt(
   for (let i = 0; i < vcJwts.length; i++) {
     const vcJwt = vcJwts[i]
     try {
-      verifyImportedCredential(vcJwt, 'vc+jwt')
+      verifyImportedCredential(vcJwt, 'vc+jwt', { issuerPolicy: verifierIssuerPolicy() })
       const parts = vcJwt.split('.')
       const unverified = JSON.parse(b64uDecodeString(parts[1])) as Record<string, unknown>
       const issuerDid = String(unverified.iss ?? '')

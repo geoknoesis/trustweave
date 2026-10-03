@@ -43,6 +43,13 @@ it does not attest a physical security device.
 - Ed25519 did:key issuer credentials in the bounded `vc+jwt` and `vc+sd-jwt` profiles.
 - Top-level object disclosures, with one SD-JWT credential per presentation.
 - Signature, issuer/holder binding, validity and disclosure checks during import.
+- An issuer trust policy that fails closed: a did:key signature only proves some key signed,
+  so import is rejected unless the issuer is trusted. Trusted issuers are the demo issuer
+  reported by the configured backend for that import, DIDs listed in
+  `NEXT_PUBLIC_TRUSTED_ISSUERS` (comma-separated), and issuers accepted at earlier imports
+  (used to re-verify backups; a backup from an unknown issuer needs the env var). The demo
+  verifier trusts this backend's demo issuers plus `TRUSTED_ISSUERS`. The optional
+  `requireHolderKeyBinding` option demands `cnf.kid == sub` on plain VC-JWTs (default off).
 - Browser-managed non-extractable Ed25519 signing and X25519 agreement keys in
   IndexedDB. Public identity metadata and credentials remain in localStorage.
 - Credential backup export/restore. Backups contain credential data, **not private

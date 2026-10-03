@@ -1,5 +1,5 @@
 import { withWalletLock } from './wallet-lock'
-import { verifyImportedCredential } from './credential-verification'
+import { IssuerTrustPolicy, verifyImportedCredential } from './credential-verification'
 import { MissingHolderKeysError, importHolderKeys, loadHolderKeys, signHolderJws, clearHolderKeys } from './key-store'
 /**
  * Wallet facade — the holder-side API surface for the reference wallet.
@@ -33,6 +33,8 @@ import {
   loadHolder,
   saveHolder,
   saveCredentials,
+  loadAcceptedIssuers,
+  addAcceptedIssuer,
   loadCredentials,
   upsertCredential,
   deleteCredential as deleteCredFromStorage,
@@ -133,6 +135,16 @@ export interface StoreResult {
 }
 
 /**
+ * Issuers this wallet accepts credentials from: those named in NEXT_PUBLIC_TRUSTED_ISSUERS
+ * (comma-separated DIDs) plus issuers accepted at an earlier import and [extra] (the backend's offer
+ * issuer, or the issuers of stored credentials being re-verified). Anything else is rejected (fail closed).
+ */
+export function walletIssuerPolicy(...extra: Array<string | null | undefined>): IssuerTrustPolicy {
+  const configured = (process.env.NEXT_PUBLIC_TRUSTED_ISSUERS ?? '').split(',').map(id => id.trim())
+  return IssuerTrustPolicy.allowList([...configured, ...loadAcceptedIssuers(), ...extra])
+}
+
+/**
  * Store a received credential. Accepts either VC-JWT or SD-JWT VC.
  *
  * Re-scanning or re-receiving the same logical credential (same issuer, subject, type,
@@ -142,16 +154,19 @@ export interface StoreResult {
  * @param format media type identifier
  * @param selectivelyDisclosable for SD-JWT VC, the issuer-declared list of
  *   selectively-disclosable claim names; ignored for VC-JWT
+ * @param offerIssuer issuer DID reported by the configured backend's offer response; trusted
+ *   for this import in addition to the configured trusted issuers (same as the Android wallet)
  */
 export async function store(
   credential: string,
   format: StoredCredential['format'],
   selectivelyDisclosable: string[] = [],
+  offerIssuer?: string,
 ): Promise<StoreResult> {
   return withWalletLock(() => {
   const holder = loadHolder()
   if (!holder) throw new Error("Open the wallet before importing a credential")
-  verifyImportedCredential(credential, format)
+  verifyImportedCredential(credential, format, { issuerPolicy: walletIssuerPolicy(offerIssuer) })
   const meta = format === 'vc+sd-jwt'
     ? extractSdJwtMeta(credential)
     : extractVcJwtMeta(credential)
@@ -167,6 +182,7 @@ export async function store(
     selectivelyDisclosable,
   }
   if (!isCredentialBoundToHolder(cred, holder.did)) throw new Error("Credential was not issued to this wallet")
+  addAcceptedIssuer(meta.issuerDid)
   const result = upsertCredential(cred)
   pruneStaleCredentialsForBusinessIdentity(cred)
   // Never delete user data merely by opening the wallet; selection enforces holder binding.
@@ -200,7 +216,7 @@ export async function restoreCredentials(backup: string): Promise<{ added: numbe
       const record = raw && typeof raw === 'object' ? { ...raw, credential: raw.credential ?? raw.vcJwt, format: raw.format ?? 'vc+jwt' } : raw;
       if (!record || typeof record.credential !== 'string' || !['vc+jwt', 'vc+sd-jwt'].includes(record.format)) throw new Error('Invalid credential in backup. Nothing was restored.')
       // Never trust labels, holder fields or disclosure hints from the backup envelope.
-      verifyImportedCredential(record.credential, record.format)
+      verifyImportedCredential(record.credential, record.format, { issuerPolicy: walletIssuerPolicy(...existing.map(c => c.issuerDid)) })
       const meta = record.format === 'vc+sd-jwt' ? extractSdJwtMeta(record.credential) : extractVcJwtMeta(record.credential)
       const credential: StoredCredential = {
         id: randomUuid(), format: record.format, credential: record.credential,
@@ -284,7 +300,7 @@ export async function createPresentation(
   if (creds.length > 1 && creds.some(credential => credential.format === 'vc+sd-jwt'))
     throw new Error('Share SD-JWT credentials one at a time; multiple selective-disclosure credentials are not supported')
   for (const credential of creds) {
-    verifyImportedCredential(credential.credential, credential.format)
+    verifyImportedCredential(credential.credential, credential.format, { issuerPolicy: walletIssuerPolicy(credential.issuerDid) })
     if (!isCredentialBoundToHolder(credential, holder.did)) throw new Error('Credential belongs to another holder')
   }
 

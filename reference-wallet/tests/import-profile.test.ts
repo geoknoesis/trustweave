@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { b64uEncodeString, generateEd25519KeyPair, publicKeyToDidKey, signJws } from '../lib/crypto'
-import { verifyImportedCredential } from '../lib/credential-verification'
+import { IssuerTrustPolicy, verifyImportedCredential } from '../lib/credential-verification'
 import { createObjectDisclosure, parseDisclosure, issueSdJwtVc } from '../lib/sdjwt'
 import { isCredentialBoundToHolder } from '../lib/holder-binding'
 
 const issuer = generateEd25519KeyPair()
 const did = publicKeyToDidKey(issuer.publicKey)
+const trusting = { issuerPolicy: IssuerTrustPolicy.allowList([did]) }
 const compact = (payload: Record<string, unknown>, disclosure: string) =>
   `${signJws({ iss: did, sub: 'holder', cnf: { kid: 'holder' }, vct: 'Employee', ...payload }, issuer.privateKey, did)}~${disclosure}~`
 
@@ -24,19 +25,19 @@ describe('supported disclosure profile', () => {
   })
   it('accepts a unique top-level disclosure', () => {
     const claim = createObjectDisclosure('name', 'Alice')
-    expect(() => verifyImportedCredential(compact({ _sd: [claim.hash] }, claim.disclosure), 'vc+sd-jwt')).not.toThrow()
+    expect(() => verifyImportedCredential(compact({ _sd: [claim.hash] }, claim.disclosure), 'vc+sd-jwt', trusting)).not.toThrow()
   })
   it('rejects a disclosure that shadows an always-visible claim', () => {
     const claim = createObjectDisclosure('sub', 'different-holder')
-    expect(() => verifyImportedCredential(compact({ sub: 'holder', _sd: [claim.hash] }, claim.disclosure), 'vc+sd-jwt')).toThrow('uniquely bound')
+    expect(() => verifyImportedCredential(compact({ sub: 'holder', _sd: [claim.hash] }, claim.disclosure), 'vc+sd-jwt', trusting)).toThrow('uniquely bound')
   })
   it('rejects nested placement instead of flattening the claim into a different object', () => {
     const claim = createObjectDisclosure('name', 'Alice')
-    expect(() => verifyImportedCredential(compact({ address: { _sd: [claim.hash] } }, claim.disclosure), 'vc+sd-jwt')).toThrow('Nested')
+    expect(() => verifyImportedCredential(compact({ address: { _sd: [claim.hash] } }, claim.disclosure), 'vc+sd-jwt', trusting)).toThrow('Nested')
   })
   it('rejects duplicate commitments', () => {
     const claim = createObjectDisclosure('name', 'Alice')
-    expect(() => verifyImportedCredential(compact({ _sd: [claim.hash, claim.hash] }, claim.disclosure), 'vc+sd-jwt')).toThrow('Duplicate')
+    expect(() => verifyImportedCredential(compact({ _sd: [claim.hash, claim.hash] }, claim.disclosure), 'vc+sd-jwt', trusting)).toThrow('Duplicate')
   })
   it('derives holder binding from signed content despite altered local metadata', () => {
     const credential = signJws({ iss: did, sub: 'other-holder' }, issuer.privateKey, did)

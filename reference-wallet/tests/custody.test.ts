@@ -3,7 +3,7 @@ import { webcrypto } from 'node:crypto'
 import 'fake-indexeddb/auto'
 import { generateEd25519KeyPair, publicKeyToDidKey, b64uEncode, verifyJws, signJws } from '../lib/crypto'
 import { clearHolderKeys, importHolderKeys, loadHolderKeys, signHolderJws } from '../lib/key-store'
-import { loadCredentials, loadHolder, exportWalletData } from '../lib/storage'
+import { addAcceptedIssuer, loadCredentials, loadHolder, exportWalletData } from '../lib/storage'
 import { bootstrap, store, createPresentation, restoreCredentials, canReplaceLostKey, replaceLostKey, resetWallet } from '../lib/wallet'
 
 class MemoryStorage {
@@ -145,7 +145,7 @@ describe('holder custody and recovery', () => {
     const issuer = generateEd25519KeyPair()
     const issuerDid = publicKeyToDidKey(issuer.publicKey)
     const credential = signJws({ iss: issuerDid, sub: holder.did, vc: { type: ['VerifiableCredential', 'Employee'], credentialSubject: { id: holder.did } } }, issuer.privateKey, issuerDid)
-    const stored = await store(credential, 'vc+jwt')
+    const stored = await store(credential, 'vc+jwt', [], issuerDid)
     const presentation = await createPresentation([stored.credential.id], 'verifier', 'nonce')
     const payload = verifyJws(presentation, (await import('../lib/crypto')).b64uDecode(holder.publicKey))
     expect(payload.nonce).toBe('nonce')
@@ -157,7 +157,7 @@ describe('holder custody and recovery', () => {
     const attacker = generateEd25519KeyPair()
     const did = publicKeyToDidKey(issuer.publicKey)
     const forged = signJws({ iss: did, sub: holder.did, vc: { type: ['Employee'] } }, attacker.privateKey, did)
-    await expect(store(forged, 'vc+jwt')).rejects.toThrow()
+    await expect(store(forged, 'vc+jwt', [], did)).rejects.toThrow()
     expect(loadCredentials()).toEqual([])
   })
 
@@ -169,7 +169,7 @@ describe('holder custody and recovery', () => {
     const make = (vct: string) => issueSdJwtVc({ issuerDid: did, issuerPrivateKey: issuer.privateKey,
       issuerKid: did, holderDid: holder.did, alwaysVisible: {}, selectivelyDisclosable: [{ name: 'secret', value: vct }],
       vct, now: Math.floor(Date.now() / 1000) })
-    const records = await Promise.all([store(make('Employee'), 'vc+sd-jwt'), store(make('Degree'), 'vc+sd-jwt')])
+    const records = await Promise.all([store(make('Employee'), 'vc+sd-jwt', [], did), store(make('Degree'), 'vc+sd-jwt', [], did)])
     expect(loadCredentials()).toHaveLength(2)
     await expect(createPresentation(records.map(r => r.credential.id), 'verifier', 'nonce', [])).rejects.toThrow('one at a time')
     const presentation = await createPresentation([records[0].credential.id], 'verifier', 'nonce', [])
@@ -206,7 +206,7 @@ describe('holder custody and recovery', () => {
     const issuer = generateEd25519KeyPair(), did = publicKeyToDidKey(issuer.publicKey)
     const issued = issueSdJwtVc({ issuerDid: did, issuerPrivateKey: issuer.privateKey, issuerKid: did, holderDid: holder.did,
       vct: 'EncryptedCredential', alwaysVisible: {}, selectivelyDisclosable: [{ name: 'private', value: envelope }], now: Math.floor(Date.now()/1000) })
-    const record = (await store(issued, 'vc+sd-jwt')).credential
+    const record = (await store(issued, 'vc+sd-jwt', [], did)).credential
     const hidden = decodeSdJwtVc(await createPresentation([record.id], 'verifier', 'nonce', []))
     expect(hidden.disclosures).toHaveLength(0)
     expect(verifyJws(hidden.kbJwt!, b64uDecode(holder.publicKey)).trustweave_claim_keys).toBeUndefined()
@@ -225,6 +225,7 @@ describe('credential backup restoration', () => {
   const issued = (did: string, name = 'Employee') => {
     const issuer = generateEd25519KeyPair()
     const issuerDid = publicKeyToDidKey(issuer.publicKey)
+    addAcceptedIssuer(issuerDid)
     return { credential: signJws({ iss: issuerDid, sub: did, vc: { type: ['VerifiableCredential', name], credentialSubject: { id: did } } }, issuer.privateKey, issuerDid), format: 'vc+jwt' }
   }
   it('restores an export without replacing keys or duplicating existing records', async () => {
@@ -239,6 +240,13 @@ describe('credential backup restoration', () => {
     expect(loadHolder()?.did).toBe(holder.did)
     expect((await loadHolderKeys(holder.did)).signing.extractable).toBe(originalKeys.signing.extractable)
     expect(loadCredentials()[0].credential).toBe(credential.credential)
+  })
+  it('rejects a backup record from an issuer the wallet never accepted', async () => {
+    const holder = (await bootstrap()).holder
+    const untrusted = issued(holder.did)
+    storage.removeItem('trustweave-wallet-accepted-issuers')
+    await expect(restoreCredentials(backup(holder.did, [untrusted]))).rejects.toThrow('not trusted')
+    expect(loadCredentials()).toHaveLength(0)
   })
   it('rejects a bad signature after a good record without partial writes', async () => {
     const holder = (await bootstrap()).holder
@@ -259,6 +267,7 @@ describe('credential backup restoration', () => {
     const issuer = generateEd25519KeyPair()
     const did = publicKeyToDidKey(issuer.publicKey)
     const { issueSdJwtVc } = await import('../lib/sdjwt')
+    addAcceptedIssuer(did)
     const credential = issueSdJwtVc({ issuerDid: did, issuerPrivateKey: issuer.privateKey, issuerKid: did, holderDid: holder.did,
       alwaysVisible: {}, selectivelyDisclosable: [{ name: 'secret', value: 'hidden' }], vct: 'Employee', now: Math.floor(Date.now() / 1000) })
     await restoreCredentials(backup(holder.did, [{ credential, format: 'vc+sd-jwt', issuerDid: 'attacker', preview: { title: 'forged' }, selectivelyDisclosable: ['forged'] }]))
@@ -282,7 +291,7 @@ describe('lost-key replacement', () => {
     const issuer = generateEd25519KeyPair()
     const did = publicKeyToDidKey(issuer.publicKey)
     const issue = (subject: string) => signJws({ iss: did, sub: subject, vc: { type: ['Employee'], credentialSubject: { id: subject } } }, issuer.privateKey, did)
-    const previous = (await store(issue(old.did), 'vc+jwt')).credential
+    const previous = (await store(issue(old.did), 'vc+jwt', [], did)).credential
     await clearHolderKeys()
     expect(await canReplaceLostKey()).toBe(true)
     const replacement = await replaceLostKey()
@@ -290,7 +299,7 @@ describe('lost-key replacement', () => {
     expect(replacement.credentials).toEqual([previous])
     expect((await bootstrap()).holder.did).toBe(replacement.holder.did)
     await expect(createPresentation([previous.id], 'verifier', 'nonce')).rejects.toThrow('another holder')
-    const reissued = (await store(issue(replacement.holder.did), 'vc+jwt')).credential
+    const reissued = (await store(issue(replacement.holder.did), 'vc+jwt', [], did)).credential
     expect(await createPresentation([reissued.id], 'verifier', 'nonce')).toBeTruthy()
   })
   it('refuses replacement while the existing key is usable', async () => {

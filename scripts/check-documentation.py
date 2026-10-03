@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
-HISTORICAL = {'.internal', 'superpowers', 'reviews'}
+HISTORICAL = {'.internal', 'superpowers', 'reviews', 'archive'}
 
 
 def inspect(root, require_contract=False):

@@ -39,6 +39,8 @@ public final class org/trustweave/webdid/WebDidConfig$Companion {
 public final class org/trustweave/webdid/WebDidMethod : org/trustweave/did/base/AbstractWebDidMethod {
 	public static final field Companion Lorg/trustweave/webdid/WebDidMethod$Companion;
 	public static final field DEFAULT_DOCUMENT_PATH Ljava/lang/String;
+	public static final field MAX_REDIRECTS I
+	public static final field MAX_STALE_CACHE_SECONDS Ljava/lang/String;
 	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;Lorg/trustweave/webdid/WebDidConfig;)V
 	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;Lorg/trustweave/webdid/WebDidConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

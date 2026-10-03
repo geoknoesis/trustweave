@@ -1,4 +1,6 @@
 public abstract class org/trustweave/did/base/AbstractBlockchainDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public static final field Companion Lorg/trustweave/did/base/AbstractBlockchainDidMethod$Companion;
+	public static final field DOCUMENT_ID_MISMATCH Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/KeyManagementService;)V
 	protected final fun anchorDocument (Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected fun canSubmitTransaction (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -9,6 +11,9 @@ public abstract class org/trustweave/did/base/AbstractBlockchainDidMethod : org/
 	protected final fun resolveFromBlockchain (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun resolveFromBlockchain$default (Lorg/trustweave/did/base/AbstractBlockchainDidMethod;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	protected final fun updateDocumentOnBlockchain (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/base/AbstractBlockchainDidMethod$Companion {
 }
 
 public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave/did/DidMethod {
@@ -50,11 +55,14 @@ public abstract class org/trustweave/did/base/AbstractDidMethodProvider : org/tr
 public abstract class org/trustweave/did/base/AbstractWebDidMethod : org/trustweave/did/base/AbstractDidMethod {
 	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;)V
 	protected final fun assertHostAllowed (Ljava/lang/String;)V
+	protected fun configureResolutionClient (Lokhttp3/OkHttpClient$Builder;)V
 	protected final fun createPublishRequest (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;)Lokhttp3/Request;
 	protected final fun deactivateDocumentOnHttp (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun executeRequest (Lokhttp3/Request;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected abstract fun getDocumentUrl (Ljava/lang/String;)Ljava/lang/String;
 	protected final fun getHttpClient ()Lokhttp3/OkHttpClient;
+	protected fun getMaxRedirects ()I
+	protected fun getMaxStaleCacheAge-UwyO8pc ()J
 	protected abstract fun publishDocument (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun resolveFromHttp (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun updateDocumentOnHttp (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -86,5 +94,18 @@ public final class org/trustweave/did/base/DidMethodUtils {
 	public final fun parseMulticodecKey ([B)Lkotlin/Pair;
 	public final fun percentDecode (Ljava/lang/String;)Ljava/lang/String;
 	public final fun validateDidMethod (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class org/trustweave/did/base/ResolutionGuardedDns : okhttp3/Dns {
+	public fun <init> ()V
+	public fun <init> (Lokhttp3/Dns;)V
+	public synthetic fun <init> (Lokhttp3/Dns;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun lookup (Ljava/lang/String;)Ljava/util/List;
+}
+
+public final class org/trustweave/did/base/ResolutionNetworkGuard {
+	public static final field INSTANCE Lorg/trustweave/did/base/ResolutionNetworkGuard;
+	public final fun isDisallowed (Ljava/net/InetAddress;)Z
+	public final fun rejectionReason (Ljava/lang/String;)Ljava/lang/String;
 }
 

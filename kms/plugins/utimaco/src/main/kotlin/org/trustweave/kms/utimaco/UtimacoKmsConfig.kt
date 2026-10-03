@@ -6,8 +6,11 @@ package org.trustweave.kms.utimaco
 data class UtimacoKmsConfig(
     val hsmAddress: String,
     val partitionId: String,
-    val partitionPassword: String
+    val partitionPassword: String,
 ) {
+    /** Redacts the partition password so it never reaches logs. */
+    override fun toString(): String = "UtimacoKmsConfig(hsmAddress=$hsmAddress, partitionId=$partitionId, partitionPassword=<redacted>)"
+
     init {
         require(hsmAddress.isNotBlank()) { "Utimaco HSM address must be specified" }
         require(partitionId.isNotBlank()) { "Utimaco partition ID must be specified" }
@@ -18,12 +21,15 @@ data class UtimacoKmsConfig(
         fun builder(): Builder = Builder()
 
         fun fromMap(options: Map<String, Any?>): UtimacoKmsConfig {
-            val hsmAddress = options["hsmAddress"] as? String
-                ?: throw IllegalArgumentException("Utimaco HSM address must be specified")
-            val partitionId = options["partitionId"] as? String
-                ?: throw IllegalArgumentException("Utimaco partition ID must be specified")
-            val partitionPassword = options["partitionPassword"] as? String
-                ?: throw IllegalArgumentException("Utimaco partition password must be specified")
+            val hsmAddress =
+                options["hsmAddress"] as? String
+                    ?: throw IllegalArgumentException("Utimaco HSM address must be specified")
+            val partitionId =
+                options["partitionId"] as? String
+                    ?: throw IllegalArgumentException("Utimaco partition ID must be specified")
+            val partitionPassword =
+                options["partitionPassword"] as? String
+                    ?: throw IllegalArgumentException("Utimaco partition password must be specified")
 
             return Builder()
                 .hsmAddress(hsmAddress)
@@ -61,4 +67,3 @@ data class UtimacoKmsConfig(
         }
     }
 }
-

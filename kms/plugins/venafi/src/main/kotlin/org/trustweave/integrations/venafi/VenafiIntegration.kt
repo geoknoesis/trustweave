@@ -19,8 +19,11 @@ import org.trustweave.core.exception.TrustWeaveException
  */
 class VenafiIntegration(
     val baseUrl: String,
-    val apiKey: String
+    val apiKey: String,
 ) {
+    /** Redacts [apiKey] so it never reaches logs. */
+    override fun toString(): String = "VenafiIntegration(baseUrl=$baseUrl, apiKey=<redacted>)"
+
     init {
         require(baseUrl.isNotBlank()) { "Venafi base URL must be specified" }
         require(apiKey.isNotBlank()) { "Venafi API key must be specified" }
@@ -35,13 +38,12 @@ class VenafiIntegration(
      */
     suspend fun issueCredentialWithCertificate(
         certificateId: String,
-        credentialType: String
-    ): Any {
+        credentialType: String,
+    ): Any =
         throw TrustWeaveException.Unknown(
             code = "VENAFI_NOT_IMPLEMENTED",
-            message = "The Venafi integration is a placeholder and is not implemented: " +
-                "no Venafi API client exists in this module."
+            message =
+                "The Venafi integration is a placeholder and is not implemented: " +
+                    "no Venafi API client exists in this module.",
         )
-    }
 }
-

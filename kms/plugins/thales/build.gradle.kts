@@ -8,7 +8,7 @@ dependencies {
     // API dependencies - exposed transitively to consumers
     api(project(":common"))
     api(project(":kms:kms-core"))
-    
+
     // Implementation dependencies - internal only
     implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
@@ -25,5 +25,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.mockwebserver)
 }
-

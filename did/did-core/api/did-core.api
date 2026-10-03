@@ -553,6 +553,10 @@ public final class org/trustweave/did/model/DidDocumentMetadata$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class org/trustweave/did/model/DidDocumentRebasingKt {
+	public static final fun rebasedTo (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;)Lorg/trustweave/did/model/DidDocument;
+}
+
 public abstract class org/trustweave/did/model/DidOrUrl {
 	public static final field Companion Lorg/trustweave/did/model/DidOrUrl$Companion;
 	public final fun toStringValue ()Ljava/lang/String;

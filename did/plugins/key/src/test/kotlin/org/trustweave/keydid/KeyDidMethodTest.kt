@@ -242,4 +242,49 @@ class KeyDidMethodTest {
             assertTrue(result is DidResolutionResult.Success)
             assertEquals(document.id, (result as DidResolutionResult.Success).document.id)
         }
+
+    @Test
+    fun `an unknown multicodec prefix is an invalid DID, not a guess`() =
+        runBlocking {
+            val result = method.resolveDid(didKeyWithBody(byteArrayOf(0x7f, 0x7f), bodySize = 32))
+            assertTrue(result is DidResolutionResult.Failure, "got $result")
+        }
+
+    @Test
+    fun `a non-base58btc multibase body is an invalid DID`() =
+        runBlocking {
+            val result = method.resolveDid(Did("did:key:u7QEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"))
+            assertTrue(result is DidResolutionResult.Failure, "got $result")
+        }
+
+    @Test
+    fun `an invalid base58 body is an invalid DID`() =
+        runBlocking {
+            val result = method.resolveDid(Did("did:key:z0OIl"))
+            assertTrue(result is DidResolutionResult.Failure, "got $result")
+        }
+
+    @Test
+    fun `a DID of another method is refused`() =
+        runBlocking {
+            val result = method.resolveDid(Did("did:web:example.com"))
+            assertTrue(result is DidResolutionResult.Failure, "got $result")
+        }
+
+    @Test
+    fun `resolution is deterministic and self-certifying`() =
+        runBlocking {
+            val created = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
+            val first = method.resolveDid(created.id) as DidResolutionResult.Success
+            val second = KeyDidMethod(InMemoryKeyManagementService()).resolveDid(created.id) as DidResolutionResult.Success
+            assertEquals(
+                first.document.verificationMethod
+                    .single()
+                    .publicKeyMultibase,
+                second.document.verificationMethod
+                    .single()
+                    .publicKeyMultibase,
+            )
+            assertEquals(created.id, second.document.id)
+        }
 }

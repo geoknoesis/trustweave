@@ -31,9 +31,14 @@ concurrency:
 jobs:
   dependency-submission:
     name: Submit Gradle dependency graph
-    # Fork PRs get a read-only token and cannot submit a snapshot; OSV below still covers them.
+    # Fork PRs get a read-only GITHUB_TOKEN whatever `permissions` says, so they cannot submit a
+    # snapshot and are skipped here; dependency review is skipped for them too (it needs the head
+    # snapshot), and OSV below still scans them. Fork PR dependency changes therefore get no
+    # dependency-review gate: maintainers must review them by hand.
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
+    # The only job with write access: the dependency-graph API requires contents: write. The
+    # workflow default is contents: read, and checkout does not persist credentials.
     permissions:
       contents: write
     steps:

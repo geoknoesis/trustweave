@@ -7,12 +7,34 @@ name: CodeQL
 # OIDC4VCI), DIDComm, ETSI signature validation, the trust registry and the facade. Extend the list
 # when a new module handles untrusted input.
 #
-# Runs on main and weekly rather than on every PR to keep PR feedback fast; findings appear in the
-# repository's code scanning alerts.
+# Runs on main, weekly, and on same-repository pull requests that touch the analysed modules (paths
+# filter below) so a change to untrusted-input code is scanned before it merges. Unrelated PRs skip
+# it to keep feedback fast. Fork PRs get a read-only token and cannot upload results, so they are
+# skipped; main and the weekly run still cover merged fork contributions. Keep the paths filter in
+# step with the module list in the compile step.
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'common/**'
+      - 'did/did-core/**'
+      - 'did/plugins/web/**'
+      - 'kms/kms-core/**'
+      - 'wallet/wallet-core/**'
+      - 'credentials/credential-api/**'
+      - 'credentials/plugins/oidc4vp/**'
+      - 'credentials/plugins/oidc4vci/**'
+      - 'credentials/plugins/didcomm/**'
+      - 'signatures/etsi-validation/**'
+      - 'trust-registry/trust-registry-core/**'
+      - 'trust/**'
+      - 'gradle/libs.versions.toml'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - '.github/workflows/codeql.yml'
   schedule:
     - cron: '41 3 * * 2'
   workflow_dispatch:
@@ -21,12 +43,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   analyze:
     name: Analyze (java-kotlin)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:

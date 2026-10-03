@@ -296,6 +296,22 @@ Added SPI provider for auto-discovery.
 Fixes #123
 ```
 
+### Recommended branch protection (maintainers)
+
+Configure these on `main` (Settings, Branches, or a ruleset) so the CI gates and `.github/CODEOWNERS`
+are enforced rather than advisory:
+
+- Require a pull request before merging, with at least one approval, dismissing stale approvals on new commits.
+- Require review from Code Owners (`.github/CODEOWNERS` covers `did/`, `kms/`, `credentials/`, `signatures/`,
+  `trust-registry/`, `.github/`, `scripts/` and the build files).
+- Require status checks to pass and the branch to be up to date: the `CI` jobs (lint, build, contracts,
+  documentation-examples, verifiable-intent, host-observability, sbom), `Dependency security / Review dependency changes`
+  and `CodeQL / Analyze`.
+- Require conversation resolution, linear history, and signed commits if your release process allows it.
+- Block force pushes and branch deletion; restrict who can push to `main` and to `v*` release tags.
+- Set the default `GITHUB_TOKEN` permission to read-only (workflows request more per job), and require
+  approval for workflow runs from outside collaborators.
+
 For complete details, see [Pull Request Process Guide](docs/contributing/pull-request-process.md).
 
 ## Creating Plugins

@@ -33,12 +33,17 @@ public final class org/trustweave/plcdid/PlcDidConfig$Companion {
 }
 
 public final class org/trustweave/plcdid/PlcDidMethod : org/trustweave/did/base/AbstractDidMethod {
+	public static final field Companion Lorg/trustweave/plcdid/PlcDidMethod$Companion;
+	public static final field NOT_IMPLEMENTED Ljava/lang/String;
 	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/plcdid/PlcDidConfig;)V
 	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/plcdid/PlcDidConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/plcdid/PlcDidMethod$Companion {
 }
 
 public final class org/trustweave/plcdid/spi/PlcDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {

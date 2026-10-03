@@ -13,9 +13,10 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
-- **BREAKING — `DidRegistrarServer`, `VcApiServer` and the status-list server refuse mutating
-  requests until authentication is configured.** These servers create and deactivate DIDs and sign
-  credentials with whatever keys their KMS holds, and previously carried no authentication
+- **BREAKING — `DidRegistrarServer`, `VcApiServer`, `StatusListServer`, `Oidc4VciServer`,
+  `AvpAuthorizationServer` and `TrustRegistryServer` refuse mutating requests until authentication
+  is configured.** These servers create and deactivate DIDs, sign credentials with whatever keys
+  their KMS holds or change trust state, and previously carried no authentication
   primitive at all — only a loopback bind default and documentation asking the operator to front
   them with a proxy. POST, PUT, PATCH and DELETE now return 503 `authentication_not_configured`
   until the host calls `withAuthentication(...)`. Reads are unaffected. Three ways to satisfy it:
@@ -48,6 +49,9 @@ working code fail until it is adjusted.**
   `CredentialRejectedException`, storing nothing, unless the credential verifies, names the offer's
   issuer and is bound to the holder DID; without a verifier it fails before contacting the issuer.
   did:web derivation from the issuer URL now follows the did:web spec (percent-encoded port, https only).
+  A new optional `issuerTrustPolicy` (`IssuerTrustPolicy.allowList(...)` or a registry lookup) decides
+  whether the offered issuer is trusted at all; without one, offers are still accepted from any issuer
+  that verifies and matches the offer, and a warning is logged once per process.
 
 - **`fromJwt` rejects unsecured (`alg: none`) JWTs** unless the caller passes `allowUnsecured = true`,
   and there is no raw-JSON fallback. `toJwt` throws instead of silently returning plain JSON.
@@ -66,9 +70,10 @@ working code fail until it is adjusted.**
   before any key is generated. Resolution uses the directory's real `GET /{did}` endpoint.
 
 - **The Spring registrar needs a bearer token or a proxy declaration.** `did:registrar-server-spring`
-  refuses every POST/PUT/DELETE with 503 until `trustweave.registrar.auth.bearer-token` (at least 32
-  characters, compared in constant time; 401 on mismatch) or
-  `trustweave.registrar.auth.fronted-by-proxy` is set. The controller's constructor and endpoint
+  refuses every POST/PUT/DELETE with 503 until `trustweave.registrar.auth.bearer-token` (32-256
+  printable non-space ASCII characters, compared in constant time; 401 on mismatch) or
+  `trustweave.registrar.auth.fronted-by-proxy` (a statement of what authenticates callers) is set.
+  Job status reads are authenticated as well. The controller's constructor and endpoint
   signatures gain the authentication and `Authorization` header parameters (ABI dump updated).
 
 - **The Ktor registrar gates job status reads.** `GET /1.0/jobs/{jobId}` needs the configured
@@ -79,16 +84,44 @@ working code fail until it is adjusted.**
 - **`DidCommExamples` is no longer part of the public API.** It used `runBlocking` and now lives in
   the plugin's test sources (ABI dump updated).
 
+- **Token status list manager throws instead of reporting "not revoked".** An unknown status list,
+  an out-of-range or undeterminable index and an unindexed credential id now fail
+  (`STATUS_LIST_UNAVAILABLE`, `RANGE_ERROR`, `STATUS_LIST_INDEX_UNKNOWN`, `NotFound`), and an
+  unrecognised stored purpose no longer defaults to revocation. Status list tokens are now signed
+  with a configured Ed25519 `issuerKeyId` from the KMS (`trustweave.statuslist.token.issuerKeyId`)
+  instead of a throwaway key; building one without it fails with a `ConfigException`.
+
+- **SD-JWT verification requires the issuer JWT `typ`.** The engine stamps `typ: dc+sd-jwt` at
+  issuance and refuses an issuer JWT whose `typ` is not `dc+sd-jwt` or `vc+sd-jwt`; an absent `typ`
+  is accepted only with `additionalOptions["allowLegacySdJwtTyp"] = true`. (An opt-in single-use
+  KB-JWT nonce store, `kbJwtNonceStore`, is additive.)
+
+- **`bindContract` is only legal from `DRAFT` or `PENDING`.** Binding an executed or terminated
+  contract no longer succeeds. `verifyContract` now requires the credential issuer to be a party,
+  the service's own issuing DID, or accepted by an optional `TrustedIssuerPolicy`.
+
+- **EVM anchor reads check the transaction.** A read needs a successful receipt, the expected
+  sender and the expected recipient (default: a self-send, which is what the client writes).
+  `expectedSender` defaults to the client's own signing account; verify-only clients must set
+  `expectedSender` or opt in with `acceptAnySelfSend=true`, otherwise reads fail with a clear error.
+
+- **JSON canonicalization rejects integers beyond 2^53,** literals outside the JSON number grammar
+  (`1d`, hex floats, `NaN`, `Infinity`) and lone surrogates, because RFC 8785 would silently round
+  them into colliding digests. Carry large integers as strings.
+
 - **Digest anchors hash an RFC 8785 (JCS) envelope.** New digest-mode envelopes carry `canon=JCS`
   and hash the canonical form, so a structurally equal payload verifies regardless of key order or
   number spelling. Legacy envelopes (no `canon` member) are still recognised and verified against
-  the bytes the old write path hashed.
+  the bytes the old write path hashed. The `requireCanonicalEnvelope` option (default `false`) makes a
+  verifier reject legacy envelopes.
 
 - Other behaviour changes: Ed25519 signatures in did-core are verified and an unchecked digest is
   never passed through; remote JSON-LD contexts are restricted to `https:` (`http:` needs a second
   explicit opt-in; `file:`, `jar:` and other schemes are refused) and cached in a bounded LRU;
   SD-JWT and VC-LD verification honour `VerificationOptions.revocationFailurePolicy` (fail closed
-  by default) and process disclosures strictly; did:ethr fails fast on a bad private key and no
+  by default) and process disclosures strictly; DID resolution rejects documents whose `id` differs from the
+  requested DID and `verifyDocument` takes an `expectedDid`; did:jwk refuses private or unknown JWKs;
+  did:ethr fails fast on a bad private key and no
   longer fakes anchors, did:polygon drops its fake transaction hash, did:ens reports the missing
   lookup as method-not-supported, did:cheqd derives identifiers per spec, did:sol derives its address
   from the Ed25519 public key; the waltid KMS no longer registers placeholder did:key/did:web methods
@@ -134,7 +167,8 @@ working code fail until it is adjusted.**
   same ledger account and previously threw out of a function whose contract is a result.
 
 - Dependency versions all come from `gradle/libs.versions.toml`. 61 coordinates were literals in
-  module build files and had drifted from the catalog: web3j 4.10.0 → 4.14.0, gson 2.10.1 → 2.14.0,
+  module build files and had drifted from the catalog: web3j 4.10.0 → 4.14.0 (did:ethr, did:polygon and
+  did:ens, through a `web3j-legacy` alias; the EVM anchor base uses web3j 5.0.2), gson 2.10.1 → 2.14.0,
   slf4j 2.0.9 → 2.0.17 and kotlinx-coroutines-test 1.8.1 → 1.10.2 are now in effect. bitcoinj stays
   on 0.16.2 through a new `bitcoinj-legacy` alias, because 0.17 is a breaking API change; the drift
   is recorded rather than hidden. `scripts/check-dependency-catalog.py` fails the build on a new
@@ -183,8 +217,9 @@ working code fail until it is adjusted.**
 - `KmsBasedRegistrar` delegates operations instead of faking them; the trust-registry server maps
   registry failures to the right status codes and the revocation reason survives re-activation.
 - OIDC4VP populates `requestedClaims` from what the verifier asked for; `expectedChallenge` and
-  `expectedDomain` are honoured without the flag; the Android reference wallet verifies credentials
-  before storing them; the trust facade keeps the original issuance failure when a status index is
+  `expectedDomain` are honoured without the flag; the Android and web reference wallets verify
+  credentials before storing them and fail closed unless the issuer is trusted (an allow-list; the
+  web wallet's `requireHolderKeyBinding` option demands `cnf.kid == sub` on plain VC-JWTs, default off); the trust facade keeps the original issuance failure when a status index is
   orphaned and picks the `assertionMethod` key in `getKeyId`.
 - DIDComm no longer blocks the caller's dispatcher in secret resolvers and does not rotate on
   invented key ages; Vault public keys are parsed strictly and curve-checked; the Azure KMS honours
@@ -198,9 +233,9 @@ working code fail until it is adjusted.**
 - The fixes above in the "Breaking and behaviour changes" and "Fixed" sections that close
   authentication, SSRF, signature-validation and fail-open paths (registrar servers, Spring
   registrar, did:web, JSON-LD contexts, JWT, SD-JWT, XAdES, wallet storage, offer acceptance).
-- All 14 remaining unpinned GitHub Actions references are pinned to commit SHAs, and the two
-  workflows that declared no `permissions` block now do. The nightly conformance job's
-  `issues: write` moved to a separate job that runs no repository code.
+- Every GitHub Actions reference is pinned to a commit SHA (`setup-gradle` and
+  `attest-build-provenance` were repinned) and every workflow declares `permissions`. The nightly
+  conformance job's `issues: write` lives in a separate job that runs no repository code.
 
 - Dependency scanning: OSV-Scanner and dependency review run on every push and pull request; the
   `org.didcommx:didcomm` 0.3.2 embedded-Nimbus risk is documented in `SECURITY.md`.

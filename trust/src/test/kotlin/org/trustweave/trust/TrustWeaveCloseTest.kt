@@ -208,6 +208,29 @@ class TrustWeaveCloseTest {
     }
 
     @Test
+    fun `closeAsync suspends through lifecycle teardown and shares idempotence with close`() =
+        runBlocking<Unit> {
+            val backingKms = CloseableKms()
+            val ownedMethod = LifecycleDidMethod(DidKeyMockMethod(backingKms))
+            val didRegistry = DidMethodRegistry().apply { register(ownedMethod) }
+            val trustWeave =
+                TrustWeave.from(
+                    directConfig(
+                        kms = backingKms,
+                        didRegistry = didRegistry,
+                        ownership = ComponentOwnership(ownedDidMethods = listOf(ownedMethod)),
+                    ),
+                )
+
+            trustWeave.closeAsync()
+            trustWeave.close()
+            trustWeave.closeAsync()
+
+            assertEquals(listOf("stop", "cleanup"), ownedMethod.calls)
+            assertEquals(1, backingKms.closeCount.get())
+        }
+
+    @Test
     fun `close does not close DID methods the caller registered after construction`() =
         runBlocking<Unit> {
             val trustWeave =

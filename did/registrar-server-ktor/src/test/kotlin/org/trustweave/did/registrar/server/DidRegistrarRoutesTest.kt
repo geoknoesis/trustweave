@@ -32,7 +32,7 @@ class DidRegistrarRoutesTest {
 
     private fun ApplicationTestBuilder.registrarApp(auth: HostAuthentication?) {
         application {
-            auth?.install(this) ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
+            auth?.forRegistrar()?.install(this) ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
             install(ContentNegotiation) { json(registrarJson()) }
             val jobs = InMemoryJobStorage()
             val registrar = KmsBasedRegistrar(InMemoryKeyManagementService(), jobs) { _, kms -> DidKeyMockMethod(kms) }
@@ -89,7 +89,7 @@ class DidRegistrarRoutesTest {
     fun `an unknown job is a 404 and internals are not leaked`() =
         testApplication {
             registrarApp(HostAuthentication.bearerToken(token))
-            val response = client.get("/1.0/jobs/does-not-exist")
+            val response = client.get("/1.0/jobs/does-not-exist") { header("Authorization", "Bearer $token") }
             assertEquals(HttpStatusCode.NotFound, response.status)
             assertTrue("JOB_NOT_FOUND" in response.bodyAsText(), response.bodyAsText())
         }
@@ -99,6 +99,16 @@ class DidRegistrarRoutesTest {
         testApplication {
             registrarApp(HostAuthentication.bearerToken(token, protect = HostAuthentication.ALL))
             assertEquals(HttpStatusCode.Unauthorized, client.get("/1.0/jobs/job-1").status)
+            val authed = client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer $token") }
+            assertEquals(HttpStatusCode.NotFound, authed.status)
+        }
+
+    @Test
+    fun `job status needs the credential even when only mutations were configured as protected`() =
+        testApplication {
+            registrarApp(HostAuthentication.bearerToken(token))
+            assertEquals(HttpStatusCode.Unauthorized, client.get("/1.0/jobs/job-1").status)
+            assertEquals(HttpStatusCode.Unauthorized, client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer nope") }.status)
             val authed = client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer $token") }
             assertEquals(HttpStatusCode.NotFound, authed.status)
         }

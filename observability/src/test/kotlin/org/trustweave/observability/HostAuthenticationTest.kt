@@ -57,6 +57,26 @@ class HostAuthenticationTest {
         }
 
     @Test
+    fun `protected path prefixes gate reads under them and leave other reads open`() =
+        testApplication {
+            application {
+                HostAuthentication.bearerToken(token).protectingPathPrefixes("/secret/").install(this)
+                routing {
+                    get("/secret/item") { call.respond(HttpStatusCode.OK, "secret") }
+                    get("/open/item") { call.respond(HttpStatusCode.OK, "open") }
+                }
+            }
+            assertEquals(HttpStatusCode.Unauthorized, client.request("/secret/item") { method = HttpMethod.Get }.status)
+            assertEquals(HttpStatusCode.OK, client.request("/open/item") { method = HttpMethod.Get }.status)
+            val authed =
+                client.request("/secret/item") {
+                    method = HttpMethod.Get
+                    header("Authorization", "Bearer $token")
+                }
+            assertEquals(HttpStatusCode.OK, authed.status)
+        }
+
+    @Test
     fun `a bearer token admits the right caller and refuses everyone else`() =
         testApplication {
             application {

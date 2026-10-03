@@ -71,6 +71,11 @@ working code fail until it is adjusted.**
   `trustweave.registrar.auth.fronted-by-proxy` is set. The controller's constructor and endpoint
   signatures gain the authentication and `Authorization` header parameters (ABI dump updated).
 
+- **The Ktor registrar gates job status reads.** `GET /1.0/jobs/{jobId}` needs the configured
+  credential whenever an authenticator is set, whatever `protect` set was passed to
+  `HostAuthentication` (job records can carry DID state). Other reads stay open. New public API:
+  `HostAuthentication.protectingPathPrefixes(...)` (ABI dump updated).
+
 - **`DidCommExamples` is no longer part of the public API.** It used `runBlocking` and now lives in
   the plugin's test sources (ABI dump updated).
 

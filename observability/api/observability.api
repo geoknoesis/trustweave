@@ -1,6 +1,5 @@
 public final class org/trustweave/observability/HostAuthentication {
 	public static final field Companion Lorg/trustweave/observability/HostAuthentication$Companion;
-	public synthetic fun <init> (Lorg/trustweave/observability/HostAuthenticator;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;Ljava/util/Set;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun bearerToken (Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
 	public static final fun bearerToken (Ljava/lang/String;Ljava/util/Set;)Lorg/trustweave/observability/HostAuthentication;
 	public static final fun bearerToken (Ljava/lang/String;Ljava/util/Set;Lorg/trustweave/observability/HostAuthentication$RateLimit;)Lorg/trustweave/observability/HostAuthentication;
@@ -13,6 +12,7 @@ public final class org/trustweave/observability/HostAuthentication {
 	public final fun install (Lio/ktor/server/application/Application;)V
 	public final fun install (Lio/ktor/server/application/Application;Ljava/util/Set;)V
 	public static synthetic fun install$default (Lorg/trustweave/observability/HostAuthentication;Lio/ktor/server/application/Application;Ljava/util/Set;ILjava/lang/Object;)V
+	public final fun protectingPathPrefixes ([Ljava/lang/String;)Lorg/trustweave/observability/HostAuthentication;
 }
 
 public final class org/trustweave/observability/HostAuthentication$Companion {

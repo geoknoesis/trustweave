@@ -47,6 +47,11 @@ public class HostAuthentication private constructor(
     private val rateLimit: RateLimit?,
     private val exemptPaths: Set<String>,
     /**
+     * Path prefixes that are gated for every method, reads included, even when [protectedMethods]
+     * covers only mutations. See [protectingPathPrefixes].
+     */
+    private val protectedPathPrefixes: Set<String> = emptySet(),
+    /**
      * What protects this server, when nothing in this process does.
      *
      * Non-null only for [frontedByProxy]. Readable so a host can log or surface the declaration
@@ -120,9 +125,26 @@ public class HostAuthentication private constructor(
             rateLimit: RateLimit? = null,
         ): HostAuthentication {
             require(reason.isNotBlank()) { "State what authenticates callers in front of this server" }
-            return HostAuthentication(null, emptySet(), rateLimit, setOf(METRICS_PATH), reason.trim())
+            return HostAuthentication(null, emptySet(), rateLimit, setOf(METRICS_PATH), delegatedTo = reason.trim())
         }
     }
+
+    /**
+     * Returns a copy that also requires the credential for every request, whatever its method,
+     * whose path starts with one of [prefixes]. Use it when a few read routes are privileged but
+     * the rest of the server's reads are not, e.g. job-status records in the DID registrar.
+     *
+     * Has no effect on [frontedByProxy], which has no authenticator of its own.
+     */
+    public fun protectingPathPrefixes(vararg prefixes: String): HostAuthentication =
+        HostAuthentication(
+            authenticator = authenticator,
+            protectedMethods = protectedMethods,
+            rateLimit = rateLimit,
+            exemptPaths = exemptPaths,
+            protectedPathPrefixes = protectedPathPrefixes + prefixes,
+            delegatedTo = delegatedTo,
+        )
 
     /**
      * A fixed-window permit budget per caller, keyed by remote host.
@@ -210,7 +232,9 @@ public class HostAuthentication private constructor(
                 return@intercept
             }
             val gate = authenticator
-            if (gate != null && call.request.httpMethod in protectedMethods) {
+            if (gate != null &&
+                (call.request.httpMethod in protectedMethods || protectedPathPrefixes.any { path.startsWith(it) })
+            ) {
                 val admitted =
                     try {
                         gate.authorize(call)

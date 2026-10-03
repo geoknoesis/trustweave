@@ -50,10 +50,9 @@ import org.trustweave.observability.HostObservability
  * 503 and reads keep working. `HostAuthentication.frontedByProxy("...")` records the case where
  * something in front already authenticates callers.
  *
- * **Job status reads are open by default** (`HostAuthentication` gates only mutating methods
- * unless told otherwise). Job records can carry DID state, so pass
- * `HostAuthentication.bearerToken(token, protect = HostAuthentication.ALL)` to require the same
- * credential for `GET /1.0/jobs/{jobId}`.
+ * **Job status reads need the same credential as mutations.** Job records can carry DID state, so
+ * `GET /1.0/jobs/{jobId}` is gated whenever an authenticator is configured, whatever `protect`
+ * set was passed to [HostAuthentication]. Other reads (resolution-style GETs) stay open.
  * @param jobStorage Storage for tracking long-running operations (default: InMemoryJobStorage)
  */
 class DidRegistrarServer(
@@ -113,7 +112,8 @@ class DidRegistrarServer(
         observability?.install(this, HostKind.DID_REGISTRAR)
         // No authentication configured is not the same as no authentication needed:
         // refuse mutations until the host states which of the two it means.
-        authentication?.install(this)
+        // Job records can carry DID state, so reads of them need the same credential as mutations.
+        authentication?.forRegistrar()?.install(this)
             ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
         // Configure JSON serialization
         install(ContentNegotiation) {
@@ -138,3 +138,8 @@ internal fun registrarJson(): Json =
         isLenient = true
         prettyPrint = true
     }
+
+private const val JOBS_PATH_PREFIX = "/1.0/jobs/"
+
+/** The host's authentication plus the registrar's own rule: job records are privileged reads. */
+internal fun HostAuthentication.forRegistrar(): HostAuthentication = protectingPathPrefixes(JOBS_PATH_PREFIX)

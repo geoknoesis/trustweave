@@ -16,8 +16,8 @@ dependencies {
     // API dependencies - exposed transitively to consumers
     api(project(":common"))
     api(project(":kms:kms-core"))
-    api(project(":did:did-core"))  // waltid also provides DID methods
-    
+    api(project(":did:did-core")) // waltid also provides DID methods
+
     // Implementation dependencies - internal only
     implementation(project(":credentials:credential-api"))
     implementation(libs.kotlinx.coroutines.core)
@@ -25,7 +25,10 @@ dependencies {
     // Force kotlinx.datetime version to ensure Clock.System is available
     implementation(libs.kotlinx.datetime) {
         version {
-            strictly(libs.versions.kotlinx.datetime.get())
+            strictly(
+                libs.versions.kotlinx.datetime
+                    .get(),
+            )
         }
     }
     implementation("id.walt.did:waltid-did:$WALTID_VERSION") {
@@ -41,6 +44,8 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    // WaltIdIntegration registers the real did:key / did:web plugins it finds via SPI.
+    testImplementation(project(":did:plugins:key"))
+    testImplementation(project(":did:plugins:web"))
     testImplementation(libs.kotlinx.datetime) // Ensure datetime is available in tests
 }
-

@@ -3,21 +3,8 @@ package org.trustweave.wallet.database
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.longOrNull
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 import org.slf4j.LoggerFactory
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialCollection
@@ -30,12 +17,10 @@ import org.trustweave.wallet.CredentialRecordStorage
 import org.trustweave.wallet.CredentialStorage
 import org.trustweave.wallet.PagedCredentialStorage
 import org.trustweave.wallet.StoredCredentialRecord
-import org.trustweave.wallet.StoredCredentialStatus
 import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.WalletStatistics
 import org.trustweave.wallet.WalletStatusResolver
 import org.trustweave.wallet.exception.WalletException
-import org.trustweave.wallet.resolveStoredStatus
 import java.sql.Connection
 import java.util.UUID
 import javax.sql.DataSource
@@ -86,6 +71,8 @@ class DatabaseWallet(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
+
+    private val metadataCodec = MetadataCodec(json)
 
     companion object {
         private val logger = LoggerFactory.getLogger(DatabaseWallet::class.java)
@@ -320,7 +307,7 @@ class DatabaseWallet(
                 }
 
                 // The complete ordered result is filtered; the List API never silently truncates.
-                if (filter == null) rawResults else rawResults.filter { matchesFilter(it, filter) }
+                if (filter == null) rawResults else rawResults.filter { matchesFilter(it, filter, statusResolver) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 throw WalletException.StorageError(
@@ -391,43 +378,10 @@ class DatabaseWallet(
                 val rawResults = mutableListOf<VerifiableCredential>()
 
                 dataSource.connection.use { conn ->
-                    // Tag/collection filters are pushed down to SQL because tags and
-                    // collections are wallet-level metadata stored in the credential_tags /
-                    // credential_collections tables, keyed by the database credential id —
-                    // they cannot be evaluated against the credential JSON in memory.
-                    // Semantics: a credential must carry ALL requested tags and belong to
-                    // ALL requested collections (AND, consistent with predicate chaining).
-                    val sql =
-                        buildString {
-                            append("SELECT credential_data FROM credentials WHERE wallet_id = ? AND archived = FALSE")
-                            if (requestedTags.isNotEmpty()) {
-                                val placeholders = requestedTags.joinToString(", ") { "?" }
-                                append(
-                                    " AND id IN (SELECT credential_id FROM credential_tags WHERE tag IN ($placeholders)" +
-                                        " GROUP BY credential_id HAVING COUNT(DISTINCT tag) = ?)",
-                                )
-                            }
-                            if (requestedCollections.isNotEmpty()) {
-                                val placeholders = requestedCollections.joinToString(", ") { "?" }
-                                append(
-                                    " AND id IN (SELECT credential_id FROM credential_collections WHERE collection_id IN ($placeholders)" +
-                                        " GROUP BY credential_id HAVING COUNT(DISTINCT collection_id) = ?)",
-                                )
-                            }
-                            append(" ORDER BY id")
-                        }
+                    val sql = buildTagCollectionQuerySql(requestedTags, requestedCollections)
 
                     conn.prepareStatement(sql).use { stmt ->
-                        var index = 1
-                        stmt.setString(index++, walletId)
-                        requestedTags.forEach { stmt.setString(index++, it) }
-                        if (requestedTags.isNotEmpty()) {
-                            stmt.setInt(index++, requestedTags.size)
-                        }
-                        requestedCollections.forEach { stmt.setString(index++, it) }
-                        if (requestedCollections.isNotEmpty()) {
-                            stmt.setInt(index++, requestedCollections.size)
-                        }
+                        bindTagCollectionQuery(stmt, walletId, requestedTags, requestedCollections)
                         stmt.executeQuery().use { rs ->
                             while (rs.next()) {
                                 val credentialJson = rs.getString("credential_data")
@@ -534,41 +488,6 @@ class DatabaseWallet(
             metadataStmt.executeUpdate()
         }
     }
-
-    /** Serialize a metadata map to JSON. Non-primitive values are stored via toString(). */
-    private fun metadataMapToJson(metadata: Map<String, Any>): String {
-        val obj =
-            buildJsonObject {
-                metadata.forEach { (key, value) ->
-                    when (value) {
-                        is String -> put(key, value)
-                        is Boolean -> put(key, value)
-                        is Number -> put(key, JsonPrimitive(value))
-                        is JsonElement -> put(key, value)
-                        else -> put(key, value.toString())
-                    }
-                }
-            }
-        return json.encodeToString(JsonObject.serializer(), obj)
-    }
-
-    /** Deserialize a metadata JSON column back into a map of primitives. */
-    private fun metadataJsonToMap(metadataJson: String?): Map<String, Any> {
-        if (metadataJson.isNullOrBlank()) return emptyMap()
-        val obj = json.decodeFromString(JsonObject.serializer(), metadataJson)
-        return obj.mapValues { (_, value) ->
-            when {
-                value is JsonPrimitive && value.isString -> value.content
-                value is JsonPrimitive && value.booleanOrNull != null -> value.booleanOrNull as Any
-                value is JsonPrimitive && value.longOrNull != null -> value.longOrNull as Any
-                value is JsonPrimitive && value.doubleOrNull != null -> value.doubleOrNull as Any
-                else -> value
-            }
-        }
-    }
-
-    private fun java.sql.ResultSet.instantOrNow(column: String): Instant =
-        getTimestamp(column)?.toInstant()?.toKotlinInstant() ?: Clock.System.now()
 
     // ----- CredentialCollections -----
 
@@ -957,12 +876,12 @@ class DatabaseWallet(
                                     stmt.setString(1, credentialId)
                                     stmt.executeQuery().use { rs -> if (rs.next()) rs.getString("metadata_json") else null }
                                 }
-                        val merged = metadataJsonToMap(existing) + metadata
+                        val merged = metadataCodec.toMap(existing) + metadata
                         conn
                             .prepareStatement(
                                 "UPDATE credential_metadata SET metadata_json = ?, updated_at = CURRENT_TIMESTAMP WHERE credential_id = ?",
                             ).use { stmt ->
-                                stmt.setString(1, metadataMapToJson(merged))
+                                stmt.setString(1, metadataCodec.toJson(merged))
                                 stmt.setString(2, credentialId)
                                 stmt.executeUpdate()
                             }
@@ -1001,7 +920,7 @@ class DatabaseWallet(
                                         credentialId = credentialId,
                                         notes = rs.getString("notes"),
                                         tags = readTags(conn, credentialId),
-                                        metadata = metadataJsonToMap(rs.getString("metadata_json")),
+                                        metadata = metadataCodec.toMap(rs.getString("metadata_json")),
                                         createdAt = rs.instantOrNow("created_at"),
                                         updatedAt = rs.instantOrNow("updated_at"),
                                     )
@@ -1039,40 +958,6 @@ class DatabaseWallet(
         }
 
     /**
-     * Check if credential matches filter criteria.
-     */
-    private suspend fun matchesFilter(
-        credential: VerifiableCredential,
-        filter: CredentialFilter,
-    ): Boolean {
-        if (filter.issuer != null && credential.issuer.id.value != filter.issuer) return false
-        filter.type?.let { filterTypes ->
-            if (!filterTypes.any { filterType -> credential.type.any { it.value == filterType } }) return false
-        }
-        if (filter.subjectId != null) {
-            val subjectId = credential.credentialSubject.id?.value
-            if (subjectId != filter.subjectId) return false
-        }
-        if (filter.expired != null) {
-            val effectiveExpiry =
-                if (credential.isVc2 && !credential.isVc1) {
-                    credential.validUntil
-                } else {
-                    credential.validUntil ?: credential.expirationDate
-                }
-            val isExpired = effectiveExpiry?.let { Clock.System.now() > it } ?: false
-            if (isExpired != filter.expired) return false
-        }
-        if (filter.hasStatusEntry != null && (credential.credentialStatus != null) != filter.hasStatusEntry) return false
-        if (filter.revoked != null) {
-            val status = resolveStoredStatus(credential, statusResolver)
-            if (status == StoredCredentialStatus.UNKNOWN) return false
-            if ((status == StoredCredentialStatus.REVOKED) != filter.revoked) return false
-        }
-        return true
-    }
-
-    /**
      * One page of stored records ordered by storage ID, starting after the [after] cursor.
      *
      * On PostgreSQL the JSON parts of [filter] are pushed into the query (containment index);
@@ -1091,54 +976,15 @@ class DatabaseWallet(
             require(after == null || after.length <= 2048) { "Invalid cursor" }
             val scanned =
                 dataSource.connection.use { conn ->
-                    val predicates = mutableListOf<String>()
-                    val values = mutableListOf<String>()
-                    if (after != null) {
-                        predicates.add("id > ?")
-                        values.add(after)
-                    }
-                    // PostgreSQL uses the JSON containment index. H2 scans only the bounded page;
-                    // remaining status/expiry filters are evaluated after closing the result set.
-                    if (isPostgreSql(conn) && filter != null) {
-                        fun contains(documents: List<JsonObject>) {
-                            if (documents.isEmpty()) return
-                            predicates.add(
-                                documents.joinToString(" OR ", "(", ")") { "CAST(credential_data AS jsonb) @> CAST(? AS jsonb)" },
-                            )
-                            values.addAll(documents.map { it.toString() })
-                        }
-                        filter.issuer?.let { issuer ->
-                            contains(
-                                listOf(
-                                    buildJsonObject { put("issuer", issuer) },
-                                    buildJsonObject { putJsonObject("issuer") { put("id", issuer) } },
-                                ),
-                            )
-                        }
-                        filter.type?.let { types ->
-                            contains(
-                                types.map { type ->
-                                    buildJsonObject { putJsonArray("type") { add(JsonPrimitive(type)) } }
-                                },
-                            )
-                        }
-                        filter.subjectId?.let { subject ->
-                            contains(
-                                listOf(
-                                    buildJsonObject { putJsonObject("credentialSubject") { put("id", subject) } },
-                                ),
-                            )
-                        }
-                    }
-                    val extra = predicates.joinToString(" AND ").let { if (it.isEmpty()) "" else " AND $it" }
+                    val pageQuery = buildPageQuery(after, filter, isPostgreSql(conn))
                     conn
                         .prepareStatement(
                             "SELECT id, credential_data FROM credentials WHERE wallet_id = ? AND archived = FALSE" +
-                                extra + " ORDER BY id LIMIT ?",
+                                pageQuery.extraSql + " ORDER BY id LIMIT ?",
                         ).use { statement ->
                             statement.setString(1, walletId)
-                            values.forEachIndexed { index, value -> statement.setString(index + 2, value) }
-                            statement.setInt(values.size + 2, limit + 1)
+                            pageQuery.values.forEachIndexed { index, value -> statement.setString(index + 2, value) }
+                            statement.setInt(pageQuery.values.size + 2, limit + 1)
                             statement.executeQuery().use { rows ->
                                 buildList {
                                     while (rows.next()) {
@@ -1155,7 +1001,7 @@ class DatabaseWallet(
                 }
             val page = scanned.take(limit)
             CredentialPage(
-                page.filter { filter == null || matchesFilter(it.credential, filter) },
+                page.filter { filter == null || matchesFilter(it.credential, filter, statusResolver) },
                 if (scanned.size > limit) page.last().storageId else null,
             )
         }
@@ -1173,7 +1019,7 @@ class DatabaseWallet(
                             while (rows.next()) {
                                 val credential = json.decodeFromString(VerifiableCredential.serializer(), rows.getString("credential_data"))
                                 if (filter == null ||
-                                    matchesFilter(credential, filter)
+                                    matchesFilter(credential, filter, statusResolver)
                                 ) {
                                     records.add(StoredCredentialRecord(rows.getString("id"), credential))
                                 }
@@ -1215,42 +1061,22 @@ class DatabaseWallet(
                             }
                         }
                 }
-            var valid = 0
-            var expired = 0
-            var revoked = 0
-            var unknown = 0
-            val now = Clock.System.now()
+            val accumulator = StatisticsAccumulator(statusResolver)
             var cursor: String? = null
             var remaining = activeCount
             do {
                 val page = pageRecords(limit = minOf(500, remaining.coerceAtLeast(1)), after = cursor)
-                for (record in page.records) {
-                    val credential = record.credential
-                    val status = resolveStoredStatus(credential, statusResolver)
-                    val expiry =
-                        if (credential.isVc2 &&
-                            !credential.isVc1
-                        ) {
-                            credential.validUntil
-                        } else {
-                            credential.validUntil ?: credential.expirationDate
-                        }
-                    val isExpired = expiry?.let { it <= now } == true
-                    if (isExpired) expired++
-                    if (status == StoredCredentialStatus.REVOKED) revoked++
-                    if (status == StoredCredentialStatus.UNKNOWN) unknown++
-                    if (credential.proof != null && status == StoredCredentialStatus.ACTIVE && !isExpired) valid++
-                }
+                page.records.forEach { accumulator.add(it.credential) }
                 remaining -= page.records.size
                 cursor = page.nextCursor
             } while (cursor != null && remaining > 0)
             WalletStatistics(
                 totalCredentials = total,
                 archivedCount = total - activeCount,
-                validCredentials = valid,
-                expiredCredentials = expired,
-                revokedCredentials = revoked,
-                unknownStatusCredentials = unknown,
+                validCredentials = accumulator.valid,
+                expiredCredentials = accumulator.expired,
+                revokedCredentials = accumulator.revoked,
+                unknownStatusCredentials = accumulator.unknown,
             )
         }
 

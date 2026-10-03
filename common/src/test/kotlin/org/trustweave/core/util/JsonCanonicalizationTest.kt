@@ -68,7 +68,9 @@ class JsonCanonicalizationTest {
             "0.000001" to "0.000001",
             "0.0000001" to "1e-7",
             "123.456e-10" to "1.23456e-8",
-            "9007199254740993" to "9007199254740992",
+            "9007199254740992" to "9007199254740992",
+            "-9007199254740992" to "-9007199254740992",
+            "9007199254740993e0" to "9007199254740992", // exponent form: an explicit double, per RFC 8785
             "5e-324" to "5e-324",
             "1.7976931348623157e308" to "1.7976931348623157e+308",
         ).forEach { (literal, expected) ->
@@ -80,5 +82,58 @@ class JsonCanonicalizationTest {
     fun `non-finite numbers are rejected`() {
         assertFailsWith<IllegalArgumentException> { JsonCanonicalization.canonicalize(JsonPrimitive(Double.NaN)) }
         assertFailsWith<IllegalArgumentException> { JsonCanonicalization.serializeNumber("1e400") }
+    }
+
+    @Test
+    fun `literals that are not valid JSON numbers are rejected`() {
+        listOf(
+            "1d",
+            "1f",
+            "1D",
+            "0x10",
+            "0x1p3",
+            "NaN",
+            "Infinity",
+            "-Infinity",
+            "+1",
+            "01",
+            "1.",
+            ".5",
+            "1e",
+            "",
+            " 1",
+            "1 ",
+            "1_0",
+            "١",
+        ).forEach {
+            assertFailsWith<IllegalArgumentException>(it) { JsonCanonicalization.serializeNumber(it) }
+        }
+        // Through the element API too, as an unquoted literal that kotlinx would happily carry.
+        assertFailsWith<IllegalArgumentException> {
+            JsonCanonicalization.canonicalize(kotlinx.serialization.json.JsonUnquotedLiteral("1d"))
+        }
+    }
+
+    @Test
+    fun `lone surrogates are rejected instead of becoming question marks`() {
+        val high = "a\uD800b"
+        val low = "a\uDC00b"
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.canonicalize(JsonPrimitive(high)) }
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.canonicalize(JsonPrimitive(low)) }
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.canonicalize(JsonPrimitive("trailing\uD83D")) }
+        assertFailsWith<IllegalArgumentException> {
+            JsonCanonicalization.canonicalize(kotlinx.serialization.json.JsonObject(mapOf(high to JsonPrimitive(1))))
+        }
+        // A well-formed surrogate pair (U+1F600) is fine.
+        assertEquals("\"\uD83D\uDE00\"", JsonCanonicalization.canonicalize(JsonPrimitive("\uD83D\uDE00")))
+    }
+
+    @Test
+    fun `integers beyond 2 to the 53 are rejected rather than silently rounded`() {
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.serializeNumber("9007199254740993") }
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.serializeNumber("-9007199254740993") }
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.serializeNumber("123456789012345678901234567890") }
+        // Two different big integers must never silently share canonical bytes.
+        assertFailsWith<IllegalArgumentException> { JsonCanonicalization.canonicalize(JsonPrimitive(9007199254740993L)) }
     }
 }

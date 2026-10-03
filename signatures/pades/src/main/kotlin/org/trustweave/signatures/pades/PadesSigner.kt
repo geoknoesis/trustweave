@@ -22,13 +22,13 @@ interface PadesSigner {
     /**
      * Sign [request].
      *
-     * @throws NotImplementedError when called on [NotImplementedPadesSigner].
+     * @throws UnsupportedOperationException always when called on [NotImplementedPadesSigner].
      */
     suspend fun sign(request: PadesSigningRequest): PadesSignature
 }
 
 /**
- * Placeholder [PadesSigner] that throws [NotImplementedError] on every call.
+ * Placeholder [PadesSigner] that throws [UnsupportedOperationException] on every call.
  *
  * This exists so that callers can wire the PAdES module at compile time and discover the missing
  * implementation at runtime rather than via a `ClassNotFoundException`. Replace with a real
@@ -36,8 +36,9 @@ interface PadesSigner {
  */
 class NotImplementedPadesSigner : PadesSigner {
     override suspend fun sign(request: PadesSigningRequest): PadesSignature {
-        throw NotImplementedError(
-            "PAdES requires the optional Apache PDFBox dependency — " +
+        throw UnsupportedOperationException(
+            "PAdES is not implemented in TrustWeave: it requires the optional Apache PDFBox dependency " +
+                "and the planned signatures:pades-pdfbox module — " +
                 "see docs/architecture/eidas-qes-design.md §12",
         )
     }

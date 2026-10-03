@@ -1,8 +1,8 @@
 package org.trustweave.credential.internal
 
 import com.nimbusds.jwt.SignedJWT
-import kotlinx.serialization.json.JsonArray
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -68,7 +68,7 @@ internal object PresentationVerification {
         presentation: VerifiablePresentation,
         options: VerificationOptions,
     ): VerificationResult.Invalid.InvalidProof? {
-        if (!options.verifyChallenge) {
+        if (!options.shouldVerifyChallenge) {
             return null
         }
 
@@ -108,7 +108,7 @@ internal object PresentationVerification {
         presentation: VerifiablePresentation,
         options: VerificationOptions,
     ): VerificationResult.Invalid.InvalidProof? {
-        if (!options.verifyDomain) {
+        if (!options.shouldVerifyDomain) {
             return null
         }
 

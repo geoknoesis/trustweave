@@ -23,7 +23,7 @@ import java.time.Duration
  */
 class ScheduledKeyRotation(
     private val rotationManager: KeyRotationManager,
-    private val interval: Duration = Duration.ofDays(1)
+    private val interval: Duration = Duration.ofDays(1),
 ) {
     private var rotationJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -36,16 +36,19 @@ class ScheduledKeyRotation(
             return // Already started
         }
 
-        rotationJob = scope.launch {
-            while (isActive) {
-                try {
-                    rotationManager.checkAndRotate()
-                } catch (e: Exception) {
-                    // Log error, continue
+        rotationJob =
+            scope.launch {
+                while (isActive) {
+                    try {
+                        rotationManager.checkAndRotate()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // Log error, continue
+                    }
+                    delay(interval.toMillis())
                 }
-                delay(interval.toMillis())
             }
-        }
     }
 
     /**
@@ -59,8 +62,5 @@ class ScheduledKeyRotation(
     /**
      * Checks if rotation is running.
      */
-    fun isRunning(): Boolean {
-        return rotationJob?.isActive == true
-    }
+    fun isRunning(): Boolean = rotationJob?.isActive == true
 }
-

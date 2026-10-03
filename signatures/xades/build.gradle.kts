@@ -17,4 +17,5 @@ dependencies {
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.test.runtime)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotest.assertions.core)
 }

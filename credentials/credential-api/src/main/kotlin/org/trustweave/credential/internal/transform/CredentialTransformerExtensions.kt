@@ -2,7 +2,6 @@ package org.trustweave.credential.internal.transform
 
 import kotlinx.serialization.json.JsonObject
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.spi.transform.CredentialFormatConverter
 
 /**
  * Extension functions for VerifiableCredential format transformation.
@@ -37,8 +36,7 @@ import org.trustweave.credential.spi.transform.CredentialFormatConverter
  * ```
  */
 
-// Shared transformer instance for efficiency
-private val defaultTransformer: CredentialFormatConverter = CredentialTransformer()
+private val defaultTransformer = CredentialTransformer()
 
 /**
  * Convert credential to JWT format.
@@ -105,6 +103,12 @@ suspend fun VerifiableCredential.toCbor(): ByteArray = defaultTransformer.toCbor
 suspend fun String.fromJwt(): VerifiableCredential = defaultTransformer.fromJwt(this)
 
 /**
+ * Convert JWT string to credential, accepting unsecured (`alg: none`) JWTs only when
+ * [allowUnsecured] is `true`.
+ */
+suspend fun String.fromJwt(allowUnsecured: Boolean): VerifiableCredential = defaultTransformer.fromJwt(this, allowUnsecured)
+
+/**
  * Convert JSON-LD object to credential.
  *
  * Parses a JSON-LD object and converts it to a VerifiableCredential.
@@ -150,7 +154,7 @@ suspend fun ByteArray.fromCbor(): VerifiableCredential = defaultTransformer.from
  *
  * @return Credential recovered from JWT transformation
  */
-suspend fun VerifiableCredential.roundTripJwt(): VerifiableCredential = this.toJwt().fromJwt()
+suspend fun VerifiableCredential.roundTripJwt(): VerifiableCredential = defaultTransformer.fromJwt(this.toJwt(), allowUnsecured = true)
 
 /**
  * Round-trip transformation: credential -> CBOR -> credential.

@@ -14,6 +14,10 @@ data class IssuerRegistration(
     val metadata: Map<String, String> = emptyMap(),
 )
 
+/**
+ * @property revocationReason Reason supplied to [TrustRegistry.revokeIssuer]; cleared on
+ *                            re-activation, null when never revoked or no reason was given.
+ */
 @Serializable
 data class IssuerRecord(
     val did: String,
@@ -25,7 +29,21 @@ data class IssuerRecord(
     @Contextual val registeredAt: Instant,
     @Contextual val updatedAt: Instant,
     val metadata: Map<String, String> = emptyMap(),
-)
+    val revocationReason: String? = null,
+) {
+    /** Binary-compatible constructor from before [revocationReason] existed. */
+    constructor(
+        did: String,
+        name: String,
+        description: String?,
+        credentialTypes: List<String>,
+        serviceEndpoint: String?,
+        status: AccreditationStatus,
+        registeredAt: Instant,
+        updatedAt: Instant,
+        metadata: Map<String, String>,
+    ) : this(did, name, description, credentialTypes, serviceEndpoint, status, registeredAt, updatedAt, metadata, null)
+}
 
 @Serializable
 data class IssuerUpdate(
@@ -45,6 +63,10 @@ data class VerifierRegistration(
     val metadata: Map<String, String> = emptyMap(),
 )
 
+/**
+ * @property revocationReason Reason supplied to [TrustRegistry.revokeVerifier]; cleared on
+ *                            re-activation, null when never revoked or no reason was given.
+ */
 @Serializable
 data class VerifierRecord(
     val did: String,
@@ -55,7 +77,20 @@ data class VerifierRecord(
     @Contextual val registeredAt: Instant,
     @Contextual val updatedAt: Instant,
     val metadata: Map<String, String> = emptyMap(),
-)
+    val revocationReason: String? = null,
+) {
+    /** Binary-compatible constructor from before [revocationReason] existed. */
+    constructor(
+        did: String,
+        name: String,
+        description: String?,
+        serviceEndpoint: String?,
+        status: AccreditationStatus,
+        registeredAt: Instant,
+        updatedAt: Instant,
+        metadata: Map<String, String>,
+    ) : this(did, name, description, serviceEndpoint, status, registeredAt, updatedAt, metadata, null)
+}
 
 @Serializable
 data class VerifierUpdate(

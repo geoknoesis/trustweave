@@ -9,7 +9,7 @@ import org.trustweave.core.identifiers.KeyId
 class NotImplementedPadesTest {
 
     @Test
-    fun `NotImplementedPadesSigner sign throws NotImplementedError`() {
+    fun `NotImplementedPadesSigner sign throws UnsupportedOperationException`() {
         val signer = NotImplementedPadesSigner()
         val request = PadesSigningRequest(
             profile = PadesProfile.B_B,
@@ -17,24 +17,24 @@ class NotImplementedPadesTest {
             pdfBytes = byteArrayOf(0x25, 0x50, 0x44, 0x46), // "%PDF"
             signerCertificateChain = listOf(byteArrayOf(0x00)),
         )
-        val error = assertThrows(NotImplementedError::class.java) {
+        val error = assertThrows(UnsupportedOperationException::class.java) {
             runBlocking { signer.sign(request) }
         }
         assertTrue(
-            error.message!!.contains("PAdES requires the optional Apache PDFBox dependency"),
+            error.message!!.contains("PAdES is not implemented") && error.message!!.contains("Apache PDFBox"),
             "expected message to mention PDFBox dependency; was '${error.message}'",
         )
     }
 
     @Test
-    fun `NotImplementedPadesVerifier verify throws NotImplementedError`() {
+    fun `NotImplementedPadesVerifier verify throws UnsupportedOperationException`() {
         val verifier = NotImplementedPadesVerifier()
         val options = PadesVerificationOptions(requiredProfile = PadesProfile.B_B)
-        val error = assertThrows(NotImplementedError::class.java) {
+        val error = assertThrows(UnsupportedOperationException::class.java) {
             runBlocking { verifier.verify(byteArrayOf(0x00), options) }
         }
         assertTrue(
-            error.message!!.contains("PAdES requires the optional Apache PDFBox dependency"),
+            error.message!!.contains("PAdES is not implemented") && error.message!!.contains("Apache PDFBox"),
             "expected message to mention PDFBox dependency; was '${error.message}'",
         )
     }

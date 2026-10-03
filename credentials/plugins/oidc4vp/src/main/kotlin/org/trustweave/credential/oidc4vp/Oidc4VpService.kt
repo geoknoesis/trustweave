@@ -315,7 +315,11 @@ class Oidc4VpService(
 
                 // Extract requested credential types and claims from presentation_definition
                 val requestedCredentialTypes = extractCredentialTypes(authorizationRequest.presentationDefinition)
-                val requestedClaims = extractRequestedClaims(authorizationRequest.presentationDefinition)
+                val requestedClaims =
+                    RequestedClaimsExtractor.extract(
+                        authorizationRequest.presentationDefinition,
+                        authorizationRequest.dcqlQuery,
+                    )
 
                 val verifierUrl =
                     requestUri?.let { extractVerifierUrl(it) }
@@ -1345,15 +1349,5 @@ class Oidc4VpService(
                 ?.jsonPrimitive
                 ?.content
         }
-    }
-
-    /**
-     * Extracts requested claims from presentation definition.
-     */
-    private fun extractRequestedClaims(presentationDefinition: JsonObject?): Map<String, List<String>> {
-        if (presentationDefinition == null) return emptyMap()
-
-        // Simplified extraction - full implementation would parse full presentation definition
-        return emptyMap()
     }
 }

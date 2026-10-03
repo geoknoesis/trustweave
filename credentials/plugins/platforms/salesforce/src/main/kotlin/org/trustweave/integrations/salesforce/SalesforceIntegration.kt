@@ -39,6 +39,12 @@ import org.trustweave.core.exception.TrustWeaveException
  * here, only the shape one would take. Depend on this module directly if the skeleton is
  * useful; do not expect it to do anything.
  */
+@Deprecated(
+    message =
+        "Salesforce integration is a stub: every operation throws TrustWeaveException.InvalidOperation " +
+            "(code SALESFORCE_INTEGRATION_NOT_IMPLEMENTED). It is not SPI-registered and not exported by the BOM.",
+    level = DeprecationLevel.WARNING,
+)
 class SalesforceIntegration(
     val instanceUrl: String,
     val clientId: String,
@@ -60,33 +66,28 @@ class SalesforceIntegration(
      * @param objectName Salesforce object name (e.g., "Contact", "Account")
      * @param recordId Salesforce record ID
      * @param credentialType Type of credential to issue
-     * @return Issued verifiable credential
+     * @return never returns
+     * @throws TrustWeaveException.InvalidOperation always — the integration is not implemented.
      */
     suspend fun issueCredential(
         objectName: String,
         recordId: String,
         credentialType: String,
-    ): Any {
-        // TODO: Implement Salesforce credential issuance
-        throw TrustWeaveException.Unknown(
-            message =
-                "Salesforce integration requires Salesforce REST API implementation. " +
-                    "Structure is ready for implementation.",
-        )
-    }
+    ): Nothing = throw notImplemented("issueCredential")
 
     /**
      * Verifies a verifiable credential from Salesforce.
      *
      * @param credentialId Salesforce credential record ID
-     * @return Verification result
+     * @return never returns
+     * @throws TrustWeaveException.InvalidOperation always — the integration is not implemented.
      */
-    suspend fun verifyCredential(credentialId: String): Any {
-        // TODO: Implement Salesforce credential verification
-        throw TrustWeaveException.Unknown(
-            message =
-                "Salesforce integration requires Salesforce REST API implementation. " +
-                    "Structure is ready for implementation.",
+    suspend fun verifyCredential(credentialId: String): Nothing = throw notImplemented("verifyCredential")
+
+    private fun notImplemented(operation: String): TrustWeaveException =
+        TrustWeaveException.InvalidOperation(
+            code = "SALESFORCE_INTEGRATION_NOT_IMPLEMENTED",
+            message = "Salesforce integration is not implemented: $operation has no Salesforce REST API client behind it",
+            context = mapOf("integration" to "salesforce", "operation" to operation),
         )
-    }
 }

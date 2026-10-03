@@ -24,7 +24,10 @@ import java.util.concurrent.ConcurrentHashMap
  * 2. Allows additional contexts to be registered programmatically via [registerContext]
  *    (e.g. issuer-specific claim vocabularies).
  * 3. **Disables remote context fetching by default.** It can be re-enabled explicitly by
- *    setting the system property [ALLOW_REMOTE_CONTEXTS_PROPERTY] to `true`.
+ *    setting the system property [ALLOW_REMOTE_CONTEXTS_PROPERTY] to `true`. Even then only
+ *    `https:` URLs are fetched; plain `http:` additionally requires
+ *    [ALLOW_HTTP_CONTEXTS_PROPERTY], and every other scheme (`file:`, `jar:`, ...) is refused.
+ *    Fetched contexts are kept in a bounded in-memory LRU cache ([REMOTE_CACHE_MAX_ENTRIES]).
  *
  * The bundled context files are the **official, unmodified W3C context documents**
  * (JSON-LD 1.1). They are processed by titanium-json-ld, a conformant JSON-LD 1.1
@@ -37,6 +40,16 @@ internal object JsonLdContextLoader {
      * Disabled by default for security.
      */
     const val ALLOW_REMOTE_CONTEXTS_PROPERTY = "org.trustweave.credential.jsonld.allowRemoteContexts"
+
+    /**
+     * System property that additionally allows plain `http:` context URLs when remote fetching
+     * is enabled. Off by default: an unauthenticated context fetch lets a network attacker
+     * change the canonicalized bytes.
+     */
+    const val ALLOW_HTTP_CONTEXTS_PROPERTY = "org.trustweave.credential.jsonld.allowHttpContexts"
+
+    /** Maximum number of remotely fetched contexts kept in memory. */
+    const val REMOTE_CACHE_MAX_ENTRIES = 64
 
     private const val RESOURCE_BASE = "/org/trustweave/credential/contexts"
 
@@ -92,6 +105,45 @@ internal object JsonLdContextLoader {
     private fun isRemoteLoadingAllowed(): Boolean =
         System.getProperty(ALLOW_REMOTE_CONTEXTS_PROPERTY)?.equals("true", ignoreCase = true) == true
 
+    private fun isHttpAllowed(): Boolean = System.getProperty(ALLOW_HTTP_CONTEXTS_PROPERTY)?.equals("true", ignoreCase = true) == true
+
+    /** Loader used for permitted remote fetches; replaceable in tests. */
+    @Volatile
+    internal var remoteLoader: DocumentLoader = SchemeRouter.defaultInstance()
+
+    private val remoteCache =
+        object : LinkedHashMap<String, Document>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Document>?): Boolean = size > REMOTE_CACHE_MAX_ENTRIES
+        }
+
+    /** Drops every cached remote context (tests, or after a context host rotation). */
+    internal fun clearRemoteContextCache() {
+        synchronized(remoteCache) { remoteCache.clear() }
+    }
+
+    internal fun remoteContextCacheSize(): Int = synchronized(remoteCache) { remoteCache.size }
+
+    private fun loadRemote(
+        url: URI,
+        options: DocumentLoaderOptions,
+    ): Document {
+        val scheme = url.scheme?.lowercase()
+        val permitted = scheme == "https" || (scheme == "http" && isHttpAllowed())
+        if (!permitted) {
+            throw JsonLdError(
+                JsonLdErrorCode.LOADING_REMOTE_CONTEXT_FAILED,
+                "Refusing to load JSON-LD context '$url': only https: URLs may be fetched" +
+                    (if (scheme == "http") " (set -D$ALLOW_HTTP_CONTEXTS_PROPERTY=true to allow http:)" else "") +
+                    ".",
+            )
+        }
+        val key = url.toString()
+        synchronized(remoteCache) { remoteCache[key] }?.let { return it }
+        val document = remoteLoader.loadDocument(url, options)
+        synchronized(remoteCache) { remoteCache[key] = document }
+        return document
+    }
+
     private object OfflineFirstDocumentLoader : DocumentLoader {
         override fun loadDocument(
             url: URI,
@@ -109,9 +161,9 @@ internal object JsonLdContextLoader {
                         "-D${JsonLdContextLoader.ALLOW_REMOTE_CONTEXTS_PROPERTY}=true to allow remote fetching.",
                 )
             }
-            // Explicitly enabled remote loading: delegate to titanium's default scheme
-            // router (HTTP/HTTPS via java.net.http, file URIs via FileLoader).
-            return SchemeRouter.defaultInstance().loadDocument(url, options)
+            // Explicitly enabled remote loading: https only (http behind a second opt-in),
+            // never file:/jar: or other local schemes, served from a bounded cache.
+            return JsonLdContextLoader.loadRemote(url, options)
         }
     }
 }

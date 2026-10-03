@@ -15,26 +15,21 @@ import org.trustweave.credential.didcomm.models.DidCommMessage
  * Each service instance owns one of these; construct it alongside the service.
  */
 internal class DidCommReceiveGuards(
-    private val replayWindowMessages: Int = DEFAULT_REPLAY_WINDOW_MESSAGES,
+    private val replayStore: DidCommReplayStore = InMemoryDidCommReplayStore(),
+    private val defaultRetentionSeconds: Long = DEFAULT_RETENTION_SECONDS,
+    private val maxRetentionSeconds: Long = MAX_RETENTION_SECONDS,
     private val nowEpochSeconds: () -> Long = { System.currentTimeMillis() / 1000 },
 ) {
-    /**
-     * Ids already accepted, oldest first.
-     *
-     * Bounded so a peer cannot grow it without limit. The tradeoff is that an id evicted after
-     * [replayWindowMessages] further messages would be accepted again, and that the window is
-     * per-instance and does not survive a restart. A deployment that needs an unbounded or durable
-     * guarantee should keep this state with the message store instead.
-     */
-    private val seenMessageIds =
-        object : LinkedHashMap<String, Boolean>(256, 0.75f, false) {
-            override fun removeEldestEntry(eldest: Map.Entry<String, Boolean>): Boolean = size > replayWindowMessages
+    init {
+        require(defaultRetentionSeconds > 0 && maxRetentionSeconds >= defaultRetentionSeconds) {
+            "retention must be positive and maxRetentionSeconds >= defaultRetentionSeconds"
         }
+    }
 
-    /** Throws if [message] has expired or has already been accepted by this instance. */
-    fun check(message: DidCommMessage) {
-        rejectIfExpired(message)
-        rejectIfAlreadySeen(message)
+    /** Throws if [message] has expired or has already been accepted. */
+    suspend fun check(message: DidCommMessage) {
+        val expiresAt = rejectIfExpired(message)
+        rejectIfAlreadySeen(message, expiresAt)
     }
 
     /**
@@ -43,8 +38,8 @@ internal class DidCommReceiveGuards(
      * A value that cannot be read as epoch seconds is rejected rather than ignored, so a malformed
      * header cannot quietly turn into no expiry at all.
      */
-    private fun rejectIfExpired(message: DidCommMessage) {
-        val raw = message.expiresTime ?: return
+    private fun rejectIfExpired(message: DidCommMessage): Long? {
+        val raw = message.expiresTime ?: return null
         val expiresAt =
             raw.trim().toLongOrNull()
                 ?: throw DidCommException.ProtocolError(
@@ -58,14 +53,33 @@ internal class DidCommReceiveGuards(
                 field = "expires_time",
             )
         }
+        return expiresAt
     }
 
-    private fun rejectIfAlreadySeen(message: DidCommMessage) {
-        val alreadySeen =
-            synchronized(seenMessageIds) {
-                seenMessageIds.put(message.id, true) != null
+    /**
+     * Records the id in the [replayStore]. It is remembered until the message's own
+     * `expires_time` (after which [rejectIfExpired] refuses it anyway) or, without one, for
+     * [defaultRetentionSeconds]; never longer than [maxRetentionSeconds]. A message without
+     * `expires_time` replayed after its retention has lapsed is not detected — senders that need
+     * a hard guarantee should set `expires_time`.
+     */
+    private suspend fun rejectIfAlreadySeen(
+        message: DidCommMessage,
+        expiresAt: Long?,
+    ) {
+        val now = nowEpochSeconds()
+        val retainUntil = minOf(expiresAt ?: (now + defaultRetentionSeconds), now + maxRetentionSeconds)
+        val recorded =
+            try {
+                replayStore.recordIfAbsent(message.id, retainUntil, now)
+            } catch (e: DidCommReplayStoreFullException) {
+                throw DidCommException.UnpackingFailed(
+                    reason = "cannot record message ${message.id} for replay protection: ${e.message}",
+                    messageId = message.id,
+                    cause = e,
+                )
             }
-        if (alreadySeen) {
+        if (!recorded) {
             throw DidCommException.UnpackingFailed(
                 reason = "message ${message.id} was already received; refusing to process a replay",
                 messageId = message.id,
@@ -74,7 +88,10 @@ internal class DidCommReceiveGuards(
     }
 
     internal companion object {
-        /** How many recently received message ids an instance remembers. */
-        const val DEFAULT_REPLAY_WINDOW_MESSAGES = 10_000
+        /** Retention for ids of messages without `expires_time`. */
+        const val DEFAULT_RETENTION_SECONDS = 24L * 60 * 60
+
+        /** Upper bound on how long any id is remembered. */
+        const val MAX_RETENTION_SECONDS = 30L * 24 * 60 * 60
     }
 }

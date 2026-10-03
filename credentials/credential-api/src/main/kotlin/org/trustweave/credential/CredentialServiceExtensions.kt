@@ -48,6 +48,7 @@ suspend fun CredentialService.toJwt(credential: VerifiableCredential): String = 
  *
  * Parses a JWT and extracts the credential from the 'vc' claim.
  * Note: This does not verify the signature. Use [CredentialService.verify] for verification.
+ * Unsecured (`alg: none`) JWTs are rejected; see the `allowUnsecured` overload.
  *
  * **Example:**
  * ```kotlin
@@ -55,6 +56,15 @@ suspend fun CredentialService.toJwt(credential: VerifiableCredential): String = 
  * ```
  */
 suspend fun CredentialService.fromJwt(jwt: String): VerifiableCredential = sharedTransformer.fromJwt(jwt)
+
+/**
+ * Convert JWT to credential, accepting unsecured (`alg: none`) JWTs — such as the output of
+ * [toJwt] — only when [allowUnsecured] is `true`. The signature is never verified here.
+ */
+suspend fun CredentialService.fromJwt(
+    jwt: String,
+    allowUnsecured: Boolean,
+): VerifiableCredential = sharedTransformer.fromJwt(jwt, allowUnsecured)
 
 /**
  * Convert credential to JSON-LD format.

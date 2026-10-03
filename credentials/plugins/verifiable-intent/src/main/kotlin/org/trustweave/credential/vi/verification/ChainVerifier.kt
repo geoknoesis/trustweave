@@ -152,7 +152,10 @@ internal object ChainVerifier {
             return fail("L2 delegate_payload contains duplicate disclosure reference (mandate smuggling)", performed)
         }
         if (checkouts.size > 1 || payments.size > 1) {
-            return fail("Multi-pair L2 is not yet implemented in this scaffold (TODO)", performed)
+            return fail(
+                "Multi-pair L2 (more than one checkout or payment mandate) is not supported; refusing to verify the chain",
+                performed,
+            )
         }
         val checkout = checkouts.firstOrNull()
         val payment = payments.firstOrNull()

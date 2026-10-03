@@ -110,7 +110,18 @@ class DidManagementService(
         }
 
     /**
-     * Get the first key ID from a DID document.
+     * Get the ID of the key to sign credentials with (issue assertions) for [did].
+     *
+     * Selection, in order:
+     * 1. the first `assertionMethod` reference — the relationship W3C VC Data Integrity requires
+     *    of an issuer's key;
+     * 2. otherwise the first `authentication` reference;
+     * 3. otherwise the first embedded verification method that is not reserved for
+     *    `keyAgreement` (an encryption key such as X25519 cannot sign).
+     *
+     * Previously the first embedded verification method was returned regardless of its
+     * relationships, which picked a key-agreement or authentication-only key for documents that
+     * list one first.
      *
      * @param did The DID to extract the key ID from
      * @return Result wrapping the key ID string, or a failure with a descriptive message
@@ -122,12 +133,7 @@ class DidManagementService(
                     is DidResolutionResult.Success -> r.document
                     else -> throw IllegalStateException("Failed to resolve DID: ${did.value}")
                 }
-            val keyId =
-                document.verificationMethod.firstOrNull()?.let { vm ->
-                    vm.id.value.takeIf { it.isNotEmpty() }
-                        ?: throw IllegalStateException("No key ID found in verification method: ${vm.id.value}")
-                } ?: throw IllegalStateException("No verification method found for DID: ${did.value}")
-            Result.success(keyId)
+            Result.success(selectSigningKeyId(document))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -297,4 +303,22 @@ class DidManagementService(
                 cause = e,
             )
         }
+}
+
+/** Picks the signing (assertion) key of [document]; see [DidManagementService.getKeyId]. */
+internal fun selectSigningKeyId(document: org.trustweave.did.model.DidDocument): String {
+    document.assertionMethod.firstOrNull()?.let { return it.value }
+    document.authentication.firstOrNull()?.let { return it.value }
+    val keyAgreementOnly = document.keyAgreement.map { it.value }.toSet()
+    val vm =
+        document.verificationMethod.firstOrNull { it.id.value !in keyAgreementOnly }
+            ?: throw IllegalStateException(
+                if (document.verificationMethod.isEmpty()) {
+                    "No verification method found for DID: ${document.id.value}"
+                } else {
+                    "DID ${document.id.value} has only key-agreement keys; none can sign"
+                },
+            )
+    return vm.id.value.takeIf { it.isNotEmpty() }
+        ?: throw IllegalStateException("No key ID found in verification method of ${document.id.value}")
 }

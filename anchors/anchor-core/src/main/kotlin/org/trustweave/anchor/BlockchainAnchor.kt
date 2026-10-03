@@ -146,12 +146,21 @@ interface BlockchainAnchorClient {
      *
      * @param payload the off-chain payload to verify, exactly as originally anchored
      * @param ref the anchor reference to verify against
+     * An anchor served from a client's in-memory test fallback ([AnchorVerification.testMode]) is
+     * not on any blockchain, so this default returns `false` for it. Only
+     * [AbstractBlockchainAnchorClient] instances explicitly constructed with
+     * `inMemoryTestMode = true` override this to accept their own memory-served anchors (tests and
+     * demos); use [verifyAnchorDetailed] to tell the cases apart.
+     *
      * @return `true` iff the on-chain data attests to [payload]
      */
     suspend fun verifyAnchor(
         payload: JsonElement,
         ref: AnchorRef,
-    ): Boolean = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope = false).verified
+    ): Boolean {
+        val detail = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope = false)
+        return detail.verified && !detail.testMode
+    }
 
     /**
      * [verifyAnchor] with an explanation of the outcome: whether the anchor came from a client's

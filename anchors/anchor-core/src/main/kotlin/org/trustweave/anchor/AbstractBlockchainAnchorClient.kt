@@ -123,10 +123,20 @@ abstract class AbstractBlockchainAnchorClient(
         options[OPTION_REQUIRE_CANONICAL_ENVELOPE] == true ||
             (options[OPTION_REQUIRE_CANONICAL_ENVELOPE] as? String)?.toBoolean() == true
 
+    /**
+     * Boolean verification. An anchor served from the in-memory test fallback is NOT chain
+     * evidence, so it only counts as verified when this client was explicitly constructed with
+     * `inMemoryTestMode = true` (tests/demos, where memory is the only store). A client without
+     * explicit test mode can never serve from memory, and a `testMode`-flagged result that reaches
+     * it anyway (foreign ref) yields `false`. Use [verifyAnchorDetailed] to see the `testMode` flag.
+     */
     override suspend fun verifyAnchor(
         payload: JsonElement,
         ref: AnchorRef,
-    ): Boolean = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope).verified
+    ): Boolean {
+        val detail = verifyAnchorDetailed(payload, ref, requireCanonicalEnvelope)
+        return detail.verified && (!detail.testMode || inMemoryTestMode)
+    }
 
     private val testModeLogger = LoggerFactory.getLogger(AbstractBlockchainAnchorClient::class.java)
 

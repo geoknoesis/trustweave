@@ -25,6 +25,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.parser.DidDocumentJsonParser
 import org.trustweave.did.representation.DidMediaTypes
+import org.trustweave.did.util.ResolvedDocumentId
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
@@ -336,6 +337,21 @@ class DefaultUniversalResolver(
                                 did = Did(did),
                                 documentMetadata = documentMetadata.copy(deactivated = true),
                                 resolutionMetadata = resolutionMetadata,
+                            )
+                        }
+                        document != null && ResolvedDocumentId.mismatchReason(did, document.id.value) != null -> {
+                            // The upstream answered for a different DID than requested. Reject:
+                            // never rewrite the id, never hand back another subject's keys.
+                            val reason =
+                                ResolvedDocumentId.mismatchReason(did, document.id.value)
+                                    ?: "Document id mismatch"
+                            DidResolutionResult.Failure.ResolutionError(
+                                did = Did(sanitizeDid(did)),
+                                reason = reason,
+                                resolutionMetadata =
+                                    resolutionMetadata.copy(
+                                        error = DidResolutionError.invalidDidDocument(reason),
+                                    ),
                             )
                         }
                         document != null -> {

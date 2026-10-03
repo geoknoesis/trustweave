@@ -33,6 +33,7 @@ import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeKeyPair
 import org.trustweave.did.sidetree.SidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeP256KeyPair
+import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.kms.KeyManagementService
 
 /**
@@ -161,7 +162,21 @@ class IonDidMethod(
                 // Convert ION document to TrustWeave format
                 val convertedDocument = convertIonDocument(resolutionResult.document!!)
 
-                // Store locally for caching
+                // The node's answer must be about the DID we asked for: reject, never rewrite, and
+                // never cache a foreign document.
+                ResolvedDocumentId
+                    .mismatchReason(didString, convertedDocument.id.value, allowCanonicalOfLongForm = true)
+                    ?.let { reason ->
+                        return@withContext DidMethodUtils.createErrorResolutionResult(
+                            "invalidDidDocument",
+                            reason,
+                            method,
+                            didString,
+                        )
+                    }
+
+                // Store locally for caching (under the verified id, which is the requested DID or
+                // its canonical form)
                 storeDocument(convertedDocument.id.value, convertedDocument)
 
                 DidMethodUtils.createSuccessResolutionResult(convertedDocument, method)

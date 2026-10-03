@@ -321,4 +321,22 @@ class DefaultUniversalResolverCrTest {
                 server.stop(0)
             }
         }
+
+    @Test
+    fun `document whose id differs from the requested DID is rejected as invalidDidDocument`() =
+        runBlocking<Unit> {
+            val body = """{"didDocument":{"id":"did:example:attacker"},"didDocumentMetadata":{}}"""
+            val server = startServer(200, body)
+            try {
+                val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+                val result = resolver.resolveDid("did:example:victim")
+
+                assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected rejection, got $result")
+                assertEquals(DidErrorType.INVALID_DID_DOCUMENT, result.resolutionMetadata.error?.type)
+                assertEquals("did:example:victim", result.did.value)
+            } finally {
+                server.stop(0)
+            }
+        }
 }

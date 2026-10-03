@@ -2040,6 +2040,12 @@ public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun validateDid (Ljava/lang/String;)Z
 }
 
+public final class org/trustweave/did/util/ResolvedDocumentId {
+	public static final field INSTANCE Lorg/trustweave/did/util/ResolvedDocumentId;
+	public final fun mismatchReason (Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;
+	public static synthetic fun mismatchReason$default (Lorg/trustweave/did/util/ResolvedDocumentId;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
+}
+
 public final class org/trustweave/did/util/XmlDateTimeKt {
 	public static final fun toXmlDateTime (Lkotlinx/datetime/Instant;)Ljava/lang/String;
 }

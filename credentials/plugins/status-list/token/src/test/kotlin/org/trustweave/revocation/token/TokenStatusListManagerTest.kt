@@ -149,8 +149,9 @@ class TokenStatusListManagerTest {
 
             assertFalse(lst.contains('='), "lst must not contain padding")
             // Must be decodable
-            val decoded = Base64.getUrlDecoder().decode(lst)
+            val decoded = TokenStatusListCodec.decode(lst)
             assertTrue(decoded.isNotEmpty(), "Decoded lst must not be empty")
+            assertEquals(0x78, Base64.getUrlDecoder().decode(lst)[0].toInt() and 0xFF, "lst must be ZLIB-compressed")
             assertEquals(1, decoded.size, "8-entry list at 1 bit/entry = 1 byte")
         }
 
@@ -194,7 +195,7 @@ class TokenStatusListManagerTest {
 
             val lstStart = payloadJson.indexOf("\"lst\":\"") + "\"lst\":\"".length
             val lstEnd = payloadJson.indexOf("\"", lstStart)
-            val arr = Base64.getUrlDecoder().decode(payloadJson.substring(lstStart, lstEnd))
+            val arr = TokenStatusListCodec.decode(payloadJson.substring(lstStart, lstEnd))
 
             // Bit 0 of byte 0 must be set
             assertTrue((arr[0].toInt() and 0x01) != 0, "Bit 0 must be set for revoked credential at index 0")

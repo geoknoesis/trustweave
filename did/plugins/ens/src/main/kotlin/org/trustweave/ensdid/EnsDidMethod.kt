@@ -22,6 +22,10 @@ import org.trustweave.kms.KeyManagementService
  * - Resolves ENS names to Ethereum addresses, then resolves as did:ethr
  * - Integrates with ENS resolver for human-readable names
  *
+ * **Not implemented:** the ENS name-to-address lookup is not implemented, so every resolution
+ * currently fails with a `methodNotSupported` error ([NOT_IMPLEMENTED]). Creation, update and
+ * deactivation are not part of did:ens and are refused.
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()
@@ -38,6 +42,11 @@ class EnsDidMethod(
     private val anchorClient: BlockchainAnchorClient,
     private val config: EnsDidConfig,
 ) : AbstractBlockchainDidMethod("ens", kms) {
+    companion object {
+        /** Error code for the ENS name-to-address step, which is not implemented. */
+        const val NOT_IMPLEMENTED = "ENS_NOT_IMPLEMENTED"
+    }
+
     // Delegate to EthrDidMethod for Ethereum DID resolution
     private val delegate: EthrDidMethod
 
@@ -117,21 +126,20 @@ class EnsDidMethod(
                     }
                 }
             } catch (e: TrustWeaveException) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                // An unimplemented step is reported as such, not as a malformed DID.
+                val error =
+                    when {
+                        e.code == NOT_IMPLEMENTED -> "methodNotSupported"
+                        e is org.trustweave.did.exception.DidException.InvalidDidFormat -> "invalidDid"
+                        else -> "internalError"
+                    }
+                DidMethodUtils.createErrorResolutionResult(error, e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult(
-                    "invalidDid",
-                    e.message,
-                    method,
-                    did.value,
-                )
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 
@@ -174,31 +182,18 @@ class EnsDidMethod(
     }
 
     /**
-     * Resolves ENS domain to Ethereum address.
+     * Resolves an ENS domain to an Ethereum address.
+     *
+     * Not implemented: it needs the ENS registry/resolver contract calls (namehash, `resolver()`,
+     * `addr()`), which this plugin does not make. Fails with [NOT_IMPLEMENTED], which
+     * [resolveDid] reports as `methodNotSupported` rather than masking it as another error.
      */
+    @Suppress("RedundantSuspendModifier")
     private suspend fun resolveEnsToAddress(ensDomain: String): String =
-        withContext(Dispatchers.IO) {
-            // In a full implementation, we'd query the ENS resolver contract
-            // to resolve the domain to an Ethereum address
-
-            // Simplified implementation: query ENS resolver via Web3j
-            try {
-                // Use Web3j to query ENS resolver
-                // This is a placeholder - real implementation needs ENS resolver contract interaction
-                throw TrustWeaveException.Unknown(
-                    code = "NOT_IMPLEMENTED",
-                    message =
-                        "ENS resolution not fully implemented. " +
-                            "Query ENS resolver contract at ${config.ensRegistryAddress} for domain: $ensDomain",
-                )
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (e: Exception) {
-                throw TrustWeaveException.Unknown(
-                    code = "RESOLVE_FAILED",
-                    message = "Failed to resolve ENS domain to address: ${e.message}",
-                    cause = e,
-                )
-            }
-        }
+        throw TrustWeaveException.Unknown(
+            code = NOT_IMPLEMENTED,
+            message =
+                "did:ens resolution is not implemented: resolving '$ensDomain' needs the ENS resolver " +
+                    "contract (registry ${config.ensRegistryAddress}), which this plugin does not query",
+        )
 }

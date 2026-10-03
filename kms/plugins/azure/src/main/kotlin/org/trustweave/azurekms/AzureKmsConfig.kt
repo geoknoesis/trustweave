@@ -21,8 +21,15 @@ data class AzureKmsConfig(
     val clientId: String? = null,
     val clientSecret: String? = null,
     val tenantId: String? = null,
-    val endpointOverride: String? = null
+    val endpointOverride: String? = null,
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String =
+        "AzureKmsConfig(vaultUrl=$vaultUrl, clientId=$clientId, clientSecret=${redactSecret(clientSecret)}, " +
+            "tenantId=$tenantId, endpointOverride=$endpointOverride)"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         require(vaultUrl.isNotBlank()) { "Azure Key Vault URL must be specified" }
         require(vaultUrl.startsWith("https://")) { "Azure Key Vault URL must use HTTPS" }
@@ -46,8 +53,9 @@ data class AzureKmsConfig(
          * @return AzureKmsConfig instance, or null if vault URL is not set
          */
         fun fromEnvironment(): AzureKmsConfig? {
-            val vaultUrl = System.getenv("AZURE_VAULT_URL")
-                ?: return null
+            val vaultUrl =
+                System.getenv("AZURE_VAULT_URL")
+                    ?: return null
 
             return Builder()
                 .vaultUrl(vaultUrl)
@@ -65,8 +73,9 @@ data class AzureKmsConfig(
          * @throws IllegalArgumentException if vault URL is not provided
          */
         fun fromMap(options: Map<String, Any?>): AzureKmsConfig {
-            val vaultUrl = options["vaultUrl"] as? String
-                ?: throw IllegalArgumentException("Azure Key Vault URL must be specified in options")
+            val vaultUrl =
+                options["vaultUrl"] as? String
+                    ?: throw IllegalArgumentException("Azure Key Vault URL must be specified in options")
 
             return Builder()
                 .vaultUrl(vaultUrl)
@@ -120,9 +129,8 @@ data class AzureKmsConfig(
                 clientId = clientId,
                 clientSecret = clientSecret,
                 tenantId = tenantId,
-                endpointOverride = endpointOverride
+                endpointOverride = endpointOverride,
             )
         }
     }
 }
-

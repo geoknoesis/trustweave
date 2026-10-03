@@ -1,11 +1,12 @@
 package org.trustweave.revocation.bitstring.spi
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.revocation.bitstring.BitstringStatusListManagerFactory
+import org.trustweave.revocation.bitstring.RemoteStatusListResolver
 import org.trustweave.revocation.services.StatusListRegistryFactory
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 
 /**
  * SPI provider for the W3C Bitstring Status List implementation.
@@ -27,7 +28,6 @@ import com.zaxxer.hikari.HikariDataSource
  * with a `proofEngine` and `issuerKeyId`.
  */
 class BitstringStatusListManagerProvider : StatusListRegistryFactory {
-
     companion object {
         const val PROVIDER_NAME = "bitstring"
     }
@@ -38,6 +38,13 @@ class BitstringStatusListManagerProvider : StatusListRegistryFactory {
      * If not set, [create] will throw [IllegalStateException].
      */
     var kms: KeyManagementService? = null
+
+    /**
+     * Optional resolver enabling verified resolution of status lists published by other issuers.
+     * Leave null (default) and unknown status lists fail closed. A host enables it with e.g.
+     * `provider.remoteStatusLists = RemoteStatusListResolver.create(credentialService)`.
+     */
+    var remoteStatusLists: RemoteStatusListResolver? = null
 
     /**
      * Create a [org.trustweave.revocation.bitstring.BitstringStatusListManager].
@@ -55,28 +62,32 @@ class BitstringStatusListManagerProvider : StatusListRegistryFactory {
         check(providerName == PROVIDER_NAME) {
             "BitstringStatusListManagerProvider does not support provider '$providerName'. Expected '$PROVIDER_NAME'."
         }
-        val resolvedKms = checkNotNull(kms) {
-            "BitstringStatusListManagerProvider: kms must be set before calling create()."
-        }
+        val resolvedKms =
+            checkNotNull(kms) {
+                "BitstringStatusListManagerProvider: kms must be set before calling create()."
+            }
 
-        val jdbcUrl = System.getProperty("trustweave.statuslist.jdbc.url")
-            ?: "jdbc:h2:mem:bitstring_status;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        val jdbcUrl =
+            System.getProperty("trustweave.statuslist.jdbc.url")
+                ?: "jdbc:h2:mem:bitstring_status;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
         val username = System.getProperty("trustweave.statuslist.jdbc.username") ?: "sa"
         val password = System.getProperty("trustweave.statuslist.jdbc.password") ?: ""
         val issuerDid = System.getProperty("trustweave.statuslist.issuer.did") ?: "did:key:default"
 
-        val config = HikariConfig().apply {
-            this.jdbcUrl = jdbcUrl
-            this.username = username
-            this.password = password
-            maximumPoolSize = 5
-        }
+        val config =
+            HikariConfig().apply {
+                this.jdbcUrl = jdbcUrl
+                this.username = username
+                this.password = password
+                maximumPoolSize = 5
+            }
         val dataSource = HikariDataSource(config)
 
         return BitstringStatusListManagerFactory.create(
             dataSource = dataSource,
             kms = resolvedKms,
-            issuerDid = issuerDid
+            issuerDid = issuerDid,
+            remoteStatusLists = remoteStatusLists,
         )
     }
 }

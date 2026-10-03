@@ -246,6 +246,29 @@ interface CredentialRevocationManager {
         statusListId: StatusListId,
         additionalSize: Int
     )
+
+    /**
+     * Give back an index that was allocated (via [assignCredentialIndex]) for a credential that
+     * was then never issued, e.g. because signing or delivery failed, so the slot is not leaked.
+     *
+     * **Contract.** The caller asserts the credential bound to [index] was never handed to anyone.
+     * An implementation MUST additionally refuse (return `false`, change nothing) when it can see
+     * the index was ever put to use: its status was ever written (revoked, suspended, or cleared),
+     * or its bit is set. An index that was ever bound to an issued credential must never be reused,
+     * because a verifier holding that credential would then read someone else's status. The call is
+     * idempotent: releasing an unallocated or already-released index returns `false`.
+     *
+     * **Default:** returns `false` (nothing is released), so existing implementations are unaffected
+     * and callers must treat `false` as "index stays allocated".
+     *
+     * @param statusListId Status list the index belongs to
+     * @param index Index to release
+     * @return `true` only if the index was released and is available for reuse
+     */
+    suspend fun releaseStatusListIndex(
+        statusListId: StatusListId,
+        index: Int,
+    ): Boolean = false
 }
 
 /**

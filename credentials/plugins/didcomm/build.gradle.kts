@@ -7,6 +7,9 @@ group = "org.trustweave.credentials"
 
 // org.didcommx:didcomm is a fat JAR that embeds com.nimbusds.* (built against ~9.16-preview).
 // A separate nimbus-jose-jwt on the classpath causes split packages / NoSuchMethodError at runtime.
+// The embedded Nimbus 9.16-preview.1 and json-smart 2.4.7 carry known DoS advisories that neither
+// Dependabot nor the catalog can fix; see SECURITY.md "Known Dependency Risks". The OSV-Scanner job in
+// .github/workflows/security.yml scans this JAR's contents so the embedded copies stay visible.
 configurations.configureEach {
     exclude(group = "com.nimbusds", module = "nimbus-jose-jwt")
 }

@@ -1,0 +1,148 @@
+name: Dependency security
+
+# Two complementary checks:
+#
+# - Dependency review (pull requests): GitHub compares the dependency graph of the PR head with its
+#   base and fails the PR when it *introduces* a dependency with a known high/critical advisory.
+#   The graph comes from Gradle dependency submission, which runs on every push to main (so the
+#   base is current) and on same-repository PRs (so the head is current).
+# - OSV-Scanner (push to main, weekly, and PRs): scans the CycloneDX SBOM the build already
+#   produces *and* the resolved JAR files themselves. The JAR scan matters for fat JARs:
+#   org.didcommx:didcomm 0.3.2 embeds nimbus-jose-jwt 9.16-preview.1 and json-smart 2.4.7, which
+#   appear in no dependency graph or SBOM. Results go to code scanning (SARIF) and the run summary.
+#   The existing backlog is reported rather than gating; see SECURITY.md "Known dependency risks".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-submission:
+    name: Submit Gradle dependency graph
+    # Fork PRs get a read-only token and cannot submit a snapshot; OSV below still covers them.
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Generate and submit the dependency graph
+        uses: gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        with:
+          # Test-only configurations (testcontainers, wiremock, ...) are not shipped.
+          dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime)Classpath'
+
+  dependency-review:
+    name: Review dependency changes
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: dependency-submission
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high
+          # The Gradle snapshot for the head commit is submitted by the job above; give it time to land.
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 600
+          comment-summary-in-pr: on-failure
+
+  osv-scan:
+    name: OSV-Scanner (SBOM and JAR contents)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+
+      - name: Generate CycloneDX SBOMs
+        run: ./gradlew cyclonedxBom --no-daemon --stacktrace
+
+      # CycloneDX hashes every component, so the JARs are now in the Gradle cache; copy them into
+      # the workspace so the scanner (a container action) can read their embedded pom.properties.
+      - name: Collect the JARs behind the SBOM
+        run: python scripts/collect-sbom-jars.py build/reports/cyclonedx/bom.json --output build/reports/osv/jars
+
+      - name: Scan (SARIF)
+        id: sarif
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |-
+            --no-ignore
+            --experimental-plugins=java/archive
+            --format=sarif
+            --output=build/reports/osv/osv.sarif
+            -L=build/reports/cyclonedx/bom.json
+            -r
+            build/reports/osv/jars
+
+      - name: Scan (Markdown summary)
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |-
+            --no-ignore
+            --experimental-plugins=java/archive
+            --format=markdown
+            --output=build/reports/osv/osv.md
+            -L=build/reports/cyclonedx/bom.json
+            -r
+            build/reports/osv/jars
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## OSV-Scanner"
+            echo
+            echo "Report-only: new high/critical advisories on PRs are gated by dependency review."
+            echo
+            if [ -f build/reports/osv/osv.md ]; then head -c 900000 build/reports/osv/osv.md; else echo "No report produced."; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload SARIF to code scanning
+        if: always() && github.event_name != 'pull_request' && hashFiles('build/reports/osv/osv.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: build/reports/osv/osv.sarif
+          category: osv-scanner
+
+      - name: Retain reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: osv-scan
+          path: |
+            build/reports/osv/osv.sarif
+            build/reports/osv/osv.md
+            build/reports/cyclonedx/
+          if-no-files-found: warn

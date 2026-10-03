@@ -1,0 +1,1377 @@
+{
+  "schema": 1,
+  "description": "Advisories present when the OSV gate was introduced (2026-10-03, osv-scanner 2.6.0 over the CycloneDX SBOM plus the resolved JARs). The OSV job in .github/workflows/security.yml fails for any advisory not listed here. Remove entries as dependencies are upgraded; add one only after triage, with a reason.",
+  "advisories": [
+    {
+      "id": "GHSA-389x-839f-4rhx",
+      "aliases": [
+        "CVE-2025-25193"
+      ],
+      "packages": [
+        "io.netty:netty-common@4.1.111.Final",
+        "io.netty:netty-common@4.1.115.Final",
+        "netty-common@4.1.111.Final",
+        "netty-common@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-38f8-5428-x5cv",
+      "aliases": [
+        "CVE-2026-42585"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-3g76-f9xq-8vp6",
+      "aliases": [
+        "CVE-2026-6860"
+      ],
+      "packages": [
+        "io.vertx:vertx-core@4.5.11",
+        "vertx-core@4.5.11"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-3p8m-j85q-pgmj",
+      "aliases": [
+        "CVE-2025-58057"
+      ],
+      "packages": [
+        "io.netty:netty-codec@4.1.111.Final",
+        "io.netty:netty-codec@4.1.115.Final",
+        "netty-codec@4.1.111.Final",
+        "netty-codec@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-3pjw-73gf-8qr5",
+      "aliases": [
+        "CVE-2026-59888"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-3qp7-7mw8-wx86",
+      "aliases": [
+        "CVE-2026-44249"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "io.netty:netty-handler@4.1.130.Final",
+        "io.netty:netty-handler@4.1.132.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final",
+        "netty-handler@4.1.130.Final",
+        "netty-handler@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4265-ccf5-phj5",
+      "aliases": [
+        "CVE-2024-26308"
+      ],
+      "packages": [
+        "commons-compress@1.24.0",
+        "org.apache.commons:commons-compress@1.24.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-45q3-82m4-75jr",
+      "aliases": [
+        "CVE-2026-42578"
+      ],
+      "packages": [
+        "io.netty:netty-handler-proxy@4.1.115.Final",
+        "io.netty:netty-handler-proxy@4.1.130.Final",
+        "netty-handler-proxy@4.1.115.Final",
+        "netty-handler-proxy@4.1.130.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-493p-pfq6-5258",
+      "aliases": [
+        "CVE-2023-1370"
+      ],
+      "packages": [
+        "net.minidev:json-smart@2.4.7"
+      ],
+      "reason": "Documented in SECURITY.md (org.didcommx:didcomm 0.3.2 embeds old Nimbus/json-smart; no fixed release)."
+    },
+    {
+      "id": "GHSA-4g8c-wm8x-jfhw",
+      "aliases": [
+        "CVE-2025-24970"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4g9r-vxhx-9pgx",
+      "aliases": [
+        "CVE-2024-25710"
+      ],
+      "packages": [
+        "commons-compress@1.24.0",
+        "org.apache.commons:commons-compress@1.24.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4gg5-vx3j-xwc7",
+      "aliases": [
+        "CVE-2022-3510"
+      ],
+      "packages": [
+        "com.google.protobuf:protobuf-java@3.14.0",
+        "com.google.protobuf:protobuf-javalite@3.18.0",
+        "protobuf-java@3.14.0",
+        "protobuf-javalite@3.18.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4h8f-2wvx-gg5w",
+      "aliases": [
+        "CVE-2024-34447"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk18on@1.77"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4jrv-ppp4-jm57",
+      "aliases": [
+        "CVE-2022-25647",
+        "SNYK-JAVA-COMGOOGLECODEGSON-1730327"
+      ],
+      "packages": [
+        "com.google.code.gson:gson@2.8.6",
+        "gson@2.8.6"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-4mp9-239f-g9hg",
+      "aliases": [
+        "CVE-2026-59898"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-558v-64gr-wgg4",
+      "aliases": [
+        "CVE-2026-59901"
+      ],
+      "packages": [
+        "io.netty:netty-codec@4.1.111.Final",
+        "io.netty:netty-codec@4.1.115.Final",
+        "io.netty:netty-codec@4.1.130.Final",
+        "io.netty:netty-codec@4.1.132.Final",
+        "netty-codec@4.1.111.Final",
+        "netty-codec@4.1.115.Final",
+        "netty-codec@4.1.130.Final",
+        "netty-codec@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-563q-j3cm-6jxm",
+      "aliases": [
+        "CVE-2026-50560"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-574f-3g2m-x479",
+      "aliases": [
+        "CVE-2025-14813"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk15to18@1.78",
+        "bcprov-jdk18on@1.77",
+        "bcprov-jdk18on@1.80"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-57rv-r2g8-2cj3",
+      "aliases": [
+        "CVE-2026-42584"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-5gvw-p9qm-jgwh",
+      "aliases": [
+        "CVE-2026-59889"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-5jmj-h7xm-6q6v",
+      "aliases": [
+        "CVE-2026-54515"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-5mg8-w23w-74h3",
+      "aliases": [
+        "CVE-2020-8908",
+        "SNYK-JAVA-COMGOOGLEGUAVA-1015415"
+      ],
+      "packages": [
+        "com.google.guava:guava@31.0.1-android",
+        "guava@31.0.1-android"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-5pvg-856g-cp85",
+      "aliases": [
+        "CVE-2026-47691"
+      ],
+      "packages": [
+        "io.netty:netty-resolver-dns@4.1.115.Final",
+        "io.netty:netty-resolver-dns@4.1.128.Final",
+        "netty-resolver-dns@4.1.115.Final",
+        "netty-resolver-dns@4.1.128.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-5x3r-wrvg-rp6q",
+      "aliases": [
+        "CVE-2026-47244"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-676x-f7gg-47vc",
+      "aliases": [
+        "CVE-2026-45674"
+      ],
+      "packages": [
+        "io.netty:netty-resolver-dns@4.1.115.Final",
+        "io.netty:netty-resolver-dns@4.1.128.Final",
+        "netty-resolver-dns@4.1.115.Final",
+        "netty-resolver-dns@4.1.128.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-67mf-3cr5-8w23",
+      "aliases": [
+        "CVE-2025-8885"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk18on@1.77"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-6cqp-g7gg-8hr5",
+      "aliases": [
+        "CVE-2026-56746"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-6jqx-86gh-f27w",
+      "aliases": [
+        "CVE-2026-55831"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-72hv-8253-57qq",
+      "aliases": [
+        "CVE-2026-18401"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.17.1",
+        "com.fasterxml.jackson.core:jackson-core@2.18.2",
+        "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "jackson-core@2.17.1",
+        "jackson-core@2.18.2",
+        "jackson-core@2.18.4.1"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-735f-pc8j-v9w8",
+      "aliases": [
+        "CVE-2024-7254"
+      ],
+      "packages": [
+        "com.google.protobuf:protobuf-java@3.14.0",
+        "com.google.protobuf:protobuf-javalite@3.18.0",
+        "protobuf-java@3.14.0",
+        "protobuf-javalite@3.18.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-7g45-4rm6-3mm3",
+      "aliases": [
+        "CVE-2023-2976"
+      ],
+      "packages": [
+        "com.google.guava:guava@31.0.1-android",
+        "guava@31.0.1-android"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-7hhh-6rmp-j9qf",
+      "aliases": [
+        "CVE-2026-89425"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.17.1",
+        "com.fasterxml.jackson.core:jackson-core@2.18.2",
+        "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "com.fasterxml.jackson.core:jackson-core@2.21.4",
+        "jackson-core@2.17.1",
+        "jackson-core@2.18.2",
+        "jackson-core@2.18.4.1",
+        "jackson-core@2.21.4",
+        "jackson-core@3.1.5",
+        "tools.jackson.core:jackson-core@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-84h7-rjj3-6jx4",
+      "aliases": [
+        "CVE-2025-67735"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-8c42-7qj2-3j46",
+      "aliases": [
+        "CVE-2026-59903"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-8xfc-gm6g-vgpv",
+      "aliases": [
+        "CVE-2024-29857"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk18on@1.77"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-93wv-jw9v-4972",
+      "aliases": [
+        "CVE-2026-56819"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-9pwp-9qqc-pr26",
+      "aliases": [
+        "CVE-2026-8763"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk15to18@1.78",
+        "bcprov-jdk18on@1.77",
+        "bcprov-jdk18on@1.80",
+        "bcprov-jdk18on@1.84",
+        "bcprov-lts8on@2.73.8"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-c2gf-v879-257j",
+      "aliases": [
+        "CVE-2026-48043"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-c3fc-8qff-9hwx",
+      "aliases": [
+        "CVE-2026-0636"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.78",
+        "bcprov-jdk18on@1.77",
+        "bcprov-jdk18on@1.80"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-c4c3-7fpv-j4q5",
+      "aliases": [
+        "CVE-2026-75595"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "io.netty:netty-handler@4.1.130.Final",
+        "io.netty:netty-handler@4.1.132.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final",
+        "netty-handler@4.1.130.Final",
+        "netty-handler@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-c653-97m9-rcg9",
+      "aliases": [
+        "CVE-2026-50010"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "io.netty:netty-handler@4.1.130.Final",
+        "io.netty:netty-handler@4.1.132.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final",
+        "netty-handler@4.1.130.Final",
+        "netty-handler@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-c69g-56f8-xwqj",
+      "aliases": [
+        "CVE-2026-59900"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-cm33-6792-r9fm",
+      "aliases": [
+        "CVE-2026-42579"
+      ],
+      "packages": [
+        "io.netty:netty-codec-dns@4.1.115.Final",
+        "io.netty:netty-codec-dns@4.1.128.Final",
+        "netty-codec-dns@4.1.115.Final",
+        "netty-codec-dns@4.1.128.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-cphf-4846-3xx9",
+      "aliases": [
+        "CVE-2026-1002"
+      ],
+      "packages": [
+        "io.vertx:vertx-core@4.5.11",
+        "vertx-core@4.5.11"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-cw39-r4h6-8j3x",
+      "aliases": [
+        "CVE-2026-21452"
+      ],
+      "packages": [
+        "msgpack-core@0.9.9"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-cxp5-3px4-pw24",
+      "aliases": [
+        "CVE-2026-91777"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-f6hv-jmp6-3vwv",
+      "aliases": [
+        "CVE-2026-42587"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "io.netty:netty-codec-http2@4.1.132.Final",
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-fccg-mwvh-qqg4",
+      "aliases": [
+        "CVE-2026-75596"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "io.netty:netty-handler@4.1.130.Final",
+        "io.netty:netty-handler@4.1.132.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final",
+        "netty-handler@4.1.130.Final",
+        "netty-handler@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-fghv-69vj-qj49",
+      "aliases": [
+        "CVE-2025-58056"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-g5ww-5jh7-63cx",
+      "aliases": [
+        "CVE-2022-3509"
+      ],
+      "packages": [
+        "com.google.protobuf:protobuf-java@3.14.0",
+        "protobuf-java@3.14.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-gcjf-9mgh-3p7g",
+      "aliases": [
+        "CVE-2026-59921"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-gvpg-vgmx-xg6w",
+      "aliases": [
+        "CVE-2023-52428"
+      ],
+      "packages": [
+        "com.nimbusds:nimbus-jose-jwt@9.16-preview.1"
+      ],
+      "reason": "Documented in SECURITY.md (org.didcommx:didcomm 0.3.2 embeds old Nimbus/json-smart; no fixed release)."
+    },
+    {
+      "id": "GHSA-gx83-3vf8-gh7j",
+      "aliases": [
+        "CVE-2026-83557"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-h4h5-3hr4-j3g2",
+      "aliases": [
+        "CVE-2022-3171"
+      ],
+      "packages": [
+        "com.google.protobuf:protobuf-java@3.14.0",
+        "com.google.protobuf:protobuf-javalite@3.18.0",
+        "protobuf-java@3.14.0",
+        "protobuf-javalite@3.18.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hf6x-8p5f-cgmf",
+      "aliases": [
+        "CVE-2026-54399"
+      ],
+      "packages": [
+        "org.apache.httpcomponents.core5:httpcore5@5.0.2"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hfcf-v2f8-x9pc",
+      "aliases": [
+        "CVE-2026-44714"
+      ],
+      "packages": [
+        "bitcoinj-core@0.16.2"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hgj6-7826-r7m5",
+      "aliases": [
+        "CVE-2026-54514"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hjcp-jmpx-g3qm",
+      "aliases": [
+        "CVE-2026-64607"
+      ],
+      "packages": [
+        "org.apache.httpcomponents.client5:httpclient5@5.0.3"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hr8g-6v94-x4m9",
+      "aliases": [
+        "CVE-2023-33201"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-hvcg-qmg6-jm4c",
+      "aliases": [
+        "CVE-2026-50020"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-j3rv-43j4-c7qm",
+      "aliases": [
+        "CVE-2026-54512"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-jppx-w49h-x2qq",
+      "aliases": [
+        "CVE-2026-56745"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-m44j-cfrm-g8qc",
+      "aliases": [
+        "CVE-2024-30172"
+      ],
+      "packages": [
+        "bcprov-jdk18on@1.77"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-m4cv-j2px-7723",
+      "aliases": [
+        "CVE-2026-42580"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-mfg7-5gfp-c4w3",
+      "aliases": [
+        "CVE-2026-73508"
+      ],
+      "packages": [
+        "io.netty:netty-codec-dns@4.1.115.Final",
+        "io.netty:netty-codec-dns@4.1.128.Final",
+        "netty-codec-dns@4.1.115.Final",
+        "netty-codec-dns@4.1.128.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-mhm7-754m-9p8w",
+      "aliases": [],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-mj4r-2hfc-f8p6",
+      "aliases": [
+        "CVE-2026-42583"
+      ],
+      "packages": [
+        "io.netty:netty-codec@4.1.111.Final",
+        "io.netty:netty-codec@4.1.115.Final",
+        "io.netty:netty-codec@4.1.130.Final",
+        "io.netty:netty-codec@4.1.132.Final",
+        "netty-codec@4.1.111.Final",
+        "netty-codec@4.1.115.Final",
+        "netty-codec@4.1.130.Final",
+        "netty-codec@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-mvh2-crg5-v77c",
+      "aliases": [
+        "CVE-2026-55833"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-mx76-r943-rf8g",
+      "aliases": [
+        "CVE-2026-8149"
+      ],
+      "packages": [
+        "bcprov-lts8on@2.73.8"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-p53j-g8pw-4w5f",
+      "aliases": [
+        "CVE-2020-36843"
+      ],
+      "packages": [
+        "eddsa@0.3.0",
+        "net.i2p.crypto:eddsa@0.3.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-p6pp-m3f8-5c89",
+      "aliases": [
+        "CVE-2026-89407"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.17.1",
+        "com.fasterxml.jackson.core:jackson-core@2.18.2",
+        "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "com.fasterxml.jackson.core:jackson-core@2.21.4",
+        "jackson-core@2.17.1",
+        "jackson-core@2.18.2",
+        "jackson-core@2.18.4.1",
+        "jackson-core@2.21.4",
+        "jackson-core@3.1.5",
+        "tools.jackson.core:jackson-core@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-p93r-85wp-75v3",
+      "aliases": [
+        "CVE-2026-5598"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.78"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-pq2g-wx69-c263",
+      "aliases": [
+        "CVE-2024-57699"
+      ],
+      "packages": [
+        "json-smart@2.5.0",
+        "net.minidev:json-smart@2.5.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-prj3-ccx8-p6x4",
+      "aliases": [
+        "CVE-2025-55163"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-pwqr-wmgm-9rr8",
+      "aliases": [
+        "CVE-2026-33870"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-q4f6-jm68-57ww",
+      "aliases": [
+        "CVE-2026-59899"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-q4xh-88c3-wmh7",
+      "aliases": [
+        "CVE-2026-68497"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-qp49-qgx5-5m26",
+      "aliases": [
+        "CVE-2026-13506"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk15to18@1.78",
+        "bcprov-jdk18on@1.77",
+        "bcprov-jdk18on@1.80",
+        "bcprov-jdk18on@1.84",
+        "bcprov-lts8on@2.73.8"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-r7wm-3cxj-wff9",
+      "aliases": [
+        "CVE-2026-68494"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.17.1",
+        "com.fasterxml.jackson.core:jackson-core@2.18.2",
+        "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "jackson-core@2.17.1",
+        "jackson-core@2.18.2",
+        "jackson-core@2.18.4.1"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-rcgg-9c38-7xpx",
+      "aliases": [
+        "CVE-2026-45292"
+      ],
+      "packages": [
+        "opentelemetry-api@1.51.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-rmj7-2vxq-3g9f",
+      "aliases": [
+        "CVE-2026-54513"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-v3jc-474w-2wm6",
+      "aliases": [
+        "CVE-2026-54428"
+      ],
+      "packages": [
+        "org.apache.httpcomponents.core5:httpcore5-h2@5.0.2"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-v435-xc8x-wvr9",
+      "aliases": [
+        "CVE-2024-30171"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69",
+        "bcprov-jdk18on@1.77"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-v8h7-rr48-vmmv",
+      "aliases": [
+        "CVE-2026-41417"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-vvgp-rfg2-7rr6",
+      "aliases": [
+        "CVE-2026-77310"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-w573-9ffj-6ff9",
+      "aliases": [
+        "CVE-2026-45536"
+      ],
+      "packages": [
+        "io.netty:netty-transport-native-epoll@4.1.111.Final",
+        "io.netty:netty-transport-native-epoll@4.1.130.Final",
+        "io.netty:netty-transport-native-kqueue@4.1.111.Final",
+        "io.netty:netty-transport-native-kqueue@4.1.130.Final",
+        "netty-transport-native-epoll@4.1.111.Final",
+        "netty-transport-native-epoll@4.1.130.Final",
+        "netty-transport-native-kqueue@4.1.111.Final",
+        "netty-transport-native-kqueue@4.1.130.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-w9fj-cfpg-grvv",
+      "aliases": [
+        "CVE-2026-33871"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http2@4.1.111.Final",
+        "io.netty:netty-codec-http2@4.1.115.Final",
+        "io.netty:netty-codec-http2@4.1.130.Final",
+        "netty-codec-http2@4.1.111.Final",
+        "netty-codec-http2@4.1.115.Final",
+        "netty-codec-http2@4.1.130.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-wjgm-6hv5-3cvf",
+      "aliases": [
+        "CVE-2026-19032"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-wjxj-5m7g-mg7q",
+      "aliases": [
+        "CVE-2023-33202"
+      ],
+      "packages": [
+        "bcprov-jdk15to18@1.69"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-wrvw-hg22-4m67",
+      "aliases": [
+        "CVE-2021-22569"
+      ],
+      "packages": [
+        "com.google.protobuf:protobuf-java@3.14.0",
+        "protobuf-java@3.14.0"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-wv8q-qhhj-9h54",
+      "aliases": [
+        "CVE-2026-91776"
+      ],
+      "packages": [
+        "com.fasterxml.jackson.core:jackson-databind@2.17.1",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.2",
+        "com.fasterxml.jackson.core:jackson-databind@2.18.4",
+        "com.fasterxml.jackson.core:jackson-databind@2.21.4",
+        "jackson-databind@2.17.1",
+        "jackson-databind@2.18.2",
+        "jackson-databind@2.18.4",
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.5"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-x4gw-5cx5-pgmh",
+      "aliases": [
+        "CVE-2026-45416"
+      ],
+      "packages": [
+        "io.netty:netty-handler@4.1.111.Final",
+        "io.netty:netty-handler@4.1.115.Final",
+        "io.netty:netty-handler@4.1.130.Final",
+        "io.netty:netty-handler@4.1.132.Final",
+        "netty-handler@4.1.111.Final",
+        "netty-handler@4.1.115.Final",
+        "netty-handler@4.1.130.Final",
+        "netty-handler@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-xmv7-r254-6q78",
+      "aliases": [
+        "CVE-2026-45673"
+      ],
+      "packages": [
+        "io.netty:netty-resolver-dns@4.1.115.Final",
+        "io.netty:netty-resolver-dns@4.1.128.Final",
+        "netty-resolver-dns@4.1.115.Final",
+        "netty-resolver-dns@4.1.128.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-xq3w-v528-46rv",
+      "aliases": [
+        "CVE-2024-47535"
+      ],
+      "packages": [
+        "io.netty:netty-common@4.1.111.Final",
+        "netty-common@4.1.111.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    },
+    {
+      "id": "GHSA-xwmg-2g98-w7v9",
+      "aliases": [
+        "CVE-2025-53864"
+      ],
+      "packages": [
+        "com.nimbusds:nimbus-jose-jwt@10.0.1",
+        "com.nimbusds:nimbus-jose-jwt@9.16-preview.1",
+        "com.nimbusds:nimbus-jose-jwt@9.48",
+        "nimbus-jose-jwt@10.0.1",
+        "nimbus-jose-jwt@9.48"
+      ],
+      "reason": "Documented in SECURITY.md (org.didcommx:didcomm 0.3.2 embeds old Nimbus/json-smart; no fixed release)."
+    },
+    {
+      "id": "GHSA-xxqh-mfjm-7mv9",
+      "aliases": [
+        "CVE-2026-42581"
+      ],
+      "packages": [
+        "io.netty:netty-codec-http@4.1.111.Final",
+        "io.netty:netty-codec-http@4.1.115.Final",
+        "io.netty:netty-codec-http@4.1.130.Final",
+        "io.netty:netty-codec-http@4.1.132.Final",
+        "netty-codec-http@4.1.111.Final",
+        "netty-codec-http@4.1.115.Final",
+        "netty-codec-http@4.1.130.Final",
+        "netty-codec-http@4.1.132.Final"
+      ],
+      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
+    }
+  ]
+}

@@ -104,8 +104,15 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
   *critical* advisory (Gradle dependency graph via GitHub dependency submission).
 - **OSV-Scanner** scans the aggregate CycloneDX SBOM (`./gradlew cyclonedxBom`) and the contents of
   every resolved JAR, so libraries shaded inside a fat JAR are found too. Results are published to
-  code scanning and to the workflow summary. The existing backlog is reported, not gating, while it
-  is worked down; new findings on a pull request are gated by dependency review.
+  code scanning and to the workflow summary. The job **fails for any advisory that is not listed in
+  [`config/osv/baseline.json`](config/osv/baseline.json)** (checked by `scripts/check-osv-baseline.py`).
+  The baseline is the existing backlog (96 distinct advisories on 2026-10-03, including the three
+  didcomm entries below), so only new advisories gate a change. Remove entries as dependencies are
+  upgraded; add one only after triage, with a reason. To regenerate it, run `./gradlew cyclonedxBom`,
+  `python scripts/collect-sbom-jars.py build/reports/cyclonedx/bom.json --output build/reports/osv/jars`,
+  `osv-scanner scan source --no-ignore --experimental-plugins=java/archive --format=json
+  --output-file=build/reports/osv/osv.json -L=build/reports/cyclonedx/bom.json -r build/reports/osv/jars`
+  and `python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --update-baseline`.
 
 Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `gradle/libs.versions.toml`.
 
@@ -146,7 +153,9 @@ input by definition, so treat them as reachable when the plugin unpacks messages
 **Status:** accepted risk with mitigation, tracked in
 [docs/contributing/dependency-upgrade-plan.md](docs/contributing/dependency-upgrade-plan.md). The
 resolution is to move to a maintained DIDComm implementation (or a didcommx release that depends on,
-rather than embeds, a current Nimbus) — not to patch the shaded classes. The OSV-Scanner job scans the
+rather than embeds, a current Nimbus; none exists as of October 2026, 0.3.2 is still the newest on
+Maven Central) — not to patch the shaded classes. The three advisories above are the only didcomm
+entries in the OSV baseline, so any further advisory against the embedded copies fails the job. The OSV-Scanner job scans the
 didcomm JAR's contents, so this entry is re-confirmed on every run and any new advisory against the
 embedded copies shows up there.
 

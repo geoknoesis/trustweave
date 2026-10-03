@@ -99,7 +99,9 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 | `build.gradle.kts` | Central config, publishing, Windows JAR handling |
 | `gradle/libs.versions.toml` | Centralized dependency versions and bundles |
 | `gradle.properties` | JVM args, parallel builds, Kotlin daemon settings |
-| `.github/workflows/` | `ci.yml` (parallel lint / build+coverage / docs / interop jobs), `security.yml` (dependency review + OSV-Scanner), `codeql.yml`, `release-evidence.yml` |
+| `.github/CODEOWNERS` | Required reviewers for security-critical paths (`did/`, `kms/`, `credentials/`, `signatures/`, `trust-registry/`, `.github/`, build files); branch protection is recommended in `CONTRIBUTING.md` |
+| `config/osv/baseline.json` | Advisories grandfathered by the OSV gate; `security.yml` fails on any other (`scripts/check-osv-baseline.py`) |
+| `.github/workflows/` | `ci.yml` (parallel lint / build+coverage / docs / interop jobs), `security.yml` (dependency review + OSV-Scanner), `codeql.yml` (also on PRs touching the analysed modules), `release-evidence.yml` |
 
 ## Tech Stack
 
@@ -107,7 +109,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 - **Build**: Gradle 9.5.0
 - **Testing**: JUnit 5 + Kotest assertions; TestContainers for DB/Docker tests
 - **HTTP**: Ktor 2.3.x (internal servers), OkHttp (client)
-- **Security**: Bouncy Castle 1.84, Nimbus JOSE JWT
+- **Security**: Bouncy Castle 1.86, Nimbus JOSE JWT
 - **Blockchain**: Web3j, Algorand SDK, Bitcoin-j
 - **Spring Boot**: 4.1.x (`did:registrar-server-spring` only; a library module, so its `bootJar` is disabled on purpose)
 - **Coroutines**: kotlinx-coroutines 1.10.x throughout
@@ -128,6 +130,8 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 - Configuration cache is **disabled** (`org.gradle.configuration-cache=false` in `gradle.properties`) while
   the Kotlin compile/jar circular dependency workaround (`kotlin.build.archivesTaskOutputAsFriendModule=false`)
   is being confirmed; the build cache and parallel execution are on
+- `scripts/check-documentation.py` also fails when an `org.trustweave.*` import in a maintained doc matches no
+  class, function or package in main sources (a snippet labelled wrong/❌ is exempt)
 - Every dependency and plugin version lives in `gradle/libs.versions.toml`; `scripts/check-dependency-catalog.py`
   fails CI on a literal `group:artifact:version` in a build file
 - `-javadoc` jars are filled by Dokka only for publish tasks or with `-Ptrustweave.dokka=true`

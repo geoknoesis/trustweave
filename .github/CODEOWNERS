@@ -1,0 +1,26 @@
+# Code owners. Requests a review from the owner when a pull request touches these paths; combined
+# with "Require review from Code Owners" branch protection (see CONTRIBUTING.md) it makes the review
+# mandatory. Replace @fellahst with a team (for example @geoknoesis/security) once one exists.
+# Later patterns take precedence.
+
+# Default
+*                               @fellahst
+
+# Security-critical modules
+/did/                           @fellahst
+/kms/                           @fellahst
+/credentials/                   @fellahst
+/signatures/                    @fellahst
+/trust-registry/                @fellahst
+/wallet/                        @fellahst
+/common/                        @fellahst
+
+# CI, supply chain and release
+/.github/                       @fellahst
+/scripts/                       @fellahst
+/config/                        @fellahst
+/gradle/                        @fellahst
+/build.gradle.kts               @fellahst
+/settings.gradle.kts            @fellahst
+/gradle.properties              @fellahst
+/SECURITY.md                    @fellahst

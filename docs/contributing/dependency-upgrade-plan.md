@@ -11,19 +11,33 @@ Dependabot bumps. Each needs its own PR because it changes APIs that TrustWeave 
 consumers compile against. Minor and patch updates within the current major still go through
 Dependabot and `gradle/libs.versions.toml` as usual.
 
-Status as of October 2026. Versions are the catalog versions on `main`; "latest" is the newest
+Status as of 3 October 2026. Versions are the catalog versions on `main`; "latest" is the newest
 release on Maven Central when this was written. Update this page in the same PR that completes an item.
 
-| Item | Current | Target | Scope | Risk |
-| ---- | ------- | ------ | ----- | ---- |
-| [Unmaintained Vault driver](#vault-java-driver) | `com.bettercloud:vault-java-driver` 5.1.0 | Maintained client or plain HTTP | `kms:plugins:hashicorp` | Medium |
-| [DIDComm library with embedded Nimbus](#didcommx) | `org.didcommx:didcomm` 0.3.2 | Maintained implementation | `credentials:plugins:didcomm` | High (security) |
-| [Ktor 3](#ktor-3) | 2.3.13 | 3.x (latest 3.6.0) | ~14 build files (servers, clients) | High |
-| [OkHttp 5](#okhttp-5) | 4.12.0 | 5.x (latest 5.5.0) | 36 build files | Medium |
-| [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low |
-| [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium |
-| [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High |
-| [bitcoinj 0.17](#bitcoinj) | 0.16.2 (`bitcoinj-legacy`) | 0.17.x | 2 build files | Medium |
+| Item | Current | Target | Scope | Risk | Owner |
+| ---- | ------- | ------ | ----- | ---- | ----- |
+| [Unmaintained Vault driver](#vault-java-driver) | `com.bettercloud:vault-java-driver` 5.1.0 | Maintained client or plain HTTP | `kms:plugins:hashicorp` | Medium | TBD (assign) |
+| [DIDComm library with embedded Nimbus](#didcommx) | `org.didcommx:didcomm` 0.3.2 | Maintained implementation | `credentials:plugins:didcomm` | High (security) | TBD (assign) |
+| [Ktor 3](#ktor-3) | 2.3.13 | 3.x (latest 3.6.0) | ~14 build files (servers, clients) | High | TBD (assign) |
+| [OkHttp 5](#okhttp-5) | 4.12.0 | 5.x (latest 5.5.0) | 36 build files | Medium | TBD (assign) |
+| [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low | TBD (assign) |
+| [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
+| [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High | TBD (assign) |
+| [bitcoinj 0.17](#bitcoinj) | 0.16.2 (`bitcoinj-legacy`) | 0.17.x | 2 build files | Medium | TBD (assign) |
+
+## Routine bumps done in the current cycle
+
+Within-major updates that were safe to take without a migration, verified by compiling and testing
+the modules that use them: Jackson 2.22.3, Bouncy Castle 1.86 (both clear advisories that OSV
+reported against the previous versions), SLF4J 2.0.20, MongoDB BSON 4.11.5, Azure Identity 1.18.7.
+Still open and routine (Dependabot can propose them): Hikari 7.1.0, web3j 5.0.3, OpenTelemetry
+1.66.0, json-path 2.10.0, Kover 0.9.11, AWS SDK BOM 2.55.x, Google libraries-bom 26.90.0, Azure SDK
+BOM 1.3.8. Take them in separate small PRs and run the affected modules' tests.
+
+The remaining OSV advisories are tracked in `config/osv/baseline.json` (see SECURITY.md). Most come
+from transitive Netty 4.1.x, Jackson 2.17/2.18 and Bouncy Castle 1.69-1.80 copies pulled in by cloud
+SDKs and web3j; upgrading those SDK BOMs is the way to shrink the baseline. After each upgrade,
+regenerate the report and remove the entries that no longer appear.
 
 ## vault-java-driver
 
@@ -42,6 +56,19 @@ Steps:
    Testcontainers suite.
 4. Note the change in `CHANGELOG.md`; the plugin's public API does not change.
 
+Recommended approach (documentation only, no code change yet): replace the driver with a thin
+internal client over Vault's HTTP API using the OkHttp the project already depends on. The plugin
+needs only `POST /v1/auth/<method>/login` (static token needs no call; AppRole login is the only auth call the plugin makes today), `POST/GET
+/v1/transit/keys/<name>`, `POST /v1/transit/sign/<name>` and `POST /v1/transit/verify/<name>`, with
+the `X-Vault-Token` header. That is a few hundred lines, removes the
+unmaintained dependency and its TLS code, and lets the plugin reuse the repository's SSRF and timeout
+conventions. The jopenlibs fork is the fallback if a drop-in is needed in a hurry. Keep the existing
+parsing of Vault public keys (strict, curve-checked) and the Testcontainers Vault suite as the
+regression gate.
+
+Next step: open an issue for the plugin owner (TBD), write the HTTP client behind the existing
+plugin interface, run the Vault suite against the old and new clients, then remove the catalog alias.
+
 ## didcommx
 
 `org.didcommx:didcomm` 0.3.2 (August 2022, still the latest release) embeds Nimbus JOSE+JWT
@@ -51,7 +78,10 @@ for the advisories and the mitigations required of users in the meantime.
 
 Steps:
 
-1. Check for a didcommx release that depends on (rather than shades) a current Nimbus.
+0. Checked on 3 October 2026: Maven Central has no didcomm release after 0.3.2, so there is nothing
+   to bump. The OSV gate (`config/osv/baseline.json`) now fails on any new advisory against the
+   embedded copies.
+1. Check for a didcommx release that depends on (rather than shades) a current Nimbus (recheck quarterly).
 2. Otherwise evaluate a maintained DIDComm v2 implementation, or implement packing/unpacking on
    the catalog's Nimbus (9.48+) behind the existing `crypto/interop` adapter boundary.
 3. Remove the `nimbus-jose-jwt` exclusion from `credentials/plugins/didcomm/build.gradle.kts` once

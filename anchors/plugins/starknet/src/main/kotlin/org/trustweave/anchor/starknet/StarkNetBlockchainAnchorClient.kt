@@ -18,7 +18,9 @@ import org.trustweave.anchor.exceptions.BlockchainException
  * client. It can only be instantiated explicitly.
  *
  * A real implementation would require a StarkNet SDK and a Cairo storage contract
- * (StarkNet is Cairo-based, not EVM), neither of which exists here.
+ * (StarkNet is Cairo-based, not EVM), neither of which exists here. It ships no default RPC
+ * endpoints (the previously referenced public testnet has been retired); a real implementation
+ * must take the endpoint from configuration.
  *
  * Chain ID format: "starknet:<network>"
  * Examples:
@@ -30,7 +32,7 @@ import org.trustweave.anchor.exceptions.BlockchainException
  * val client = StarkNetBlockchainAnchorClient(
  *     chainId = "starknet:mainnet",
  *     options = mapOf(
- *         "rpcUrl" to "https://starknet-mainnet.public.blastapi.io",
+ *         "rpcUrl" to "https://<your-starknet-rpc>",
  *         "privateKey" to "0x...",
  *         "contractAddress" to "0x..."
  *     )
@@ -39,16 +41,12 @@ import org.trustweave.anchor.exceptions.BlockchainException
  */
 class StarkNetBlockchainAnchorClient(
     chainId: String,
-    options: Map<String, Any?> = emptyMap()
-) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-
+    options: Map<String, Any?> = emptyMap(),
+) : AbstractBlockchainAnchorClient(chainId, options),
+    java.io.Closeable {
     companion object {
         const val MAINNET = "starknet:mainnet"
         const val TESTNET = "starknet:testnet"
-
-        // Network RPC endpoints
-        private const val MAINNET_RPC_URL = "https://starknet-mainnet.public.blastapi.io"
-        private const val TESTNET_RPC_URL = "https://starknet-testnet.public.blastapi.io"
     }
 
     init {
@@ -61,7 +59,7 @@ class StarkNetBlockchainAnchorClient(
         }
     }
 
-    override protected fun canSubmitTransaction(): Boolean {
+    protected override fun canSubmitTransaction(): Boolean {
         // Always false: transaction submission is NOT implemented. Returning true based on
         // the presence of credentials would route writePayload into submitTransactionToBlockchain
         // and fail after pretending to be a working client. With false, the base class's
@@ -69,57 +67,52 @@ class StarkNetBlockchainAnchorClient(
         return false
     }
 
-    override protected suspend fun submitTransactionToBlockchain(
-        payloadBytes: ByteArray
-    ): String {
+    protected override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String {
         // Unreachable through the base class while canSubmitTransaction() is false;
         // kept as an honest guard in case a subclass or future change reaches it.
         throw BlockchainException.UnsupportedOperation(
             chainId = chainId,
             operation = "submitTransaction",
-            reason = "The StarkNet anchor client is a stub and is not implemented: " +
-                "transaction submission would require a StarkNet SDK and a Cairo storage " +
-                "contract, neither of which exists."
+            reason =
+                "The StarkNet anchor client is a stub and is not implemented: " +
+                    "transaction submission would require a StarkNet SDK and a Cairo storage " +
+                    "contract, neither of which exists.",
         )
     }
 
-    override protected suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
+    protected override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
         throw BlockchainException.UnsupportedOperation(
             chainId = chainId,
             operation = "readTransaction",
-            reason = "The StarkNet anchor client is a stub and is not implemented: " +
-                "reading transactions would require a StarkNet SDK, which does not exist."
+            reason =
+                "The StarkNet anchor client is a stub and is not implemented: " +
+                    "reading transactions would require a StarkNet SDK, which does not exist.",
         )
-    }
 
-    override protected fun getContractAddress(): String? {
-        return options["contractAddress"] as? String
-    }
+    protected override fun getContractAddress(): String? = options["contractAddress"] as? String
 
-    override protected fun buildExtraMetadata(mediaType: String): Map<String, String> {
-        val network = when (chainId) {
-            MAINNET -> "starknet-mainnet"
-            TESTNET -> "starknet-testnet"
-            else -> chainId
-        }
+    protected override fun buildExtraMetadata(mediaType: String): Map<String, String> {
+        val network =
+            when (chainId) {
+                MAINNET -> "starknet-mainnet"
+                TESTNET -> "starknet-testnet"
+                else -> chainId
+            }
         return mapOf(
             "network" to network,
             "mediaType" to mediaType,
-            "protocol" to "cairo"
+            "protocol" to "cairo",
         )
     }
 
-    override protected fun generateTestTxHash(): String {
+    protected override fun generateTestTxHash(): String {
         // Generate a unique test transaction hash (64 hex characters)
         return "0x${uniqueTestHashHex()}"
     }
 
-    override protected fun getBlockchainName(): String {
-        return "StarkNet"
-    }
+    protected override fun getBlockchainName(): String = "StarkNet"
 
     override fun close() {
         // Cleanup if needed
     }
 }
-

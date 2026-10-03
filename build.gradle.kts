@@ -10,7 +10,8 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     id("org.jlleitschuh.gradle.ktlint")
     alias(libs.plugins.kover)
-    id("org.cyclonedx.bom") version "3.4.1"
+    alias(libs.plugins.cyclonedx)
+    alias(libs.plugins.dokka.javadoc) apply false
 }
 
 // Configure common settings for all projects (root + all subprojects).
@@ -27,6 +28,16 @@ allprojects {
     }
 }
 
+// Dokka renders the Kotlin API into the published -javadoc jars. Running it over every module costs
+// minutes, so it is on for publication (any requested task whose name contains "publish") and
+// otherwise opt-in with -Ptrustweave.dokka=true; ordinary builds keep the cheap, empty javadoc jar.
+val dokkaJavadoc =
+    (findProperty("trustweave.dokka") as? String)?.equals("true", ignoreCase = true) == true ||
+        gradle.startParameter.taskNames.any { it.substringAfterLast(':').contains("publish", ignoreCase = true) }
+
+// Read here, not inside subprojects {}: there `libs` would resolve against each subproject.
+val kotlinVersion = libs.versions.kotlin.get()
+
 subprojects {
 
     plugins.withId("org.jetbrains.kotlin.jvm") {
@@ -37,6 +48,9 @@ subprojects {
             }
         apply(plugin = "org.jetbrains.kotlinx.kover")
         rootProject.dependencies.add("kover", project)
+        if (dokkaJavadoc) {
+            apply(plugin = "org.jetbrains.dokka-javadoc")
+        }
     }
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
         (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>() as ExtensionAware)
@@ -169,67 +183,16 @@ subprojects {
     // Windows: `clean` fails when IDE holds JARs. Evict locked files with retries before Gradle's Delete runs.
     afterEvaluate {
         tasks.findByName("clean")?.doFirst("trustweaveEvictLockedOutputsForClean") {
-            val buildDir = layout.buildDirectory.get().asFile
-            if (!buildDir.exists()) {
-                return@doFirst
-            }
-            val stashRoot =
-                File(System.getProperty("java.io.tmpdir"), "trustweave-gradle-clean-stash").apply { mkdirs() }
-            val maxRounds = 20
-            val pauseMs = 250L
-            repeat(maxRounds) { round ->
-                if (!buildDir.exists()) {
-                    return@doFirst
-                }
-                var anyStillStuck = false
-                buildDir.walkBottomUp().forEach { f ->
-                    if (!f.exists()) {
-                        return@forEach
-                    }
-                    when {
-                        f.isFile -> {
-                            if (f.delete()) {
-                                return@forEach
-                            }
-                            val ext = f.extension
-                            val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
-                            val dest =
-                                File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
-                            try {
-                                java.nio.file.Files.move(
-                                    f.toPath(),
-                                    dest.toPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                                )
-                            } catch (_: Exception) {
-                                anyStillStuck = true
-                            }
-                        }
-                        f.isDirectory && f != buildDir -> {
-                            val kids = f.listFiles()
-                            if (kids == null || kids.isEmpty()) {
-                                if (!f.delete()) {
-                                    anyStillStuck = true
-                                }
-                            }
-                        }
-                    }
-                }
-                if (!anyStillStuck) {
-                    return@doFirst
-                }
-                if (round < maxRounds - 1) {
-                    Thread.sleep(pauseMs)
-                }
-            }
+            LockedOutputEviction.evict(layout.buildDirectory.get().asFile)
         }
     }
 
-    // Force consistent Kotlin stdlib version across all modules to avoid binary compatibility issues
+    // Force consistent Kotlin stdlib version across all modules to avoid binary compatibility issues.
+    // The version comes from the catalog so a Kotlin bump cannot leave the stdlib behind.
     configurations.all {
         resolutionStrategy {
-            force("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")
-            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21")
+            force("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         }
     }
 
@@ -321,14 +284,20 @@ subprojects {
             }
 
             // Publish -sources and -javadoc jars alongside the binary jar (Maven Central
-            // requires both; IDEs use the sources jar for navigation). Kotlin-only modules
-            // have no Java sources, so the javadoc task is NO-SOURCE and the -javadoc jar
-            // is empty — accepted practice for Kotlin libraries without pulling Dokka into
-            // the build. Both jars are added as variants of the "java" component, so the
-            // existing from(components["java"]) publication picks them up automatically.
+            // requires both; IDEs use the sources jar for navigation). Both jars are added as
+            // variants of the "java" component, so the existing from(components["java"])
+            // publication picks them up automatically. Kotlin-only modules have no Java sources,
+            // so the javadoc task is NO-SOURCE; when Dokka is enabled (see dokkaJavadoc above) its
+            // javadoc-format output fills the jar instead of leaving it empty.
             extensions.findByType<org.gradle.api.plugins.JavaPluginExtension>()?.apply {
                 withSourcesJar()
                 withJavadocJar()
+            }
+            if (plugins.hasPlugin("org.jetbrains.dokka-javadoc")) {
+                tasks.named<Jar>("javadocJar") {
+                    from(tasks.named("dokkaGeneratePublicationJavadoc"))
+                    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+                }
             }
 
             // Configure Maven publishing
@@ -439,65 +408,87 @@ if (trustweaveRootWindowsExternal) {
 // Root `clean`: same eviction as subprojects (outputs under _root can still be locked by tooling).
 afterEvaluate {
     tasks.findByName("clean")?.doFirst("trustweaveEvictRootBuildDirForClean") {
-        val buildDir = layout.buildDirectory.get().asFile
+        LockedOutputEviction.evict(layout.buildDirectory.get().asFile)
+    }
+}
+
+/**
+ * Empties a build directory before Gradle's own `clean` runs. On Windows an IDE, language server
+ * or antivirus often holds a JAR open, and Gradle's Delete then fails with "Unable to delete file".
+ * Each file is deleted, or moved aside into a temp stash when the delete is refused; empty
+ * directories are removed. Locked leftovers are retried for up to 20 rounds, 250 ms apart.
+ * Shared by the root project and every subproject so the two copies cannot drift.
+ */
+object LockedOutputEviction {
+    private const val MAX_ROUNDS = 20
+    private const val PAUSE_MS = 250L
+
+    fun evict(buildDir: File) {
         if (!buildDir.exists()) {
-            return@doFirst
+            return
         }
         val stashRoot =
             File(System.getProperty("java.io.tmpdir"), "trustweave-gradle-clean-stash").apply { mkdirs() }
-        val maxRounds = 20
-        val pauseMs = 250L
-        repeat(maxRounds) { round ->
-            if (!buildDir.exists()) {
-                return@doFirst
+        for (round in 0 until MAX_ROUNDS) {
+            if (!buildDir.exists() || !evictOnce(buildDir, stashRoot)) {
+                return
             }
-            var anyStillStuck = false
-            buildDir.walkBottomUp().forEach { f ->
-                if (!f.exists()) {
-                    return@forEach
-                }
-                when {
-                    f.isFile -> {
-                        if (f.delete()) {
-                            return@forEach
-                        }
-                        val ext = f.extension
-                        val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
-                        val dest =
-                            File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
-                        try {
-                            java.nio.file.Files.move(
-                                f.toPath(),
-                                dest.toPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                            )
-                        } catch (_: Exception) {
-                            anyStillStuck = true
-                        }
-                    }
-                    f.isDirectory && f != buildDir -> {
-                        val kids = f.listFiles()
-                        if (kids == null || kids.isEmpty()) {
-                            if (!f.delete()) {
-                                anyStillStuck = true
-                            }
-                        }
-                    }
-                }
-            }
-            if (!anyStillStuck) {
-                return@doFirst
-            }
-            if (round < maxRounds - 1) {
-                Thread.sleep(pauseMs)
+            if (round < MAX_ROUNDS - 1) {
+                Thread.sleep(PAUSE_MS)
             }
         }
+    }
+
+    /** One pass over the build directory; returns true when something is still stuck. */
+    private fun evictOnce(
+        buildDir: File,
+        stashRoot: File,
+    ): Boolean {
+        var anyStillStuck = false
+        buildDir.walkBottomUp().forEach { f ->
+            if (!f.exists()) {
+                return@forEach
+            }
+            when {
+                f.isFile -> {
+                    if (f.delete()) {
+                        return@forEach
+                    }
+                    val ext = f.extension
+                    val base = if (ext.isEmpty()) f.name else f.name.removeSuffix(".$ext")
+                    val dest = File(stashRoot, "$base-${System.nanoTime()}${if (ext.isEmpty()) "" else ".$ext"}")
+                    try {
+                        java.nio.file.Files.move(
+                            f.toPath(),
+                            dest.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        )
+                    } catch (_: Exception) {
+                        anyStillStuck = true
+                    }
+                }
+                f.isDirectory && f != buildDir -> {
+                    val kids = f.listFiles()
+                    if ((kids == null || kids.isEmpty()) && !f.delete()) {
+                        anyStillStuck = true
+                    }
+                }
+            }
+        }
+        return anyStillStuck
     }
 }
 
 // Configure Gradle Wrapper to use a specific Gradle version.
 // The wrapper allows developers to build the project without installing Gradle locally.
 // When updating the wrapper, run: ./gradlew wrapper --gradle-version <version>
+// Without --gradle-version the task regenerates the version already recorded in
+// gradle/wrapper/gradle-wrapper.properties, so that file stays the single source of truth.
 tasks.wrapper {
-    gradleVersion = "9.2.0"
+    val recorded =
+        Regex("""gradle-([^/]+?)-(?:bin|all)\.zip""")
+            .find(file("gradle/wrapper/gradle-wrapper.properties").readText())
+            ?.groupValues
+            ?.get(1)
+    gradleVersion = recorded ?: error("gradle-wrapper.properties has no distributionUrl version")
 }

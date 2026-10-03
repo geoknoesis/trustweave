@@ -28,6 +28,8 @@ class EvmAnchorReadIntegrityTest {
 
     private val requestedTxHash = "0x" + "ab".repeat(32)
     private val otherTxHash = "0x" + "cd".repeat(32)
+    private val sender = "0x" + "22".repeat(20)
+    private val stranger = "0x" + "33".repeat(20)
 
     private class TestEvmClient(
         chain: EvmChainConfig,
@@ -48,6 +50,9 @@ class EvmAnchorReadIntegrityTest {
         blockNumberHex: String,
         headBlockHex: String,
         payloadJson: String = """{"anchored":"payload"}""",
+        status: String = "0x1",
+        from: String = sender,
+        to: String? = sender,
         block: (rpcUrl: String) -> Unit,
     ) {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
@@ -59,8 +64,8 @@ class EvmAnchorReadIntegrityTest {
                         """{"jsonrpc":"2.0","id":1,"result":{
                             "transactionHash":"$receiptTxHash","transactionIndex":"0x0",
                             "blockHash":"0x${"11".repeat(32)}","blockNumber":"$blockNumberHex",
-                            "cumulativeGasUsed":"0x5208","gasUsed":"0x5208","status":"0x1",
-                            "from":"0x${"22".repeat(20)}","to":"0x${"22".repeat(20)}",
+                            "cumulativeGasUsed":"0x5208","gasUsed":"0x5208","status":"$status",
+                            "from":"$from","to":${to?.let { "\"$it\"" } ?: "null"},
                             "logs":[],"logsBloom":"0x0"}}"""
 
                     request.contains("eth_getTransactionByHash") ->
@@ -68,7 +73,7 @@ class EvmAnchorReadIntegrityTest {
                             "hash":"$transactionTxHash","nonce":"0x0",
                             "blockHash":"0x${"11".repeat(32)}","blockNumber":"$blockNumberHex",
                             "transactionIndex":"0x0",
-                            "from":"0x${"22".repeat(20)}","to":"0x${"22".repeat(20)}",
+                            "from":"$from","to":${to?.let { "\"$it\"" } ?: "null"},
                             "value":"0x0","gas":"0x5208","gasPrice":"0x1",
                             "input":"${payloadHex(payloadJson)}"}}"""
 
@@ -168,6 +173,69 @@ class EvmAnchorReadIntegrityTest {
 
                     assertEquals("application/json", result.mediaType)
                 }
+            }
+        }
+
+    private fun assertReadRejected(
+        message: String,
+        options: Map<String, Any?> = emptyMap(),
+        status: String = "0x1",
+        from: String = sender,
+        to: String? = sender,
+    ) = withRpc(
+        receiptTxHash = requestedTxHash,
+        transactionTxHash = requestedTxHash,
+        blockNumberHex = "0x1",
+        headBlockHex = "0x64",
+        status = status,
+        from = from,
+        to = to,
+    ) { url ->
+        TestEvmClient(chain.copy(defaultRpcUrl = url), options).use { client ->
+            assertFails(message) { runBlocking { client.read(requestedTxHash) } }
+        }
+    }
+
+    @Test
+    fun `a reverted transaction is not an anchor`() = assertReadRejected("A receipt with status 0x0 must be rejected", status = "0x0")
+
+    @Test
+    fun `a transaction from someone other than the expected sender is rejected`() =
+        assertReadRejected(
+            "A transaction not sent by the configured anchoring account must be rejected",
+            options = mapOf(AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER to stranger),
+        )
+
+    @Test
+    fun `a transaction that is not a self-send is rejected by default`() =
+        assertReadRejected("A transaction to another address must be rejected", to = stranger)
+
+    @Test
+    fun `a contract creation is rejected`() = assertReadRejected("A transaction without a recipient must be rejected", to = null)
+
+    @Test
+    fun `a transaction to a recipient other than the configured one is rejected`() =
+        assertReadRejected(
+            "The configured recipient must be enforced",
+            options = mapOf(AbstractEvmAnchorClient.OPTION_EXPECTED_RECIPIENT to stranger),
+        )
+
+    @Test
+    fun `configured sender and recipient that match are accepted, case-insensitively`() =
+        withRpc(
+            receiptTxHash = requestedTxHash,
+            transactionTxHash = requestedTxHash,
+            blockNumberHex = "0x1",
+            headBlockHex = "0x64",
+            to = stranger,
+        ) { url ->
+            val options =
+                mapOf(
+                    AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER to sender.uppercase().replace("0X", "0x"),
+                    AbstractEvmAnchorClient.OPTION_EXPECTED_RECIPIENT to stranger,
+                )
+            TestEvmClient(chain.copy(defaultRpcUrl = url), options).use { client ->
+                assertEquals("application/json", runBlocking { client.read(requestedTxHash) }.mediaType)
             }
         }
 }

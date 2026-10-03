@@ -1,14 +1,12 @@
 package org.trustweave.anchor
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 import org.trustweave.anchor.payment.OperationDescriptor
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.core.exception.TrustWeaveException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-import java.nio.charset.StandardCharsets
 
 /**
  * Reference to a blockchain anchor (CAIP-2-style chain identifier + transaction reference).
@@ -22,7 +20,7 @@ data class AnchorRef(
     val chainId: String,
     val txHash: String,
     val contract: String? = null,
-    val extra: Map<String, String> = emptyMap()
+    val extra: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -54,7 +52,6 @@ data class AnchorResult(
  * will be provided in separate adapter modules.
  */
 interface BlockchainAnchorClient {
-
     /**
      * Writes a payload to the blockchain and returns an anchor reference.
      *
@@ -68,7 +65,7 @@ interface BlockchainAnchorClient {
      */
     suspend fun writePayload(
         payload: JsonElement,
-        mediaType: String = "application/json"
+        mediaType: String = "application/json",
     ): AnchorResult
 
     /**
@@ -101,8 +98,7 @@ interface BlockchainAnchorClient {
      * [TokenAmount.unknown] for plugins that have not yet implemented the
      * payment plane.
      */
-    suspend fun estimate(op: OperationDescriptor): TokenAmount =
-        TokenAmount.unknown(op.chainId)
+    suspend fun estimate(op: OperationDescriptor): TokenAmount = TokenAmount.unknown(op.chainId)
 
     /**
      * Reads a payload from the blockchain using an anchor reference.
@@ -120,11 +116,11 @@ interface BlockchainAnchorClient {
      * The on-chain data for [ref] is read and compared:
      * - **Digest anchors** (an [AnchorDigest] envelope on-chain — see
      *   [AbstractBlockchainAnchorClient.OPTION_PAYLOAD_MODE]): the SHA-256 digest is
-     *   recomputed over the UTF-8 bytes of [payload] exactly as serialized by the
-     *   write path (`Json.encodeToString(JsonElement.serializer(), payload)` — no
-     *   canonicalization) and compared against the anchored digest. A structurally
-     *   equal payload with a different key order serializes to different bytes and
-     *   does NOT verify.
+     *   recomputed over the RFC 8785 (JCS) canonical bytes of [payload] and compared
+     *   against the anchored digest, so key order and number spelling do not matter.
+     *   Legacy envelopes without a `canon` member are verified against the bytes the old
+     *   write path hashed (`Json.encodeToString(JsonElement.serializer(), payload)`), which
+     *   is key-order sensitive (see [AnchorDigest.matches]).
      * - **Full anchors**: the anchored JSON is compared structurally
      *   (JsonElement equality, not string equality), so key order is irrelevant.
      *
@@ -137,19 +133,21 @@ interface BlockchainAnchorClient {
      * @param ref the anchor reference to verify against
      * @return `true` iff the on-chain data attests to [payload]
      */
-    suspend fun verifyAnchor(payload: JsonElement, ref: AnchorRef): Boolean {
-        val onChain = try {
-            readPayload(ref)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            return false
-        }
+    suspend fun verifyAnchor(
+        payload: JsonElement,
+        ref: AnchorRef,
+    ): Boolean {
+        val onChain =
+            try {
+                readPayload(ref)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                return false
+            }
         val anchored = onChain.payload
         return if (AnchorDigest.isEnvelope(anchored)) {
-            val payloadBytes = Json.encodeToString(JsonElement.serializer(), payload)
-                .toByteArray(StandardCharsets.UTF_8)
-            AnchorDigest.matches(anchored.jsonObject, payloadBytes)
+            AnchorDigest.matches(anchored.jsonObject, payload)
         } else {
             anchored == payload
         }

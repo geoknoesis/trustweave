@@ -44,13 +44,18 @@ public final class org/trustweave/anchor/AbstractBlockchainAnchorClient$Companio
 
 public final class org/trustweave/anchor/AnchorDigest {
 	public static final field ALGORITHM Ljava/lang/String;
+	public static final field CANONICALIZATION_JCS Ljava/lang/String;
 	public static final field FIELD_ALG Ljava/lang/String;
+	public static final field FIELD_CANONICALIZATION Ljava/lang/String;
 	public static final field FIELD_DIGEST Ljava/lang/String;
 	public static final field FIELD_MEDIA_TYPE Ljava/lang/String;
 	public static final field INSTANCE Lorg/trustweave/anchor/AnchorDigest;
 	public static final fun digestBase64Url ([B)Ljava/lang/String;
+	public static final fun envelope (Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lkotlinx/serialization/json/JsonObject;
 	public static final fun envelope ([BLjava/lang/String;)Lkotlinx/serialization/json/JsonObject;
+	public static final fun isCanonicalized (Lkotlinx/serialization/json/JsonObject;)Z
 	public static final fun isEnvelope (Lkotlinx/serialization/json/JsonElement;)Z
+	public static final fun matches (Lkotlinx/serialization/json/JsonObject;Lkotlinx/serialization/json/JsonElement;)Z
 	public static final fun matches (Lkotlinx/serialization/json/JsonObject;[B)Z
 	public static final fun sha256 ([B)[B
 }

@@ -26,6 +26,25 @@ public final class org/trustweave/contract/ContractDraftRequest {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/contract/ContractStatusChange {
+	public fun <init> (Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/trustweave/contract/models/ContractStatus;
+	public final fun component2 ()Lorg/trustweave/contract/models/ContractStatus;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;)Lorg/trustweave/contract/ContractStatusChange;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/ContractStatusChange;Lorg/trustweave/contract/models/ContractStatus;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/contract/ContractStatusChange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAt ()Ljava/lang/String;
+	public final fun getFrom ()Lorg/trustweave/contract/models/ContractStatus;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getTo ()Lorg/trustweave/contract/models/ContractStatus;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/contract/ContractValidator {
 	public static final field INSTANCE Lorg/trustweave/contract/ContractValidator;
 	public final fun isExpired (Lorg/trustweave/contract/models/SmartContract;)Z
@@ -38,9 +57,13 @@ public final class org/trustweave/contract/ContractValidator {
 
 public final class org/trustweave/contract/DefaultSmartContractService : org/trustweave/contract/SmartContractService {
 	public fun <init> ()V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;)V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;)V
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;)V
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;)V
-	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;)V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;Z)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun activateContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun anchorContract-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun bindContract-yxL6bBk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -49,6 +72,7 @@ public final class org/trustweave/contract/DefaultSmartContractService : org/tru
 	public fun executeContract-0E7RQCE (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/contract/models/ExecutionContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun issueContractCredential-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun statusHistory (Ljava/lang/String;)Ljava/util/List;
 	public fun updateStatus-yxL6bBk (Ljava/lang/String;Lorg/trustweave/contract/models/ContractStatus;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -83,6 +107,10 @@ public final class org/trustweave/contract/SmartContractServiceKt {
 	public static final fun executeEvent (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;[Lkotlin/Pair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun executeParametric (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;[Lkotlin/Pair;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun issueCredential (Lorg/trustweave/contract/SmartContractService;Lorg/trustweave/contract/models/SmartContract;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/trustweave/contract/TrustedIssuerPolicy {
+	public abstract fun isTrusted (Ljava/lang/String;Lorg/trustweave/contract/models/SmartContract;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class org/trustweave/contract/evaluation/BaseEvaluationEngine : org/trustweave/contract/evaluation/ContractEvaluationEngine {

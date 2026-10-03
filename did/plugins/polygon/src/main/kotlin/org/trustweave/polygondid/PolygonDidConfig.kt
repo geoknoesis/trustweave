@@ -41,6 +41,12 @@ data class PolygonDidConfig(
      */
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
+    override fun toString(): String =
+        "PolygonDidConfig(rpcUrl=$rpcUrl, chainId=$chainId, registryAddress=$registryAddress, " +
+            "privateKey=${if (privateKey == null) "null" else "<redacted>"}, network=$network, " +
+            "additionalProperties=${additionalProperties.keys})"
+
     companion object {
         /**
          * Polygon mainnet configuration constants.

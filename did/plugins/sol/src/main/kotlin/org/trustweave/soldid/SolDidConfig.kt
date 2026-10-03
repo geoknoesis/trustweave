@@ -20,32 +20,32 @@ data class SolDidConfig(
      * Solana RPC endpoint URL (required).
      */
     val rpcUrl: String,
-
     /**
      * Solana network (mainnet-beta, devnet, testnet, localhost).
      */
     val network: String = "mainnet-beta",
-
     /**
      * DID registry program ID (optional, uses default if not provided).
      */
     val programId: String? = null,
-
     /**
      * Private key for signing transactions (base58 encoded, optional).
      */
     val privateKey: String? = null,
-
     /**
      * Commitment level for transactions (finalized, confirmed, processed).
      */
     val commitment: String = "finalized",
-
     /**
      * Additional configuration properties.
      */
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Redacts [privateKey] and the values of [additionalProperties] so the key never reaches logs. */
+    override fun toString(): String =
+        "SolDidConfig(rpcUrl=$rpcUrl, network=$network, programId=$programId, " +
+            "privateKey=${if (privateKey == null) "null" else "<redacted>"}, commitment=$commitment, " +
+            "additionalProperties=${additionalProperties.keys})"
 
     companion object {
         /**
@@ -73,48 +73,51 @@ data class SolDidConfig(
         /**
          * Creates configuration for Solana mainnet.
          */
-        fun mainnet(rpcUrl: String = MAINNET_RPC_URL, privateKey: String? = null): SolDidConfig {
-            return SolDidConfig(
+        fun mainnet(
+            rpcUrl: String = MAINNET_RPC_URL,
+            privateKey: String? = null,
+        ): SolDidConfig =
+            SolDidConfig(
                 rpcUrl = rpcUrl,
                 network = MAINNET,
-                privateKey = privateKey
+                privateKey = privateKey,
             )
-        }
 
         /**
          * Creates configuration for Solana devnet.
          */
-        fun devnet(rpcUrl: String = DEVNET_RPC_URL, privateKey: String? = null): SolDidConfig {
-            return SolDidConfig(
+        fun devnet(
+            rpcUrl: String = DEVNET_RPC_URL,
+            privateKey: String? = null,
+        ): SolDidConfig =
+            SolDidConfig(
                 rpcUrl = rpcUrl,
                 network = DEVNET,
-                privateKey = privateKey
+                privateKey = privateKey,
             )
-        }
 
         /**
          * Creates configuration from a map (for backward compatibility).
          */
-        fun fromMap(map: Map<String, Any?>): SolDidConfig {
-            return SolDidConfig(
-                rpcUrl = map["rpcUrl"] as? String
-                    ?: throw IllegalArgumentException("rpcUrl is required"),
+        fun fromMap(map: Map<String, Any?>): SolDidConfig =
+            SolDidConfig(
+                rpcUrl =
+                    map["rpcUrl"] as? String
+                        ?: throw IllegalArgumentException("rpcUrl is required"),
                 network = map["network"] as? String ?: MAINNET,
                 programId = map["programId"] as? String,
                 privateKey = map["privateKey"] as? String,
                 commitment = map["commitment"] as? String ?: COMMITMENT_FINALIZED,
-                additionalProperties = map.filterKeys {
-                    it !in setOf("rpcUrl", "network", "programId", "privateKey", "commitment")
-                }
+                additionalProperties =
+                    map.filterKeys {
+                        it !in setOf("rpcUrl", "network", "programId", "privateKey", "commitment")
+                    },
             )
-        }
 
         /**
          * Builder for SolDidConfig.
          */
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
     }
 
     /**
@@ -153,7 +156,10 @@ data class SolDidConfig(
             return this
         }
 
-        fun property(key: String, value: Any?): Builder {
+        fun property(
+            key: String,
+            value: Any?,
+        ): Builder {
             this.additionalProperties[key] = value
             return this
         }
@@ -167,7 +173,7 @@ data class SolDidConfig(
                 programId = programId,
                 privateKey = privateKey,
                 commitment = commitment,
-                additionalProperties = additionalProperties.toMap()
+                additionalProperties = additionalProperties.toMap(),
             )
         }
     }
@@ -175,8 +181,8 @@ data class SolDidConfig(
     /**
      * Converts to map format.
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             put("rpcUrl", rpcUrl)
             put("network", network)
             put("programId", programId)
@@ -184,6 +190,4 @@ data class SolDidConfig(
             put("commitment", commitment)
             putAll(additionalProperties)
         }
-    }
 }
-

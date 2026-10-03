@@ -5,7 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.*
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.KeyPurpose
 import org.trustweave.did.base.AbstractBlockchainDidMethod
 import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.identifiers.Did
@@ -20,6 +21,7 @@ import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.TransactionManager
 import java.math.BigInteger
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Implementation of did:ethr method for Ethereum blockchain.
@@ -67,25 +69,30 @@ class EthrDidMethod(
 ) : AbstractBlockchainDidMethod("ethr", kms) {
     private val web3j: Web3j
     private val transactionManager: TransactionManager?
-    private val didToTxHash = mutableMapOf<String, String>()
+
+    /**
+     * Anchor transaction hashes of documents this instance wrote (create/update). Accessed from
+     * concurrent coroutines, hence a concurrent map.
+     */
+    private val didToTxHash = ConcurrentHashMap<String, String>()
 
     init {
         // Initialize Web3j client
         web3j = Web3j.build(HttpService(config.rpcUrl))
 
-        // Initialize transaction manager if private key provided
+        // Initialize the transaction manager if a private key is configured. A configured but
+        // unusable key (or chain id) is a configuration error and fails construction: silently
+        // dropping it would leave the method looking configured while it can never sign.
         transactionManager =
             config.privateKey?.let { privateKeyHex ->
-                try {
-                    val credentials =
-                        org.web3j.crypto.Credentials.create(
-                            privateKeyHex.removePrefix("0x"),
-                        )
-                    val chainIdNum = parseChainId(config.chainId)
-                    RawTransactionManager(web3j, credentials, chainIdNum)
-                } catch (e: Exception) {
-                    null
+                val hex = privateKeyHex.removePrefix("0x")
+                require(hex.length == 64 && hex.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }) {
+                    "Invalid did:ethr privateKey: expected 32 bytes of hex (64 hex digits, optional 0x prefix)"
                 }
+                val credentials =
+                    org.web3j.crypto.Credentials
+                        .create(hex)
+                RawTransactionManager(web3j, credentials, parseChainId(config.chainId))
             }
     }
 
@@ -95,27 +102,14 @@ class EthrDidMethod(
 
     override suspend fun canSubmitTransaction(): Boolean = transactionManager != null
 
-    override suspend fun findDocumentTxHash(did: String): String? {
-        // First check local cache
-        val cached = didToTxHash[did]
-        if (cached != null) {
-            return cached
-        }
-
-        // For did:ethr, we can derive the transaction hash from the DID
-        // In a full ERC1056 implementation, we would query the registry contract
-        // For now, we use a simpler approach with blockchain anchoring
-
-        // Try to resolve from stored documents
-        val stored = getStoredDocument(did)
-        if (stored != null) {
-            // If we have a stored document, it was anchored
-            // In a real implementation, we'd store the txHash when anchoring
-            return null
-        }
-
-        return null
-    }
+    /**
+     * The anchor transaction of [did], if this instance anchored it.
+     *
+     * There is no ERC-1056 registry lookup (see the class KDoc), so a DID anchored by another
+     * instance cannot be found here: resolution then falls back to this instance's local store
+     * and otherwise reports notFound.
+     */
+    override suspend fun findDocumentTxHash(did: String): String? = didToTxHash[did]
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument =
         withContext(Dispatchers.IO) {
@@ -165,16 +159,9 @@ class EthrDidMethod(
                             },
                     )
 
-                // Anchor document to blockchain
-                try {
-                    val txHash = anchorDocument(document)
-                    didToTxHash[did] = txHash
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (e: Exception) {
-                    // If anchoring fails, still store locally for testing
-                    storeDocument(document.id, document)
-                }
+                // Anchor the document. A failure fails the creation: reporting a DID as created
+                // when nothing was anchored would hand out an identifier no one else can resolve.
+                didToTxHash[did] = anchorDocument(document)
 
                 document
             } catch (e: TrustWeaveException) {
@@ -428,10 +415,6 @@ class EthrDidMethod(
     }
 
     /**
-     * Parses chain ID to long.
-     */
-
-    /**
      * Describes why [did] does not belong to the chain this method is configured for, or null when
      * it does.
      *
@@ -466,6 +449,7 @@ class EthrDidMethod(
         return if (segments.size >= 2) segments.first() else null
     }
 
+    /** Parses a CAIP-2 `eip155:<n>` chain id to its numeric chain id. */
     private fun parseChainId(chainId: String): Long {
         require(chainId.startsWith("eip155:")) {
             "Invalid Ethereum chain ID format: $chainId"

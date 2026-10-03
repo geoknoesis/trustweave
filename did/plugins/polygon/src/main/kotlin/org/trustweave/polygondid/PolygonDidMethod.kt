@@ -71,17 +71,12 @@ class PolygonDidMethod(
 
     override suspend fun canSubmitTransaction(): Boolean = config.privateKey != null
 
-    override suspend fun findDocumentTxHash(did: String): String? {
-        // Convert did:polygon to did:ethr and resolve via stored document
-        val ethrDid = did.replace("did:polygon:", "did:ethr:")
-        val stored = getStoredDocument(did) ?: getStoredDocument(ethrDid)
-        return if (stored != null) {
-            // Return a synthetic tx hash for stored documents
-            did.hashCode().toString(16)
-        } else {
-            null
-        }
-    }
+    /**
+     * Always `null`: did:polygon resolution is delegated to an internal [EthrDidMethod], which
+     * tracks the anchor transactions itself, so this method never reads anchors directly. (It
+     * used to return `did.hashCode()` as a fake transaction hash.)
+     */
+    override suspend fun findDocumentTxHash(did: String): String? = null
 
     override suspend fun createDid(options: DidCreationOptions): DidDocument =
         withContext(Dispatchers.IO) {

@@ -1,10 +1,10 @@
 package org.trustweave.did.registrar.server.spring
 
-import org.trustweave.did.registrar.DidRegistrar
-import org.trustweave.did.registrar.storage.InMemoryJobStorage
-import org.trustweave.did.registrar.storage.JobStorage
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.trustweave.did.registrar.DidRegistrar
+import org.trustweave.did.registrar.storage.JobStorage
 
 /**
  * Spring Boot configuration for DID Registrar Server.
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration
  *     @Bean
  *     fun registrar(): DidRegistrar {
  *         // Your DidRegistrar implementation
- *         return KmsBasedRegistrar(kms)
+ *         return KmsBasedRegistrar(kms) { method, kms -> didMethodFor(method, kms) }
  *     }
  *
  *     @Bean
@@ -40,9 +40,18 @@ class DidRegistrarConfiguration {
     @Bean
     fun didRegistrarService(
         registrar: DidRegistrar,
-        jobStorage: JobStorage
-    ): DidRegistrarService {
-        return DidRegistrarService(registrar, jobStorage)
-    }
-}
+        jobStorage: JobStorage,
+    ): DidRegistrarService = DidRegistrarService(registrar, jobStorage)
 
+    /**
+     * Authentication for the mutating registrar endpoints, from
+     * `trustweave.registrar.auth.bearer-token` (32-256 printable ASCII characters) or
+     * `trustweave.registrar.auth.fronted-by-proxy` (a statement of what authenticates callers in
+     * front of this server). With neither set, every create/update/deactivate is refused.
+     */
+    @Bean
+    fun registrarAuthentication(
+        @Value("\${trustweave.registrar.auth.bearer-token:}") bearerToken: String,
+        @Value("\${trustweave.registrar.auth.fronted-by-proxy:}") frontedByProxy: String,
+    ): RegistrarAuthentication = RegistrarAuthentication.fromProperties(bearerToken, frontedByProxy)
+}

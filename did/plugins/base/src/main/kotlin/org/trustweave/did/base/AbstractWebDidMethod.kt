@@ -1,25 +1,27 @@
 package org.trustweave.did.base
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.net.PrivateNetworkGuard
-import org.trustweave.did.*
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URL
-import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
+import kotlin.time.Duration
 
 /**
  * Abstract base class for HTTP-based DID method implementations (e.g., did:web).
@@ -122,12 +124,135 @@ abstract class AbstractWebDidMethod(
             } catch (e: Exception) {
                 throw IllegalArgumentException("Invalid URL: $url", e)
             }
-        PrivateNetworkGuard.rejectionReason(host)?.let { reason ->
+        ResolutionNetworkGuard.rejectionReason(host)?.let { reason ->
             throw TrustWeaveException.Unknown(
                 message = "did:web SSRF guard rejected resolution: $reason",
                 context = mapOf("url" to url, "method" to method),
             )
         }
+    }
+
+    /**
+     * How many HTTP redirects [resolveFromHttp] follows. Default `0`: a redirect fails the
+     * resolution. The HTTP client's own redirect handling is always disabled for resolution;
+     * redirects are followed manually so every hop is re-checked against the HTTPS requirement
+     * and the SSRF guard.
+     */
+    protected open val maxRedirects: Int = 0
+
+    /**
+     * How old (since the last successful fetch or write) a cached document may be and still be
+     * served when the endpoint is unreachable (an [IOException]). Default [Duration.ZERO]: never
+     * serve a cached live document on a network failure — fail instead. A locally recorded
+     * deactivation is served regardless, because reporting Deactivated is fail-safe.
+     */
+    protected open val maxStaleCacheAge: Duration = Duration.ZERO
+
+    /**
+     * Hook for subclasses to adjust the client used for resolution (e.g. a call timeout). Runs
+     * before the redirect and DNS guards are applied, so it cannot re-enable automatic redirects
+     * or remove the resolved-address guard.
+     */
+    protected open fun configureResolutionClient(builder: OkHttpClient.Builder) {}
+
+    /**
+     * The client used for resolution: [httpClient] with automatic redirects disabled and its DNS
+     * wrapped in [ResolutionGuardedDns], so the addresses actually connected to are checked too
+     * (closing the DNS-rebinding gap the pre-flight [assertHostAllowed] check leaves open).
+     */
+    private val resolutionClient: OkHttpClient by lazy {
+        httpClient
+            .newBuilder()
+            .also { configureResolutionClient(it) }
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .dns(ResolutionGuardedDns(httpClient.dns))
+            .build()
+    }
+
+    /**
+     * Fetches the document at [initialUrl], following at most [maxRedirects] redirects and
+     * re-validating HTTPS and the SSRF guard on every hop.
+     */
+    private fun fetchDocumentJson(initialUrl: String): String {
+        var url = initialUrl
+        var redirects = 0
+        while (true) {
+            validateHttps(url)
+            assertHostAllowed(url)
+
+            val request =
+                Request
+                    .Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+            // Close the response on every path (including non-2xx) to avoid leaking
+            // the underlying OkHttp connection.
+            val next: String =
+                resolutionClient.newCall(request).execute().use { response ->
+                    if (response.isRedirect) {
+                        if (redirects >= maxRedirects) {
+                            throw TrustWeaveException.Unknown(
+                                message =
+                                    "DID document request was redirected (HTTP ${response.code}) and " +
+                                        "redirect limit $maxRedirects was reached at: $url",
+                                context = mapOf("url" to url, "method" to method),
+                            )
+                        }
+                        val location =
+                            response.header("Location")
+                                ?: throw TrustWeaveException.Unknown(
+                                    message = "HTTP ${response.code} redirect without a Location header at: $url",
+                                    context = mapOf("url" to url, "method" to method),
+                                )
+                        val target =
+                            response.request.url.resolve(location)
+                                ?: throw TrustWeaveException.Unknown(
+                                    message = "Invalid redirect Location '$location' at: $url",
+                                    context = mapOf("url" to url, "method" to method),
+                                )
+                        return@use target.toString()
+                    }
+                    if (!response.isSuccessful) {
+                        if (response.code == 404) {
+                            throw TrustWeaveException.NotFound(
+                                message = "DID document not found at: $url",
+                            )
+                        }
+                        throw TrustWeaveException.Unknown(
+                            message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
+                            context = mapOf("statusCode" to response.code, "url" to url, "method" to method),
+                        )
+                    }
+                    return readCappedBody(response, url)
+                }
+            redirects++
+            url = next
+        }
+    }
+
+    private fun readCappedBody(
+        response: Response,
+        url: String,
+    ): String {
+        val body =
+            response.body ?: throw SerializationException.InvalidJson(
+                parseError = "Empty response body",
+                jsonString = null,
+            )
+        // Cap the body to avoid a memory-exhaustion DoS from a malicious/compromised host.
+        val maxResponseBytes = 1 * 1024 * 1024 // 1 MB
+        val bytes = body.byteStream().readNBytes(maxResponseBytes + 1)
+        if (bytes.size > maxResponseBytes) {
+            throw TrustWeaveException.Unknown(
+                message = "DID document exceeds maximum allowed size ($maxResponseBytes bytes) at: $url",
+                context = mapOf("url" to url, "method" to method),
+            )
+        }
+        return String(bytes, Charsets.UTF_8)
     }
 
     /**
@@ -158,50 +283,7 @@ abstract class AbstractWebDidMethod(
             validateDidFormat(did)
 
             try {
-                val url = getDocumentUrl(didString)
-                validateHttps(url)
-                assertHostAllowed(url)
-
-                val request =
-                    Request
-                        .Builder()
-                        .url(url)
-                        .get()
-                        .addHeader("Accept", "application/json")
-                        .build()
-
-                // Close the response on every path (including non-2xx) to avoid leaking
-                // the underlying OkHttp connection.
-                val jsonString =
-                    httpClient.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) {
-                            if (response.code == 404) {
-                                throw TrustWeaveException.NotFound(
-                                    message = "DID document not found at: $url",
-                                )
-                            }
-                            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                                message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
-                                context = mapOf("statusCode" to response.code, "url" to url, "method" to method),
-                            )
-                        }
-
-                        val body =
-                            response.body ?: throw SerializationException.InvalidJson(
-                                parseError = "Empty response body",
-                                jsonString = null,
-                            )
-                        // Cap the body to avoid a memory-exhaustion DoS from a malicious/compromised host.
-                        val maxResponseBytes = 1 * 1024 * 1024 // 1 MB
-                        val bytes = body.byteStream().readNBytes(maxResponseBytes + 1)
-                        if (bytes.size > maxResponseBytes) {
-                            throw TrustWeaveException.Unknown(
-                                message = "DID document exceeds maximum allowed size ($maxResponseBytes bytes) at: $url",
-                                context = mapOf("url" to url, "method" to method),
-                            )
-                        }
-                        String(bytes, Charsets.UTF_8)
-                    }
+                val jsonString = fetchDocumentJson(getDocumentUrl(didString))
 
                 // Parse JSON to DidDocument
                 val json = Json.parseToJsonElement(jsonString)
@@ -237,22 +319,36 @@ abstract class AbstractWebDidMethod(
             } catch (e: TrustWeaveException) {
                 throw e
             } catch (e: IOException) {
-                // Try fallback to stored document
+                // Offline fallback, bounded by maxStaleCacheAge (see its KDoc). A locally recorded
+                // deactivation is always served: reporting Deactivated is fail-safe.
                 val stored = getStoredDocument(did)
-                if (stored != null) {
+                val metadata = getDocumentMetadata(did)
+                val lastFetched = getLastFetched(did)
+                val deactivated = metadata?.deactivated ?: false
+                val fresh =
+                    lastFetched != null &&
+                        maxStaleCacheAge > Duration.ZERO &&
+                        Clock.System.now() - lastFetched <= maxStaleCacheAge
+                if (stored != null && (deactivated || fresh)) {
                     return@withContext org.trustweave.did.base.DidMethodUtils.createSuccessResolutionResult(
                         stored,
                         method,
-                        getDocumentMetadata(did)?.created,
-                        getDocumentMetadata(did)?.updated,
-                        getDocumentMetadata(did)?.deactivated ?: false,
-                        retrieved = getLastFetched(did),
+                        metadata?.created,
+                        metadata?.updated,
+                        deactivated,
+                        retrieved = lastFetched,
                     )
                 }
 
                 val url = getDocumentUrl(didString)
+                val staleNote =
+                    if (stored != null) {
+                        " (a cached copy exists but is older than the allowed max stale age $maxStaleCacheAge)"
+                    } else {
+                        ""
+                    }
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                    message = "Failed to resolve DID from HTTP endpoint: ${e.message ?: "Unknown error"}",
+                    message = "Failed to resolve DID from HTTP endpoint: ${e.message ?: "Unknown error"}$staleNote",
                     context = mapOf("did" to didString, "method" to method, "url" to url),
                     cause = e,
                 )

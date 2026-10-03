@@ -20,32 +20,32 @@ data class EthrDidConfig(
      * Ethereum RPC endpoint URL (required).
      */
     val rpcUrl: String,
-
     /**
      * Chain ID in CAIP-2 format (e.g., "eip155:1" for mainnet, "eip155:11155111" for Sepolia).
      */
     val chainId: String,
-
     /**
      * DID registry contract address (optional, uses default ERC1056 if not provided).
      */
     val registryAddress: String? = null,
-
     /**
      * Private key for signing transactions (optional, for read-only operations).
      */
     val privateKey: String? = null,
-
     /**
      * Network name (mainnet, sepolia, etc.) for convenience.
      */
     val network: String? = null,
-
     /**
      * Additional configuration properties.
      */
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
+    override fun toString(): String =
+        "EthrDidConfig(rpcUrl=$rpcUrl, chainId=$chainId, registryAddress=$registryAddress, " +
+            "privateKey=${if (privateKey == null) "null" else "<redacted>"}, network=$network, " +
+            "additionalProperties=${additionalProperties.keys})"
 
     companion object {
         /**
@@ -68,51 +68,55 @@ data class EthrDidConfig(
         /**
          * Creates configuration for Ethereum mainnet.
          */
-        fun mainnet(rpcUrl: String, privateKey: String? = null): EthrDidConfig {
-            return EthrDidConfig(
+        fun mainnet(
+            rpcUrl: String,
+            privateKey: String? = null,
+        ): EthrDidConfig =
+            EthrDidConfig(
                 rpcUrl = rpcUrl,
                 chainId = MAINNET_CHAIN_ID,
                 network = "mainnet",
-                privateKey = privateKey
+                privateKey = privateKey,
             )
-        }
 
         /**
          * Creates configuration for Sepolia testnet.
          */
-        fun sepolia(rpcUrl: String, privateKey: String? = null): EthrDidConfig {
-            return EthrDidConfig(
+        fun sepolia(
+            rpcUrl: String,
+            privateKey: String? = null,
+        ): EthrDidConfig =
+            EthrDidConfig(
                 rpcUrl = rpcUrl,
                 chainId = SEPOLIA_CHAIN_ID,
                 network = "sepolia",
-                privateKey = privateKey
+                privateKey = privateKey,
             )
-        }
 
         /**
          * Creates configuration from a map (for backward compatibility).
          */
-        fun fromMap(map: Map<String, Any?>): EthrDidConfig {
-            return EthrDidConfig(
-                rpcUrl = map["rpcUrl"] as? String
-                    ?: throw IllegalArgumentException("rpcUrl is required"),
-                chainId = map["chainId"] as? String
-                    ?: throw IllegalArgumentException("chainId is required"),
+        fun fromMap(map: Map<String, Any?>): EthrDidConfig =
+            EthrDidConfig(
+                rpcUrl =
+                    map["rpcUrl"] as? String
+                        ?: throw IllegalArgumentException("rpcUrl is required"),
+                chainId =
+                    map["chainId"] as? String
+                        ?: throw IllegalArgumentException("chainId is required"),
                 registryAddress = map["registryAddress"] as? String ?: DEFAULT_REGISTRY_ADDRESS,
                 privateKey = map["privateKey"] as? String,
                 network = map["network"] as? String,
-                additionalProperties = map.filterKeys {
-                    it !in setOf("rpcUrl", "chainId", "registryAddress", "privateKey", "network")
-                }
+                additionalProperties =
+                    map.filterKeys {
+                        it !in setOf("rpcUrl", "chainId", "registryAddress", "privateKey", "network")
+                    },
             )
-        }
 
         /**
          * Builder for EthrDidConfig.
          */
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
     }
 
     /**
@@ -151,7 +155,10 @@ data class EthrDidConfig(
             return this
         }
 
-        fun property(key: String, value: Any?): Builder {
+        fun property(
+            key: String,
+            value: Any?,
+        ): Builder {
             this.additionalProperties[key] = value
             return this
         }
@@ -166,7 +173,7 @@ data class EthrDidConfig(
                 registryAddress = registryAddress,
                 privateKey = privateKey,
                 network = network,
-                additionalProperties = additionalProperties.toMap()
+                additionalProperties = additionalProperties.toMap(),
             )
         }
     }
@@ -174,8 +181,8 @@ data class EthrDidConfig(
     /**
      * Converts configuration to a map for backward compatibility.
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             put("rpcUrl", rpcUrl)
             put("chainId", chainId)
             if (registryAddress != null) {
@@ -189,6 +196,4 @@ data class EthrDidConfig(
             }
             putAll(additionalProperties)
         }
-    }
 }
-

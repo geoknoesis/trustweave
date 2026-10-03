@@ -20,32 +20,32 @@ data class CheqdDidConfig(
      * Cheqd API URL (optional, uses default if not provided).
      */
     val cheqdApiUrl: String? = null,
-
     /**
      * Cheqd network (mainnet, testnet, etc.).
      */
     val network: String = "mainnet",
-
     /**
      * Account address for transactions (optional).
      */
     val accountAddress: String? = null,
-
     /**
      * Private key for signing transactions (optional).
      */
     val privateKey: String? = null,
-
     /**
      * HTTP timeout in seconds (default: 30).
      */
     val timeoutSeconds: Int = 30,
-
     /**
      * Additional configuration properties.
      */
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
+    override fun toString(): String =
+        "CheqdDidConfig(cheqdApiUrl=$cheqdApiUrl, network=$network, accountAddress=$accountAddress, " +
+            "privateKey=${if (privateKey == null) "null" else "<redacted>"}, timeoutSeconds=$timeoutSeconds, " +
+            "additionalProperties=${additionalProperties.keys})"
 
     companion object {
         /**
@@ -63,45 +63,41 @@ data class CheqdDidConfig(
         /**
          * Creates configuration for Cheqd mainnet.
          */
-        fun mainnet(cheqdApiUrl: String = MAINNET_API_URL): CheqdDidConfig {
-            return CheqdDidConfig(
+        fun mainnet(cheqdApiUrl: String = MAINNET_API_URL): CheqdDidConfig =
+            CheqdDidConfig(
                 cheqdApiUrl = cheqdApiUrl,
-                network = MAINNET
+                network = MAINNET,
             )
-        }
 
         /**
          * Creates configuration for Cheqd testnet.
          */
-        fun testnet(cheqdApiUrl: String = TESTNET_API_URL): CheqdDidConfig {
-            return CheqdDidConfig(
+        fun testnet(cheqdApiUrl: String = TESTNET_API_URL): CheqdDidConfig =
+            CheqdDidConfig(
                 cheqdApiUrl = cheqdApiUrl,
-                network = TESTNET
+                network = TESTNET,
             )
-        }
 
         /**
          * Creates configuration from a map (for backward compatibility).
          */
-        fun fromMap(map: Map<String, Any?>): CheqdDidConfig {
-            return CheqdDidConfig(
+        fun fromMap(map: Map<String, Any?>): CheqdDidConfig =
+            CheqdDidConfig(
                 cheqdApiUrl = map["cheqdApiUrl"] as? String,
                 network = map["network"] as? String ?: MAINNET,
                 accountAddress = map["accountAddress"] as? String,
                 privateKey = map["privateKey"] as? String,
                 timeoutSeconds = map["timeoutSeconds"] as? Int ?: 30,
-                additionalProperties = map.filterKeys {
-                    it !in setOf("cheqdApiUrl", "network", "accountAddress", "privateKey", "timeoutSeconds")
-                }
+                additionalProperties =
+                    map.filterKeys {
+                        it !in setOf("cheqdApiUrl", "network", "accountAddress", "privateKey", "timeoutSeconds")
+                    },
             )
-        }
 
         /**
          * Builder for CheqdDidConfig.
          */
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
     }
 
     /**
@@ -140,28 +136,30 @@ data class CheqdDidConfig(
             return this
         }
 
-        fun property(key: String, value: Any?): Builder {
+        fun property(
+            key: String,
+            value: Any?,
+        ): Builder {
             this.additionalProperties[key] = value
             return this
         }
 
-        fun build(): CheqdDidConfig {
-            return CheqdDidConfig(
+        fun build(): CheqdDidConfig =
+            CheqdDidConfig(
                 cheqdApiUrl = cheqdApiUrl,
                 network = network,
                 accountAddress = accountAddress,
                 privateKey = privateKey,
                 timeoutSeconds = timeoutSeconds,
-                additionalProperties = additionalProperties.toMap()
+                additionalProperties = additionalProperties.toMap(),
             )
-        }
     }
 
     /**
      * Converts to map format.
      */
-    fun toMap(): Map<String, Any?> {
-        return buildMap {
+    fun toMap(): Map<String, Any?> =
+        buildMap {
             if (cheqdApiUrl != null) {
                 put("cheqdApiUrl", cheqdApiUrl)
             }
@@ -175,6 +173,4 @@ data class CheqdDidConfig(
             put("timeoutSeconds", timeoutSeconds)
             putAll(additionalProperties)
         }
-    }
 }
-

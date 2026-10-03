@@ -12,14 +12,21 @@ data class CyberArkKmsConfig(
     val apiKey: String? = null,
     val hostId: String? = null,
     val username: String? = null,
-    val password: String? = null
+    val password: String? = null,
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String =
+        "CyberArkKmsConfig(conjurUrl=$conjurUrl, account=$account, apiKey=${redactSecret(apiKey)}, " +
+            "hostId=$hostId, username=$username, password=${redactSecret(password)})"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         require(conjurUrl.isNotBlank()) { "CyberArk Conjur URL must be specified" }
         require(account.isNotBlank()) { "CyberArk Conjur account must be specified" }
         require(
             apiKey != null ||
-            (username != null && password != null)
+                (username != null && password != null),
         ) { "CyberArk Conjur authentication credentials must be provided (apiKey or username/password)" }
     }
 
@@ -41,10 +48,12 @@ data class CyberArkKmsConfig(
         }
 
         fun fromMap(options: Map<String, Any?>): CyberArkKmsConfig {
-            val conjurUrl = options["conjurUrl"] as? String
-                ?: throw IllegalArgumentException("CyberArk Conjur URL must be specified")
-            val account = options["account"] as? String
-                ?: throw IllegalArgumentException("CyberArk Conjur account must be specified")
+            val conjurUrl =
+                options["conjurUrl"] as? String
+                    ?: throw IllegalArgumentException("CyberArk Conjur URL must be specified")
+            val account =
+                options["account"] as? String
+                    ?: throw IllegalArgumentException("CyberArk Conjur account must be specified")
 
             return Builder()
                 .conjurUrl(conjurUrl)
@@ -104,9 +113,8 @@ data class CyberArkKmsConfig(
                 apiKey = apiKey,
                 hostId = hostId,
                 username = username,
-                password = password
+                password = password,
             )
         }
     }
 }
-

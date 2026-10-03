@@ -52,19 +52,21 @@ object KeyManagementServices {
      * Thread-safe ConcurrentHashMap ensures safe concurrent access.
      */
     private val instanceCache = ConcurrentHashMap<String, KeyManagementService>()
-    
+
     /**
      * Flag to track if shutdown has been called.
      */
     private val isShutdown = AtomicBoolean(false)
-    
+
     /**
      * Shutdown hook registered with JVM to ensure cleanup on application exit.
      */
     init {
-        Runtime.getRuntime().addShutdownHook(Thread {
-            shutdown()
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                shutdown()
+            },
+        )
     }
 
     /**
@@ -79,19 +81,23 @@ object KeyManagementServices {
      * @return KeyManagementService instance (cached if previously created)
      * @throws IllegalArgumentException if provider is not found
      */
-    fun create(providerName: String, options: KmsCreationOptions): KeyManagementService {
+    fun create(
+        providerName: String,
+        options: KmsCreationOptions,
+    ): KeyManagementService {
         checkShutdown()
-        
+
         val cacheKey = ConfigCacheKey.create(providerName, options)
-        
+
         // computeIfAbsent is atomic — the factory executes at most once per cache key, unlike
         // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
         // multiple times, leaking SDK clients with open connection pools.
         return instanceCache.computeIfAbsent(cacheKey) {
-            val provider = cachedProviders.find { it.name == providerName }
-                ?: throw IllegalArgumentException(
-                    "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}"
-                )
+            val provider =
+                cachedProviders.find { it.name == providerName }
+                    ?: throw IllegalArgumentException(
+                        "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
+                    )
             provider.create(options)
         }
     }
@@ -108,7 +114,10 @@ object KeyManagementServices {
      * @return KeyManagementService instance (cached if previously created)
      * @throws IllegalArgumentException if provider is not found
      */
-    fun create(providerName: String, options: Map<String, Any?> = emptyMap()): KeyManagementService {
+    fun create(
+        providerName: String,
+        options: Map<String, Any?> = emptyMap(),
+    ): KeyManagementService {
         checkShutdown()
 
         val cacheKey = ConfigCacheKey.create(providerName, options)
@@ -117,10 +126,11 @@ object KeyManagementServices {
         // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
         // multiple times, leaking SDK clients with open connection pools.
         return instanceCache.computeIfAbsent(cacheKey) {
-            val provider = cachedProviders.find { it.name == providerName }
-                ?: throw IllegalArgumentException(
-                    "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}"
-                )
+            val provider =
+                cachedProviders.find { it.name == providerName }
+                    ?: throw IllegalArgumentException(
+                        "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
+                    )
             provider.create(options)
         }
     }
@@ -138,9 +148,7 @@ object KeyManagementServices {
      * @param providerName The provider name
      * @return Provider instance, or null if not found
      */
-    fun getProvider(providerName: String): KeyManagementServiceProvider? {
-        return cachedProviders.find { it.name == providerName }
-    }
+    fun getProvider(providerName: String): KeyManagementServiceProvider? = cachedProviders.find { it.name == providerName }
 
     /**
      * Clears the instance cache.
@@ -170,15 +178,22 @@ object KeyManagementServices {
             // Close all cached instances that implement AutoCloseable
             val instances = instanceCache.values.toList() // Create snapshot to avoid concurrent modification
             instanceCache.clear()
-            
+
             instances.forEach { instance ->
                 if (instance is AutoCloseable) {
                     try {
                         instance.close()
                     } catch (e: Exception) {
-                        // Log but don't throw - we want to close all instances
-                        System.err.println("Error closing KMS instance: ${e.message}")
-                        e.printStackTrace()
+                        // Log but don't throw - we want to close all instances. The JDK platform
+                        // logger is used because SLF4J is only a compile-time dependency here; it
+                        // routes to java.util.logging, or to SLF4J when a bridge is installed.
+                        System
+                            .getLogger(KeyManagementServices::class.java.name)
+                            .log(
+                                System.Logger.Level.WARNING,
+                                "Error closing KMS instance ${instance::class.java.name}",
+                                e,
+                            )
                     }
                 }
             }
@@ -198,7 +213,7 @@ object KeyManagementServices {
      * @return Number of cached instances
      */
     fun getCacheSize(): Int = instanceCache.size
-    
+
     /**
      * Checks if shutdown has been called and throws if so.
      */
@@ -207,7 +222,7 @@ object KeyManagementServices {
             throw IllegalStateException("KeyManagementServices has been shut down and cannot create new instances")
         }
     }
-    
+
     /**
      * Resets the shutdown state for testing purposes only.
      * This method should not be used in production code.

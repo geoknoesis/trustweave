@@ -8,8 +8,13 @@ package org.trustweave.kms.fortanix
  */
 data class FortanixKmsConfig(
     val apiEndpoint: String,
-    val apiKey: String
+    val apiKey: String,
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String = "FortanixKmsConfig(apiEndpoint=$apiEndpoint, apiKey=${redactSecret(apiKey)})"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         require(apiEndpoint.isNotBlank()) { "Fortanix DSM API endpoint must be specified" }
         require(apiKey.isNotBlank()) { "Fortanix DSM API key must be specified" }
@@ -29,12 +34,14 @@ data class FortanixKmsConfig(
         }
 
         fun fromMap(options: Map<String, Any?>): FortanixKmsConfig {
-            val apiEndpoint = options["apiEndpoint"] as? String
-                ?: options["api_endpoint"] as? String
-                ?: throw IllegalArgumentException("Fortanix DSM API endpoint must be specified")
-            val apiKey = options["apiKey"] as? String
-                ?: options["api_key"] as? String
-                ?: throw IllegalArgumentException("Fortanix DSM API key must be specified")
+            val apiEndpoint =
+                options["apiEndpoint"] as? String
+                    ?: options["api_endpoint"] as? String
+                    ?: throw IllegalArgumentException("Fortanix DSM API endpoint must be specified")
+            val apiKey =
+                options["apiKey"] as? String
+                    ?: options["api_key"] as? String
+                    ?: throw IllegalArgumentException("Fortanix DSM API key must be specified")
 
             return Builder()
                 .apiEndpoint(apiEndpoint)
@@ -64,4 +71,3 @@ data class FortanixKmsConfig(
         }
     }
 }
-

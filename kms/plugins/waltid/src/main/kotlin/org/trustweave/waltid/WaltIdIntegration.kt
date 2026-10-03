@@ -4,14 +4,40 @@ import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.spi.KeyManagementServiceProvider
 import java.util.ServiceLoader
 
 /**
  * Integration helper for walt.id adapters.
- * Provides SPI-based discovery and registration of walt.id implementations.
+ *
+ * Creates the walt.id KMS and registers DID methods backed by it. The DID methods come from the
+ * real method plugins discovered via SPI (e.g. `did:plugins:key`, `did:plugins:web`); a method
+ * whose plugin is not on the classpath is simply not registered, and is absent from
+ * [WaltIdIntegrationResult.registeredDidMethods].
  */
 object WaltIdIntegration {
+    private val DEFAULT_METHODS = listOf("key", "web")
+
+    /**
+     * Registers, for each requested method, the first SPI provider that supports it — excluding
+     * the deprecated placeholder provider named "waltid" — wired to [kms].
+     */
+    private fun registerMethods(
+        kms: KeyManagementService,
+        registry: DidMethodRegistry,
+        didMethods: List<String>,
+        options: DidCreationOptions,
+    ): List<String> {
+        val providers = ServiceLoader.load(DidMethodProvider::class.java).filter { it.name != "waltid" }
+        val methodOptions = options.copy(additionalProperties = options.additionalProperties + ("kms" to kms))
+        return didMethods.filter { methodName ->
+            val method =
+                providers
+                    .firstOrNull { methodName in it.supportedMethods }
+                    ?.create(methodName, methodOptions)
+            if (method != null) registry.register(method)
+            method != null
+        }
+    }
 
     /**
      * Discovers and registers all walt.id adapters via SPI.
@@ -21,37 +47,23 @@ object WaltIdIntegration {
      */
     fun discoverAndRegister(
         registry: DidMethodRegistry,
-        options: DidCreationOptions = DidCreationOptions()
+        options: DidCreationOptions = DidCreationOptions(),
     ): WaltIdIntegrationResult {
         // Create KMS using factory API
-        val kms = try {
-            org.trustweave.kms.KeyManagementServices.create("waltid", options.additionalProperties)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalStateException("walt.id KMS provider not found. Ensure TrustWeave-waltid is on classpath.", e)
-        }
-
-        // Discover DID method providers
-        val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
-        val waltIdDidProvider = didProviders.find { it.name == "waltid" }
-            ?: throw IllegalStateException("walt.id DID method provider not found. Ensure TrustWeave-waltid is on classpath.")
-
-        // Register supported DID methods
-        val registeredMethods = mutableListOf<String>()
-        for (methodName in waltIdDidProvider.supportedMethods) {
-            val methodOptions = options.copy(
-                additionalProperties = options.additionalProperties + ("kms" to kms)
-            )
-            val method = waltIdDidProvider.create(methodName, methodOptions)
-            if (method != null) {
-                registry.register(method)
-                registeredMethods.add(methodName)
+        val kms =
+            try {
+                org.trustweave.kms.KeyManagementServices
+                    .create("waltid", options.additionalProperties)
+            } catch (e: IllegalArgumentException) {
+                throw IllegalStateException("walt.id KMS provider not found. Ensure TrustWeave-waltid is on classpath.", e)
             }
-        }
+
+        val registeredMethods = registerMethods(kms, registry, DEFAULT_METHODS, options)
 
         return WaltIdIntegrationResult(
             kms = kms,
             registry = registry,
-            registeredDidMethods = registeredMethods
+            registeredDidMethods = registeredMethods,
         )
     }
 
@@ -59,7 +71,7 @@ object WaltIdIntegration {
      * Manually setup walt.id integration with a provided KMS.
      *
      * @param kms The KeyManagementService to use (can be walt.id or any compatible implementation)
-     * @param didMethods List of DID method names to register (defaults to ["key", "web"])
+     * @param didMethods DID method names to register (defaults to ["key", "web"]); each needs its plugin on the classpath
      * @param options Configuration options
      * @return A WaltIdIntegrationResult
      */
@@ -67,32 +79,14 @@ object WaltIdIntegration {
         kms: KeyManagementService,
         registry: DidMethodRegistry,
         didMethods: List<String> = listOf("key", "web"),
-        options: DidCreationOptions = DidCreationOptions()
+        options: DidCreationOptions = DidCreationOptions(),
     ): WaltIdIntegrationResult {
-        // Discover DID method provider
-        val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
-        val waltIdDidProvider = didProviders.find { it.name == "waltid" }
-            ?: throw IllegalStateException("walt.id DID method provider not found. Ensure TrustWeave-waltid is on classpath.")
-
-        // Register requested DID methods
-        val registeredMethods = mutableListOf<String>()
-        for (methodName in didMethods) {
-            if (methodName in waltIdDidProvider.supportedMethods) {
-                val methodOptions = options.copy(
-                    additionalProperties = options.additionalProperties + ("kms" to kms)
-                )
-                val method = waltIdDidProvider.create(methodName, methodOptions)
-                if (method != null) {
-                    registry.register(method)
-                    registeredMethods.add(methodName)
-                }
-            }
-        }
+        val registeredMethods = registerMethods(kms, registry, didMethods, options)
 
         return WaltIdIntegrationResult(
             kms = kms,
             registry = registry,
-            registeredDidMethods = registeredMethods
+            registeredDidMethods = registeredMethods,
         )
     }
 }
@@ -103,6 +97,5 @@ object WaltIdIntegration {
 data class WaltIdIntegrationResult(
     val kms: KeyManagementService,
     val registry: DidMethodRegistry,
-    val registeredDidMethods: List<String>
+    val registeredDidMethods: List<String>,
 )
-

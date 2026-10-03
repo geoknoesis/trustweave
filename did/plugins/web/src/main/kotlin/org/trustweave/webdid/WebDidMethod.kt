@@ -3,15 +3,20 @@ package org.trustweave.webdid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.*
+import okhttp3.OkHttpClient
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.*
+import org.trustweave.did.DidCreationOptions
+import org.trustweave.did.KeyPurpose
 import org.trustweave.did.base.AbstractWebDidMethod
 import org.trustweave.did.base.DidMethodUtils
+import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Implementation of did:web method per W3C specification.
@@ -66,12 +71,43 @@ class WebDidMethod(
         private const val PATH_FORBIDDEN_CHARS = "/?#"
 
         /**
+         * Redirect hops followed when [WebDidConfig.followRedirects] is enabled. Each hop is
+         * re-checked against the HTTPS requirement and the SSRF guard.
+         */
+        const val MAX_REDIRECTS = 5
+
+        /**
+         * [WebDidConfig.additionalProperties] key: how many seconds a cached document may be
+         * served when the endpoint is unreachable. Absent or `0` (the default) disables the
+         * offline fallback, so an unreachable endpoint fails resolution.
+         */
+        const val MAX_STALE_CACHE_SECONDS = "maxStaleCacheSeconds"
+
+        /**
          * Creates a WebDidMethod with default configuration.
          */
         fun create(
             kms: KeyManagementService,
             httpClient: OkHttpClient = OkHttpClient(),
         ): WebDidMethod = WebDidMethod(kms, httpClient, WebDidConfig.default())
+    }
+
+    /** [WebDidConfig.followRedirects] enables up to [MAX_REDIRECTS] manually checked hops. */
+    override val maxRedirects: Int
+        get() = if (config.followRedirects) MAX_REDIRECTS else 0
+
+    /** Read from [WebDidConfig.additionalProperties] under [MAX_STALE_CACHE_SECONDS]. */
+    override val maxStaleCacheAge: Duration
+        get() = ((config.additionalProperties[MAX_STALE_CACHE_SECONDS] as? Number)?.toLong() ?: 0L).coerceAtLeast(0L).seconds
+
+    /**
+     * Bounds each resolution request by [WebDidConfig.timeoutSeconds] (OkHttp call timeout), on
+     * top of whatever connect/read timeouts the supplied client already has.
+     */
+    override fun configureResolutionClient(builder: OkHttpClient.Builder) {
+        if (config.timeoutSeconds > 0) {
+            builder.callTimeout(config.timeoutSeconds.toLong(), TimeUnit.SECONDS)
+        }
     }
 
     /**
@@ -217,12 +253,16 @@ class WebDidMethod(
                 resolveFromHttp(did.value)
             } catch (e: TrustWeaveException.NotFound) {
                 DidMethodUtils.createErrorResolutionResult("notFound", e.message, method, did.value)
-            } catch (e: TrustWeaveException) {
+            } catch (e: DidException.InvalidDidFormat) {
+                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+            } catch (e: IllegalArgumentException) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
-                DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
+                // Transport failures, SSRF-guard and redirect refusals, oversized or malformed
+                // responses: the DID itself may be well-formed, so these are not "invalidDid".
+                DidMethodUtils.createErrorResolutionResult("internalError", e.message, method, did.value)
             }
         }
 
@@ -249,7 +289,6 @@ class WebDidMethod(
                 val updatedDocument = updater(currentDocument)
 
                 // Publish updated document
-                val url = getDocumentUrl(didString)
                 updateDocumentOnHttp(didString, updatedDocument)
 
                 updatedDocument

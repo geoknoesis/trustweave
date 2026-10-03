@@ -147,17 +147,18 @@ class DidDocumentVerificationServiceTest {
         }
 
     @Test
-    fun `a non-conformant canonicalizer skips the digest check with a warning rather than failing it`() =
+    fun `a non-conformant canonicalizer cannot check the digest, and the document is not reported valid`() =
         runBlocking<Unit> {
             // Running the comparison with a non-conformant implementation would report a mismatch
-            // against every external resolver, which is worse than not checking: it would train
-            // an operator to ignore the error.
+            // against every external resolver, so it is not run. But a supplied digest that was
+            // never checked must not come back as valid = true: "could not check" is not "fine".
             val result =
                 service(conformant = false, digest = multibase(byteArrayOf(1)))
                     .verifyDocument(document(), metadata(multibase(byteArrayOf(9))))
 
-            assertTrue(result.valid, "a skipped check is not a failed one: ${result.errors}")
-            assertTrue(result.warnings.any { "skipped" in it.lowercase() }, result.warnings.toString())
+            assertFalse(result.valid, "an unchecked digest must not verify")
+            assertTrue(result.errors.any { "could not be verified" in it }, result.errors.toString())
+            assertFalse(result.errors.any { "mismatch" in it.lowercase() }, "not a mismatch: ${result.errors}")
         }
 
     @Test

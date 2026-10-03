@@ -40,6 +40,12 @@ data class EnsDidConfig(
      */
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
+    override fun toString(): String =
+        "EnsDidConfig(ensRegistryAddress=$ensRegistryAddress, rpcUrl=$rpcUrl, chainId=$chainId, " +
+            "privateKey=${if (privateKey == null) "null" else "<redacted>"}, network=$network, " +
+            "additionalProperties=${additionalProperties.keys})"
+
     companion object {
         /**
          * ENS registry contract addresses.

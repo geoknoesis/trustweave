@@ -22,8 +22,16 @@ data class GoogleKmsConfig(
     val credentialsPath: String? = null,
     val credentialsJson: String? = null,
     val endpoint: String? = null,
-    val cacheTtlSeconds: Long? = 300 // Default 5 minutes
+    val cacheTtlSeconds: Long? = 300, // Default 5 minutes
 ) {
+    /** Redacts credentials so they never reach logs or exception messages. */
+    override fun toString(): String =
+        "GoogleKmsConfig(projectId=$projectId, location=$location, keyRing=$keyRing, " +
+            "credentialsPath=$credentialsPath, credentialsJson=${redactSecret(credentialsJson)}, endpoint=$endpoint, " +
+            "cacheTtlSeconds=$cacheTtlSeconds)"
+
+    private fun redactSecret(value: Any?): String = if (value == null) "null" else "<redacted>"
+
     init {
         require(projectId.isNotBlank()) { "Google Cloud project ID must be specified" }
         require(location.isNotBlank()) { "Google Cloud location must be specified" }
@@ -50,9 +58,10 @@ data class GoogleKmsConfig(
          * @return GoogleKmsConfig instance, or null if project ID is not set
          */
         fun fromEnvironment(): GoogleKmsConfig? {
-            val projectId = System.getenv("GOOGLE_CLOUD_PROJECT")
-                ?: System.getenv("GCLOUD_PROJECT")
-                ?: return null
+            val projectId =
+                System.getenv("GOOGLE_CLOUD_PROJECT")
+                    ?: System.getenv("GCLOUD_PROJECT")
+                    ?: return null
 
             return Builder()
                 .projectId(projectId)
@@ -71,10 +80,12 @@ data class GoogleKmsConfig(
          * @throws IllegalArgumentException if project ID or location is not provided
          */
         fun fromMap(options: Map<String, Any?>): GoogleKmsConfig {
-            val projectId = options["projectId"] as? String
-                ?: throw IllegalArgumentException("Google Cloud project ID must be specified in options")
-            val location = options["location"] as? String
-                ?: throw IllegalArgumentException("Google Cloud location must be specified in options")
+            val projectId =
+                options["projectId"] as? String
+                    ?: throw IllegalArgumentException("Google Cloud project ID must be specified in options")
+            val location =
+                options["location"] as? String
+                    ?: throw IllegalArgumentException("Google Cloud location must be specified in options")
 
             return Builder()
                 .projectId(projectId)
@@ -145,9 +156,8 @@ data class GoogleKmsConfig(
                 credentialsPath = credentialsPath,
                 credentialsJson = credentialsJson,
                 endpoint = endpoint,
-                cacheTtlSeconds = cacheTtlSeconds
+                cacheTtlSeconds = cacheTtlSeconds,
             )
         }
     }
 }
-

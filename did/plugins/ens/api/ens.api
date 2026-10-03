@@ -43,11 +43,16 @@ public final class org/trustweave/ensdid/EnsDidConfig$Companion {
 }
 
 public final class org/trustweave/ensdid/EnsDidMethod : org/trustweave/did/base/AbstractBlockchainDidMethod {
+	public static final field Companion Lorg/trustweave/ensdid/EnsDidMethod$Companion;
+	public static final field NOT_IMPLEMENTED Ljava/lang/String;
 	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/ensdid/EnsDidConfig;)V
 	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/ensdid/EnsDidMethod$Companion {
 }
 
 public final class org/trustweave/ensdid/spi/EnsDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {

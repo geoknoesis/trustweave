@@ -50,7 +50,7 @@ interface DidCommMessageStorage {
     suspend fun getMessagesForDid(
         did: String,
         limit: Int = 100,
-        offset: Int = 0
+        offset: Int = 0,
     ): List<DidCommMessage>
 
     /**
@@ -104,7 +104,7 @@ interface DidCommMessageStorage {
     suspend fun search(
         filter: MessageFilter,
         limit: Int = 100,
-        offset: Int = 0
+        offset: Int = 0,
     ): List<DidCommMessage>
 
     /**
@@ -115,12 +115,22 @@ interface DidCommMessageStorage {
     fun setEncryption(encryption: org.trustweave.credential.didcomm.storage.encryption.MessageEncryption?)
 
     /**
+     * A durable, replica-shared replay store living in this storage's own database, or `null` when
+     * the backend has none to offer (the default). [org.trustweave.credential.didcomm.DatabaseDidCommService]
+     * uses it as its default replay store.
+     */
+    fun replayStore(): org.trustweave.credential.didcomm.DidCommReplayStore? = null
+
+    /**
      * Marks messages as archived.
      *
      * @param messageIds List of message IDs to mark as archived
      * @param archiveId Archive ID
      */
-    suspend fun markAsArchived(messageIds: List<String>, archiveId: String)
+    suspend fun markAsArchived(
+        messageIds: List<String>,
+        archiveId: String,
+    )
 
     /**
      * Gets archived status of a message.
@@ -141,6 +151,5 @@ data class MessageFilter(
     val thid: String? = null,
     val createdAfter: String? = null, // ISO 8601 timestamp
     val createdBefore: String? = null, // ISO 8601 timestamp
-    val hasAttachments: Boolean? = null
+    val hasAttachments: Boolean? = null,
 )
-

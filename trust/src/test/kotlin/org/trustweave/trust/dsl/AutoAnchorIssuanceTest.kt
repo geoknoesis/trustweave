@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.transform.toJsonLd
 import org.trustweave.did.model.DidDocument
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.results.GenerateKeyResult
@@ -91,6 +92,25 @@ class AutoAnchorIssuanceTest {
                 1,
                 anchoredCount(tw),
                 "autoAnchor(true) must anchor the issued credential exactly once",
+            )
+        }
+
+    @Test
+    fun `the auto-anchored digest verifies against the issued credential`() =
+        runBlocking<Unit> {
+            val tw = buildTrustWeave(autoAnchor = true, defaultChain = "algorand:testnet")
+            val result = issue(tw)
+            val credential = (result as IssuanceResult.Success).credential
+
+            val client =
+                tw.configuration.anchorClients.values
+                    .filterIsInstance<InMemoryBlockchainAnchorClient>()
+                    .single()
+            val ref = client.anchoredRefs().single()
+
+            assertTrue(
+                client.verifyAnchor(credential.toJsonLd(), ref),
+                "a verifier holding the credential must be able to check the anchor (RFC 8785 digest)",
             )
         }
 

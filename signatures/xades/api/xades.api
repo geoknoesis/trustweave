@@ -85,6 +85,17 @@ public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateNotYetValid : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
+	public fun <init> (Lkotlinx/datetime/Instant;)V
+	public final fun component1 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateNotYetValid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateNotYetValid;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/xades/XadesValidationResult$Invalid$CertificateNotYetValid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotBefore ()Lkotlinx/datetime/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/signatures/xades/XadesValidationResult$Invalid$Malformed : org/trustweave/signatures/xades/XadesValidationResult$Invalid {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;

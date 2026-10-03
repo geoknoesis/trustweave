@@ -71,7 +71,10 @@ data class XadesSignature(
  * @property trustAnchorResolver                   Resolves the signer-cert chain against the
  *                                                 caller-supplied trust graph.
  * @property allowExpiredCertificateAtSigningTime  When `true`, certificate validity is not
- *                                                 enforced at the claimed signing time.
+ *                                                 enforced at the claimed signing time. When
+ *                                                 `false` (default) the validity window is checked
+ *                                                 against the signed `SigningTime`, or against the
+ *                                                 current time when the producer omitted it.
  */
 data class XadesVerificationOptions(
     val requiredProfile: XadesProfile,
@@ -85,7 +88,6 @@ data class XadesVerificationOptions(
  * Mirrors the JAdES / CAdES result-tree layout. The MVP only ships the B-B failure modes.
  */
 sealed class XadesValidationResult {
-
     /**
      * @property signerCert   The certificate that produced the signature.
      * @property trust        Trust-graph match returned by the [TrustAnchorResolver].
@@ -102,21 +104,40 @@ sealed class XadesValidationResult {
 
     sealed class Invalid : XadesValidationResult() {
         /** XML-DSig signature value did not verify. */
-        data class BadSignature(val reason: String) : Invalid()
+        data class BadSignature(
+            val reason: String,
+        ) : Invalid()
 
         /** Signer cert chain did not anchor to a trusted CA/QC service. */
-        data class UntrustedSigner(val cert: X509Certificate) : Invalid()
+        data class UntrustedSigner(
+            val cert: X509Certificate,
+        ) : Invalid()
 
         /** Required profile differs from the profile actually present on the wire. */
-        data class WrongProfile(val found: XadesProfile, val required: XadesProfile) : Invalid()
+        data class WrongProfile(
+            val found: XadesProfile,
+            val required: XadesProfile,
+        ) : Invalid()
 
         /** Signer certificate had already expired at the asserted signing time. */
-        data class CertificateExpired(val notAfter: Instant) : Invalid()
+        data class CertificateExpired(
+            val notAfter: Instant,
+        ) : Invalid()
+
+        /**
+         * Signer certificate was not yet valid (`notBefore` in the future) at the asserted
+         * signing time — or, when the producer omitted `SigningTime`, at verification time.
+         */
+        data class CertificateNotYetValid(
+            val notBefore: Instant,
+        ) : Invalid()
 
         /**
          * Input was not well-formed XML, did not contain a `<ds:Signature>` element, or was
          * missing one of the XAdES baseline qualifying properties.
          */
-        data class Malformed(val reason: String) : Invalid()
+        data class Malformed(
+            val reason: String,
+        ) : Invalid()
     }
 }

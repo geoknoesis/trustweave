@@ -12,6 +12,7 @@ import { credentialDedupKey } from './credential-dedup'
 const HOLDER_KEY = 'trustweave-wallet-holder'
 const CREDENTIALS_KEY = 'trustweave-wallet-credentials'
 const VERSION_KEY = 'trustweave-wallet-schema-version'
+const ISSUERS_KEY = 'trustweave-wallet-accepted-issuers'
 const CURRENT_VERSION = 2
 
 export interface HolderIdentity {
@@ -152,6 +153,25 @@ export function resetWallet(): void {
   window.localStorage.removeItem(HOLDER_KEY)
   window.localStorage.removeItem(CREDENTIALS_KEY)
   window.localStorage.removeItem(VERSION_KEY)
+  window.localStorage.removeItem(ISSUERS_KEY)
+}
+
+/** Issuers whose credentials this wallet already accepted at import (used to re-verify backups). */
+export function loadAcceptedIssuers(): string[] {
+  if (!isBrowser()) return []
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(ISSUERS_KEY) ?? '[]')
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+export function addAcceptedIssuer(issuerDid: string): void {
+  if (!isBrowser()) return
+  const issuers = new Set(loadAcceptedIssuers())
+  issuers.add(issuerDid)
+  window.localStorage.setItem(ISSUERS_KEY, JSON.stringify([...issuers]))
 }
 
 /** Recovery export intentionally excludes private key material, including legacy seeds. */

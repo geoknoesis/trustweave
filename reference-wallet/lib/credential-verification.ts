@@ -1,8 +1,45 @@
 import { b64uDecodeString, didKeyToPublicKey, parseJwsHeader, verifyJws } from './crypto'
 import { decodeSdJwtVc } from './sdjwt'
 
-/** Supported import profile: Ed25519 did:key issuer proofs; unsupported issuers fail closed. */
-export function verifyImportedCredential(compact: string, format: 'vc+jwt' | 'vc+sd-jwt'): void {
+/**
+ * Decides which issuers the wallet is willing to accept credentials from. A valid did:key
+ * signature only proves that some key signed the credential (anyone can mint such a key), so
+ * verification also needs an explicit trust decision about the issuer.
+ */
+export interface IssuerTrustPolicy {
+  isTrusted(issuerDid: string): boolean
+}
+
+export const IssuerTrustPolicy = {
+  /** Trusts nothing; the default of [verifyImportedCredential] (fail closed). */
+  NONE: { isTrusted: () => false } as IssuerTrustPolicy,
+  /** Trusts exactly the listed issuer DIDs/IDs (exact match, no prefix matching). */
+  allowList(trusted: Iterable<string | null | undefined>): IssuerTrustPolicy {
+    const copy = new Set([...trusted].filter((id): id is string => typeof id === 'string' && id.length > 0))
+    return { isTrusted: issuerDid => copy.has(issuerDid) }
+  },
+}
+
+export interface VerifyImportOptions {
+  /** Which issuers are trusted. Defaults to [IssuerTrustPolicy.NONE]: untrusted issuers are rejected. */
+  issuerPolicy?: IssuerTrustPolicy
+  /**
+   * Plain VC-JWT only: require `cnf.kid == sub` (holder key binding). Default off; SD-JWT VC
+   * always requires it.
+   */
+  requireHolderKeyBinding?: boolean
+}
+
+/**
+ * Supported import profile: Ed25519 did:key issuer proofs from issuers accepted by
+ * `options.issuerPolicy`; unsupported or untrusted issuers fail closed.
+ */
+export function verifyImportedCredential(
+  compact: string,
+  format: 'vc+jwt' | 'vc+sd-jwt',
+  options: VerifyImportOptions = {},
+): void {
+  const issuerPolicy = options.issuerPolicy ?? IssuerTrustPolicy.NONE
   if (!['vc+jwt', 'vc+sd-jwt'].includes(format)) throw new Error('Unsupported credential format')
   if (new TextEncoder().encode(compact).byteLength > 1_048_576) throw new Error('Credential exceeds the 1 MiB import limit')
   if (format === 'vc+jwt' && compact.includes('~')) throw new Error('SD-JWT cannot be imported as a plain VC-JWT')
@@ -18,12 +55,18 @@ export function verifyImportedCredential(compact: string, format: 'vc+jwt' | 'vc
   if (header.kid !== undefined && header.kid !== untrusted.iss && header.kid !== canonicalKid)
     throw new Error('Issuer signing key does not match the credential issuer')
   const payload = verifyJws(jwt, didKeyToPublicKey(untrusted.iss))
+  if (!issuerPolicy.isTrusted(untrusted.iss)) throw new Error(`Issuer ${untrusted.iss} is not trusted by this wallet`)
   const now = Math.floor(Date.now() / 1000)
   const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
   if (typeof payload.sub !== 'string' || !payload.sub) throw new Error('Credential holder is missing')
   if (format === 'vc+jwt') {
     if (!object(payload.vc) || payload.vct !== undefined || payload._sd !== undefined) throw new Error('Unsupported VC-JWT payload profile')
     const vc = payload.vc
+    if (options.requireHolderKeyBinding) {
+      const cnf = payload.cnf
+      if (!object(cnf) || cnf.kid !== payload.sub || Object.keys(cnf).some(key => key !== 'kid'))
+        throw new Error('Credential has no holder key binding (cnf.kid) for its holder')
+    }
     if (!Array.isArray(vc.type) || !vc.type.length || vc.type.some(type => typeof type !== 'string' || !type)) throw new Error('Invalid credential types')
     if (vc.issuer !== undefined && vc.issuer !== payload.iss && (!object(vc.issuer) || vc.issuer.id !== payload.iss)) throw new Error('Conflicting credential issuer')
     if (vc.credentialSubject !== undefined && (!object(vc.credentialSubject) || (vc.credentialSubject.id !== undefined && vc.credentialSubject.id !== payload.sub))) throw new Error('Conflicting credential holder')

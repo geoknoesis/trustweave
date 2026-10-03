@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateEd25519KeyPair, publicKeyToDidKey, signJws } from '../lib/crypto'
-import { verifyImportedCredential } from '../lib/credential-verification'
+import { IssuerTrustPolicy, verifyImportedCredential as verify } from '../lib/credential-verification'
 import { createObjectDisclosure } from '../lib/sdjwt'
 
 const issuer = generateEd25519KeyPair()
@@ -10,7 +10,27 @@ const now = Math.floor(Date.now() / 1000)
 const base = { iss: did, sub: holder, iat: now, exp: now + 3600 }
 const vc = { ...base, vc: { type: ['VerifiableCredential', 'Employee'], credentialSubject: { id: holder } } }
 const sd = { ...base, vct: 'Employee', cnf: { kid: holder }, _sd: [] }
+const trusting = { issuerPolicy: IssuerTrustPolicy.allowList([did]) }
+const verifyImportedCredential = (c: string, f: 'vc+jwt' | 'vc+sd-jwt', o = trusting) => verify(c, f, o)
 const jwt = (payload: Record<string, unknown>, kid = did) => signJws(payload, issuer.privateKey, kid)
+
+describe('issuer trust policy and holder key binding', () => {
+  it('fails closed with no policy and for issuers outside the allow-list', () => {
+    expect(() => verify(jwt(vc), 'vc+jwt')).toThrow('not trusted')
+    expect(() => verify(jwt(sd) + '~', 'vc+sd-jwt')).toThrow('not trusted')
+    const other = { issuerPolicy: IssuerTrustPolicy.allowList(['did:key:z6MkOther', undefined, '']) }
+    expect(() => verify(jwt(vc), 'vc+jwt', other)).toThrow(`Issuer ${did} is not trusted`)
+    expect(() => verify(jwt(vc), 'vc+jwt', { issuerPolicy: IssuerTrustPolicy.NONE })).toThrow('not trusted')
+  })
+  it('requires cnf.kid == sub for plain VC-JWT only when requireHolderKeyBinding is set', () => {
+    const on = { ...trusting, requireHolderKeyBinding: true }
+    verify(jwt(vc), 'vc+jwt', trusting)
+    expect(() => verify(jwt(vc), 'vc+jwt', on)).toThrow('holder key binding')
+    expect(() => verify(jwt({ ...vc, cnf: { kid: 'someone-else' } }), 'vc+jwt', on)).toThrow('holder key binding')
+    expect(() => verify(jwt({ ...vc, cnf: { kid: holder, jwk: {} } }), 'vc+jwt', on)).toThrow('holder key binding')
+    verify(jwt({ ...vc, cnf: { kid: holder } }), 'vc+jwt', on)
+  })
+})
 
 describe('explicit issuer credential profiles', () => {
   it('accepts both bounded profiles with DID or canonical verification-method kid', () => {

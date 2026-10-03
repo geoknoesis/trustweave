@@ -79,6 +79,33 @@ class PresentationVerificationTest {
     }
 
     @Test
+    fun `expectedChallenge alone enables the challenge check`() {
+        val presentation = createTestPresentation(challenge = "wrong-challenge")
+        val options = VerificationOptions(expectedChallenge = "expected-challenge")
+
+        assertTrue(options.shouldVerifyChallenge)
+        val result = PresentationVerification.verifyChallenge(presentation, options)
+
+        assertNotNull(result, "A supplied expectedChallenge must never be silently ignored")
+        assertTrue(result.errors.any { it.contains("expected-challenge") })
+    }
+
+    @Test
+    fun `expectedDomain alone enables the domain check`() {
+        val presentation = createTestPresentation(domain = "evil.example")
+        val options = VerificationOptions(expectedDomain = "verifier.example")
+
+        assertTrue(options.shouldVerifyDomain)
+        assertNotNull(PresentationVerification.verifyDomain(presentation, options))
+        assertNull(
+            PresentationVerification.verifyDomain(
+                createTestPresentation(domain = "verifier.example"),
+                options,
+            ),
+        )
+    }
+
+    @Test
     fun `test verifyChallenge with matching challenge`() {
         val presentation = createTestPresentation(challenge = "expected-challenge")
         val options =

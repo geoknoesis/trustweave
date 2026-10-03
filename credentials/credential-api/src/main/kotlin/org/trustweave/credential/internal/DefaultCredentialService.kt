@@ -496,7 +496,7 @@ internal class DefaultCredentialService(
 
         // Guard: challenge/domain fields can be trivially forged when the presentation signature
         // was not verified.  Require proof verification before honouring either check.
-        if ((options.verifyChallenge || options.verifyDomain) && !options.verifyPresentationProof) {
+        if ((options.shouldVerifyChallenge || options.shouldVerifyDomain) && !options.verifyPresentationProof) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = null,
                 reason = "Challenge/domain verification requires presentation proof verification",

@@ -30,7 +30,7 @@ enum class RevocationFailurePolicy {
      * Fail-with-warning: If revocation check fails, allow verification but
      * add a warning to the result. This balances security and availability.
      */
-    FAIL_WITH_WARNING
+    FAIL_WITH_WARNING,
 }
 
 /**
@@ -54,9 +54,20 @@ data class VerificationOptions(
     val revocationFailurePolicy: RevocationFailurePolicy = RevocationFailurePolicy.FAIL_CLOSED,
     // Presentation verification options
     val verifyPresentationProof: Boolean = true,
+    /**
+     * Force the challenge check. The check also runs whenever [expectedChallenge] is set, so a
+     * caller that supplies an expected value is never silently ignored; see
+     * [shouldVerifyChallenge]. Setting this without [expectedChallenge] fails verification.
+     */
     val verifyChallenge: Boolean = false,
+    /** Expected presentation challenge (nonce). Setting it enables the challenge check. */
     val expectedChallenge: String? = null,
+    /**
+     * Force the domain check. The check also runs whenever [expectedDomain] is set; see
+     * [shouldVerifyDomain]. Setting this without [expectedDomain] fails verification.
+     */
     val verifyDomain: Boolean = false,
+    /** Expected presentation domain/audience. Setting it enables the domain check. */
     val expectedDomain: String? = null,
     /** Format-specific or engine-specific verification parameters (e.g. `sessionTranscript` for mDL). */
     val additionalOptions: Map<String, Any?> = emptyMap(),
@@ -82,4 +93,12 @@ data class VerificationOptions(
      * credentials should opt in here.
      */
     val enforceHolderBinding: Boolean = false,
-)
+) {
+    /** Effective challenge check: requested explicitly or implied by [expectedChallenge]. */
+    val shouldVerifyChallenge: Boolean
+        get() = verifyChallenge || expectedChallenge != null
+
+    /** Effective domain check: requested explicitly or implied by [expectedDomain]. */
+    val shouldVerifyDomain: Boolean
+        get() = verifyDomain || expectedDomain != null
+}

@@ -755,6 +755,8 @@ class TrustWeave internal constructor(
             config.blockchainRegistry.getAllClients().values.forEach { client ->
                 closeComponent("blockchain client ${client.javaClass.simpleName}", client)
             }
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.warn("Error enumerating blockchain clients during close: ${e.message}", e)
         }

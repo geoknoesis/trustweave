@@ -219,6 +219,8 @@ class RemoteStatusListResolver(
         val uri =
             try {
                 URI(url)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 throw failure("STATUS_LIST_UNAVAILABLE", "status list URL is invalid: ${e.message}", url, e)
             }
@@ -233,6 +235,8 @@ class RemoteStatusListResolver(
         val credential =
             try {
                 json.decodeFromString(VerifiableCredential.serializer(), body)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 throw failure("STATUS_LIST_MALFORMED", "status list $url is not a JSON verifiable credential: ${e.message}", url, e)
             }

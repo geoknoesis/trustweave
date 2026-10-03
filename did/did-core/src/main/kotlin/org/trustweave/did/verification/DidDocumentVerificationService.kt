@@ -48,7 +48,35 @@ interface DidDocumentVerificationService {
     ): VerificationResult
 
     /**
+     * Like [verifyDocument], and additionally checks that the document is the one for
+     * [expectedDid]: `document.id` must equal it exactly. A resolver that returns another
+     * subject's document for the requested DID must not pass verification.
+     *
+     * The default implementation delegates to [verifyDocument] and adds the id check, so existing
+     * implementations keep working; [DefaultDidDocumentVerificationService] overrides it.
+     *
+     * @param expectedDid the DID the caller asked to resolve; `null` skips the id check
+     */
+    suspend fun verifyDocument(
+        document: DidDocument,
+        resolutionMetadata: DidResolutionMetadata,
+        expectedDid: String?,
+    ): VerificationResult {
+        val result = verifyDocument(document, resolutionMetadata)
+        if (expectedDid == null || document.id.value == expectedDid) return result
+        return result.copy(
+            valid = false,
+            errors = result.errors + "Document id '${document.id.value}' does not match the expected DID '$expectedDid'",
+        )
+    }
+
+    /**
      * Verify document signature (if method supports it).
+     *
+     * **`false` means "not verified", which is not the same as "verified invalid".** Only
+     * methods with an implemented check can return `true`: currently `did:key` (self-certifying).
+     * For every other method, including `did:ion` whose proof chain is not implemented, the
+     * result is `false` (fail-closed) and a warning is logged naming the reason.
      *
      * @param document The DID document
      * @param method The DID method name
@@ -76,6 +104,12 @@ interface DidDocumentVerificationService {
 
 /**
  * Verification result.
+ *
+ * @property valid no check that was performed failed. This is **not** a statement that the
+ *   document's integrity was established: see [integrityVerified].
+ * @property integrityVerified `true` only when a digest was supplied and the document's
+ *   canonical digest was compared against it and matched. `false` when no digest was supplied
+ *   (nothing to compare against; a warning says so) or the comparison could not be made.
  */
 data class VerificationResult(
     val valid: Boolean,
@@ -83,6 +117,7 @@ data class VerificationResult(
     val warnings: List<String> = emptyList(),
     val verifiedAt: kotlinx.datetime.Instant = Clock.System.now(),
     val verificationMethod: String? = null,
+    val integrityVerified: Boolean = false,
 )
 
 /**
@@ -98,9 +133,20 @@ class DefaultDidDocumentVerificationService(
     override suspend fun verifyDocument(
         document: DidDocument,
         resolutionMetadata: DidResolutionMetadata,
+    ): VerificationResult = verifyDocument(document, resolutionMetadata, null)
+
+    override suspend fun verifyDocument(
+        document: DidDocument,
+        resolutionMetadata: DidResolutionMetadata,
+        expectedDid: String?,
     ): VerificationResult {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
+        var integrityVerified = false
+
+        if (expectedDid != null && document.id.value != expectedDid) {
+            errors.add("Document id '${document.id.value}' does not match the expected DID '$expectedDid'")
+        }
 
         // 1. Verify document structure
         if (document.id.value.isEmpty()) {
@@ -163,13 +209,18 @@ class DefaultDidDocumentVerificationService(
                 // Only add "digest mismatch" when the comparison was actually performed and failed.
                 // When digestChecked is false an error was already recorded above.
                 if (digestChecked && !digestOk) errors.add("Document digest mismatch")
+                if (digestChecked && digestOk) integrityVerified = true
             }
-        }
+        } ?: warnings.add(
+            "No digest was supplied in the resolution metadata: document integrity was NOT verified " +
+                "(valid=true only means the structural checks passed).",
+        )
 
         return VerificationResult(
             valid = errors.isEmpty(),
             errors = errors,
             warnings = warnings,
+            integrityVerified = integrityVerified,
         )
     }
 
@@ -225,8 +276,19 @@ class DefaultDidDocumentVerificationService(
     private fun verifyServiceStructure(service: org.trustweave.did.model.DidService): Boolean =
         service.id.isNotEmpty() && service.type.isNotEmpty()
 
+    /**
+     * Always `false`: verifying a did:ion document means replaying its Sidetree operation chain
+     * (create/update/recover/deactivate, with the commitment/reveal hash checks and each
+     * operation's JWS) against anchored batch files, which requires the ION node data this
+     * module does not have. That is not implemented, so the document is reported as *not
+     * verified* (fail-closed), never as verified, and the reason is logged.
+     */
     private suspend fun verifyIonDocumentSignature(document: DidDocument): Boolean {
-        return false // ION proof chain verification not implemented — fail-closed
+        logger.warn(
+            "verifyDocumentSignature: did:ion proof-chain verification is not implemented; " +
+                "${document.id.value} is reported as NOT verified",
+        )
+        return false
     }
 
     private suspend fun verifyKeyDocumentSignature(document: DidDocument): Boolean {

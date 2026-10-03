@@ -1,15 +1,17 @@
 public class org/trustweave/did/registrar/server/spring/DidRegistrarConfiguration {
 	public fun <init> ()V
 	public fun didRegistrarService (Lorg/trustweave/did/registrar/DidRegistrar;Lorg/trustweave/did/registrar/storage/JobStorage;)Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;
+	public fun registrarAuthentication (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
 }
 
 public class org/trustweave/did/registrar/server/spring/DidRegistrarController {
-	public fun <init> (Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;)V
-	public fun createDid (Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun deactivateDid$default (Lorg/trustweave/did/registrar/server/spring/DidRegistrarController;Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun <init> (Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;)V
+	public synthetic fun <init> (Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDid (Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/CreateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deactivateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deactivateDid$default (Lorg/trustweave/did/registrar/server/spring/DidRegistrarController;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/DeactivateDidRequest;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public fun getJobStatus (Ljava/lang/String;)Lorg/springframework/http/ResponseEntity;
-	public fun updateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun updateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/server/spring/dto/UpdateDidRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/trustweave/did/registrar/server/spring/DidRegistrarService {
@@ -18,6 +20,25 @@ public final class org/trustweave/did/registrar/server/spring/DidRegistrarServic
 	public final fun deactivateDid (Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getJobStatus (Ljava/lang/String;)Lorg/trustweave/did/registrar/model/DidRegistrationResponse;
 	public final fun updateDid (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/trustweave/did/registrar/server/spring/RegistrarAuthentication {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication$Companion;
+	public synthetic fun <init> ([BLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun bearerToken (Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public static final fun fromProperties (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public static final fun frontedByProxy (Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public final fun getDelegatedTo ()Ljava/lang/String;
+	public final fun refusal (Ljava/lang/String;)Lorg/springframework/http/ResponseEntity;
+	public fun toString ()Ljava/lang/String;
+	public static final fun unconfigured ()Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+}
+
+public final class org/trustweave/did/registrar/server/spring/RegistrarAuthentication$Companion {
+	public final fun bearerToken (Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public final fun fromProperties (Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public final fun frontedByProxy (Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public final fun unconfigured ()Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
 }
 
 public final class org/trustweave/did/registrar/server/spring/dto/CreateDidRequest {

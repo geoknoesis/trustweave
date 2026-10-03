@@ -16,7 +16,10 @@ package org.trustweave.anchor.options
  * Return `null` if this parser does not handle the given [chainId].
  */
 fun interface BlockchainAnchorOptionsParser {
-    fun parse(chainId: String, map: Map<String, Any?>): BlockchainAnchorClientOptions?
+    fun parse(
+        chainId: String,
+        map: Map<String, Any?>,
+    ): BlockchainAnchorClientOptions?
 }
 
 /**
@@ -57,7 +60,6 @@ fun interface BlockchainAnchorOptionsParser {
  * ```
  */
 sealed class BlockchainAnchorClientOptions {
-
     /**
      * Converts options to a map for backward compatibility.
      */
@@ -69,24 +71,27 @@ sealed class BlockchainAnchorClientOptions {
     inline fun <reified T> get(key: String): T? = (toMap()[key] as? T)
 
     companion object {
-        private val parsers: MutableList<BlockchainAnchorOptionsParser> = mutableListOf(
-            // Built-in parsers for the known blockchain types shipped with the SDK
-            BlockchainAnchorOptionsParser { chainId, map ->
-                if (chainId.startsWith("algorand:")) AlgorandOptions.fromMap(map) else null
-            },
-            BlockchainAnchorOptionsParser { chainId, map ->
-                if (chainId.startsWith("eip155:")) {
-                    val chainNum = chainId.substringAfter(":").toIntOrNull()
-                    when (chainNum) {
-                        1337 -> GanacheOptions.fromMap(map)
-                        else -> PolygonOptions.fromMap(map)
+        private val parsers: MutableList<BlockchainAnchorOptionsParser> =
+            mutableListOf(
+                // Built-in parsers for the known blockchain types shipped with the SDK
+                BlockchainAnchorOptionsParser { chainId, map ->
+                    if (chainId.startsWith("algorand:")) AlgorandOptions.fromMap(map) else null
+                },
+                BlockchainAnchorOptionsParser { chainId, map ->
+                    if (chainId.startsWith("eip155:")) {
+                        val chainNum = chainId.substringAfter(":").toIntOrNull()
+                        when (chainNum) {
+                            1337 -> GanacheOptions.fromMap(map)
+                            else -> PolygonOptions.fromMap(map)
+                        }
+                    } else {
+                        null
                     }
-                } else null
-            },
-            BlockchainAnchorOptionsParser { chainId, map ->
-                if (chainId.startsWith("indy:")) IndyOptions.fromMap(map) else null
-            }
-        )
+                },
+                BlockchainAnchorOptionsParser { chainId, map ->
+                    if (chainId.startsWith("indy:")) IndyOptions.fromMap(map) else null
+                },
+            )
 
         /**
          * Registers an additional [BlockchainAnchorOptionsParser].
@@ -106,13 +111,15 @@ sealed class BlockchainAnchorClientOptions {
          * @throws IllegalArgumentException if no registered parser handles [chainId]
          */
         @JvmStatic
-        fun fromMap(chainId: String, map: Map<String, Any?>): BlockchainAnchorClientOptions {
-            return parsers.firstNotNullOfOrNull { it.parse(chainId, map) }
+        fun fromMap(
+            chainId: String,
+            map: Map<String, Any?>,
+        ): BlockchainAnchorClientOptions =
+            parsers.firstNotNullOfOrNull { it.parse(chainId, map) }
                 ?: throw IllegalArgumentException(
                     "No parser registered for chain ID '$chainId'. " +
-                    "Register one via BlockchainAnchorClientOptions.registerParser(...)."
+                        "Register one via BlockchainAnchorClientOptions.registerParser(...).",
                 )
-        }
     }
 }
 
@@ -136,30 +143,35 @@ data class AlgorandOptions(
     val privateKey: String? = null,
     val appId: String? = null,
     val indexerUrl: String? = null,
-    val indexerToken: String? = null
+    val indexerToken: String? = null,
 ) : BlockchainAnchorClientOptions() {
+    override fun toMap(): Map<String, Any?> =
+        buildMap {
+            algodUrl?.let { put("algodUrl", it) }
+            algodToken?.let { put("algodToken", it) }
+            privateKey?.let { put("privateKey", it) }
+            appId?.let { put("appId", it) }
+            indexerUrl?.let { put("indexerUrl", it) }
+            indexerToken?.let { put("indexerToken", it) }
+        }
 
-    override fun toMap(): Map<String, Any?> = buildMap {
-        algodUrl?.let { put("algodUrl", it) }
-        algodToken?.let { put("algodToken", it) }
-        privateKey?.let { put("privateKey", it) }
-        appId?.let { put("appId", it) }
-        indexerUrl?.let { put("indexerUrl", it) }
-        indexerToken?.let { put("indexerToken", it) }
-    }
+    /** Never prints [privateKey] or the API tokens; URLs are reduced to scheme and host. */
+    override fun toString(): String =
+        "AlgorandOptions(algodUrl=${redactUrl(algodUrl)}, algodToken=${redact(algodToken)}, " +
+            "privateKey=${redact(privateKey)}, appId=$appId, indexerUrl=${redactUrl(indexerUrl)}, " +
+            "indexerToken=${redact(indexerToken)})"
 
     companion object {
         @JvmStatic
-        fun fromMap(map: Map<String, Any?>): AlgorandOptions {
-            return AlgorandOptions(
+        fun fromMap(map: Map<String, Any?>): AlgorandOptions =
+            AlgorandOptions(
                 algodUrl = map["algodUrl"] as? String,
                 algodToken = map["algodToken"] as? String,
                 privateKey = map["privateKey"] as? String,
                 appId = map["appId"] as? String,
                 indexerUrl = map["indexerUrl"] as? String,
-                indexerToken = map["indexerToken"] as? String
+                indexerToken = map["indexerToken"] as? String,
             )
-        }
     }
 }
 
@@ -173,24 +185,27 @@ data class AlgorandOptions(
 data class PolygonOptions(
     val rpcUrl: String? = null,
     val privateKey: String? = null,
-    val contractAddress: String? = null
+    val contractAddress: String? = null,
 ) : BlockchainAnchorClientOptions() {
+    override fun toMap(): Map<String, Any?> =
+        buildMap {
+            rpcUrl?.let { put("rpcUrl", it) }
+            privateKey?.let { put("privateKey", it) }
+            contractAddress?.let { put("contractAddress", it) }
+        }
 
-    override fun toMap(): Map<String, Any?> = buildMap {
-        rpcUrl?.let { put("rpcUrl", it) }
-        privateKey?.let { put("privateKey", it) }
-        contractAddress?.let { put("contractAddress", it) }
-    }
+    /** Never prints [privateKey]; the RPC URL (which often embeds an API key) is reduced to scheme and host. */
+    override fun toString(): String =
+        "PolygonOptions(rpcUrl=${redactUrl(rpcUrl)}, privateKey=${redact(privateKey)}, contractAddress=$contractAddress)"
 
     companion object {
         @JvmStatic
-        fun fromMap(map: Map<String, Any?>): PolygonOptions {
-            return PolygonOptions(
+        fun fromMap(map: Map<String, Any?>): PolygonOptions =
+            PolygonOptions(
                 rpcUrl = map["rpcUrl"] as? String,
                 privateKey = map["privateKey"] as? String,
-                contractAddress = map["contractAddress"] as? String
+                contractAddress = map["contractAddress"] as? String,
             )
-        }
     }
 }
 
@@ -204,24 +219,29 @@ data class PolygonOptions(
 data class GanacheOptions(
     val rpcUrl: String? = null,
     val privateKey: String,
-    val contractAddress: String? = null
+    val contractAddress: String? = null,
 ) : BlockchainAnchorClientOptions() {
+    override fun toMap(): Map<String, Any?> =
+        buildMap {
+            rpcUrl?.let { put("rpcUrl", it) }
+            put("privateKey", privateKey)
+            contractAddress?.let { put("contractAddress", it) }
+        }
 
-    override fun toMap(): Map<String, Any?> = buildMap {
-        rpcUrl?.let { put("rpcUrl", it) }
-        put("privateKey", privateKey)
-        contractAddress?.let { put("contractAddress", it) }
-    }
+    /** Never prints [privateKey]; the RPC URL is reduced to scheme and host. */
+    override fun toString(): String =
+        "GanacheOptions(rpcUrl=${redactUrl(rpcUrl)}, privateKey=${redact(privateKey)}, contractAddress=$contractAddress)"
 
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): GanacheOptions {
-            val privateKey = map["privateKey"] as? String
-                ?: throw IllegalArgumentException("privateKey is required for GanacheOptions")
+            val privateKey =
+                map["privateKey"] as? String
+                    ?: throw IllegalArgumentException("privateKey is required for GanacheOptions")
             return GanacheOptions(
                 rpcUrl = map["rpcUrl"] as? String,
                 privateKey = privateKey,
-                contractAddress = map["contractAddress"] as? String
+                contractAddress = map["contractAddress"] as? String,
             )
         }
     }
@@ -239,26 +259,45 @@ data class IndyOptions(
     val poolEndpoint: String? = null,
     val walletName: String? = null,
     val walletKey: String? = null,
-    val did: String? = null
+    val did: String? = null,
 ) : BlockchainAnchorClientOptions() {
+    override fun toMap(): Map<String, Any?> =
+        buildMap {
+            poolEndpoint?.let { put("poolEndpoint", it) }
+            walletName?.let { put("walletName", it) }
+            walletKey?.let { put("walletKey", it) }
+            did?.let { put("did", it) }
+        }
 
-    override fun toMap(): Map<String, Any?> = buildMap {
-        poolEndpoint?.let { put("poolEndpoint", it) }
-        walletName?.let { put("walletName", it) }
-        walletKey?.let { put("walletKey", it) }
-        did?.let { put("did", it) }
-    }
+    /** Never prints [walletKey]; the pool endpoint is reduced to scheme and host. */
+    override fun toString(): String =
+        "IndyOptions(poolEndpoint=${redactUrl(poolEndpoint)}, walletName=$walletName, " +
+            "walletKey=${redact(walletKey)}, did=$did)"
 
     companion object {
         @JvmStatic
-        fun fromMap(map: Map<String, Any?>): IndyOptions {
-            return IndyOptions(
+        fun fromMap(map: Map<String, Any?>): IndyOptions =
+            IndyOptions(
                 poolEndpoint = map["poolEndpoint"] as? String,
                 walletName = map["walletName"] as? String,
                 walletKey = map["walletKey"] as? String,
-                did = map["did"] as? String
+                did = map["did"] as? String,
             )
-        }
     }
 }
 
+/** `null` stays `null`; any secret value prints as a fixed marker that reveals nothing about it. */
+private fun redact(secret: String?): String? = secret?.let { "***" }
+
+/**
+ * Reduces a URL to `scheme://host[:port]` followed by a marker when anything was dropped: provider
+ * URLs commonly carry an API key in the path (`/v2/<key>`), query or user-info.
+ */
+private fun redactUrl(url: String?): String? {
+    if (url == null) return null
+    val uri = runCatching { java.net.URI(url) }.getOrNull()
+    if (uri?.scheme == null || uri.host == null) return "***"
+    val origin = uri.scheme + "://" + uri.host + (if (uri.port >= 0) ":" + uri.port else "")
+    val hasMore = !uri.rawPath.isNullOrEmpty() && uri.rawPath != "/" || uri.rawQuery != null || uri.rawUserInfo != null
+    return if (hasMore) "$origin/***" else origin
+}

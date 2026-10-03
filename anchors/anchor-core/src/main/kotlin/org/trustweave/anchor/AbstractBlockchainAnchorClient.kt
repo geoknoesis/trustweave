@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import org.slf4j.LoggerFactory
 import org.trustweave.anchor.exceptions.BlockchainException
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -73,11 +74,10 @@ abstract class AbstractBlockchainAnchorClient(
          * [BlockchainException.ConfigurationFailed] at construction.
          *
          * In digest mode, the on-chain data is a compact [AnchorDigest] envelope —
-         * `{"alg":"SHA-256","digest":"<base64url(sha256(payload bytes))>","mediaType":…}` —
+         * `{"alg":"SHA-256","canon":"JCS","digest":"<base64url(sha256(JCS(payload)))>","mediaType":…}` —
          * instead of the full payload JSON, so payload content (PII, business data)
-         * never goes on-chain. Payload bytes are the UTF-8 of the payload JSON exactly
-         * as serialized by this write path (`Json.encodeToString(JsonElement.serializer(),
-         * payload)`); no canonicalization is applied. [readPayload] consequently returns
+         * never goes on-chain. The digest is over the RFC 8785 canonical form of the
+         * payload, so verification does not depend on key order. [readPayload] consequently returns
          * the envelope, not the original payload, and marks the reference with
          * `extra["payloadMode"] = "digest"`. Use [BlockchainAnchorClient.verifyAnchor]
          * with the off-chain payload to verify the anchor.
@@ -109,6 +109,19 @@ abstract class AbstractBlockchainAnchorClient(
     protected val inMemoryTestMode: Boolean =
         options[OPTION_IN_MEMORY_TEST_MODE] == true ||
             (options[OPTION_IN_MEMORY_TEST_MODE] as? String)?.toBoolean() == true
+
+    private val testModeLogger = LoggerFactory.getLogger(AbstractBlockchainAnchorClient::class.java)
+
+    init {
+        if (inMemoryTestMode) {
+            testModeLogger.warn(
+                "IN-MEMORY TEST MODE enabled for {} ({}): anchors written without chain credentials are " +
+                    "NOT on any blockchain and will verify only inside this process. Never use in production.",
+                chainId,
+                this::class.simpleName,
+            )
+        }
+    }
 
     /**
      * How long write operations wait for on-chain confirmation before failing,
@@ -166,13 +179,9 @@ abstract class AbstractBlockchainAnchorClient(
         payload: JsonElement,
         mediaType: String,
     ): ByteArray {
-        val payloadBytes =
-            Json
-                .encodeToString(JsonElement.serializer(), payload)
-                .toByteArray(StandardCharsets.UTF_8)
-        if (!digestPayloadMode) return payloadBytes
+        val anchored = if (digestPayloadMode) AnchorDigest.envelope(payload, mediaType) else payload
         return Json
-            .encodeToString(JsonElement.serializer(), AnchorDigest.envelope(payloadBytes, mediaType))
+            .encodeToString(JsonElement.serializer(), anchored)
             .toByteArray(StandardCharsets.UTF_8)
     }
 
@@ -277,17 +286,11 @@ abstract class AbstractBlockchainAnchorClient(
         mediaType: String,
     ): AnchorResult =
         withContext(Dispatchers.IO) {
-            val payloadJson = Json.encodeToString(JsonElement.serializer(), payload)
-            val payloadBytes = payloadJson.toByteArray(StandardCharsets.UTF_8)
             // In digest mode the on-chain data is the compact digest envelope, never the
-            // payload itself. The digest is computed over the exact bytes the full-payload
-            // path would have anchored (UTF-8 of the serialized payload JSON above).
+            // payload itself. The digest is over the RFC 8785 canonical payload bytes.
             val envelope: JsonElement? =
-                if (digestPayloadMode) AnchorDigest.envelope(payloadBytes, mediaType) else null
-            val submittedBytes =
-                envelope
-                    ?.let { Json.encodeToString(JsonElement.serializer(), it).toByteArray(StandardCharsets.UTF_8) }
-                    ?: payloadBytes
+                if (digestPayloadMode) AnchorDigest.envelope(payload, mediaType) else null
+            val submittedBytes = encodeAnchoredBytes(payload, mediaType)
 
             try {
                 when {
@@ -366,7 +369,16 @@ abstract class AbstractBlockchainAnchorClient(
                     throw cancelled
                 } catch (e: Exception) {
                     val fromTestStorage = if (inMemoryTestMode) storage[ref.txHash] else null
-                    fromTestStorage ?: when (e) {
+                    if (fromTestStorage != null) {
+                        testModeLogger.warn(
+                            "IN-MEMORY TEST MODE: serving {} on {} from process memory after the chain read " +
+                                "failed ({}); this anchor is NOT on-chain.",
+                            ref.txHash,
+                            chainId,
+                            e.message,
+                        )
+                    }
+                    fromTestStorage?.markedAsInMemory() ?: when (e) {
                         is CoreTrustWeaveException -> throw e
                         else -> throw BlockchainException.TransactionFailed(
                             chainId = chainId,
@@ -393,6 +405,14 @@ abstract class AbstractBlockchainAnchorClient(
             } else {
                 result
             }
+        }
+
+    /** Ensures a result served from test storage always carries the in-memory marker. */
+    private fun AnchorResult.markedAsInMemory(): AnchorResult =
+        if (ref.extra[OPTION_IN_MEMORY_TEST_MODE] == "true") {
+            this
+        } else {
+            copy(ref = ref.copy(extra = ref.extra + (OPTION_IN_MEMORY_TEST_MODE to "true")))
         }
 
     /**

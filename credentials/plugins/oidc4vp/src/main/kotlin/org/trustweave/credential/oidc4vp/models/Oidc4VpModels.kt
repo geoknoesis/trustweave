@@ -130,6 +130,10 @@ data class AuthorizationRequest(
 
 /**
  * OIDC4VP permission request (holder-side representation).
+ *
+ * @property requestedClaims Claims the verifier asked for, keyed by input descriptor id
+ *                           (Presentation Exchange) or credential query id (DCQL); each value is
+ *                           the list of requested claim paths as JSONPath expressions.
  */
 data class PermissionRequest(
     val requestId: String,

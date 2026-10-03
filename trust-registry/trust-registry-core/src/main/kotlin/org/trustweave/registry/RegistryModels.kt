@@ -116,3 +116,23 @@ data class RegistryFilter(
     val credentialType: String? = null,
     val nameContains: String? = null,
 )
+
+/** Which side of the registry a participant is registered on. */
+@Serializable
+enum class ParticipantRole { ISSUER, VERIFIER }
+
+/**
+ * One entry of a participant's accreditation history (see [TrustRegistry.statusHistory]).
+ *
+ * @property from Status before the change; null for the registration itself.
+ * @property reason Revocation reason supplied with the change, if any.
+ */
+@Serializable
+data class StatusChange(
+    val did: String,
+    val role: ParticipantRole,
+    val from: AccreditationStatus?,
+    val to: AccreditationStatus,
+    val reason: String? = null,
+    @Contextual val changedAt: Instant,
+)

@@ -1,174 +1,263 @@
 package org.trustweave.contract
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.*
 import org.trustweave.anchor.AnchorRef
-import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
-import org.trustweave.contract.evaluation.*
-import org.trustweave.contract.models.*
-import org.trustweave.core.util.trustweaveCatching
-import kotlin.Result
+import org.trustweave.contract.evaluation.EngineReference
+import org.trustweave.contract.evaluation.EvaluationContext
+import org.trustweave.contract.evaluation.EvaluationEngines
+import org.trustweave.contract.evaluation.evaluateWith
+import org.trustweave.contract.evaluation.require
+import org.trustweave.contract.evaluation.toEngineReference
+import org.trustweave.contract.evaluation.verifyOrThrow
+import org.trustweave.contract.evaluation.withEngineHash
+import org.trustweave.contract.models.AnchorRefData
+import org.trustweave.contract.models.BoundContract
+import org.trustweave.contract.models.ConditionEvaluation
+import org.trustweave.contract.models.ContractOutcome
+import org.trustweave.contract.models.ContractStatus
+import org.trustweave.contract.models.ExecutionContext
+import org.trustweave.contract.models.ExecutionModel
+import org.trustweave.contract.models.ExecutionResult
+import org.trustweave.contract.models.ExecutionType
+import org.trustweave.contract.models.OutcomeType
+import org.trustweave.contract.models.SmartContract
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.util.ValidationResult
-import org.trustweave.credential.CredentialService as CredentialServiceInterface
-import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.util.trustweaveCatching
+import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.requests.IssuanceRequest
-import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.core.identifiers.Iri
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import org.trustweave.credential.results.VerificationResult
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.Result
+import org.trustweave.credential.CredentialService as CredentialServiceInterface
+
+/**
+ * Looks up the verifiable credential that was issued for a contract.
+ *
+ * [DefaultSmartContractService] remembers the credentials it issued itself through
+ * [SmartContractService.bindContract]; a resolver is only needed to verify contracts whose
+ * credential was issued elsewhere (or by a previous process). Return `null` when the credential
+ * is unknown; [DefaultSmartContractService.verifyContract] then fails rather than reporting
+ * the contract as verified.
+ */
+fun interface ContractCredentialResolver {
+    suspend fun resolve(credentialId: String): VerifiableCredential?
+}
 
 /**
  * Default in-memory implementation of SmartContractService.
  *
  * This is a simple implementation suitable for testing and development.
  * Production implementations should use persistent storage.
+ *
+ * All state changes of one contract are serialised by a per-contract [Mutex] and written with a
+ * compare-and-set against the record that was read, so two concurrent executions of the same
+ * ACTIVE contract cannot both execute it.
+ *
+ * @param credentialResolver optional lookup for contract credentials that this instance did not
+ *   issue itself; used by [verifyContract].
  */
 class DefaultSmartContractService(
     private val credentialService: CredentialServiceInterface? = null,
     private val blockchainRegistry: BlockchainAnchorRegistry? = null,
-    private val engines: EvaluationEngines = EvaluationEngines()
+    private val engines: EvaluationEngines = EvaluationEngines(),
+    private val credentialResolver: ContractCredentialResolver? = null,
 ) : SmartContractService {
+    /** Binary-compatible form of the pre-[ContractCredentialResolver] constructor. */
+    constructor(
+        credentialService: CredentialServiceInterface?,
+        blockchainRegistry: BlockchainAnchorRegistry?,
+        engines: EvaluationEngines,
+    ) : this(credentialService, blockchainRegistry, engines, null)
 
     private val contracts = ConcurrentHashMap<String, SmartContract>()
 
-    // JSON serializer for encoding execution model and terms
-    private val json = Json {
-        encodeDefaults = true
-        ignoreUnknownKeys = true
-    }
+    /** Credentials issued by [bindContract], keyed by credential ID, for [verifyContract]. */
+    private val issuedCredentials = ConcurrentHashMap<String, VerifiableCredential>()
 
-    override suspend fun createDraft(
-        request: ContractDraftRequest
-    ): Result<SmartContract> = trustweaveCatching {
-        // Validate request
-        val validation = ContractValidator.validateDraftRequest(request)
-        if (!validation.isValid()) {
-            throw TrustWeaveException.InvalidOperation(
-                message = validation.errorMessage() ?: "Invalid contract draft request"
-            )
+    private val contractLocks = ConcurrentHashMap<String, Mutex>()
+
+    private suspend fun <T> withContractLock(
+        contractId: String,
+        block: suspend () -> T,
+    ): T = contractLocks.computeIfAbsent(contractId) { Mutex() }.withLock { block() }
+
+    private fun storedContract(contractId: String): SmartContract =
+        contracts[contractId] ?: throw TrustWeaveException.NotFound(resource = "Contract: $contractId")
+
+    // JSON serializer for encoding execution model and terms
+    private val json =
+        Json {
+            encodeDefaults = true
+            ignoreUnknownKeys = true
         }
 
-        val contractId = UUID.randomUUID().toString()
-        val now = Clock.System.now()
-        val contractNumber = "CONTRACT-${now.epochSeconds * 1000}"
-        val nowStr = now.toString()
+    override suspend fun createDraft(request: ContractDraftRequest): Result<SmartContract> =
+        trustweaveCatching {
+            // Validate request
+            val validation = ContractValidator.validateDraftRequest(request)
+            if (!validation.isValid()) {
+                throw TrustWeaveException.InvalidOperation(
+                    message = validation.errorMessage() ?: "Invalid contract draft request",
+                )
+            }
 
-        val contract = SmartContract(
-            id = contractId,
-            contractNumber = contractNumber,
-            status = ContractStatus.DRAFT,
-            contractType = request.contractType,
-            executionModel = request.executionModel,
-            parties = request.parties,
-            terms = request.terms,
-            effectiveDate = request.effectiveDate,
-            expirationDate = request.expirationDate,
-            createdAt = nowStr,
-            updatedAt = nowStr,
-            credentialId = null,
-            anchorRef = null,
-            contractData = request.contractData
-        )
+            val contractId = UUID.randomUUID().toString()
+            val now = Clock.System.now()
+            val contractNumber = "CONTRACT-${now.epochSeconds * 1000}"
+            val nowStr = now.toString()
 
-        contracts[contractId] = contract
-        contract
-    }
+            val contract =
+                SmartContract(
+                    id = contractId,
+                    contractNumber = contractNumber,
+                    status = ContractStatus.DRAFT,
+                    contractType = request.contractType,
+                    executionModel = request.executionModel,
+                    parties = request.parties,
+                    terms = request.terms,
+                    effectiveDate = request.effectiveDate,
+                    expirationDate = request.expirationDate,
+                    createdAt = nowStr,
+                    updatedAt = nowStr,
+                    credentialId = null,
+                    anchorRef = null,
+                    contractData = request.contractData,
+                )
+
+            contracts[contractId] = contract
+            contract
+        }
 
     override suspend fun issueContractCredential(
         contract: SmartContract,
         issuerDid: String,
-        issuerKeyId: String
-    ): Result<VerifiableCredential> = trustweaveCatching {
-        requireNotNull(credentialService) {
-            "CredentialService is required for issuing contract credentials"
-        }
+        issuerKeyId: String,
+    ): Result<VerifiableCredential> =
+        trustweaveCatching {
+            requireNotNull(credentialService) {
+                "CredentialService is required for issuing contract credentials"
+            }
 
-        // Extract and capture engine hash if engine is registered
-        val executionModelWithHash = contract.executionModel.withEngineHash(engines)
+            // Extract and capture engine hash if engine is registered
+            val executionModelWithHash = contract.executionModel.withEngineHash(engines)
 
-        val claims = buildJsonObject {
-            put("contractNumber", contract.contractNumber)
-            put("contractType", contract.contractType.toString())
-            put("status", contract.status.name)
-            put("parties", buildJsonObject {
-                put("primaryPartyDid", contract.parties.primaryPartyDid)
-                put("counterpartyDid", contract.parties.counterpartyDid)
-                contract.parties.additionalParties.forEach { (role, did) ->
-                    put(role, did)
+            val claims =
+                buildJsonObject {
+                    put("contractNumber", contract.contractNumber)
+                    put("contractType", contract.contractType.toString())
+                    put("status", contract.status.name)
+                    put(
+                        "parties",
+                        buildJsonObject {
+                            put("primaryPartyDid", contract.parties.primaryPartyDid)
+                            put("counterpartyDid", contract.parties.counterpartyDid)
+                            contract.parties.additionalParties.forEach { (role, did) ->
+                                put(role, did)
+                            }
+                        },
+                    )
+                    put("effectiveDate", contract.effectiveDate)
+                    put("expirationDate", contract.expirationDate ?: "")
+                    put("contractData", contract.contractData)
+                    // Include execution model and terms in credential for tamper protection
+                    put("executionModel", json.encodeToJsonElement(executionModelWithHash))
+                    put("terms", json.encodeToJsonElement(contract.terms))
                 }
-            })
-            put("effectiveDate", contract.effectiveDate)
-            put("expirationDate", contract.expirationDate ?: "")
-            put("contractData", contract.contractData)
-            // Include execution model and terms in credential for tamper protection
-            put("executionModel", json.encodeToJsonElement(executionModelWithHash))
-            put("terms", json.encodeToJsonElement(contract.terms))
+
+            val credentialSubject =
+                CredentialSubject.fromIri(
+                    iri = Iri(contract.id),
+                    claims = claims,
+                )
+
+            val issuanceRequest =
+                IssuanceRequest(
+                    format = ProofSuiteId.VC_LD,
+                    issuer = Issuer.from(Iri(issuerDid)),
+                    issuerKeyId =
+                        issuerKeyId?.let {
+                            org.trustweave.did.identifiers.VerificationMethodId
+                                .parse(
+                                    it,
+                                    org.trustweave.did.identifiers
+                                        .Did(issuerDid),
+                                )
+                        },
+                    credentialSubject = credentialSubject,
+                    type =
+                        listOf(
+                            CredentialType.fromString("VerifiableCredential"),
+                            CredentialType.fromString("SmartContractCredential"),
+                        ),
+                    id = CredentialId("urn:uuid:${UUID.randomUUID()}"),
+                    issuedAt = Clock.System.now(),
+                )
+
+            val issuanceResult = credentialService.issue(issuanceRequest)
+            when (issuanceResult) {
+                is org.trustweave.credential.results.IssuanceResult.Success -> issuanceResult.credential
+                is org.trustweave.credential.results.IssuanceResult.Failure -> throw TrustWeaveException(
+                    code = "CREDENTIAL_ISSUANCE_FAILED",
+                    message = "Failed to issue credential: $issuanceResult",
+                )
+            }
         }
-
-        val credentialSubject = CredentialSubject.fromIri(
-            iri = Iri(contract.id),
-            claims = claims
-        )
-
-        val issuanceRequest = IssuanceRequest(
-            format = ProofSuiteId.VC_LD,
-            issuer = Issuer.from(Iri(issuerDid)),
-            issuerKeyId = issuerKeyId?.let { org.trustweave.did.identifiers.VerificationMethodId.parse(it, org.trustweave.did.identifiers.Did(issuerDid)) },
-            credentialSubject = credentialSubject,
-            type = listOf(
-                CredentialType.fromString("VerifiableCredential"),
-                CredentialType.fromString("SmartContractCredential")
-            ),
-            id = CredentialId("urn:uuid:${UUID.randomUUID()}"),
-            issuedAt = Clock.System.now()
-        )
-
-        val issuanceResult = credentialService.issue(issuanceRequest)
-        when (issuanceResult) {
-            is org.trustweave.credential.results.IssuanceResult.Success -> issuanceResult.credential
-            is org.trustweave.credential.results.IssuanceResult.Failure -> throw TrustWeaveException(
-                code = "CREDENTIAL_ISSUANCE_FAILED",
-                message = "Failed to issue credential: ${issuanceResult}"
-            )
-        }
-    }
 
     override suspend fun anchorContract(
         contract: SmartContract,
         credential: VerifiableCredential,
-        chainId: String
-    ): Result<AnchorRef> = trustweaveCatching {
-        val blockchainClient = blockchainRegistry?.get(chainId)
-            ?: throw IllegalStateException("No blockchain client available for chain: $chainId")
+        chainId: String,
+    ): Result<AnchorRef> =
+        trustweaveCatching {
+            val blockchainClient =
+                blockchainRegistry?.get(chainId)
+                    ?: throw IllegalStateException("No blockchain client available for chain: $chainId")
 
-        val payload = buildJsonObject {
-            put("contractId", contract.id)
-            put("credentialId", credential.id?.value ?: throw IllegalStateException(
-                "Credential must have an ID after issuance"
-            ))
-            put("contractNumber", contract.contractNumber)
-            put("status", contract.status.name)
+            val payload =
+                buildJsonObject {
+                    put("contractId", contract.id)
+                    put(
+                        "credentialId",
+                        credential.id?.value ?: throw IllegalStateException(
+                            "Credential must have an ID after issuance",
+                        ),
+                    )
+                    put("contractNumber", contract.contractNumber)
+                    put("status", contract.status.name)
+                }
+
+            val anchorResult = blockchainClient.writePayload(payload)
+            anchorResult.ref
         }
-
-        val anchorResult = blockchainClient.writePayload(payload)
-        anchorResult.ref
-    }
 
     override suspend fun bindContract(
         contractId: String,
         issuerDid: String,
         issuerKeyId: String,
-        chainId: String
-    ): Result<BoundContract> = trustweaveCatching {
-        val contract = contracts[contractId]
-            ?: throw TrustWeaveException.NotFound(resource = "Contract: $contractId")
+        chainId: String,
+    ): Result<BoundContract> =
+        trustweaveCatching {
+            withContractLock(contractId) { bindLocked(contractId, issuerDid, issuerKeyId, chainId) }
+        }
+
+    private suspend fun bindLocked(
+        contractId: String,
+        issuerDid: String,
+        issuerKeyId: String,
+        chainId: String,
+    ): BoundContract {
+        val contract = storedContract(contractId)
 
         // Issue credential
         val credential = issueContractCredential(contract, issuerDid, issuerKeyId).getOrThrow()
@@ -177,88 +266,107 @@ class DefaultSmartContractService(
         val anchorRef = anchorContract(contract, credential, chainId).getOrThrow()
 
         // Update contract with credential and anchor
-        val credentialId = credential.id?.value ?: throw IllegalStateException(
-            "Credential must have an ID after issuance"
-        )
-
-        val updatedContract = updateContract(
-            contract.copy(
-                credentialId = credentialId,
-                anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
-                status = ContractStatus.PENDING,
-                updatedAt = Clock.System.now().toString()
+        val credentialId =
+            credential.id?.value ?: throw IllegalStateException(
+                "Credential must have an ID after issuance",
             )
-        ).getOrThrow()
 
-        BoundContract(
+        issuedCredentials[credentialId] = credential
+
+        val updatedContract =
+            replaceContract(
+                contract,
+                contract.copy(
+                    credentialId = credentialId,
+                    anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
+                    status = ContractStatus.PENDING,
+                    updatedAt = Clock.System.now().toString(),
+                ),
+            )
+
+        return BoundContract(
             contract = updatedContract,
             credentialId = credentialId,
-            anchorRef = AnchorRefData.fromAnchorRef(anchorRef)
+            anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
         )
     }
 
-    override suspend fun activateContract(
-        contractId: String
-    ): Result<SmartContract> = trustweaveCatching {
-        val contract = contracts[contractId]
-            ?: throw TrustWeaveException.NotFound(resource = "Contract: $contractId")
+    override suspend fun activateContract(contractId: String): Result<SmartContract> =
+        trustweaveCatching {
+            withContractLock(contractId) { activateLocked(contractId) }
+        }
+
+    private fun activateLocked(contractId: String): SmartContract {
+        val contract = storedContract(contractId)
 
         // Validate state transition
-        val transitionValidation = ContractValidator.validateStateTransition(
-            contract.status,
-            ContractStatus.ACTIVE
-        )
+        val transitionValidation =
+            ContractValidator.validateStateTransition(
+                contract.status,
+                ContractStatus.ACTIVE,
+            )
         if (!transitionValidation.isValid()) {
             throw TrustWeaveException.InvalidOperation(
-                message = transitionValidation.errorMessage() ?: "Invalid state transition"
+                message = transitionValidation.errorMessage() ?: "Invalid state transition",
             )
         }
 
         // Check if contract is expired
         if (ContractValidator.isExpired(contract)) {
             throw TrustWeaveException.InvalidOperation(
-                message = "Cannot activate expired contract"
+                message = "Cannot activate expired contract",
             )
         }
 
-        val updatedContract = updateContract(
+        return replaceContract(
+            contract,
             contract.copy(
                 status = ContractStatus.ACTIVE,
-                updatedAt = Clock.System.now().toString()
-            )
-        ).getOrThrow()
-
-        updatedContract
+                updatedAt = Clock.System.now().toString(),
+            ),
+        )
     }
 
     override suspend fun executeContract(
         contract: SmartContract,
-        executionContext: ExecutionContext
-    ): Result<ExecutionResult> = trustweaveCatching {
+        executionContext: ExecutionContext,
+    ): Result<ExecutionResult> =
+        trustweaveCatching {
+            // The caller's object is only used to identify the contract: status, terms and execution
+            // model all come from the stored record, under the contract's lock, so a stale or edited
+            // snapshot cannot be executed and two concurrent calls cannot both execute it.
+            withContractLock(contract.id) { executeLocked(storedContract(contract.id), executionContext) }
+        }
+
+    private suspend fun executeLocked(
+        contract: SmartContract,
+        executionContext: ExecutionContext,
+    ): ExecutionResult {
         // Validate contract is active
         if (contract.status != ContractStatus.ACTIVE) {
             throw TrustWeaveException.InvalidOperation(
-                message = "Contract must be in ACTIVE status to execute. Current status: ${contract.status}"
+                message = "Contract must be in ACTIVE status to execute. Current status: ${contract.status}",
             )
         }
 
         // Check if contract is expired
         if (ContractValidator.isExpired(contract)) {
             // Auto-expire contract
-            updateStatus(contract.id, ContractStatus.EXPIRED, "Contract expired").getOrThrow()
+            transitionLocked(contract.id, ContractStatus.EXPIRED)
             throw TrustWeaveException.InvalidOperation(
-                message = "Cannot execute expired contract"
+                message = "Cannot execute expired contract",
             )
         }
 
         // Determine execution type based on execution model
-        val executionType = when (contract.executionModel) {
-            is ExecutionModel.Parametric -> ExecutionType.PARAMETRIC_TRIGGER
-            is ExecutionModel.Conditional -> ExecutionType.CONDITIONAL_EVALUATION
-            is ExecutionModel.Scheduled -> ExecutionType.SCHEDULED_ACTION
-            is ExecutionModel.EventDriven -> ExecutionType.EVENT_RESPONSE
-            is ExecutionModel.Manual -> ExecutionType.MANUAL_ACTION
-        }
+        val executionType =
+            when (contract.executionModel) {
+                is ExecutionModel.Parametric -> ExecutionType.PARAMETRIC_TRIGGER
+                is ExecutionModel.Conditional -> ExecutionType.CONDITIONAL_EVALUATION
+                is ExecutionModel.Scheduled -> ExecutionType.SCHEDULED_ACTION
+                is ExecutionModel.EventDriven -> ExecutionType.EVENT_RESPONSE
+                is ExecutionModel.Manual -> ExecutionType.MANUAL_ACTION
+            }
 
         // Evaluate conditions
         val conditionEvaluation = evaluateConditions(contract, executionContext.triggerData ?: buildJsonObject {}).getOrThrow()
@@ -266,163 +374,274 @@ class DefaultSmartContractService(
         // Determine if contract should be executed
         val executed = conditionEvaluation.overallResult
 
-        val outcomes = if (executed) {
-            // Generate outcomes based on contract terms
-            contract.terms.obligations.map { obligation ->
-                ContractOutcome(
-                    type = OutcomeType.STATUS_CHANGE,
-                    description = "Obligation triggered: ${obligation.description}",
-                    obligationTriggered = obligation.id,
-                    metadata = obligation.metadata
-                )
+        val outcomes =
+            if (executed) {
+                // Generate outcomes based on contract terms
+                contract.terms.obligations.map { obligation ->
+                    ContractOutcome(
+                        type = OutcomeType.STATUS_CHANGE,
+                        description = "Obligation triggered: ${obligation.description}",
+                        obligationTriggered = obligation.id,
+                        metadata = obligation.metadata,
+                    )
+                }
+            } else {
+                emptyList()
             }
-        } else {
-            emptyList()
-        }
 
         // Update contract status if executed
         if (executed) {
-            updateStatus(contract.id, ContractStatus.EXECUTED, "Contract conditions met").getOrThrow()
+            transitionLocked(contract.id, ContractStatus.EXECUTED)
         }
 
-        ExecutionResult(
+        // Evidence is the credential that binds the executed terms; null when the contract was
+        // never bound to one.
+        val evidence = listOfNotNull(contract.credentialId).takeIf { it.isNotEmpty() }
+
+        return ExecutionResult(
             contractId = contract.id,
             executed = executed,
             executionType = executionType,
             outcomes = outcomes,
-            evidence = executionContext.triggerData?.let { listOf() }, // Would contain VC IDs in real implementation
-            timestamp = Clock.System.now().toString()
+            evidence = evidence,
+            timestamp = Clock.System.now().toString(),
         )
     }
 
     override suspend fun evaluateConditions(
         contract: SmartContract,
-        inputData: JsonElement
-    ): Result<ConditionEvaluation> = trustweaveCatching {
-        // 1. Extract engine reference from execution model
-        val engineRef = contract.executionModel.toEngineReference()
+        inputData: JsonElement,
+    ): Result<ConditionEvaluation> =
+        trustweaveCatching {
+            // 1. Extract engine reference from execution model
+            val engineRef = contract.executionModel.toEngineReference()
 
-        // 2. Handle manual execution
-        if (engineRef is EngineReference.Manual) {
-            throw IllegalStateException(
-                "Manual execution does not require condition evaluation"
-            )
-        }
-
-        // 3. Get engine (throws if not registered)
-        val engineId = (engineRef as EngineReference.WithEngine).engineId
-        val engine = engines.require(engineId)
-
-        // 4. Verify engine integrity (tamper detection)
-        engineRef.expectedHash?.let { expectedHash ->
-            engines.verifyOrThrow(engineId, expectedHash)
-        }
-
-        // 5. Verify engine version compatibility (if specified)
-        engineRef.expectedVersion?.let { expectedVersion ->
-            require(expectedVersion.isNotBlank()) { "Expected version cannot be blank" }
-            if (engine.version != expectedVersion) {
+            // 2. Handle manual execution
+            if (engineRef is EngineReference.Manual) {
                 throw IllegalStateException(
-                    "Evaluation engine version mismatch. " +
-                    "Expected: $expectedVersion, " +
-                    "Actual: ${engine.version}"
+                    "Manual execution does not require condition evaluation",
                 )
             }
-        }
 
-        // 6. Verify condition types are supported
-        val unsupportedConditions = contract.terms.conditions.filter { condition ->
-            condition.conditionType !in engine.supportedConditionTypes
-        }
-        if (unsupportedConditions.isNotEmpty()) {
-            throw IllegalStateException(
-                "Engine '$engineId' does not support condition types: " +
-                unsupportedConditions.map { it.conditionType.name }.joinToString()
+            // 3. Get engine (throws if not registered)
+            val engineId = (engineRef as EngineReference.WithEngine).engineId
+            val engine = engines.require(engineId)
+
+            // 4. Verify engine integrity (tamper detection)
+            engineRef.expectedHash?.let { expectedHash ->
+                engines.verifyOrThrow(engineId, expectedHash)
+            }
+
+            // 5. Verify engine version compatibility (if specified)
+            engineRef.expectedVersion?.let { expectedVersion ->
+                require(expectedVersion.isNotBlank()) { "Expected version cannot be blank" }
+                if (engine.version != expectedVersion) {
+                    throw IllegalStateException(
+                        "Evaluation engine version mismatch. " +
+                            "Expected: $expectedVersion, " +
+                            "Actual: ${engine.version}",
+                    )
+                }
+            }
+
+            // 6. Verify condition types are supported
+            val unsupportedConditions =
+                contract.terms.conditions.filter { condition ->
+                    condition.conditionType !in engine.supportedConditionTypes
+                }
+            if (unsupportedConditions.isNotEmpty()) {
+                throw IllegalStateException(
+                    "Engine '$engineId' does not support condition types: " +
+                        unsupportedConditions.map { it.conditionType.name }.joinToString(),
+                )
+            }
+
+            // 7. Create evaluation context
+            val context =
+                EvaluationContext(
+                    contractId = contract.id,
+                    executionModel = contract.executionModel,
+                    contractData = contract.contractData,
+                )
+
+            // 8. Evaluate conditions using the engine
+            val conditionResults =
+                contract.terms.conditions.map { condition ->
+                    condition.evaluateWith(engine, inputData, context)
+                }
+
+            val overallResult = conditionResults.all { it.satisfied && it.error == null }
+
+            ConditionEvaluation(
+                contractId = contract.id,
+                conditions = conditionResults,
+                overallResult = overallResult,
+                timestamp = Clock.System.now().toString(),
             )
         }
-
-        // 7. Create evaluation context
-        val context = EvaluationContext(
-            contractId = contract.id,
-            executionModel = contract.executionModel,
-            contractData = contract.contractData
-        )
-
-        // 8. Evaluate conditions using the engine
-        val conditionResults = contract.terms.conditions.map { condition ->
-            condition.evaluateWith(engine, inputData, context)
-        }
-
-        val overallResult = conditionResults.all { it.satisfied && it.error == null }
-
-        ConditionEvaluation(
-            contractId = contract.id,
-            conditions = conditionResults,
-            overallResult = overallResult,
-            timestamp = Clock.System.now().toString()
-        )
-    }
-
 
     override suspend fun updateStatus(
         contractId: String,
         newStatus: ContractStatus,
         reason: String?,
-        metadata: JsonElement?
-    ): Result<SmartContract> = trustweaveCatching {
-        val contract = contracts[contractId]
-            ?: throw TrustWeaveException.NotFound(resource = "Contract: $contractId")
+        metadata: JsonElement?,
+    ): Result<SmartContract> =
+        trustweaveCatching {
+            withContractLock(contractId) { transitionLocked(contractId, newStatus) }
+        }
+
+    /** Validates and applies a status transition. Caller must hold the contract's lock. */
+    private fun transitionLocked(
+        contractId: String,
+        newStatus: ContractStatus,
+    ): SmartContract {
+        val contract = storedContract(contractId)
 
         // Validate state transition
-        val transitionValidation = ContractValidator.validateStateTransition(
-            contract.status,
-            newStatus
-        )
+        val transitionValidation =
+            ContractValidator.validateStateTransition(
+                contract.status,
+                newStatus,
+            )
         if (!transitionValidation.isValid()) {
             throw TrustWeaveException.InvalidOperation(
-                message = transitionValidation.errorMessage() ?: "Invalid state transition"
+                message = transitionValidation.errorMessage() ?: "Invalid state transition",
             )
         }
 
-        val updatedContract = updateContract(
+        return replaceContract(
+            contract,
             contract.copy(
                 status = newStatus,
-                updatedAt = Clock.System.now().toString()
-            )
-        ).getOrThrow()
-
-        updatedContract
+                updatedAt = Clock.System.now().toString(),
+            ),
+        )
     }
 
-    override suspend fun getContract(contractId: String): Result<SmartContract> = trustweaveCatching {
-        contracts[contractId]
-            ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound("Contract not found: $contractId")
-    }
-
-    override suspend fun verifyContract(
-        credentialId: String
-    ): Result<Boolean> = trustweaveCatching {
-        requireNotNull(credentialService) {
-            "CredentialService is required for contract verification"
+    override suspend fun getContract(contractId: String): Result<SmartContract> =
+        trustweaveCatching {
+            contracts[contractId]
+                ?: throw org.trustweave.core.exception.TrustWeaveException
+                    .NotFound("Contract not found: $contractId")
         }
 
-        // Find contract by credential ID
-        val contract = contracts.values.firstOrNull { it.credentialId == credentialId }
-            ?:             throw TrustWeaveException.NotFound(
-                resource = "Contract for credential ID: $credentialId"
-            )
+    /**
+     * Verifies the contract bound to [credentialId].
+     *
+     * The credential is taken from the credentials this instance issued in [bindContract] or,
+     * failing that, from the configured [ContractCredentialResolver]. It is then verified with
+     * the credential service (proof, validity, status) and checked to actually bind the stored
+     * contract: subject ID, contract number, dates, parties, contract data, terms and execution
+     * model must match.
+     *
+     * @return success(true) when all checks pass, success(false) when the credential is invalid or
+     *   does not match the stored contract, and a failure when verification cannot be performed
+     *   (no credential service, unknown contract, or credential not obtainable).
+     */
+    override suspend fun verifyContract(credentialId: String): Result<Boolean> =
+        trustweaveCatching {
+            requireNotNull(credentialService) {
+                "CredentialService is required for contract verification"
+            }
 
-        // Note: To fully verify, we would need to retrieve the credential
-        // This requires credential storage which is not available in this service
-        // For now, we verify the contract exists and has a credential ID
-        // Full verification should be done via CredentialService.verify()
-        contract.credentialId != null
+            // Find contract by credential ID
+            val contract =
+                contracts.values.firstOrNull { it.credentialId == credentialId }
+                    ?: throw TrustWeaveException.NotFound(
+                        resource = "Contract for credential ID: $credentialId",
+                    )
+
+            val credential =
+                issuedCredentials[credentialId]
+                    ?: credentialResolver?.resolve(credentialId)
+                    ?: throw TrustWeaveException.NotFound(
+                        resource =
+                            "Credential $credentialId for contract ${contract.id} " +
+                                "(not issued by this service and no ContractCredentialResolver could provide it)",
+                    )
+
+            if (credential.id?.value != credentialId) {
+                false
+            } else {
+                when (credentialService.verify(credential)) {
+                    is VerificationResult.Valid -> credentialBindsContract(credential, contract)
+                    is VerificationResult.Invalid -> false
+                }
+            }
+        }
+
+    /**
+     * Checks that the credential's subject carries exactly the stored contract's binding claims,
+     * so a valid credential for one contract cannot vouch for different (or edited) terms.
+     */
+    private fun credentialBindsContract(
+        credential: VerifiableCredential,
+        contract: SmartContract,
+    ): Boolean {
+        val subject = credential.credentialSubject
+        if (subject.id?.value != contract.id) return false
+        val claims = subject.claims
+
+        fun claimString(name: String): String? = (claims[name] as? JsonPrimitive)?.takeIf { it.isString }?.content
+
+        if (claimString("contractNumber") != contract.contractNumber) return false
+        if (claimString("effectiveDate") != contract.effectiveDate) return false
+        if (claimString("expirationDate") != (contract.expirationDate ?: "")) return false
+        if (claims["contractData"] != contract.contractData) return false
+        if (claims["terms"] != json.encodeToJsonElement(contract.terms)) return false
+
+        val parties = claims["parties"] as? JsonObject ?: return false
+        val expectedParties =
+            buildMap {
+                put("primaryPartyDid", contract.parties.primaryPartyDid)
+                put("counterpartyDid", contract.parties.counterpartyDid)
+                putAll(contract.parties.additionalParties)
+            }
+        if (parties.keys != expectedParties.keys) return false
+        if (expectedParties.any { (k, v) -> (parties[k] as? JsonPrimitive)?.content != v }) return false
+
+        val boundModel =
+            claims["executionModel"]?.let {
+                runCatching { json.decodeFromJsonElement(ExecutionModel.serializer(), it) }.getOrNull()
+            } ?: return false
+        // The credential records the engine version/hash captured at issuance; the stored draft
+        // usually does not. Compare the model without them, and exactly when the draft pins a hash.
+        return withoutEngineHash(boundModel) == withoutEngineHash(contract.executionModel) &&
+            (engineHashOf(contract.executionModel) == null || boundModel == contract.executionModel)
     }
 
-    private suspend fun updateContract(contract: SmartContract): Result<SmartContract> = trustweaveCatching {
-        // Use compute for atomic update
-        contracts.compute(contract.id) { _, _ -> contract }
-        contract
+    private fun engineHashOf(model: ExecutionModel): String? =
+        when (model) {
+            is ExecutionModel.Parametric -> model.engineHash
+            is ExecutionModel.Conditional -> model.engineHash
+            is ExecutionModel.Scheduled -> model.engineHash
+            is ExecutionModel.EventDriven -> model.engineHash
+            ExecutionModel.Manual -> null
+        }
+
+    private fun withoutEngineHash(model: ExecutionModel): ExecutionModel =
+        when (model) {
+            is ExecutionModel.Parametric -> model.copy(engineVersion = null, engineHash = null)
+            is ExecutionModel.Conditional -> model.copy(engineVersion = null, engineHash = null)
+            is ExecutionModel.Scheduled -> model.copy(engineVersion = null, engineHash = null)
+            is ExecutionModel.EventDriven -> model.copy(engineVersion = null, engineHash = null)
+            ExecutionModel.Manual -> model
+        }
+
+    /**
+     * Compare-and-set write: replaces [expected] with [updated] only if the stored record is
+     * still [expected]. Fails loudly instead of silently overwriting a concurrent change.
+     */
+    private fun replaceContract(
+        expected: SmartContract,
+        updated: SmartContract,
+    ): SmartContract {
+        require(expected.id == updated.id) { "Contract ID cannot change" }
+        if (!contracts.replace(expected.id, expected, updated)) {
+            throw TrustWeaveException.InvalidOperation(
+                message = "Contract ${expected.id} was modified concurrently; reload it and retry",
+            )
+        }
+        return updated
     }
 }
-

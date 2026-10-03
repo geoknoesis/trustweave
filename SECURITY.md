@@ -7,9 +7,12 @@ TrustWeave provides security updates for the following versions:
 | Version | Supported          |
 | ------- | ------------------ |
 | 0.7.x   | :white_check_mark: |
+| 0.6.x   | :x:                |
 | < 0.6   | :x:                |
 
-We recommend using the latest stable release to ensure you receive security updates and bug fixes.
+Only the latest minor release line receives security fixes while TrustWeave is pre-1.0; upgrade
+from 0.6.x to 0.7.x to receive them. We recommend using the latest stable release to ensure you
+receive security updates and bug fixes.
 
 ## Reporting a Vulnerability
 
@@ -92,6 +95,60 @@ The following are generally considered out of scope:
 - ❌ Issues in example code or documentation (unless exploitable in production)
 
 *If you're unsure whether a vulnerability is in scope, please report it and we'll assess it.*
+
+## Dependency Scanning
+
+Every pull request and every push to `main` runs [`.github/workflows/security.yml`](.github/workflows/security.yml):
+
+- **Dependency review** fails a pull request that adds a dependency with a known *high* or
+  *critical* advisory (Gradle dependency graph via GitHub dependency submission).
+- **OSV-Scanner** scans the aggregate CycloneDX SBOM (`./gradlew cyclonedxBom`) and the contents of
+  every resolved JAR, so libraries shaded inside a fat JAR are found too. Results are published to
+  code scanning and to the workflow summary. The existing backlog is reported, not gating, while it
+  is worked down; new findings on a pull request are gated by dependency review.
+
+Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `gradle/libs.versions.toml`.
+
+## Known Dependency Risks
+
+### `org.didcommx:didcomm` 0.3.2 embeds outdated Nimbus JOSE+JWT and json-smart
+
+**Affected module:** `credentials:plugins:didcomm` (optional plugin; nothing else depends on it).
+
+`org.didcommx:didcomm` 0.3.2 (the latest release, August 2022) is a fat JAR that contains its own
+copies of `com.nimbusds:nimbus-jose-jwt` **9.16-preview.1** and `net.minidev:json-smart`
+**2.4.7**. They are not separate dependencies, so they do not appear in the Gradle dependency graph
+or the SBOM, Dependabot cannot update them, and the catalog's Nimbus version (9.48) does not apply.
+The module's build file excludes a standalone `nimbus-jose-jwt` from its classpath on purpose,
+because two copies of the `com.nimbusds` packages cause split-package and `NoSuchMethodError` failures
+at runtime.
+
+Advisories in the embedded copies (as reported by OSV-Scanner):
+
+| Embedded library | Advisory | Impact | Fixed in |
+| ---------------- | -------- | ------ | -------- |
+| nimbus-jose-jwt 9.16-preview.1 | [GHSA-gvpg-vgmx-xg6w](https://osv.dev/GHSA-gvpg-vgmx-xg6w) (CVE-2023-52428) | Denial of service through a large PBES2 iteration count (`p2c`) when decrypting a password-based JWE | 9.37.2 |
+| nimbus-jose-jwt 9.16-preview.1 | [GHSA-xwmg-2g98-w7v9](https://osv.dev/GHSA-xwmg-2g98-w7v9) (CVE-2025-53864) | Denial of service (stack overflow) from deeply nested JSON in a parsed JOSE object | 9.37.4 |
+| json-smart 2.4.7 | [GHSA-493p-pfq6-5258](https://osv.dev/GHSA-493p-pfq6-5258) (CVE-2023-1370) | Denial of service (stack exhaustion) from deeply nested JSON arrays/objects | 2.4.9 |
+
+All three are denial-of-service issues triggered by untrusted input. DIDComm messages are untrusted
+input by definition, so treat them as reachable when the plugin unpacks messages from external parties.
+
+**If you use the DIDComm plugin:**
+
+- Bound the size of an inbound DIDComm message before it reaches the plugin (for example at your
+  HTTP endpoint), and reject messages that nest JSON more deeply than your protocol needs.
+- Run message unpacking where a thread or request failing with a stack overflow is contained and
+  retried, not where it takes down the host.
+- Do not use password-based (PBES2) JWE with the plugin.
+- Prefer leaving `credentials:plugins:didcomm` off the classpath when you do not need DIDComm.
+
+**Status:** accepted risk with mitigation, tracked in
+[docs/contributing/dependency-upgrade-plan.md](docs/contributing/dependency-upgrade-plan.md). The
+resolution is to move to a maintained DIDComm implementation (or a didcommx release that depends on,
+rather than embeds, a current Nimbus) — not to patch the shaded classes. The OSV-Scanner job scans the
+didcomm JAR's contents, so this entry is re-confirmed on every run and any new advisory against the
+embedded copies shows up there.
 
 ## Security Best Practices
 

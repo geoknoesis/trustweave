@@ -36,7 +36,7 @@ dependencies {
     // Test dependencies
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.test.runtime)
-    testImplementation(libs.wiremock.jre8.standalone)
+    testImplementation(libs.wiremock.standalone)
 
     integrationTestImplementation(libs.testcontainers)
     integrationTestImplementation(libs.testcontainers.junit)

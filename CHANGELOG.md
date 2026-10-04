@@ -226,6 +226,18 @@ working code fail until it is adjusted.**
 
 ### Changed
 
+- **Dependency round (JVM)**: kotlinx-coroutines and coroutines-test 1.11.0, JUnit 6.1.3 (Jupiter
+  and platform launcher share one version line), H2 2.5.252, mysql-connector-j 26.7.0 (same
+  coordinates, Oracle's new year-based numbering), AWS SDK BOM 2.55.11, nimbus-jose-jwt 10.10.
+  The didcomm plugin still excludes the standalone Nimbus jar because the didcomm fat jar embeds
+  its own. H2 2.5 changes `LENGTH`/`CHAR_LENGTH` on binary values to count bytes.
+- web3j 6.0.0 for every EVM consumer (`anchors:plugins:evm-base`, `did:plugins:ethr`, `polygon`,
+  `ens`); the `web3j-legacy` catalog alias is removed. web3j 5.0.3+ uses Jackson 3 internally.
+- bitcoinj 0.17.1 for `anchors:plugins:bitcoin` and `did:plugins:btcr`; the `bitcoinj-legacy`
+  alias is removed. The Bitcoin anchor client now parses raw transactions with
+  `Transaction.read`, hex-encodes with `java.util.HexFormat` and detects OP_RETURN with
+  `ScriptPattern.isOpReturn`; behaviour is unchanged (the txid-integrity read test covers it).
+
 - `BitstringStatusListManager`'s bitstring encode and decode are now `suspend` and check
   cooperative cancellation every 8192 bits. A cancelled status-list refresh previously ran the full
   131072-entry loop to completion. `updateCredentialStatus` became `suspend` with them; all its

@@ -3,7 +3,6 @@ package org.trustweave.anchor.bitcoin
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
 import org.bitcoinj.core.Transaction
-import org.bitcoinj.core.Utils
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.script.ScriptBuilder
 import org.junit.jupiter.api.Test
@@ -43,12 +42,14 @@ class BitcoinAnchorReadIntegrityTest {
         val tx = Transaction(params)
         // A transaction with no inputs serializes with a segwit marker that the parser then reads
         // back as a superfluous witness record, so give it one dummy input.
-        tx.addInput(org.bitcoinj.core.Sha256Hash.ZERO_HASH, 0L, ScriptBuilder.createEmpty())
+        tx.addInput(org.bitcoinj.base.Sha256Hash.ZERO_HASH, 0L, ScriptBuilder.createEmpty())
         tx.addOutput(
-            org.bitcoinj.core.Coin.ZERO,
+            org.bitcoinj.base.Coin.ZERO,
             ScriptBuilder.createOpReturnScript(payloadJson.toByteArray(StandardCharsets.UTF_8)),
         )
-        return Utils.HEX.encode(tx.bitcoinSerialize()) to tx.txId.toString()
+        return java.util.HexFormat
+            .of()
+            .formatHex(tx.serialize()) to tx.txId.toString()
     }
 
     private fun withRpc(

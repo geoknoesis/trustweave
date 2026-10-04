@@ -27,11 +27,7 @@ opentelemetry-proto = "1.11.0-alpha"
 
 # Blockchain
 web3j = "6.0.0"
-# 0.17 is a breaking API change (Transaction/NetworkParameters/HEX/isOpReturn all moved), so the
-# two consumers still build against 0.16.2 through bitcoinj-legacy. Both aliases live here so the
-# drift is recorded and Dependabot can see it; the 0.17 migration is tracked separately.
 bitcoinj = "0.17.1"
-bitcoinj-legacy = "0.16.2"
 algosdk = "2.10.1"
 cardano-client = "0.5.1"
 
@@ -121,7 +117,6 @@ opentelemetry-proto = { module = "io.opentelemetry.proto:opentelemetry-proto", v
 # Blockchain
 web3j = { module = "org.web3j:core", version.ref = "web3j" }
 bitcoinj-core = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj" }
-bitcoinj-core-legacy = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj-legacy" }
 algosdk = { module = "com.algorand:algosdk", version.ref = "algosdk" }
 cardano-client-lib = { module = "com.bloxbean.cardano:cardano-client-lib", version.ref = "cardano-client" }
 cardano-client-backend-blockfrost = { module = "com.bloxbean.cardano:cardano-client-backend-blockfrost", version.ref = "cardano-client" }

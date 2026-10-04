@@ -23,15 +23,17 @@ release on Maven Central when this was written. Update this page in the same PR 
 | [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low | TBD (assign) |
 | [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
 | [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High | TBD (assign) |
-| [bitcoinj 0.17](#bitcoinj) | 0.16.2 (`bitcoinj-legacy`) | 0.17.x | 2 build files | Medium | TBD (assign) |
 
 ## Routine bumps done in the current cycle
 
 Within-major updates that were safe to take without a migration, verified by compiling and testing
 the modules that use them: Jackson 2.22.3, Bouncy Castle 1.86 (both clear advisories that OSV
 reported against the previous versions), SLF4J 2.0.20, MongoDB BSON 4.11.5, Azure Identity 1.18.7.
-Still open and routine (Dependabot can propose them): Hikari 7.1.0, web3j 5.0.3, OpenTelemetry
-1.66.0, json-path 2.10.0, Kover 0.9.11, AWS SDK BOM 2.55.x, Google libraries-bom 26.90.0, Azure SDK
+The JVM dependency round that followed also moved kotlinx-coroutines 1.11.0, JUnit 6.1.3, H2 2.5.252,
+mysql-connector-j 26.7.0, AWS SDK BOM 2.55.11, nimbus-jose-jwt 10.10, web3j 6.0.0 (the `web3j-legacy`
+alias is gone) and bitcoinj 0.17.1 (the `bitcoinj-legacy` alias is gone).
+Still open and routine (Dependabot can propose them): Hikari 7.1.0, OpenTelemetry
+1.66.0, json-path 2.10.0, Kover 0.9.11, Google libraries-bom 26.90.0, Azure SDK
 BOM 1.3.8. Take them in separate small PRs and run the affected modules' tests.
 
 The remaining OSV advisories are tracked in `config/osv/baseline.json` (see SECURITY.md). Most come
@@ -166,9 +168,3 @@ Steps:
 3. Migrate module by module, regenerate ABI dumps (`./gradlew updateKotlinAbi`) and review the
    diffs, and verify JSON serialization of timestamps is unchanged (ISO-8601) with the existing
    round-trip tests.
-
-## bitcoinj
-
-Already recorded in `gradle/libs.versions.toml`: two consumers still build against 0.16.2 through
-the `bitcoinj-legacy` alias because 0.17 moves `Transaction`, `NetworkParameters`, `HEX` and
-`isOpReturn`. Migrate those two modules, then delete the legacy alias.

@@ -226,6 +226,8 @@ working code fail until it is adjusted.**
 
 ### Changed
 
+- GitHub Actions bumped to checkout 7.0.1, setup-java 6.0.1, setup-node 7.0.0, upload-artifact 7.0.1, upload-pages-artifact 5.0.0, github-script 9.0.0, attest-build-provenance 4.2.2 and gradle/actions 6.4.0 (setup-gradle, dependency-submission), all SHA-pinned; `dependabot.yml` now groups Gradle and Actions updates and ignores the major upgrades deferred in `docs/contributing/dependency-upgrade-plan.md`.
+
 - `BitstringStatusListManager`'s bitstring encode and decode are now `suspend` and check
   cooperative cancellation every 8192 bits. A cancelled status-list refresh previously ran the full
   131072-entry loop to completion. `updateCredentialStatus` became `suspend` with them; all its

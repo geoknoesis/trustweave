@@ -47,6 +47,9 @@ class PlcDidMethod(
 
         /** A did:plc identifier: 24 characters of lowercase base32 (RFC 4648 alphabet, no padding). */
         private val IDENTIFIER = Regex("^[a-z2-7]{24}$")
+
+        /** Upper bound on a directory response body (same cap as did:web). */
+        private const val MAX_RESPONSE_BYTES = 1L * 1024 * 1024
     }
 
     private val httpClient: OkHttpClient
@@ -58,8 +61,29 @@ class PlcDidMethod(
                 .connectTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+                // A directory that redirects is misbehaving (or compromised); never follow blindly.
+                .followRedirects(false)
+                .followSslRedirects(false)
                 .build()
     }
+
+    /** Reads the body, refusing anything over [MAX_RESPONSE_BYTES] without buffering more than that. */
+    private fun readCapped(response: okhttp3.Response): String {
+        val body =
+            response.body
+                ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty response body")
+        if (body.contentLength() > MAX_RESPONSE_BYTES) throw tooLarge()
+        val source = body.source()
+        source.request(MAX_RESPONSE_BYTES + 1)
+        if (source.buffer.size > MAX_RESPONSE_BYTES) throw tooLarge()
+        return source.buffer.readUtf8()
+    }
+
+    private fun tooLarge() =
+        TrustWeaveException.Unknown(
+            code = "RESPONSE_TOO_LARGE",
+            message = "PLC directory response exceeds the maximum allowed size ($MAX_RESPONSE_BYTES bytes)",
+        )
 
     private fun notImplemented(operation: String): Nothing =
         throw TrustWeaveException.Unknown(
@@ -122,19 +146,21 @@ class PlcDidMethod(
                                 didString,
                             )
                             // The PLC directory answers 410 for a tombstoned (deactivated) DID.
-                            response.code == 410 -> return@withContext DidMethodUtils.createErrorResolutionResult(
-                                "notFound",
-                                "DID has been tombstoned (deactivated) in the PLC directory",
-                                method,
-                                didString,
+                            response.code == 410 -> {
+                                // Tombstoned == deactivated (DID Resolution 1.0 §4.4): not a "not found".
+                                removeStoredDocument(didString)
+                                return@withContext DidResolutionResult.Deactivated(did = did)
+                            }
+                            response.isRedirect -> throw TrustWeaveException.Unknown(
+                                code = "REDIRECT_REFUSED",
+                                message = "PLC directory answered with a redirect (HTTP ${response.code}); redirects are not followed",
                             )
                             !response.isSuccessful -> throw TrustWeaveException.Unknown(
                                 code = "RESOLVE_FAILED",
                                 message = "PLC directory returned HTTP ${response.code} for $didString",
                             )
                         }
-                        response.body?.string()
-                            ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty response body")
+                        readCapped(response)
                     }
 
                 val document = jsonElementToDocument(Json.parseToJsonElement(jsonString))

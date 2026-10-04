@@ -70,12 +70,39 @@ class PlcDidMethodTest {
         }
 
     @Test
-    fun `404 is not found and 410 reports the tombstone`() =
+    fun `404 is not found and 410 resolves as deactivated`() =
         runBlocking<Unit> {
             assertIs<DidResolutionResult.Failure.NotFound>(method(directory(404)).resolveDid(Did(DID)))
             stop()
-            val tombstoned = assertIs<DidResolutionResult.Failure.NotFound>(method(directory(410)).resolveDid(Did(DID)))
-            assertTrue(tombstoned.reason!!.contains("tombstoned"), tombstoned.reason)
+            val tombstoned = assertIs<DidResolutionResult.Deactivated>(method(directory(410)).resolveDid(Did(DID)))
+            assertTrue(tombstoned.documentMetadata.deactivated)
+        }
+
+    @Test
+    fun `an oversized directory response is refused`() =
+        runBlocking<Unit> {
+            val huge = """{"id":"$DID","pad":"${"a".repeat(1_100_000)}"}"""
+            val result = method(directory(200, huge)).resolveDid(Did(DID))
+            val failure = assertIs<DidResolutionResult.Failure.ResolutionError>(result)
+            assertTrue(failure.reason.contains("maximum allowed size"), failure.reason)
+        }
+
+    @Test
+    fun `a redirect from the directory is not followed`() =
+        runBlocking<Unit> {
+            val target = directory(200, """{"id":"$DID"}""")
+            stop()
+            val s = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+            s.createContext("/") { exchange ->
+                exchange.responseHeaders.add("Location", "$target/$DID")
+                exchange.sendResponseHeaders(302, -1)
+                exchange.close()
+            }
+            s.start()
+            server = s
+            val result = method("http://127.0.0.1:${s.address.port}").resolveDid(Did(DID))
+            val failure = assertIs<DidResolutionResult.Failure.ResolutionError>(result)
+            assertTrue(failure.reason.contains("redirect", ignoreCase = true), failure.reason)
         }
 
     @Test

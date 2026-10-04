@@ -140,7 +140,8 @@ export interface StoreResult {
  * issuer, or the issuers of stored credentials being re-verified). Anything else is rejected (fail closed).
  */
 export function walletIssuerPolicy(...extra: Array<string | null | undefined>): IssuerTrustPolicy {
-  const configured = (process.env.NEXT_PUBLIC_TRUSTED_ISSUERS ?? '').split(',').map(id => id.trim())
+  // `process` exists under Next (which inlines NEXT_PUBLIC_*) but not in a bare browser module graph.
+  const configured = ((typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_TRUSTED_ISSUERS : undefined) ?? '').split(',').map(id => id.trim())
   return IssuerTrustPolicy.allowList([...configured, ...loadAcceptedIssuers(), ...extra])
 }
 

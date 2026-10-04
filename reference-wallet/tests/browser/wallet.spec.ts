@@ -69,7 +69,7 @@ for (const profile of ['cac', 'faa', 'spatial']) {
     for (const name of issued.selectivelyDisclosable) expect(visible).not.toHaveProperty(name)
     const hidden = await page.evaluate(async issued => {
       const { wallet, sdjwt } = (window as any).walletTest
-      const record = (await wallet.store(issued.credential, issued.format)).credential
+      const record = (await wallet.store(issued.credential, issued.format, issued.selectivelyDisclosable ?? [], issued.issuer)).credential
       return sdjwt.decodeSdJwtVc(await wallet.createPresentation([record.id], 'verifier', 'nonce', [])).disclosures.length
     }, issued)
     expect(hidden).toBe(0)
@@ -86,7 +86,7 @@ test('real issuer and verifier agree on the holder-selected disclosure', async (
   const challenge = await (await request.get('http://127.0.0.1:4175/api/demo-verifier/request')).json()
   const presentation = await page.evaluate(async ({ issued, challenge }) => {
     const { wallet } = (window as any).walletTest
-    const record = (await wallet.store(issued.credential, issued.format)).credential
+    const record = (await wallet.store(issued.credential, issued.format, issued.selectivelyDisclosable ?? [], issued.issuer)).credential
     return wallet.createPresentation([record.id], challenge.audience, challenge.nonce, [issued.selectivelyDisclosable[0]])
   }, { issued, challenge })
   const verdict = await (await request.post('http://127.0.0.1:4175/api/demo-verifier/verify', {
@@ -124,7 +124,7 @@ test('real browser custody survives reload and concurrent tabs retain imports', 
     const issuer = crypto.generateEd25519KeyPair(), issuerDid = crypto.publicKeyToDidKey(issuer.publicKey)
     const compact = sdjwt.issueSdJwtVc({ issuerDid, issuerPrivateKey: issuer.privateKey, issuerKid: issuerDid,
       holderDid: holder.did, vct: name, alwaysVisible: {}, selectivelyDisclosable: [{ name: 'privateClaim', value: name }], now: Math.floor(Date.now()/1000) })
-    return (await wallet.store(compact, 'vc+sd-jwt')).credential.id
+    return (await wallet.store(compact, 'vc+sd-jwt', [], issuerDid)).credential.id
   }, name)
   const ids = await Promise.all([add(page, 'Employee'), add(second, 'Degree')])
   await page.reload(); await page.waitForFunction(() => !!(window as any).walletTest)
@@ -149,6 +149,8 @@ test('production wallet restores a signed backup and exports without private key
   await page.waitForFunction(() => !!localStorage.getItem('trustweave-wallet-holder'))
   const holder = await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!))
   const issued = await (await request.get('http://127.0.0.1:4175/api/demo-issuer/credential', { params: { subject: holder.did } })).json()
+  // A restore re-verifies against issuers this wallet already accepted (fail closed), so mirror a user who received it earlier.
+  await page.evaluate(issuer => localStorage.setItem('trustweave-wallet-accepted-issuers', JSON.stringify([issuer])), issued.issuer)
   const content = JSON.stringify({ version: '2', holder, credentials: JSON.stringify([issued]) })
   await page.getByText('Back up and restore credentials', { exact: true }).click()
   page.on('dialog', dialog => dialog.accept())
@@ -173,6 +175,7 @@ test('key loss offers replacement while preserving old credentials for reissuanc
   await page.waitForFunction(() => !!localStorage.getItem('trustweave-wallet-holder'))
   const holder = await page.evaluate(() => JSON.parse(localStorage.getItem('trustweave-wallet-holder')!))
   const issued = await (await request.get('http://127.0.0.1:4175/api/demo-issuer/credential', { params: { subject: holder.did } })).json()
+  await page.evaluate(issuer => localStorage.setItem('trustweave-wallet-accepted-issuers', JSON.stringify([issuer])), issued.issuer)
   await page.getByText('Back up and restore credentials', { exact: true }).click()
   page.on('dialog', dialog => dialog.accept())
   await page.getByLabel('Credential backup file').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ version: '2', holder, credentials: JSON.stringify([issued]) })) })
@@ -201,7 +204,7 @@ test('airspace request names the required claims and the gate accepts their sign
   expect(challenge.requiredClaims).toEqual(['trustDomainId', 'activityType'])
   const presentation = await page.evaluate(async ({ issued, challenge }) => {
     const wallet = (window as any).walletTest.wallet
-    const record = (await wallet.store(issued.credential, issued.format)).credential
+    const record = (await wallet.store(issued.credential, issued.format, issued.selectivelyDisclosable ?? [], issued.issuer)).credential
     return wallet.createPresentation([record.id], challenge.audience, challenge.nonce, challenge.requiredClaims)
   }, { issued, challenge })
   const verdict = await (await request.post('http://127.0.0.1:4175/api/demo-airspace/gate/verify', {

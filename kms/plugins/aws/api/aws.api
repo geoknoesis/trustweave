@@ -126,5 +126,6 @@ public final class org/trustweave/awskms/AwsKmsOptionsBuilder {
 	public final fun setRegion (Ljava/lang/String;)V
 	public final fun setSecretAccessKey (Ljava/lang/String;)V
 	public final fun setSessionToken (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
 }
 

@@ -26,8 +26,8 @@ opentelemetry = "1.65.0"
 opentelemetry-proto = "1.11.0-alpha"
 
 # Blockchain
-web3j = "5.0.2"
-web3j-legacy = "4.14.0"
+web3j = "6.0.0"
+web3j-legacy = "6.0.0"
 # 0.17 is a breaking API change (Transaction/NetworkParameters/HEX/isOpReturn all moved), so the
 # two consumers still build against 0.16.2 through bitcoinj-legacy. Both aliases live here so the
 # drift is recorded and Dependabot can see it; the 0.17 migration is tracked separately.

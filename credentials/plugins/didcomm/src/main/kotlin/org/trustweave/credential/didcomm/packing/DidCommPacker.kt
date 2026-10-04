@@ -1,6 +1,21 @@
 package org.trustweave.credential.didcomm.packing
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.didcomm.crypto.DidCommCryptoInterface
 import org.trustweave.credential.didcomm.exception.DidCommException
@@ -8,15 +23,10 @@ import org.trustweave.credential.didcomm.models.DidCommEnvelope
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import kotlinx.serialization.json.putJsonArray
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
 import java.util.Base64
 
 /**
@@ -49,7 +59,7 @@ import java.util.Base64
 class DidCommPacker(
     private val crypto: DidCommCryptoInterface,
     private val resolveDid: suspend (String) -> DidDocument?,
-    private val signer: suspend (ByteArray, String) -> ByteArray // Signer for plain messages
+    private val signer: suspend (ByteArray, String) -> ByteArray, // Signer for plain messages
 ) {
     private companion object {
         const val JWS_ALG_EDDSA = "EdDSA"
@@ -57,13 +67,29 @@ class DidCommPacker(
         const val ED25519_SIGNATURE_LENGTH_BYTES = 64
 
         /** X.509 SubjectPublicKeyInfo prefix for a raw Ed25519 public key (RFC 8410). */
-        val ED25519_SPKI_PREFIX = byteArrayOf(
-            0x30, 0x2A, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x03, 0x21, 0x00,
-        )
+        val ED25519_SPKI_PREFIX =
+            byteArrayOf(
+                0x30,
+                0x2A,
+                0x30,
+                0x05,
+                0x06,
+                0x03,
+                0x2B,
+                0x65,
+                0x70,
+                0x03,
+                0x21,
+                0x00,
+            )
     }
 
     /** Compact, deterministic JSON used for JWS payload bytes on both sign and verify. */
-    private val compactJson = Json { prettyPrint = false; encodeDefaults = false }
+    private val compactJson =
+        Json {
+            prettyPrint = false
+            encodeDefaults = false
+        }
 
     /**
      * Packs a message for sending.
@@ -84,52 +110,61 @@ class DidCommPacker(
         toDid: String,
         toKeyId: String,
         encrypt: Boolean = true,
-        sign: Boolean = true
-    ): String = withContext(Dispatchers.IO) {
-        val messageJson = message.toJsonObject()
+        sign: Boolean = true,
+    ): String =
+        withContext(Dispatchers.IO) {
+            val messageJson = message.toJsonObject()
 
-        if (encrypt) {
-            // Encrypt the message
-            val envelope = crypto.encrypt(
-                message = messageJson,
-                fromDid = fromDid,
-                fromKeyId = fromKeyId,
-                toDid = toDid,
-                toKeyId = toKeyId
-            )
+            if (encrypt) {
+                // Encrypt the message
+                val envelope =
+                    crypto.encrypt(
+                        message = messageJson,
+                        fromDid = fromDid,
+                        fromKeyId = fromKeyId,
+                        toDid = toDid,
+                        toKeyId = toKeyId,
+                    )
 
-            // Serialize envelope to JSON
-            val envelopeJson = buildJsonObject {
-                put("protected", envelope.protected)
-                put("recipients", JsonArray(
-                    envelope.recipients.map { recipient ->
-                        buildJsonObject {
-                            put("header", buildJsonObject {
-                                put("kid", recipient.header.kid)
-                                put("alg", recipient.header.alg)
-                                recipient.header.epk?.let { put("epk", it) }
-                            })
-                            put("encrypted_key", recipient.encrypted_key)
-                        }
+                // Serialize envelope to JSON
+                val envelopeJson =
+                    buildJsonObject {
+                        put("protected", envelope.protected)
+                        put(
+                            "recipients",
+                            JsonArray(
+                                envelope.recipients.map { recipient ->
+                                    buildJsonObject {
+                                        put(
+                                            "header",
+                                            buildJsonObject {
+                                                put("kid", recipient.header.kid)
+                                                put("alg", recipient.header.alg)
+                                                recipient.header.epk?.let { put("epk", it) }
+                                            },
+                                        )
+                                        put("encrypted_key", recipient.encrypted_key)
+                                    }
+                                },
+                            ),
+                        )
+                        put("iv", envelope.iv)
+                        put("ciphertext", envelope.ciphertext)
+                        put("tag", envelope.tag)
                     }
-                ))
-                put("iv", envelope.iv)
-                put("ciphertext", envelope.ciphertext)
-                put("tag", envelope.tag)
-            }
 
-            Json.encodeToString(JsonObject.serializer(), envelopeJson)
-        } else {
-            // Plain message (may be signed)
-            if (sign) {
-                // Sign the message using JWS
-                val signedMessage = signMessage(messageJson, fromDid, fromKeyId)
-                Json.encodeToString(JsonObject.serializer(), signedMessage)
+                Json.encodeToString(JsonObject.serializer(), envelopeJson)
             } else {
-                Json.encodeToString(JsonObject.serializer(), messageJson)
+                // Plain message (may be signed)
+                if (sign) {
+                    // Sign the message using JWS
+                    val signedMessage = signMessage(messageJson, fromDid, fromKeyId)
+                    Json.encodeToString(JsonObject.serializer(), signedMessage)
+                } else {
+                    Json.encodeToString(JsonObject.serializer(), messageJson)
+                }
             }
         }
-    }
 
     /**
      * Unpacks a received message.
@@ -157,14 +192,15 @@ class DidCommPacker(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String? = null,
-        requireSigned: Boolean = false
-    ): DidCommMessage = unpackToResult(
-        packedMessage = packedMessage,
-        recipientDid = recipientDid,
-        recipientKeyId = recipientKeyId,
-        senderDid = senderDid,
-        requireSigned = requireSigned
-    ).message
+        requireSigned: Boolean = false,
+    ): DidCommMessage =
+        unpackToResult(
+            packedMessage = packedMessage,
+            recipientDid = recipientDid,
+            recipientKeyId = recipientKeyId,
+            senderDid = senderDid,
+            requireSigned = requireSigned,
+        ).message
 
     /**
      * Unpacks a received message and reports the authentication outcome.
@@ -180,67 +216,77 @@ class DidCommPacker(
         recipientDid: String,
         recipientKeyId: String,
         senderDid: String? = null,
-        requireSigned: Boolean = false
-    ): UnpackResult = withContext(Dispatchers.IO) {
-        val json = Json.parseToJsonElement(packedMessage)
-
-        // Check if it's an encrypted envelope
-        if (json.jsonObject.containsKey("ciphertext")) {
-            // Encrypted message. The expected sender is the caller-supplied [senderDid], falling
-            // back to the envelope's `skid` protected header (present for AuthCrypt). A pure
-            // AnonCrypt envelope has neither and is decrypted anonymously (no sender claim).
-            val envelope = parseEnvelope(json.jsonObject)
-            val resolvedSenderDid = senderDid ?: extractSenderDid(envelope)
-
-            val decrypted = try {
-                crypto.decrypt(
-                    envelope = envelope,
-                    recipientDid = recipientDid,
-                    recipientKeyId = recipientKeyId,
-                    senderDid = resolvedSenderDid ?: ""
-                )
-            } catch (e: IllegalArgumentException) {
-                // Sender-binding violations (e.g. expected sender vs anoncrypt, or vs a different
-                // cryptographic sender) surface as UnpackingFailed like every other unpack failure.
-                throw DidCommException.UnpackingFailed(
-                    reason = e.message ?: "DIDComm decryption rejected the envelope",
-                    cause = e
-                )
-            }
-
-            // `requireSigned` for an encrypted envelope is satisfied ONLY when decryption
-            // cryptographically authenticated the sender (AuthCrypt / ECDH-1PU). Anonymous
-            // encryption (AnonCrypt / ECDH-ES) does NOT authenticate: anyone with the
-            // recipient's public key can forge such an envelope with an arbitrary plaintext
-            // `from`, so it can never satisfy the requirement.
-            val authenticatedSenderDid = decrypted.authenticatedSenderDid
-            if (requireSigned) {
-                if (authenticatedSenderDid == null) {
-                    signatureFailure(
-                        "anonymous encryption does not authenticate the sender; signature required " +
-                            "(requireSigned=true) - use AuthCrypt or a signed message"
-                    )
+        requireSigned: Boolean = false,
+    ): UnpackResult =
+        withContext(Dispatchers.IO) {
+            // Input that is not a JSON object is an unpack failure like any other, not a raw parser exception.
+            val json =
+                try {
+                    Json.parseToJsonElement(packedMessage).jsonObject
+                } catch (e: kotlinx.serialization.SerializationException) {
+                    throw DidCommException.UnpackingFailed(reason = "packed message is not valid JSON: ${e.message}", cause = e)
+                } catch (e: IllegalArgumentException) {
+                    throw DidCommException.UnpackingFailed(reason = "packed message is not a JSON object", cause = e)
                 }
-                // Defense in depth: crypto.decrypt already enforced this when an expectation was given.
-                if (resolvedSenderDid != null && authenticatedSenderDid != resolvedSenderDid) {
-                    signatureFailure(
-                        "authenticated envelope sender '$authenticatedSenderDid' does not match " +
-                            "expected sender '$resolvedSenderDid'"
-                    )
-                }
-            }
 
-            // Parse the decrypted message, verifying any nested signatures (fail closed).
-            verifyAndParsePlainMessage(
-                decrypted.message,
-                expectedSenderDid = resolvedSenderDid ?: authenticatedSenderDid,
-                requireSigned = false
-            ).copy(authenticatedSenderDid = authenticatedSenderDid)
-        } else {
-            // Plain message (verified when it carries signatures)
-            verifyAndParsePlainMessage(json.jsonObject, senderDid, requireSigned)
+            // Check if it's an encrypted envelope
+            if (json.containsKey("ciphertext")) {
+                // Encrypted message. The expected sender is the caller-supplied [senderDid], falling
+                // back to the envelope's `skid` protected header (present for AuthCrypt). A pure
+                // AnonCrypt envelope has neither and is decrypted anonymously (no sender claim).
+                val envelope = parseEnvelope(json)
+                val resolvedSenderDid = senderDid ?: extractSenderDid(envelope)
+
+                val decrypted =
+                    try {
+                        crypto.decrypt(
+                            envelope = envelope,
+                            recipientDid = recipientDid,
+                            recipientKeyId = recipientKeyId,
+                            senderDid = resolvedSenderDid ?: "",
+                        )
+                    } catch (e: IllegalArgumentException) {
+                        // Sender-binding violations (e.g. expected sender vs anoncrypt, or vs a different
+                        // cryptographic sender) surface as UnpackingFailed like every other unpack failure.
+                        throw DidCommException.UnpackingFailed(
+                            reason = e.message ?: "DIDComm decryption rejected the envelope",
+                            cause = e,
+                        )
+                    }
+
+                // `requireSigned` for an encrypted envelope is satisfied ONLY when decryption
+                // cryptographically authenticated the sender (AuthCrypt / ECDH-1PU). Anonymous
+                // encryption (AnonCrypt / ECDH-ES) does NOT authenticate: anyone with the
+                // recipient's public key can forge such an envelope with an arbitrary plaintext
+                // `from`, so it can never satisfy the requirement.
+                val authenticatedSenderDid = decrypted.authenticatedSenderDid
+                if (requireSigned) {
+                    if (authenticatedSenderDid == null) {
+                        signatureFailure(
+                            "anonymous encryption does not authenticate the sender; signature required " +
+                                "(requireSigned=true) - use AuthCrypt or a signed message",
+                        )
+                    }
+                    // Defense in depth: crypto.decrypt already enforced this when an expectation was given.
+                    if (resolvedSenderDid != null && authenticatedSenderDid != resolvedSenderDid) {
+                        signatureFailure(
+                            "authenticated envelope sender '$authenticatedSenderDid' does not match " +
+                                "expected sender '$resolvedSenderDid'",
+                        )
+                    }
+                }
+
+                // Parse the decrypted message, verifying any nested signatures (fail closed).
+                verifyAndParsePlainMessage(
+                    decrypted.message,
+                    expectedSenderDid = resolvedSenderDid ?: authenticatedSenderDid,
+                    requireSigned = false,
+                ).copy(authenticatedSenderDid = authenticatedSenderDid)
+            } else {
+                // Plain message (verified when it carries signatures)
+                verifyAndParsePlainMessage(json, senderDid, requireSigned)
+            }
         }
-    }
 
     /**
      * Verifies the `signatures` array (when present) and parses the plain message.
@@ -252,17 +298,18 @@ class DidCommPacker(
     private suspend fun verifyAndParsePlainMessage(
         json: JsonObject,
         expectedSenderDid: String?,
-        requireSigned: Boolean
+        requireSigned: Boolean,
     ): UnpackResult {
-        val signatures = json["signatures"]
-            ?: if (requireSigned) {
-                signatureFailure(
-                    "Message carries no 'signatures' but a signed message is required " +
-                        "(requireSigned=true); signatures may have been stripped"
-                )
-            } else {
-                return UnpackResult(parseMessage(json), verifiedSignerDids = emptyList())
-            }
+        val signatures =
+            json["signatures"]
+                ?: if (requireSigned) {
+                    signatureFailure(
+                        "Message carries no 'signatures' but a signed message is required " +
+                            "(requireSigned=true); signatures may have been stripped",
+                    )
+                } else {
+                    return UnpackResult(parseMessage(json), verifiedSignerDids = emptyList())
+                }
         val verifiedSigners = verifySignatures(json, signatures, expectedSenderDid)
         return UnpackResult(parseMessage(json), verifiedSignerDids = verifiedSigners)
     }
@@ -271,22 +318,26 @@ class DidCommPacker(
     private suspend fun verifySignatures(
         json: JsonObject,
         signatures: JsonElement,
-        expectedSenderDid: String?
+        expectedSenderDid: String?,
     ): List<String> {
-        val entries = (signatures as? JsonArray)?.takeIf { it.isNotEmpty() }
-            ?: signatureFailure("'signatures' must be a non-empty JSON array")
+        val entries =
+            (signatures as? JsonArray)?.takeIf { it.isNotEmpty() }
+                ?: signatureFailure("'signatures' must be a non-empty JSON array")
 
         // Reconstruct the signed payload: the message without its 'signatures' field,
         // re-encoded with the same compact JSON used at signing time.
         val payloadJson = JsonObject(json.filterKeys { it != "signatures" })
-        val payloadBytes = compactJson.encodeToString(JsonObject.serializer(), payloadJson)
-            .toByteArray(Charsets.UTF_8)
+        val payloadBytes =
+            compactJson
+                .encodeToString(JsonObject.serializer(), payloadJson)
+                .toByteArray(Charsets.UTF_8)
         val payloadBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadBytes)
         val fromDid = (json["from"] as? JsonPrimitive)?.contentOrNull
 
-        return entries.map { entry ->
-            verifySignatureEntry(entry, payloadBase64, fromDid, expectedSenderDid)
-        }.distinct()
+        return entries
+            .map { entry ->
+                verifySignatureEntry(entry, payloadBase64, fromDid, expectedSenderDid)
+            }.distinct()
     }
 
     /** Verifies a single signature entry; returns the verified signer's DID. */
@@ -294,30 +345,35 @@ class DidCommPacker(
         entry: JsonElement,
         payloadBase64: String,
         fromDid: String?,
-        expectedSenderDid: String?
+        expectedSenderDid: String?,
     ): String {
-        val obj = entry as? JsonObject
-            ?: signatureFailure("Signature entry is not a JSON object")
-        val protectedBase64 = (obj["protected"] as? JsonPrimitive)?.contentOrNull
-            ?: signatureFailure("Signature entry is missing the 'protected' header")
-        val signatureBase64 = (obj["signature"] as? JsonPrimitive)?.contentOrNull
-            ?: signatureFailure("Signature entry is missing the 'signature' value")
+        val obj =
+            entry as? JsonObject
+                ?: signatureFailure("Signature entry is not a JSON object")
+        val protectedBase64 =
+            (obj["protected"] as? JsonPrimitive)?.contentOrNull
+                ?: signatureFailure("Signature entry is missing the 'protected' header")
+        val signatureBase64 =
+            (obj["signature"] as? JsonPrimitive)?.contentOrNull
+                ?: signatureFailure("Signature entry is missing the 'signature' value")
 
-        val header = try {
-            Json.parseToJsonElement(
-                String(Base64.getUrlDecoder().decode(protectedBase64), Charsets.UTF_8)
-            ).jsonObject
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            signatureFailure("Cannot decode the protected JWS header", e)
-        }
+        val header =
+            try {
+                Json
+                    .parseToJsonElement(
+                        String(Base64.getUrlDecoder().decode(protectedBase64), Charsets.UTF_8),
+                    ).jsonObject
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                signatureFailure("Cannot decode the protected JWS header", e)
+            }
 
         // RFC 7515 §4.1.11: a verifier MUST reject a JWS whose 'crit' lists extensions it does
         // not process — we process none, so any 'crit' (even an empty or malformed one) fails.
         if (header.containsKey("crit")) {
             signatureFailure(
-                "Protected JWS header contains 'crit' but no JWS extensions are supported (RFC 7515 §4.1.11)"
+                "Protected JWS header contains 'crit' but no JWS extensions are supported (RFC 7515 §4.1.11)",
             )
         }
         // RFC 7797 unencoded payloads ('b64': false) are not supported; only an explicit
@@ -326,7 +382,7 @@ class DidCommPacker(
             val isBooleanTrue = b64 is JsonPrimitive && !b64.isString && b64.booleanOrNull == true
             if (!isBooleanTrue) {
                 signatureFailure(
-                    "Protected JWS header sets 'b64' to a non-true value; unencoded payloads (RFC 7797) are not supported"
+                    "Protected JWS header sets 'b64' to a non-true value; unencoded payloads (RFC 7797) are not supported",
                 )
             }
         }
@@ -335,8 +391,9 @@ class DidCommPacker(
         if (alg != JWS_ALG_EDDSA) {
             signatureFailure("Unsupported or missing JWS 'alg' ('${alg ?: "absent"}'); only '$JWS_ALG_EDDSA' is accepted")
         }
-        val kid = (header["kid"] as? JsonPrimitive)?.contentOrNull
-            ?: signatureFailure("Protected JWS header is missing 'kid'")
+        val kid =
+            (header["kid"] as? JsonPrimitive)?.contentOrNull
+                ?: signatureFailure("Protected JWS header is missing 'kid'")
 
         val signerDid = kid.substringBefore("#")
         if (expectedSenderDid != null && signerDid != expectedSenderDid) {
@@ -346,81 +403,96 @@ class DidCommPacker(
             signatureFailure("Signature kid '$kid' does not belong to message sender '$fromDid'")
         }
 
-        val signerDoc = resolveDid(signerDid)
-            ?: signatureFailure("Cannot resolve signer DID '$signerDid' to verify the message signature")
-        val verificationMethod = signerDoc.verificationMethod.firstOrNull {
-            normalizeKeyRef(it.id.value, signerDoc.id.value) == normalizeKeyRef(kid, signerDid)
-        } ?: signatureFailure("Signer DID document '$signerDid' has no verification method '$kid'")
+        val signerDoc =
+            resolveDid(signerDid)
+                ?: signatureFailure("Cannot resolve signer DID '$signerDid' to verify the message signature")
+        val verificationMethod =
+            signerDoc.verificationMethod.firstOrNull {
+                normalizeKeyRef(it.id.value, signerDoc.id.value) == normalizeKeyRef(kid, signerDid)
+            } ?: signatureFailure("Signer DID document '$signerDid' has no verification method '$kid'")
 
-        val publicKey = extractEd25519PublicKey(verificationMethod)
-            ?: signatureFailure("Verification method '$kid' carries no usable Ed25519 public key")
+        val publicKey =
+            extractEd25519PublicKey(verificationMethod)
+                ?: signatureFailure("Verification method '$kid' carries no usable Ed25519 public key")
 
-        val signatureBytes = try {
-            Base64.getUrlDecoder().decode(signatureBase64)
-        } catch (e: IllegalArgumentException) {
-            signatureFailure("Signature is not valid base64url", e)
-        }
+        val signatureBytes =
+            try {
+                Base64.getUrlDecoder().decode(signatureBase64)
+            } catch (e: IllegalArgumentException) {
+                signatureFailure("Signature is not valid base64url", e)
+            }
         if (signatureBytes.size != ED25519_SIGNATURE_LENGTH_BYTES) {
             signatureFailure("Invalid Ed25519 signature length: ${signatureBytes.size}")
         }
 
         val signingInput = "$protectedBase64.$payloadBase64".toByteArray(Charsets.US_ASCII)
-        val verified = try {
-            Signature.getInstance("Ed25519").run {
-                initVerify(publicKey)
-                update(signingInput)
-                verify(signatureBytes)
+        val verified =
+            try {
+                Signature.getInstance("Ed25519").run {
+                    initVerify(publicKey)
+                    update(signingInput)
+                    verify(signatureBytes)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                false
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            false
-        }
         if (!verified) {
             signatureFailure("Signature verification failed for kid '$kid'")
         }
         return signerDid
     }
 
-    private fun signatureFailure(reason: String, cause: Throwable? = null): Nothing =
-        throw DidCommException.UnpackingFailed(reason = reason, cause = cause)
+    private fun signatureFailure(
+        reason: String,
+        cause: Throwable? = null,
+    ): Nothing = throw DidCommException.UnpackingFailed(reason = reason, cause = cause)
 
-    private fun normalizeKeyRef(keyRef: String, did: String): String =
-        if (keyRef.startsWith("#")) "$did$keyRef" else keyRef
+    private fun normalizeKeyRef(
+        keyRef: String,
+        did: String,
+    ): String = if (keyRef.startsWith("#")) "$did$keyRef" else keyRef
 
     /**
      * Extracts an Ed25519 [PublicKey] from a verification method's `publicKeyJwk`
      * (OKP/Ed25519) or `publicKeyMultibase` (base58btc, optionally multicodec-prefixed).
      */
     private fun extractEd25519PublicKey(vm: VerificationMethod): PublicKey? {
-        val raw = vm.publicKeyJwk?.let { jwk ->
-            val kty = jwk["kty"] as? String
-            val crv = jwk["crv"] as? String
-            val x = jwk["x"] as? String
-            if (kty == "OKP" && crv == "Ed25519" && x != null) {
-                try {
-                    Base64.getUrlDecoder().decode(x)
-                } catch (e: IllegalArgumentException) {
+        val raw =
+            vm.publicKeyJwk?.let { jwk ->
+                val kty = jwk["kty"] as? String
+                val crv = jwk["crv"] as? String
+                val x = jwk["x"] as? String
+                if (kty == "OKP" && crv == "Ed25519" && x != null) {
+                    try {
+                        Base64.getUrlDecoder().decode(x)
+                    } catch (e: IllegalArgumentException) {
+                        null
+                    }
+                } else {
                     null
                 }
-            } else {
-                null
-            }
-        } ?: vm.publicKeyMultibase?.let { decodeMultibaseEd25519(it, vm.type) }
+            } ?: vm.publicKeyMultibase?.let { decodeMultibaseEd25519(it, vm.type) }
 
         return raw?.let { rawEd25519ToPublicKey(it) }
     }
 
-    private fun decodeMultibaseEd25519(multibase: String, vmType: String): ByteArray? {
+    private fun decodeMultibaseEd25519(
+        multibase: String,
+        vmType: String,
+    ): ByteArray? {
         if (!multibase.startsWith("z")) return null
-        val decoded = try {
-            multibase.substring(1).decodeBase58()
-        } catch (e: Exception) {
-            return null
-        }
+        val decoded =
+            try {
+                multibase.substring(1).decodeBase58()
+            } catch (e: Exception) {
+                return null
+            }
         return when {
             decoded.size == ED25519_RAW_KEY_LENGTH_BYTES + 2 &&
-                decoded[0] == 0xED.toByte() && decoded[1] == 0x01.toByte() ->
+                decoded[0] == 0xED.toByte() &&
+                decoded[1] == 0x01.toByte() ->
                 decoded.copyOfRange(2, decoded.size)
             decoded.size == ED25519_RAW_KEY_LENGTH_BYTES &&
                 vmType.contains("Ed25519", ignoreCase = true) -> decoded
@@ -431,7 +503,8 @@ class DidCommPacker(
     private fun rawEd25519ToPublicKey(raw: ByteArray): PublicKey? {
         if (raw.size != ED25519_RAW_KEY_LENGTH_BYTES) return null
         return try {
-            KeyFactory.getInstance("Ed25519")
+            KeyFactory
+                .getInstance("Ed25519")
                 .generatePublic(X509EncodedKeySpec(ED25519_SPKI_PREFIX + raw))
         } catch (e: Exception) {
             null
@@ -439,47 +512,58 @@ class DidCommPacker(
     }
 
     private fun parseEnvelope(json: JsonObject): DidCommEnvelope {
-        val protected = json["protected"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'protected' in envelope")
+        val protected =
+            json["protected"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'protected' in envelope")
 
-        val recipients = json["recipients"]?.jsonArray?.map { recipientJson ->
-            val recipientObj = recipientJson.jsonObject
-            val headerObj = recipientObj["header"]?.jsonObject
-                ?: throw IllegalArgumentException("Missing 'header' in recipient")
+        val recipients =
+            json["recipients"]?.jsonArray?.map { recipientJson ->
+                val recipientObj = recipientJson.jsonObject
+                val headerObj =
+                    recipientObj["header"]?.jsonObject
+                        ?: throw IllegalArgumentException("Missing 'header' in recipient")
 
-            org.trustweave.credential.didcomm.models.DidCommRecipient(
-                header = org.trustweave.credential.didcomm.models.DidCommRecipientHeader(
-                    kid = headerObj["kid"]?.jsonPrimitive?.content
-                        ?: throw IllegalArgumentException("Missing 'kid' in header"),
-                    alg = headerObj["alg"]?.jsonPrimitive?.content ?: "ECDH-1PU+A256KW",
-                    epk = headerObj["epk"]?.jsonObject
-                ),
-                encrypted_key = recipientObj["encrypted_key"]?.jsonPrimitive?.content
-                    ?: throw IllegalArgumentException("Missing 'encrypted_key' in recipient")
-            )
-        } ?: throw IllegalArgumentException("Missing 'recipients' in envelope")
+                org.trustweave.credential.didcomm.models.DidCommRecipient(
+                    header =
+                        org.trustweave.credential.didcomm.models.DidCommRecipientHeader(
+                            kid =
+                                headerObj["kid"]?.jsonPrimitive?.content
+                                    ?: throw IllegalArgumentException("Missing 'kid' in header"),
+                            alg = headerObj["alg"]?.jsonPrimitive?.content ?: "ECDH-1PU+A256KW",
+                            epk = headerObj["epk"]?.jsonObject,
+                        ),
+                    encrypted_key =
+                        recipientObj["encrypted_key"]?.jsonPrimitive?.content
+                            ?: throw IllegalArgumentException("Missing 'encrypted_key' in recipient"),
+                )
+            } ?: throw IllegalArgumentException("Missing 'recipients' in envelope")
 
-        val iv = json["iv"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'iv' in envelope")
-        val ciphertext = json["ciphertext"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'ciphertext' in envelope")
-        val tag = json["tag"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'tag' in envelope")
+        val iv =
+            json["iv"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'iv' in envelope")
+        val ciphertext =
+            json["ciphertext"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'ciphertext' in envelope")
+        val tag =
+            json["tag"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'tag' in envelope")
 
         return DidCommEnvelope(
             protected = protected,
             recipients = recipients,
             iv = iv,
             ciphertext = ciphertext,
-            tag = tag
+            tag = tag,
         )
     }
 
     private fun parseMessage(json: JsonObject): DidCommMessage {
-        val id = json["id"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'id' in message")
-        val type = json["type"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Missing 'type' in message")
+        val id =
+            json["id"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'id' in message")
+        val type =
+            json["type"]?.jsonPrimitive?.content
+                ?: throw IllegalArgumentException("Missing 'type' in message")
 
         val from = json["from"]?.jsonPrimitive?.content
         val to = json["to"].asStringList()
@@ -488,22 +572,25 @@ class DidCommPacker(
         val created = json["created_time"]?.jsonPrimitive?.content
         val expiresTime = json["expires_time"]?.jsonPrimitive?.content
 
-        val attachments = json["attachments"]?.jsonArray?.mapNotNull { attachmentJson ->
-            val attachmentObj = attachmentJson.jsonObject
-            val mediaType = attachmentObj["media_type"]?.jsonPrimitive?.content ?: "application/json"
-            val dataObj = attachmentObj["data"]?.jsonObject
-                ?: throw IllegalArgumentException("Missing 'data' in attachment")
+        val attachments =
+            json["attachments"]?.jsonArray?.mapNotNull { attachmentJson ->
+                val attachmentObj = attachmentJson.jsonObject
+                val mediaType = attachmentObj["media_type"]?.jsonPrimitive?.content ?: "application/json"
+                val dataObj =
+                    attachmentObj["data"]?.jsonObject
+                        ?: throw IllegalArgumentException("Missing 'data' in attachment")
 
-            org.trustweave.credential.didcomm.models.DidCommAttachment(
-                id = attachmentObj["id"]?.jsonPrimitive?.content,
-                mediaType = mediaType,
-                data = org.trustweave.credential.didcomm.models.DidCommAttachmentData(
-                    base64 = dataObj["base64"]?.jsonPrimitive?.content,
-                    json = dataObj["json"],
-                    links = dataObj["links"].asStringListOrNull(),
+                org.trustweave.credential.didcomm.models.DidCommAttachment(
+                    id = attachmentObj["id"]?.jsonPrimitive?.content,
+                    mediaType = mediaType,
+                    data =
+                        org.trustweave.credential.didcomm.models.DidCommAttachmentData(
+                            base64 = dataObj["base64"]?.jsonPrimitive?.content,
+                            json = dataObj["json"],
+                            links = dataObj["links"].asStringListOrNull(),
+                        ),
                 )
-            )
-        } ?: emptyList()
+            } ?: emptyList()
 
         val thid = json["thid"]?.jsonPrimitive?.content
         val pthid = json["pthid"]?.jsonPrimitive?.content
@@ -520,16 +607,18 @@ class DidCommPacker(
             attachments = attachments,
             thid = thid,
             pthid = pthid,
-            ack = ack
+            ack = ack,
         )
     }
 
     private fun extractSenderDid(envelope: DidCommEnvelope): String? {
         // Extract sender DID from protected headers
         return try {
-            val protectedJson = Json.parseToJsonElement(
-                String(Base64.getUrlDecoder().decode(envelope.protected))
-            ).jsonObject
+            val protectedJson =
+                Json
+                    .parseToJsonElement(
+                        String(Base64.getUrlDecoder().decode(envelope.protected)),
+                    ).jsonObject
 
             val skid = protectedJson["skid"]?.jsonPrimitive?.content
             // Extract DID from key ID (format: did:method:id#key-id)
@@ -549,27 +638,37 @@ class DidCommPacker(
     private suspend fun signMessage(
         messageJson: JsonObject,
         fromDid: String,
-        fromKeyId: String
+        fromKeyId: String,
     ): JsonObject {
         val messageBytes = compactJson.encodeToString(JsonObject.serializer(), messageJson).toByteArray(Charsets.UTF_8)
 
         // Protected JWS header; EdDSA is the JOSE algorithm identifier for Ed25519 (RFC 8037).
-        val header = buildJsonObject {
-            put("alg", JWS_ALG_EDDSA)
-            put("typ", "JWS")
-            put("kid", fromKeyId)
-        }
+        val header =
+            buildJsonObject {
+                put("alg", JWS_ALG_EDDSA)
+                put("typ", "JWS")
+                put("kid", fromKeyId)
+            }
 
-        val headerBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(compactJson.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
-        val payloadBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(messageBytes)
+        val headerBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(compactJson.encodeToString(JsonObject.serializer(), header).toByteArray(Charsets.UTF_8))
+        val payloadBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(messageBytes)
 
         // Sign the JWS signing input using the provided signer
         val signingInput = "$headerBase64.$payloadBase64".toByteArray(Charsets.US_ASCII)
         val signature = signer(signingInput, fromKeyId)
-        val signatureBase64 = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(signature)
+        val signatureBase64 =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(signature)
 
         // Return signed message with JWS
         return buildJsonObject {
@@ -578,10 +677,12 @@ class DidCommPacker(
                 put(key, value)
             }
             putJsonArray("signatures") {
-                add(buildJsonObject {
-                    put("protected", headerBase64)
-                    put("signature", signatureBase64)
-                })
+                add(
+                    buildJsonObject {
+                        put("protected", headerBase64)
+                        put("signature", signatureBase64)
+                    },
+                )
             }
         }
     }
@@ -604,7 +705,7 @@ class DidCommPacker(
 data class UnpackResult(
     val message: DidCommMessage,
     val verifiedSignerDids: List<String> = emptyList(),
-    val authenticatedSenderDid: String? = null
+    val authenticatedSenderDid: String? = null,
 ) {
     /** Convenience accessor: the verified signer DID when exactly one DID signed, else `null`. */
     val verifiedSignerDid: String?
@@ -630,4 +731,3 @@ private fun JsonElement?.asStringListOrNull(): List<String>? =
         is JsonPrimitive -> listOf(this.content)
         else -> null
     }
-

@@ -57,6 +57,21 @@ class InvalidProofException(
     val cNonceExpiresIn: Long,
 ) : SecurityException(message)
 
+/**
+ * The issuer is holding as many offers, tokens or deferred credentials as it is configured to,
+ * even after expired entries were purged. Surfaces as `503 temporarily_unavailable`; refusing is
+ * deliberate, because silently evicting a live entry would invalidate a holder's valid offer.
+ */
+class IssuerCapacityExceededException(
+    message: String,
+) : IllegalStateException(message)
+
+/** A deferred credential awaiting pickup, with the time it was registered (for expiry). */
+internal data class DeferredEntry(
+    val credential: String,
+    val issuedAt: Long,
+)
+
 /** Raw Ed25519 public key length in bytes (RFC 8032). */
 private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
 
@@ -104,16 +119,25 @@ class Oidc4VciIssuerService(
      * long a leaked offer stays usable.
      */
     val offerTtlSeconds: Long = 300,
+    /** Upper bound on retained, unredeemed offers (after expired ones are purged). */
+    val maxPendingOffers: Int = 10_000,
+    /** Upper bound on retained access tokens (after expired ones are purged). */
+    val maxActiveTokens: Int = 10_000,
+    /** How long a deferred credential waits for pickup before it is dropped. */
+    val deferredTtlSeconds: Long = 3600,
+    /** Upper bound on retained deferred credentials. */
+    val maxDeferredCredentials: Int = 10_000,
 ) {
     private val pendingOffers = ConcurrentHashMap<String, OfferState>()
     private val activeTokens = ConcurrentHashMap<String, TokenEntry>()
 
     /**
-     * Deferred issuance is not implemented: nothing writes to this map, so
-     * [getDeferredCredential] always answers null. Kept as the seam a deferred flow would use,
-     * and called out here so a reader does not assume the endpoint does something.
+     * Credentials awaiting pickup at the deferred endpoint, keyed by transaction id. Nothing in
+     * this service defers issuance by itself; a host that does registers results through
+     * [registerDeferredCredential]. Entries expire after [deferredTtlSeconds] and the map is
+     * bounded by [maxDeferredCredentials].
      */
-    private val deferredCredentials = ConcurrentHashMap<String, String>() // transactionId -> credentialJson
+    private val deferredCredentials = ConcurrentHashMap<String, DeferredEntry>()
 
     fun getMetadata(): CredentialIssuerMetadata =
         CredentialIssuerMetadata(
@@ -131,6 +155,9 @@ class Oidc4VciIssuerService(
         txCodeValue: String? = null,
     ): CreateOfferResponse {
         purgeExpired()
+        if (pendingOffers.size >= maxPendingOffers) {
+            throw IssuerCapacityExceededException("Too many pending credential offers ($maxPendingOffers)")
+        }
         val preAuthCode = UUID.randomUUID().toString()
         pendingOffers[preAuthCode] = OfferState(credentialTypes, txCode, txCodeValue)
         return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
@@ -211,6 +238,9 @@ class Oidc4VciIssuerService(
                 "Invalid tx_code"
             }
         }
+        if (activeTokens.size >= maxActiveTokens) {
+            throw IssuerCapacityExceededException("Too many active access tokens ($maxActiveTokens)")
+        }
         val accessToken = UUID.randomUUID().toString()
         val entry = TokenEntry(offerState)
         activeTokens[accessToken] = entry
@@ -265,9 +295,30 @@ class Oidc4VciIssuerService(
         transactionId: String,
         accessToken: String,
     ): CredentialServerResponse? {
-        runCatching { requireValidToken(accessToken) }.getOrNull() ?: return null
-        val cred = deferredCredentials.remove(transactionId) ?: return null
-        return CredentialServerResponse(credential = cred)
+        requireValidToken(accessToken)
+        val entry = deferredCredentials.remove(transactionId) ?: return null
+        if (System.currentTimeMillis() - entry.issuedAt >= deferredTtlSeconds * 1000) return null
+        return CredentialServerResponse(credential = entry.credential)
+    }
+
+    /**
+     * Makes [credentialJson] collectable at the deferred endpoint under [transactionId].
+     * Throws [IssuerCapacityExceededException] when the bound is reached.
+     */
+    fun registerDeferredCredential(
+        transactionId: String,
+        credentialJson: String,
+    ) {
+        purgeExpired()
+        if (deferredCredentials.size >= maxDeferredCredentials) {
+            throw IssuerCapacityExceededException("Too many deferred credentials ($maxDeferredCredentials)")
+        }
+        deferredCredentials[transactionId] = DeferredEntry(credentialJson, System.currentTimeMillis())
+    }
+
+    /** Throws [InvalidTokenException] unless [accessToken] is a live access token. */
+    fun requireAccessToken(accessToken: String) {
+        requireValidToken(accessToken)
     }
 
     fun recordNotification(notification: Oidc4VciNotification) {
@@ -287,14 +338,18 @@ class Oidc4VciIssuerService(
      * so the bound is testable.
      */
     fun purgeExpired(now: Long = System.currentTimeMillis()): Int {
-        val before = pendingOffers.size + activeTokens.size
+        val before = pendingOffers.size + activeTokens.size + deferredCredentials.size
         pendingOffers.values.removeIf { now - it.issuedAt >= offerTtlSeconds * 1000 }
         activeTokens.values.removeIf { now - it.issuedAt >= tokenTtlSeconds * 1000 }
-        return before - (pendingOffers.size + activeTokens.size)
+        deferredCredentials.values.removeIf { now - it.issuedAt >= deferredTtlSeconds * 1000 }
+        return before - (pendingOffers.size + activeTokens.size + deferredCredentials.size)
     }
 
     /** Retained offer and token counts, for a host metric or a test. Never the secrets themselves. */
     fun retainedState(): Pair<Int, Int> = pendingOffers.size to activeTokens.size
+
+    /** Retained deferred-credential count, for a host metric or a test. */
+    fun retainedDeferredCount(): Int = deferredCredentials.size
 
     /** Returns the live [TokenEntry] or throws [InvalidTokenException] (unknown/expired). */
     private fun requireValidToken(accessToken: String): TokenEntry {

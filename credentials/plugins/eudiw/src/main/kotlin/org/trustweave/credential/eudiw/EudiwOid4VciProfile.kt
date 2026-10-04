@@ -74,7 +74,7 @@ object EudiwOid4VciProfile {
         if (!offerUri.startsWith("openid-credential-offer://")) {
             violations.add(
                 "EUDIW credential offers must use the openid-credential-offer:// scheme " +
-                    "(received: ${offerUri.substringBefore("://") + "://..."})",
+                    "(received scheme: ${receivedScheme(offerUri)})",
             )
         }
         return ValidationResult(violations.isEmpty(), violations)
@@ -115,4 +115,16 @@ object EudiwOid4VciProfile {
             }
         return ValidationResult(violations.isEmpty(), violations)
     }
+
+    /**
+     * The scheme of [offerUri] for a diagnostic message, never any other part of it: an offer URI
+     * carries a pre-authorized code, and a string that is not even shaped like a URI must not be
+     * echoed back into logs or error responses.
+     */
+    private fun receivedScheme(offerUri: String): String {
+        val scheme = offerUri.substringBefore(":", missingDelimiterValue = "")
+        return if (scheme.length in 1..64 && SCHEME.matches(scheme)) "$scheme://..." else "<not a URI>"
+    }
+
+    private val SCHEME = Regex("[A-Za-z][A-Za-z0-9+.-]*")
 }

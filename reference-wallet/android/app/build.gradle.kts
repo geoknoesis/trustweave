@@ -76,7 +76,7 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Networking
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
 
     // Crypto — Ed25519 + did:key encoding
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")

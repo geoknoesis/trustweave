@@ -107,8 +107,9 @@ class PluginLifecycleInvocationTest {
         assertTrue(registry.findByProvider("test").isEmpty())
         assertTrue(registry.getAllPlugins().isEmpty())
 
-        // start() must not run after a failed initialize().
-        assertEquals(listOf("initialize"), plugin.calls)
+        // start() must not run after a failed initialize(), but whatever initialize() acquired is
+        // released: cleanup() runs, stop() does not (the plugin never started).
+        assertEquals(listOf("initialize", "cleanup"), plugin.calls)
     }
 
     @Test
@@ -132,9 +133,67 @@ class PluginLifecycleInvocationTest {
         assertFailsWith<PluginException.InitializationFailed> {
             registry.register(metadata("bad-start"), plugin)
         }
-        assertEquals(listOf("initialize", "start"), plugin.calls)
+        // initialize() succeeded, so the half-started plugin is stopped and cleaned up.
+        assertEquals(listOf("initialize", "start", "stop", "cleanup"), plugin.calls)
         assertFalse(registry.isRegistered("bad-start"))
         assertNull(registry.getMetadata("bad-start"))
+    }
+
+    @Test
+    fun `start throwing runs stop and cleanup and keeps the original failure`() {
+        val boom = IllegalStateException("port in use")
+        val plugin = RecordingLifecyclePlugin(startResult = { throw boom })
+
+        val ex = assertFailsWith<PluginException.InitializationFailed> { registry.register(metadata("throwing-start"), plugin) }
+
+        assertSame(boom, ex.cause)
+        assertEquals(listOf("initialize", "start", "stop", "cleanup"), plugin.calls)
+        assertFalse(registry.isRegistered("throwing-start"))
+    }
+
+    @Test
+    fun `cleanup still runs when stop fails after a failed start and the failure is reported`() {
+        val stopBoom = IllegalStateException("stop exploded")
+        val plugin =
+            object : RecordingLifecyclePlugin(startResult = { false }) {
+                override suspend fun stop(): Boolean {
+                    calls.add("stop")
+                    throw stopBoom
+                }
+            }
+
+        val ex = assertFailsWith<PluginException.InitializationFailed> { registry.register(metadata("stop-fails"), plugin) }
+
+        assertEquals(listOf("initialize", "start", "stop", "cleanup"), plugin.calls)
+        assertTrue(ex.suppressed.contains(stopBoom), "teardown failure must be reported on the original exception")
+    }
+
+    @Test
+    fun `a failing cleanup after a failed start is reported and does not mask the start failure`() {
+        val cleanupBoom = IllegalStateException("cleanup exploded")
+        val plugin = RecordingLifecyclePlugin(startResult = { false }, cleanupAction = { throw cleanupBoom })
+
+        val ex = assertFailsWith<PluginException.InitializationFailed> { registry.register(metadata("cleanup-fails"), plugin) }
+
+        assertTrue(ex.message!!.contains("start() returned false"), ex.message)
+        assertTrue(ex.suppressed.contains(cleanupBoom))
+        assertFalse(registry.isRegistered("cleanup-fails"))
+    }
+
+    @Test
+    fun `cancellation during start still releases the plugin and propagates cancellation`() {
+        val plugin =
+            object : RecordingLifecyclePlugin() {
+                override suspend fun start(): Boolean {
+                    calls.add("start")
+                    throw kotlinx.coroutines.CancellationException("cancelled")
+                }
+            }
+
+        assertFailsWith<kotlinx.coroutines.CancellationException> { registry.register(metadata("cancelled-start"), plugin) }
+
+        assertEquals(listOf("initialize", "start", "stop", "cleanup"), plugin.calls)
+        assertFalse(registry.isRegistered("cancelled-start"))
     }
 
     @Test

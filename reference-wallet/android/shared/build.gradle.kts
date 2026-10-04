@@ -42,9 +42,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
             }
         }
         val commonTest by getting {
@@ -55,7 +55,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 // BouncyCastle for Ed25519 + SubjectPublicKeyInfo parsing on JVM/Android.
-                implementation("org.bouncycastle:bcprov-jdk18on:1.84")
+                implementation("org.bouncycastle:bcprov-jdk18on:1.86")
             }
         }
         val jvmTest by getting {

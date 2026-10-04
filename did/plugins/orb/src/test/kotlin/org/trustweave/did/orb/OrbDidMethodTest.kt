@@ -294,14 +294,32 @@ class OrbDidMethodTest {
     @Test
     fun `resolveDid accepts the canonical short form for a long-form request`() =
         runBlocking<Unit> {
+            val suffix = "Ei" + "A".repeat(44)
             val body =
                 """
-                {"didDocument":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:orb:EiTest",
+                {"didDocument":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:orb:$suffix",
                  "verificationMethod":[],"authentication":[],"assertionMethod":[]},"didDocumentMetadata":{}}
                 """.trimIndent()
             server.enqueue(MockResponse().setResponseCode(200).setBody(body))
 
-            assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:EiTest:eyJkZWx0YSI6e319")))
+            assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:$suffix:eyJkZWx0YSI6e319")))
+        }
+
+    @Test
+    fun `an anchored short form is not mistaken for a long form`() =
+        runBlocking<Unit> {
+            val suffix = "Ei" + "A".repeat(44)
+            // did:orb:<anchor>:<suffix> has four segments; answering it with the bare anchor must fail.
+            val body =
+                """
+                {"didDocument":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:orb:uAnchor",
+                 "verificationMethod":[],"authentication":[],"assertionMethod":[]},"didDocumentMetadata":{}}
+                """.trimIndent()
+            server.enqueue(MockResponse().setResponseCode(200).setBody(body))
+
+            val failure = method.resolveDid(Did("did:orb:uAnchor:$suffix"))
+            assertIs<DidResolutionResult.Failure>(failure)
+            assertEquals(org.trustweave.did.resolver.DidErrorType.INVALID_DID_DOCUMENT, failure.errorType)
         }
 
     @Test

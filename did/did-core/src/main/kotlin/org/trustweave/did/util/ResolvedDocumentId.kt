@@ -35,7 +35,13 @@ public object ResolvedDocumentId {
 
     private fun canonicalOfLongForm(did: String): String? {
         val parts = did.split(":")
-        // did : method : suffix : initial-state (the initial state itself contains no colon)
-        return if (parts.size == 4 && parts[0] == "did") parts.take(3).joinToString(":") else null
+        // did : method : suffix : initial-state (the initial state itself contains no colon).
+        // The third segment must be shaped like a Sidetree suffix (46 base64url characters, `Ei`
+        // multihash prefix). Without that, `did:ion:test:<suffix>` (network + short form) and
+        // `did:orb:<anchor>:<suffix>` would be misread as long forms and their "canonical form"
+        // (`did:ion:test`, `did:orb:<anchor>`) would be accepted as a resolved document id.
+        return if (parts.size == 4 && parts[0] == "did" && isSidetreeSuffix(parts[2])) parts.take(3).joinToString(":") else null
     }
+
+    private fun isSidetreeSuffix(segment: String): Boolean = segment.length == 46 && segment.startsWith("Ei")
 }

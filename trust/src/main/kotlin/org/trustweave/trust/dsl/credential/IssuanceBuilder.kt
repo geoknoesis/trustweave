@@ -552,16 +552,23 @@ class IssuanceBuilder(
                 }
             }
 
+            // On any abnormal exit (cancellation included) release the index, then rethrow unchanged.
+            suspend fun abortWith(cause: Throwable) {
+                val toRelease = allocated
+                if (toRelease != null) {
+                    val released = releaseAllocated()
+                    if (released != true) cause.addSuppressed(UnreleasedStatusIndexException(toRelease))
+                }
+            }
+
             val outcome =
                 try {
                     issueAndAnchor()
-                } catch (e: Throwable) {
-                    // Includes CancellationException: release, then propagate unchanged.
-                    val toRelease = allocated
-                    if (toRelease != null) {
-                        val released = releaseAllocated()
-                        if (released != true) e.addSuppressed(UnreleasedStatusIndexException(toRelease))
-                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    abortWith(e)
+                    throw e
+                } catch (e: Exception) {
+                    abortWith(e)
                     throw e
                 }
 

@@ -371,17 +371,18 @@ class FileWallet private constructor(
                     createdMetadata = true
                 }
 
+                var written = false
                 try {
                     atomicWrite(credentialFile, content)
-                } catch (e: Throwable) {
-                    if (createdMetadata) {
+                    written = true
+                } finally {
+                    if (!written && createdMetadata) {
                         try {
                             Files.deleteIfExists(metadataFile)
-                        } catch (cleanup: Exception) {
-                            e.addSuppressed(cleanup)
+                        } catch (cleanup: java.io.IOException) {
+                            logger.warn("Could not roll back metadata sidecar {} after a failed store", metadataFile, cleanup)
                         }
                     }
-                    throw e
                 }
                 id
             }

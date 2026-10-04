@@ -405,6 +405,7 @@ class DefaultSmartContractService
             contractIdByCredentialId[credentialId] = contractId
             anchoredPayloads[credentialId] = anchoredPayloadFor(contract, credentialId)
 
+            var committed = false
             val updatedContract =
                 try {
                     replaceContract(
@@ -415,10 +416,9 @@ class DefaultSmartContractService
                             status = ContractStatus.PENDING,
                             updatedAt = Clock.System.now().toString(),
                         ),
-                    )
-                } catch (e: Throwable) {
-                    forgetCredential(credentialId, contractId)
-                    throw e
+                    ).also { committed = true }
+                } finally {
+                    if (!committed) forgetCredential(credentialId, contractId)
                 }
             // The previous binding is superseded: drop everything kept for it.
             if (previousCredentialId != null && previousCredentialId != credentialId) {

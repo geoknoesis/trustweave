@@ -81,6 +81,9 @@ class DefaultXadesSigner(
 ) : XadesSigner {
     override suspend fun sign(request: XadesSigningRequest): XadesSignature =
         withContext(Dispatchers.IO) {
+            if (request.profile != XadesProfile.B_B) {
+                throw XadesSignerException("only XAdES B-B can be produced; ${request.profile} is verification-only")
+            }
             val chain = decodeChain(request.signerCertificateChain)
             val signerCert = chain.first()
             val signingTime = request.signingTime ?: Clock.System.now()

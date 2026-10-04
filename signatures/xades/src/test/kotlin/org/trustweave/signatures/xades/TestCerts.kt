@@ -22,12 +22,19 @@ internal class TestCa(
     val caCert: X509Certificate
 
     init {
-        val now = Date()
-        val notAfter = Date(now.time + 365L * 24 * 3600 * 1000)
+        // Valid from well in the past so signatures with a claimed past SigningTime stay inside the CA window.
+        val now = Date(System.currentTimeMillis() - 90L * 24 * 3600 * 1000)
+        val notAfter = Date(System.currentTimeMillis() + 365L * 24 * 3600 * 1000)
         val dn = X500Name(caSubject)
-        val builder = JcaX509v3CertificateBuilder(
-            dn, BigInteger.valueOf(System.nanoTime()), now, notAfter, dn, caKey.public,
-        )
+        val builder =
+            JcaX509v3CertificateBuilder(
+                dn,
+                BigInteger.valueOf(System.nanoTime()),
+                now,
+                notAfter,
+                dn,
+                caKey.public,
+            )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(true))
         builder.addExtension(
             Extension.keyUsage,
@@ -44,21 +51,25 @@ internal class TestCa(
         notBefore: Date = Date(System.currentTimeMillis() - 60_000),
         notAfter: Date = Date(System.currentTimeMillis() + 365L * 24 * 3600 * 1000),
     ): X509Certificate {
-        val builder = JcaX509v3CertificateBuilder(
-            X500Name(caSubject),
-            BigInteger.valueOf(System.nanoTime()),
-            notBefore,
-            notAfter,
-            X500Name(subject),
-            subjectPublicKey,
-        )
+        val builder =
+            JcaX509v3CertificateBuilder(
+                X500Name(caSubject),
+                BigInteger.valueOf(System.nanoTime()),
+                notBefore,
+                notAfter,
+                X500Name(subject),
+                subjectPublicKey,
+            )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(false))
         builder.addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
         val signer = JcaContentSignerBuilder("SHA256withRSA").build(caKey.private)
         return JcaX509CertificateConverter().getCertificate(builder.build(signer))
     }
 
-    fun issueChainBytes(subjectPublicKey: PublicKey, subject: String): List<ByteArray> {
+    fun issueChainBytes(
+        subjectPublicKey: PublicKey,
+        subject: String,
+    ): List<ByteArray> {
         val endEntity = issue(subjectPublicKey, subject)
         return listOf(endEntity.encoded, caCert.encoded)
     }

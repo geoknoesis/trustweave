@@ -22,6 +22,7 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import kotlin.time.Duration.Companion.hours
 
 /** Trust handling: which KeyInfo certificates reach the resolver, and what each result means. */
 class XadesTrustChainTest {
@@ -122,18 +123,37 @@ class XadesTrustChainTest {
         }
 
     @Test
-    fun `QualifiedActive and QualifiedWithdrawn are accepted and carried on the result`() =
+    fun `QualifiedActive is accepted and carried on the result`() =
+        runTest {
+            val doc = signed(listOf(signerCert, ca.caCert))
+            val result = verifier.verify(doc, options(RecordingResolver(activeMatch()))) as Valid
+            result.trust.shouldBeInstanceOf<TrustAnchorMatch.QualifiedActive>()
+            result.signingTimeAuthenticated shouldBe false
+            result.revocationChecked shouldBe false
+        }
+
+    @Test
+    fun `QualifiedWithdrawn without an authenticated signing time is refused by default`() =
         runTest {
             val withdrawn = TrustAnchorMatch.QualifiedWithdrawn("Test TSP", Clock.System.now())
-            val doc = signed(listOf(signerCert, ca.caCert))
-            (
-                verifier.verify(
-                    doc,
-                    options(RecordingResolver(activeMatch())),
-                ) as Valid
-            ).trust.shouldBeInstanceOf<TrustAnchorMatch.QualifiedActive>()
-            val doc2 = signed(listOf(signerCert, ca.caCert))
-            (verifier.verify(doc2, options(RecordingResolver(withdrawn))) as Valid).trust shouldBe withdrawn
+            val result = verifier.verify(signed(listOf(signerCert, ca.caCert)), options(RecordingResolver(withdrawn)))
+            result.shouldBeInstanceOf<Invalid.TrustWithdrawn>()
+        }
+
+    @Test
+    fun `QualifiedWithdrawn is accepted without authenticated time only when explicitly allowed and the claim predates withdrawal`() =
+        runTest {
+            val withdrawnLater = TrustAnchorMatch.QualifiedWithdrawn("Test TSP", Clock.System.now().plus(1.hours))
+            val lenient = options(RecordingResolver(withdrawnLater)).copy(allowWithdrawnTrustWithoutAuthenticatedTime = true)
+            (verifier.verify(signed(listOf(signerCert, ca.caCert)), lenient) as Valid).trust shouldBe withdrawnLater
+
+            // A claimed signing time at/after the withdrawal is refused even with the option set.
+            val withdrawnEarlier = TrustAnchorMatch.QualifiedWithdrawn("Test TSP", Clock.System.now().minus(1.hours))
+            verifier
+                .verify(
+                    signed(listOf(signerCert, ca.caCert)),
+                    options(RecordingResolver(withdrawnEarlier)).copy(allowWithdrawnTrustWithoutAuthenticatedTime = true),
+                ).shouldBeInstanceOf<Invalid.TrustWithdrawn>()
         }
 
     @Test

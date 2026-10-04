@@ -138,7 +138,7 @@ class WalletHolderOfferVerificationTest {
         wallet: BasicWallet,
         issued: (ExchangeRequest.Issue) -> VerifiableCredential,
         verifier: CredentialService? = Verifier(valid = true),
-        policy: IssuerTrustPolicy? = null,
+        policy: IssuerTrustPolicy? = IssuerTrustPolicy.allowList(setOf(issuerDid)),
     ): WalletHolder {
         val registry = ExchangeProtocolRegistries.default().apply { register(FixedIssuer(issued)) }
         return WalletHolder(wallet, holderDid, registry, null, verifier, policy)
@@ -208,6 +208,62 @@ class WalletHolderOfferVerificationTest {
             }
             assertTrue(!contacted && wallet.list().isEmpty())
         }
+
+    @Test
+    fun `accepting offers without an issuer trust policy fails closed before contacting the issuer`() =
+        runBlocking<Unit> {
+            val wallet = BasicWallet()
+            var contacted = false
+            val failure =
+                assertFailsWith<IllegalStateException> {
+                    holder(wallet, {
+                        contacted = true
+                        credential()
+                    }, policy = null).acceptCredentialOffer(offerUrl)
+                }
+            assertTrue(failure.message!!.contains("IssuerTrustPolicy"))
+            assertTrue(!contacted && wallet.list().isEmpty())
+        }
+
+    @Test
+    fun `acceptAnyIssuer is an explicit opt in that accepts a verified credential from any issuer`() =
+        runBlocking<Unit> {
+            val wallet = BasicWallet()
+            val offerFromOther =
+                "openid-credential-offer://?credential_offer=" +
+                    URLEncoder.encode(
+                        """{"credential_issuer":"https://other.example.org","credential_configuration_ids":["UniversityDegree"]}""",
+                        Charsets.UTF_8,
+                    )
+            holder(wallet, { credential(issuer = "did:web:other.example.org") }, policy = IssuerTrustPolicy.acceptAnyIssuer())
+                .acceptCredentialOffer(offerFromOther)
+            assertEquals(1, wallet.list().size)
+        }
+
+    @Test
+    fun `issuer URLs use the raw path so encoded and plain slashes do not collide`() {
+        assertEquals("did:web:h.example:a:b", issuerDidFor("https://h.example/a/b"))
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%2Fb") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%2fb") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%3Ab") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%5Cb") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%00b") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/%2e%2e/b") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%zzb") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a%2") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/a//b") }
+        assertFailsWith<IllegalArgumentException> { issuerDidFor("https://h.example/%FF") }
+    }
+
+    @Test
+    fun `equivalent encodings of a path segment map to one canonical did`() {
+        assertEquals("did:web:h.example:caf%C3%A9", issuerDidFor("https://h.example/caf%C3%A9"))
+        assertEquals("did:web:h.example:caf%C3%A9", issuerDidFor("https://h.example/caf%c3%a9"))
+        assertEquals("did:web:h.example:a~b", issuerDidFor("https://h.example/a%7Eb"))
+        assertEquals("did:web:h.example:a%20b", issuerDidFor("https://h.example/a%20b"))
+        // A double-encoded slash stays a literal percent sign, distinct from a real slash.
+        assertEquals("did:web:h.example:a%252Fb", issuerDidFor("https://h.example/a%252Fb"))
+    }
 
     @Test
     fun `issuer URLs map to did web per the did web spec`() {

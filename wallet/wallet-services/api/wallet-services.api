@@ -4,12 +4,14 @@ public final class org/trustweave/wallet/holder/CredentialRejectedException : ja
 
 public abstract interface class org/trustweave/wallet/holder/IssuerTrustPolicy {
 	public static final field Companion Lorg/trustweave/wallet/holder/IssuerTrustPolicy$Companion;
+	public static fun acceptAnyIssuer ()Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 	public static fun allowList (Ljava/util/Set;)Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 	public static fun fromLookup (Lkotlin/jvm/functions/Function2;)Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 	public abstract fun isTrusted (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/credential/model/vc/VerifiableCredential;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/trustweave/wallet/holder/IssuerTrustPolicy$Companion {
+	public final fun acceptAnyIssuer ()Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 	public final fun allowList (Ljava/util/Set;)Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 	public final fun fromLookup (Lkotlin/jvm/functions/Function2;)Lorg/trustweave/wallet/holder/IssuerTrustPolicy;
 }

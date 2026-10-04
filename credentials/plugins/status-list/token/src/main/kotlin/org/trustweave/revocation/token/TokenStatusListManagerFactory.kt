@@ -34,6 +34,7 @@ object TokenStatusListManagerFactory {
      * @param requireTtl when true, building a token without any ttl fails with a ConfigException
      * @return Configured [TokenStatusListManager]
      */
+    @JvmOverloads
     fun create(
         dataSource: DataSource,
         kms: KeyManagementService,

@@ -1,7 +1,12 @@
 package org.trustweave.anchor.evm
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorResult
@@ -67,7 +72,8 @@ data class EvmChainConfig(
  *   [EvmChainConfig.defaultRpcUrl])
  * - credential parsing — a present-but-invalid `privateKey` fails closed with
  *   [BlockchainException.ConfigurationFailed] carrying the parse failure as cause
- * - PENDING-nonce retrieval so rapid successive anchors never reuse a nonce
+ * - PENDING-nonce retrieval, serialised per client by a mutex held from the nonce read to the send
+ *   (one retry on "nonce too low"), so concurrent anchors from one account never reuse a nonce
  * - gas-limit derivation via the overridable [deriveGasLimit] strategy
  *   (default: intrinsic calldata gas via [EvmGas.txGasLimit]; chains where
  *   `eth_estimateGas` is authoritative override it using [tryEstimateGas])
@@ -76,6 +82,13 @@ data class EvmChainConfig(
  * - receipt-based fee computation ([computeActualFee])
  * - payload reads via `eth_getTransactionByHash` with real block timestamps
  *   ([readTransactionFromBlockchain])
+ *
+ * All JSON-RPC calls (web3j's `.send()` blocks the calling thread) run on [Dispatchers.IO].
+ *
+ * **Legacy digest envelopes.** Reading an anchor is chain-level; whether a digest envelope without
+ * `canon = "JCS"` counts as verified is decided by [AbstractBlockchainAnchorClient.OPTION_REQUIRE_CANONICAL_ENVELOPE]
+ * (default: accepted, with a once-per-client warning). Prefer `requireCanonicalEnvelope=true` for
+ * deployments that never wrote legacy anchors.
  *
  * Subclasses provide only chain identity (validation + [EvmChainConfig]) and any
  * chain-specific behavior (e.g. the Ethereum plugin's payment plane).
@@ -190,57 +203,137 @@ abstract class AbstractEvmAnchorClient(
 
     override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String = submitTransaction(payloadBytes).transactionHash
 
-    override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
-        val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
-        if (!ethGetTransactionReceipt.transactionReceipt.isPresent) {
-            throw TrustWeaveException.NotFound(resource = "Transaction receipt not found: $txHash")
+    override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
+        withContext(Dispatchers.IO) {
+            val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
+            if (!ethGetTransactionReceipt.transactionReceipt.isPresent) {
+                throw TrustWeaveException.NotFound(resource = "Transaction receipt not found: $txHash")
+            }
+
+            val receipt = ethGetTransactionReceipt.transactionReceipt.get()
+            requireSameTransaction(requested = txHash, returned = receipt.transactionHash, source = "receipt")
+            // A reverted transaction still carries its calldata, but nothing was anchored by it.
+            if (!receipt.isStatusOK) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "readTransaction",
+                    reason = "Transaction reverted on chain (status=${receipt.status}); it is not an anchor",
+                )
+            }
+
+            val tx =
+                web3j
+                    .ethGetTransactionByHash(txHash)
+                    .send()
+                    .transaction
+                    .orElse(null)
+                    ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
+            requireSameTransaction(requested = txHash, returned = tx.hash, source = "transaction")
+            requireSameBlock(txHash, receipt, tx)
+            requireExpectedParties(txHash, from = tx.from, to = tx.to)
+
+            requireBuried(txHash, receipt)
+
+            val input = tx.input
+            if (input == null || input.isEmpty() || input == "0x") {
+                throw TrustWeaveException.NotFound(resource = "Transaction data not found: $txHash")
+            }
+
+            val payload = parseAnchoredPayload(txHash, input)
+
+            AnchorResult(
+                ref =
+                    buildAnchorRef(
+                        txHash = txHash,
+                        contract = getContractAddress(),
+                    ),
+                payload = payload,
+                mediaType = "application/json",
+                timestamp = readBlockTimestamp(receipt),
+            )
         }
 
-        val receipt = ethGetTransactionReceipt.transactionReceipt.get()
-        requireSameTransaction(requested = txHash, returned = receipt.transactionHash, source = "receipt")
-        // A reverted transaction still carries its calldata, but nothing was anchored by it.
-        if (!receipt.isStatusOK) {
+    /**
+     * Decodes calldata as the JSON anchor payload. Calldata that is not valid UTF-8 or not valid JSON
+     * (anyone can put arbitrary bytes on chain) is reported as a clear [BlockchainException.TransactionFailed],
+     * never as a raw serialization error, so a verifier sees "this is not an anchor" rather than a
+     * parser stack trace.
+     */
+    private fun parseAnchoredPayload(
+        txHash: String,
+        input: String,
+    ): kotlinx.serialization.json.JsonElement {
+        fun notAnAnchor(
+            why: String,
+            cause: Throwable?,
+        ): Nothing =
             throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = txHash,
                 operation = "readTransaction",
-                reason = "Transaction reverted on chain (status=${receipt.status}); it is not an anchor",
+                reason = "Transaction calldata is not a JSON anchor payload ($why); it is not an anchor",
+                cause = cause,
             )
-        }
-
-        val tx =
-            web3j
-                .ethGetTransactionByHash(txHash)
-                .send()
-                .transaction
-                .orElse(null)
-                ?: throw TrustWeaveException.NotFound(resource = "Transaction not found: $txHash")
-        requireSameTransaction(requested = txHash, returned = tx.hash, source = "transaction")
-        requireExpectedParties(txHash, from = tx.from, to = tx.to)
-
-        requireBuried(txHash, receipt)
-
-        val input = tx.input
-        if (input == null || input.isEmpty() || input == "0x") {
-            throw TrustWeaveException.NotFound(resource = "Transaction data not found: $txHash")
-        }
 
         val dataBytes =
-            org.web3j.utils.Numeric
-                .hexStringToByteArray(input)
-        val payloadJson = String(dataBytes, StandardCharsets.UTF_8)
-        val payload = Json.parseToJsonElement(payloadJson)
+            try {
+                org.web3j.utils.Numeric
+                    .hexStringToByteArray(input)
+            } catch (e: RuntimeException) {
+                notAnAnchor("calldata is not valid hex", e)
+            }
+        val text =
+            try {
+                StandardCharsets.UTF_8
+                    .newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(dataBytes))
+                    .toString()
+            } catch (e: java.nio.charset.CharacterCodingException) {
+                notAnAnchor("calldata is not valid UTF-8", e)
+            }
+        return try {
+            Json.parseToJsonElement(text)
+        } catch (e: SerializationException) {
+            notAnAnchor("calldata is not valid JSON", e)
+        } catch (e: IllegalArgumentException) {
+            notAnAnchor("calldata is not valid JSON", e)
+        }
+    }
 
-        return AnchorResult(
-            ref =
-                buildAnchorRef(
-                    txHash = txHash,
-                    contract = getContractAddress(),
-                ),
-            payload = payload,
-            mediaType = "application/json",
-            timestamp = readBlockTimestamp(receipt),
-        )
+    /**
+     * Asserts the receipt and the transaction describe the same inclusion: both must name a block,
+     * and the block hash and number must agree. One node answering with a receipt from one block and a
+     * transaction from another (a reorg race, a buggy or malicious proxy) must not be read as one anchor.
+     */
+    private fun requireSameBlock(
+        txHash: String,
+        receipt: TransactionReceipt,
+        tx: org.web3j.protocol.core.methods.response.Transaction,
+    ) {
+        fun reject(reason: String): Nothing =
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readTransaction",
+                reason = reason,
+            )
+
+        val receiptHash = receipt.blockHash
+        val txBlockHash = tx.blockHash
+        if (receiptHash.isNullOrBlank() || txBlockHash.isNullOrBlank()) {
+            reject("Receipt or transaction does not name a containing block; refusing to treat it as a settled anchor")
+        }
+        if (!receiptHash.equals(txBlockHash, ignoreCase = true)) {
+            reject("Receipt is in block $receiptHash but the transaction reports block $txBlockHash; refusing to read an anchor from it")
+        }
+        val receiptNumber = receipt.blockNumber
+        val txNumber = tx.blockNumber
+        if (receiptNumber == null || txNumber == null || receiptNumber != txNumber) {
+            reject("Receipt is at block number $receiptNumber but the transaction reports $txNumber; refusing to read an anchor from it")
+        }
     }
 
     override fun getContractAddress(): String? = options["contractAddress"] as? String
@@ -307,39 +400,66 @@ abstract class AbstractEvmAnchorClient(
      *
      * @return the confirmed transaction receipt
      */
-    protected suspend fun submitTransaction(data: ByteArray): TransactionReceipt {
-        val creds =
-            credentials
-                ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
+    protected suspend fun submitTransaction(data: ByteArray): TransactionReceipt =
+        withContext(Dispatchers.IO) {
+            val creds =
+                credentials
+                    ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
 
-        val gasPrice = web3j.ethGasPrice().send().gasPrice
-        // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
-        val nonce =
-            web3j
-                .ethGetTransactionCount(creds.address, DefaultBlockParameterName.PENDING)
-                .send()
-                .transactionCount
+            // One account, one nonce sequence: the read of the PENDING count, the signature and the send
+            // must not interleave with another submission from this client, or both would use the same
+            // nonce and one anchor would replace (or be rejected as a duplicate of) the other. The lock
+            // is released before the receipt wait, so successive anchors still overlap their confirmations.
+            val txHash = nonceMutex.withLock { sendWithFreshNonce(data, creds) }
+            waitForReceipt(txHash, data.size.toLong())
+        }
 
-        val gasLimit = deriveGasLimit(data, creds.address)
-        val rawTransaction =
-            org.web3j.crypto.RawTransaction.createTransaction(
-                nonce,
-                gasPrice,
-                gasLimit,
-                creds.address, // Send to self
-                BigInteger.ZERO,
+    /** Held from the nonce read to the end of `eth_sendRawTransaction`; see [submitTransaction]. */
+    private val nonceMutex = Mutex()
+
+    /**
+     * Reads the PENDING nonce, signs and sends; on "nonce too low" (another sender, or a node that
+     * lagged, used the nonce) re-reads once and tries again. Any other error, or a second "too low", fails.
+     */
+    private fun sendWithFreshNonce(
+        data: ByteArray,
+        creds: org.web3j.crypto.Credentials,
+    ): String {
+        var attempt = 0
+        while (true) {
+            val gasPrice = web3j.ethGasPrice().send().gasPrice
+            // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
+            val nonce =
+                web3j
+                    .ethGetTransactionCount(creds.address, DefaultBlockParameterName.PENDING)
+                    .send()
+                    .transactionCount
+
+            val gasLimit = deriveGasLimit(data, creds.address)
+            val rawTransaction =
+                org.web3j.crypto.RawTransaction.createTransaction(
+                    nonce,
+                    gasPrice,
+                    gasLimit,
+                    creds.address, // Send to self
+                    BigInteger.ZERO,
+                    org.web3j.utils.Numeric
+                        .toHexString(data),
+                )
+
+            val signedTransaction = signWithChainId(rawTransaction, creds)
+            val hexValue =
                 org.web3j.utils.Numeric
-                    .toHexString(data),
-            )
+                    .toHexString(signedTransaction)
 
-        val signedTransaction = signWithChainId(rawTransaction, creds)
-        val hexValue =
-            org.web3j.utils.Numeric
-                .toHexString(signedTransaction)
+            val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
+            if (!ethSendTransaction.hasError()) return ethSendTransaction.transactionHash
 
-        val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
-        if (ethSendTransaction.hasError()) {
             val error = ethSendTransaction.error
+            if (attempt == 0 && NONCE_TOO_LOW.containsMatchIn(error?.message.orEmpty())) {
+                attempt++
+                continue
+            }
             throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = null,
@@ -349,8 +469,6 @@ abstract class AbstractEvmAnchorClient(
                 reason = "Transaction failed: ${error?.message ?: "Unknown error"}",
             )
         }
-
-        return waitForReceipt(ethSendTransaction.transactionHash, data.size.toLong())
     }
 
     /**
@@ -378,49 +496,52 @@ abstract class AbstractEvmAnchorClient(
     protected suspend fun waitForReceipt(
         txHash: String,
         payloadSize: Long,
-    ): TransactionReceipt {
-        val deadline = System.currentTimeMillis() + confirmationTimeoutMs
-        while (true) {
-            val receipt =
-                web3j
-                    .ethGetTransactionReceipt(txHash)
-                    .send()
-                    .transactionReceipt
-                    .orElse(null)
-            if (receipt != null) {
-                if (!receipt.isStatusOK) {
+    ): TransactionReceipt =
+        withContext(Dispatchers.IO) {
+            val deadline = System.currentTimeMillis() + confirmationTimeoutMs
+            while (true) {
+                val receipt =
+                    web3j
+                        .ethGetTransactionReceipt(txHash)
+                        .send()
+                        .transactionReceipt
+                        .orElse(null)
+                if (receipt != null) {
+                    if (!receipt.isStatusOK) {
+                        throw BlockchainException.TransactionFailed(
+                            chainId = chainId,
+                            txHash = txHash,
+                            operation = "submitTransaction",
+                            payloadSize = payloadSize,
+                            gasUsed =
+                                try {
+                                    receipt.gasUsed?.toLong()
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (_: Exception) {
+                                    null
+                                },
+                            reason = "Transaction reverted on chain (status=${receipt.status})",
+                        )
+                    }
+                    return@withContext receipt
+                }
+                if (System.currentTimeMillis() >= deadline) {
                     throw BlockchainException.TransactionFailed(
                         chainId = chainId,
                         txHash = txHash,
                         operation = "submitTransaction",
                         payloadSize = payloadSize,
-                        gasUsed =
-                            try {
-                                receipt.gasUsed?.toLong()
-                            } catch (cancelled: CancellationException) {
-                                throw cancelled
-                            } catch (_: Exception) {
-                                null
-                            },
-                        reason = "Transaction reverted on chain (status=${receipt.status})",
+                        reason =
+                            "Transaction not confirmed within $confirmationTimeoutMs ms " +
+                                "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)",
                     )
                 }
-                return receipt
+                delay(confirmationPollIntervalMs)
             }
-            if (System.currentTimeMillis() >= deadline) {
-                throw BlockchainException.TransactionFailed(
-                    chainId = chainId,
-                    txHash = txHash,
-                    operation = "submitTransaction",
-                    payloadSize = payloadSize,
-                    reason =
-                        "Transaction not confirmed within $confirmationTimeoutMs ms " +
-                            "(configure via '$OPTION_CONFIRMATION_TIMEOUT_MS' option)",
-                )
-            }
-            delay(confirmationPollIntervalMs)
+            @Suppress("UNREACHABLE_CODE")
+            error("unreachable: the polling loop only exits by returning or throwing")
         }
-    }
 
     /**
      * Computes the fee actually paid from the confirmed [receipt].
@@ -608,6 +729,8 @@ abstract class AbstractEvmAnchorClient(
             }
 
     public companion object {
+        private val NONCE_TOO_LOW = Regex("nonce.{0,16}too low", RegexOption.IGNORE_CASE)
+
         /**
          * Blocks that must sit on top of an anchor's block before [readTransactionFromBlockchain]
          * will read it. 0 disables the check.

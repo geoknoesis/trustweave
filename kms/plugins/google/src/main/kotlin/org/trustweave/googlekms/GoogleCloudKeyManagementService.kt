@@ -8,8 +8,8 @@ import com.google.cloud.kms.v1.CryptoKeyVersionTemplate
 import com.google.cloud.kms.v1.KeyManagementServiceClient
 import com.google.cloud.kms.v1.KeyRingName
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.KeyId
@@ -375,6 +375,14 @@ class GoogleCloudKeyManagementService(
             }
         }
 
+    /**
+     * Signs [data] with Google Cloud KMS `AsymmetricSign`.
+     *
+     * **Empty data is rejected.** `AsymmetricSign` needs a non-empty `data` (or `digest`) field: a
+     * request that supplies neither is refused with `INVALID_ARGUMENT`, so a zero-length message
+     * cannot be signed here even for Ed25519 (where an empty message would otherwise be valid). It is
+     * reported as [SignResult.Failure.Error] naming this constraint, without a round trip.
+     */
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
@@ -382,7 +390,13 @@ class GoogleCloudKeyManagementService(
     ): SignResult =
         withContext(Dispatchers.IO) {
             // Validate input data
-            val dataValidationError = KmsInputValidator.validateSignData(data)
+            val dataValidationError =
+                KmsInputValidator.validateSignData(
+                    data,
+                    emptyDataMessage =
+                        "Cannot sign empty data: Google Cloud KMS AsymmetricSign requires a non-empty `data` " +
+                            "(or `digest`) field, and rejects a request that supplies neither with INVALID_ARGUMENT",
+                )
             if (dataValidationError != null) {
                 logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
                 return@withContext SignResult.Failure.Error(

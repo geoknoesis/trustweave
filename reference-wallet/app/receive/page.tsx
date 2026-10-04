@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { OfferQrScanner } from '@/components/OfferQrScanner'
-import { bootstrap, store, type WalletState } from '@/lib/wallet'
+import { bootstrap, store, UntrustedIssuerError, type WalletState } from '@/lib/wallet'
+import type { IssuedCredentialResponse } from '@/lib/claim-credential'
 import type { StoredCredential } from '@/lib/storage'
 import { fetchCredentialFromOffer } from '@/lib/claim-credential'
 import type { CredentialOfferQrPayload } from '@/lib/credential-offer-qr'
@@ -14,6 +15,7 @@ import { credentialSummary } from '@/lib/credential-display'
 type Status =
   | { kind: 'idle' }
   | { kind: 'requesting' }
+  | { kind: 'confirm-issuer'; issuerDid: string; body: IssuedCredentialResponse }
   | { kind: 'success'; credential: StoredCredential; replaced: boolean }
   | { kind: 'error'; message: string }
 
@@ -37,25 +39,33 @@ export default function ReceivePage() {
     )
   }
 
-  const claimOffer = async (offer: CredentialOfferQrPayload) => {
+  const importBody = async (body: IssuedCredentialResponse, confirmedIssuer?: string) => {
     setStatus({ kind: 'requesting' })
-    setScanError(null)
     try {
       const wallet = await bootstrap()
       setState(wallet)
-      const body = await fetchCredentialFromOffer(offer, wallet.holder.did)
-      const { credential, replaced } = await store(
-        body.credential,
-        body.format,
-        body.selectivelyDisclosable ?? [],
-        body.issuer, // the demo issuer of the configured backend
-      )
+      // The issuer named in the offer response (`body.issuer`) is deliberately NOT passed on: trust
+      // comes from configuration, this wallet's own backend, or the user's explicit confirmation.
+      const { credential, replaced } = await store(body.credential, body.format, body.selectivelyDisclosable ?? [], { confirmedIssuer })
       if (!isCredentialBoundToHolder(credential, wallet.holder.did)) {
         throw new Error(
           'Credential was not issued to this wallet. Refresh the page and scan the issuer QR again.',
         )
       }
       setStatus({ kind: 'success', credential, replaced })
+    } catch (e) {
+      if (e instanceof UntrustedIssuerError) { setStatus({ kind: 'confirm-issuer', issuerDid: e.issuerDid, body }); return }
+      setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+    }
+  }
+
+  const claimOffer = async (offer: CredentialOfferQrPayload) => {
+    setStatus({ kind: 'requesting' })
+    setScanError(null)
+    try {
+      const wallet = await bootstrap()
+      setState(wallet)
+      await importBody(await fetchCredentialFromOffer(offer, wallet.holder.did))
     } catch (e) {
       setStatus({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
     }
@@ -90,6 +100,23 @@ export default function ReceivePage() {
 
         {status.kind === 'requesting' && (
           <div className="status-text loading">Receiving credential…</div>
+        )}
+
+        {status.kind === 'confirm-issuer' && (
+          <div className="callout warning" role="alertdialog" aria-labelledby="confirm-issuer-title">
+            <strong id="confirm-issuer-title">Trust this issuer?</strong>
+            <div style={{ marginTop: '0.35rem' }}>
+              This credential is signed by an issuer your wallet does not know. Only continue if you
+              recognise this identifier and expected a credential from it.
+            </div>
+            <div className="identity-value" style={{ marginTop: '0.5rem' }}>{status.issuerDid}</div>
+            <div className="button-row">
+              <button type="button" className="btn" onClick={() => void importBody(status.body, status.issuerDid)}>
+                Trust this issuer and add credential
+              </button>
+              <button type="button" className="btn secondary" onClick={() => setStatus({ kind: 'idle' })}>Cancel</button>
+            </div>
+          </div>
         )}
 
         {status.kind === 'success' && (

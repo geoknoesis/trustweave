@@ -67,6 +67,23 @@ for this service authorization. No production service endpoint is implemented or
 configured by these client adapters. A non-production KMS resource and credential
 profile were requested for the remaining provider integration.
 
+## Issuer trust and web storage exposure
+
+The web wallet keeps credentials, holder metadata and the accepted-issuer list in plaintext
+`localStorage`. Any script that runs in the wallet origin (XSS, a compromised dependency, a
+malicious browser extension) can read every credential and can add an issuer to the accepted list,
+which makes that issuer trusted for later imports. The non-extractable holder key stays protected,
+but signatures can still be requested while the page is open. Mitigations in this wallet: a strict
+nonce-based CSP (see the e2e tests), no auto-trust of issuers named in offers, shape/size limits on
+every read of the accepted-issuer list (200 entries, DID-shaped values only), and a review/remove UI.
+The list is **not** integrity protected: an attacker with script access or profile write access can
+edit it. Treat the origin as the trust boundary, deploy the CSP, and prefer the configured allow-list
+(`NEXT_PUBLIC_TRUSTED_ISSUERS`), which lives in the build, for production issuers. The Android wallet keeps
+its accepted-issuer list in EncryptedSharedPreferences.
+
+Issuer trust sources, in order: configured allow-list, the wallet's own backend identity (same-origin
+endpoint / build-time URL, never an offer payload), and explicit user confirmation of the signed issuer DID.
+
 ## Validation limits
 
 Use the [live qualification matrix](../docs/operations/custody-qualification.md)

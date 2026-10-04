@@ -1,7 +1,9 @@
 package org.trustweave.core.plugin
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.PluginException
 import java.util.concurrent.ConcurrentHashMap
@@ -290,8 +292,11 @@ internal class DefaultPluginRegistry(
             }
 
         // Phase 2 (unlocked): drive the plugin lifecycle. A plugin that fails initialize()/start()
-        // never becomes visible; the reservation is released and a PluginException propagates.
+        // never becomes visible; the reservation is released and a PluginException propagates. Whatever
+        // the plugin already acquired is released first (best effort, see below), so a plugin whose
+        // start() fails does not leak the resources initialize() opened.
         if (instance is PluginLifecycle) {
+            var initialized = false
             try {
                 if (!instance.initialize(metadata.configuration)) {
                     throw PluginException.InitializationFailed(
@@ -299,6 +304,7 @@ internal class DefaultPluginRegistry(
                         reason = "initialize() returned false",
                     )
                 }
+                initialized = true
                 if (!instance.start()) {
                     throw PluginException.InitializationFailed(
                         pluginId = metadata.id,
@@ -308,6 +314,15 @@ internal class DefaultPluginRegistry(
             } catch (t: Throwable) {
                 // Release only OUR reservation: after a clear() another registration may own the slot.
                 synchronized(mutationLock) { pendingRegistrations.remove(metadata.id, token) }
+                // Best-effort cleanup of the half-started plugin, even on cancellation (hence NonCancellable):
+                // stop() only when initialize() succeeded (start() was attempted), cleanup() always, and
+                // cleanup() even when stop() fails. Teardown failures never replace the original failure;
+                // they are logged and attached to it as suppressed exceptions so they are reported.
+                if (t !is Error) {
+                    val teardownFailures =
+                        withContext(NonCancellable) { teardownAfterFailedStart(metadata.id, instance, stopFirst = initialized) }
+                    teardownFailures.forEach { t.addSuppressed(it) }
+                }
                 when (t) {
                     is CancellationException -> throw t // cancellation is not an initialization failure
                     is Error -> throw t // OOM/StackOverflow etc. must propagate as-is
@@ -438,6 +453,38 @@ internal class DefaultPluginRegistry(
         } catch (e: Exception) {
             logger.warn("Plugin '{}' cleanup() failed during unregistration", pluginId, e)
         }
+    }
+
+    /**
+     * Releases a plugin whose registration failed. [stopFirst] is true when initialize() succeeded
+     * (so start() was attempted). cleanup() always runs, even when stop() throws or returns false.
+     * Returns the failures instead of throwing so the caller can report them next to the original error.
+     */
+    private suspend fun teardownAfterFailedStart(
+        pluginId: String,
+        lifecycle: PluginLifecycle,
+        stopFirst: Boolean,
+    ): List<Throwable> {
+        val failures = mutableListOf<Throwable>()
+        if (stopFirst) {
+            try {
+                if (!lifecycle.stop()) logger.warn("Plugin '{}' stop() returned false after a failed start", pluginId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Plugin '{}' stop() failed after a failed start; continuing with cleanup", pluginId, e)
+                failures += e
+            }
+        }
+        try {
+            lifecycle.cleanup()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("Plugin '{}' cleanup() failed after a failed start", pluginId, e)
+            failures += e
+        }
+        return failures
     }
 
     /** Blocking: parks the calling thread until the plugin's stop/cleanup complete. */

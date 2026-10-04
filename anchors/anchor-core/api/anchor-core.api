@@ -29,6 +29,7 @@ public abstract class org/trustweave/anchor/AbstractBlockchainAnchorClient : org
 	protected final fun getPayloadMode ()Ljava/lang/String;
 	protected final fun getRequireCanonicalEnvelope ()Z
 	protected final fun getStorage ()Ljava/util/concurrent/ConcurrentHashMap;
+	protected fun onLegacyDigestAccepted (Lorg/trustweave/anchor/AnchorRef;)V
 	public fun readPayload (Lorg/trustweave/anchor/AnchorRef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected abstract fun readTransactionFromBlockchain (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected abstract fun submitTransactionToBlockchain ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;

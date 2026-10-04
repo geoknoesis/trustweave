@@ -55,6 +55,12 @@ class CredentialVerificationTest {
     }
 
     @Test
+    fun `an untrusted issuer is reported with its signed DID so the UI can ask for confirmation`() {
+        val e = assertThrows(UntrustedIssuerException::class.java) { verify(vcJwt(), IssuerTrustPolicy.NONE) }
+        assertTrue(e.issuerDid == issuerDid)
+    }
+
+    @Test
     fun `a signed credential from a trusted issuer bound to the holder is accepted`() {
         verify(vcJwt())
     }

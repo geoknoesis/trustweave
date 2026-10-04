@@ -2,6 +2,7 @@ package org.trustweave.trust.dsl.credential
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
@@ -333,6 +334,25 @@ class IssuanceBuilder(
                 }
             val verificationMethodId = "${resolvedIssuerDid.value}#$normalizedKeyId" // normalizedKeyId is non-null per guard above
 
+            // Validate the verification method ID BEFORE a status-list index is allocated: a request
+            // that is rejected here must not consume (and then have to give back) any capacity.
+            val parsedVmId =
+                try {
+                    VerificationMethodId.parse(verificationMethodId)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return@withContext IssuanceResult.Failure.InvalidRequest(
+                        field = "issuerKeyId",
+                        reason = "Could not parse verification method ID '$verificationMethodId': ${e.message}",
+                    )
+                }
+
+            // The status-list index THIS build allocated, or null. Set only by the auto-revocation
+            // block below, never for a caller-supplied credentialStatus: releasing an index this build did
+            // not allocate could hand out a slot that belongs to someone else's credential.
+            var allocated: AllocatedStatusIndex? = null
+
             // Handle auto-revocation if enabled
             var credentialToIssue = cred
             if (autoRevocation && credentialToIssue.credentialStatus == null) {
@@ -387,6 +407,8 @@ class IssuanceBuilder(
                             )
                         }
 
+                    allocated = AllocatedStatusIndex(statusListId, statusIndex)
+
                     // Add credential status to credential
                     val credentialStatus =
                         CredentialStatus(
@@ -408,166 +430,175 @@ class IssuanceBuilder(
                 }
             }
 
-            // Capture status-list coordinates (if allocated above) so that if issuance fails the
-            // index can be handed back via CredentialRevocationManager.releaseStatusListIndex. A
-            // manager that cannot (or will not) release it leaves the slot allocated, and the failure
-            // then carries a warning naming it.
-            val allocatedStatusListId =
-                if (autoRevocation && credentialToIssue.credentialStatus != null) {
-                    credentialToIssue.credentialStatus?.statusListCredential
-                } else {
-                    null
-                }
-            val allocatedStatusIndex =
-                if (autoRevocation && credentialToIssue.credentialStatus != null) {
-                    credentialToIssue.credentialStatus?.statusListIndex
-                } else {
-                    null
-                }
-
             val proofSuiteToUse = proofSuite ?: defaultProofSuite
 
-            val parsedVmId =
+            // Issue (and optionally anchor) as one unit so that the allocated status-list index is given
+            // back on EVERY path that does not deliver the credential: a Failure result, an exception
+            // (cancellation included, which is rethrown after the release), and a failed auto-anchor.
+            // It is never released when issuance succeeded, and never twice.
+            suspend fun issueAndAnchor(): IssuanceResult {
+                // Build IssuanceRequest from VerifiableCredential
+                val request =
+                    IssuanceRequest(
+                        format = proofSuiteToUse,
+                        issuer = credentialToIssue.issuer,
+                        issuerKeyId = parsedVmId,
+                        credentialSubject = credentialToIssue.credentialSubject,
+                        type = credentialToIssue.type,
+                        id = credentialToIssue.id,
+                        issuedAt =
+                            credentialToIssue.issuanceDate ?: kotlinx.datetime.Clock.System
+                                .now(),
+                        // null for VC 2.0-only credentials
+                        validFrom = credentialToIssue.validFrom,
+                        validUntil = credentialToIssue.validUntil ?: credentialToIssue.expirationDate,
+                        credentialStatus = credentialToIssue.credentialStatus,
+                        credentialSchema = credentialToIssue.credentialSchema,
+                        evidence = credentialToIssue.evidence,
+                        proofOptions =
+                            run {
+                                val base =
+                                    if (challenge == null && domain == null) {
+                                        proofOptionsForIssuance(verificationMethod = verificationMethodId)
+                                    } else {
+                                        ProofOptions(
+                                            purpose = ProofPurpose.AssertionMethod,
+                                            challenge = challenge,
+                                            domain = domain,
+                                            verificationMethod = verificationMethodId,
+                                        )
+                                    }
+                                if (additionalProofOptions.isEmpty()) {
+                                    base
+                                } else {
+                                    base.withAdditionalOptions(additionalProofOptions.toMap())
+                                }
+                            },
+                    )
+
+                // Issue credential using CredentialService
+                val issueResult = credentialService.issue(request)
+
+                // Auto-anchor. Follows the withRevocation() precedent above: an opt-in side-effect that
+                // cannot be performed fails the issuance rather than being skipped. Silently not anchoring
+                // is precisely the defect this path was added to fix, so "best effort" is not an option —
+                // a caller who asked for an anchor and received an un-anchored credential with a Success
+                // result has no way to find out.
+                if (!autoAnchor || issueResult !is IssuanceResult.Success) {
+                    return issueResult
+                }
+
+                val chainId =
+                    defaultChain
+                        ?: return IssuanceResult.Failure.InvalidRequest(
+                            field = "defaultChain",
+                            reason =
+                                "autoAnchor is enabled but no chain is configured. " +
+                                    "Set credentials { defaultChain(\"<caip-2-chain-id>\") }.",
+                        )
+                val anchorService =
+                    blockchainService
+                        ?: return IssuanceResult.Failure.AdapterError(
+                            format = proofSuiteToUse,
+                            reason =
+                                "autoAnchor is enabled but no anchor layer is configured. " +
+                                    "Add an anchor { chain(\"$chainId\") { ... } } block.",
+                            cause = null,
+                        )
+
                 try {
-                    VerificationMethodId.parse(verificationMethodId)
+                    // A digest envelope, not the credential — see the [autoAnchor] KDoc.
+                    // The digest is over the RFC 8785 (JCS) canonical form, so any verifier can take the
+                    // same credential, in any key order, and check it with BlockchainAnchorClient.verifyAnchor.
+                    val envelope =
+                        org.trustweave.anchor.AnchorDigest.envelope(
+                            issueResult.credential.toJsonLd(),
+                            "application/vc+json",
+                        )
+                    anchorService.anchor(
+                        data = envelope,
+                        serializer =
+                            kotlinx.serialization.json.JsonObject
+                                .serializer(),
+                        chainId = chainId,
+                    )
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    return@withContext IssuanceResult.Failure.InvalidRequest(
-                        field = "issuerKeyId",
-                        reason = "Could not parse verification method ID '$verificationMethodId': ${e.message}",
-                    )
-                }
-
-            // Build IssuanceRequest from VerifiableCredential
-            val request =
-                IssuanceRequest(
-                    format = proofSuiteToUse,
-                    issuer = credentialToIssue.issuer,
-                    issuerKeyId = parsedVmId,
-                    credentialSubject = credentialToIssue.credentialSubject,
-                    type = credentialToIssue.type,
-                    id = credentialToIssue.id,
-                    issuedAt =
-                        credentialToIssue.issuanceDate ?: kotlinx.datetime.Clock.System
-                            .now(),
-                    // null for VC 2.0-only credentials
-                    validFrom = credentialToIssue.validFrom,
-                    validUntil = credentialToIssue.validUntil ?: credentialToIssue.expirationDate,
-                    credentialStatus = credentialToIssue.credentialStatus,
-                    credentialSchema = credentialToIssue.credentialSchema,
-                    evidence = credentialToIssue.evidence,
-                    proofOptions =
-                        run {
-                            val base =
-                                if (challenge == null && domain == null) {
-                                    proofOptionsForIssuance(verificationMethod = verificationMethodId)
-                                } else {
-                                    ProofOptions(
-                                        purpose = ProofPurpose.AssertionMethod,
-                                        challenge = challenge,
-                                        domain = domain,
-                                        verificationMethod = verificationMethodId,
-                                    )
-                                }
-                            if (additionalProofOptions.isEmpty()) {
-                                base
-                            } else {
-                                base.withAdditionalOptions(additionalProofOptions.toMap())
-                            }
-                        },
-                )
-
-            // Issue credential using CredentialService
-            val issueResult = credentialService.issue(request)
-
-            // If issuance failed after a status-list index was allocated, hand the index back (the
-            // credential bound to it was never delivered) and keep the original failure: its
-            // subtype, reason and cause are what the caller needs to act on. When the manager
-            // cannot release the index, say so in a warning.
-            val settledResult =
-                if (issueResult is IssuanceResult.Failure && allocatedStatusListId != null && allocatedStatusIndex != null) {
-                    val released =
-                        try {
-                            allocatedStatusIndex.toIntOrNull()?.let {
-                                revocationManager?.releaseStatusListIndex(allocatedStatusListId, it)
-                            } ?: false
-                        } catch (e: kotlinx.coroutines.CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            false
-                        }
-                    if (released) {
-                        issueResult
-                    } else {
-                        issueResult.withWarning(
-                            "Credential issuance failed after status-list index $allocatedStatusIndex was " +
-                                "assigned in status list ${allocatedStatusListId.value}; that index could not be " +
-                                "released and stays allocated but unused.",
-                        )
-                    }
-                } else {
-                    issueResult
-                }
-
-            // Auto-anchor. Follows the withRevocation() precedent above: an opt-in side-effect that
-            // cannot be performed fails the issuance rather than being skipped. Silently not anchoring
-            // is precisely the defect this path was added to fix, so "best effort" is not an option —
-            // a caller who asked for an anchor and received an un-anchored credential with a Success
-            // result has no way to find out.
-            if (!autoAnchor || settledResult !is IssuanceResult.Success) {
-                return@withContext settledResult
-            }
-
-            val chainId =
-                defaultChain
-                    ?: return@withContext IssuanceResult.Failure.InvalidRequest(
-                        field = "defaultChain",
-                        reason =
-                            "autoAnchor is enabled but no chain is configured. " +
-                                "Set credentials { defaultChain(\"<caip-2-chain-id>\") }.",
-                    )
-            val anchorService =
-                blockchainService
-                    ?: return@withContext IssuanceResult.Failure.AdapterError(
+                    return IssuanceResult.Failure.AdapterError(
                         format = proofSuiteToUse,
                         reason =
-                            "autoAnchor is enabled but no anchor layer is configured. " +
-                                "Add an anchor { chain(\"$chainId\") { ... } } block.",
-                        cause = null,
+                            "Credential was issued but auto-anchoring to '$chainId' failed. " +
+                                "This is required when autoAnchor is enabled. Error: ${e.message}",
+                        cause = e,
                     )
+                }
 
-            try {
-                // A digest envelope, not the credential — see the [autoAnchor] KDoc.
-                // The digest is over the RFC 8785 (JCS) canonical form, so any verifier can take the
-                // same credential, in any key order, and check it with BlockchainAnchorClient.verifyAnchor.
-                val envelope =
-                    org.trustweave.anchor.AnchorDigest.envelope(
-                        settledResult.credential.toJsonLd(),
-                        "application/vc+json",
-                    )
-                anchorService.anchor(
-                    data = envelope,
-                    serializer =
-                        kotlinx.serialization.json.JsonObject
-                            .serializer(),
-                    chainId = chainId,
-                )
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                return@withContext IssuanceResult.Failure.AdapterError(
-                    format = proofSuiteToUse,
-                    reason =
-                        "Credential was issued but auto-anchoring to '$chainId' failed. " +
-                            "This is required when autoAnchor is enabled. Error: ${e.message}",
-                    cause = e,
-                )
+                return issueResult
             }
 
-            settledResult
+            suspend fun releaseAllocated(): Boolean? {
+                val toRelease = allocated ?: return null
+                allocated = null // at most one release per build
+                // NonCancellable: the release must still run when the caller was cancelled.
+                return withContext(NonCancellable) {
+                    try {
+                        revocationManager?.releaseStatusListIndex(toRelease.listId, toRelease.index) ?: false
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+
+            // On any abnormal exit (cancellation included) release the index, then rethrow unchanged.
+            suspend fun abortWith(cause: Throwable) {
+                val toRelease = allocated
+                if (toRelease != null) {
+                    val released = releaseAllocated()
+                    if (released != true) cause.addSuppressed(UnreleasedStatusIndexException(toRelease))
+                }
+            }
+
+            val outcome =
+                try {
+                    issueAndAnchor()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    abortWith(e)
+                    throw e
+                } catch (e: Exception) {
+                    abortWith(e)
+                    throw e
+                }
+
+            if (outcome is IssuanceResult.Failure) {
+                val toRelease = allocated
+                // The credential bound to the index was never delivered: hand the index back and keep
+                // the original failure (subtype, reason, cause). When the manager cannot release it,
+                // say so in a warning.
+                if (toRelease != null && releaseAllocated() != true) {
+                    return@withContext outcome.withWarning(
+                        "Credential issuance failed after status-list index ${toRelease.index} was " +
+                            "assigned in status list ${toRelease.listId.value}; that index could not be " +
+                            "released and stays allocated but unused.",
+                    )
+                }
+            }
+            outcome
         }
 }
+
+/** A status-list slot allocated by one [IssuanceBuilder.build] call, eligible for release if issuance fails. */
+private data class AllocatedStatusIndex(
+    val listId: StatusListId,
+    val index: Int,
+)
+
+/** Attached as a suppressed exception when issuance threw and the allocated index could not be released. */
+internal class UnreleasedStatusIndexException(
+    allocation: Any,
+) : RuntimeException("Status-list index allocation could not be released and stays allocated but unused: $allocation")
 
 /** The same failure with [warning] appended to its warnings; subtype, reason and cause are kept. */
 internal fun IssuanceResult.Failure.withWarning(warning: String): IssuanceResult.Failure =

@@ -47,6 +47,14 @@ Run the automated checks from this directory:
 - **Real OID4VCI / OID4VP wire-format compliance.** Same simplification as web wallet.
 - **Selective disclosure (SD-JWT VC).** Phase 2.5.
 
+## Issuer trust
+
+An issuer named by an offer is never trusted for being named. The wallet trusts only (1) issuers
+listed in the `TRUSTED_ISSUERS` Gradle property (`-PTRUSTED_ISSUERS=did:key:...,did:key:...`),
+(2) the backend's own issuer identities, read from `$DEMO_BACKEND_BASE_URL/api/demo-issuer/identity`,
+and (3) issuers the user confirmed in the receive dialog (listed and removable under "Trusted
+issuers" on the home screen). See [`../CUSTODY.md`](../CUSTODY.md).
+
 ## Prerequisites
 
 - Android Studio Hedgehog (2023.1.1) or newer

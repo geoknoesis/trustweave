@@ -76,6 +76,7 @@ fun HomeScreen(
             onPresent = onPresent,
             onDelete = { confirmDelete = it },
         )
+        TrustedIssuersPanel(wallet = wallet)
         DangerZonePanel(onReset = { confirmReset = true })
     }
 
@@ -223,6 +224,34 @@ private fun CredentialCard(cred: Storage.StoredCredential, onDelete: () -> Unit)
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** Review and remove issuers the user confirmed earlier (configured/backend issuers are not listed). */
+@Composable
+private fun TrustedIssuersPanel(wallet: Wallet) {
+    var issuers by remember { mutableStateOf(wallet.acceptedIssuers()) }
+    Card {
+        Column(Modifier.padding(16.dp)) {
+            Text("Trusted issuers", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Credentials are only accepted from configured issuers, this wallet's own backend, or issuers you confirmed.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            if (issuers.isEmpty()) Text("You have not confirmed any issuers.", style = MaterialTheme.typography.bodySmall)
+            issuers.forEach { did ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(did, Modifier.weight(1f), fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    TextButton(onClick = {
+                        wallet.removeAcceptedIssuer(did)
+                        issuers = wallet.acceptedIssuers()
+                    }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
+                }
             }
         }
     }

@@ -32,7 +32,7 @@ object CredentialVerification {
     private val RESERVED_DISCLOSURE_NAMES =
         setOf("iss", "sub", "iat", "nbf", "exp", "vct", "cnf", "_sd", "_sd_alg", "...", "__proto__", "constructor", "prototype")
 
-    class RejectedCredentialException(message: String) : IllegalArgumentException(message)
+    open class RejectedCredentialException(message: String) : IllegalArgumentException(message)
 
     private fun reject(message: String): Nothing = throw RejectedCredentialException(message)
 
@@ -85,7 +85,7 @@ object CredentialVerification {
         val signingInput = "${parts[0]}.${parts[1]}".toByteArray(Charsets.US_ASCII)
         if (!Crypto.verifyEd25519(signature, signingInput, issuerKey)) reject("Issuer signature is invalid")
 
-        if (!issuerPolicy.isTrusted(iss)) reject("Issuer $iss is not trusted by this wallet")
+        if (!issuerPolicy.isTrusted(iss)) throw UntrustedIssuerException(iss)
 
         val sub = payload.string("sub")?.takeIf { it.isNotEmpty() } ?: reject("Credential holder is missing")
         if (sub != holderDid) reject("Credential is bound to $sub, not to this wallet's holder $holderDid")

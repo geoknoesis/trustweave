@@ -12,6 +12,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import org.trustweave.referencewallet.BuildConfig
 
 /**
  * Holder-side wallet facade.
@@ -23,11 +24,11 @@ import kotlinx.serialization.json.put
 class Wallet(
     private val context: Context,
     /**
-     * Issuer DIDs this wallet stores credentials from, in addition to the issuer named by the
-     * offer passed to [store]. Empty by default, so the only trusted issuer is the demo issuer
-     * of the demo backend the user configured.
+     * The configured issuer allow-list (`TRUSTED_ISSUERS` build property). Issuers are trusted only
+     * through this list, the wallet's own backend identity, or an explicit user confirmation (see
+     * [IssuerTrust]); an issuer named by an offer is never trusted merely for being named.
      */
-    private val trustedIssuers: Set<String> = emptySet(),
+    private val trustedIssuers: Set<String> = IssuerTrust.parseConfigured(BuildConfig.TRUSTED_ISSUERS),
 ) {
 
     private val storage = Storage(context)
@@ -62,11 +63,25 @@ class Wallet(
     fun deleteCredential(id: String) = storage.deleteCredential(id)
     fun reset() = storage.reset()
 
+    /** Issuers the user confirmed earlier (removable); configured and backend issuers are not listed. */
+    fun acceptedIssuers(): List<String> = storage.loadAcceptedIssuers()
+    fun removeAcceptedIssuer(did: String) = storage.removeAcceptedIssuer(did)
+
+    /**
+     * Verify and store a received credential.
+     *
+     * Behaviour change (security): the issuer named by an offer is no longer trusted for being
+     * named. If the signed issuer is not configured, not in [backendIssuers] (read from the wallet's
+     * own backend, see [DemoBackend.backendIssuers]) and not previously accepted, this throws
+     * [UntrustedIssuerException]; show its DID and, on explicit confirmation, call again with
+     * [confirmedIssuer]. The confirmed issuer is persisted only after the credential passed every check.
+     */
     fun store(
         credential: String,
         format: String,
         selectivelyDisclosable: List<String> = emptyList(),
-        offerIssuer: String? = null,
+        backendIssuers: Set<String> = emptySet(),
+        confirmedIssuer: String? = null,
     ): Storage.StoredCredential {
         // Never store what was not verified: issuer signature, holder binding, validity window
         // and (for SD-JWT VC) that every disclosure is covered by the signed digests.
@@ -76,7 +91,7 @@ class Wallet(
             format = format,
             holderDid = holder.did,
             nowEpochSeconds = Clock.System.now().epochSeconds,
-            issuerPolicy = IssuerTrustPolicy.allowList(trustedIssuers + listOfNotNull(offerIssuer)),
+            issuerPolicy = IssuerTrust.policy(trustedIssuers, backendIssuers, storage.loadAcceptedIssuers(), confirmedIssuer),
         )
         val meta = when (format) {
             "vc+sd-jwt" -> extractSdJwtMeta(credential)
@@ -95,6 +110,12 @@ class Wallet(
             selectivelyDisclosable = selectivelyDisclosable,
         )
         storage.addCredential(cred)
+        // Trust is persisted only now: the user confirmed this issuer AND the credential passed every check.
+        if (confirmedIssuer != null && confirmedIssuer == meta.issuerDid &&
+            !IssuerTrust.policy(trustedIssuers, backendIssuers, storage.loadAcceptedIssuers()).isTrusted(confirmedIssuer)
+        ) {
+            storage.addAcceptedIssuer(confirmedIssuer)
+        }
         return cred
     }
 

@@ -78,8 +78,12 @@ class WalletHolder
          * binding the credential to that issuer proves nothing about whether the issuer deserves
          * trust. Supply an allow-list ([IssuerTrustPolicy.allowList]) or a trust-registry lookup.
          *
-         * When `null`, offers are accepted from any issuer whose credential verifies and matches the
-         * offer, and a warning is logged once per process.
+         * **Required for accepting offers (secure by default).** When `null`, [acceptCredentialOffer]
+         * fails with [IllegalStateException] before contacting the issuer, exactly like a missing
+         * [credentialVerifier]; it never falls back to trusting every issuer. Tests and demos that
+         * really want that must say so with [IssuerTrustPolicy.acceptAnyIssuer].
+         *
+         * Behaviour change: earlier versions accepted any issuer when this was `null`.
          */
         private val issuerTrustPolicy: IssuerTrustPolicy? = null,
     ) {
@@ -90,13 +94,13 @@ class WalletHolder
          * wallet. The credential is rejected (and nothing is stored) unless:
          * - the configured [CredentialService] verifies it (proof, validity window, status),
          * - its issuer is the offer's credential issuer (its DID, or the issuer URL itself),
-         * - the configured [IssuerTrustPolicy] (if any) trusts that issuer, and
+         * - the configured [IssuerTrustPolicy] (required) trusts that issuer, and
          * - its subject is bound to this holder (`credentialSubject.id` is [holderDid] or one of its
          *   DID URLs).
          *
          * @param offerUrl The credential offer URL (openid-credential-offer:// or HTTPS)
          * @return The accepted credential stored in the wallet
-         * @throws IllegalStateException if no credential verifier is configured
+         * @throws IllegalStateException if no credential verifier or no [IssuerTrustPolicy] is configured
          * @throws CredentialRejectedException if the issued credential fails any check above
          */
         suspend fun acceptCredentialOffer(offerUrl: String): VerifiableCredential {
@@ -234,6 +238,13 @@ class WalletHolder
                         "verified before they are stored. Provide credentialVerifier in the WalletHolder constructor."
                 }
 
+            val policy =
+                checkNotNull(issuerTrustPolicy) {
+                    "An IssuerTrustPolicy is required to accept credential offers: the offer's issuer is chosen by " +
+                        "whoever hands out the QR code. Provide issuerTrustPolicy (IssuerTrustPolicy.allowList(...) or a " +
+                        "trust-registry lookup); tests and demos may pass IssuerTrustPolicy.acceptAnyIssuer() explicitly."
+                }
+
             val issuerDid = Did(issuerDidFor(credentialIssuer))
 
             // Step 1: Register the offer in the exchange protocol so that the subsequent
@@ -306,7 +317,7 @@ class WalletHolder
             }
 
             // Step 4: Verify before persisting — never store an unverified credential.
-            requireAcceptable(issuedCredential, verifier, credentialIssuer, issuerDid)
+            requireAcceptable(issuedCredential, verifier, policy, credentialIssuer, issuerDid)
             wallet.store(issuedCredential)
             return issuedCredential
         }
@@ -330,6 +341,7 @@ class WalletHolder
         private suspend fun requireAcceptable(
             credential: VerifiableCredential,
             verifier: CredentialService,
+            policy: IssuerTrustPolicy,
             credentialIssuer: String,
             issuerDid: Did,
         ) {
@@ -349,16 +361,7 @@ class WalletHolder
                 )
             }
 
-            val policy = issuerTrustPolicy
-            if (policy == null) {
-                if (warnedNoIssuerPolicy.compareAndSet(false, true)) {
-                    System.getLogger(WalletHolder::class.java.name).log(
-                        System.Logger.Level.WARNING,
-                        "WalletHolder has no IssuerTrustPolicy: credential offers are accepted from any issuer " +
-                            "the offer names (first seen: $actualIssuer). Configure an allow-list or trust-registry lookup.",
-                    )
-                }
-            } else if (!policy.isTrusted(actualIssuer, credentialIssuer, credential)) {
+            if (!policy.isTrusted(actualIssuer, credentialIssuer, credential)) {
                 throw CredentialRejectedException("Issuer '$actualIssuer' is not trusted by the configured issuer trust policy")
             }
 
@@ -398,10 +401,30 @@ fun interface IssuerTrustPolicy {
         @JvmStatic
         fun fromLookup(lookup: suspend (issuerId: String) -> Boolean): IssuerTrustPolicy =
             IssuerTrustPolicy { issuerId, _, _ -> lookup(issuerId) }
+
+        /**
+         * **UNSAFE.** Trusts every issuer whose credential verifies and matches the offer. The offer's
+         * issuer is chosen by whoever hands out the QR code, so with this policy anyone can get a
+         * credential from an issuer they control into the wallet. Intended for tests and demos only;
+         * a warning is logged once per process, on first use. Production code must use
+         * [allowList] or [fromLookup].
+         */
+        @JvmStatic
+        fun acceptAnyIssuer(): IssuerTrustPolicy =
+            IssuerTrustPolicy { issuerId, _, _ ->
+                if (warnedAcceptAnyIssuer.compareAndSet(false, true)) {
+                    System.getLogger(WalletHolder::class.java.name).log(
+                        System.Logger.Level.WARNING,
+                        "IssuerTrustPolicy.acceptAnyIssuer() is in use: credential offers are accepted from any issuer " +
+                            "the offer names (first seen: $issuerId). This is unsafe outside tests and demos.",
+                    )
+                }
+                true
+            }
     }
 }
 
-private val warnedNoIssuerPolicy = AtomicBoolean(false)
+private val warnedAcceptAnyIssuer = AtomicBoolean(false)
 
 /** An issued credential was refused before it reached the wallet; nothing was stored. */
 class CredentialRejectedException(
@@ -434,11 +457,70 @@ internal fun issuerDidFor(credentialIssuer: String): String {
             if (it.startsWith("[")) it.replace("[", "%5B").replace("]", "%5D").replace(":", "%3A") else it
         }
     val authority = if (uri.port >= 0) "$host%3A${uri.port}" else host
-    val path =
-        uri.path
+    // Work on the RAW path. The decoded path would map `a%2Fb` and `a/b` to the same DID, and a
+    // decoded `%3A` would inject a `:` that did:web reads as a path separator. Each raw segment is
+    // decoded once, refused if ambiguous, and re-encoded canonically.
+    val rawSegments =
+        uri.rawPath
             .orEmpty()
-            .trim('/')
-            .split('/')
-            .filter { it.isNotEmpty() }
+            .removePrefix("/")
+            .removeSuffix("/")
+            .let { if (it.isEmpty()) emptyList() else it.split('/') }
+    val path = rawSegments.map { canonicalDidWebSegment(it, credentialIssuer) }
     return (listOf("did:web:$authority") + path).joinToString(":")
+}
+
+/**
+ * Decodes one raw URL path segment and re-encodes it canonically (RFC 3986 unreserved characters
+ * stay, everything else becomes uppercase `%XX` of its UTF-8 bytes). Refuses what would make the
+ * resulting did:web ambiguous: empty segments, malformed escapes, `.`/`..`, and decoded `/`, `\`, `:`,
+ * control characters.
+ */
+private fun canonicalDidWebSegment(
+    rawSegment: String,
+    credentialIssuer: String,
+): String {
+    require(rawSegment.isNotEmpty()) { "Credential issuer '$credentialIssuer' must not contain empty path segments" }
+    val bytes = java.io.ByteArrayOutputStream()
+    var i = 0
+    while (i < rawSegment.length) {
+        val c = rawSegment[i]
+        if (c == '%') {
+            val hex = rawSegment.substring(i + 1, minOf(i + 3, rawSegment.length))
+            require(hex.length == 2 && hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
+                "Credential issuer '$credentialIssuer' has a malformed percent-escape in its path"
+            }
+            bytes.write(hex.toInt(16))
+            i += 3
+        } else {
+            bytes.write(c.toString().toByteArray(Charsets.UTF_8))
+            i++
+        }
+    }
+    val decoded =
+        try {
+            Charsets.UTF_8
+                .newDecoder()
+                .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                .decode(java.nio.ByteBuffer.wrap(bytes.toByteArray()))
+                .toString()
+        } catch (e: java.nio.charset.CharacterCodingException) {
+            throw IllegalArgumentException("Credential issuer '$credentialIssuer' has a path that is not valid UTF-8", e)
+        }
+    require(decoded != "." && decoded != "..") { "Credential issuer '$credentialIssuer' must not contain dot path segments" }
+    require(decoded.none { it == '/' || it == '\\' || it == ':' || it.isISOControl() }) {
+        "Credential issuer '$credentialIssuer' has an ambiguous encoded character (/, \\, : or a control character) in its path"
+    }
+    val out = StringBuilder()
+    for (b in decoded.toByteArray(Charsets.UTF_8)) {
+        val v = b.toInt() and 0xFF
+        val ch = v.toChar()
+        if (v < 0x80 && (ch.isLetterOrDigit() || ch == '-' || ch == '.' || ch == '_' || ch == '~')) {
+            out.append(ch)
+        } else {
+            out.append('%').append("0123456789ABCDEF"[v shr 4]).append("0123456789ABCDEF"[v and 0xF])
+        }
+    }
+    return out.toString()
 }

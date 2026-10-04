@@ -1,6 +1,5 @@
 package org.trustweave.trust
 
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonElement
 import org.slf4j.LoggerFactory
 import org.trustweave.anchor.AnchorResult
@@ -41,6 +40,7 @@ import org.trustweave.trust.dsl.findTrustPath
 import org.trustweave.trust.dsl.not
 import org.trustweave.trust.dsl.trustWeave
 import org.trustweave.trust.dsl.wallet.WalletBuilder
+import org.trustweave.trust.internal.TrustWeaveShutdown
 import org.trustweave.trust.internal.placeholderCredentialForUnconfiguredVerification
 import org.trustweave.trust.services.CredentialIssuanceService
 import org.trustweave.trust.services.CredentialRevocationService
@@ -740,6 +740,8 @@ class TrustWeave internal constructor(
     /** Guards [close] so repeated calls are no-ops (idempotent close). */
     private val closed = AtomicBoolean(false)
 
+    private val shutdown by lazy { TrustWeaveShutdown(config, logger) }
+
     /**
      * Close and cleanup resources held by this TrustWeave instance.
      *
@@ -759,9 +761,16 @@ class TrustWeave internal constructor(
      *
      * For each owned component, [AutoCloseable.close] is invoked when implemented;
      * otherwise, if the component implements [PluginLifecycle], `stop()` + `cleanup()`
-     * are driven. Because [AutoCloseable.close] cannot suspend, this method drives those
-     * suspend functions with `runBlocking` (no lock or monitor is held while it does). From a
-     * coroutine, prefer [closeAsync], which suspends instead of blocking the calling thread.
+     * are driven.
+     *
+     * **From a coroutine, call [closeAsync] instead of this method.** [AutoCloseable.close] cannot
+     * suspend, so this method BLOCKS the calling thread until the owned components have stopped. To make
+     * that safe it runs the shutdown on a dedicated daemon thread (its own `runBlocking` event loop,
+     * never nested in the caller's dispatcher) and waits for it with a bounded `join` (60 s); a
+     * component that never finishes is logged as an error and abandoned rather than hanging the caller.
+     * Even so, never call `close()` on a single-threaded or main dispatcher from a coroutine: a
+     * component that needs that very thread to complete cannot, while it waits here. Use [closeAsync]
+     * (or `use { }` only from plain, non-coroutine code such as `main` or a shutdown hook).
      *
      * **Error handling:** exceptions thrown by individual components are logged and do
      * not prevent the remaining components from being closed; in keeping with the
@@ -780,7 +789,7 @@ class TrustWeave internal constructor(
      */
     override fun close() {
         if (!beginClose()) return
-        runBlocking { closeOwnedComponents() }
+        shutdown.closeBlocking()
     }
 
     /**
@@ -791,7 +800,7 @@ class TrustWeave internal constructor(
      */
     suspend fun closeAsync() {
         if (!beginClose()) return
-        closeOwnedComponents()
+        shutdown.closeOwnedComponents()
     }
 
     private fun beginClose(): Boolean {
@@ -800,78 +809,6 @@ class TrustWeave internal constructor(
             return false
         }
         return true
-    }
-
-    private suspend fun closeOwnedComponents() {
-        logger.debug("Closing TrustWeave instance: ${config.name}")
-
-        val ownership = config.ownership
-
-        // DID method instances created during build (caller-registered methods are
-        // intentionally absent from this snapshot).
-        ownership.ownedDidMethods.forEach { method ->
-            closeComponent("DID method ${method.javaClass.simpleName}", method)
-        }
-
-        if (ownership.ownsCredentialService) {
-            closeComponent("credential service", config.credentialService)
-        }
-        if (ownership.ownsRevocationManager) {
-            closeComponent("revocation manager", config.revocationManager)
-        }
-        if (ownership.ownsTrustRegistry) {
-            closeComponent("trust registry", config.trustRegistry)
-        }
-
-        // Factory-built when domain { ... } is configured.
-        closeComponent("trusted domain manager", config.trustedDomainManager)
-
-        // Anchor clients are resolved by the factory from anchor { ... } configuration.
-        try {
-            config.blockchainRegistry.getAllClients().values.forEach { client ->
-                closeComponent("blockchain client ${client.javaClass.simpleName}", client)
-            }
-        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.warn("Error enumerating blockchain clients during close: ${e.message}", e)
-        }
-
-        if (ownership.ownsKms) {
-            closeComponent("KMS", config.kms)
-        }
-        // The KmsService adapter is always factory-created (DefaultKmsService).
-        closeComponent("KMS service", config.kmsService)
-
-        logger.debug("TrustWeave instance closed: ${config.name}")
-    }
-
-    /**
-     * Close a single owned component, preferring [AutoCloseable.close] and falling back
-     * to [PluginLifecycle] `stop()` + `cleanup()`. Failures are logged, never propagated,
-     * so every remaining component still gets closed.
-     */
-    private suspend fun closeComponent(
-        name: String,
-        component: Any?,
-    ) {
-        if (component == null) return
-        try {
-            when (component) {
-                is AutoCloseable -> component.close()
-                is PluginLifecycle ->
-                    try {
-                        component.stop()
-                    } finally {
-                        component.cleanup()
-                    }
-                else -> Unit
-            }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.warn("Error closing $name: ${e.message}", e)
-        }
     }
 
     /**

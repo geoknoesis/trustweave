@@ -44,12 +44,21 @@ it does not attest a physical security device.
 - Top-level object disclosures, with one SD-JWT credential per presentation.
 - Signature, issuer/holder binding, validity and disclosure checks during import.
 - An issuer trust policy that fails closed: a did:key signature only proves some key signed,
-  so import is rejected unless the issuer is trusted. Trusted issuers are the demo issuer
-  reported by the configured backend for that import, DIDs listed in
-  `NEXT_PUBLIC_TRUSTED_ISSUERS` (comma-separated), and issuers accepted at earlier imports
-  (used to re-verify backups; a backup from an unknown issuer needs the env var). The demo
-  verifier trusts this backend's demo issuers plus `TRUSTED_ISSUERS`. The optional
-  `requireHolderKeyBinding` option demands `cnf.kid == sub` on plain VC-JWTs (default off).
+  so import is rejected unless the issuer is trusted. **An issuer is never trusted because an
+  offer, QR code or credential response names it.** Trust comes only from (1) DIDs listed in
+  `NEXT_PUBLIC_TRUSTED_ISSUERS` (comma-separated; Android: `-PTRUSTED_ISSUERS=...`), (2) the wallet's
+  own backend, whose issuer DIDs are read from the same-origin `/api/demo-issuer/identity`
+  endpoint (Android: the build-time `DEMO_BACKEND_BASE_URL`), and (3) an explicit user
+  confirmation: an unknown issuer raises `UntrustedIssuerError` (Android:
+  `UntrustedIssuerException`), the receive and restore screens show the signed issuer DID, and the
+  issuer is persisted only after the user confirms **and** the credential passes every check.
+  The "Trusted issuers" section lists accepted issuers and removes them (a removed issuer's
+  stored credentials can no longer be presented). `store(...)` takes
+  `{ confirmedIssuer }` instead of the former offer-issuer string (behaviour change). The demo
+  verifier trusts this backend's demo issuers plus `TRUSTED_ISSUERS`. Holder binding
+  (`holderDid`) is enforced on import, and `exp`/`nbf`/`iat` are compared as whole seconds,
+  as on Android. The optional `requireHolderKeyBinding` option demands `cnf.kid == sub` on
+  plain VC-JWTs (default off).
 - Browser-managed non-extractable Ed25519 signing and X25519 agreement keys in
   IndexedDB. Public identity metadata and credentials remain in localStorage.
 - Credential backup export/restore. Backups contain credential data, **not private

@@ -173,32 +173,48 @@ interface BlockchainAnchorClient {
         payload: JsonElement,
         ref: AnchorRef,
         requireCanonicalEnvelope: Boolean,
-    ): AnchorVerification {
-        val onChain =
-            try {
-                readPayload(ref)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                return AnchorVerification(false, reason = "anchor could not be read: ${e.message}")
-            }
-        val testMode = onChain.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE] == "true"
-        val anchored = onChain.payload
-        val verified =
-            if (AnchorDigest.isEnvelope(anchored)) {
-                AnchorDigest.matches(anchored.jsonObject, payload, requireCanonicalEnvelope)
-            } else {
-                anchored == payload
-            }
-        val reason =
-            when {
-                verified -> null
-                requireCanonicalEnvelope &&
-                    AnchorDigest.isEnvelope(anchored) &&
-                    !AnchorDigest.isCanonicalized(anchored.jsonObject) ->
-                    "legacy (non-canonical) digest envelope rejected by requireCanonicalEnvelope"
-                else -> "anchored data does not match the payload"
-            }
-        return AnchorVerification(verified, testMode, reason)
-    }
+    ): AnchorVerification = verifyAnchorOutcome(this, payload, ref, requireCanonicalEnvelope).verification
+}
+
+/** [AnchorVerification] plus whether a verified result rested on a legacy (non-JCS) digest envelope. */
+internal data class DigestVerificationOutcome(
+    val verification: AnchorVerification,
+    val legacyEnvelopeAccepted: Boolean,
+)
+
+internal suspend fun verifyAnchorOutcome(
+    client: BlockchainAnchorClient,
+    payload: JsonElement,
+    ref: AnchorRef,
+    requireCanonicalEnvelope: Boolean,
+): DigestVerificationOutcome {
+    val onChain =
+        try {
+            client.readPayload(ref)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return DigestVerificationOutcome(
+                AnchorVerification(false, reason = "anchor could not be read: ${e.message}"),
+                legacyEnvelopeAccepted = false,
+            )
+        }
+    val testMode = onChain.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE] == "true"
+    val anchored = onChain.payload
+    val isEnvelope = AnchorDigest.isEnvelope(anchored)
+    val verified =
+        if (isEnvelope) {
+            AnchorDigest.matches(anchored.jsonObject, payload, requireCanonicalEnvelope)
+        } else {
+            anchored == payload
+        }
+    val legacy = isEnvelope && !AnchorDigest.isCanonicalized(anchored.jsonObject)
+    val reason =
+        when {
+            verified -> null
+            requireCanonicalEnvelope && legacy ->
+                "legacy (non-canonical) digest envelope rejected by requireCanonicalEnvelope"
+            else -> "anchored data does not match the payload"
+        }
+    return DigestVerificationOutcome(AnchorVerification(verified, testMode, reason), legacyEnvelopeAccepted = verified && legacy)
 }

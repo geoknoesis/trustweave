@@ -45,6 +45,21 @@ public final class org/trustweave/contract/ContractStatusChange {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/contract/ContractStoreLimits {
+	public fun <init> ()V
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lorg/trustweave/contract/ContractStoreLimits;
+	public static synthetic fun copy$default (Lorg/trustweave/contract/ContractStoreLimits;IIILjava/lang/Object;)Lorg/trustweave/contract/ContractStoreLimits;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxContracts ()I
+	public final fun getMaxStatusHistoryPerContract ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/contract/ContractValidator {
 	public static final field INSTANCE Lorg/trustweave/contract/ContractValidator;
 	public final fun isExpired (Lorg/trustweave/contract/models/SmartContract;)Z
@@ -63,7 +78,8 @@ public final class org/trustweave/contract/DefaultSmartContractService : org/tru
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;)V
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;)V
 	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;Z)V
-	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;ZLorg/trustweave/contract/ContractStoreLimits;)V
+	public synthetic fun <init> (Lorg/trustweave/credential/CredentialService;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Lorg/trustweave/contract/evaluation/EvaluationEngines;Lorg/trustweave/contract/ContractCredentialResolver;Lorg/trustweave/contract/TrustedIssuerPolicy;ZLorg/trustweave/contract/ContractStoreLimits;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun activateContract-gIAlu-s (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun anchorContract-BWLJW6A (Lorg/trustweave/contract/models/SmartContract;Lorg/trustweave/credential/model/vc/VerifiableCredential;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun bindContract-yxL6bBk (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

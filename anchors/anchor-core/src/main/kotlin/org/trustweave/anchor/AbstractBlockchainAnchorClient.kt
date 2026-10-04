@@ -91,6 +91,14 @@ abstract class AbstractBlockchainAnchorClient(
          * envelopes (those without `canon = "JCS"`, whose digest depends on key order and number
          * spelling) so only RFC 8785 canonical anchors verify. Leave unset to keep verifying
          * anchors written before canonicalization existed.
+         *
+         * **Why strict mode matters.** A legacy digest covers the bytes of one particular
+         * serialization, so it is only as strong as that serialization is canonical: two logically
+         * different payloads can only collide if the serializer is ambiguous, but an honest verifier
+         * holding the same payload in another key order fails to verify it. The default stays lenient
+         * so anchors written by earlier versions keep verifying; when one is accepted the client logs
+         * a warning once (per client instance) so operators can find out whether any such anchors
+         * remain and then switch this option on.
          */
         const val OPTION_REQUIRE_CANONICAL_ENVELOPE: String = "requireCanonicalEnvelope"
 
@@ -139,6 +147,41 @@ abstract class AbstractBlockchainAnchorClient(
     }
 
     private val testModeLogger = LoggerFactory.getLogger(AbstractBlockchainAnchorClient::class.java)
+
+    private val legacyDigestWarned =
+        java.util.concurrent.atomic
+            .AtomicBoolean(false)
+
+    /**
+     * Called at most once per client instance, the first time a legacy (non-JCS) digest envelope is
+     * accepted by [verifyAnchorDetailed]. The default logs a warning; override to count or alert.
+     */
+    protected open fun onLegacyDigestAccepted(ref: AnchorRef) {
+        testModeLogger.warn(
+            "Accepted a legacy (non-canonical) digest envelope on {} for {}: its digest depends on key order " +
+                "and number spelling. Set '{}'=true to accept only RFC 8785 (JCS) anchors once none remain.",
+            chainId,
+            ref.txHash,
+            OPTION_REQUIRE_CANONICAL_ENVELOPE,
+        )
+    }
+
+    /**
+     * Same result as [BlockchainAnchorClient.verifyAnchorDetailed]; additionally calls [onLegacyDigestAccepted],
+     * once per client instance, when a legacy (non-JCS) digest envelope was accepted (see
+     * [OPTION_REQUIRE_CANONICAL_ENVELOPE]).
+     */
+    override suspend fun verifyAnchorDetailed(
+        payload: JsonElement,
+        ref: AnchorRef,
+        requireCanonicalEnvelope: Boolean,
+    ): AnchorVerification {
+        val outcome = verifyAnchorOutcome(this, payload, ref, requireCanonicalEnvelope)
+        if (outcome.legacyEnvelopeAccepted && legacyDigestWarned.compareAndSet(false, true)) {
+            onLegacyDigestAccepted(ref)
+        }
+        return outcome.verification
+    }
 
     init {
         if (inMemoryTestMode) {

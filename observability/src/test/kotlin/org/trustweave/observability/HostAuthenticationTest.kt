@@ -231,12 +231,120 @@ class HostAuthenticationTest {
     }
 
     @Test
+    fun `a spray of distinct callers does not reset the budget of a tracked caller`() {
+        val now = 0L
+        val limit = HostAuthentication.RateLimit(permits = 1, windowMillis = 60_000, maxTrackedCallers = 4, clock = { now })
+        assertTrue(limit.admit("legit"))
+        assertTrue(!limit.admit("legit"))
+        repeat(200) { limit.admit("attacker-$it") }
+        assertTrue(!limit.admit("legit"), "spraying callers must not hand a tracked caller a fresh budget")
+    }
+
+    @Test
+    fun `expired windows are reclaimed before any caller is pushed to the overflow window`() {
+        var now = 0L
+        val limit = HostAuthentication.RateLimit(permits = 1, windowMillis = 1_000, maxTrackedCallers = 2, clock = { now })
+        assertTrue(limit.admit("a"))
+        assertTrue(limit.admit("b"))
+        now = 2_000
+        assertTrue(limit.admit("c"), "idle callers are evicted to make room")
+        assertTrue(limit.admit("d"), "and the budget of a new caller is its own")
+        assertTrue(!limit.admit("c"))
+    }
+
+    @Test
+    fun `untracked callers share one overflow window while tracked callers keep theirs`() {
+        val now = 0L
+        val limit = HostAuthentication.RateLimit(permits = 1, windowMillis = 60_000, maxTrackedCallers = 1, clock = { now })
+        assertTrue(limit.admit("tracked"))
+        assertTrue(limit.admit("overflow-1"), "the first untracked caller spends the shared window")
+        assertTrue(!limit.admit("overflow-2"), "the next one finds it spent")
+        assertTrue(!limit.admit("tracked"), "the tracked caller's own budget is intact")
+    }
+
+    @Test
+    fun `a flood of bad credentials does not spend the budget of a caller with a valid one`() =
+        testApplication {
+            application {
+                HostAuthentication
+                    .bearerToken(
+                        token,
+                        rateLimit = HostAuthentication.RateLimit(permits = 3, failedAuthPermits = 2, attemptPermits = 1_000),
+                    ).install(this)
+                echoRoutes()
+            }
+            val statuses =
+                List(5) {
+                    client
+                        .request("/thing") {
+                            method = HttpMethod.Post
+                            header("Authorization", "Bearer wrong")
+                        }.status
+                }
+            assertEquals(
+                listOf(
+                    HttpStatusCode.Unauthorized,
+                    HttpStatusCode.Unauthorized,
+                    HttpStatusCode.TooManyRequests,
+                    HttpStatusCode.TooManyRequests,
+                    HttpStatusCode.TooManyRequests,
+                ),
+                statuses,
+                "bad credentials hit their own, stricter budget",
+            )
+            // The same host, now with the right credential: its full budget is still there.
+            repeat(3) {
+                val ok =
+                    client.request("/thing") {
+                        method = HttpMethod.Post
+                        header("Authorization", "Bearer $token")
+                    }
+                assertEquals(HttpStatusCode.Created, ok.status)
+            }
+            val over =
+                client.request("/thing") {
+                    method = HttpMethod.Post
+                    header("Authorization", "Bearer $token")
+                }
+            assertEquals(HttpStatusCode.TooManyRequests, over.status)
+        }
+
+    @Test
+    fun `the pre-authentication attempt cap still bounds anonymous work`() =
+        testApplication {
+            application {
+                HostAuthentication
+                    .bearerToken(token, rateLimit = HostAuthentication.RateLimit(permits = 2, failedAuthPermits = 100, attemptPermits = 3))
+                    .install(this)
+                echoRoutes()
+            }
+            val statuses = List(4) { client.request("/thing") { method = HttpMethod.Post }.status }
+            assertEquals(HttpStatusCode.TooManyRequests, statuses.last())
+        }
+
+    @Test
+    fun `cancellation inside an authenticator is propagated, not turned into a refusal`() =
+        testApplication {
+            application {
+                HostAuthentication.custom({ throw kotlinx.coroutines.CancellationException("caller went away") }).install(this)
+                echoRoutes()
+            }
+            val outcome = runCatching { client.request("/thing") { method = HttpMethod.Post }.status }
+            assertTrue(
+                outcome.isFailure || outcome.getOrNull() != HttpStatusCode.Unauthorized,
+                "a cancelled authorisation must not be reported as 401: $outcome",
+            )
+        }
+
+    @Test
     fun `invalid rate limits are refused at configuration time`() {
         for (build in listOf<() -> HostAuthentication.RateLimit>(
             { HostAuthentication.RateLimit(permits = 0) },
             { HostAuthentication.RateLimit(permits = -1) },
             { HostAuthentication.RateLimit(permits = 1, windowMillis = 0) },
             { HostAuthentication.RateLimit(permits = 1, maxTrackedCallers = 0) },
+            { HostAuthentication.RateLimit(permits = 1, failedAuthPermits = 0) },
+            { HostAuthentication.RateLimit(permits = 1, attemptPermits = 0) },
         )) {
             assertFailsWith<IllegalArgumentException> { build() }
         }

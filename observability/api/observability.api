@@ -36,7 +36,9 @@ public final class org/trustweave/observability/HostAuthentication$RateLimit {
 	public fun <init> (IJ)V
 	public fun <init> (IJI)V
 	public fun <init> (IJILkotlin/jvm/functions/Function0;)V
-	public synthetic fun <init> (IJILkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IJILkotlin/jvm/functions/Function0;I)V
+	public fun <init> (IJILkotlin/jvm/functions/Function0;II)V
+	public synthetic fun <init> (IJILkotlin/jvm/functions/Function0;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class org/trustweave/observability/HostAuthentication$Unconfigured {

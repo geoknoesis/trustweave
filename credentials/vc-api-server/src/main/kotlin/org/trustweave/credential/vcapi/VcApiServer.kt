@@ -100,7 +100,7 @@ class VcApiServer(
         server = null
     }
 
-    private fun Application.configureApplication() {
+    internal fun Application.configureApplication() {
         observability?.install(this, HostKind.VC_API)
         // No authentication configured is not the same as no authentication needed:
         // refuse mutations until the host states which of the two it means.

@@ -3,6 +3,7 @@ package org.trustweave.revocation.token
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.assertThrows
 import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import java.util.Base64
@@ -523,7 +524,7 @@ class TokenStatusListManagerTest {
         runBlocking<Unit> {
             val strict = managerWithKey(org.trustweave.kms.Algorithm.Ed25519, requireTtl = true)
             val id = strict.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
-            org.junit.jupiter.api.assertThrows<org.trustweave.core.exception.ConfigException> {
+            assertThrows<org.trustweave.core.exception.ConfigException> {
                 strict.buildStatusListToken(id)
             }
             assertTrue(strict.buildStatusListToken(id, ttlSeconds = 60).jwt.isNotBlank())
@@ -550,7 +551,7 @@ class TokenStatusListManagerTest {
             dataSource.connection.use { conn ->
                 conn.createStatement().execute("DROP TABLE token_credential_indices")
             }
-            org.junit.jupiter.api.assertThrows<Exception> { manager.deleteStatusList(id) }
+            assertThrows<Exception> { manager.deleteStatusList(id) }
         }
 
     @Test

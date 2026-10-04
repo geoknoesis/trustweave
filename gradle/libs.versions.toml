@@ -53,7 +53,7 @@ google-cloud-bom = "26.80.0"
 # Other
 vault-java-driver = "5.1.0"
 didcommx = "0.3.2"
-mongodb-bson = "4.11.5"
+mongodb-bson = "5.13.0"
 azure-identity = "1.18.7"
 
 # Build tools

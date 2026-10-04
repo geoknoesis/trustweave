@@ -131,4 +131,65 @@ class DidRegistrarControllerAuthTest {
         assertFailsWith<IllegalArgumentException> { RegistrarAuthentication.fromProperties("", "TRUE") }
         assertEquals("mTLS at the gateway", RegistrarAuthentication.frontedByProxy("  mTLS at the gateway ").delegatedTo)
     }
+
+    private val document =
+        org.trustweave.did.model
+            .DidDocument(
+                id =
+                    org.trustweave.did.identifiers
+                        .Did("did:key:abc"),
+            )
+
+    @Test
+    fun `updates are refused without the credential and while unconfigured`() =
+        runBlocking<Unit> {
+            val update =
+                org.trustweave.did.registrar.server.spring.dto
+                    .UpdateDidRequest(didDocument = document)
+
+            val unconfigured = controller(RegistrarAuthentication.unconfigured())
+            assertEquals(HttpStatus.SERVICE_UNAVAILABLE, unconfigured.updateDid(null, "did:key:abc", update).statusCode)
+
+            val protected = controller(RegistrarAuthentication.bearerToken(token))
+            assertEquals(HttpStatus.UNAUTHORIZED, protected.updateDid(null, "did:key:abc", update).statusCode)
+            assertEquals(HttpStatus.UNAUTHORIZED, protected.updateDid("Bearer ${"x".repeat(40)}", "did:key:abc", update).statusCode)
+        }
+
+    @Test
+    fun `an authorised update of a DID the registrar does not know is not a success`() =
+        runBlocking<Unit> {
+            val update =
+                org.trustweave.did.registrar.server.spring.dto
+                    .UpdateDidRequest(didDocument = document)
+            val response = controller(RegistrarAuthentication.bearerToken(token)).updateDid("Bearer $token", "did:key:abc", update)
+            assertTrue(response.statusCode != HttpStatus.UNAUTHORIZED)
+            val body = response.body
+            assertTrue(
+                response.statusCode.isError || (body is DidRegistrationResponse && body.didState.state.name != "FINISHED"),
+                "an update for an unknown DID must not report success: ${response.statusCode} $body",
+            )
+        }
+
+    @Test
+    fun `expired jobs are not served by the status endpoint`() =
+        runBlocking<Unit> {
+            var now = 0L
+            val jobs = InMemoryJobStorage(finishedJobTtl = kotlin.time.Duration.parse("PT1M"), nowMillis = { now })
+            val registrar = KmsBasedRegistrar(InMemoryKeyManagementService(), jobs) { _, kms -> DidKeyMockMethod(kms) }
+            val c = DidRegistrarController(DidRegistrarService(registrar, jobs), RegistrarAuthentication.bearerToken(token))
+            val finished =
+                DidRegistrationResponse(
+                    jobId = "job-1",
+                    didState =
+                        org.trustweave.did.registrar.model.DidState(
+                            state = org.trustweave.did.registrar.model.OperationState.FINISHED,
+                            did = "did:key:abc",
+                        ),
+                )
+            jobs.store("job-1", finished)
+
+            assertEquals(HttpStatus.OK, c.getJobStatus("Bearer $token", "job-1").statusCode)
+            now = 61_000L
+            assertEquals(HttpStatus.NOT_FOUND, c.getJobStatus("Bearer $token", "job-1").statusCode)
+        }
 }

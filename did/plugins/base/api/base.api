@@ -17,14 +17,20 @@ public final class org/trustweave/did/base/AbstractBlockchainDidMethod$Companion
 }
 
 public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave/did/DidMethod {
+	public static final field DEFAULT_MAX_CACHED_DOCUMENTS I
+	public static final field DEFAULT_MAX_DEACTIVATED_RECORDS I
 	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/KeyManagementService;)V
+	protected final fun cachedDocumentCount ()I
 	protected final fun createErrorResolutionMetadata (Ljava/lang/String;Ljava/lang/String;)Ljava/util/Map;
 	public static synthetic fun createErrorResolutionMetadata$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/Map;
 	protected final fun createSuccessResolutionMetadata ()Ljava/util/Map;
 	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun documentToJsonElement (Lorg/trustweave/did/model/DidDocument;)Lkotlinx/serialization/json/JsonElement;
+	protected final fun enforceCacheBounds (Ljava/lang/String;)V
+	public static synthetic fun enforceCacheBounds$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/String;ILjava/lang/Object;)V
 	protected final fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun generateKey$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	protected fun getCacheTtl-UwyO8pc ()J
 	public fun getCapabilities ()Lorg/trustweave/did/model/MethodCapabilities;
 	protected final fun getDocumentMetadata ()Ljava/util/concurrent/ConcurrentHashMap;
 	protected final fun getDocumentMetadata (Ljava/lang/Object;)Lorg/trustweave/did/model/DidDocumentMetadata;
@@ -32,6 +38,8 @@ public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave
 	protected final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
 	protected final fun getLastFetched ()Ljava/util/concurrent/ConcurrentHashMap;
 	protected final fun getLastFetched (Ljava/lang/Object;)Lkotlinx/datetime/Instant;
+	protected fun getMaxCachedDocuments ()I
+	protected fun getMaxDeactivatedRecords ()I
 	public fun getMethod ()Ljava/lang/String;
 	protected final fun getStoredDocument (Ljava/lang/Object;)Lorg/trustweave/did/model/DidDocument;
 	protected final fun getUpdateMutex ()Lkotlinx/coroutines/sync/Mutex;

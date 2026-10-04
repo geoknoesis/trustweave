@@ -93,7 +93,7 @@ class ThalesKeyManagementService(
             if (!response.isSuccessful) {
                 return@withContext GenerateKeyResult.Failure.Error(
                     algorithm = algorithm,
-                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -164,7 +164,7 @@ class ThalesKeyManagementService(
                 }
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -197,7 +197,7 @@ class ThalesKeyManagementService(
             if (!publicKeyResponse.isSuccessful) {
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}. Response: $publicKeyBody",
+                    reason = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -287,7 +287,7 @@ class ThalesKeyManagementService(
                 }
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Thales CipherTrust API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }

@@ -49,6 +49,33 @@ class WebDidMethodUrlTest {
     }
 
     @Test
+    fun `lowercase and mixed-case percent-encoded dot segments are rejected`() {
+        for (did in listOf("did:web:example.com:%2e%2e:admin", "did:web:example.com:%2E.:admin", "did:web:example.com:.%2e:admin")) {
+            assertThrows<IllegalArgumentException>(did) { method.getDocumentUrl(did) }
+        }
+    }
+
+    @Test
+    fun `lowercase percent-encoded backslash and encoded slash segments are rejected`() {
+        for (did in listOf("did:web:example.com:x%5c..%5cy", "did:web:example.com:a%2Fb", "did:web:example.com:a%2fb")) {
+            assertThrows<IllegalArgumentException>(did) { method.getDocumentUrl(did) }
+        }
+    }
+
+    @Test
+    fun `double-encoded dot segments never decode into a traversal`() {
+        // %252E%252E decodes once to the literal text "%2E%2E", which is an ordinary segment and not "..".
+        val url = runCatching { method.getDocumentUrl("did:web:example.com:%252E%252E:admin") }
+        url.onSuccess { assertEquals(false, it.contains("/../"), it) }
+    }
+
+    @Test
+    fun `empty path segments are rejected`() {
+        assertThrows<IllegalArgumentException> { method.getDocumentUrl("did:web:example.com::admin") }
+        assertThrows<IllegalArgumentException> { method.getDocumentUrl("did:web:example.com:user:") }
+    }
+
+    @Test
     fun `bare domain resolves to well-known location`() {
         assertEquals(
             "https://example.com/.well-known/did.json",

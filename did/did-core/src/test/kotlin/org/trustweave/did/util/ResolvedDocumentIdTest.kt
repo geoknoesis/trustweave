@@ -11,11 +11,20 @@ class ResolvedDocumentIdTest {
     @Test
     fun `different ids mismatch`() = assertNotNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:c"))
 
+    private val suffix = "Ei" + "A".repeat(44)
+
     @Test
     fun `canonical form is only accepted when allowed`() {
-        assertNotNull(ResolvedDocumentId.mismatchReason("did:ion:s:init", "did:ion:s"))
-        assertNull(ResolvedDocumentId.mismatchReason("did:ion:s:init", "did:ion:s", allowCanonicalOfLongForm = true))
-        assertNotNull(ResolvedDocumentId.mismatchReason("did:ion:s:init", "did:ion:t", allowCanonicalOfLongForm = true))
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:ion:$suffix:init", "did:ion:$suffix"))
+        assertNull(ResolvedDocumentId.mismatchReason("did:ion:$suffix:init", "did:ion:$suffix", allowCanonicalOfLongForm = true))
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:ion:$suffix:init", "did:ion:t", allowCanonicalOfLongForm = true))
+    }
+
+    @Test
+    fun `a network or anchor prefixed short form is not mistaken for a long form`() {
+        // did:ion:test:<suffix> has four segments too, but its "canonical form" is not did:ion:test.
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:ion:test:$suffix", "did:ion:test", allowCanonicalOfLongForm = true))
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:orb:uAnchor:$suffix", "did:orb:uAnchor", allowCanonicalOfLongForm = true))
     }
 
     @Test

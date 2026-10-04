@@ -1,8 +1,10 @@
 package org.trustweave.did.registrar.server
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -30,11 +32,13 @@ class DidRegistrarRoutesTest {
     private val token = "r".repeat(48)
     private val createBody = """{"method":"key","options":{}}"""
 
-    private fun ApplicationTestBuilder.registrarApp(auth: HostAuthentication?) {
+    private fun ApplicationTestBuilder.registrarApp(
+        auth: HostAuthentication?,
+        jobs: InMemoryJobStorage = InMemoryJobStorage(),
+    ) {
         application {
             auth?.forRegistrar()?.install(this) ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
             install(ContentNegotiation) { json(registrarJson()) }
-            val jobs = InMemoryJobStorage()
             val registrar = KmsBasedRegistrar(InMemoryKeyManagementService(), jobs) { _, kms -> DidKeyMockMethod(kms) }
             routing { configureDidRegistrarRoutes(registrar, jobs) }
         }
@@ -122,7 +126,56 @@ class DidRegistrarRoutesTest {
                     contentType(ContentType.Application.Json)
                     setBody("{not json")
                 }
-            assertTrue(response.status.value in 400..599, "got ${response.status}")
-            assertTrue(response.status != HttpStatusCode.OK)
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `update and deactivate need the credential`() =
+        testApplication {
+            registrarApp(HostAuthentication.bearerToken(token))
+            val put =
+                client.put("/1.0/dids/did:key:abc") {
+                    contentType(ContentType.Application.Json)
+                    setBody("{}")
+                }
+            assertEquals(HttpStatusCode.Unauthorized, put.status)
+            assertEquals(HttpStatusCode.Unauthorized, client.delete("/1.0/dids/did:key:abc").status)
+            val wrong = client.delete("/1.0/dids/did:key:abc") { header("Authorization", "Bearer ${"x".repeat(48)}") }
+            assertEquals(HttpStatusCode.Unauthorized, wrong.status)
+        }
+
+    @Test
+    fun `an authorised update with a malformed body is a client error`() =
+        testApplication {
+            registrarApp(HostAuthentication.bearerToken(token))
+            val response =
+                client.put("/1.0/dids/did:key:abc") {
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody("{not json")
+                }
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `expired jobs are not served by the status route`() =
+        testApplication {
+            var now = 0L
+            val jobs = InMemoryJobStorage(finishedJobTtl = kotlin.time.Duration.parse("PT1M"), nowMillis = { now })
+            registrarApp(HostAuthentication.bearerToken(token), jobs)
+            val finished =
+                org.trustweave.did.registrar.model.DidRegistrationResponse(
+                    jobId = "job-1",
+                    didState =
+                        org.trustweave.did.registrar.model.DidState(
+                            state = org.trustweave.did.registrar.model.OperationState.FINISHED,
+                            did = "did:key:abc",
+                        ),
+                )
+            jobs.store("job-1", finished)
+
+            assertEquals(HttpStatusCode.OK, client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer $token") }.status)
+            now = 61_000L
+            assertEquals(HttpStatusCode.NotFound, client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer $token") }.status)
         }
 }

@@ -1,7 +1,7 @@
 package org.trustweave.awskms
 
-import org.trustweave.kms.KmsCreationOptions
 import org.trustweave.awskms.AwsKmsOptionKeys
+import org.trustweave.kms.KmsCreationOptions
 
 /**
  * Type-safe configuration builder for AWS KMS provider.
@@ -28,12 +28,19 @@ class AwsKmsOptionsBuilder {
     var enabled: Boolean = true
     var priority: Int? = null
 
+    /** Never prints [accessKeyId], [secretAccessKey] or [sessionToken]. */
+    override fun toString(): String =
+        "AwsKmsOptionsBuilder(region=$region, accessKeyId=${if (accessKeyId == null) "null" else "<redacted>"}, " +
+            "secretAccessKey=${if (secretAccessKey == null) "null" else "<redacted>"}, " +
+            "sessionToken=${if (sessionToken == null) "null" else "<redacted>"}, endpointOverride=$endpointOverride)"
+
     fun build(): KmsCreationOptions {
         require(region != null) { "region is required for AWS KMS" }
-        
-        val properties = mutableMapOf<String, Any?>(
-            AwsKmsOptionKeys.REGION to region
-        )
+
+        val properties =
+            mutableMapOf<String, Any?>(
+                AwsKmsOptionKeys.REGION to region,
+            )
 
         accessKeyId?.let { properties[AwsKmsOptionKeys.ACCESS_KEY_ID] = it }
         secretAccessKey?.let { properties[AwsKmsOptionKeys.SECRET_ACCESS_KEY] = it }
@@ -41,11 +48,11 @@ class AwsKmsOptionsBuilder {
         endpointOverride?.let { properties[AwsKmsOptionKeys.ENDPOINT_OVERRIDE] = it }
         pendingWindowInDays?.let { properties[AwsKmsOptionKeys.PENDING_WINDOW_IN_DAYS] = it }
         cacheTtlSeconds?.let { properties["cacheTtlSeconds"] = it }
-        
+
         return KmsCreationOptions(
             enabled = enabled,
             priority = priority,
-            additionalProperties = properties
+            additionalProperties = properties,
         )
     }
 }
@@ -56,17 +63,14 @@ class AwsKmsOptionsBuilder {
  * **Example:**
  * ```kotlin
  * import org.trustweave.kms.*
- * 
+ *
  * val kms = KeyManagementServices.create("aws", awsKmsOptions {
  *     region = "us-east-1"
  * })
  * ```
  */
-fun awsKmsOptions(
-    block: AwsKmsOptionsBuilder.() -> Unit
-): KmsCreationOptions {
+fun awsKmsOptions(block: AwsKmsOptionsBuilder.() -> Unit): KmsCreationOptions {
     val builder = AwsKmsOptionsBuilder()
     builder.block()
     return builder.build()
 }
-

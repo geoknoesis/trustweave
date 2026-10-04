@@ -175,6 +175,7 @@ public final class org/trustweave/did/dsl/UniversalResolverBuilder {
 	public final fun setApiKey (Ljava/lang/String;)V
 	public final fun setProtocolAdapter (Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;)V
 	public final fun setTimeout (I)V
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/dsl/UniversalResolverBuilderKt {
@@ -2040,6 +2041,12 @@ public final class org/trustweave/did/telemetry/TelemetryDidMethodKt {
 	public static final fun withTelemetry (Lorg/trustweave/did/DidMethod;)Lorg/trustweave/did/DidMethod;
 }
 
+public final class org/trustweave/did/util/CredentialTransport {
+	public static final field INSTANCE Lorg/trustweave/did/util/CredentialTransport;
+	public static final fun requireSecure (Ljava/lang/String;ZLjava/lang/String;)V
+	public static synthetic fun requireSecure$default (Ljava/lang/String;ZLjava/lang/String;ILjava/lang/Object;)V
+}
+
 public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun extractAllVerificationMethodIds (Lorg/trustweave/did/model/DidDocument;)Ljava/util/Set;
 	public static final fun findVerificationMethod (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/VerificationMethodId;)Lorg/trustweave/did/model/VerificationMethod;
@@ -2049,6 +2056,13 @@ public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun normalizeKeyId (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun parseDidOrNull (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
 	public static final fun validateDid (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/did/util/Redaction {
+	public static final field INSTANCE Lorg/trustweave/did/util/Redaction;
+	public static final fun keysOnly (Ljava/util/Map;)Ljava/lang/String;
+	public static final fun secret (Ljava/lang/Object;)Ljava/lang/String;
+	public static final fun url (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class org/trustweave/did/util/ResolvedDocumentId {
@@ -2072,6 +2086,7 @@ public final class org/trustweave/did/util/XmlDateTimeSerializer : kotlinx/seria
 
 public final class org/trustweave/did/verification/DefaultDidDocumentVerificationService : org/trustweave/did/verification/DidDocumentVerificationService {
 	public fun <init> (Lorg/trustweave/did/verification/DidDocumentCanonicalizationService;)V
+	public fun checkDocumentSelfCertification (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2090,6 +2105,7 @@ public final class org/trustweave/did/verification/DidDocumentCanonicalizationSe
 }
 
 public abstract interface class org/trustweave/did/verification/DidDocumentVerificationService {
+	public fun checkDocumentSelfCertification (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun verifyDocument (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun verifyDocumentSignature (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2097,6 +2113,7 @@ public abstract interface class org/trustweave/did/verification/DidDocumentVerif
 }
 
 public final class org/trustweave/did/verification/DidDocumentVerificationService$DefaultImpls {
+	public static fun checkDocumentSelfCertification (Lorg/trustweave/did/verification/DidDocumentVerificationService;Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun verifyDocument (Lorg/trustweave/did/verification/DidDocumentVerificationService;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

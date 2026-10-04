@@ -14,6 +14,7 @@ import org.trustweave.did.model.rebasedTo
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.ethrdid.EthrDidMethod
+import org.trustweave.ethrdid.EvmNetworks
 import org.trustweave.kms.KeyManagementService
 
 /**
@@ -53,6 +54,7 @@ class EnsDidMethod(
     private val delegate: EthrDidMethod
 
     init {
+        EvmNetworks.requireConsistent(config.chainId, config.network, "did:ens")
         // Create EthrDidConfig from EnsDidConfig
         val ethrConfig =
             org.trustweave.ethrdid.EthrDidConfig(
@@ -99,7 +101,9 @@ class EnsDidMethod(
                 val ethAddress = resolveEnsToAddress(ensDomain)
 
                 // Resolve as did:ethr
-                val ethrDidString = "did:ethr:$ethAddress"
+                // The delegate is bound to the configured network, so name that network explicitly
+                // (an omitted segment would mean mainnet and be refused on any other chain).
+                val ethrDidString = "did:ethr:${config.network ?: "mainnet"}:$ethAddress"
                 val ethrDid = Did(ethrDidString)
                 val ethrResult = delegate.resolveDid(ethrDid)
 

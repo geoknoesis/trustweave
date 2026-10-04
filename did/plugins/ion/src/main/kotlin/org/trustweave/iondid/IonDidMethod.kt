@@ -30,6 +30,7 @@ import org.trustweave.did.model.parseServiceTypesFromJson
 import org.trustweave.did.model.serviceEndpointFromJsonElement
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeJcs
 import org.trustweave.did.sidetree.SidetreeKeyPair
 import org.trustweave.did.sidetree.SidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeP256KeyPair
@@ -103,7 +104,14 @@ class IonDidMethod(
                 val operationResponse = sidetreeClient.submitOperation(createResult.operation)
 
                 // Prefer the DID returned by the ION node; fall back to locally derived long-form DID
-                val longFormDid = operationResponse.did ?: createResult.longFormDid
+                val nodeDid = operationResponse.did
+                if (nodeDid != null && runCatching { parseIonDid(nodeDid).suffix }.getOrNull() != createResult.didSuffix) {
+                    throw TrustWeaveException.Unknown(
+                        code = "ION_SUFFIX_MISMATCH",
+                        message = "The ION node returned a DID whose suffix differs from the created operation's suffix",
+                    )
+                }
+                val longFormDid = nodeDid ?: createResult.longFormDid
 
                 keyStore.put(
                     createResult.didSuffix,
@@ -148,9 +156,14 @@ class IonDidMethod(
 
                 val didString = did.value
                 // Resolve through ION node
+                val ionDid = parseIonDid(didString)
+                // A long-form DID carries its own initial state: it must hash to the suffix, or the
+                // DID names something other than what it claims to.
+                verifyInitialState(ionDid)
                 val resolutionResult = sidetreeClient.resolveDid(didString)
+                val ionDocument = resolutionResult.document
 
-                if (!resolutionResult.success || resolutionResult.document == null) {
+                if (!resolutionResult.success || ionDocument == null) {
                     // Only a 404 means "no such DID". Transport failures (-1), node errors and
                     // unparseable answers are resolution errors, not a verdict on the DID.
                     val notFound = resolutionResult.httpStatus == 404
@@ -163,20 +176,22 @@ class IonDidMethod(
                 }
 
                 // Convert ION document to TrustWeave format
-                val convertedDocument = convertIonDocument(resolutionResult.document!!)
+                val convertedDocument = convertIonDocument(ionDocument)
 
                 // The node's answer must be about the DID we asked for: reject, never rewrite, and
                 // never cache a foreign document.
-                ResolvedDocumentId
-                    .mismatchReason(didString, convertedDocument.id.value, allowCanonicalOfLongForm = true)
-                    ?.let { reason ->
-                        return@withContext DidMethodUtils.createErrorResolutionResult(
-                            "invalidDidDocument",
-                            reason,
-                            method,
-                            didString,
-                        )
-                    }
+                // A long-form request may be answered with its canonical short form, nothing else.
+                // The canonical form is computed here from the parsed DID: `did:ion:test:<suffix>`
+                // (network + short form) must never be mistaken for a long form.
+                if (convertedDocument.id.value != didString && convertedDocument.id.value != ionDid.canonicalForm) {
+                    return@withContext DidMethodUtils.createErrorResolutionResult(
+                        "invalidDidDocument",
+                        ResolvedDocumentId.mismatchReason(didString, convertedDocument.id.value)
+                            ?: "Resolved document id does not match the requested DID",
+                        method,
+                        didString,
+                    )
+                }
 
                 // Store locally for caching (under the verified id, which is the requested DID or
                 // its canonical form)
@@ -489,11 +504,89 @@ class IonDidMethod(
         )
     }
 
-    private fun extractDidSuffix(did: String): String {
-        require(did.startsWith("did:ion:")) { "DID does not match did:ion namespace: $did" }
-        val rest = did.removePrefix("did:ion:")
-        val colon = rest.indexOf(':')
-        return if (colon >= 0) rest.substring(0, colon) else rest
+    private fun extractDidSuffix(did: String): String = parseIonDid(did).suffix
+
+    /**
+     * The parts of a did:ion identifier. The three forms are told apart by the *shape* of their
+     * segments, never by counting colons:
+     *  - `did:ion:<suffix>` (short form)
+     *  - `did:ion:<network>:<suffix>` (e.g. `did:ion:test:<suffix>`); a network label is lowercase
+     *  - `did:ion:<suffix>:<initial-state>` (long form)
+     *  - `did:ion:<network>:<suffix>:<initial-state>`
+     * A suffix starts with an uppercase `E` (the multihash prefix), so it can never be a network
+     * label.
+     */
+    private class IonDid(
+        val network: String?,
+        val suffix: String,
+        val initialState: String?,
+    ) {
+        val canonicalForm: String get() = "did:ion:" + (network?.let { "$it:" } ?: "") + suffix
+    }
+
+    private fun parseIonDid(did: String): IonDid {
+        fun invalid(reason: String): Nothing =
+            throw org.trustweave.did.exception.DidException
+                .InvalidDidFormat(did = did, reason = reason)
+
+        if (!did.startsWith("did:ion:")) invalid("DID does not match did:ion namespace")
+        val segments = did.removePrefix("did:ion:").split(":")
+        if (segments.any { it.isEmpty() }) invalid("did:ion contains an empty segment")
+        val hasNetwork = segments.size >= 2 && NETWORK_LABEL.matches(segments.first())
+        val rest = if (hasNetwork) segments.drop(1) else segments
+        val network = if (hasNetwork) segments.first() else null
+        return when (rest.size) {
+            1 -> IonDid(network, rest[0], null)
+            2 -> IonDid(network, rest[0], rest[1])
+            else -> invalid("did:ion has too many segments")
+        }
+    }
+
+    /**
+     * For a long-form DID, checks that the initial state is `{suffixData, delta}` and that
+     * `base64url(multihash(sha256(JCS(suffixData))))` equals the DID suffix (and, when a delta is
+     * present, that `suffixData.deltaHash` is the hash of the delta). Short forms carry nothing to check.
+     */
+    private fun verifyInitialState(ionDid: IonDid) {
+        val encoded = ionDid.initialState ?: return
+
+        fun invalid(reason: String): Nothing =
+            throw org.trustweave.did.exception.DidException.InvalidDidFormat(
+                did = ionDid.canonicalForm,
+                reason = "Long-form initial state is invalid: $reason",
+            )
+        val b64url =
+            java.util.Base64
+                .getUrlEncoder()
+                .withoutPadding()
+        val state =
+            try {
+                val bytes =
+                    java.util.Base64
+                        .getUrlDecoder()
+                        .decode(encoded)
+                kotlinx.serialization.json.Json
+                    .parseToJsonElement(String(bytes, Charsets.UTF_8)) as? JsonObject
+            } catch (e: IllegalArgumentException) {
+                null
+            } catch (e: kotlinx.serialization.SerializationException) {
+                null
+            } ?: invalid("not base64url-encoded JSON object")
+        val suffixData = state["suffixData"] as? JsonObject ?: invalid("missing suffixData")
+        val computedSuffix = b64url.encodeToString(SidetreeJcs.multihashSha256(SidetreeJcs.canonicalize(suffixData)))
+        if (computedSuffix != ionDid.suffix) invalid("it does not hash to the DID suffix")
+        val delta = state["delta"]
+        if (delta != null) {
+            val deltaObject = delta as? JsonObject ?: invalid("delta is not an object")
+            val expected = b64url.encodeToString(SidetreeJcs.multihashSha256(SidetreeJcs.canonicalize(deltaObject)))
+            val declared = (suffixData["deltaHash"] as? JsonPrimitive)?.contentOrNull
+            if (declared != expected) invalid("delta does not match suffixData.deltaHash")
+        }
+    }
+
+    private companion object {
+        /** Network labels such as `test`: lowercase, never a Sidetree suffix (which starts with `E`). */
+        val NETWORK_LABEL = Regex("^[a-z][a-z0-9-]{0,15}$")
     }
 
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> =

@@ -1,9 +1,12 @@
 package org.trustweave.kms.inmemory
 
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
-import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.KeyManagementServiceContractTest
 import org.trustweave.kms.KmsOptionKeys
@@ -11,34 +14,25 @@ import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import kotlin.test.*
 
 /**
  * Contract tests for InMemoryKeyManagementService.
- * 
+ *
  * Extends KeyManagementServiceContractTest to ensure interface contract compliance.
  */
 class InMemoryKeyManagementServiceContractTest : KeyManagementServiceContractTest() {
-    
-    override fun createKms(): KeyManagementService {
-        return InMemoryKeyManagementService()
-    }
+    override fun createKms(): KeyManagementService = InMemoryKeyManagementService()
 
-    override fun getSupportedAlgorithms(): List<Algorithm> {
-        return InMemoryKeyManagementService.SUPPORTED_ALGORITHMS.toList()
-    }
+    override fun getSupportedAlgorithms(): List<Algorithm> = InMemoryKeyManagementService.SUPPORTED_ALGORITHMS.toList()
 }
 
 /**
  * Comprehensive unit tests for InMemoryKeyManagementService.
- * 
+ *
  * Tests implementation-specific behavior beyond the interface contract.
  */
 class InMemoryKeyManagementServiceTest {
-
     private lateinit var kms: InMemoryKeyManagementService
 
     @BeforeEach
@@ -47,424 +41,473 @@ class InMemoryKeyManagementServiceTest {
     }
 
     @Test
-    fun `test getSupportedAlgorithms returns all supported algorithms`() = runBlocking<Unit> {
-        val supported = kms.getSupportedAlgorithms()
+    fun `test getSupportedAlgorithms returns all supported algorithms`() =
+        runBlocking<Unit> {
+            val supported = kms.getSupportedAlgorithms()
 
-        assertTrue(supported.contains(Algorithm.Ed25519))
-        assertTrue(supported.contains(Algorithm.Secp256k1))
-        assertTrue(supported.contains(Algorithm.P256))
-        assertTrue(supported.contains(Algorithm.P384))
-        assertTrue(supported.contains(Algorithm.P521))
-        assertTrue(supported.contains(Algorithm.RSA.RSA_2048))
-        assertTrue(supported.contains(Algorithm.RSA.RSA_3072))
-        assertTrue(supported.contains(Algorithm.RSA.RSA_4096))
-        assertEquals(8, supported.size)
-    }
-
-    @Test
-    fun `test generateKey with Ed25519`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.Ed25519)
-
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertNotNull(handle)
-        assertEquals(Algorithm.Ed25519.name, handle.algorithm)
-        val jwk = handle.publicKeyJwk
-        assertNotNull(jwk)
-        assertEquals(JwkKeyTypes.OKP, jwk[JwkKeys.KTY])
-        assertEquals(Algorithm.Ed25519.curveName, jwk[JwkKeys.CRV])
-        assertNotNull(jwk[JwkKeys.X])
-    }
+            assertTrue(supported.contains(Algorithm.Ed25519))
+            assertTrue(supported.contains(Algorithm.Secp256k1))
+            assertTrue(supported.contains(Algorithm.P256))
+            assertTrue(supported.contains(Algorithm.P384))
+            assertTrue(supported.contains(Algorithm.P521))
+            assertTrue(supported.contains(Algorithm.RSA.RSA_2048))
+            assertTrue(supported.contains(Algorithm.RSA.RSA_3072))
+            assertTrue(supported.contains(Algorithm.RSA.RSA_4096))
+            assertEquals(8, supported.size)
+        }
 
     @Test
-    fun `test generateKey with secp256k1`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.Secp256k1)
+    fun `test generateKey with Ed25519`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.Ed25519)
 
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.Secp256k1.name, handle.algorithm)
-        val jwk = handle.publicKeyJwk
-        assertNotNull(jwk)
-        assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
-        assertEquals(Algorithm.Secp256k1.curveName, jwk[JwkKeys.CRV])
-    }
-
-    @Test
-    fun `test generateKey with P-256`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.P256)
-
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.P256.name, handle.algorithm)
-        val jwk = handle.publicKeyJwk
-        assertNotNull(jwk)
-        assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
-        assertEquals(Algorithm.P256.curveName, jwk[JwkKeys.CRV])
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertNotNull(handle)
+            assertEquals(Algorithm.Ed25519.name, handle.algorithm)
+            val jwk = handle.publicKeyJwk
+            assertNotNull(jwk)
+            assertEquals(JwkKeyTypes.OKP, jwk[JwkKeys.KTY])
+            assertEquals(Algorithm.Ed25519.curveName, jwk[JwkKeys.CRV])
+            assertNotNull(jwk[JwkKeys.X])
+        }
 
     @Test
-    fun `test generateKey with P-384`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.P384)
+    fun `test generateKey with secp256k1`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.Secp256k1)
 
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.P384.name, handle.algorithm)
-        assertNotNull(handle.publicKeyJwk)
-    }
-
-    @Test
-    fun `test generateKey with P-521`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.P521)
-
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.P521.name, handle.algorithm)
-        assertNotNull(handle.publicKeyJwk)
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.Secp256k1.name, handle.algorithm)
+            val jwk = handle.publicKeyJwk
+            assertNotNull(jwk)
+            assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
+            assertEquals(Algorithm.Secp256k1.curveName, jwk[JwkKeys.CRV])
+        }
 
     @Test
-    fun `test generateKey with RSA-2048`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.RSA.RSA_2048)
+    fun `test generateKey with P-256`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.P256)
 
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.RSA.RSA_2048.name, handle.algorithm)
-        val jwk = handle.publicKeyJwk
-        assertNotNull(jwk)
-        assertEquals(JwkKeyTypes.RSA, jwk[JwkKeys.KTY])
-        assertNotNull(jwk[JwkKeys.N])
-        assertNotNull(jwk[JwkKeys.E])
-    }
-
-    @Test
-    fun `test generateKey with RSA-3072`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.RSA.RSA_3072)
-
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.RSA.RSA_3072.name, handle.algorithm)
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.P256.name, handle.algorithm)
+            val jwk = handle.publicKeyJwk
+            assertNotNull(jwk)
+            assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
+            assertEquals(Algorithm.P256.curveName, jwk[JwkKeys.CRV])
+        }
 
     @Test
-    fun `test generateKey with RSA-4096`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.RSA.RSA_4096)
+    fun `test generateKey with P-384`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.P384)
 
-        assertTrue(result is GenerateKeyResult.Success)
-        val handle = result.keyHandle
-        assertEquals(Algorithm.RSA.RSA_4096.name, handle.algorithm)
-    }
-
-    @Test
-    fun `test generateKey with custom keyId`() = runBlocking<Unit> {
-        val customKeyId = "my-custom-key-123"
-        val result = kms.generateKey(
-            Algorithm.Ed25519,
-            mapOf(KmsOptionKeys.KEY_ID to customKeyId)
-        )
-
-        assertTrue(result is GenerateKeyResult.Success)
-        assertEquals(customKeyId, result.keyHandle.id.value)
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.P384.name, handle.algorithm)
+            assertNotNull(handle.publicKeyJwk)
+        }
 
     @Test
-    fun `test generateKey rejects duplicate keyId`() = runBlocking<Unit> {
-        val keyId = "duplicate-key"
-        val firstResult = kms.generateKey(
-            Algorithm.Ed25519,
-            mapOf(KmsOptionKeys.KEY_ID to keyId)
-        )
+    fun `test generateKey with P-521`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.P521)
 
-        assertTrue(firstResult is GenerateKeyResult.Success)
-
-        val secondResult = kms.generateKey(
-            Algorithm.Ed25519,
-            mapOf(KmsOptionKeys.KEY_ID to keyId)
-        )
-
-        assertTrue(secondResult is GenerateKeyResult.Failure.DuplicateKeyId)
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.P521.name, handle.algorithm)
+            assertNotNull(handle.publicKeyJwk)
+        }
 
     @Test
-    fun `test generateKey rejects invalid keyId - too long`() = runBlocking<Unit> {
-        val longKeyId = "a".repeat(300) // Exceeds 256 character limit
-        val result = kms.generateKey(
-            Algorithm.Ed25519,
-            mapOf(KmsOptionKeys.KEY_ID to longKeyId)
-        )
+    fun `test generateKey with RSA-2048`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.RSA.RSA_2048)
 
-        assertTrue(result is GenerateKeyResult.Failure.InvalidOptions)
-        assertTrue(result.reason.contains("256 characters"))
-    }
-
-    @Test
-    fun `test generateKey rejects invalid keyId - blank`() = runBlocking<Unit> {
-        val result = kms.generateKey(
-            Algorithm.Ed25519,
-            mapOf(KmsOptionKeys.KEY_ID to "   ")
-        )
-
-        assertTrue(result is GenerateKeyResult.Failure.InvalidOptions)
-        assertTrue(result.reason.contains("non-blank"))
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.RSA.RSA_2048.name, handle.algorithm)
+            val jwk = handle.publicKeyJwk
+            assertNotNull(jwk)
+            assertEquals(JwkKeyTypes.RSA, jwk[JwkKeys.KTY])
+            assertNotNull(jwk[JwkKeys.N])
+            assertNotNull(jwk[JwkKeys.E])
+        }
 
     @Test
-    fun `test generateKey rejects unsupported algorithm`() = runBlocking<Unit> {
-        val unsupported = Algorithm.Custom("UnsupportedAlg")
-        val result = kms.generateKey(unsupported)
+    fun `test generateKey with RSA-3072`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.RSA.RSA_3072)
 
-        assertTrue(result is GenerateKeyResult.Failure.UnsupportedAlgorithm)
-        assertEquals(unsupported, result.algorithm)
-        assertNotNull(result.supportedAlgorithms)
-    }
-
-    @Test
-    fun `test getPublicKey retrieves existing key`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-
-        val result = kms.getPublicKey(keyId)
-
-        assertTrue(result is GetPublicKeyResult.Success)
-        assertEquals(keyId, result.keyHandle.id)
-        assertEquals(Algorithm.Ed25519.name, result.keyHandle.algorithm)
-        assertNotNull(result.keyHandle.publicKeyJwk)
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.RSA.RSA_3072.name, handle.algorithm)
+        }
 
     @Test
-    fun `test getPublicKey returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
-        val nonExistentKeyId = KeyId("non-existent-key")
+    fun `test generateKey with RSA-4096`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.RSA.RSA_4096)
 
-        val result = kms.getPublicKey(nonExistentKeyId)
-
-        assertTrue(result is GetPublicKeyResult.Failure.KeyNotFound)
-        assertEquals(nonExistentKeyId, result.keyId)
-    }
-
-    @Test
-    fun `test sign signs data successfully`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-        val data = "Hello, TrustWeave!".toByteArray()
-
-        val result = kms.sign(keyId, data)
-
-        assertTrue(result is SignResult.Success)
-        assertNotNull(result.signature)
-        assertTrue(result.signature.isNotEmpty())
-    }
+            assertTrue(result is GenerateKeyResult.Success)
+            val handle = result.keyHandle
+            assertEquals(Algorithm.RSA.RSA_4096.name, handle.algorithm)
+        }
 
     @Test
-    fun `test sign with different algorithms`() = runBlocking<Unit> {
-        val algorithms = listOf(
-            Algorithm.Ed25519,
-            Algorithm.Secp256k1,
-            Algorithm.P256,
-            Algorithm.P384,
-            Algorithm.P521,
-            Algorithm.RSA.RSA_2048
-        )
+    fun `test generateKey with custom keyId`() =
+        runBlocking<Unit> {
+            val customKeyId = "my-custom-key-123"
+            val result =
+                kms.generateKey(
+                    Algorithm.Ed25519,
+                    mapOf(KmsOptionKeys.KEY_ID to customKeyId),
+                )
 
-        for (algorithm in algorithms) {
-            val generateResult = kms.generateKey(algorithm)
-            // Some algorithms (like secp256k1) may not be supported on all JVMs
-            if (generateResult is GenerateKeyResult.Success) {
-                val keyId = generateResult.keyHandle.id
-                val data = "test data".toByteArray()
+            assertTrue(result is GenerateKeyResult.Success)
+            assertEquals(customKeyId, result.keyHandle.id.value)
+        }
 
-                val sign = kms.sign(keyId, data)
+    @Test
+    fun `test generateKey rejects duplicate keyId`() =
+        runBlocking<Unit> {
+            val keyId = "duplicate-key"
+            val firstResult =
+                kms.generateKey(
+                    Algorithm.Ed25519,
+                    mapOf(KmsOptionKeys.KEY_ID to keyId),
+                )
 
-                assertTrue(sign is SignResult.Success, "Signing failed for ${algorithm.name}")
-                assertTrue(sign.signature.isNotEmpty())
-            } else {
-                // If key generation fails (e.g., secp256k1 on some JVMs), skip this algorithm
-                // This is acceptable as algorithm support varies by JVM
+            assertTrue(firstResult is GenerateKeyResult.Success)
+
+            val secondResult =
+                kms.generateKey(
+                    Algorithm.Ed25519,
+                    mapOf(KmsOptionKeys.KEY_ID to keyId),
+                )
+
+            assertTrue(secondResult is GenerateKeyResult.Failure.DuplicateKeyId)
+        }
+
+    @Test
+    fun `test generateKey rejects invalid keyId - too long`() =
+        runBlocking<Unit> {
+            val longKeyId = "a".repeat(300) // Exceeds 256 character limit
+            val result =
+                kms.generateKey(
+                    Algorithm.Ed25519,
+                    mapOf(KmsOptionKeys.KEY_ID to longKeyId),
+                )
+
+            assertTrue(result is GenerateKeyResult.Failure.InvalidOptions)
+            assertTrue(result.reason.contains("256 characters"))
+        }
+
+    @Test
+    fun `test generateKey rejects invalid keyId - blank`() =
+        runBlocking<Unit> {
+            val result =
+                kms.generateKey(
+                    Algorithm.Ed25519,
+                    mapOf(KmsOptionKeys.KEY_ID to "   "),
+                )
+
+            assertTrue(result is GenerateKeyResult.Failure.InvalidOptions)
+            assertTrue(result.reason.contains("non-blank"))
+        }
+
+    @Test
+    fun `test generateKey rejects unsupported algorithm`() =
+        runBlocking<Unit> {
+            val unsupported = Algorithm.Custom("UnsupportedAlg")
+            val result = kms.generateKey(unsupported)
+
+            assertTrue(result is GenerateKeyResult.Failure.UnsupportedAlgorithm)
+            assertEquals(unsupported, result.algorithm)
+            assertNotNull(result.supportedAlgorithms)
+        }
+
+    @Test
+    fun `test getPublicKey retrieves existing key`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+
+            val result = kms.getPublicKey(keyId)
+
+            assertTrue(result is GetPublicKeyResult.Success)
+            assertEquals(keyId, result.keyHandle.id)
+            assertEquals(Algorithm.Ed25519.name, result.keyHandle.algorithm)
+            assertNotNull(result.keyHandle.publicKeyJwk)
+        }
+
+    @Test
+    fun `test getPublicKey returns KeyNotFound for non-existent key`() =
+        runBlocking<Unit> {
+            val nonExistentKeyId = KeyId("non-existent-key")
+
+            val result = kms.getPublicKey(nonExistentKeyId)
+
+            assertTrue(result is GetPublicKeyResult.Failure.KeyNotFound)
+            assertEquals(nonExistentKeyId, result.keyId)
+        }
+
+    @Test
+    fun `test sign signs data successfully`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+            val data = "Hello, TrustWeave!".toByteArray()
+
+            val result = kms.sign(keyId, data)
+
+            assertTrue(result is SignResult.Success)
+            assertNotNull(result.signature)
+            assertTrue(result.signature.isNotEmpty())
+        }
+
+    @Test
+    fun `test sign with different algorithms`() =
+        runBlocking<Unit> {
+            val algorithms =
+                listOf(
+                    Algorithm.Ed25519,
+                    Algorithm.Secp256k1,
+                    Algorithm.P256,
+                    Algorithm.P384,
+                    Algorithm.P521,
+                    Algorithm.RSA.RSA_2048,
+                )
+
+            for (algorithm in algorithms) {
+                val generateResult = kms.generateKey(algorithm)
+                // Some algorithms (like secp256k1) may not be supported on all JVMs
+                if (generateResult is GenerateKeyResult.Success) {
+                    val keyId = generateResult.keyHandle.id
+                    val data = "test data".toByteArray()
+
+                    val sign = kms.sign(keyId, data)
+
+                    assertTrue(sign is SignResult.Success, "Signing failed for ${algorithm.name}")
+                    assertTrue(sign.signature.isNotEmpty())
+                } else {
+                    // If key generation fails (e.g., secp256k1 on some JVMs), skip this algorithm
+                    // This is acceptable as algorithm support varies by JVM
+                }
             }
         }
-    }
 
     @Test
-    fun `test sign rejects empty data`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
+    fun `test sign accepts empty data for every algorithm`() =
+        runBlocking<Unit> {
+            val algorithms =
+                listOf(
+                    Algorithm.Ed25519,
+                    Algorithm.Secp256k1,
+                    Algorithm.P256,
+                    Algorithm.P384,
+                    Algorithm.P521,
+                    Algorithm.RSA.RSA_2048,
+                )
 
-        val result = kms.sign(keyId, ByteArray(0))
+            for (algorithm in algorithms) {
+                val generateResult = kms.generateKey(algorithm)
+                if (generateResult is GenerateKeyResult.Success) {
+                    val result = kms.sign(generateResult.keyHandle.id, ByteArray(0))
 
-        assertTrue(result is SignResult.Failure.Error)
-        assertTrue(result.reason.contains("empty"))
-    }
-
-    @Test
-    fun `test sign rejects data exceeding size limit`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-        val largeData = ByteArray(11 * 1024 * 1024) // 11 MB, exceeds 10 MB limit
-
-        val result = kms.sign(keyId, largeData)
-
-        assertTrue(result is SignResult.Failure.Error)
-        assertTrue(result.reason.contains("exceeds maximum"))
-    }
-
-    @Test
-    fun `test sign returns KeyNotFound for non-existent key`() = runBlocking<Unit> {
-        val nonExistentKeyId = KeyId("non-existent-key")
-        val data = "test".toByteArray()
-
-        val result = kms.sign(nonExistentKeyId, data)
-
-        assertTrue(result is SignResult.Failure.KeyNotFound)
-        assertEquals(nonExistentKeyId, result.keyId)
-    }
-
-    @Test
-    fun `test sign with algorithm compatibility check`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-        val data = "test".toByteArray()
-
-        // Try to sign with incompatible algorithm
-        val result = kms.sign(keyId, data, Algorithm.P256)
-
-        assertTrue(result is SignResult.Failure.UnsupportedAlgorithm)
-        assertEquals(Algorithm.P256, result.requestedAlgorithm)
-    }
-
-    @Test
-    fun `test deleteKey deletes existing key`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-
-        val result = kms.deleteKey(keyId)
-
-        assertTrue(result is DeleteKeyResult.Deleted)
-
-        // Verify key is actually deleted
-        val getResult = kms.getPublicKey(keyId)
-        assertTrue(getResult is GetPublicKeyResult.Failure.KeyNotFound)
-    }
-
-    @Test
-    fun `test deleteKey returns NotFound for non-existent key`() = runBlocking<Unit> {
-        val nonExistentKeyId = KeyId("non-existent-key")
-
-        val result = kms.deleteKey(nonExistentKeyId)
-
-        assertTrue(result is DeleteKeyResult.NotFound)
-    }
-
-    @Test
-    fun `test deleteKey is idempotent`() = runBlocking<Unit> {
-        val generateResult = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(generateResult is GenerateKeyResult.Success)
-        val keyId = generateResult.keyHandle.id
-
-        val firstDelete = kms.deleteKey(keyId)
-        assertTrue(firstDelete is DeleteKeyResult.Deleted)
-
-        val secondDelete = kms.deleteKey(keyId)
-        assertTrue(secondDelete is DeleteKeyResult.NotFound)
-    }
-
-    @Test
-    fun `test multiple keys can coexist`() = runBlocking<Unit> {
-        val key1Result = kms.generateKey(Algorithm.Ed25519)
-        val key2Result = kms.generateKey(Algorithm.P256)
-        val key3Result = kms.generateKey(Algorithm.RSA.RSA_2048)
-
-        assertTrue(key1Result is GenerateKeyResult.Success)
-        assertTrue(key2Result is GenerateKeyResult.Success)
-        assertTrue(key3Result is GenerateKeyResult.Success)
-
-        assertNotEquals(key1Result.keyHandle.id, key2Result.keyHandle.id)
-        assertNotEquals(key2Result.keyHandle.id, key3Result.keyHandle.id)
-    }
-
-    @Test
-    fun `test thread safety with concurrent operations`() = runBlocking<Unit> {
-        val keys = mutableListOf<KeyId>()
-        
-        // Generate multiple keys concurrently
-        val generateResults = (1..10).map {
-            kms.generateKey(Algorithm.Ed25519)
-        }
-        
-        generateResults.forEach { result ->
-            assertTrue(result is GenerateKeyResult.Success)
-            keys.add(result.keyHandle.id)
+                    assertTrue(result is SignResult.Success, "Signing empty data failed for ${algorithm.name}: $result")
+                    assertTrue(result.signature.isNotEmpty())
+                }
+            }
         }
 
-        // Sign concurrently
-        val signs = keys.map { keyId ->
-            kms.sign(keyId, "test".toByteArray())
+    @Test
+    fun `test sign rejects data exceeding size limit`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+            val largeData = ByteArray(11 * 1024 * 1024) // 11 MB, exceeds 10 MB limit
+
+            val result = kms.sign(keyId, largeData)
+
+            assertTrue(result is SignResult.Failure.Error)
+            assertTrue(result.reason.contains("exceeds maximum"))
         }
 
-        signs.forEach { result ->
-            assertTrue(result is SignResult.Success)
+    @Test
+    fun `test sign returns KeyNotFound for non-existent key`() =
+        runBlocking<Unit> {
+            val nonExistentKeyId = KeyId("non-existent-key")
+            val data = "test".toByteArray()
+
+            val result = kms.sign(nonExistentKeyId, data)
+
+            assertTrue(result is SignResult.Failure.KeyNotFound)
+            assertEquals(nonExistentKeyId, result.keyId)
         }
 
-        // Delete concurrently
-        val deleteResults = keys.map { keyId ->
-            kms.deleteKey(keyId)
+    @Test
+    fun `test sign with algorithm compatibility check`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+            val data = "test".toByteArray()
+
+            // Try to sign with incompatible algorithm
+            val result = kms.sign(keyId, data, Algorithm.P256)
+
+            assertTrue(result is SignResult.Failure.UnsupportedAlgorithm)
+            assertEquals(Algorithm.P256, result.requestedAlgorithm)
         }
 
-        deleteResults.forEach { result ->
+    @Test
+    fun `test deleteKey deletes existing key`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+
+            val result = kms.deleteKey(keyId)
+
             assertTrue(result is DeleteKeyResult.Deleted)
+
+            // Verify key is actually deleted
+            val getResult = kms.getPublicKey(keyId)
+            assertTrue(getResult is GetPublicKeyResult.Failure.KeyNotFound)
         }
-    }
 
     @Test
-    fun `test JWK format for EC keys`() = runBlocking<Unit> {
-        val algorithms = listOf(Algorithm.Secp256k1, Algorithm.P256, Algorithm.P384, Algorithm.P521)
-        
-        for (algorithm in algorithms) {
-            val result = kms.generateKey(algorithm)
+    fun `test deleteKey returns NotFound for non-existent key`() =
+        runBlocking<Unit> {
+            val nonExistentKeyId = KeyId("non-existent-key")
+
+            val result = kms.deleteKey(nonExistentKeyId)
+
+            assertTrue(result is DeleteKeyResult.NotFound)
+        }
+
+    @Test
+    fun `test deleteKey is idempotent`() =
+        runBlocking<Unit> {
+            val generateResult = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(generateResult is GenerateKeyResult.Success)
+            val keyId = generateResult.keyHandle.id
+
+            val firstDelete = kms.deleteKey(keyId)
+            assertTrue(firstDelete is DeleteKeyResult.Deleted)
+
+            val secondDelete = kms.deleteKey(keyId)
+            assertTrue(secondDelete is DeleteKeyResult.NotFound)
+        }
+
+    @Test
+    fun `test multiple keys can coexist`() =
+        runBlocking<Unit> {
+            val key1Result = kms.generateKey(Algorithm.Ed25519)
+            val key2Result = kms.generateKey(Algorithm.P256)
+            val key3Result = kms.generateKey(Algorithm.RSA.RSA_2048)
+
+            assertTrue(key1Result is GenerateKeyResult.Success)
+            assertTrue(key2Result is GenerateKeyResult.Success)
+            assertTrue(key3Result is GenerateKeyResult.Success)
+
+            assertNotEquals(key1Result.keyHandle.id, key2Result.keyHandle.id)
+            assertNotEquals(key2Result.keyHandle.id, key3Result.keyHandle.id)
+        }
+
+    @Test
+    fun `test thread safety with concurrent operations`() =
+        runBlocking<Unit> {
+            val keys = mutableListOf<KeyId>()
+
+            // Generate multiple keys concurrently
+            val generateResults =
+                (1..10).map {
+                    kms.generateKey(Algorithm.Ed25519)
+                }
+
+            generateResults.forEach { result ->
+                assertTrue(result is GenerateKeyResult.Success)
+                keys.add(result.keyHandle.id)
+            }
+
+            // Sign concurrently
+            val signs =
+                keys.map { keyId ->
+                    kms.sign(keyId, "test".toByteArray())
+                }
+
+            signs.forEach { result ->
+                assertTrue(result is SignResult.Success)
+            }
+
+            // Delete concurrently
+            val deleteResults =
+                keys.map { keyId ->
+                    kms.deleteKey(keyId)
+                }
+
+            deleteResults.forEach { result ->
+                assertTrue(result is DeleteKeyResult.Deleted)
+            }
+        }
+
+    @Test
+    fun `test JWK format for EC keys`() =
+        runBlocking<Unit> {
+            val algorithms = listOf(Algorithm.Secp256k1, Algorithm.P256, Algorithm.P384, Algorithm.P521)
+
+            for (algorithm in algorithms) {
+                val result = kms.generateKey(algorithm)
+                assertTrue(result is GenerateKeyResult.Success)
+                val jwk = result.keyHandle.publicKeyJwk
+                assertNotNull(jwk)
+
+                assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
+                assertNotNull(jwk[JwkKeys.CRV])
+                assertNotNull(jwk[JwkKeys.X])
+                assertNotNull(jwk[JwkKeys.Y])
+            }
+        }
+
+    @Test
+    fun `test JWK format for RSA keys`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.RSA.RSA_2048)
             assertTrue(result is GenerateKeyResult.Success)
             val jwk = result.keyHandle.publicKeyJwk
             assertNotNull(jwk)
 
-            assertEquals(JwkKeyTypes.EC, jwk[JwkKeys.KTY])
-            assertNotNull(jwk[JwkKeys.CRV])
-            assertNotNull(jwk[JwkKeys.X])
-            assertNotNull(jwk[JwkKeys.Y])
+            assertEquals(JwkKeyTypes.RSA, jwk[JwkKeys.KTY])
+            assertNotNull(jwk[JwkKeys.N])
+            assertNotNull(jwk[JwkKeys.E])
         }
-    }
 
     @Test
-    fun `test JWK format for RSA keys`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.RSA.RSA_2048)
-        assertTrue(result is GenerateKeyResult.Success)
-        val jwk = result.keyHandle.publicKeyJwk
-        assertNotNull(jwk)
+    fun `test JWK format for Ed25519`() =
+        runBlocking<Unit> {
+            val result = kms.generateKey(Algorithm.Ed25519)
+            assertTrue(result is GenerateKeyResult.Success)
+            val jwk = result.keyHandle.publicKeyJwk
+            assertNotNull(jwk)
 
-        assertEquals(JwkKeyTypes.RSA, jwk[JwkKeys.KTY])
-        assertNotNull(jwk[JwkKeys.N])
-        assertNotNull(jwk[JwkKeys.E])
-    }
-
-    @Test
-    fun `test JWK format for Ed25519`() = runBlocking<Unit> {
-        val result = kms.generateKey(Algorithm.Ed25519)
-        assertTrue(result is GenerateKeyResult.Success)
-        val jwk = result.keyHandle.publicKeyJwk
-        assertNotNull(jwk)
-
-        assertEquals(JwkKeyTypes.OKP, jwk[JwkKeys.KTY])
-        assertEquals(Algorithm.Ed25519.curveName, jwk[JwkKeys.CRV])
-        assertNotNull(jwk[JwkKeys.X])
-    }
+            assertEquals(JwkKeyTypes.OKP, jwk[JwkKeys.KTY])
+            assertEquals(Algorithm.Ed25519.curveName, jwk[JwkKeys.CRV])
+            assertNotNull(jwk[JwkKeys.X])
+        }
 }
 
 /**
  * Tests for InMemoryKeyManagementServiceProvider.
  */
 class InMemoryKeyManagementServiceProviderTest {
-
     @Test
     fun `test provider name is inmemory`() {
         val provider = InMemoryKeyManagementServiceProvider()
@@ -490,18 +533,18 @@ class InMemoryKeyManagementServiceProviderTest {
     }
 
     @Test
-    fun `test provider supported algorithms match service`() = runBlocking<Unit> {
-        val provider = InMemoryKeyManagementServiceProvider()
-        val kms = provider.create()
+    fun `test provider supported algorithms match service`() =
+        runBlocking<Unit> {
+            val provider = InMemoryKeyManagementServiceProvider()
+            val kms = provider.create()
 
-        assertEquals(provider.supportedAlgorithms, kms.getSupportedAlgorithms())
-    }
+            assertEquals(provider.supportedAlgorithms, kms.getSupportedAlgorithms())
+        }
 
     @Test
     fun `test provider has no required environment variables`() {
         val provider = InMemoryKeyManagementServiceProvider()
-        
+
         assertTrue(provider.requiredEnvironmentVariables.isEmpty())
     }
 }
-

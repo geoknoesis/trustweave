@@ -80,6 +80,29 @@ class WebDidMethodResolutionTest {
         }
 
     @Test
+    fun `an updater that changes the document id is refused before anything is published or cached`() =
+        runBlocking<Unit> {
+            val methods = mutableListOf<String>()
+            val http =
+                client {
+                    methods += it.method
+                    response(it, 200, body = documentJson(DID))
+                }
+            val method = WebDidMethod(InMemoryKeyManagementService(), http)
+
+            val failure =
+                kotlin.test.assertFailsWith<org.trustweave.core.exception.TrustWeaveException> {
+                    method.updateDid(Did(DID)) { it.copy(id = Did("did:web:$OTHER_HOST")) }
+                }
+
+            assertTrue(failure.message!!.contains("does not equal"), failure.message)
+            assertFalse(methods.any { it != "GET" }, "nothing may be published: $methods")
+            // The cache still holds the original document for the original DID.
+            val resolved = assertIs<DidResolutionResult.Success>(method.resolveDid(Did(DID)))
+            assertTrue(resolved.document.id.value == DID)
+        }
+
+    @Test
     fun `redirects are not followed by default`() =
         runBlocking<Unit> {
             assertFalse(WebDidConfig.default().followRedirects)

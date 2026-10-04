@@ -122,6 +122,73 @@ abstract class AbstractDidMethod(
     protected val lastFetched = ConcurrentHashMap<String, Instant>()
 
     /**
+     * Maximum number of live (non-deactivated) documents kept in the in-memory cache. Resolution
+     * of `did:web` stores every resolved DID, and the DID string is chosen by the caller, so an
+     * unbounded cache is a memory-exhaustion vector. When the bound is exceeded the least recently
+     * fetched live entries are evicted (down to 90% of the bound). Override to tune.
+     */
+    protected open val maxCachedDocuments: Int get() = DEFAULT_MAX_CACHED_DOCUMENTS
+
+    /**
+     * Maximum age of a live cached document, measured from [lastFetched]. Older live entries are
+     * dropped by the sweep that follows each cache-store. Deactivated records never expire by age.
+     */
+    protected open val cacheTtl: kotlin.time.Duration get() = DEFAULT_CACHE_TTL
+
+    /**
+     * Maximum number of *deactivated* records retained. Deactivation records are never evicted by
+     * the live-entry LRU or by [cacheTtl] (evicting one would let the DID resolve live again). They
+     * are only dropped, oldest first, if this very generous count cap is exceeded.
+     */
+    protected open val maxDeactivatedRecords: Int get() = DEFAULT_MAX_DEACTIVATED_RECORDS
+
+    /**
+     * Evicts expired and excess entries. Must be called while holding [updateMutex].
+     * [keep] (the entry just written) is never evicted by this call.
+     */
+    protected fun enforceCacheBounds(keep: String? = null) {
+        val now = Clock.System.now()
+        val ttl = cacheTtl
+        val deactivated = HashSet<String>()
+        for (id in documents.keys) {
+            if (documentMetadata[id]?.deactivated == true) deactivated.add(id)
+        }
+        // TTL for live entries
+        for (id in documents.keys.toList()) {
+            if (id == keep || id in deactivated) continue
+            val fetched = lastFetched[id] ?: continue
+            if (now - fetched > ttl) evictEntry(id)
+        }
+        val live = documents.keys.filter { it !in deactivated }
+        val max = maxCachedDocuments.coerceAtLeast(1)
+        if (live.size > max) {
+            val target = (max * 9 / 10).coerceAtLeast(1)
+            live
+                .filter { it != keep }
+                .sortedBy { lastFetched[it] ?: Instant.DISTANT_PAST }
+                .take(live.size - target)
+                .forEach { evictEntry(it) }
+        }
+        val maxDeact = maxDeactivatedRecords.coerceAtLeast(1)
+        if (deactivated.size > maxDeact) {
+            deactivated
+                .filter { it != keep }
+                .sortedBy { lastFetched[it] ?: Instant.DISTANT_PAST }
+                .take(deactivated.size - maxDeact)
+                .forEach { evictEntry(it) }
+        }
+    }
+
+    private fun evictEntry(id: String) {
+        documents.remove(id)
+        documentMetadata.remove(id)
+        lastFetched.remove(id)
+    }
+
+    /** Number of cached entries (live and deactivated). Exposed for diagnostics and tests. */
+    protected fun cachedDocumentCount(): Int = documents.size
+
+    /**
      * Default implementation of updateDid using in-memory storage.
      *
      * Subclasses can override for methods that require external updates.
@@ -152,6 +219,7 @@ abstract class AbstractDidMethod(
                     (documentMetadata[didString] ?: DidDocumentMetadata(created = now))
                         .copy(updated = now)
                 lastFetched[didString] = now
+                enforceCacheBounds(keep = didString)
                 updatedDocument
             }
         }
@@ -277,6 +345,7 @@ abstract class AbstractDidMethod(
             // Create, an Update or a Deactivate, so it has nothing to say about `created`,
             // `updated` or `deactivated`.
             documentMetadata.putIfAbsent(didString, DidDocumentMetadata(created = created ?: fetchedAt))
+            enforceCacheBounds(keep = didString)
         }
     }
 
@@ -418,4 +487,10 @@ abstract class AbstractDidMethod(
                 cause = result.cause,
             )
         }
+
+    private companion object {
+        const val DEFAULT_MAX_CACHED_DOCUMENTS = 10_000
+        const val DEFAULT_MAX_DEACTIVATED_RECORDS = 100_000
+        val DEFAULT_CACHE_TTL: kotlin.time.Duration = kotlin.time.Duration.parse("PT24H")
+    }
 }

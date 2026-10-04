@@ -30,6 +30,11 @@ data class DidCreationOptions(
     val purposes: List<KeyPurpose> = listOf(KeyPurpose.AUTHENTICATION),
     val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
+    /** Method-specific properties routinely carry secrets (private keys, API keys): print keys only. */
+    override fun toString(): String =
+        "DidCreationOptions(algorithm=$algorithm, purposes=$purposes, " +
+            "additionalProperties=${org.trustweave.did.util.Redaction.keysOnly(additionalProperties)})"
+
     /**
      * Converts to Map format for backward compatibility with existing DID methods.
      *

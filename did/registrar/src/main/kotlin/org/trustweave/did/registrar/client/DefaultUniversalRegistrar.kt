@@ -1,16 +1,18 @@
 package org.trustweave.did.registrar.client
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registrar.DidRegistrar
 import org.trustweave.did.registrar.PollableRegistrar
-import org.trustweave.did.registrar.adapter.UniversalRegistrarProtocolAdapter
 import org.trustweave.did.registrar.adapter.StandardUniversalRegistrarAdapter
-import org.trustweave.did.registrar.model.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import java.time.Duration
+import org.trustweave.did.registrar.adapter.UniversalRegistrarProtocolAdapter
+import org.trustweave.did.registrar.model.CreateDidOptions
+import org.trustweave.did.registrar.model.DeactivateDidOptions
+import org.trustweave.did.registrar.model.DidRegistrationResponse
+import org.trustweave.did.registrar.model.UpdateDidOptions
 
 /**
  * Default implementation of a Universal Registrar client.
@@ -54,8 +56,13 @@ class DefaultUniversalRegistrar(
     private val apiKey: String? = null,
     private val protocolAdapter: UniversalRegistrarProtocolAdapter = StandardUniversalRegistrarAdapter(),
     private val pollInterval: Long = 1000,
-    private val maxPollAttempts: Int = 60
-) : DidRegistrar, PollableRegistrar {
+    private val maxPollAttempts: Int = 60,
+) : DidRegistrar,
+    PollableRegistrar {
+    init {
+        org.trustweave.did.util.CredentialTransport
+            .requireSecure(baseUrl, apiKey != null, "the registrar API key")
+    }
 
     /**
      * Creates a new DID.
@@ -66,10 +73,11 @@ class DefaultUniversalRegistrar(
      */
     override suspend fun createDid(
         method: String,
-        options: CreateDidOptions
-    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        protocolAdapter.createDid(baseUrl, method, options)
-    }
+        options: CreateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            protocolAdapter.createDid(baseUrl, method, options)
+        }
 
     /**
      * Updates a DID Document.
@@ -82,10 +90,11 @@ class DefaultUniversalRegistrar(
     override suspend fun updateDid(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions
-    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        protocolAdapter.updateDid(baseUrl, did, document, options)
-    }
+        options: UpdateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            protocolAdapter.updateDid(baseUrl, did, document, options)
+        }
 
     /**
      * Deactivates a DID.
@@ -96,10 +105,11 @@ class DefaultUniversalRegistrar(
      */
     override suspend fun deactivateDid(
         did: String,
-        options: DeactivateDidOptions
-    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        protocolAdapter.deactivateDid(baseUrl, did, options)
-    }
+        options: DeactivateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            protocolAdapter.deactivateDid(baseUrl, did, options)
+        }
 
     /**
      * Gets the status of a long-running operation.
@@ -109,9 +119,10 @@ class DefaultUniversalRegistrar(
      * @param jobId Job identifier from a previous operation
      * @return Registration response with current didState
      */
-    override suspend fun getOperationStatus(jobId: String): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        protocolAdapter.getOperationStatus(baseUrl, jobId)
-    }
+    override suspend fun getOperationStatus(jobId: String): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            protocolAdapter.getOperationStatus(baseUrl, jobId)
+        }
 
     /**
      * Waits for a long-running operation to complete by polling status.
@@ -133,11 +144,12 @@ class DefaultUniversalRegistrar(
         }
 
         // If no jobId, cannot poll
-        val jobId = response.jobId
+        val jobId =
+            response.jobId
                 ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidState(
-                message = "Cannot wait for completion: operation is not complete but no jobId provided",
-                context = mapOf("operation" to "waitForCompletion")
-            )
+                    message = "Cannot wait for completion: operation is not complete but no jobId provided",
+                    context = mapOf("operation" to "waitForCompletion"),
+                )
 
         // Poll until complete
         var currentResponse = response
@@ -152,7 +164,7 @@ class DefaultUniversalRegistrar(
         if (!currentResponse.isComplete()) {
             throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                 message = "Operation did not complete within ${maxPollAttempts * pollInterval}ms",
-                context = mapOf("jobId" to jobId, "maxPollAttempts" to maxPollAttempts, "pollInterval" to pollInterval)
+                context = mapOf("jobId" to jobId, "maxPollAttempts" to maxPollAttempts, "pollInterval" to pollInterval),
             )
         }
 
@@ -170,7 +182,7 @@ class DefaultUniversalRegistrar(
      */
     suspend fun createDidAndWait(
         method: String,
-        options: CreateDidOptions
+        options: CreateDidOptions,
     ): DidRegistrationResponse {
         val response = createDid(method, options)
         return waitForCompletion(response)
@@ -189,7 +201,7 @@ class DefaultUniversalRegistrar(
     suspend fun updateDidAndWait(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions = UpdateDidOptions()
+        options: UpdateDidOptions = UpdateDidOptions(),
     ): DidRegistrationResponse {
         val response = updateDid(did, document, options)
         return waitForCompletion(response)
@@ -206,10 +218,9 @@ class DefaultUniversalRegistrar(
      */
     suspend fun deactivateDidAndWait(
         did: String,
-        options: DeactivateDidOptions = DeactivateDidOptions()
+        options: DeactivateDidOptions = DeactivateDidOptions(),
     ): DidRegistrationResponse {
         val response = deactivateDid(did, options)
         return waitForCompletion(response)
     }
 }
-

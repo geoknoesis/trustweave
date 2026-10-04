@@ -46,4 +46,12 @@ class EnsDidMethodTest {
         assertFalse(key.removePrefix("0x") in text, text)
         assertTrue("<redacted>" in text, text)
     }
+
+    @Test
+    fun `a configuration whose chain id and network disagree is rejected`() {
+        val bad = EnsDidConfig.mainnet("http://localhost:8545").copy(network = "sepolia")
+        assertFailsWith<IllegalArgumentException> {
+            EnsDidMethod(InMemoryKeyManagementService(), InMemoryBlockchainAnchorClient(chainId = bad.chainId), bad)
+        }
+    }
 }

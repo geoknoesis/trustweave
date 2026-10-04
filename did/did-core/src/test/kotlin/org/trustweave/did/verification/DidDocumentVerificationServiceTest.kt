@@ -290,5 +290,34 @@ class DidDocumentVerificationServiceTest {
             )
         }
 
+    @Test
+    fun `signed or non-hex digests are refused rather than decoded`() =
+        runBlocking<Unit> {
+            // "f+1" / "f-1" would otherwise decode through String.toInt(16) to 0x01 / 0xFF.
+            for (bad in listOf("f+1", "f-1", "f0g", "F-1", "f 1", "f0x")) {
+                val result = service(digest = multibase(byteArrayOf(1))).verifyDocument(document(), metadata(bad))
+                assertFalse(result.valid, "$bad must not verify")
+                assertTrue(result.errors.any { "encoding" in it.lowercase() }, "$bad: ${result.errors}")
+            }
+            // Well-formed hex still works, in both cases.
+            val ok = service(digest = "f0aff").verifyDocument(document(), metadata("f0aff"))
+            assertTrue(ok.integrityVerified, ok.errors.toString())
+            val upper = service(digest = "f0aff").verifyDocument(document(), metadata("F0AFF"))
+            assertTrue(upper.integrityVerified, upper.errors.toString())
+        }
+
+    @Test
+    fun `did key self-certification is reported as such and never as a verified signature`() =
+        runBlocking<Unit> {
+            val result = service().checkDocumentSelfCertification(document(), "key")
+            assertTrue(result.valid)
+            assertFalse(result.integrityVerified)
+            assertTrue(result.warnings.any { "no signature was verified" in it }, result.warnings.toString())
+
+            val failed = service().checkDocumentSelfCertification(document(id = Did("did:unknown:x")), "unknown")
+            assertFalse(failed.valid)
+            assertTrue(failed.errors.any { "no signature was verified" in it }, failed.errors.toString())
+        }
+
     private fun multibase(bytes: ByteArray) = "u" + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
 }

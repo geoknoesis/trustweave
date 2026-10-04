@@ -11,9 +11,8 @@ import io.ktor.server.plugins.origin
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respondText
+import kotlinx.coroutines.CancellationException
 import java.security.MessageDigest
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Decides whether one call may proceed. Return `true` to admit it.
@@ -147,7 +146,26 @@ public class HostAuthentication private constructor(
         )
 
     /**
-     * A fixed-window permit budget per caller, keyed by remote host.
+     * Fixed-window permit budgets per caller, keyed by remote host.
+     *
+     * Three budgets are kept, so that unauthenticated traffic cannot spend what a legitimate
+     * caller sharing the same host (a NAT, a proxy that does not forward the client address) needs:
+     *
+     *  1. **Attempts** ([attemptPermits], generous): every request, counted *before* authentication.
+     *     It exists only to bound the work an anonymous flood can cause (the authenticator runs
+     *     for each request that gets past it). It is deliberately far above [permits].
+     *  2. **Failed authentications** ([failedAuthPermits], strict): charged only when the credential
+     *     is refused. When it is exhausted, a refused credential is answered 429 instead of 401. A
+     *     caller presenting a valid credential is never affected by this budget.
+     *  3. **Admitted requests** ([permits]): charged only to requests that passed authentication
+     *     (or needed none). A flood of bad credentials therefore cannot use up the budget of the
+     *     legitimate caller behind the same host.
+     *
+     * Each budget tracks at most [maxTrackedCallers] callers. When the table is full, expired
+     * windows are dropped first; if every tracked caller is still inside its window, callers that
+     * are not tracked share a single overflow window per budget. Tracked callers keep their
+     * budgets, so spraying distinct caller keys cannot reset anyone's spend; the cost of that is
+     * that, while such a spray lasts, untracked callers compete for the overflow window.
      *
      * This bounds one caller; [HostTelemetry]'s admission limit bounds the server as a whole.
      * Behind a proxy every request shares one remote host, so configure the limit at the proxy
@@ -160,47 +178,84 @@ public class HostAuthentication private constructor(
             private val windowMillis: Long = 60_000,
             private val maxTrackedCallers: Int = 10_000,
             private val clock: () -> Long = System::currentTimeMillis,
+            private val failedAuthPermits: Int = defaultFailedAuthPermits(permits),
+            private val attemptPermits: Int = defaultAttemptPermits(permits),
         ) {
             init {
                 require(permits > 0) { "Rate limit permits must be positive" }
                 require(windowMillis > 0) { "Rate limit window must be positive" }
                 require(maxTrackedCallers > 0) { "Tracked callers must be positive" }
+                require(failedAuthPermits > 0) { "Failed-authentication permits must be positive" }
+                require(attemptPermits > 0) { "Attempt permits must be positive" }
             }
 
-            private val windows = ConcurrentHashMap<String, Window>()
-            private val lastSweep = AtomicLong(0)
+            private val admitted = Budget(permits)
+            private val failed = Budget(failedAuthPermits)
+            private val attempts = Budget(attemptPermits)
 
+            /** One fixed window for one caller. Guarded by its [Budget]'s lock. */
             private class Window(
-                @Volatile var startedAt: Long,
-                val used: AtomicLong,
+                var startedAt: Long,
+                var used: Int = 0,
             )
 
-            /** True when this caller still has budget in the current window. */
-            internal fun admit(caller: String): Boolean {
-                val now = clock()
-                sweep(now)
-                val window = windows.computeIfAbsent(caller) { Window(now, AtomicLong(0)) }
-                synchronized(window) {
+            private inner class Budget(
+                private val limit: Int,
+            ) {
+                private val windows = HashMap<String, Window>()
+                private var overflow: Window? = null
+                private var lastPurge = Long.MIN_VALUE
+
+                @Synchronized
+                fun take(
+                    caller: String,
+                    now: Long,
+                ): Boolean {
+                    var window = windows[caller]
+                    if (window == null) {
+                        if (windows.size >= maxTrackedCallers) purgeExpired(now)
+                        window =
+                            if (windows.size >= maxTrackedCallers) {
+                                overflow ?: Window(now).also { overflow = it }
+                            } else {
+                                Window(now).also { windows[caller] = it }
+                            }
+                    }
                     if (now - window.startedAt >= windowMillis) {
                         window.startedAt = now
-                        window.used.set(0)
+                        window.used = 0
                     }
-                    if (window.used.get() >= permits) return false
-                    window.used.incrementAndGet()
+                    if (window.used >= limit) return false
+                    window.used++
                     return true
+                }
+
+                /** Drops expired windows, at most a few times per window so a spray cannot make it O(n) per call. */
+                private fun purgeExpired(now: Long) {
+                    if (lastPurge != Long.MIN_VALUE && now - lastPurge < maxOf(1L, windowMillis / 10)) return
+                    lastPurge = now
+                    windows.values.removeIf { now - it.startedAt >= windowMillis }
                 }
             }
 
-            /** Drops expired entries so a spray of distinct callers cannot grow this map forever. */
-            private fun sweep(now: Long) {
-                if (windows.size < maxTrackedCallers) return
-                val previous = lastSweep.get()
-                if (now - previous < windowMillis || !lastSweep.compareAndSet(previous, now)) return
-                windows.entries.removeIf { now - it.value.startedAt >= windowMillis }
-                if (windows.size >= maxTrackedCallers) windows.clear()
-            }
+            /** True when this caller still has budget for an admitted request in the current window. */
+            internal fun admit(caller: String): Boolean = admitted.take(caller, clock())
+
+            /** Pre-authentication, generous bound on the work one caller can cause. */
+            internal fun admitAttempt(caller: String): Boolean = attempts.take(caller, clock())
+
+            /** Charged when a credential is refused; false once the caller is out of failed-auth budget. */
+            internal fun admitFailedAuthentication(caller: String): Boolean = failed.take(caller, clock())
 
             internal fun retryAfterSeconds(): Long = maxOf(1, windowMillis / 1000)
+
+            private companion object {
+                /** A quarter of the admitted budget (at least one): stricter than it, by design. */
+                fun defaultFailedAuthPermits(permits: Int): Int = maxOf(1, permits / 4)
+
+                /** Ten times the admitted budget, saturating. Generous: it only bounds anonymous work. */
+                fun defaultAttemptPermits(permits: Int): Int = if (permits > Int.MAX_VALUE / 10) Int.MAX_VALUE else maxOf(1, permits * 10)
+            }
         }
 
     /**
@@ -225,9 +280,10 @@ public class HostAuthentication private constructor(
                 return@intercept
             }
             val limit = rateLimit
-            if (limit != null && !limit.admit(call.request.origin.remoteHost)) {
-                call.response.headers.append("Retry-After", limit.retryAfterSeconds().toString())
-                call.refuse(HttpStatusCode.TooManyRequests, "rate_limited", "Too many requests from this caller")
+            val caller = call.request.origin.remoteHost
+            // Generous, pre-authentication bound on anonymous work. Not the caller's real budget.
+            if (limit != null && !limit.admitAttempt(caller)) {
+                call.tooManyRequests(limit)
                 finish()
                 return@intercept
             }
@@ -238,16 +294,31 @@ public class HostAuthentication private constructor(
                 val admitted =
                     try {
                         gate.authorize(call)
+                    } catch (cancelled: CancellationException) {
+                        // Cancellation is not a verdict on the caller; never swallow it.
+                        throw cancelled
                     } catch (refused: Exception) {
                         // An authenticator that throws has not authorized anything.
                         false
                     }
                 if (!admitted) {
-                    call.response.headers.append("WWW-Authenticate", "Bearer")
-                    call.refuse(HttpStatusCode.Unauthorized, "unauthorized", "Caller is not authorized for this operation")
+                    // A refused credential is charged to its own, stricter budget so that failures
+                    // can never spend the budget of an authenticated caller sharing this host.
+                    if (limit != null && !limit.admitFailedAuthentication(caller)) {
+                        call.tooManyRequests(limit)
+                    } else {
+                        call.response.headers.append("WWW-Authenticate", "Bearer")
+                        call.refuse(HttpStatusCode.Unauthorized, "unauthorized", "Caller is not authorized for this operation")
+                    }
                     finish()
                     return@intercept
                 }
+            }
+            // Only requests that passed authentication (or needed none) spend the caller's budget.
+            if (limit != null && !limit.admit(caller)) {
+                call.tooManyRequests(limit)
+                finish()
+                return@intercept
             }
             proceed()
         }
@@ -287,6 +358,11 @@ public class HostAuthentication private constructor(
             }
         }
         return "/" + segments.joinToString("/")
+    }
+
+    private suspend fun ApplicationCall.tooManyRequests(limit: RateLimit) {
+        response.headers.append("Retry-After", limit.retryAfterSeconds().toString())
+        refuse(HttpStatusCode.TooManyRequests, "rate_limited", "Too many requests from this caller")
     }
 
     private suspend fun ApplicationCall.refuse(

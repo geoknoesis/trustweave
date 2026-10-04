@@ -92,6 +92,9 @@ class DefaultUniversalResolver(
         require(baseUrl.matches(Regex("^https?://[^/]+"))) {
             "Invalid base URL format: $baseUrl. Must be a valid HTTP/HTTPS URL."
         }
+        // The API key is sent on every request: never in the clear to a non-loopback host.
+        org.trustweave.did.util.CredentialTransport
+            .requireSecure(baseUrl, apiKey != null, "the resolver API key")
         // Validate URL can be parsed
         try {
             URI.create(baseUrl)
@@ -324,21 +327,10 @@ class DefaultUniversalResolver(
                         )
 
                     when {
-                        // §4.4/§12.1: deactivation is checked before document-presence. An
-                        // upstream HTTP 200 can carry both a non-null `didDocument` and
-                        // `didDocumentMetadata.deactivated: true` — this is exactly the shape a
-                        // DID Resolution v0.3-era resolver emits (a 0.6 client behind a 0.5
-                        // server reproduces it directly), and the CR does not forbid it either.
-                        // Checking deactivation first means that shape still yields Deactivated,
-                        // never a Success carrying a revoked document — the same guarantee the
-                        // 410 branch below already provides, now also on the 200 path.
-                        documentMetadata.deactivated -> {
-                            DidResolutionResult.Deactivated(
-                                did = Did(did),
-                                documentMetadata = documentMetadata.copy(deactivated = true),
-                                resolutionMetadata = resolutionMetadata,
-                            )
-                        }
+                        // The id check precedes the deactivation check: an upstream that answers for a
+                        // *different* DID must not be able to mark the requested DID deactivated
+                        // (a denial-of-service on someone else's identifier) any more than it may
+                        // supply that DID's keys.
                         document != null && ResolvedDocumentId.mismatchReason(did, document.id.value) != null -> {
                             // The upstream answered for a different DID than requested. Reject:
                             // never rewrite the id, never hand back another subject's keys.
@@ -352,6 +344,21 @@ class DefaultUniversalResolver(
                                     resolutionMetadata.copy(
                                         error = DidResolutionError.invalidDidDocument(reason),
                                     ),
+                            )
+                        }
+                        // §4.4/§12.1: deactivation is checked before document-presence. An
+                        // upstream HTTP 200 can carry both a non-null `didDocument` and
+                        // `didDocumentMetadata.deactivated: true` — this is exactly the shape a
+                        // DID Resolution v0.3-era resolver emits (a 0.6 client behind a 0.5
+                        // server reproduces it directly), and the CR does not forbid it either.
+                        // Checking deactivation first means that shape still yields Deactivated,
+                        // never a Success carrying a revoked document — the same guarantee the
+                        // 410 branch below already provides, now also on the 200 path.
+                        documentMetadata.deactivated -> {
+                            DidResolutionResult.Deactivated(
+                                did = Did(did),
+                                documentMetadata = documentMetadata.copy(deactivated = true),
+                                resolutionMetadata = resolutionMetadata,
                             )
                         }
                         document != null -> {

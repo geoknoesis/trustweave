@@ -38,6 +38,7 @@ val dokkaJavadoc =
 // Read here, not inside subprojects {}: there `libs` would resolve against each subproject.
 val kotlinVersion = libs.versions.kotlin.get()
 val jackson3Version = libs.versions.jackson3.get()
+val netty42Version = libs.versions.netty42.get()
 
 subprojects {
 
@@ -202,6 +203,11 @@ subprojects {
                 ) {
                     useVersion(jackson3Version)
                     because("Jackson 3.1.0 advisories GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55, GHSA-rcqc-6cw3-h962")
+                }
+                // Ktor 3 brings Netty 4.2.x; 4.2.12 carries known advisories. Netty 4.1 consumers are left alone.
+                if (requested.group == "io.netty" && requested.version?.startsWith("4.2.") == true) {
+                    useVersion(netty42Version)
+                    because("Netty 4.2.12 advisories GHSA-558v-64gr-wgg4, GHSA-mj4r-2hfc-f8p6, GHSA-rwm7-x88c-3g2p")
                 }
             }
         }

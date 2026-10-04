@@ -336,6 +336,9 @@ working code fail until it is adjusted.**
 - Jackson 3 (`tools.jackson`, pulled in transitively by web3j 6) is pinned to 3.1.4 in the root build and
   `gradle/libs.versions.toml`, closing GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55 and
   GHSA-rcqc-6cw3-h962 that the OSV gate reported against 3.1.0.
+- Netty 4.2 (pulled in transitively by Ktor 3) is pinned to 4.2.18.Final, closing GHSA-558v-64gr-wgg4,
+  GHSA-mj4r-2hfc-f8p6 and GHSA-rwm7-x88c-3g2p that the OSV gate reported against 4.2.12. Only the 4.2 line is
+  pinned; libraries that use Netty 4.1 keep their own version.
 - The fixes above in the "Breaking and behaviour changes" and "Fixed" sections that close
   authentication, SSRF, signature-validation and fail-open paths (registrar servers, Spring
   registrar, did:web, JSON-LD contexts, JWT, SD-JWT, XAdES, wallet storage, offer acceptance).

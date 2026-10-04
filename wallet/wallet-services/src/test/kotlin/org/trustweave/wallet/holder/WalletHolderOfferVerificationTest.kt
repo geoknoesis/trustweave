@@ -1,7 +1,6 @@
 package org.trustweave.wallet.holder
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
@@ -37,6 +36,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration
 
 /** A credential received through an OIDC4VCI offer must be verified and bound before it is stored. */

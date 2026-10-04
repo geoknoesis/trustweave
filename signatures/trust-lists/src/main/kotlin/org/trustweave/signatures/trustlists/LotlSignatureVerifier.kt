@@ -1,6 +1,5 @@
 package org.trustweave.signatures.trustlists
 
-import kotlinx.datetime.Instant
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -25,6 +24,7 @@ import javax.xml.crypto.dsig.dom.DOMValidateContext
 import javax.xml.crypto.dsig.keyinfo.KeyInfo
 import javax.xml.crypto.dsig.keyinfo.X509Data
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.time.Instant
 
 /**
  * Self-validates the enveloped XAdES signature on the EU LoTL XML.

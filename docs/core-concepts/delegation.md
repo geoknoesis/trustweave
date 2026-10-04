@@ -115,7 +115,7 @@ When a credential is issued by a delegate, the verification can check the delega
 
 ```kotlin
 import org.trustweave.credential.results.getOrThrow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.trustweave.trust.types.delegationValid
 import org.trustweave.did.identifiers.Did
 
@@ -189,7 +189,7 @@ trustWeave.updateDid {
 ```kotlin
 import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustWeave

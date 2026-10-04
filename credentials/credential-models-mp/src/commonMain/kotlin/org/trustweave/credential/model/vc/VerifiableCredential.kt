@@ -1,14 +1,14 @@
 package org.trustweave.credential.model.vc
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.Evidence
 import org.trustweave.credential.model.vc.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Transient
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Verifiable Credential as defined by W3C Verifiable Credentials Data Model.

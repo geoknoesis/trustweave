@@ -1,6 +1,5 @@
 package org.trustweave.did
 
-import kotlinx.datetime.Instant
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
@@ -18,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Comprehensive edge case tests for DID models (VerificationMethod, DidService, DidDocument, DidResolutionResult).
@@ -261,10 +261,10 @@ class DidModelsEdgeCasesTest {
                 document = doc,
                 documentMetadata =
                     DidDocumentMetadata(
-                        created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
-                        updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z"),
+                        created = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
+                        updated = kotlin.time.Instant.parse("2024-01-02T00:00:00Z"),
                         versionId = "1",
-                        nextUpdate = kotlinx.datetime.Instant.parse("2024-02-01T00:00:00Z"),
+                        nextUpdate = kotlin.time.Instant.parse("2024-02-01T00:00:00Z"),
                     ),
                 resolutionMetadata =
                     DidResolutionMetadata(

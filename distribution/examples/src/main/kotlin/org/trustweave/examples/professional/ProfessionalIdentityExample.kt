@@ -1,8 +1,6 @@
 package org.trustweave.examples.professional
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.credential.credentialService
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.ProofType
@@ -31,6 +29,8 @@ import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
+import kotlin.time.Clock
+import kotlin.time.Instant
 import org.trustweave.trust.dsl.wallet.query as dslQuery
 
 fun main() =

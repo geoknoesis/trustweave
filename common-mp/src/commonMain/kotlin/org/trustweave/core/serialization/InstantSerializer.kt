@@ -7,15 +7,15 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
- * Serializer for kotlinx.datetime.Instant.
+ * Serializer for kotlin.time.Instant.
  *
  * Serializes Instant as ISO-8601 string (e.g., "2024-01-01T00:00:00Z").
  * This is the standard format used in JSON-LD and W3C specifications.
  *
- * **Performance:** Uses optimized kotlinx.datetime.Instant parsing and formatting.
+ * **Performance:** Uses optimized kotlin.time.Instant parsing and formatting.
  *
  * **Error Handling:** Provides detailed error messages for debugging.
  */
@@ -46,7 +46,7 @@ object InstantSerializer : KSerializer<Instant> {
 }
 
 /**
- * Serializer for nullable kotlinx.datetime.Instant?.
+ * Serializer for nullable kotlin.time.Instant?.
  *
  * Handles null values and serializes non-null values as ISO-8601 strings.
  *

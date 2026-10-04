@@ -13,10 +13,10 @@ import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.mdl.engine.MdocCbor
 import org.trustweave.credential.mdl.engine.MdocProofEngine
+import org.trustweave.credential.mdl.model.DeviceKeyInfo
 import org.trustweave.credential.mdl.model.IssuerSignedItem
 import org.trustweave.credential.mdl.model.MobileSecurityObject
 import org.trustweave.credential.mdl.model.ValidityInfo
-import org.trustweave.credential.mdl.model.DeviceKeyInfo
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -31,8 +31,8 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class MdocProofEngineTest {
 

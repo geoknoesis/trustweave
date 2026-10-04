@@ -164,7 +164,7 @@ import org.trustweave.trust.dsl.credential.*
 import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 import org.trustweave.trust.dsl.credential.DidMethods.KEY

@@ -1,6 +1,5 @@
 package org.trustweave.credential.internal
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
@@ -15,6 +14,7 @@ import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.did.identifiers.Did
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import kotlin.time.Clock
 
 /**
  * Comprehensive tests for InputValidation utility.

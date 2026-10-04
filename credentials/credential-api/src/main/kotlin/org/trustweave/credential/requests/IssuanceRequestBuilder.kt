@@ -1,7 +1,5 @@
 package org.trustweave.credential.requests
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -10,7 +8,9 @@ import org.trustweave.credential.model.vc.SubjectBuilder
 import org.trustweave.credential.model.vc.subject
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 import java.time.Duration as JavaDuration
 
 /**

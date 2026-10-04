@@ -36,17 +36,17 @@ public abstract interface class org/trustweave/signatures/etsi/validation/EtsiSi
 }
 
 public final class org/trustweave/signatures/etsi/validation/EtsiValidationReport {
-	public fun <init> (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public fun <init> (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlin/time/Instant;)V
 	public final fun component1 ()Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
 	public final fun component2 ()Ljava/util/Map;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
-	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;Ljava/util/Map;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFinalVerdict ()Lorg/trustweave/signatures/etsi/validation/EtsiValidationReport$FinalVerdict;
 	public final fun getSignerSubject ()Ljava/lang/String;
-	public final fun getSigningTime ()Lkotlinx/datetime/Instant;
+	public final fun getSigningTime ()Lkotlin/time/Instant;
 	public final fun getSteps ()Ljava/util/Map;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

@@ -13,6 +13,18 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **BREAKING — timestamps are now `kotlin.time.Instant` and `kotlin.time.Clock` (kotlinx-datetime
+  0.8.0).** kotlinx-datetime 0.7 moved `Instant`/`Clock` into the Kotlin standard library and 0.8
+  no longer ships `kotlinx.datetime.Instant`/`Clock`. Every public signature, model field and
+  default clock that used them (credential and DID document models, signatures, wallets, trust
+  registry, anchors) now uses `kotlin.time.Instant`/`kotlin.time.Clock`. Migration for consumers:
+  replace `import kotlinx.datetime.Instant` with `import kotlin.time.Instant` and
+  `import kotlinx.datetime.Clock` with `import kotlin.time.Clock`; `Instant.parse`,
+  `Clock.System.now()`, `toLocalDateTime` and the other `kotlinx.datetime` extension functions keep
+  working. JSON stays ISO-8601 (verified by the existing serialization round-trip tests). The ABI
+  dumps changed only by this type rename. Other kotlinx-datetime 0.7 changes (`TimeZone.UTC` id
+  `"UTC"`, `dayOfMonth`/`monthNumber` renamed) do not affect TrustWeave sources.
+
 - **BREAKING — `DidRegistrarServer`, `VcApiServer`, `StatusListServer`, `Oidc4VciServer`,
   `AvpAuthorizationServer` and `TrustRegistryServer` refuse mutating requests until authentication
   is configured.** These servers create and deactivate DIDs, sign credentials with whatever keys
@@ -229,6 +241,24 @@ working code fail until it is adjusted.**
 - GitHub Actions bumped to checkout 7.0.1, setup-java 6.0.1, setup-node 7.0.0, upload-artifact 7.0.1, upload-pages-artifact 5.0.0, github-script 9.0.0, attest-build-provenance 4.2.2 and gradle/actions 6.4.0 (setup-gradle, dependency-submission), all SHA-pinned; `dependabot.yml` now groups Gradle and Actions updates and ignores the major upgrades deferred in `docs/contributing/dependency-upgrade-plan.md`.
 
 - **Reference wallet dependencies refreshed.** Web: Next 16.3.8, React 19.3, TypeScript 7, `@noble/curves` 2 (`.js` subpaths, `ed25519.utils.toMontgomery`), `jose` 6, Vite 8.3, Vitest 5.0.3; Android: `security-crypto` 1.1.0 and Bouncy Castle 1.86. Expo and the Android toolchain upgrades are deferred (see `docs/contributing/dependency-upgrade-plan.md`).
+- Ktor 3.4.3 (from 2.3.13) for every server and client module. The six embedded servers
+  (`DidRegistrarServer`, `VcApiServer`, `StatusListServer`, `Oidc4VciServer`,
+  `AvpAuthorizationServer`, `TrustRegistryServer`) now hold an
+  `EmbeddedServer<NettyApplicationEngine, ...>` internally; their public API is unchanged. The AVP
+  request-size guard reads the body with the new `io.ktor.utils.io.readAvailable` extension.
+  Server tests (including the observability host-export test that starts real Netty servers) pass.
+- **Dependency round (JVM)**: kotlinx-coroutines and coroutines-test 1.11.0, JUnit 6.1.3 (Jupiter
+  and platform launcher share one version line), H2 2.5.252, mysql-connector-j 26.7.0 (same
+  coordinates, Oracle's new year-based numbering), AWS SDK BOM 2.55.11, nimbus-jose-jwt 10.10.
+  The didcomm plugin still excludes the standalone Nimbus jar because the didcomm fat jar embeds
+  its own. H2 2.5 changes `LENGTH`/`CHAR_LENGTH` on binary values to count bytes.
+- web3j 6.0.0 for every EVM consumer (`anchors:plugins:evm-base`, `did:plugins:ethr`, `polygon`,
+  `ens`); the `web3j-legacy` catalog alias is removed. web3j 5.0.3+ uses Jackson 3 internally.
+- bitcoinj 0.17.1 for `anchors:plugins:bitcoin` and `did:plugins:btcr`; the `bitcoinj-legacy`
+  alias is removed. The Bitcoin anchor client now parses raw transactions with
+  `Transaction.read`, hex-encodes with `java.util.HexFormat` and detects OP_RETURN with
+  `ScriptPattern.isOpReturn`; behaviour is unchanged (the txid-integrity read test covers it).
+
 - `BitstringStatusListManager`'s bitstring encode and decode are now `suspend` and check
   cooperative cancellation every 8192 bits. A cancelled status-list refresh previously ran the full
   131072-entry loop to completion. `updateCredentialStatus` became `suspend` with them; all its

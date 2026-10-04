@@ -2,11 +2,11 @@ package org.trustweave.trust.domain.treasury
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Instant
 import org.trustweave.anchor.payment.AssetRef
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.trust.domain.DomainId
 import java.math.BigInteger
+import kotlin.time.Instant
 
 /**
  * In-memory implementation of [TreasuryLedgerStore]. Default for tests and

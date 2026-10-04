@@ -1,6 +1,5 @@
 package org.trustweave.credential.results
 
-import kotlinx.datetime.Instant
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
@@ -14,6 +13,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * The fluent helpers over [IssuanceResult] and [VerificationResult] are how callers branch on

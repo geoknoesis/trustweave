@@ -2,8 +2,6 @@ package org.trustweave.credential.proof.internal.engines
 
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
@@ -36,8 +34,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /** SD-JWT issuer-JWT `typ` enforcement and the opt-in single-use KB-JWT nonce. */
 class SdJwtTypAndNonceTest {
@@ -248,7 +248,7 @@ class SdJwtTypAndNonceTest {
         runBlocking<Unit> {
             var now = Instant.fromEpochSeconds(1_000)
             val clock =
-                object : kotlinx.datetime.Clock {
+                object : kotlin.time.Clock {
                     override fun now() = now
                 }
             val store = InMemoryPresentationNonceStore(ttl = 10.minutes, capacity = 2, clock = clock)

@@ -1,21 +1,21 @@
 package org.trustweave.keydid
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.core.util.encodeBase58
 import org.trustweave.did.*
+import org.trustweave.did.base.AbstractDidMethod
+import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.base.AbstractDidMethod
-import org.trustweave.did.base.DidMethodUtils
 import org.trustweave.kms.KeyManagementService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.sync.withLock
 /**
  * Native implementation of did:key method.
  *
@@ -195,7 +195,7 @@ class KeyDidMethod(
                 // operation, so §4.3 `updated` is omitted rather than fabricated from `now`
                 // (the same defect this branch fixed for the shared storeDocument() path).
                 val didString = didStr
-                val now = kotlinx.datetime.Clock.System.now()
+                val now = kotlin.time.Clock.System.now()
                 documents[didString] = document
                 documentMetadata[didString] = org.trustweave.did.model.DidDocumentMetadata(
                     created = now

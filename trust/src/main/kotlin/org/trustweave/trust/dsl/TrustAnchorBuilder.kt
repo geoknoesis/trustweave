@@ -1,6 +1,6 @@
 package org.trustweave.trust.dsl
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Builder for trust anchor configuration using infix syntax.

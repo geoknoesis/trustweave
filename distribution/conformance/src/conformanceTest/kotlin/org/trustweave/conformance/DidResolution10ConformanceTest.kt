@@ -1,7 +1,6 @@
 package org.trustweave.conformance
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions
@@ -25,6 +24,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Conformance suite for W3C DID Resolution 1.0 (Candidate Recommendation, 2026-08-06):

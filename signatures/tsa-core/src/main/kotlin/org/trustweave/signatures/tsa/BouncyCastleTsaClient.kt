@@ -3,7 +3,6 @@ package org.trustweave.signatures.tsa
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.toKotlinInstant
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -23,6 +22,7 @@ import java.math.BigInteger
 import java.security.SecureRandom
 import java.security.Security
 import java.util.concurrent.TimeUnit
+import kotlin.time.toKotlinInstant
 import org.bouncycastle.tsp.TimeStampToken as BcTimeStampToken
 
 /**

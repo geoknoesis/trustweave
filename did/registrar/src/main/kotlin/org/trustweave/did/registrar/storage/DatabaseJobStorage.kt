@@ -1,11 +1,11 @@
 package org.trustweave.did.registrar.storage
 
-import org.trustweave.did.registrar.model.DidRegistrationResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.trustweave.did.registrar.model.DidRegistrationResponse
 import java.sql.Timestamp
-import kotlinx.datetime.Clock
 import javax.sql.DataSource
+import kotlin.time.Clock
 
 /**
  * Database-backed implementation of [JobStorage].

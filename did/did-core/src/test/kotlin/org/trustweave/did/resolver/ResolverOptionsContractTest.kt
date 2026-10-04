@@ -1,7 +1,6 @@
 package org.trustweave.did.resolver
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidMethodResolver
 import org.trustweave.did.identifiers.Did
@@ -9,6 +8,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolution.ResolutionOptions
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 class ResolverOptionsContractTest {
     private val did = Did("did:example:123456789abcdefghi")

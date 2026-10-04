@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,6 +20,7 @@ import org.trustweave.trust.types.getOrThrow
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for IssuanceBuilder DSL.

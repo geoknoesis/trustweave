@@ -3,8 +3,6 @@ package org.trustweave.revocation.database
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -26,6 +24,8 @@ import java.util.Base64
 import java.util.BitSet
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Database-backed status list manager implementation.

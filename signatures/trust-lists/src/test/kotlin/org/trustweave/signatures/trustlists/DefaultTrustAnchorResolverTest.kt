@@ -88,7 +88,7 @@ class DefaultTrustAnchorResolverTest {
         val empty = TrustList(
             schemeOperator = "Test",
             sequenceNumber = 1,
-            issuedAt = kotlinx.datetime.Clock.System.now(),
+            issuedAt = kotlin.time.Clock.System.now(),
             nextUpdateAt = null,
             memberStateLists = emptyList(),
         )

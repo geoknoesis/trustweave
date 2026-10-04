@@ -1,11 +1,11 @@
 package org.trustweave.credential.internal
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.schema.SchemaRegistry
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Credential validation utilities.

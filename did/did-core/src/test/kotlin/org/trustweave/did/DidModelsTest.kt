@@ -1,6 +1,5 @@
 package org.trustweave.did
 
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -17,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Comprehensive tests for Did models and DidRegistry.
@@ -140,7 +140,7 @@ class DidModelsTest {
                 document = doc,
                 documentMetadata =
                     DidDocumentMetadata(
-                        created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                        created = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
                     ),
                 resolutionMetadata = DidResolutionMetadata(duration = 100L),
             )

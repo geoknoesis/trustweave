@@ -1,8 +1,6 @@
 package org.trustweave.testkit.credential
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -25,6 +23,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Branch coverage tests for BasicWallet.
@@ -402,7 +402,7 @@ class BasicWalletBranchCoverageTest {
                 put("name", "John Doe")
             },
         issuanceDate: String =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now()
                 .toString(),
         expirationDate: String? = null,
@@ -425,17 +425,17 @@ class BasicWalletBranchCoverageTest {
                 ),
             issuanceDate =
                 try {
-                    kotlinx.datetime.Instant.parse(issuanceDate)
+                    kotlin.time.Instant.parse(issuanceDate)
                 } catch (e: Exception) {
                     // For invalid dates in tests, use current time as fallback
                     // DateTimeFormatException is internal, so catch Exception
-                    kotlinx.datetime.Clock.System
+                    kotlin.time.Clock.System
                         .now()
                 },
             expirationDate =
                 expirationDate?.let {
                     try {
-                        kotlinx.datetime.Instant.parse(it)
+                        kotlin.time.Instant.parse(it)
                     } catch (e: Exception) {
                         // For invalid dates, return null (treat as no expiration)
                         // DateTimeFormatException is internal, so catch Exception

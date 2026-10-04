@@ -74,7 +74,7 @@ data class VerifiableCredential(
     val id: CredentialId? = null,                  // Typed, optional
     val type: List<CredentialType>,                // Must include "VerifiableCredential"
     val issuer: Issuer,                            // Issuer (Iri-backed, can include id/name object)
-    val issuanceDate: Instant,                     // kotlinx.datetime.Instant
+    val issuanceDate: Instant,                     // kotlin.time.Instant
     val credentialSubject: CredentialSubject,      // Typed subject (id + claims)
     val validFrom: Instant? = null,                // VC 2.0
     val expirationDate: Instant? = null,           // VC 1.1
@@ -89,7 +89,7 @@ data class VerifiableCredential(
 )
 ```
 
-**Notes:** `id` is a `CredentialId` (not raw `String`); `type` is a `List<CredentialType>`; `issuer` is an `Issuer` value object (use `Issuer.fromDid(Did)`); dates are `kotlinx.datetime.Instant`; `proof` is the sealed `CredentialProof` hierarchy (not a flat `Proof`).
+**Notes:** `id` is a `CredentialId` (not raw `String`); `type` is a `List<CredentialType>`; `issuer` is an `Issuer` value object (use `Issuer.fromDid(Did)`); dates are `kotlin.time.Instant`; `proof` is the sealed `CredentialProof` hierarchy (not a flat `Proof`).
 
 ### VerifiablePresentation
 
@@ -243,7 +243,7 @@ data class CredentialCollection(
     val id: String,
     val name: String,
     val description: String? = null,
-    val createdAt: Instant = Clock.System.now(),   // kotlinx.datetime.Instant
+    val createdAt: Instant = Clock.System.now(),   // kotlin.time.Instant
     val credentialCount: Int = 0
 )
 ```
@@ -399,7 +399,7 @@ Sealed cryptographic proof (`org.trustweave.credential.model.vc.CredentialProof`
 sealed class CredentialProof {
     data class LinkedDataProof(
         val type: String,                    // e.g. "Ed25519Signature2020", "JsonWebSignature2020"
-        val created: kotlinx.datetime.Instant,
+        val created: kotlin.time.Instant,
         val verificationMethod: String,      // DID URL or IRI
         val proofPurpose: String,            // "assertionMethod", "authentication", ...
         val proofValue: String,              // Base58/Base64 signature

@@ -17,7 +17,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // Web3j for Ethereum blockchain interaction
-    implementation(libs.web3j.legacy)
+    implementation(libs.web3j)
 
     // Test dependencies
     testImplementation(project(":testkit"))

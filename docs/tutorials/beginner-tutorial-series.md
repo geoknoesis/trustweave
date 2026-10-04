@@ -255,7 +255,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods
 import org.trustweave.trust.dsl.credential.KeyAlgorithms
@@ -343,7 +343,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import kotlin.time.Duration.Companion.days
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     // ... trustWeave, issuerDid, holderDid, issuerKeyId ...
@@ -632,7 +632,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import org.trustweave.credential.results.getOrThrow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     // ... setup parties (Step 1): trustWeave, issuerDid, issuerKeyId, holderDid ...
@@ -822,7 +822,7 @@ fun main() = runBlocking {
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods

@@ -4,7 +4,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -22,6 +21,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import java.io.IOException
 import java.net.Proxy
+import kotlin.time.Clock
 import kotlin.time.Duration
 
 /**

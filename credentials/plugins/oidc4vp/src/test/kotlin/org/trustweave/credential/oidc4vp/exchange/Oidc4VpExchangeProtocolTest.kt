@@ -1,28 +1,28 @@
 package org.trustweave.credential.oidc4vp.exchange
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.*
+import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.credential.exchange.ExchangeOperation
+import org.trustweave.credential.exchange.model.CredentialAttribute
+import org.trustweave.credential.exchange.model.CredentialPreview
 import org.trustweave.credential.exchange.request.ExchangeRequest
 import org.trustweave.credential.exchange.request.ProofExchangeRequest
 import org.trustweave.credential.exchange.request.ProofRequest
 import org.trustweave.credential.identifiers.ExchangeProtocolName
 import org.trustweave.credential.identifiers.OfferId
 import org.trustweave.credential.identifiers.RequestId
-import org.trustweave.credential.oidc4vp.Oidc4VpService
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.credential.exchange.model.CredentialPreview
-import org.trustweave.credential.exchange.model.CredentialAttribute
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.oidc4vp.Oidc4VpService
 import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.json.*
 import kotlin.test.*
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Tests for OIDC4VP Exchange Protocol.

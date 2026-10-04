@@ -2,19 +2,19 @@ package org.trustweave.wallet
 
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.identifiers.StatusListId
+import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialStatus
+import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 class CredentialQueryBuilderTest {
 

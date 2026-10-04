@@ -3,9 +3,6 @@ package org.trustweave.signatures.xades
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.GeneralName
@@ -34,6 +31,9 @@ import javax.xml.crypto.dsig.XMLSignature
 import javax.xml.crypto.dsig.XMLSignatureFactory
 import javax.xml.crypto.dsig.dom.DOMValidateContext
 import javax.xml.crypto.dsig.keyinfo.KeyInfo
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 /**
  * Verifier for XAdES B-B signatures (MVP scope).

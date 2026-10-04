@@ -1,10 +1,10 @@
 package org.trustweave.signatures.xades
 
-import kotlinx.datetime.Instant
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import java.security.cert.X509Certificate
+import kotlin.time.Instant
 
 /**
  * XAdES baseline profile (ETSI EN 319 132-1 §5).

@@ -366,7 +366,7 @@ Create `did/did-core/src/test/kotlin/org/trustweave/did/util/XmlDateTimeTest.kt`
 ```kotlin
 package org.trustweave.did.util
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -423,7 +423,7 @@ Create `did/did-core/src/main/kotlin/org/trustweave/did/util/XmlDateTime.kt`:
 ```kotlin
 package org.trustweave.did.util
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -685,7 +685,7 @@ Create `did/did-core/src/test/kotlin/org/trustweave/did/resolver/DidResolutionMe
 ```kotlin
 package org.trustweave.did.resolver
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -783,7 +783,7 @@ Replace `did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionM
 ```kotlin
 package org.trustweave.did.resolver
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -999,7 +999,7 @@ Create `did/did-core/src/test/kotlin/org/trustweave/did/model/DidDocumentMetadat
 ```kotlin
 package org.trustweave.did.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -1102,7 +1102,7 @@ data class DidDocumentMetadata(
 Add these imports to the top of `DidModels.kt`:
 
 ```kotlin
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -1151,7 +1151,7 @@ Create `did/did-core/src/test/kotlin/org/trustweave/did/resolution/ResolutionOpt
 ```kotlin
 package org.trustweave.did.resolution
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.resolver.DidErrorType
 import kotlin.test.assertEquals
@@ -1239,7 +1239,7 @@ Create `did/did-core/src/main/kotlin/org/trustweave/did/resolution/ResolutionOpt
 ```kotlin
 package org.trustweave.did.resolution
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.trustweave.did.resolver.DidResolutionError
@@ -1830,7 +1830,7 @@ Create `did/did-core/src/test/kotlin/org/trustweave/did/resolver/ResolverOptions
 package org.trustweave.did.resolver
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidMethodResolver
 import org.trustweave.did.identifiers.Did
@@ -2207,7 +2207,7 @@ class RegistryBasedResolverAlgorithmTest {
         val resolver = RegistryBasedResolver(DidMethodRegistry())
         val options = ResolutionOptions(
             versionId = "3",
-            versionTime = kotlinx.datetime.Instant.parse("2021-05-10T17:00:00Z")
+            versionTime = kotlin.time.Instant.parse("2021-05-10T17:00:00Z")
         )
         assertEquals(DidErrorType.INVALID_OPTIONS, resolver.resolve(did, options).errorType)
     }
@@ -3212,7 +3212,7 @@ Create `distribution/conformance/src/conformanceTest/kotlin/org/trustweave/confo
 package org.trustweave.conformance
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions

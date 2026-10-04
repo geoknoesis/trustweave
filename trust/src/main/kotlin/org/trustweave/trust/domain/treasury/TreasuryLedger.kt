@@ -1,11 +1,11 @@
 package org.trustweave.trust.domain.treasury
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.trustweave.anchor.payment.AssetRef
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.trust.domain.DomainId
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 enum class SettlementStatus { RESERVED, SETTLED, CANCELLED, FAILED }
 

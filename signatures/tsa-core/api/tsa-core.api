@@ -10,19 +10,19 @@ public final class org/trustweave/signatures/tsa/BouncyCastleTsaClient$Companion
 }
 
 public final class org/trustweave/signatures/tsa/TimeStampToken {
-	public fun <init> ([BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)V
+	public fun <init> ([BLkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)V
 	public final fun component1 ()[B
-	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public final fun component2 ()Lkotlin/time/Instant;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
 	public final fun component5 ()[B
 	public final fun component6 ()[B
 	public final fun component7 ()Ljava/lang/String;
-	public final fun copy ([BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)Lorg/trustweave/signatures/tsa/TimeStampToken;
-	public static synthetic fun copy$default (Lorg/trustweave/signatures/tsa/TimeStampToken;[BLkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/tsa/TimeStampToken;
+	public final fun copy ([BLkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;)Lorg/trustweave/signatures/tsa/TimeStampToken;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/tsa/TimeStampToken;[BLkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;[B[BLjava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/tsa/TimeStampToken;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEncoded ()[B
-	public final fun getGenTime ()Lkotlinx/datetime/Instant;
+	public final fun getGenTime ()Lkotlin/time/Instant;
 	public final fun getMessageImprint ()[B
 	public final fun getMessageImprintAlgorithm ()Lorg/trustweave/signatures/tsa/TsaHashAlgorithm;
 	public final fun getPolicyOid ()Ljava/lang/String;

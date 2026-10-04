@@ -1,6 +1,6 @@
 package org.trustweave.credential.mdl.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Top-level ISO 18013-5 mobile document.

@@ -1,7 +1,7 @@
 package org.trustweave.credential.didcomm.storage.analytics
 
 import org.trustweave.credential.didcomm.models.DidCommMessage
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Message analytics and reporting.

@@ -65,7 +65,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 |------------|---------|---------|
 | `kotlinx-serialization-json` | 1.11.0 | JSON serialization |
 | `kotlinx-coroutines-core` | 1.10.2 | Coroutines support |
-| `kotlinx-datetime` | 0.6.2 | Date/time handling |
+| `kotlinx-datetime` | 0.8.0 | Date/time handling |
 
 ### Optional Dependencies
 

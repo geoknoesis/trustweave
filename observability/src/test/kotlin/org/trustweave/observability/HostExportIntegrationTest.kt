@@ -87,7 +87,8 @@ class HostExportIntegrationTest {
                             routing { get("/lookup") { downstreamTelemetry.phase(HostPhase.VERIFY) { call.respondText("verified") } } }
                         }.start()
                     try {
-                        val downstreamPort = downstream.resolvedConnectors().single().port
+                        val downstreamConnectors = downstream.engine.resolvedConnectors()
+                        val downstreamPort = downstreamConnectors.single().port
                         val upstreamTelemetry = HostTelemetry(sdk)
                         val upstream =
                             embeddedServer(Netty, port = 0, host = "127.0.0.1") {
@@ -113,7 +114,8 @@ class HostExportIntegrationTest {
                                 }
                             }.start()
                         try {
-                            val upstreamPort = upstream.resolvedConnectors().single().port
+                            val upstreamConnectors = upstream.engine.resolvedConnectors()
+                            val upstreamPort = upstreamConnectors.single().port
                             val upstreamUri = URI("http://127.0.0.1:$upstreamPort/issue?credential=private-payload")
                             val responses =
                                 (1..10)

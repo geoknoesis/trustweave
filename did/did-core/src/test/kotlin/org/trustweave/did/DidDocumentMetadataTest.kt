@@ -1,6 +1,5 @@
 package org.trustweave.did
 
-import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
@@ -11,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for DidDocumentMetadata with Instant fields.

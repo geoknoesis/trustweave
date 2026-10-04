@@ -38,7 +38,7 @@ import org.trustweave.trust.types.DidCreationResult
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 ```
 
@@ -165,7 +165,7 @@ Define the credential content using the DSL builder. Specify the subject, types,
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 val credential = trustWeave.issue {
@@ -275,7 +275,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.VerificationResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.did.resolver.DidResolutionResult

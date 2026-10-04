@@ -161,7 +161,7 @@ fun main() =
                             "honors" to true
                         }
                         issued(
-                            kotlinx.datetime.Clock.System
+                            kotlin.time.Clock.System
                                 .now(),
                         )
                     }
@@ -337,7 +337,7 @@ fun main() =
                                     "issueDate" to "2024-0$i-01"
                                 }
                                 issued(
-                                    kotlinx.datetime.Clock.System
+                                    kotlin.time.Clock.System
                                         .now(),
                                 )
                             }
@@ -373,7 +373,7 @@ fun main() =
                 digest = "uABC123...",
                 issuer = credential.issuer.id.value,
                 timestamp =
-                    kotlinx.datetime.Clock.System
+                    kotlin.time.Clock.System
                         .now()
                         .toString(),
                 chainId = chainId,

@@ -3,6 +3,7 @@ package org.trustweave.credential.vcapi
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -64,7 +65,7 @@ class VcApiServer(
     private val port: Int = 8080,
     private val host: String = "127.0.0.1",
 ) {
-    private var server: NettyApplicationEngine? = null
+    private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
 

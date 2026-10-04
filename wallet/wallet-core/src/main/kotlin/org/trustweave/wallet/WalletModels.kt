@@ -1,7 +1,7 @@
 package org.trustweave.wallet
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Credential collection model.

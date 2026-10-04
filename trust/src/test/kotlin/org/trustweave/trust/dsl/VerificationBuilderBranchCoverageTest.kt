@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.model.ProofType
@@ -9,6 +8,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
 import org.trustweave.trust.dsl.credential.credential as buildCredential
 
 /**

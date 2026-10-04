@@ -2,7 +2,7 @@ package org.trustweave.contract.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Core SmartContract models for trustweave.

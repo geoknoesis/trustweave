@@ -1,6 +1,5 @@
 package org.trustweave.credential.template.internal
 
-import kotlinx.datetime.Instant
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
@@ -9,6 +8,7 @@ import org.trustweave.credential.template.CredentialTemplate
 import org.trustweave.credential.template.TemplateService
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * Default implementation of TemplateService.

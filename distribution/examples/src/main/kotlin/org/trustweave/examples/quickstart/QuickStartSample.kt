@@ -69,7 +69,7 @@ fun main(): Unit =
                             "role" to "Site Reliability Engineer"
                         }
                         issued(
-                            kotlinx.datetime.Clock.System
+                            kotlin.time.Clock.System
                                 .now(),
                         )
                     }

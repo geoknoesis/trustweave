@@ -5,7 +5,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import org.junit.jupiter.api.Test
 import org.trustweave.anchor.AnchorRef
@@ -23,6 +22,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for [AbstractBlockchainDidMethod] resolution metadata, in particular that the

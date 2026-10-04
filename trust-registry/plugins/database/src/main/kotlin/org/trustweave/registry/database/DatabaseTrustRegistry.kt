@@ -2,13 +2,13 @@
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.trustweave.registry.*
 import java.sql.Timestamp
 import javax.sql.DataSource
+import kotlin.time.Clock
+import kotlin.time.toKotlinInstant
 
 /**
  * JDBC-backed [TrustRegistry].

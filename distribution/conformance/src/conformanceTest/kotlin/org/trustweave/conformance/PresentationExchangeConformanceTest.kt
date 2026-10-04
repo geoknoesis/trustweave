@@ -1,19 +1,19 @@
 ﻿package org.trustweave.conformance
 
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.JsonPrimitive
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.pex.*
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import kotlinx.datetime.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 @Tag("conformance")
 @Tag("presentation-exchange")

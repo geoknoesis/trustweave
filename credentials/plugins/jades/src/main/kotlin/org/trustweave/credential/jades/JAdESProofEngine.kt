@@ -1,6 +1,5 @@
 package org.trustweave.credential.jades
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -27,6 +26,7 @@ import org.trustweave.signatures.jades.JadesVerificationOptions
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
+import kotlin.time.Clock
 
 /**
  * JAdES proof engine — implements the [ProofEngine] SPI for ETSI TS 119 182-1 signatures over

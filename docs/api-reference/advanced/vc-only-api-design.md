@@ -16,7 +16,7 @@ nav_order: 120
 > - `Issuer` is sealed with `IriIssuer` and `ObjectIssuer`; both expose `val id: Iri`.
 > - `CredentialSubject` matches the proposal but exposes both `fromDid(...)` and `fromIri(...)` factories.
 > - `SubjectId` was **not** removed — it remains in `credentials/credential-api/.../identifiers/CredentialIdentifiers.kt` as a sealed class (`DidSubject`, `UriSubject`, `OtherSubject`).
-> - `VerifiableCredential` adds VC 2.0 fields (`validFrom`, `validUntil`, `name`, `description`) and uses `kotlinx.datetime.Instant` (not `java.time.Instant`).
+> - `VerifiableCredential` adds VC 2.0 fields (`validFrom`, `validUntil`, `name`, `description`) and uses `kotlin.time.Instant` (not `java.time.Instant`).
 >
 > The "Changes Required" / "Files to remove" sections below do **not** reflect what shipped.
 

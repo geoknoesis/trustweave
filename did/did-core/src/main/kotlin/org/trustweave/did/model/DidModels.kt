@@ -1,6 +1,5 @@
 package org.trustweave.did.model
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -12,6 +11,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.util.XmlDateTimeSerializer
 import org.trustweave.did.util.toXmlDateTime
+import kotlin.time.Instant
 
 /**
  * Note: Did class has been moved to org.trustweave.did.identifiers.Did

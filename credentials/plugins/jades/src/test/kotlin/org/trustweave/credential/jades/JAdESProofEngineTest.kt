@@ -1,7 +1,6 @@
 package org.trustweave.credential.jades
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -29,6 +28,7 @@ import org.trustweave.signatures.trustlists.TrustedTSP
 import org.trustweave.signatures.trustlists.TspService
 import org.trustweave.signatures.trustlists.TspServiceStatus
 import org.trustweave.signatures.trustlists.TspServiceType
+import kotlin.time.Clock
 
 class JAdESProofEngineTest {
 

@@ -2,7 +2,6 @@ package org.trustweave.contract
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.BlockchainAnchorRegistry
@@ -41,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.Result
+import kotlin.time.Clock
 import org.trustweave.credential.CredentialService as CredentialServiceInterface
 
 /**

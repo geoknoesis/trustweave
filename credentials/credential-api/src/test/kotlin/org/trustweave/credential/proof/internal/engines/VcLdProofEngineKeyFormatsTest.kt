@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jose.util.Base64URL
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.trustweave.core.identifiers.Iri
@@ -47,6 +46,7 @@ import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Round-trip tests for verification-method key formats and JWS algorithms:

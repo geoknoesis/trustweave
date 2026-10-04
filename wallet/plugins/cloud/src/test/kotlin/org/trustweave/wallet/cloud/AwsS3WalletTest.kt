@@ -1,7 +1,6 @@
 package org.trustweave.wallet.cloud
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -31,6 +30,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Unit tests for [AwsS3Wallet] (and the [CloudWallet] base behavior) against an

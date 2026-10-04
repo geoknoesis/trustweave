@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import org.trustweave.signatures.trustlists.QualifierUris
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
@@ -22,6 +21,7 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 
 /** Trust handling: which KeyInfo certificates reach the resolver, and what each result means. */

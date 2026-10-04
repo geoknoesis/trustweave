@@ -3,8 +3,7 @@ package org.trustweave.signatures.jades
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -19,7 +18,8 @@ import org.trustweave.signatures.tsa.TsaClient
 import org.trustweave.signatures.tsa.TsaHashAlgorithm
 import java.security.MessageDigest
 import java.util.Base64
-import kotlinx.serialization.json.Json
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Builds a JAdES signature in JWS JSON Serialization (flattened) form.

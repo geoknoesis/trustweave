@@ -1,6 +1,5 @@
 package org.trustweave.credential.internal
 
-import kotlinx.datetime.Clock
 import org.slf4j.LoggerFactory
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.requests.RevocationFailurePolicy
@@ -8,6 +7,7 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.revocation.CredentialRevocationManager
 import org.trustweave.credential.spi.status.CredentialStatusCheckResult
 import org.trustweave.credential.spi.status.CredentialStatusChecker
+import kotlin.time.Clock
 
 /**
  * Revocation checking utilities.

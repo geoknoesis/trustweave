@@ -1,17 +1,17 @@
 package org.trustweave.credential.requests
 
 import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.Evidence
+import org.trustweave.credential.model.vc.CredentialSchema
 import org.trustweave.credential.model.vc.CredentialStatus
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.credential.model.vc.CredentialSchema
-import org.trustweave.credential.model.Evidence
-import org.trustweave.credential.identifiers.CredentialId
-import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.did.identifiers.VerificationMethodId
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Request for Verifiable Credential issuance.

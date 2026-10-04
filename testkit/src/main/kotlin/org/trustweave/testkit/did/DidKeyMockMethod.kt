@@ -6,15 +6,15 @@ import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.model.VerificationMethod
-import org.trustweave.did.resolver.DidResolutionResult
-import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionError
+import org.trustweave.did.resolver.DidResolutionMetadata
+import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Mock DID method implementation for testing.

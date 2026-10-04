@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -22,6 +21,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for PresentationBuilder DSL.

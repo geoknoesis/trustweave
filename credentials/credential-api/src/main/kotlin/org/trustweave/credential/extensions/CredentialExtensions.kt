@@ -1,9 +1,9 @@
 package org.trustweave.credential.extensions
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Extension functions for common VerifiableCredential and VerifiablePresentation operations.

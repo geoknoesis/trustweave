@@ -1,12 +1,12 @@
 package org.trustweave.trust
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
+import kotlin.time.Clock
+import kotlin.time.Instant
 import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
 
 /**

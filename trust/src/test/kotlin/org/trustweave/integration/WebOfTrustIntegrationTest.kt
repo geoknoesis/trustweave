@@ -1,7 +1,6 @@
 package org.trustweave.integration
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.kms.results.SignResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
@@ -23,6 +22,7 @@ import org.trustweave.trust.types.warnings
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * End-to-end integration tests for web of trust features.

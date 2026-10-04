@@ -33,15 +33,12 @@ updates:
         update-types: [minor, patch]
       minor-and-patch:
         patterns: ["*"]
-        # kotlinx-datetime 0.x minors (0.6 -> 0.7) are breaking API migrations, so they stay out
-        # of the batch and arrive on their own.
+        # kotlinx-datetime 0.x minors can be breaking (0.7 moved Instant/Clock to kotlin.time), so they
+        # stay out of the batch and arrive on their own for a compile check.
         exclude-patterns:
           - "org.jetbrains.kotlinx:kotlinx-datetime*"
         update-types: [minor, patch]
     ignore:
-      # Ktor 2 -> 3 changes server and client APIs (~14 build files).
-      - dependency-name: "io.ktor*"
-        update-types: ["version-update:semver-major"]
       # Spring Boot major (library module did:registrar-server-spring only).
       - dependency-name: "org.springframework.boot*"
         update-types: ["version-update:semver-major"]
@@ -54,9 +51,6 @@ updates:
       # Testcontainers 1 -> 2 renames artifacts and modules.
       - dependency-name: "org.testcontainers*"
         update-types: ["version-update:semver-major"]
-      # bitcoinj 0.16 -> 0.17 (0.x: the minor is the breaking step); patch updates still flow.
-      - dependency-name: "org.bitcoinj*"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     labels:
       - dependencies
       - gradle

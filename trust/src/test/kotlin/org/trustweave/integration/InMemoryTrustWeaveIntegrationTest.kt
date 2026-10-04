@@ -1,7 +1,6 @@
 package org.trustweave.integration
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.trustweave.credential.credentialService
@@ -36,6 +35,7 @@ import org.trustweave.trust.types.warnings
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import org.trustweave.trust.dsl.wallet.query as dslQuery
 
 /**

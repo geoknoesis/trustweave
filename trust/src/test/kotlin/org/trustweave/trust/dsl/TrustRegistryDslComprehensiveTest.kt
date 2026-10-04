@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.extractKeyId
@@ -20,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Comprehensive tests for Trust Registry DSL integration.

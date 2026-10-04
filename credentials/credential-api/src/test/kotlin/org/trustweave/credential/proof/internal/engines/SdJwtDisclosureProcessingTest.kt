@@ -112,7 +112,7 @@ class SdJwtDisclosureProcessingTest {
             type = listOf(CredentialType.fromString("VerifiableCredential")),
             issuer = Issuer.IriIssuer(Iri(issuer.id.value)),
             issuanceDate =
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now(),
             credentialSubject = CredentialSubject(id = Iri(holder.id.value), claims = envelopeClaims),
             proof = CredentialProof.SdJwtVcProof(sdJwtVc = "$header.$body.${b64.encodeToString(sig)}", disclosures = disclosures),

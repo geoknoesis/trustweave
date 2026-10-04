@@ -1,7 +1,6 @@
 package org.trustweave.credential.anchor
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
@@ -13,6 +12,7 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class CredentialAnchorServiceTest {
     @Test

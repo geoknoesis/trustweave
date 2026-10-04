@@ -203,7 +203,7 @@ class InMemoryDomainTreasury(
         return estimate.copy(amount = estimate.amount * num / den)
     }
 
-    private fun sweepExpired(now: kotlinx.datetime.Instant) {
+    private fun sweepExpired(now: kotlin.time.Instant) {
         val expired = reservations.values.filter { it.isExpired(now) }
         for (r in expired) {
             reservations.remove(r.id)

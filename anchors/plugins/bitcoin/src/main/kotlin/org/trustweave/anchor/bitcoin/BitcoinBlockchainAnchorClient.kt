@@ -21,16 +21,15 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Transaction
-import org.bitcoinj.core.Utils
-import org.bitcoinj.params.MainNetParams
-import org.bitcoinj.params.TestNet3Params
+import org.bitcoinj.script.ScriptPattern
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import java.util.HexFormat
 
 /**
  * Bitcoin blockchain anchor client implementation.
@@ -79,7 +78,6 @@ class BitcoinBlockchainAnchorClient(
         private const val FEE_SATS = 1_000L
     }
 
-    private val networkParams: NetworkParameters
     private val networkName: String
     private val rpcUrl: String?
     private val rpcUser: String?
@@ -88,12 +86,10 @@ class BitcoinBlockchainAnchorClient(
 
     init {
         val network = options["network"] as? String ?: "mainnet"
-        networkParams =
-            when (network.lowercase()) {
-                "mainnet" -> MainNetParams.get()
-                "testnet", "testnet3" -> TestNet3Params.get()
-                else -> throw IllegalArgumentException("Unsupported Bitcoin network: $network. Use 'mainnet' or 'testnet'")
-            }
+        when (network.lowercase()) {
+            "mainnet", "testnet", "testnet3" -> Unit
+            else -> throw IllegalArgumentException("Unsupported Bitcoin network: $network. Use 'mainnet' or 'testnet'")
+        }
         networkName = network
 
         // Refused at construction, not at first use: an operator who mistyped https as http should
@@ -196,7 +192,7 @@ class BitcoinBlockchainAnchorClient(
 
             // Build transaction outputs
             // OP_RETURN output: data in hex
-            val opReturnHex = Utils.HEX.encode(payloadBytes)
+            val opReturnHex = HexFormat.of().formatHex(payloadBytes)
             // All amount math is integer satoshis; BTC decimals only appear (exactly)
             // at the JSON-RPC boundary.
             val totalInputSats = utxos.sumOf { it.amountSats }
@@ -253,7 +249,7 @@ class BitcoinBlockchainAnchorClient(
 
             // Get transaction via RPC
             val txHex = getRawTransaction(txHash)
-            val tx = Transaction(networkParams, Utils.HEX.decode(txHex))
+            val tx = Transaction.read(ByteBuffer.wrap(HexFormat.of().parseHex(txHex)))
 
             // A txid is the hash of the transaction's own bytes, so this recomputes it rather than
             // comparing two strings the node controls: bytes that are not the requested transaction
@@ -277,7 +273,7 @@ class BitcoinBlockchainAnchorClient(
             for (output in tx.outputs) {
                 val script = output.scriptPubKey
                 // Check if script is OP_RETURN (starts with OP_RETURN opcode)
-                if (script.isOpReturn ||
+                if (ScriptPattern.isOpReturn(script) ||
                     (script.chunks.isNotEmpty() && script.chunks[0].opcode == org.bitcoinj.script.ScriptOpCodes.OP_RETURN)
                 ) {
                     if (script.chunks.size > 1) {

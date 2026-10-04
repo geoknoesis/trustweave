@@ -7,7 +7,6 @@ import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.*
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
@@ -23,6 +22,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.UniversalResolver
 import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.godiddy.GodiddyClient
+import kotlin.time.Instant
 
 /**
  * GoDiddy implementation of Universal Resolver.

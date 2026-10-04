@@ -1,11 +1,11 @@
 package org.trustweave.credential.results
 
+import kotlinx.serialization.json.JsonElement
+import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.core.identifiers.Iri
 import org.trustweave.did.identifiers.Did
-import kotlinx.serialization.json.JsonElement
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Result of credential or presentation verification.

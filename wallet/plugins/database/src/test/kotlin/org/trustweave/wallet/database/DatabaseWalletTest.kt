@@ -3,7 +3,6 @@ package org.trustweave.wallet.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -20,6 +19,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for [DatabaseWallet] against an in-memory H2 database (exercising the

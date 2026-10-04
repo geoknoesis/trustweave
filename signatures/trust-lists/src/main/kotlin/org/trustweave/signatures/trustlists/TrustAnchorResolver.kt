@@ -1,13 +1,13 @@
 package org.trustweave.signatures.trustlists
 
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import java.security.cert.CertPath
 import java.security.cert.CertPathValidator
 import java.security.cert.CertificateFactory
 import java.security.cert.PKIXParameters
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 /**
  * Resolves a signing certificate (plus its chain) against a parsed [TrustList], producing a
@@ -146,7 +146,7 @@ class DefaultTrustAnchorResolver(
     )
 
     /**
-     * Convert a [java.util.Date] to a [kotlinx.datetime.Instant] without dropping precision.
+     * Convert a [java.util.Date] to a [kotlin.time.Instant] without dropping precision.
      * Currently unused in MVP but reserved for future "validation at a specific signing time"
      * support in JAdES B-LT.
      */

@@ -148,7 +148,7 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.core.identifiers.Iri
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val credential = VerifiableCredential(
     type = listOf(CredentialType.fromString("VerifiableCredential"), CredentialType.fromString("PersonCredential")),

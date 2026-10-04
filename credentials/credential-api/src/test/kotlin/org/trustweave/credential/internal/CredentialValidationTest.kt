@@ -1,8 +1,6 @@
 package org.trustweave.credential.internal
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialProof
@@ -17,7 +15,9 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * Comprehensive tests for CredentialValidation utility.

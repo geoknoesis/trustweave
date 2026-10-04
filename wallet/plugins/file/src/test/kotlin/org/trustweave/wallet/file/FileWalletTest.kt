@@ -2,7 +2,6 @@ package org.trustweave.wallet.file
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.io.TempDir
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
@@ -23,6 +22,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class FileWalletTest {
     @Test

@@ -1,9 +1,9 @@
 package org.trustweave.signatures.jades
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import java.security.cert.X509Certificate
+import kotlin.time.Instant
 
 /**
  * Outcome of [JadesVerifier.verify].

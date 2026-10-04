@@ -2,14 +2,14 @@ package org.trustweave.did.resolver
 
 import org.trustweave.core.telemetry.Operation
 import org.trustweave.core.telemetry.Telemetry
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolution.ResolutionOptions
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * Caching decorator for any [DidResolver].

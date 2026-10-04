@@ -3,7 +3,6 @@ package org.trustweave.waltid.did
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -29,6 +28,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.kms.KeyManagementService
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * Base class for walt.id DID method implementations.

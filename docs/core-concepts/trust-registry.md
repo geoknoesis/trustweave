@@ -341,14 +341,14 @@ runBlocking {
 
 ```kotlin
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 runBlocking {
     trustWeave.trust {
         addAnchor("did:key:issuer") {
             credentialTypes("CredentialType1", "CredentialType2")
             description("Detailed description of the trust anchor")
-            addedAt(Clock.System.now()) // Optional: specify when added (kotlinx.datetime.Instant)
+            addedAt(Clock.System.now()) // Optional: specify when added (kotlin.time.Instant)
         }
     }
 }

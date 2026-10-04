@@ -1,5 +1,11 @@
 package org.trustweave.did.base
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.*
 import org.trustweave.did.exception.DidException
@@ -11,15 +17,9 @@ import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.GenerateKeyResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Abstract base class for DID method implementations.

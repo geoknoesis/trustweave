@@ -1,5 +1,6 @@
 package org.trustweave.wallet.database
 
+import kotlinx.coroutines.runBlocking
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
@@ -8,13 +9,12 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.services.WalletCreationOptions
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for [DatabaseWalletFactory], focused on the P1 finding that every

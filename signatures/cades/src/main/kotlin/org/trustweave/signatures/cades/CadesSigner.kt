@@ -3,7 +3,6 @@ package org.trustweave.signatures.cades
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.DERSet
@@ -47,6 +46,7 @@ import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.Hashtable
+import kotlin.time.Clock
 
 /**
  * Builds a CAdES signature for an arbitrary binary payload.

@@ -1,19 +1,19 @@
 package org.trustweave.testkit.integrity
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.*
+import org.junit.jupiter.api.Test
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
-import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.core.util.DigestUtils
+import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.integrity.models.*
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Test
 import kotlin.test.*
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Comprehensive integrity verification tests demonstrating the complete workflow:

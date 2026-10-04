@@ -1,8 +1,8 @@
 package org.trustweave.trust.types
 
-import kotlinx.datetime.Instant
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustAnchorMetadata
+import kotlin.time.Instant
 
 /**
  * Trust anchor in a trust path.

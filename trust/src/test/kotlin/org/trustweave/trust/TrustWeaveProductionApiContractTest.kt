@@ -145,7 +145,7 @@ class TrustWeaveProductionApiContractTest {
         runBlocking<Unit> {
             val tw = trustWeaveWithoutCredentialService()
             val c =
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now()
             val minimal =
                 org.trustweave.credential.model.vc.VerifiableCredential(

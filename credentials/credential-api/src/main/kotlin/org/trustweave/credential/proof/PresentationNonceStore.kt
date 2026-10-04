@@ -1,10 +1,10 @@
 package org.trustweave.credential.proof
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import java.util.PriorityQueue
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * Single-use guard for the SD-JWT Key Binding JWT `nonce` (the verifier's challenge).

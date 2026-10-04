@@ -1,8 +1,6 @@
 package org.trustweave.testkit.credential
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.trustweave.core.identifiers.Iri
@@ -25,6 +23,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class BasicWalletTest {
     private lateinit var wallet: BasicWallet

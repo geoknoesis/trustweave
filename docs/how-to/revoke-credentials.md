@@ -150,7 +150,7 @@ Issue a credential that includes a reference to the status list:
 
 ```kotlin
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val credential = trustWeave.issue {
     credential {
@@ -269,7 +269,7 @@ import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.revocation.RevocationStatus
 import org.trustweave.credential.model.StatusPurpose
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {

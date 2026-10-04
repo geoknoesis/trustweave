@@ -1,8 +1,6 @@
 package org.trustweave.credential.proof.internal.engines
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.exception.SerializationException
 import org.trustweave.core.identifiers.Iri
@@ -31,6 +29,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * VC Data Model version honesty tests for [VcLdProofEngine] (Finding 19).

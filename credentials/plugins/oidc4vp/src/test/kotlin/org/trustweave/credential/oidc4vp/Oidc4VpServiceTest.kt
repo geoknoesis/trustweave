@@ -10,7 +10,6 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -28,6 +27,7 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import java.util.*
 import java.util.Base64
 import kotlin.test.*
+import kotlin.time.Clock
 
 /**
  * Comprehensive tests for OIDC4VP Service.

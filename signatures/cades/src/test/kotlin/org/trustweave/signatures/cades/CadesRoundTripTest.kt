@@ -1,7 +1,6 @@
 package org.trustweave.signatures.cades
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -28,6 +27,7 @@ import org.trustweave.signatures.trustlists.TspServiceStatus
 import org.trustweave.signatures.trustlists.TspServiceType
 import org.trustweave.signatures.tsa.TsaConfig
 import java.security.cert.X509Certificate
+import kotlin.time.Clock
 
 class CadesRoundTripTest {
 

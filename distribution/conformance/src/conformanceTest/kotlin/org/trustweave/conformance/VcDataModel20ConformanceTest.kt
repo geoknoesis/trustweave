@@ -1,17 +1,17 @@
 ﻿package org.trustweave.conformance
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.*
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 
 @Tag("conformance")
@@ -21,7 +21,7 @@ class VcDataModel20ConformanceTest {
     private fun buildTestVc(
         types: List<String> = listOf("VerifiableCredential"),
         issuerDid: String = "did:key:z6MkTestIssuer",
-        validUntil: kotlinx.datetime.Instant? = null,
+        validUntil: kotlin.time.Instant? = null,
         subjectId: String = "did:key:z6MkTestSubject",
         name: String? = null,
         description: String? = null,

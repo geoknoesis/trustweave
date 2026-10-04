@@ -1,7 +1,6 @@
 package org.trustweave.examples.eo
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -25,6 +24,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
+import kotlin.time.Clock
 
 /**
  * Compute credential digest excluding metadata fields.

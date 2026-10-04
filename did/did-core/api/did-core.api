@@ -195,119 +195,119 @@ public final class org/trustweave/did/events/DefaultDidEventBus : org/trustweave
 
 public abstract class org/trustweave/did/events/DidEvent {
 	public abstract fun getDid ()Lorg/trustweave/did/identifiers/Did;
-	public abstract fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public abstract fun getTimestamp ()Lkotlin/time/Instant;
 }
 
 public final class org/trustweave/did/events/DidEvent$Created : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Created;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Created;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Created;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$Created;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Created;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Created;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$Deactivated : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Deactivated;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Deactivated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Deactivated;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$Deactivated;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Deactivated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Deactivated;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getDocument ()Lorg/trustweave/did/model/DidDocument;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$ServiceAdded : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceAdded;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getServiceId ()Ljava/lang/String;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$ServiceRemoved : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$ServiceRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$ServiceRemoved;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getServiceId ()Ljava/lang/String;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$Updated : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
 	public final fun component3 ()Lorg/trustweave/did/model/DidDocument;
-	public final fun component4 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$Updated;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Updated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Updated;
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$Updated;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$Updated;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$Updated;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getPreviousDocument ()Lorg/trustweave/did/model/DidDocument;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public final fun getUpdatedDocument ()Lorg/trustweave/did/model/DidDocument;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$VerificationMethodAdded : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodAdded;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getMethodId ()Ljava/lang/String;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/events/DidEvent$VerificationMethodRemoved : org/trustweave/did/events/DidEvent {
-	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
-	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
+	public static synthetic fun copy$default (Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;Lorg/trustweave/did/identifiers/Did;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/events/DidEvent$VerificationMethodRemoved;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getMethodId ()Ljava/lang/String;
-	public fun getTimestamp ()Lkotlinx/datetime/Instant;
+	public fun getTimestamp ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -511,28 +511,28 @@ public final class org/trustweave/did/model/DidDocument$Companion {
 public final class org/trustweave/did/model/DidDocumentMetadata {
 	public static final field Companion Lorg/trustweave/did/model/DidDocumentMetadata$Companion;
 	public fun <init> ()V
-	public fun <init> (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)V
-	public synthetic fun <init> (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lkotlinx/datetime/Instant;
-	public final fun component2 ()Lkotlinx/datetime/Instant;
+	public fun <init> (Lkotlin/time/Instant;Lkotlin/time/Instant;ZLjava/lang/String;Lkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lkotlin/time/Instant;Lkotlin/time/Instant;ZLjava/lang/String;Lkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/time/Instant;
+	public final fun component2 ()Lkotlin/time/Instant;
 	public final fun component3 ()Z
 	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun component5 ()Lkotlin/time/Instant;
 	public final fun component6 ()Ljava/lang/String;
 	public final fun component7 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component8 ()Ljava/util/List;
 	public final fun component9 ()Ljava/util/List;
-	public final fun copy (Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/did/model/DidDocumentMetadata;
-	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLjava/lang/String;Lkotlinx/datetime/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public final fun copy (Lkotlin/time/Instant;Lkotlin/time/Instant;ZLjava/lang/String;Lkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;)Lorg/trustweave/did/model/DidDocumentMetadata;
+	public static synthetic fun copy$default (Lorg/trustweave/did/model/DidDocumentMetadata;Lkotlin/time/Instant;Lkotlin/time/Instant;ZLjava/lang/String;Lkotlin/time/Instant;Ljava/lang/String;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/did/model/DidDocumentMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCanonicalId ()Lorg/trustweave/did/identifiers/Did;
-	public final fun getCreated ()Lkotlinx/datetime/Instant;
+	public final fun getCreated ()Lkotlin/time/Instant;
 	public final fun getDeactivated ()Z
 	public final fun getEquivalentId ()Ljava/util/List;
-	public final fun getNextUpdate ()Lkotlinx/datetime/Instant;
+	public final fun getNextUpdate ()Lkotlin/time/Instant;
 	public final fun getNextVersionId ()Ljava/lang/String;
 	public final fun getProof ()Ljava/util/List;
-	public final fun getUpdated ()Lkotlinx/datetime/Instant;
+	public final fun getUpdated ()Lkotlin/time/Instant;
 	public final fun getVersionId ()Ljava/lang/String;
 	public fun hashCode ()I
 	public final fun toJson ()Lkotlinx/serialization/json/JsonObject;
@@ -1469,23 +1469,23 @@ public final class org/trustweave/did/resolution/DidResolutionResultJson {
 public final class org/trustweave/did/resolution/ResolutionOptions {
 	public static final field Companion Lorg/trustweave/did/resolution/ResolutionOptions$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlin/time/Instant;ZLjava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLjava/lang/String;Lkotlin/time/Instant;ZLjava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Z
 	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lkotlin/time/Instant;
 	public final fun component5 ()Z
 	public final fun component6 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;)Lorg/trustweave/did/resolution/ResolutionOptions;
-	public static synthetic fun copy$default (Lorg/trustweave/did/resolution/ResolutionOptions;Ljava/lang/String;ZLjava/lang/String;Lkotlinx/datetime/Instant;ZLjava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public final fun copy (Ljava/lang/String;ZLjava/lang/String;Lkotlin/time/Instant;ZLjava/util/Map;Ljava/lang/String;)Lorg/trustweave/did/resolution/ResolutionOptions;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolution/ResolutionOptions;Ljava/lang/String;ZLjava/lang/String;Lkotlin/time/Instant;ZLjava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolution/ResolutionOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAccept ()Ljava/lang/String;
 	public final fun getAdditional ()Ljava/util/Map;
 	public final fun getExpandRelativeUrls ()Z
 	public final fun getNoCache ()Z
 	public final fun getVersionId ()Ljava/lang/String;
-	public final fun getVersionTime ()Lkotlinx/datetime/Instant;
+	public final fun getVersionTime ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public final fun isEmpty ()Z
 	public final fun methodSpecificOptions ()Ljava/util/Set;
@@ -1512,8 +1512,8 @@ public final class org/trustweave/did/resolution/ResolutionOptions$Companion {
 }
 
 public final class org/trustweave/did/resolver/CachingDidResolver : org/trustweave/did/resolver/DidResolver {
-	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlinx/datetime/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlinx/datetime/Clock;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlin/time/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/did/resolver/DidResolver;JILkotlin/time/Clock;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun clear ()V
 	public final fun getSize ()I
 	public final fun invalidate (Lorg/trustweave/did/identifiers/Did;)V
@@ -1602,18 +1602,18 @@ public final class org/trustweave/did/resolver/DidResolutionError$Companion {
 public final class org/trustweave/did/resolver/DidResolutionMetadata {
 	public static final field Companion Lorg/trustweave/did/resolver/DidResolutionMetadata$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlin/time/Instant;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlin/time/Instant;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/trustweave/did/resolver/DidResolutionError;
 	public final fun component3 ()Ljava/util/List;
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Ljava/lang/Long;
-	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component7 ()Lkotlin/time/Instant;
 	public final fun component8 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
-	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlinx/datetime/Instant;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlin/time/Instant;Ljava/util/Map;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
+	public static synthetic fun copy$default (Lorg/trustweave/did/resolver/DidResolutionMetadata;Ljava/lang/String;Lorg/trustweave/did/resolver/DidResolutionError;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Lkotlin/time/Instant;Ljava/util/Map;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContentType ()Ljava/lang/String;
 	public final fun getDriverUrl ()Ljava/lang/String;
@@ -1623,7 +1623,7 @@ public final class org/trustweave/did/resolver/DidResolutionMetadata {
 	public final fun getPattern ()Ljava/lang/String;
 	public final fun getProof ()Ljava/util/List;
 	public final fun getProperties ()Ljava/util/Map;
-	public final fun getRetrieved ()Lkotlinx/datetime/Instant;
+	public final fun getRetrieved ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public final fun toJson ()Lkotlinx/serialization/json/JsonObject;
 	public final fun toMap ()Ljava/util/Map;
@@ -1884,22 +1884,22 @@ public final class org/trustweave/did/rotation/DefaultDidRotationService : org/t
 }
 
 public final class org/trustweave/did/rotation/DidRotationResult {
-	public fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component3 ()Lorg/trustweave/did/identifiers/Did;
 	public final fun component4 ()Lorg/trustweave/did/rotation/MigrationGuide;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun component6 ()Lkotlinx/datetime/Instant;
-	public final fun copy (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/rotation/DidRotationResult;
-	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/DidRotationResult;ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/DidRotationResult;
+	public final fun component6 ()Lkotlin/time/Instant;
+	public final fun copy (ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/rotation/DidRotationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/DidRotationResult;ZLorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/rotation/MigrationGuide;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/DidRotationResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getError ()Ljava/lang/String;
 	public final fun getMigrationGuide ()Lorg/trustweave/did/rotation/MigrationGuide;
 	public final fun getNewDid ()Lorg/trustweave/did/identifiers/Did;
 	public final fun getOldDid ()Lorg/trustweave/did/identifiers/Did;
-	public final fun getRotatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getRotatedAt ()Lkotlin/time/Instant;
 	public final fun getSuccess ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1943,17 +1943,17 @@ public final class org/trustweave/did/rotation/NewDidOptions {
 }
 
 public final class org/trustweave/did/rotation/RotationResult {
-	public fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Lorg/trustweave/did/model/DidDocument;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()Lkotlinx/datetime/Instant;
-	public final fun copy (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/did/rotation/RotationResult;
-	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/RotationResult;ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/RotationResult;
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy (ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/did/rotation/RotationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/rotation/RotationResult;ZLorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/rotation/RotationResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getError ()Ljava/lang/String;
-	public final fun getRotatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getRotatedAt ()Lkotlin/time/Instant;
 	public final fun getSuccess ()Z
 	public final fun getUpdatedDocument ()Lorg/trustweave/did/model/DidDocument;
 	public fun hashCode ()I
@@ -2072,16 +2072,16 @@ public final class org/trustweave/did/util/ResolvedDocumentId {
 }
 
 public final class org/trustweave/did/util/XmlDateTimeKt {
-	public static final fun toXmlDateTime (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public static final fun toXmlDateTime (Lkotlin/time/Instant;)Ljava/lang/String;
 }
 
 public final class org/trustweave/did/util/XmlDateTimeSerializer : kotlinx/serialization/KSerializer {
 	public static final field INSTANCE Lorg/trustweave/did/util/XmlDateTimeSerializer;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/datetime/Instant;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlin/time/Instant;
 	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/datetime/Instant;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlin/time/Instant;)V
 }
 
 public final class org/trustweave/did/verification/DefaultDidDocumentVerificationService : org/trustweave/did/verification/DidDocumentVerificationService {
@@ -2126,22 +2126,22 @@ public final class org/trustweave/did/verification/JsonLdCanonicalizationService
 }
 
 public final class org/trustweave/did/verification/VerificationResult {
-	public fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Z)V
-	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlin/time/Instant;Ljava/lang/String;Z)V
+	public synthetic fun <init> (ZLjava/util/List;Ljava/util/List;Lkotlin/time/Instant;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Ljava/util/List;
-	public final fun component4 ()Lkotlinx/datetime/Instant;
+	public final fun component4 ()Lkotlin/time/Instant;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Z
-	public final fun copy (ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;Z)Lorg/trustweave/did/verification/VerificationResult;
-	public static synthetic fun copy$default (Lorg/trustweave/did/verification/VerificationResult;ZLjava/util/List;Ljava/util/List;Lkotlinx/datetime/Instant;Ljava/lang/String;ZILjava/lang/Object;)Lorg/trustweave/did/verification/VerificationResult;
+	public final fun copy (ZLjava/util/List;Ljava/util/List;Lkotlin/time/Instant;Ljava/lang/String;Z)Lorg/trustweave/did/verification/VerificationResult;
+	public static synthetic fun copy$default (Lorg/trustweave/did/verification/VerificationResult;ZLjava/util/List;Ljava/util/List;Lkotlin/time/Instant;Ljava/lang/String;ZILjava/lang/Object;)Lorg/trustweave/did/verification/VerificationResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getErrors ()Ljava/util/List;
 	public final fun getIntegrityVerified ()Z
 	public final fun getValid ()Z
 	public final fun getVerificationMethod ()Ljava/lang/String;
-	public final fun getVerifiedAt ()Lkotlinx/datetime/Instant;
+	public final fun getVerifiedAt ()Lkotlin/time/Instant;
 	public final fun getWarnings ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

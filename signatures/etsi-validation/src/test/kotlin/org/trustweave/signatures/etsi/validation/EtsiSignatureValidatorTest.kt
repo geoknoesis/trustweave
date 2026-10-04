@@ -1,7 +1,6 @@
 package org.trustweave.signatures.etsi.validation
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,6 +25,7 @@ import org.trustweave.signatures.trustlists.TspService
 import org.trustweave.signatures.trustlists.TspServiceStatus
 import org.trustweave.signatures.trustlists.TspServiceType
 import java.security.cert.X509Certificate
+import kotlin.time.Clock
 
 class EtsiSignatureValidatorTest {
 

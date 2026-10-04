@@ -1,7 +1,6 @@
 package org.trustweave.examples.delegation
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.getOrThrow
@@ -12,6 +11,7 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
+import kotlin.time.Clock
 
 /**
  * Delegation Chain Example Scenario.

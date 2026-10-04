@@ -150,7 +150,7 @@ class ChapiMessagesTest {
             type = listOf(CredentialType.fromString("VerifiableCredential")),
             issuer = Issuer.IriIssuer(Iri("did:key:issuer")),
             issuanceDate =
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now(),
             credentialSubject = CredentialSubject(id = Iri("did:key:holder"), claims = emptyMap()),
         )

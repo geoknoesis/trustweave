@@ -315,7 +315,7 @@ abstract class AbstractBlockchainDidMethod(
         // write cannot be lost to (or lose to) a concurrent cache-store's read-modify-write.
         updateMutex.withLock {
             val now =
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now()
             documentMetadata[did] =
                 (documentMetadata[did] ?: DidDocumentMetadata(created = now))
@@ -365,7 +365,7 @@ abstract class AbstractBlockchainDidMethod(
             // not Deactivated). Pre-existing and narrow; not fixed here.
             updateMutex.withLock {
                 val now =
-                    kotlinx.datetime.Clock.System
+                    kotlin.time.Clock.System
                         .now()
                 documents[did] = deactivatedDocument
                 documentMetadata[did] =

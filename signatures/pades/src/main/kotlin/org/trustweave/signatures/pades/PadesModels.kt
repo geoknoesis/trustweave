@@ -1,8 +1,8 @@
 package org.trustweave.signatures.pades
 
-import kotlinx.datetime.Instant
 import org.trustweave.core.identifiers.KeyId
 import java.security.cert.X509Certificate
+import kotlin.time.Instant
 
 /**
  * PAdES baseline profile (ETSI EN 319 142-1 §5).

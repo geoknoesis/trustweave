@@ -119,7 +119,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 - KTLint **is enforced**: the `org.jlleitschuh.gradle.ktlint` plugin is applied to every subproject
   (`build.gradle.kts`'s `subprojects {}` block), and `.github/workflows/ci.yml` runs
   `./gradlew ktlintCheck` on every PR. Each module carries a `config/ktlint/baseline.xml` recording
-  the pre-existing violations from before the gate was wired up (~27k entries repo-wide) — those
+  the pre-existing violations from before the gate was wired up (~19k entries repo-wide) — those
   are grandfathered in and won't fail the build. New and changed code is held to the real ktlint
   rules with no baseline cover, so `ktlintCheck` fails on anything you introduce. Run
   `./gradlew ktlintFormat` before committing to auto-fix what it can; regenerate a module's baseline

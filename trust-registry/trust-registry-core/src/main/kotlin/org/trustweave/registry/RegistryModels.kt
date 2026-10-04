@@ -1,8 +1,8 @@
 package org.trustweave.registry
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 @Serializable
 data class IssuerRegistration(

@@ -19,12 +19,9 @@ release on Maven Central when this was written. Update this page in the same PR 
 | ---- | ------- | ------ | ----- | ---- | ----- |
 | [Unmaintained Vault driver](#vault-java-driver) | `com.bettercloud:vault-java-driver` 5.1.0 | Maintained client or plain HTTP | `kms:plugins:hashicorp` | Medium | TBD (assign) |
 | [DIDComm library with embedded Nimbus](#didcommx) | `org.didcommx:didcomm` 0.3.2 | Maintained implementation | `credentials:plugins:didcomm` | High (security) | TBD (assign) |
-| [Ktor 3](#ktor-3) | 2.3.13 | 3.x (latest 3.6.0) | ~14 build files (servers, clients) | High | TBD (assign) |
 | [OkHttp 5](#okhttp-5) | 4.12.0 | 5.x (latest 5.5.0) | 36 build files | Medium | TBD (assign) |
 | [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low | TBD (assign) |
 | [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
-| [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High | TBD (assign) |
-| [bitcoinj 0.17](#bitcoinj) | 0.16.2 (`bitcoinj-legacy`) | 0.17.x | 2 build files | Medium | TBD (assign) |
 | Deferred: [Expo SDK 54 pins](#reference-wallet-deferrals) | react 19.1.0, react-native 0.81.5, async-storage 2.2.0, safe-area-context ~5.6.0, jest 29 | react 19.3 / RN 0.87 / async-storage 3.1 / safe-area 5.10 / jest 30 | `reference-wallet/expo` | High | TBD (assign) |
 | Deferred: [Android toolchain](#reference-wallet-deferrals) | AGP 8.5.0, Kotlin 2.0.0, Gradle 8.9, compileSdk 34, Compose BOM 2024.06.00, OkHttp 4.12.0 | Kotlin 2.4.20, Gradle 9.8, BOM 2026.09.00, OkHttp 5.5.0 | `reference-wallet/android` | High | TBD (assign) |
 
@@ -33,8 +30,11 @@ release on Maven Central when this was written. Update this page in the same PR 
 Within-major updates that were safe to take without a migration, verified by compiling and testing
 the modules that use them: Jackson 2.22.3, Bouncy Castle 1.86 (both clear advisories that OSV
 reported against the previous versions), SLF4J 2.0.20, MongoDB BSON 4.11.5, Azure Identity 1.18.7.
-Still open and routine (Dependabot can propose them): Hikari 7.1.0, web3j 5.0.3, OpenTelemetry
-1.66.0, json-path 2.10.0, Kover 0.9.11, AWS SDK BOM 2.55.x, Google libraries-bom 26.90.0, Azure SDK
+The JVM dependency round that followed also moved kotlinx-coroutines 1.11.0, JUnit 6.1.3, H2 2.5.252,
+mysql-connector-j 26.7.0, AWS SDK BOM 2.55.11, nimbus-jose-jwt 10.10, web3j 6.0.0 (the `web3j-legacy`
+alias is gone) and bitcoinj 0.17.1 (the `bitcoinj-legacy` alias is gone).
+Still open and routine (Dependabot can propose them): Hikari 7.1.0, OpenTelemetry
+1.66.0, json-path 2.10.0, Kover 0.9.11, Google libraries-bom 26.90.0, Azure SDK
 BOM 1.3.8. Take them in separate small PRs and run the affected modules' tests.
 
 The remaining OSV advisories are tracked in `config/osv/baseline.json` (see SECURITY.md). Most come
@@ -91,26 +91,6 @@ Steps:
    no shaded copy remains, and drop the SECURITY.md entry when the OSV-Scanner job
    (`.github/workflows/security.yml`) no longer reports the embedded copies.
 
-## Ktor 3
-
-Used by the registrar, VC API, OIDC4VCI, status-list and trust-registry servers (`libs.bundles.ktor-server`)
-and by HTTP clients (`libs.bundles.ktor-client`).
-
-Risk: Ktor 3 moves to kotlinx-io, changes `ApplicationEngine`/`EmbeddedServer` startup, removes
-deprecated APIs and changes some plugin configuration DSLs; server tests (`ktor-server-test-host`)
-need `testApplication` updates. Servers are published artifacts, so behaviour must be re-qualified
-(the host observability and conformance workflows).
-
-Steps:
-
-1. Bump `ktor` in the catalog on a branch and compile everything that uses it
-   (`grep -rl "libs.ktor\|libs.bundles.ktor" --include=build.gradle.kts`).
-2. Fix server bootstrap (`embeddedServer(...).start(wait = ...)`), `call.receive`/`respond` channel
-   APIs and any `ByteReadChannel` code for kotlinx-io.
-3. Run each server's tests and `./gradlew checkKotlinAbi`; update ABI dumps where server APIs
-   legitimately change and record it in `CHANGELOG.md`.
-4. Re-run conformance (`conformance-pr.yml`) and host observability checks from `ci.yml`.
-
 ## OkHttp 5
 
 Used in 36 modules, mostly as an HTTP client for DID methods, anchors and KMS providers;
@@ -149,32 +129,6 @@ Steps:
    `testcontainers-postgresql`) to the 2.x artifact names.
 2. Update imports and any `@Container`/`@Testcontainers` usage; remove JUnit 4 rule usage.
 3. Run the Docker-backed suites in CI (they cannot run where Docker is unavailable).
-
-## kotlinx-datetime
-
-`kotlinx.datetime.Instant`/`Clock` appear in about 230 source files across 58 modules,
-including **public API** (credential and DID document models).
-
-Risk: high. kotlinx-datetime 0.7 removes `kotlinx.datetime.Instant` and `Clock` in favour of
-Kotlin's `kotlin.time.Instant`/`kotlin.time.Clock` (stable in Kotlin 2.3). Every public signature
-that exposes `kotlinx.datetime.Instant` changes, which is a binary-incompatible change for
-consumers and for serialized formats that rely on its serializer.
-
-Steps:
-
-1. Decide the public API type (`kotlin.time.Instant` is the forward path) and announce the break
-   in `CHANGELOG.md` for the next minor release.
-2. Optionally stage it: move to the `0.7.x-0.6.x-compat` / `0.8.0-0.6.x-compat` artifact first,
-   which keeps the old classes while the code migrates.
-3. Migrate module by module, regenerate ABI dumps (`./gradlew updateKotlinAbi`) and review the
-   diffs, and verify JSON serialization of timestamps is unchanged (ISO-8601) with the existing
-   round-trip tests.
-
-## bitcoinj
-
-Already recorded in `gradle/libs.versions.toml`: two consumers still build against 0.16.2 through
-the `bitcoinj-legacy` alias because 0.17 moves `Transaction`, `NetworkParameters`, `HEX` and
-`isOpReturn`. Migrate those two modules, then delete the legacy alias.
 
 ## Reference wallet deferrals
 

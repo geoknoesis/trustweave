@@ -10,7 +10,7 @@ name: CodeQL
 # Runs on main, weekly, and on same-repository pull requests that touch the analysed modules (paths
 # filter below) so a change to untrusted-input code is scanned before it merges. Unrelated PRs skip
 # it to keep feedback fast. Fork PRs get a read-only token and cannot upload results, so they are
-# skipped; main and the weekly run still cover merged fork contributions. Keep the paths filter in
+# skipped (as are Dependabot PRs, see the job); main and the weekly run still cover merged fork contributions. Keep the paths filter in
 # step with the module list in the compile step.
 
 on:
@@ -49,7 +49,12 @@ concurrency:
 jobs:
   analyze:
     name: Analyze (java-kotlin)
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Dependabot-triggered runs get a read-only GITHUB_TOKEN, so the SARIF upload (security-events:
+    # write) would fail on every Dependabot PR; they are skipped like fork PRs. The weekly and main
+    # runs scan the merged result.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:

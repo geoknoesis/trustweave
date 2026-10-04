@@ -16,6 +16,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: {PINNED} # v4
 """
@@ -58,12 +59,41 @@ class WorkflowPinningTest(unittest.TestCase):
             "    runs-on: ubuntu-latest\n", "    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n"
         ) + f"""  notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: {PINNED} # v4
 """
         failures = checker.check_text("w.yml", text)
         self.assertEqual(1, len(failures))
         self.assertIn("job 'notify'", failures[0])
+
+    def test_job_without_timeout_is_rejected(self):
+        failures = checker.check_text("w.yml", SCOPED.replace("    timeout-minutes: 10\n", ""))
+        self.assertEqual(1, len(failures))
+        self.assertIn("job 'build' has no timeout-minutes", failures[0])
+
+    def test_every_job_needs_a_timeout(self):
+        text = SCOPED + f"  notify:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: {PINNED} # v4\n"
+        failures = checker.check_text("w.yml", text)
+        self.assertEqual(1, len(failures))
+        self.assertIn("job 'notify' has no timeout-minutes", failures[0])
+
+    def test_tee_without_pipefail_is_rejected(self):
+        for run in ["      - run: ./gradlew build | tee build.log\n", "      - run: |\n          ./gradlew build 2>&1 | tee build.log\n"]:
+            with self.subTest(run=run):
+                failures = checker.check_text("w.yml", SCOPED + run)
+                self.assertEqual(1, len(failures))
+                self.assertIn("pipefail", failures[0])
+
+    def test_tee_with_pipefail_passes(self):
+        for flag in ["set -o pipefail", "set -euo pipefail", "set -e -o pipefail"]:
+            with self.subTest(flag=flag):
+                run = f"      - run: |\n          {flag}\n          ./gradlew build | tee build.log\n"
+                self.assertEqual([], checker.check_text("w.yml", SCOPED + run))
+
+    def test_pipefail_in_another_step_does_not_count(self):
+        run = "      - run: set -o pipefail\n      - run: ./gradlew build | tee build.log\n"
+        self.assertEqual(1, len(checker.check_text("w.yml", SCOPED + run)))
 
     def test_workflow_without_jobs_is_rejected(self):
         with self.assertRaises(ValueError):

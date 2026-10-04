@@ -1,6 +1,9 @@
 name: Documentation Check
 
 on:
+  # Narrow on purpose: ci.yml (`contracts`, `documentation-examples`) already runs the script unit
+  # tests, check-documentation and the documentation examples on every PR. This workflow adds the
+  # slower Gradle documentation tests, and only when documentation or its executed sources change.
   push:
     branches: [main]
     paths:
@@ -9,15 +12,15 @@ on:
       - 'reference-wallet/**/*.md'
       - 'distribution/examples/**'
       - 'scripts/check-doc*'
-      - 'scripts/test_check_*.py'
-      - 'scripts/check-junit-contract.py'
-      - 'scripts/check-test-evidence.py'
-      - 'config/testing-contract.json'
+      - 'scripts/generate-capability-docs.py'
       - 'config/documentation-contract.json'
-      - '**/*.kt'
-      - '**/*.kts'
-      - 'gradle/**'
-      - 'gradlew*'
+      # Only the Kotlin sources the documentation contract executes (config/documentation-contract.json);
+      # a general **/*.kt filter ran this workflow on nearly every PR. Keep in step with that file.
+      - 'testkit/src/test/kotlin/org/trustweave/testkit/DocumentationExampleTest.kt'
+      - 'observability/src/test/kotlin/org/trustweave/observability/*DocumentationExampleTest.kt'
+      - 'credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CheckoutTrustTest.kt'
+      - 'credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerMigrationDocumentationTest.kt'
+      - 'wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletFactoryTest.kt'
       - '.github/workflows/docs-check.yml'
   pull_request:
     branches: [main]
@@ -27,23 +30,28 @@ on:
       - 'reference-wallet/**/*.md'
       - 'distribution/examples/**'
       - 'scripts/check-doc*'
-      - 'scripts/test_check_*.py'
-      - 'scripts/check-junit-contract.py'
-      - 'scripts/check-test-evidence.py'
-      - 'config/testing-contract.json'
+      - 'scripts/generate-capability-docs.py'
       - 'config/documentation-contract.json'
-      - '**/*.kt'
-      - '**/*.kts'
-      - 'gradle/**'
-      - 'gradlew*'
+      # Only the Kotlin sources the documentation contract executes (config/documentation-contract.json);
+      # a general **/*.kt filter ran this workflow on nearly every PR. Keep in step with that file.
+      - 'testkit/src/test/kotlin/org/trustweave/testkit/DocumentationExampleTest.kt'
+      - 'observability/src/test/kotlin/org/trustweave/observability/*DocumentationExampleTest.kt'
+      - 'credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/CheckoutTrustTest.kt'
+      - 'credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/LedgerMigrationDocumentationTest.kt'
+      - 'wallet/plugins/file/src/test/kotlin/org/trustweave/wallet/file/FileWalletFactoryTest.kt'
       - '.github/workflows/docs-check.yml'
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check-docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -51,8 +59,6 @@ jobs:
           java-version: '21'
           distribution: temurin
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
-      - name: Test the documentation checker
-        run: python -m unittest discover -s scripts -p 'test_*.py'
       - name: Check maintained links, fences, API patterns and exact examples
         run: python scripts/check-documentation.py --report build/reports/documentation.json
       - name: Check generated capability documentation

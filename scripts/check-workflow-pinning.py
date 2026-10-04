@@ -1,8 +1,10 @@
-"""Fail CI when a workflow action is not pinned to a commit SHA or a job lacks a permissions scope.
+"""Fail CI when a workflow action is not pinned, or a job lacks a permissions scope or a timeout.
 
 A mutable tag (``@v4``) lets whoever controls the tag change what runs with the
 repository's token. A workflow with no ``permissions:`` block inherits the
-repository default scope, which is usually broader than the job needs.
+repository default scope, which is usually broader than the job needs. A job without
+``timeout-minutes`` can hang for the 6-hour default. A ``run:`` block that pipes into ``tee`` without
+``set -o pipefail`` reports ``tee``'s exit status and hides a failing command in front of it.
 """
 import argparse
 import re
@@ -18,6 +20,31 @@ USES = re.compile(r"^\s*(?:-\s*)?uses:\s*(\S+)")
 TOP_LEVEL = re.compile(r"^([A-Za-z_][\w-]*):")
 JOB = re.compile(r"^  ([A-Za-z_][\w-]*):\s*$")
 JOB_KEY = re.compile(r"^    ([A-Za-z_][\w-]*):")
+RUN = re.compile(r"^(\s*)(?:-\s*)?run:\s*(.*)$")
+PIPE_TEE = re.compile(r"\|\s*tee\b")
+PIPEFAIL = re.compile(r"set\s+(?:-[A-Za-z]*\s+)*-o\s+pipefail|set\s+-[A-Za-z]*o\s+pipefail|set\s+-[A-Za-z]*e[A-Za-z]*o\s+pipefail")
+
+
+def check_pipefail(name, lines):
+    """Flag `run:` blocks that pipe into tee without enabling pipefail."""
+    failures = []
+    index = 0
+    while index < len(lines):
+        match = RUN.match(lines[index])
+        if not match:
+            index += 1
+            continue
+        indent = len(match.group(1))
+        start = index
+        block = [match.group(2)]
+        index += 1
+        while index < len(lines) and (not lines[index].strip() or len(lines[index]) - len(lines[index].lstrip()) > indent):
+            block.append(lines[index])
+            index += 1
+        text = "\n".join(block)
+        if PIPE_TEE.search(text) and not PIPEFAIL.search(text):
+            failures.append(f"{name}:{start + 1}: run block pipes into tee without 'set -o pipefail'")
+    return failures
 
 
 def check_text(name, text):
@@ -43,30 +70,38 @@ def check_text(name, text):
     if "jobs" not in top_level:
         raise ValueError(f"{name}: no jobs block")
     workflow_scoped = "permissions" in top_level
+    failures.extend(check_pipefail(name, lines))
 
     in_jobs = False
     job = None
     scoped = False
+    timed = False
+
+    def close_job():
+        if job is not None and not scoped and not workflow_scoped:
+            failures.append(f"{name}: job '{job}' has no permissions scope and the workflow declares none")
+        if job is not None and not timed:
+            failures.append(f"{name}: job '{job}' has no timeout-minutes")
+
     for line in lines:
         top = TOP_LEVEL.match(line)
         if top:
-            if job is not None and not scoped and not workflow_scoped:
-                failures.append(f"{name}: job '{job}' has no permissions scope and the workflow declares none")
-            in_jobs, job, scoped = top.group(1) == "jobs", None, False
+            close_job()
+            in_jobs, job, scoped, timed = top.group(1) == "jobs", None, False, False
             continue
         if not in_jobs:
             continue
         started = JOB.match(line)
         if started:
-            if job is not None and not scoped and not workflow_scoped:
-                failures.append(f"{name}: job '{job}' has no permissions scope and the workflow declares none")
-            job, scoped = started.group(1), False
+            close_job()
+            job, scoped, timed = started.group(1), False, False
             continue
         key = JOB_KEY.match(line)
         if key and key.group(1) == "permissions":
             scoped = True
-    if job is not None and not scoped and not workflow_scoped:
-        failures.append(f"{name}: job '{job}' has no permissions scope and the workflow declares none")
+        if key and key.group(1) == "timeout-minutes":
+            timed = True
+    close_job()
     return failures
 
 
@@ -93,4 +128,4 @@ if __name__ == "__main__":
         print(failure, file=sys.stderr)
     if failures:
         sys.exit(1)
-    print(f"Checked {count} workflows; every action is SHA-pinned and every job is permission-scoped")
+    print(f"Checked {count} workflows; every action is SHA-pinned, every job is permission-scoped and time-limited, and no tee pipe lacks pipefail")

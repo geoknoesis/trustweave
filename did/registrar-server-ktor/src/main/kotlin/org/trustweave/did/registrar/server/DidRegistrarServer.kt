@@ -3,6 +3,7 @@ package org.trustweave.did.registrar.server
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -61,7 +62,7 @@ class DidRegistrarServer(
     private val host: String = "127.0.0.1",
     private val jobStorage: JobStorage = InMemoryJobStorage(),
 ) {
-    private var server: NettyApplicationEngine? = null
+    private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
 

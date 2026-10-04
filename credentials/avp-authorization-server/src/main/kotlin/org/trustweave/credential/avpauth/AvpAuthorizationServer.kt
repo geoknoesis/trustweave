@@ -1,6 +1,7 @@
 package org.trustweave.credential.avpauth
 
 import io.ktor.server.application.Application
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -51,7 +52,7 @@ class AvpAuthorizationServer(
     private val port: Int = 8080,
     private val host: String = "127.0.0.1",
 ) {
-    private var server: NettyApplicationEngine? = null
+    private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
 
@@ -93,6 +94,6 @@ class AvpAuthorizationServer(
         // refuse until the host states which of the two it means.
         authentication?.install(this)
             ?: HostAuthentication.Unconfigured("The AVP authorization server").install(this)
-        configureAuthorization(engine)
+        configureAuthorization(this@AvpAuthorizationServer.engine)
     }
 }

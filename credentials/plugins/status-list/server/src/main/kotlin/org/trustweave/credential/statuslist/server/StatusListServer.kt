@@ -3,6 +3,7 @@ package org.trustweave.credential.statuslist.server
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -53,7 +54,7 @@ class StatusListServer(
     private val bitstringManager: BitstringStatusListManager? = null,
     private val tokenManager: TokenStatusListManager? = null,
 ) {
-    private var server: NettyApplicationEngine? = null
+    private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
 

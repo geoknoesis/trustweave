@@ -18,7 +18,6 @@ release on Maven Central when this was written. Update this page in the same PR 
 | ---- | ------- | ------ | ----- | ---- | ----- |
 | [Unmaintained Vault driver](#vault-java-driver) | `com.bettercloud:vault-java-driver` 5.1.0 | Maintained client or plain HTTP | `kms:plugins:hashicorp` | Medium | TBD (assign) |
 | [DIDComm library with embedded Nimbus](#didcommx) | `org.didcommx:didcomm` 0.3.2 | Maintained implementation | `credentials:plugins:didcomm` | High (security) | TBD (assign) |
-| [Ktor 3](#ktor-3) | 2.3.13 | 3.x (latest 3.6.0) | ~14 build files (servers, clients) | High | TBD (assign) |
 | [OkHttp 5](#okhttp-5) | 4.12.0 | 5.x (latest 5.5.0) | 36 build files | Medium | TBD (assign) |
 | [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low | TBD (assign) |
 | [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
@@ -88,26 +87,6 @@ Steps:
 3. Remove the `nimbus-jose-jwt` exclusion from `credentials/plugins/didcomm/build.gradle.kts` once
    no shaded copy remains, and drop the SECURITY.md entry when the OSV-Scanner job
    (`.github/workflows/security.yml`) no longer reports the embedded copies.
-
-## Ktor 3
-
-Used by the registrar, VC API, OIDC4VCI, status-list and trust-registry servers (`libs.bundles.ktor-server`)
-and by HTTP clients (`libs.bundles.ktor-client`).
-
-Risk: Ktor 3 moves to kotlinx-io, changes `ApplicationEngine`/`EmbeddedServer` startup, removes
-deprecated APIs and changes some plugin configuration DSLs; server tests (`ktor-server-test-host`)
-need `testApplication` updates. Servers are published artifacts, so behaviour must be re-qualified
-(the host observability and conformance workflows).
-
-Steps:
-
-1. Bump `ktor` in the catalog on a branch and compile everything that uses it
-   (`grep -rl "libs.ktor\|libs.bundles.ktor" --include=build.gradle.kts`).
-2. Fix server bootstrap (`embeddedServer(...).start(wait = ...)`), `call.receive`/`respond` channel
-   APIs and any `ByteReadChannel` code for kotlinx-io.
-3. Run each server's tests and `./gradlew checkKotlinAbi`; update ABI dumps where server APIs
-   legitimately change and record it in `CHANGELOG.md`.
-4. Re-run conformance (`conformance-pr.yml`) and host observability checks from `ci.yml`.
 
 ## OkHttp 5
 

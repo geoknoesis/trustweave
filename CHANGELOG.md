@@ -238,6 +238,12 @@ working code fail until it is adjusted.**
 
 ### Changed
 
+- Ktor 3.4.3 (from 2.3.13) for every server and client module. The six embedded servers
+  (`DidRegistrarServer`, `VcApiServer`, `StatusListServer`, `Oidc4VciServer`,
+  `AvpAuthorizationServer`, `TrustRegistryServer`) now hold an
+  `EmbeddedServer<NettyApplicationEngine, ...>` internally; their public API is unchanged. The AVP
+  request-size guard reads the body with the new `io.ktor.utils.io.readAvailable` extension.
+  Server tests (including the observability host-export test that starts real Netty servers) pass.
 - **Dependency round (JVM)**: kotlinx-coroutines and coroutines-test 1.11.0, JUnit 6.1.3 (Jupiter
   and platform launcher share one version line), H2 2.5.252, mysql-connector-j 26.7.0 (same
   coordinates, Oracle's new year-based numbering), AWS SDK BOM 2.55.11, nimbus-jose-jwt 10.10.

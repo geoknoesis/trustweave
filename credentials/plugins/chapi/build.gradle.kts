@@ -16,5 +16,5 @@ dependencies {
 
     // Test dependencies
     testImplementation(project(":testkit"))
+    testImplementation(libs.kotlinx.datetime)
 }
-

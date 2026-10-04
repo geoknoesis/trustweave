@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.trustweave.registry.AccreditationStatus
@@ -18,6 +19,27 @@ import org.trustweave.registry.VerifierRegistration
 import org.trustweave.registry.VerifierUpdate
 import java.security.MessageDigest
 
+/** Serializable (no default) so `respond(Any)` can find its serializer and always emits `status`. */
+@Serializable
+private data class RevokedResponse(
+    val status: String,
+)
+
+private fun parseStatus(value: String): AccreditationStatus? = AccreditationStatus.entries.firstOrNull { it.name == value }
+
+private suspend fun ApplicationCall.respondInvalidStatus(value: String) {
+    respond(
+        HttpStatusCode.BadRequest,
+        buildJsonObject {
+            put("error", "invalid_status")
+            put(
+                "message",
+                "Unknown status '$value'; expected one of ${AccreditationStatus.entries.joinToString { it.name }}",
+            )
+        },
+    )
+}
+
 /**
  * Configures the trust registry HTTP routes.
  *
@@ -27,7 +49,8 @@ import java.security.MessageDigest
  * the server fails closed rather than allowing unauthenticated writes.
  *
  * Registering an already-registered DID answers 409; revoke accepts an optional `reason` query
- * parameter that is stored on the record.
+ * parameter that is stored on the record. An unrecognised `status` filter is a 400, never a
+ * silently unfiltered list.
  *
  * @param hostAuthenticated true when a `HostAuthentication` gate has already admitted the call.
  *   The two mechanisms compose rather than stack: a call the gate admitted is authorized, and
@@ -106,9 +129,12 @@ fun Routing.configureTrustRegistryRoutes(
         // Issuers
         route("/issuers") {
             get {
-                val status =
-                    call.request.queryParameters["status"]
-                        ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
+                val statusParam = call.request.queryParameters["status"]
+                val status = statusParam?.let { parseStatus(it) }
+                if (statusParam != null && status == null) {
+                    call.respondInvalidStatus(statusParam)
+                    return@get
+                }
                 val credentialType = call.request.queryParameters["credentialType"]
                 val nameContains = call.request.queryParameters["nameContains"]
                 call.respond(registry.listIssuers(RegistryFilter(status, credentialType, nameContains)))
@@ -135,11 +161,11 @@ fun Routing.configureTrustRegistryRoutes(
                 post("/revoke") {
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val revoked = registry.revokeIssuer(did, call.request.queryParameters["reason"])
-                    if (revoked) {
-                        call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
-                    } else {
-                        call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    val reason = call.request.queryParameters["reason"]
+                    call.respondRegistryCall {
+                        // false means the DID is not registered: surfaced as 404 by respondRegistryCall.
+                        if (!registry.revokeIssuer(did, reason)) throw NoSuchElementException(did)
+                        RevokedResponse(status = "revoked")
                     }
                 }
             }
@@ -148,9 +174,12 @@ fun Routing.configureTrustRegistryRoutes(
         // Verifiers
         route("/verifiers") {
             get {
-                val status =
-                    call.request.queryParameters["status"]
-                        ?.let { runCatching { AccreditationStatus.valueOf(it) }.getOrNull() }
+                val statusParam = call.request.queryParameters["status"]
+                val status = statusParam?.let { parseStatus(it) }
+                if (statusParam != null && status == null) {
+                    call.respondInvalidStatus(statusParam)
+                    return@get
+                }
                 val nameContains = call.request.queryParameters["nameContains"]
                 call.respond(registry.listVerifiers(RegistryFilter(status = status, nameContains = nameContains)))
             }
@@ -176,11 +205,11 @@ fun Routing.configureTrustRegistryRoutes(
                 post("/revoke") {
                     if (!call.authorizeMutation()) return@post
                     val did = call.parameters["did"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-                    val revoked = registry.revokeVerifier(did, call.request.queryParameters["reason"])
-                    if (revoked) {
-                        call.respond(HttpStatusCode.OK, buildJsonObject { put("status", "revoked") })
-                    } else {
-                        call.respond(HttpStatusCode.NotFound, buildJsonObject { put("error", "not_found") })
+                    val reason = call.request.queryParameters["reason"]
+                    call.respondRegistryCall {
+                        // false means the DID is not registered: surfaced as 404 by respondRegistryCall.
+                        if (!registry.revokeVerifier(did, reason)) throw NoSuchElementException(did)
+                        RevokedResponse(status = "revoked")
                     }
                 }
             }

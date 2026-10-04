@@ -24,8 +24,10 @@ import org.trustweave.revocation.token.TokenStatusListManagerFactory
  * - `trustweave.statuslist.jdbc.password`
  * - `trustweave.statuslist.issuer.did`
  * - `trustweave.statuslist.token.uri`
- * - `trustweave.statuslist.token.issuerKeyId` (optional): verification method ID of the Ed25519 key,
- *   held in [kms], that signs tokens. Without it the manager tracks status but building a token
+ * - `trustweave.statuslist.token.ttlSeconds` (optional): default `ttl`/`exp` for built tokens
+ * - `trustweave.statuslist.token.requireTtl` (optional, `true`): refuse to build a token with no ttl
+ * - `trustweave.statuslist.token.issuerKeyId` (optional): verification method ID of the Ed25519 or
+ *   P-256 key, held in [kms], that signs tokens. Without it the manager tracks status but building a token
  *   fails with a ConfigException.
  */
 class TokenStatusListManagerProvider : StatusListRegistryFactory {
@@ -84,6 +86,11 @@ class TokenStatusListManagerProvider : StatusListRegistryFactory {
                         org.trustweave.did.identifiers.VerificationMethodId
                             .parse(it)
                     },
+            defaultTtlSeconds =
+                System.getProperty("trustweave.statuslist.token.ttlSeconds")?.let {
+                    requireNotNull(it.toLongOrNull()) { "trustweave.statuslist.token.ttlSeconds must be a number, got '$it'" }
+                },
+            requireTtl = System.getProperty("trustweave.statuslist.token.requireTtl").toBoolean(),
         )
     }
 }

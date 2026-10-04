@@ -304,8 +304,8 @@ class ShaclValidator : SchemaValidator {
                         ),
                     )
                 }
-            } catch (e: Exception) {
-                // Invalid regex pattern - add warning
+            } catch (e: java.util.regex.PatternSyntaxException) {
+                // Invalid regex pattern in the shape: reported as a validation error, never ignored
                 errors.add(
                     SchemaValidationError(
                         path = "/credentialSubject/$fieldName",
@@ -429,7 +429,8 @@ class ShaclValidator : SchemaValidator {
                 if (value is kotlinx.serialization.json.JsonPrimitive && value.isString) {
                     try {
                         Instant.parse(value.content)
-                    } catch (e: Exception) {
+                    } catch (e: IllegalArgumentException) {
+                        // kotlinx-datetime's parse failure is an IllegalArgumentException
                         errors.add(
                             SchemaValidationError(
                                 path = "/credentialSubject/$fieldName",

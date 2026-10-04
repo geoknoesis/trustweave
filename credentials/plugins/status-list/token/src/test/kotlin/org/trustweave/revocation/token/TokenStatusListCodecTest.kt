@@ -66,10 +66,38 @@ class TokenStatusListCodecTest {
     }
 
     @Test
-    fun `legacy list that merely resembles a ZLIB header is read as legacy`() {
-        // 0x78 0x9C is a valid ZLIB header, but the rest is not a valid stream.
-        val legacy = byteArrayOf(0x78, 0x9C.toByte(), 0x00, 0x00, 0x00)
+    fun `a legacy list whose first bytes are not a ZLIB header is read as legacy`() {
+        // 0x78 0x9D fails the header checksum (not divisible by 31), so this is legacy data.
+        val legacy = byteArrayOf(0x78, 0x9D.toByte(), 0x00, 0x00, 0x00)
         assertContentEquals(legacy, TokenStatusListCodec.decode(b64(legacy)))
+    }
+
+    @Test
+    fun `a valid ZLIB header followed by a corrupt stream is rejected, not read as legacy`() {
+        val corrupt = byteArrayOf(0x78, 0x9C.toByte(), 0x00, 0x00, 0x00)
+        assertFailsWith<IllegalArgumentException> { TokenStatusListCodec.decode(b64(corrupt)) }
+    }
+
+    @Test
+    fun `a ZLIB stream with a failed Adler-32 checksum is rejected`() {
+        val good = zlib(ByteArray(64) { it.toByte() })
+        good[good.size - 1] = (good[good.size - 1].toInt() xor 0x01).toByte()
+        assertFailsWith<IllegalArgumentException> { TokenStatusListCodec.decode(b64(good)) }
+    }
+
+    @Test
+    fun `a truncated ZLIB stream is rejected`() {
+        val good = zlib(ByteArray(2048) { (it % 7).toByte() })
+        val truncated = good.copyOf(good.size - 6)
+        assertFailsWith<IllegalArgumentException> { TokenStatusListCodec.decode(b64(truncated)) }
+    }
+
+    @Test
+    fun `trailing bytes after a complete ZLIB stream are rejected`() {
+        val good = zlib(ByteArray(64) { it.toByte() })
+        val withTrailer = good + byteArrayOf(0x01, 0x02)
+        val failure = assertFailsWith<IllegalArgumentException> { TokenStatusListCodec.decode(b64(withTrailer)) }
+        assertTrue(failure.message!!.contains("trailing"), failure.message)
     }
 
     @Test

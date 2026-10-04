@@ -68,6 +68,13 @@ interface XadesVerifier {
  *   present) matches the signed `SigningCertificateV2` / `SigningCertificate` property, and the
  *   signature is validated with *that* certificate's public key — never with whatever key the
  *   `KeyInfo` happens to list first.
+ * - `SigningTime` is only the signer's CLAIM unless a trusted RFC 3161 `SignatureTimeStamp` backs
+ *   it ([XadesValidationResult.Valid.signingTimeAuthenticated]); see
+ *   [XadesVerificationOptions.requireSignatureTimestamp] and `timestampTrustAnchors`. A `QualifiedWithdrawn`
+ *   trust result is accepted only for a time-stamped signature that predates the withdrawal
+ *   (or when `allowWithdrawnTrustWithoutAuthenticatedTime` is set).
+ * - The chain built from `<ds:KeyInfo>` is checked structurally (validity window, `basicConstraints`,
+ *   `pathLenConstraint`, `keyUsage`); revocation is NOT checked (`revocationChecked` is false).
  * - `SigningTime` is read only from the signed `SignedSignatureProperties`. A malformed value is
  *   [Invalid.Malformed]. When it is missing, the certificate validity window is checked against
  *   the CURRENT time (so a signature by a since-expired certificate is rejected, and the result's
@@ -205,42 +212,151 @@ class DefaultXadesVerifier : XadesVerifier {
                 return@withContext Invalid.BadSignature("XML-DSig validation failed")
             }
 
-            // 8. Cert validity at signing time (or now, when SigningTime was omitted).
+            // 8. Signature time-stamp (B-T). Without one, SigningTime is the signer's own claim.
+            val timestampRequired =
+                options.requireSignatureTimestamp || options.requiredProfile == XadesProfile.B_T
+            val authenticatedTime: Instant? =
+                when (
+                    val ts =
+                        XadesTimestamps.evaluate(qp, signatureElement, options.timestampTrustAnchors, C14N_ALGORITHMS)
+                ) {
+                    is XadesTimestamps.Outcome.Valid -> {
+                        val skew = options.maxClockSkewSeconds * 1000
+                        if (signingTime != null && signingTime.toEpochMilliseconds() > ts.genTime.toEpochMilliseconds() + skew) {
+                            return@withContext Invalid.TimeStampInvalid(
+                                "claimed SigningTime ($signingTime) is later than the time-stamp (${ts.genTime})",
+                            )
+                        }
+                        ts.genTime
+                    }
+                    is XadesTimestamps.Outcome.Invalid -> return@withContext Invalid.TimeStampInvalid(ts.reason)
+                    XadesTimestamps.Outcome.None ->
+                        if (timestampRequired) {
+                            return@withContext Invalid.TimeStampInvalid("signature carries no <xades:SignatureTimeStamp>")
+                        } else {
+                            null
+                        }
+                    XadesTimestamps.Outcome.NoAnchors ->
+                        if (timestampRequired) {
+                            return@withContext Invalid.TimeStampInvalid(
+                                "a SignatureTimeStamp is present but no timestampTrustAnchors are configured to trust it",
+                            )
+                        } else {
+                            null
+                        }
+                }
+            val effectiveTime: Instant = authenticatedTime ?: signingTime ?: Clock.System.now()
+
+            // 9. Cert validity at the (authenticated, else claimed, else current) time.
             if (!options.allowExpiredCertificateAtSigningTime) {
-                val at = signingTime ?: Clock.System.now()
                 val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
                 val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
-                if (at > notAfter) return@withContext Invalid.CertificateExpired(notAfter)
-                if (at < notBefore) return@withContext Invalid.CertificateNotYetValid(notBefore)
+                if (effectiveTime > notAfter) return@withContext Invalid.CertificateExpired(notAfter)
+                if (effectiveTime < notBefore) return@withContext Invalid.CertificateNotYetValid(notBefore)
             }
 
-            // 9. Trust anchor resolution. Only KeyInfo certificates that actually chain to the
-            //    signer (issuer/subject linkage + signature) are offered to the resolver; unrelated
-            //    certificates an attacker appended to <ds:KeyInfo> are ignored.
+            // 10. Certificate chain checks. Only KeyInfo certificates that actually chain to the
+            //     signer (issuer/subject linkage + signature) are considered; unrelated
+            //     certificates an attacker appended to <ds:KeyInfo> are ignored.
             val chainCerts = chainToSigner(signerCert, keyInfoCerts)
+            validateChain(signerCert, chainCerts, effectiveTime, options.allowExpiredCertificateAtSigningTime)
+                ?.let { return@withContext it }
+
+            // 11. Trust anchor resolution.
             val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts)
             // Exhaustive on purpose: a future TrustAnchorMatch subtype must be classified here
             // (accepted or refused) before this compiles, so it can never pass by default.
             when (trust) {
                 is TrustAnchorMatch.NotTrusted -> return@withContext Invalid.UntrustedSigner(signerCert)
-                is TrustAnchorMatch.QualifiedActive, is TrustAnchorMatch.QualifiedWithdrawn -> Unit
-            }
-
-            // 10. Profile check — MVP supports only B-B.
-            if (options.requiredProfile != XadesProfile.B_B) {
-                return@withContext Invalid.WrongProfile(
-                    found = XadesProfile.B_B,
-                    required = options.requiredProfile,
-                )
+                is TrustAnchorMatch.QualifiedActive -> Unit
+                is TrustAnchorMatch.QualifiedWithdrawn -> {
+                    // A withdrawn service only vouches for signatures made before it was withdrawn.
+                    if (authenticatedTime != null) {
+                        if (authenticatedTime >= trust.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trust.withdrawnAt,
+                                "time-stamped at $authenticatedTime, not before the withdrawal at ${trust.withdrawnAt}",
+                            )
+                        }
+                    } else {
+                        if (!options.allowWithdrawnTrustWithoutAuthenticatedTime) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trust.withdrawnAt,
+                                "the trust-list service was withdrawn and the signing time is not authenticated by a " +
+                                    "time-stamp; set allowWithdrawnTrustWithoutAuthenticatedTime to accept",
+                            )
+                        }
+                        if (signingTime != null && signingTime >= trust.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trust.withdrawnAt,
+                                "claimed SigningTime $signingTime is not before the withdrawal at ${trust.withdrawnAt}",
+                            )
+                        }
+                    }
+                }
             }
 
             XadesValidationResult.Valid(
                 signerCert = signerCert,
                 trust = trust,
                 signingTime = signingTime,
-                profile = XadesProfile.B_B,
+                profile = if (authenticatedTime != null) XadesProfile.B_T else XadesProfile.B_B,
+                signingTimeAuthenticated = authenticatedTime != null,
+                signatureTimeStamp = authenticatedTime,
+                revocationChecked = false,
             )
         }
+
+    /**
+     * Structural chain checks (no revocation): the signer's `keyUsage` (when present) must allow
+     * signing, and each issuer certificate must be inside its validity window, be a CA
+     * (`basicConstraints`), respect `pathLenConstraint`, and (when `keyUsage` is present) allow
+     * `keyCertSign`.
+     */
+    private fun validateChain(
+        signer: X509Certificate,
+        chain: List<X509Certificate>,
+        at: Instant,
+        allowExpired: Boolean,
+    ): Invalid? {
+        signer.keyUsage?.let { ku ->
+            val signs = ku.getOrElse(KU_DIGITAL_SIGNATURE) { false } || ku.getOrElse(KU_NON_REPUDIATION) { false }
+            if (!signs) {
+                return Invalid.CertificateChainInvalid(
+                    "signer certificate keyUsage permits neither digitalSignature nor nonRepudiation",
+                )
+            }
+        }
+        chain.forEachIndexed { index, ca ->
+            val name = ca.subjectX500Principal.name
+            if (!allowExpired) {
+                if (at > ca.notAfter.toInstant().toKotlinInstant()) {
+                    return Invalid.CertificateChainInvalid("CA certificate '$name' had expired at $at")
+                }
+                if (at < ca.notBefore.toInstant().toKotlinInstant()) {
+                    return Invalid.CertificateChainInvalid("CA certificate '$name' was not yet valid at $at")
+                }
+            }
+            // getBasicConstraints: -1 when the extension is absent or cA is false.
+            val pathLen = ca.basicConstraints
+            if (pathLen < 0) {
+                return Invalid.CertificateChainInvalid("issuer certificate '$name' is not a CA (basicConstraints cA not set)")
+            }
+            // `index` CA certificates sit between this one and the signer.
+            if (pathLen < index) {
+                return Invalid.CertificateChainInvalid("CA certificate '$name' pathLenConstraint $pathLen is exceeded")
+            }
+            ca.keyUsage?.let { ku ->
+                if (!ku.getOrElse(KU_KEY_CERT_SIGN) { false }) {
+                    return Invalid.CertificateChainInvalid("CA certificate '$name' keyUsage lacks keyCertSign")
+                }
+            }
+        }
+        return null
+    }
 
     // ---------------------------------------------------------------- helpers
 
@@ -494,6 +610,9 @@ class DefaultXadesVerifier : XadesVerifier {
         val DS_NS = "http://www.w3.org/2000/09/xmldsig#"
         val XADES_NS = "http://uri.etsi.org/01903/v1.3.2#"
         val SIGNED_PROPERTIES_TYPE = "http://uri.etsi.org/01903#SignedProperties"
+        const val KU_DIGITAL_SIGNATURE = 0
+        const val KU_NON_REPUDIATION = 1
+        const val KU_KEY_CERT_SIGN = 5
         val ID_ATTRIBUTE_NAMES = setOf("Id", "ID", "id")
         val DIGEST_ALGORITHMS =
             mapOf(
@@ -513,7 +632,6 @@ class DefaultXadesVerifier : XadesVerifier {
     }
 }
 
-// TODO(B-T): when XAdES B-T ships, validate the SignatureTimeStamp element against the embedded
-//            RFC 3161 TimeStampToken's messageImprint and genTime, mirroring CadesVerifier.
+// TODO(B-LT): revocation (CRL/OCSP) data is not evaluated; Valid.revocationChecked is always false.
 // TODO(detached): support detached XAdES — verify that external URIs resolve.
 // TODO(enveloping): support enveloping XAdES — verify the wrapped <ds:Object> reference.

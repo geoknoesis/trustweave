@@ -3,6 +3,7 @@ package org.trustweave.credential.didcomm
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 import java.sql.SQLException
 import java.sql.SQLIntegrityConstraintViolationException
 import java.util.concurrent.atomic.AtomicLong
@@ -15,6 +16,14 @@ import javax.sql.DataSource
  * callers (in this process or in other replicas sharing the database) presenting the same message
  * id, exactly one gets `true`. An id whose retention has passed is replaced rather than treated as
  * a replay, and expired rows are purged opportunistically at most every [cleanupIntervalSeconds].
+ *
+ * The key stored is the lowercase-hex SHA-256 of the UTF-8 message id (64 characters), not the id
+ * itself. A raw id in a `VARCHAR(255)` primary key would be compared under the column's collation:
+ * MySQL's default collations are case-insensitive (and accent-insensitive), so two distinct ids
+ * differing only in case would collide and a legitimate message would be refused as a replay, and an
+ * id longer than 255 characters could not be stored at all. A fixed-length hex digest is
+ * collation-independent. Rows written by earlier versions held raw ids and no longer match; they only
+ * protected ids for their retention window, which they will simply age out of.
  *
  * Uses only portable SQL (`CREATE TABLE IF NOT EXISTS`, plain `INSERT`/`DELETE`), so it runs on
  * PostgreSQL, MySQL and H2. The table is created on construction.
@@ -55,10 +64,16 @@ class DatabaseDidCommReplayStore
             nowEpochSeconds: Long,
         ): Boolean =
             withContext(Dispatchers.IO) {
-                val recorded = insertIfAbsent(messageId, retainUntilEpochSeconds, nowEpochSeconds)
+                val recorded = insertIfAbsent(keyOf(messageId), retainUntilEpochSeconds, nowEpochSeconds)
                 purgeExpiredIfDue(nowEpochSeconds)
                 recorded
             }
+
+        private fun keyOf(messageId: String): String =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest(messageId.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
 
         private fun insertIfAbsent(
             messageId: String,
@@ -66,6 +81,7 @@ class DatabaseDidCommReplayStore
             now: Long,
         ): Boolean =
             dataSource.connection.use { conn ->
+                val originalAutoCommit = conn.autoCommit
                 conn.autoCommit = false
                 try {
                     // An expired record of the same id no longer protects anything; clear it so the
@@ -93,9 +109,13 @@ class DatabaseDidCommReplayStore
                 } catch (e: CancellationException) {
                     conn.rollback()
                     throw e
-                } catch (e: SQLException) {
+                } catch (e: Exception) {
                     conn.rollback()
                     throw e
+                } finally {
+                    // The connection goes back to the pool: leaving it in manual-commit mode would
+                    // make the next borrower's writes silently uncommitted.
+                    runCatching { conn.autoCommit = originalAutoCommit }
                 }
             }
 

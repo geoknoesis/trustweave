@@ -38,6 +38,62 @@ class DatabaseReplayProtectionTest {
         }
 
     @Test
+    fun `autoCommit is restored before the connection returns to the pool`() =
+        runBlocking<Unit> {
+            val real = dataSource()
+            val seen = mutableListOf<Boolean>()
+            val tracking =
+                object : DataSource by real {
+                    override fun getConnection(): java.sql.Connection {
+                        val conn = real.connection
+                        return java.lang.reflect.Proxy.newProxyInstance(
+                            javaClass.classLoader,
+                            arrayOf(java.sql.Connection::class.java),
+                        ) { _, method, args ->
+                            if (method.name == "close") seen += conn.autoCommit
+                            try {
+                                method.invoke(conn, *(args ?: emptyArray()))
+                            } catch (e: java.lang.reflect.InvocationTargetException) {
+                                throw e.targetException
+                            }
+                        } as java.sql.Connection
+                    }
+                }
+            val store = DatabaseDidCommReplayStore(tracking)
+            store.recordIfAbsent("m1", 2_000, 1_000) shouldBe true // commit path
+            store.recordIfAbsent("m1", 2_000, 1_001) shouldBe false // duplicate (rollback) path
+            seen.isNotEmpty() shouldBe true
+            seen.all { it } shouldBe true
+        }
+
+    @Test
+    fun `ids differing only in case are distinct even on a case-insensitive column`() =
+        runBlocking<Unit> {
+            val ds = dataSource()
+            // Simulates MySQL's default case-insensitive collation: the table already exists with an
+            // ignore-case key column, which CREATE TABLE IF NOT EXISTS leaves alone.
+            ds.connection.use {
+                it.createStatement().execute(
+                    "CREATE TABLE didcomm_replay_ids (message_id VARCHAR_IGNORECASE(255) PRIMARY KEY, retain_until BIGINT NOT NULL)",
+                )
+            }
+            val store = DatabaseDidCommReplayStore(ds)
+            store.recordIfAbsent("Msg-A", 2_000, 1_000) shouldBe true
+            store.recordIfAbsent("msg-a", 2_000, 1_000) shouldBe true
+            store.recordIfAbsent("Msg-A", 2_000, 1_001) shouldBe false
+        }
+
+    @Test
+    fun `an id longer than 255 characters is recorded and detected`() =
+        runBlocking<Unit> {
+            val store = DatabaseDidCommReplayStore(dataSource())
+            val long = "x".repeat(1_000)
+            store.recordIfAbsent(long, 2_000, 1_000) shouldBe true
+            store.recordIfAbsent(long, 2_000, 1_001) shouldBe false
+            store.recordIfAbsent("x".repeat(999), 2_000, 1_001) shouldBe true
+        }
+
+    @Test
     fun `an id is accepted once and then refused`() =
         runBlocking<Unit> {
             val store = DatabaseDidCommReplayStore(dataSource())

@@ -23,8 +23,11 @@ import kotlin.time.Duration.Companion.minutes
  * The nonce is consumed only after the presentation has passed every other check (KB-JWT signature,
  * `sd_hash`, freshness, expected challenge and domain), so a request that was going to be rejected
  * anyway cannot burn a nonce. A second presentation carrying the same nonce is rejected as a replay.
- * When a store is configured the KB-JWT MUST carry a non-blank `nonce`, and presentation-proof
- * verification must be enabled (the nonce is untrustworthy otherwise).
+ * When a store is configured the proof MUST carry a non-blank nonce (SD-JWT-VC KB-JWT `nonce`, or the
+ * `challenge` of a Linked Data proof; other proof types are rejected as unable to honour the guard),
+ * and presentation-proof verification must be enabled (the nonce is untrustworthy otherwise). The
+ * string passed to [consume] is `"<scopeLength>:<scope>:<nonce>"`, scoping single-use per verifier/audience
+ * (see [SCOPE_OPTION_KEY]). A full or failing store makes verification fail with an Invalid result.
  *
  * Opt-in and additive: with no store configured nothing changes.
  */
@@ -39,6 +42,13 @@ public fun interface PresentationNonceStore {
     public companion object {
         /** Key under `VerificationOptions.additionalOptions` that carries the [PresentationNonceStore]. */
         public const val OPTION_KEY: String = "kbJwtNonceStore"
+
+        /**
+         * Optional key under `VerificationOptions.additionalOptions` (a `String`) naming this verifier /
+         * audience. The string handed to [consume] is scoped by it (falling back to `expectedDomain`,
+         * then empty), so a nonce is single-use per (scope, nonce) rather than globally.
+         */
+        public const val SCOPE_OPTION_KEY: String = "kbJwtNonceScope"
     }
 }
 

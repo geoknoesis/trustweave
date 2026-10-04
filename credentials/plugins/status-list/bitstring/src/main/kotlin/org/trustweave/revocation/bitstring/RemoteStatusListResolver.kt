@@ -2,6 +2,7 @@ package org.trustweave.revocation.bitstring
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -11,10 +12,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.ConnectionPool
 import okhttp3.Dns
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.net.PrivateNetworkGuard
 import org.trustweave.core.serialization.SerializationModule
@@ -25,6 +29,7 @@ import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.trust.TrustEvaluator
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.InetAddress
 import java.net.Proxy
@@ -34,6 +39,8 @@ import java.util.Base64
 import java.util.BitSet
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -88,6 +95,7 @@ fun interface StatusListCredentialVerifier {
  *   layer, so a DNS-rebinding attacker cannot return a public address to the check and an internal
  *   one to the connect. TLS still uses the original host name for SNI and certificate
  *   verification;
+ * - the request is cancellable: cancelling the coroutine cancels the underlying OkHttp call;
  * - redirects are not followed, system proxies are not used (a proxy would resolve the host
  *   itself and bypass the pin), the response must be `200`, and the body is capped at
  *   [maxResponseBytes].
@@ -136,13 +144,7 @@ class HttpsStatusListCredentialFetcher(
                     .header("Accept", "application/vc+ld+json, application/vc, application/ld+json, application/json")
                     .get()
                     .build()
-            client.newCall(request).execute().use { response ->
-                if (response.code != 200) {
-                    throw IllegalStateException("status list fetch returned HTTP ${response.code}")
-                }
-                val body = response.body ?: throw IllegalStateException("status list fetch returned no body")
-                String(readCapped(body.byteStream(), maxResponseBytes), Charsets.UTF_8)
-            }
+            client.newCall(request).awaitBody(maxResponseBytes)
         }
 
     /** Throws [IllegalArgumentException] when [url] is not a permitted public HTTPS target. */
@@ -156,6 +158,46 @@ class HttpsStatusListCredentialFetcher(
 
     companion object {
         const val DEFAULT_MAX_RESPONSE_BYTES: Int = 2 * 1024 * 1024
+
+        /**
+         * Runs [this] call asynchronously and suspends for its (capped) body. Cancelling the
+         * coroutine calls [Call.cancel], which aborts the connect, the request and the body read, so
+         * a cancelled or timed-out caller does not leave a thread blocked on a stalled endpoint.
+         */
+        internal suspend fun Call.awaitBody(maxBytes: Int): String =
+            suspendCancellableCoroutine { continuation ->
+                continuation.invokeOnCancellation { runCatching { cancel() } }
+                enqueue(
+                    object : Callback {
+                        override fun onFailure(
+                            call: Call,
+                            e: IOException,
+                        ) {
+                            continuation.resumeWithException(e)
+                        }
+
+                        override fun onResponse(
+                            call: Call,
+                            response: Response,
+                        ) {
+                            val outcome =
+                                runCatching {
+                                    response.use {
+                                        if (it.code != 200) {
+                                            throw IllegalStateException("status list fetch returned HTTP ${it.code}")
+                                        }
+                                        val body = it.body ?: throw IllegalStateException("status list fetch returned no body")
+                                        String(readCapped(body.byteStream(), maxBytes), Charsets.UTF_8)
+                                    }
+                                }
+                            outcome.fold(
+                                onSuccess = { continuation.resume(it) },
+                                onFailure = { continuation.resumeWithException(it) },
+                            )
+                        }
+                    },
+                )
+            }
 
         /** Documentation ranges (RFC 5737) that [PrivateNetworkGuard] does not list. */
         private fun isDocumentationIpv4(address: InetAddress): Boolean {

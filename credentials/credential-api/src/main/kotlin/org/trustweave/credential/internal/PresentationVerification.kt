@@ -759,8 +759,11 @@ internal object PresentationVerification {
      * [PresentationNonceStore] under [PresentationNonceStore.OPTION_KEY]; a no-op otherwise.
      *
      * Call it only after every other presentation check has passed, so a request that is rejected
-     * for another reason cannot consume a nonce. Presentations whose proof is not an SD-JWT-VC are
-     * unaffected (the option is KB-JWT specific).
+     * for another reason cannot consume a nonce. Supported for SD-JWT-VC (KB-JWT `nonce`) and Linked
+     * Data proofs (`challenge`); for any other proof type the result is Invalid, because the replay
+     * guard the verifier asked for cannot be honoured. The key handed to the store is scoped by
+     * (verifier scope or expected domain, nonce), see [PresentationNonceStore.SCOPE_OPTION_KEY].
+     * A full or failing store yields an Invalid result instead of an exception.
      *
      * @return null when no store is configured or the nonce was fresh, otherwise the failure
      */
@@ -777,19 +780,60 @@ internal object PresentationVerification {
                     reason = "Verification option '${PresentationNonceStore.OPTION_KEY}' is not a PresentationNonceStore",
                     errors = listOf("Got ${raw::class.simpleName}; refusing to verify without the requested replay guard"),
                 )
-        val proof = presentation.proof as? CredentialProof.SdJwtVcProof ?: return null
-        val nonce =
-            kbJwtBoundField(proof.sdJwtVc, "challenge")?.takeIf { it.isNotBlank() }
-                ?: return VerificationResult.Invalid.InvalidProof(
-                    credential = credential,
-                    reason = "Key Binding JWT carries no nonce but a nonce store is configured",
-                    errors = listOf("A single-use nonce store requires every KB-JWT to carry a non-blank 'nonce'"),
-                )
-        if (!store.consume(nonce)) {
+        val proof = presentation.proof
+        if (proof !is CredentialProof.SdJwtVcProof && proof !is CredentialProof.LinkedDataProof) {
+            // A store was requested but this proof type exposes no verified nonce: refuse rather than
+            // silently skipping the replay guard the verifier asked for.
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
-                reason = "Key Binding JWT nonce has already been used (replayed presentation)",
-                errors = listOf("KB-JWT nonce was already consumed; the presentation is a replay"),
+                reason = "A nonce store is configured but the presentation proof type cannot honour it",
+                errors =
+                    listOf(
+                        "Single-use nonce enforcement supports SD-JWT-VC (KB-JWT nonce) and Linked Data " +
+                            "proofs (challenge); got ${proof?.let { it::class.simpleName } ?: "no proof"}",
+                    ),
+            )
+        }
+        val nonce =
+            proof.proofStringField("challenge")?.takeIf { it.isNotBlank() }
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Presentation proof carries no nonce/challenge but a nonce store is configured",
+                    errors = listOf("A single-use nonce store requires every presentation proof to carry a non-blank nonce"),
+                )
+        // Scope by verifier-trusted context so one verifier's nonce cannot collide with (or be
+        // burned by) another audience's. Only verifier-supplied values are used; the presented
+        // `aud`/`domain` is attacker-controlled when it is not being enforced.
+        val scope =
+            (options.additionalOptions[PresentationNonceStore.SCOPE_OPTION_KEY] as? String)
+                ?: options.expectedDomain
+                ?: ""
+        val scopedKey = "${scope.length}:$scope:$nonce"
+        val fresh =
+            try {
+                store.consume(scopedKey)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: IllegalStateException) {
+                logger.warn("Presentation nonce store refused a new nonce: {}", e.message)
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Presentation nonce store is exhausted; the nonce cannot be recorded",
+                    errors = listOf(e.message ?: "nonce store exhausted"),
+                )
+            } catch (e: Exception) {
+                logger.error("Presentation nonce store failed", e)
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Presentation nonce store failed; refusing to accept without replay protection",
+                    errors = listOf(e.message ?: e::class.simpleName ?: "nonce store failure"),
+                )
+            }
+        if (!fresh) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = credential,
+                reason = "Presentation nonce has already been used (replayed presentation)",
+                errors = listOf("The nonce was already consumed; the presentation is a replay"),
             )
         }
         return null

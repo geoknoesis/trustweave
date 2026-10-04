@@ -17,6 +17,12 @@ import java.security.cert.X509Certificate
 enum class XadesProfile {
     /** Basic XAdES — XML-DSig signature with the XAdES `SignedProperties` reference. */
     B_B,
+
+    /**
+     * XAdES-B-T: B-B plus an RFC 3161 `SignatureTimeStamp` over the `ds:SignatureValue`.
+     * Verification only; [XadesSigner] cannot produce it.
+     */
+    B_T,
 }
 
 /**
@@ -82,13 +88,41 @@ data class XadesSignature(
  *                                                 validity is judged at verification time, which
  *                                                 cannot show the certificate was valid when the
  *                                                 document was actually signed.
+ * @property requireSignatureTimestamp             When `true`, the signature must carry a valid RFC 3161
+ *                                                 `SignatureTimeStamp` (B-T) issued by one of
+ *                                                 [timestampTrustAnchors]; otherwise it is rejected
+ *                                                 with [XadesValidationResult.Invalid.TimeStampInvalid].
+ *                                                 Default `false`. Without a timestamp the
+ *                                                 `SigningTime` is only the signer's own claim.
+ * @property timestampTrustAnchors                 TSA certificates (or the CAs that issued them) the
+ *                                                 caller trusts to time-stamp. A time-stamp whose TSA
+ *                                                 certificate is neither one of these nor signed by
+ *                                                 one is invalid. Empty (default) means no time-stamp
+ *                                                 can be trusted: it is ignored, or, when
+ *                                                 [requireSignatureTimestamp] is set, rejected.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                                 A signer whose trust-list service is
+ *                                                 `QualifiedWithdrawn` is accepted only when an
+ *                                                 authenticated (time-stamped) signing time precedes
+ *                                                 the withdrawal. Set this to `true` to also accept it
+ *                                                 when the signing time is merely claimed or absent
+ *                                                 (a claimed time at or after the withdrawal is still
+ *                                                 refused). Default `false`.
+ * @property maxClockSkewSeconds                   Tolerance between the claimed `SigningTime` and the
+ *                                                 time-stamp's `genTime`.
  */
-data class XadesVerificationOptions(
-    val requiredProfile: XadesProfile,
-    val trustAnchorResolver: TrustAnchorResolver,
-    val allowExpiredCertificateAtSigningTime: Boolean = false,
-    val requireSigningTime: Boolean = false,
-)
+data class XadesVerificationOptions
+    @JvmOverloads
+    constructor(
+        val requiredProfile: XadesProfile,
+        val trustAnchorResolver: TrustAnchorResolver,
+        val allowExpiredCertificateAtSigningTime: Boolean = false,
+        val requireSigningTime: Boolean = false,
+        val requireSignatureTimestamp: Boolean = false,
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
+        val maxClockSkewSeconds: Long = 300,
+    )
 
 /**
  * Outcome of [XadesVerifier.verify].
@@ -102,13 +136,26 @@ sealed class XadesValidationResult {
      * @property signingTime  Asserted signing time (XAdES `SigningTime` qualifying property), or
      *                        null when the producer omitted it.
      * @property profile      Profile actually detected on the wire.
+     * @property signingTimeAuthenticated `true` only when a valid, trusted RFC 3161
+     *                        `SignatureTimeStamp` backs the signing time. When `false`,
+     *                        [signingTime] is merely what the signer claimed and proves nothing
+     *                        about when the document was signed.
+     * @property signatureTimeStamp The time-stamp's `genTime` when one was validated, else null.
+     * @property revocationChecked Always `false` at present: this verifier does not evaluate CRL /
+     *                        OCSP data, so certificate revocation is NOT checked. Callers needing
+     *                        revocation status must check it themselves.
      */
-    data class Valid(
-        val signerCert: X509Certificate,
-        val trust: TrustAnchorMatch,
-        val signingTime: Instant?,
-        val profile: XadesProfile,
-    ) : XadesValidationResult()
+    data class Valid
+        @JvmOverloads
+        constructor(
+            val signerCert: X509Certificate,
+            val trust: TrustAnchorMatch,
+            val signingTime: Instant?,
+            val profile: XadesProfile,
+            val signingTimeAuthenticated: Boolean = false,
+            val signatureTimeStamp: Instant? = null,
+            val revocationChecked: Boolean = false,
+        ) : XadesValidationResult()
 
     sealed class Invalid : XadesValidationResult() {
         /** XML-DSig signature value did not verify. */
@@ -138,6 +185,33 @@ sealed class XadesValidationResult {
          */
         data class CertificateNotYetValid(
             val notBefore: Instant,
+        ) : Invalid()
+
+        /**
+         * The signer's trust-list service was withdrawn at (or the signature cannot be shown to
+         * predate) [withdrawnAt]; see [XadesVerificationOptions.allowWithdrawnTrustWithoutAuthenticatedTime].
+         */
+        data class TrustWithdrawn(
+            val cert: X509Certificate,
+            val withdrawnAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /**
+         * The certificate chain failed validation: a CA certificate lacks `basicConstraints` CA /
+         * `keyCertSign`, a `pathLenConstraint` is exceeded, a certificate is outside its validity
+         * window, or the signer certificate's `keyUsage` forbids signing.
+         */
+        data class CertificateChainInvalid(
+            val reason: String,
+        ) : Invalid()
+
+        /**
+         * A time-stamp was required ([XadesVerificationOptions.requireSignatureTimestamp] or
+         * [XadesProfile.B_T]) but is absent, untrusted, malformed or does not match the signature.
+         */
+        data class TimeStampInvalid(
+            val reason: String,
         ) : Invalid()
 
         /**

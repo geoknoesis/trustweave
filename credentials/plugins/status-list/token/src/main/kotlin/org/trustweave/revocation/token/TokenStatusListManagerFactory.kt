@@ -28,10 +28,13 @@ object TokenStatusListManagerFactory {
      * @param issuerDid DID of the issuer (`iss` claim in the JWT)
      * @param statusListUri Publicly reachable URI where the status token is served (`sub` claim)
      * @param bitsPerEntry 1 for single-purpose lists, 2 for combined revocation + suspension
-     * @param issuerKeyId Issuer verification method (an Ed25519 key held in [kms]) that signs tokens;
-     *   without it, building a token fails with a ConfigException
+     * @param issuerKeyId Issuer verification method (an Ed25519 or P-256 key held in [kms]) that signs
+     *   tokens (`EdDSA` / `ES256`); without it, building a token fails with a ConfigException
+     * @param defaultTtlSeconds `ttl` / `exp` applied when a token is built without an explicit ttl
+     * @param requireTtl when true, building a token without any ttl fails with a ConfigException
      * @return Configured [TokenStatusListManager]
      */
+    @JvmOverloads
     fun create(
         dataSource: DataSource,
         kms: KeyManagementService,
@@ -39,6 +42,8 @@ object TokenStatusListManagerFactory {
         statusListUri: String,
         bitsPerEntry: Int = 1,
         issuerKeyId: VerificationMethodId? = null,
+        defaultTtlSeconds: Long? = null,
+        requireTtl: Boolean = false,
     ): TokenStatusListManager =
         TokenStatusListManager(
             dataSource = dataSource,
@@ -47,5 +52,7 @@ object TokenStatusListManagerFactory {
             statusListUri = statusListUri,
             bitsPerEntry = bitsPerEntry,
             issuerKeyId = issuerKeyId,
+            defaultTtlSeconds = defaultTtlSeconds,
+            requireTtl = requireTtl,
         )
 }

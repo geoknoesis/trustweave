@@ -20,11 +20,12 @@ import java.util.zip.Inflater
  * - otherwise the bytes are taken as the legacy uncompressed list that earlier TrustWeave versions
  *   emitted.
  *
- * Legacy detection: the data is treated as ZLIB only if it starts with a valid ZLIB header
- * (CM = 8, CINFO <= 7, header checksum divisible by 31, no preset dictionary) AND inflates to a
- * complete, checksum-valid stream. A legacy list that happens to begin with header-like bytes but
- * is not a valid ZLIB stream is therefore still read as legacy. A size-cap violation is never
- * downgraded to "legacy".
+ * Legacy detection (precise rule): data is the legacy uncompressed form if and only if it does NOT
+ * start with a valid ZLIB header (CM = 8, CINFO <= 7, header checksum divisible by 31, no preset
+ * dictionary). Once the header is valid the data is committed to being ZLIB: a truncated or
+ * corrupt stream (including an Adler-32 failure) is rejected with [IllegalArgumentException],
+ * never reinterpreted as legacy bytes, and so are trailing bytes after the complete stream.
+ * A size-cap violation is likewise never downgraded.
  */
 object TokenStatusListCodec {
     /** Upper bound on the decompressed size of a status list (16 MiB, i.e. 134M one-bit entries). */
@@ -52,8 +53,9 @@ object TokenStatusListCodec {
      * Decode an `lst` value (ZLIB-compressed per the spec, or legacy uncompressed) to the packed
      * status bytes.
      *
-     * @throws IllegalArgumentException if [lst] is not base64url, or the decompressed list would
-     *   exceed [maxBytes]
+     * @throws IllegalArgumentException if [lst] is not base64url, the decompressed list would
+     *   exceed [maxBytes], or it has a valid ZLIB header but is not exactly one complete,
+     *   checksum-valid ZLIB stream
      */
     fun decode(
         lst: String,
@@ -61,7 +63,7 @@ object TokenStatusListCodec {
     ): ByteArray {
         val raw = Base64.getUrlDecoder().decode(lst)
         if (!hasZlibHeader(raw)) return raw
-        return inflateOrNull(raw, maxBytes) ?: raw
+        return inflateStrict(raw, maxBytes)
     }
 
     private fun hasZlibHeader(b: ByteArray): Boolean {
@@ -74,11 +76,11 @@ object TokenStatusListCodec {
             ((cmf shl 8) or flg) % 31 == 0
     }
 
-    /** Inflates [data]; null when it is not a complete valid ZLIB stream. Throws when over [maxBytes]. */
-    private fun inflateOrNull(
+    /** Inflates [data]; throws unless it is exactly one complete valid ZLIB stream within [maxBytes]. */
+    private fun inflateStrict(
         data: ByteArray,
         maxBytes: Int,
-    ): ByteArray? {
+    ): ByteArray {
         val inflater = Inflater()
         try {
             inflater.setInput(data)
@@ -88,16 +90,23 @@ object TokenStatusListCodec {
                 val n =
                     try {
                         inflater.inflate(buf)
-                    } catch (_: DataFormatException) {
-                        return null
+                    } catch (e: DataFormatException) {
+                        throw IllegalArgumentException("Status list has a ZLIB header but is a corrupt ZLIB stream: ${e.message}", e)
                     }
-                if (n == 0 && (inflater.needsInput() || inflater.needsDictionary())) return null
+                if (n == 0 && (inflater.needsInput() || inflater.needsDictionary())) {
+                    throw IllegalArgumentException("Status list has a ZLIB header but the stream is truncated")
+                }
                 if (out.size() + n > maxBytes) {
                     throw IllegalArgumentException(
                         "Status list decompresses to more than $maxBytes bytes; rejected as a possible decompression bomb",
                     )
                 }
                 out.write(buf, 0, n)
+            }
+            if (inflater.remaining > 0) {
+                throw IllegalArgumentException(
+                    "Status list has ${inflater.remaining} trailing byte(s) after the complete ZLIB stream",
+                )
             }
             return out.toByteArray()
         } finally {

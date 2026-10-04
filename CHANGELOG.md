@@ -114,6 +114,28 @@ working code fail until it is adjusted.**
   identity, or an explicit user confirmation; the web `store()` takes `{ confirmedIssuer }` instead of the
   offer-issuer string, and a "Trusted issuers" list lets the user review and remove accepted issuers.
 
+- **Credential and signature verification is stricter.**
+  - `PresentationNonceStore` keys are scoped as `<len>:<scope>:<nonce>` (scope from
+    `PresentationNonceStore.SCOPE_OPTION_KEY` or `expectedDomain`); a store that cannot honour the proof
+    type, is full or errors returns `Invalid` instead of being skipped or throwing.
+  - XAdES refuses a `QualifiedWithdrawn` trust result unless a time-stamp predates the withdrawal
+    (`allowWithdrawnTrustWithoutAuthenticatedTime` opts out), validates CA validity, `basicConstraints`,
+    `pathLen` and key usage, and can verify an RFC 3161 signature time-stamp (`requireSignatureTimestamp`,
+    `timestampTrustAnchors`; verify-only `XadesProfile.B_T`). Revocation is still not evaluated.
+  - Token Status List: `lst` data with a valid ZLIB header must decode as ZLIB (corrupt or trailing bytes
+    throw); ES256 (P-256) is supported; `defaultTtlSeconds` / `requireTtl` are new options.
+  - The OID4VCI server maps errors per RFC (`invalid_proof` 400 with a fresh `c_nonce`, `invalid_token` 401
+    with `WWW-Authenticate`, `server_error` 500), requires the access token on `/notification`, and
+    bounds and expires offers, tokens and deferred credentials (503 when full).
+  - `DatabaseDidCommReplayStore` keys rows by the SHA-256 of the message id, so rows written by earlier
+    versions stop matching. Trust-registry `?status=` rejects unknown values with 400.
+
+- **Hardening that can change observable behaviour.** The in-memory DID document cache and registrar job
+  storage are bounded and expire entries (deactivation records are retained); PLC resolves HTTP 410 as
+  deactivated and refuses redirects; API keys are refused over cleartext `http://` (loopback excepted);
+  rate limiting counts failed authentications separately and no longer resets all callers' budgets under
+  a caller spray; `InMemoryKeyManagementService` signs empty data.
+
 - **`bindContract` is only legal from `DRAFT` or `PENDING`.** Binding an executed or terminated
   contract no longer succeeds. `verifyContract` now requires the credential issuer to be a party,
   the service's own issuing DID, or accepted by an optional `TrustedIssuerPolicy`.

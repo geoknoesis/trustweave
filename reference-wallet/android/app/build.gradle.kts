@@ -73,13 +73,13 @@ dependencies {
     // Android Keystore as the wrapping-key root, so the on-disk file is non-extractable
     // without device unlock (Phase 2 baseline; Phase 2.5 binds the holder signing key
     // directly to Keystore once we have an Ed25519-on-Keystore strategy).
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0")
 
     // Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Crypto — Ed25519 + did:key encoding
-    implementation("org.bouncycastle:bcprov-jdk18on:1.84")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
 
     // Serialization for VC-JWT payloads + DTOs
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")

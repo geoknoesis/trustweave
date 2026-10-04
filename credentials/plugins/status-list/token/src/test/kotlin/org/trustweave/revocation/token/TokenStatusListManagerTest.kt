@@ -342,4 +342,204 @@ class TokenStatusListManagerTest {
             assertNotNull(metadata)
             assertTrue(metadata.size >= 16, "Size must be at least 16 after expansion")
         }
+
+    // -------------------------------------------------------------------------
+    // ES256 signing and ttl policy
+    // -------------------------------------------------------------------------
+
+    /** In-memory KMS holding a JCA P-256 key; signs as P1363 (`r || s`) or, when asked, DER. */
+    private class P256Kms(
+        private val derSignatures: Boolean = false,
+    ) : org.trustweave.kms.KeyManagementService by InMemoryKeyManagementService() {
+        private val pairs = HashMap<org.trustweave.core.identifiers.KeyId, java.security.KeyPair>()
+
+        override suspend fun getSupportedAlgorithms() = setOf(org.trustweave.kms.Algorithm.P256)
+
+        override suspend fun generateKey(
+            algorithm: org.trustweave.kms.Algorithm,
+            options: Map<String, Any?>,
+        ): org.trustweave.kms.results.GenerateKeyResult {
+            val pair =
+                java.security.KeyPairGenerator
+                    .getInstance("EC")
+                    .apply { initialize(java.security.spec.ECGenParameterSpec("secp256r1")) }
+                    .generateKeyPair()
+            val id =
+                org.trustweave.core.identifiers
+                    .KeyId("p256-${pairs.size}")
+            pairs[id] = pair
+            val point = (pair.public as java.security.interfaces.ECPublicKey).w
+
+            fun b64(v: java.math.BigInteger) =
+                Base64.getUrlEncoder().withoutPadding().encodeToString(
+                    v.toByteArray().let {
+                        if (it.size >
+                            32
+                        ) {
+                            it.copyOfRange(it.size - 32, it.size)
+                        } else {
+                            ByteArray(32 - it.size) + it
+                        }
+                    },
+                )
+            return org.trustweave.kms.results.GenerateKeyResult.Success(
+                org.trustweave.kms.KeyHandle(
+                    id,
+                    "P-256",
+                    mapOf("kty" to "EC", "crv" to "P-256", "x" to b64(point.affineX), "y" to b64(point.affineY)),
+                ),
+            )
+        }
+
+        override suspend fun getPublicKey(keyId: org.trustweave.core.identifiers.KeyId): org.trustweave.kms.results.GetPublicKeyResult {
+            val pair =
+                pairs[keyId] ?: return org.trustweave.kms.results.GetPublicKeyResult.Failure
+                    .KeyNotFound(keyId)
+            val point = (pair.public as java.security.interfaces.ECPublicKey).w
+
+            fun b64(v: java.math.BigInteger) =
+                Base64.getUrlEncoder().withoutPadding().encodeToString(
+                    v.toByteArray().let {
+                        if (it.size >
+                            32
+                        ) {
+                            it.copyOfRange(it.size - 32, it.size)
+                        } else {
+                            ByteArray(32 - it.size) + it
+                        }
+                    },
+                )
+            return org.trustweave.kms.results.GetPublicKeyResult.Success(
+                org.trustweave.kms.KeyHandle(
+                    keyId,
+                    "P-256",
+                    mapOf("kty" to "EC", "crv" to "P-256", "x" to b64(point.affineX), "y" to b64(point.affineY)),
+                ),
+            )
+        }
+
+        override suspend fun sign(
+            keyId: org.trustweave.core.identifiers.KeyId,
+            data: ByteArray,
+            algorithm: org.trustweave.kms.Algorithm?,
+        ): org.trustweave.kms.results.SignResult {
+            val pair =
+                pairs[keyId] ?: return org.trustweave.kms.results.SignResult.Failure
+                    .KeyNotFound(keyId)
+            val der =
+                java.security.Signature
+                    .getInstance("SHA256withECDSA")
+                    .apply {
+                        initSign(pair.private)
+                        update(data)
+                    }.sign()
+            val out =
+                if (derSignatures) {
+                    der
+                } else {
+                    org.trustweave.kms.util.EcdsaSignatureCodec.derToP1363(
+                        der,
+                        org.trustweave.kms.Algorithm.P256,
+                    )
+                }
+            return org.trustweave.kms.results.SignResult
+                .Success(out)
+        }
+    }
+
+    private fun managerWithKey(
+        algorithm: org.trustweave.kms.Algorithm,
+        defaultTtlSeconds: Long? = null,
+        requireTtl: Boolean = false,
+        useKms: org.trustweave.kms.KeyManagementService = kms,
+    ): TokenStatusListManager {
+        val key =
+            runBlocking { useKms.generateKey(algorithm) } as org.trustweave.kms.results.GenerateKeyResult.Success
+        return TokenStatusListManagerFactory.create(
+            dataSource = dataSource,
+            kms = useKms,
+            issuerDid = issuerDid,
+            statusListUri = statusListUri,
+            issuerKeyId =
+                org.trustweave.did.identifiers.VerificationMethodId(
+                    org.trustweave.did.identifiers
+                        .Did(issuerDid),
+                    org.trustweave.core.identifiers
+                        .KeyId("#${key.keyHandle.id.value}"),
+                ),
+            defaultTtlSeconds = defaultTtlSeconds,
+            requireTtl = requireTtl,
+        )
+    }
+
+    private fun assertEs256Token(
+        p256: P256Kms,
+        derSignatures: Boolean,
+    ) = runBlocking<Unit> {
+        val es = managerWithKey(org.trustweave.kms.Algorithm.P256, useKms = p256)
+        val id = es.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+        val token = es.buildStatusListToken(id)
+        val jws =
+            com.nimbusds.jwt.SignedJWT
+                .parse(token.jwt)
+        assertEquals(com.nimbusds.jose.JWSAlgorithm.ES256, jws.header.algorithm)
+        assertEquals(64, jws.signature.decode().size, "ES256 signature must be raw r||s (der=$derSignatures)")
+        val kid = jws.header.keyID.substringAfter('#')
+        val pub =
+            p256.getPublicKey(
+                org.trustweave.core.identifiers
+                    .KeyId(kid),
+            ) as org.trustweave.kms.results.GetPublicKeyResult.Success
+        val ecKey =
+            com.nimbusds.jose.jwk.ECKey
+                .parse(checkNotNull(pub.keyHandle.publicKeyJwk).mapValues { it.value.toString() })
+        assertTrue(
+            jws.verify(
+                com.nimbusds.jose.crypto
+                    .ECDSAVerifier(ecKey),
+            ),
+            "ES256 signature must verify",
+        )
+    }
+
+    @Test
+    fun `a P-256 issuer key yields an ES256 token whose signature verifies`() = assertEs256Token(P256Kms(), false)
+
+    @Test
+    fun `a DER signature from the KMS is transcoded to raw ES256`() = assertEs256Token(P256Kms(derSignatures = true), true)
+
+    @Test
+    fun `an unsupported issuer key type is refused`() =
+        runBlocking<Unit> {
+            val k = InMemoryKeyManagementService()
+            val m = managerWithKey(org.trustweave.kms.Algorithm.Secp256k1, useKms = k)
+            val id = m.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            org.junit.jupiter.api
+                .assertThrows<org.trustweave.core.exception.ConfigException> { m.buildStatusListToken(id) }
+        }
+
+    @Test
+    fun `requireTtl refuses a token without any ttl and accepts one with a default`() =
+        runBlocking<Unit> {
+            val strict = managerWithKey(org.trustweave.kms.Algorithm.Ed25519, requireTtl = true)
+            val id = strict.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            org.junit.jupiter.api.assertThrows<org.trustweave.core.exception.ConfigException> {
+                strict.buildStatusListToken(id)
+            }
+            assertTrue(strict.buildStatusListToken(id, ttlSeconds = 60).jwt.isNotBlank())
+
+            val withDefault = managerWithKey(org.trustweave.kms.Algorithm.Ed25519, defaultTtlSeconds = 120, requireTtl = true)
+            val id2 = withDefault.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            val payload = String(Base64.getUrlDecoder().decode(withDefault.buildStatusListToken(id2).jwt.split(".")[1]))
+            assertTrue(payload.contains("\"ttl\":120"), payload)
+            assertTrue(payload.contains("\"exp\""), payload)
+        }
+
+    @Test
+    fun `a non-positive ttl is rejected`() =
+        runBlocking<Unit> {
+            val id = manager.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            org.junit.jupiter.api
+                .assertThrows<IllegalArgumentException> { manager.buildStatusListToken(id, ttlSeconds = 0) }
+        }
 }

@@ -79,6 +79,21 @@ data class ContractStatusChange(
 )
 
 /**
+ * Capacity limits of [DefaultSmartContractService]'s in-memory stores. Reaching [maxContracts] makes
+ * [DefaultSmartContractService.createDraft] fail loudly (nothing is evicted); the status history of
+ * one contract keeps only its most recent [maxStatusHistoryPerContract] changes.
+ */
+data class ContractStoreLimits(
+    val maxContracts: Int = 100_000,
+    val maxStatusHistoryPerContract: Int = 1_000,
+) {
+    init {
+        require(maxContracts > 0) { "maxContracts must be positive" }
+        require(maxStatusHistoryPerContract > 0) { "maxStatusHistoryPerContract must be positive" }
+    }
+}
+
+/**
  * Default in-memory implementation of SmartContractService.
  *
  * This is a simple implementation suitable for testing and development.
@@ -86,16 +101,28 @@ data class ContractStatusChange(
  *
  * All state changes of one contract are serialised by a per-contract [Mutex] and written with a
  * compare-and-set against the record that was read, so two concurrent executions of the same
- * ACTIVE contract cannot both execute it.
+ * ACTIVE contract cannot both execute it. A slow credential issuance, anchor write or engine
+ * evaluation therefore only delays the one contract it belongs to, never an unrelated one; the
+ * mutex of a contract exists only while an operation on it is running or waiting.
+ *
+ * **Lifecycle rules.**
+ * - A contract can only become ACTIVE (through [activateContract] or [updateStatus]) once
+ *   [bindContract] bound a credential to it, and, when a blockchain registry is configured, an anchor.
+ * - [updateStatus] refuses [ContractStatus.EXECUTED]: a contract is executed only by
+ *   [executeContract], which evaluates its conditions first. A [ExecutionModel.Manual] contract has
+ *   no engine; it executes when its terms contain no conditions (conditions cannot be evaluated
+ *   automatically, so such a contract is refused rather than executed unchecked).
+ * - Re-binding replaces the previous credential and drops everything this service kept for it.
  *
  * @param credentialResolver optional lookup for contract credentials that this instance did not
  *   issue itself; used by [verifyContract].
  * @param trustedIssuerPolicy optional extra policy deciding which issuers may vouch for a contract
  *   in [verifyContract]. Without it, the credential issuer must be a party to the contract or
  *   the issuer DID this service itself used when issuing the credential.
- * @param verifyAnchorOnVerify when true and a blockchain client is configured for the stored
- *   anchor's chain, [verifyContract] also checks that the anchored payload attests to this
- *   contract and credential (default false).
+ * @param verifyAnchorOnVerify when true, [verifyContract] also checks that the anchored payload
+ *   attests to this contract and credential (default false). Fails closed: a contract with no anchor,
+ *   or whose anchor's chain has no client in the registry, does not verify.
+ * @param limits capacity limits of the in-memory stores, see [ContractStoreLimits].
  */
 class DefaultSmartContractService
     @JvmOverloads
@@ -106,6 +133,7 @@ class DefaultSmartContractService
         private val credentialResolver: ContractCredentialResolver? = null,
         private val trustedIssuerPolicy: TrustedIssuerPolicy? = null,
         private val verifyAnchorOnVerify: Boolean = false,
+        private val limits: ContractStoreLimits = ContractStoreLimits(),
     ) : SmartContractService {
         private val contracts = ConcurrentHashMap<String, SmartContract>()
 
@@ -123,18 +151,42 @@ class DefaultSmartContractService
 
         private val statusHistories = ConcurrentHashMap<String, CopyOnWriteArrayList<ContractStatusChange>>()
 
-        /**
-         * Striped locks: memory stays bounded however many contracts are created, and two contracts
-         * sharing a stripe merely serialise. Locks are never nested, so stripes cannot deadlock.
-         */
-        private val lockStripes = Array(LOCK_STRIPES) { Mutex() }
+        private class LockEntry {
+            val mutex = Mutex()
+            var holders = 0 // only touched inside ConcurrentHashMap.compute, i.e. atomically
+        }
+
+        /** One mutex per contract with an operation in flight; entries are removed when the last one finishes. */
+        private val contractLocks = ConcurrentHashMap<String, LockEntry>()
 
         private val lastContractNumber = AtomicLong(0)
 
         private suspend fun <T> withContractLock(
             contractId: String,
             block: suspend () -> T,
-        ): T = lockStripes[(contractId.hashCode() and Int.MAX_VALUE) % LOCK_STRIPES].withLock { block() }
+        ): T {
+            val entry = contractLocks.compute(contractId) { _, existing -> (existing ?: LockEntry()).also { it.holders++ } }!!
+            try {
+                return entry.mutex.withLock { block() }
+            } finally {
+                contractLocks.compute(contractId) { _, existing ->
+                    existing?.let { it.holders-- }
+                    existing?.takeIf { it.holders > 0 }
+                }
+            }
+        }
+
+        /** Number of contracts with a lock entry, for tests: must return to 0 when the service is idle. */
+        internal fun activeLockCount(): Int = contractLocks.size
+
+        /** Sizes of the per-credential caches, for tests. */
+        internal fun cacheSizes(): Map<String, Int> =
+            mapOf(
+                "issuedCredentials" to issuedCredentials.size,
+                "issuerDidByCredentialId" to issuerDidByCredentialId.size,
+                "anchoredPayloads" to anchoredPayloads.size,
+                "contractIdByCredentialId" to contractIdByCredentialId.size,
+            )
 
         /** Collision-free within this instance: strictly increasing millisecond counter plus a random suffix. */
         private fun nextContractNumber(nowMillis: Long): String {
@@ -162,6 +214,12 @@ class DefaultSmartContractService
                 if (!validation.isValid()) {
                     throw TrustWeaveException.InvalidOperation(
                         message = validation.errorMessage() ?: "Invalid contract draft request",
+                    )
+                }
+
+                if (contracts.size >= limits.maxContracts) {
+                    throw TrustWeaveException.InvalidOperation(
+                        message = "Contract store is full (${limits.maxContracts} contracts); nothing was created",
                     )
                 }
 
@@ -339,23 +397,32 @@ class DefaultSmartContractService
                 )
 
             val previousCredentialId = contract.credentialId
+            // Register the new credential first and roll back if the compare-and-set loses, so a failed
+            // bind leaves nothing behind. verifyContract only trusts an index entry whose contract record
+            // names the same credential, so the window before the CAS is invisible to it.
             issuedCredentials[credentialId] = credential
             issuerDidByCredentialId[credentialId] = issuerDid
-
-            val updatedContract =
-                replaceContract(
-                    contract,
-                    contract.copy(
-                        credentialId = credentialId,
-                        anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
-                        status = ContractStatus.PENDING,
-                        updatedAt = Clock.System.now().toString(),
-                    ),
-                )
             contractIdByCredentialId[credentialId] = contractId
             anchoredPayloads[credentialId] = anchoredPayloadFor(contract, credentialId)
+
+            val updatedContract =
+                try {
+                    replaceContract(
+                        contract,
+                        contract.copy(
+                            credentialId = credentialId,
+                            anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
+                            status = ContractStatus.PENDING,
+                            updatedAt = Clock.System.now().toString(),
+                        ),
+                    )
+                } catch (e: Throwable) {
+                    forgetCredential(credentialId, contractId)
+                    throw e
+                }
+            // The previous binding is superseded: drop everything kept for it.
             if (previousCredentialId != null && previousCredentialId != credentialId) {
-                contractIdByCredentialId.remove(previousCredentialId)
+                forgetCredential(previousCredentialId, contractId)
             }
             recordStatus(contractId, contract.status, ContractStatus.PENDING, "bound", null)
 
@@ -364,6 +431,16 @@ class DefaultSmartContractService
                 credentialId = credentialId,
                 anchorRef = AnchorRefData.fromAnchorRef(anchorRef),
             )
+        }
+
+        private fun forgetCredential(
+            credentialId: String,
+            contractId: String,
+        ) {
+            issuedCredentials.remove(credentialId)
+            issuerDidByCredentialId.remove(credentialId)
+            anchoredPayloads.remove(credentialId)
+            contractIdByCredentialId.remove(credentialId, contractId)
         }
 
         private fun anchoredPayloadFor(
@@ -384,9 +461,10 @@ class DefaultSmartContractService
             reason: String?,
             metadata: JsonElement?,
         ) {
-            statusHistories
-                .computeIfAbsent(contractId) { CopyOnWriteArrayList() }
-                .add(ContractStatusChange(from, to, reason, metadata, Clock.System.now().toString()))
+            val history = statusHistories.computeIfAbsent(contractId) { CopyOnWriteArrayList() }
+            history.add(ContractStatusChange(from, to, reason, metadata, Clock.System.now().toString()))
+            // Keep only the most recent changes (callers hold the contract's lock, so this cannot interleave).
+            while (history.size > limits.maxStatusHistoryPerContract) history.removeAt(0)
         }
 
         override suspend fun activateContract(contractId: String): Result<SmartContract> =
@@ -416,6 +494,8 @@ class DefaultSmartContractService
                 )
             }
 
+            requireBoundForActivation(contract)
+
             return replaceContract(
                 contract,
                 contract.copy(
@@ -423,6 +503,20 @@ class DefaultSmartContractService
                     updatedAt = Clock.System.now().toString(),
                 ),
             ).also { recordStatus(contractId, contract.status, ContractStatus.ACTIVE, null, null) }
+        }
+
+        /** A contract may only be ACTIVE once a credential (and, with an anchor layer configured, an anchor) is bound. */
+        private fun requireBoundForActivation(contract: SmartContract) {
+            if (contract.credentialId == null) {
+                throw TrustWeaveException.InvalidOperation(
+                    message = "Cannot activate contract ${contract.id}: no credential is bound to it. Call bindContract first.",
+                )
+            }
+            if (blockchainRegistry != null && contract.anchorRef == null) {
+                throw TrustWeaveException.InvalidOperation(
+                    message = "Cannot activate contract ${contract.id}: it is not anchored. Call bindContract first.",
+                )
+            }
         }
 
         override suspend fun executeContract(
@@ -467,7 +561,12 @@ class DefaultSmartContractService
                 }
 
             // Evaluate conditions
-            val conditionEvaluation = evaluateConditions(contract, executionContext.triggerData ?: buildJsonObject {}).getOrThrow()
+            val conditionEvaluation =
+                if (contract.executionModel is ExecutionModel.Manual) {
+                    manualEvaluation(contract)
+                } else {
+                    evaluateConditions(contract, executionContext.triggerData ?: buildJsonObject {}).getOrThrow()
+                }
 
             // Determine if contract should be executed
             val executed = conditionEvaluation.overallResult
@@ -487,9 +586,9 @@ class DefaultSmartContractService
                     emptyList()
                 }
 
-            // Update contract status if executed
+            // Update contract status if executed (the only path to EXECUTED: updateStatus refuses it)
             if (executed) {
-                transitionLocked(contract.id, ContractStatus.EXECUTED)
+                transitionLocked(contract.id, ContractStatus.EXECUTED, viaExecution = true)
             }
 
             // Evidence is the credential that binds the executed terms; null when the contract was
@@ -502,6 +601,23 @@ class DefaultSmartContractService
                 executionType = executionType,
                 outcomes = outcomes,
                 evidence = evidence,
+                timestamp = Clock.System.now().toString(),
+            )
+        }
+
+        /** A manual contract has no engine: it can only be executed when there is nothing to evaluate. */
+        private fun manualEvaluation(contract: SmartContract): ConditionEvaluation {
+            if (contract.terms.conditions.isNotEmpty()) {
+                throw TrustWeaveException.InvalidOperation(
+                    message =
+                        "Manual contract ${contract.id} has ${contract.terms.conditions.size} condition(s) that cannot be " +
+                            "evaluated automatically; use an execution model with an evaluation engine",
+                )
+            }
+            return ConditionEvaluation(
+                contractId = contract.id,
+                conditions = emptyList(),
+                overallResult = true,
                 timestamp = Clock.System.now().toString(),
             )
         }
@@ -585,6 +701,13 @@ class DefaultSmartContractService
             metadata: JsonElement?,
         ): Result<SmartContract> =
             trustweaveCatching {
+                if (newStatus == ContractStatus.EXECUTED) {
+                    throw TrustWeaveException.InvalidOperation(
+                        message =
+                            "A contract cannot be set to EXECUTED through updateStatus: use executeContract, " +
+                                "which evaluates the contract's conditions first",
+                    )
+                }
                 withContractLock(contractId) { transitionLocked(contractId, newStatus, reason, metadata) }
             }
 
@@ -594,8 +717,10 @@ class DefaultSmartContractService
             newStatus: ContractStatus,
             reason: String? = null,
             metadata: JsonElement? = null,
+            viaExecution: Boolean = false,
         ): SmartContract {
             val contract = storedContract(contractId)
+            check(newStatus != ContractStatus.EXECUTED || viaExecution) { "EXECUTED is only reachable through executeContract" }
 
             // Validate state transition
             val transitionValidation =
@@ -608,6 +733,7 @@ class DefaultSmartContractService
                     message = transitionValidation.errorMessage() ?: "Invalid state transition",
                 )
             }
+            if (newStatus == ContractStatus.ACTIVE) requireBoundForActivation(contract)
 
             return replaceContract(
                 contract,
@@ -694,7 +820,8 @@ class DefaultSmartContractService
         ): Boolean {
             if (!verifyAnchorOnVerify) return true
             val anchor = contract.anchorRef ?: return false
-            val client = blockchainRegistry?.get(anchor.chainId) ?: return true
+            // Fail closed: verification was asked for, so a chain nobody can query must not pass.
+            val client = blockchainRegistry?.get(anchor.chainId) ?: return false
             val payload = anchoredPayloads[credentialId] ?: return false
             return client.verifyAnchor(payload, anchor.toAnchorRef())
         }
@@ -774,5 +901,3 @@ class DefaultSmartContractService
             return updated
         }
     }
-
-private const val LOCK_STRIPES = 64

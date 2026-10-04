@@ -44,7 +44,6 @@ import org.trustweave.testkit.anchor.InMemoryBlockchainAnchorClient
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 
@@ -58,7 +57,7 @@ class ContractVerificationAndExecutionTest {
     private val chainId = "test:chain"
 
     /** Issues credentials by copying the request; verification outcome is configurable. */
-    internal class FakeCredentialService(
+    internal open class FakeCredentialService(
         var valid: Boolean = true,
         val tamper: (CredentialSubject) -> CredentialSubject = { it },
         val issuerOverride: ((org.trustweave.credential.model.vc.Issuer) -> org.trustweave.credential.model.vc.Issuer)? = null,
@@ -229,7 +228,7 @@ class ContractVerificationAndExecutionTest {
                 .createDraft(
                     request(ExecutionModel.Parametric(TriggerType.Weather, "slow-true"), listOf(condition)),
                 ).getOrThrow()
-        service.updateStatus(draft.id, ContractStatus.PENDING).getOrThrow()
+        service.bindContract(draft.id, primaryDid, "$primaryDid#key-1", chainId).getOrThrow()
         return service.activateContract(draft.id).getOrThrow()
     }
 
@@ -237,7 +236,7 @@ class ContractVerificationAndExecutionTest {
     fun `concurrent executions of one ACTIVE contract execute it exactly once`() =
         runTest {
             val engine = SlowTrueEngine()
-            val service = serviceWith(null, EvaluationEngines().apply { plusAssign(engine) })
+            val service = serviceWith(FakeCredentialService(), EvaluationEngines().apply { plusAssign(engine) })
             val active = activeConditionalContract(service)
 
             val results =
@@ -255,7 +254,7 @@ class ContractVerificationAndExecutionTest {
     @Test
     fun `executeContract uses the stored record, not a stale ACTIVE snapshot`() =
         runTest {
-            val service = serviceWith(null, EvaluationEngines().apply { plusAssign(SlowTrueEngine()) })
+            val service = serviceWith(FakeCredentialService(), EvaluationEngines().apply { plusAssign(SlowTrueEngine()) })
             val active = activeConditionalContract(service)
             service.updateStatus(active.id, ContractStatus.SUSPENDED).getOrThrow()
 
@@ -268,7 +267,7 @@ class ContractVerificationAndExecutionTest {
     @Test
     fun `executeContract ignores terms edited in the caller snapshot`() =
         runTest {
-            val service = serviceWith(null, EvaluationEngines().apply { plusAssign(SlowTrueEngine()) })
+            val service = serviceWith(FakeCredentialService(), EvaluationEngines().apply { plusAssign(SlowTrueEngine()) })
             val active = activeConditionalContract(service)
             val forged =
                 active.copy(
@@ -300,15 +299,6 @@ class ContractVerificationAndExecutionTest {
             val result = service.executeContract(active, ExecutionContext(triggerData = buildJsonObject { put("x", 1) })).getOrThrow()
 
             assertEquals(listOf(bound.credentialId), result.evidence)
-        }
-
-    @Test
-    fun `executeContract without a bound credential reports no evidence`() =
-        runTest {
-            val service = serviceWith(null, EvaluationEngines().apply { plusAssign(SlowTrueEngine()) })
-            val active = activeConditionalContract(service)
-            val result = service.executeContract(active, ExecutionContext(triggerData = buildJsonObject { put("x", 1) })).getOrThrow()
-            assertFalse(result.evidence != null)
         }
 
     @Test

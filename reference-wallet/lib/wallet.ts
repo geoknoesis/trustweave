@@ -488,7 +488,6 @@ function extractSdJwtMeta(sdJwtVc: string): CredentialMeta {
     disclosureMap.callsign ?? disclosureMap.name ?? disclosureMap.degree ?? disclosureMap.droneId
       ?? disclosureMap.rank
       ?? (disclosureMap.make && disclosureMap.model ? `${disclosureMap.make} ${disclosureMap.model}` : '')
-      ?? '',
   ) || undefined
 
   return {

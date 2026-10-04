@@ -107,6 +107,23 @@ updates:
       # TypeScript major follows the Expo SDK; 7 is the native toolchain, defer it.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # Expo SDK 54 pins these (see bundledNativeModules.json); they move with an Expo SDK upgrade, not alone.
+      # Remove these ignores when the Expo SDK is upgraded (docs/contributing/dependency-upgrade-plan.md).
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "@react-native-async-storage/async-storage"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-native-safe-area-context"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # jest-expo 54 is built for Jest 29.
+      - dependency-name: "jest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/jest"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
       - reference-wallet
@@ -128,6 +145,21 @@ updates:
     ignore:
       # The Gradle wrapper is bumped by hand together with the AGP/Kotlin it supports.
       - dependency-name: "gradle-wrapper"
+        update-types: ["version-update:semver-major"]
+      # The Android toolchain (AGP, Kotlin, compileSdk, Compose, OkHttp) moves together in individual upgrade
+      # PRs that the CI job "Android app tests and shared compilation" can validate; there is no Android SDK to
+      # check them locally. See docs/contributing/dependency-upgrade-plan.md.
+      - dependency-name: "org.jetbrains.kotlin.*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "org.jetbrains.kotlinx:*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "androidx.core:core-ktx"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "androidx.navigation:navigation-compose"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "androidx.compose:compose-bom"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "com.squareup.okhttp3:okhttp"
         update-types: ["version-update:semver-major"]
     labels:
       - dependencies

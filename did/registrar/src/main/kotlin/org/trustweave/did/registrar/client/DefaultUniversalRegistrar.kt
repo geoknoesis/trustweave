@@ -54,7 +54,7 @@ class DefaultUniversalRegistrar(
     private val baseUrl: String,
     private val timeout: Int = 60,
     private val apiKey: String? = null,
-    private val protocolAdapter: UniversalRegistrarProtocolAdapter = StandardUniversalRegistrarAdapter(),
+    protocolAdapter: UniversalRegistrarProtocolAdapter = StandardUniversalRegistrarAdapter(),
     private val pollInterval: Long = 1000,
     private val maxPollAttempts: Int = 60,
 ) : DidRegistrar,
@@ -63,6 +63,10 @@ class DefaultUniversalRegistrar(
         org.trustweave.did.util.CredentialTransport
             .requireSecure(baseUrl, apiKey != null, "the registrar API key")
     }
+
+    // The API key is handed to the adapter so it is sent on every request (https only, see above).
+    private val protocolAdapter: UniversalRegistrarProtocolAdapter =
+        if (apiKey != null) protocolAdapter.withApiKey(apiKey) else protocolAdapter
 
     /**
      * Creates a new DID.

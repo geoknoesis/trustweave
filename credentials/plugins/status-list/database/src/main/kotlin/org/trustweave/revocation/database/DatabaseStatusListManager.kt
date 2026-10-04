@@ -13,6 +13,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -248,7 +249,12 @@ class DatabaseStatusListManager(
                 conn.autoCommit = false
                 try {
                     // Get status list
-                    val size = lockStatusList(statusListId, conn)
+                    val size =
+                        lockStatusListOrNull(statusListId, conn)
+                            ?: run {
+                                conn.rollback()
+                                return@withContext false // no such status list: genuinely not applied
+                            }
                     val statusListJson = getStatusListFromDb(statusListId, conn) ?: return@withContext false
                     val purpose = extractPurpose(statusListJson)
                     val encodedList = extractEncodedList(statusListJson)
@@ -293,7 +299,13 @@ class DatabaseStatusListManager(
                     throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
-                    false
+                    // A database/decoding failure must not look like "not applied".
+                    throw TrustWeaveException.InvalidState(
+                        message =
+                            "Failed to update status entry for credential $credentialId " +
+                                "in status list $statusListId: ${e.message}",
+                        cause = e,
+                    )
                 }
             }
         }
@@ -806,12 +818,16 @@ class DatabaseStatusListManager(
     private fun lockStatusList(
         statusListId: String,
         conn: java.sql.Connection,
-    ): Int =
+    ): Int = requireNotNull(lockStatusListOrNull(statusListId, conn)) { "Status list not found" }
+
+    private fun lockStatusListOrNull(
+        statusListId: String,
+        conn: java.sql.Connection,
+    ): Int? =
         conn.prepareStatement("SELECT size FROM status_lists WHERE id = ? FOR UPDATE").use { statement ->
             statement.setString(1, statusListId)
             statement.executeQuery().use { rows ->
-                require(rows.next()) { "Status list not found" }
-                rows.getInt(1)
+                if (rows.next()) rows.getInt(1) else null
             }
         }
 

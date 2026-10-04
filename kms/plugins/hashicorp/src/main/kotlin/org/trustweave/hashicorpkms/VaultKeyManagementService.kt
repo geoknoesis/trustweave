@@ -2,8 +2,8 @@ package org.trustweave.hashicorpkms
 
 import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.KeyId
@@ -298,6 +298,14 @@ class VaultKeyManagementService(
             }
         }
 
+    /**
+     * Signs [data] with Vault Transit `sign/:name`.
+     *
+     * **Empty data is accepted.** Transit's `input` is a base64 string and an empty one is a valid
+     * message (for Ed25519 this is the signature over the empty string). Only the size bound of
+     * `KmsInputValidator` applies. Should a particular Vault server refuse the request, Vault's own
+     * refusal is returned as [SignResult.Failure.Error].
+     */
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
@@ -305,7 +313,10 @@ class VaultKeyManagementService(
     ): SignResult =
         withContext(Dispatchers.IO) {
             // Validate input data
-            val dataValidationError = KmsInputValidator.validateSignData(data)
+            // Vault Transit's `input` is a base64 string and an empty one is a valid message, so only
+            // the size bound applies here; if a Vault server nevertheless refuses it, that refusal
+            // surfaces as a SignResult.Failure.Error carrying Vault's own message.
+            val dataValidationError = KmsInputValidator.validateSignData(data, allowEmpty = true)
             if (dataValidationError != null) {
                 logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
                 return@withContext SignResult.Failure.Error(

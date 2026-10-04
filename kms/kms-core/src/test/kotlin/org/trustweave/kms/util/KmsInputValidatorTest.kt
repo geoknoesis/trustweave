@@ -1,10 +1,11 @@
 package org.trustweave.kms.util
 
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 class KmsInputValidatorTest {
     @Test
@@ -51,11 +52,12 @@ class KmsInputValidatorTest {
 
     @Test
     fun `test validateKeyId with valid special characters`() {
-        val validKeyIds = listOf(
-            "key-id_123",
-            "key/id:123",
-            "key-id_123/456:test"
-        )
+        val validKeyIds =
+            listOf(
+                "key-id_123",
+                "key/id:123",
+                "key-id_123/456:test",
+            )
         validKeyIds.forEach { keyId ->
             val error = KmsInputValidator.validateKeyId(keyId)
             assertNull(error, "Key ID '$keyId' should be valid")
@@ -119,5 +121,21 @@ class KmsInputValidatorTest {
         assertFalse(isValid, "Invalid data should return false")
         assertNotNull(error, "Invalid data should return error message")
     }
-}
 
+    @Test
+    fun `test validateSignData allows empty data when the provider accepts it`() {
+        assertNull(KmsInputValidator.validateSignData(ByteArray(0), allowEmpty = true))
+    }
+
+    @Test
+    fun `test validateSignData uses the provider message for empty data`() {
+        val error = KmsInputValidator.validateSignData(ByteArray(0), emptyDataMessage = "provider says no")
+        assertEquals("provider says no", error)
+    }
+
+    @Test
+    fun `test validateSignData still enforces the size bound when empty data is allowed`() {
+        val error = KmsInputValidator.validateSignData(ByteArray(10 * 1024 * 1024 + 1), allowEmpty = true)
+        assertNotNull(error)
+    }
+}

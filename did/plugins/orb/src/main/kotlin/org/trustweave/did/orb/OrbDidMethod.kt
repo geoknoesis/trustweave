@@ -16,6 +16,7 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.sidetree.InMemorySidetreeKeyStore
 import org.trustweave.did.sidetree.SidetreeKeyPair
 import org.trustweave.did.sidetree.SidetreeKeyStore
+import org.trustweave.did.sidetree.SidetreeLongForm
 import org.trustweave.did.sidetree.SidetreeP256KeyPair
 import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.kms.KeyManagementService
@@ -165,6 +166,21 @@ class OrbDidMethod(
                 )
             }
 
+            // A long-form DID carries its own initial state: it must hash to the suffix, or the DID
+            // names something other than what it claims to. Only a verified long form may be answered
+            // under its canonical short form (`did:orb:<anchor>:<suffix>`).
+            val longForm = SidetreeLongForm.parse(config.namespace, did.value)
+            if (longForm != null) {
+                SidetreeLongForm.verifyInitialState(longForm)?.let { reason ->
+                    return@withContext DidMethodUtils.createErrorResolutionResult(
+                        "invalidDid",
+                        "Long-form initial state is invalid: $reason",
+                        method,
+                        did.value,
+                    )
+                }
+            }
+
             val response = sidetree.resolveDid(did.value)
             val document = response.document
             if (response.success && document != null) {
@@ -183,8 +199,13 @@ class OrbDidMethod(
                     }
                 // Reject (never rewrite or cache) a document that answers for a different DID. A
                 // long-form request may legitimately come back under its canonical short form.
-                ResolvedDocumentId
-                    .mismatchReason(did.value, parsed.id.value, allowCanonicalOfLongForm = true)
+                val idMismatch =
+                    if (longForm != null && parsed.id.value == longForm.canonicalDid) {
+                        null
+                    } else {
+                        ResolvedDocumentId.mismatchReason(did.value, parsed.id.value)
+                    }
+                idMismatch
                     ?.let { reason ->
                         return@withContext DidMethodUtils.createErrorResolutionResult(
                             "invalidDidDocument",

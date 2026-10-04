@@ -47,6 +47,22 @@ class EudiwProfilesTest {
     }
 
     @Test
+    fun `a rejected offer never echoes more than its scheme`() {
+        val secret = "pre-authorized_code=SECRET123"
+        for (bad in listOf("https://issuer.example/offer?$secret", "openid-credential-offer:/x?$secret", secret, "?$secret")) {
+            val message = EudiwOid4VciProfile.validateCredentialOffer(bad).violations.single()
+            assertFalse(message.contains("SECRET123"), message)
+        }
+        assertTrue(
+            EudiwOid4VciProfile
+                .validateCredentialOffer("https://issuer.example/offer")
+                .violations
+                .single()
+                .contains("https://..."),
+        )
+    }
+
+    @Test
     fun `credential formats are limited to the profile set`() {
         for (ok in listOf("vc+sd-jwt", "dc+sd-jwt", "mso_mdoc")) assertTrue(EudiwOid4VciProfile.validateFormat(ok).valid, ok)
         for (bad in listOf("jwt_vc_json", "ldp_vc", "", "VC+SD-JWT")) assertFalse(EudiwOid4VciProfile.validateFormat(bad).valid, bad)

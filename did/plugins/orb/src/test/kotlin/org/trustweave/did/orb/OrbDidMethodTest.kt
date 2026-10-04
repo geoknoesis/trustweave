@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -291,18 +292,92 @@ class OrbDidMethodTest {
             )
         }
 
+    private val b64 =
+        java.util.Base64
+            .getUrlEncoder()
+            .withoutPadding()
+
+    /** A consistent initial state: returns (suffix, base64url state). */
+    private fun initialState(recoveryCommitment: String = "EiCommitment"): Pair<String, String> {
+        val delta = kotlinx.serialization.json.buildJsonObject { put("patches", "none") }
+        val suffixData =
+            kotlinx.serialization.json.buildJsonObject {
+                put(
+                    "deltaHash",
+                    b64.encodeToString(
+                        org.trustweave.did.sidetree.SidetreeJcs
+                            .multihashSha256(
+                                org.trustweave.did.sidetree.SidetreeJcs
+                                    .canonicalize(delta),
+                            ),
+                    ),
+                )
+                put("recoveryCommitment", recoveryCommitment)
+            }
+        val state =
+            kotlinx.serialization.json.buildJsonObject {
+                put("suffixData", suffixData)
+                put("delta", delta)
+            }
+        val suffix =
+            b64.encodeToString(
+                org.trustweave.did.sidetree.SidetreeJcs
+                    .multihashSha256(
+                        org.trustweave.did.sidetree.SidetreeJcs
+                            .canonicalize(suffixData),
+                    ),
+            )
+        return suffix to b64.encodeToString(state.toString().toByteArray())
+    }
+
+    private fun docBody(id: String) =
+        """
+        {"didDocument":{"@context":["https://www.w3.org/ns/did/v1"],"id":"$id",
+         "verificationMethod":[],"authentication":[],"assertionMethod":[]},"didDocumentMetadata":{}}
+        """.trimIndent()
+
     @Test
     fun `resolveDid accepts the canonical short form for a long-form request`() =
         runBlocking<Unit> {
-            val suffix = "Ei" + "A".repeat(44)
-            val body =
-                """
-                {"didDocument":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:orb:$suffix",
-                 "verificationMethod":[],"authentication":[],"assertionMethod":[]},"didDocumentMetadata":{}}
-                """.trimIndent()
-            server.enqueue(MockResponse().setResponseCode(200).setBody(body))
+            val (suffix, state) = initialState()
+            server.enqueue(MockResponse().setResponseCode(200).setBody(docBody("did:orb:$suffix")))
 
-            assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:$suffix:eyJkZWx0YSI6e319")))
+            assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:$suffix:$state")))
+        }
+
+    @Test
+    fun `resolveDid accepts the anchored canonical form for an anchored long-form request`() =
+        runBlocking<Unit> {
+            val (suffix, state) = initialState()
+            val anchor = "hl:uEiDahaOGH1Nyjlm0zLg7j6cJ2oSGmy4Vi8k3Q4RVQqhK7Q:uoQ-CeEdodHRwczovL29yYi5leGFtcGxl"
+            server.enqueue(MockResponse().setResponseCode(200).setBody(docBody("did:orb:$anchor:$suffix")))
+
+            assertIs<DidResolutionResult.Success>(method.resolveDid(Did("did:orb:$anchor:$suffix:$state")))
+        }
+
+    @Test
+    fun `a long form whose initial state does not hash to the suffix is rejected before any request`() =
+        runBlocking<Unit> {
+            val (suffix, _) = initialState()
+            val (_, foreignState) = initialState(recoveryCommitment = "EiOther")
+
+            val failure = method.resolveDid(Did("did:orb:uAnchor:$suffix:$foreignState"))
+
+            assertIs<DidResolutionResult.Failure>(failure)
+            assertEquals(org.trustweave.did.resolver.DidErrorType.INVALID_DID, failure.errorType)
+            assertEquals(0, server.requestCount)
+        }
+
+    @Test
+    fun `a verified long form still cannot be answered with a different canonical id`() =
+        runBlocking<Unit> {
+            val (suffix, state) = initialState()
+            server.enqueue(MockResponse().setResponseCode(200).setBody(docBody("did:orb:uAnchor:$suffix")))
+
+            val failure = method.resolveDid(Did("did:orb:$suffix:$state"))
+
+            assertIs<DidResolutionResult.Failure>(failure)
+            assertEquals(org.trustweave.did.resolver.DidErrorType.INVALID_DID_DOCUMENT, failure.errorType)
         }
 
     @Test

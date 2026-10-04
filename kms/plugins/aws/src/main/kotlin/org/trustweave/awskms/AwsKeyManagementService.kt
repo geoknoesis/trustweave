@@ -1,27 +1,26 @@
 package org.trustweave.awskms
 
-import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.kms.Algorithm
-import org.trustweave.kms.KeyHandle
-import org.trustweave.kms.KeyManagementService
-import org.trustweave.kms.results.DeleteKeyResult
-import org.trustweave.kms.results.GenerateKeyResult
-import org.trustweave.kms.results.GetPublicKeyResult
-import org.trustweave.kms.results.SignResult
-import org.trustweave.kms.KmsOptionKeys
-import org.trustweave.awskms.AwsKmsOptionKeys
-import org.trustweave.kms.util.EcdsaSignatureCodec
-import org.trustweave.kms.util.KmsInputValidator
-import org.trustweave.kms.util.CacheEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import org.trustweave.awskms.AwsKmsOptionKeys
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.KeyHandle
+import org.trustweave.kms.KeyManagementService
+import org.trustweave.kms.KmsOptionKeys
+import org.trustweave.kms.results.DeleteKeyResult
+import org.trustweave.kms.results.GenerateKeyResult
+import org.trustweave.kms.results.GetPublicKeyResult
+import org.trustweave.kms.results.SignResult
+import org.trustweave.kms.util.CacheEntry
+import org.trustweave.kms.util.EcdsaSignatureCodec
+import org.trustweave.kms.util.KmsInputValidator
+import software.amazon.awssdk.awscore.exception.AwsServiceException
 import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.*
-import software.amazon.awssdk.awscore.exception.AwsServiceException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -47,22 +46,23 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class AwsKeyManagementService(
     private val config: AwsKmsConfig,
-    private val kmsClient: KmsClient = AwsKmsClientFactory.createClient(config)
-) : KeyManagementService, AutoCloseable {
-
+    private val kmsClient: KmsClient = AwsKmsClientFactory.createClient(config),
+) : KeyManagementService,
+    AutoCloseable {
     companion object {
         /**
          * Algorithms supported by AWS KMS.
          */
-        val SUPPORTED_ALGORITHMS = setOf(
-            Algorithm.Secp256k1,
-            Algorithm.P256,
-            Algorithm.P384,
-            Algorithm.P521,
-            Algorithm.RSA.RSA_2048,
-            Algorithm.RSA.RSA_3072,
-            Algorithm.RSA.RSA_4096
-        )
+        val SUPPORTED_ALGORITHMS =
+            setOf(
+                Algorithm.Secp256k1,
+                Algorithm.P256,
+                Algorithm.P384,
+                Algorithm.P521,
+                Algorithm.RSA.RSA_2048,
+                Algorithm.RSA.RSA_3072,
+                Algorithm.RSA.RSA_4096,
+            )
 
         /**
          * Default pending window for key deletion (30 days).
@@ -71,12 +71,12 @@ class AwsKeyManagementService(
     }
 
     private val logger = LoggerFactory.getLogger(AwsKeyManagementService::class.java)
-    
+
     // Cache for key metadata to avoid duplicate describeKey calls
     private val keyMetadataCache = ConcurrentHashMap<String, CacheEntry<KeyMetadata>>()
 
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
-    
+
     /**
      * Gets cached key metadata or fetches it if not cached or expired.
      *
@@ -89,21 +89,23 @@ class AwsKeyManagementService(
      */
     private suspend fun getCachedKeyMetadata(resolvedKeyId: String): KeyMetadata? {
         val cacheEntry = keyMetadataCache[resolvedKeyId]
-        
+
         // Check if cache entry exists and is not expired
         if (cacheEntry != null && !cacheEntry.isExpired()) {
             logger.debug("Using cached key metadata: keyId={}", resolvedKeyId)
             return cacheEntry.value
         }
-        
+
         // Fetch fresh metadata
-        val keyMetadata = runInterruptible {
-            kmsClient.describeKey(
-                DescribeKeyRequest.builder()
-                    .keyId(resolvedKeyId)
-                    .build()
-            )
-        }.keyMetadata()
+        val keyMetadata =
+            runInterruptible {
+                kmsClient.describeKey(
+                    DescribeKeyRequest
+                        .builder()
+                        .keyId(resolvedKeyId)
+                        .build(),
+                )
+            }.keyMetadata()
 
         // Check state BEFORE caching — never put a deleted/disabled key into the cache.
         // Callers treat null as KeyNotFound.
@@ -114,11 +116,12 @@ class AwsKeyManagementService(
 
         // Cache with TTL if configured
         val ttlSeconds = config.cacheTtlSeconds
-        val cacheEntryNew = if (ttlSeconds != null) {
-            CacheEntry.withTtlSeconds(keyMetadata, ttlSeconds)
-        } else {
-            CacheEntry.permanent(keyMetadata)
-        }
+        val cacheEntryNew =
+            if (ttlSeconds != null) {
+                CacheEntry.withTtlSeconds(keyMetadata, ttlSeconds)
+            } else {
+                CacheEntry.permanent(keyMetadata)
+            }
 
         // putIfAbsent ensures a concurrent invalidateCache().remove() always wins over a
         // delayed re-insert from a racing fetch.  If the entry is already present (another
@@ -128,7 +131,7 @@ class AwsKeyManagementService(
         logger.debug("Cached key metadata: keyId={}, ttlSeconds={}", resolvedKeyId, ttlSeconds)
         return keyMetadata
     }
-    
+
     /**
      * Invalidates cache entry for a key.
      */
@@ -139,415 +142,504 @@ class AwsKeyManagementService(
 
     override suspend fun generateKey(
         algorithm: Algorithm,
-        options: Map<String, Any?>
-    ): GenerateKeyResult = withContext(Dispatchers.IO) {
-        if (!supportsAlgorithm(algorithm)) {
-            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
-                algorithm = algorithm,
-                supportedAlgorithms = SUPPORTED_ALGORITHMS
-            )
-        }
-
-        // Validate key ID if provided
-        (options[KmsOptionKeys.KEY_ID] as? String)?.let { keyIdStr ->
-            val validationError = KmsInputValidator.validateKeyId(keyIdStr)
-            if (validationError != null) {
-                logger.warn("Invalid key ID provided: keyId={}, error={}", keyIdStr, validationError)
-                return@withContext GenerateKeyResult.Failure.InvalidOptions(
+        options: Map<String, Any?>,
+    ): GenerateKeyResult =
+        withContext(Dispatchers.IO) {
+            if (!supportsAlgorithm(algorithm)) {
+                return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
                     algorithm = algorithm,
-                    reason = "Invalid key ID: $validationError",
-                    invalidOptions = options
+                    supportedAlgorithms = SUPPORTED_ALGORITHMS,
                 )
             }
-        }
 
-        try {
-            val keySpec = AlgorithmMapping.toAwsKeySpec(algorithm)
-
-            val requestBuilder = CreateKeyRequest.builder()
-                .keySpec(keySpec)
-                .keyUsage(KeyUsageType.SIGN_VERIFY)
-
-            // Add description if provided
-            (options[KmsOptionKeys.DESCRIPTION] as? String)?.let {
-                requestBuilder.description(it)
-            }
-
-            // Add tags if provided
-            val tags = (options[AwsKmsOptionKeys.TAGS] as? Map<*, *>)?.let { map ->
-                map.entries.associate { (k, v) -> 
-                    k.toString() to v.toString() 
+            // Validate key ID if provided
+            (options[KmsOptionKeys.KEY_ID] as? String)?.let { keyIdStr ->
+                val validationError = KmsInputValidator.validateKeyId(keyIdStr)
+                if (validationError != null) {
+                    logger.warn("Invalid key ID provided: keyId={}, error={}", keyIdStr, validationError)
+                    return@withContext GenerateKeyResult.Failure.InvalidOptions(
+                        algorithm = algorithm,
+                        reason = "Invalid key ID: $validationError",
+                        invalidOptions = options,
+                    )
                 }
             }
-            tags?.let {
-                val tagList = it.map { (key, value) ->
-                    Tag.builder().tagKey(key).tagValue(value).build()
+
+            try {
+                val keySpec = AlgorithmMapping.toAwsKeySpec(algorithm)
+
+                val requestBuilder =
+                    CreateKeyRequest
+                        .builder()
+                        .keySpec(keySpec)
+                        .keyUsage(KeyUsageType.SIGN_VERIFY)
+
+                // Add description if provided
+                (options[KmsOptionKeys.DESCRIPTION] as? String)?.let {
+                    requestBuilder.description(it)
                 }
-                requestBuilder.tags(tagList)
-            }
 
-            val createResponse = runInterruptible { kmsClient.createKey(requestBuilder.build()) }
-            val keyId = createResponse.keyMetadata().keyId()
-            val keyArn = createResponse.keyMetadata().arn()
+                // Add tags if provided
+                val tags =
+                    (options[AwsKmsOptionKeys.TAGS] as? Map<*, *>)?.let { map ->
+                        map.entries.associate { (k, v) ->
+                            k.toString() to v.toString()
+                        }
+                    }
+                tags?.let {
+                    val tagList =
+                        it.map { (key, value) ->
+                            Tag
+                                .builder()
+                                .tagKey(key)
+                                .tagValue(value)
+                                .build()
+                        }
+                    requestBuilder.tags(tagList)
+                }
 
-            // Enable automatic rotation if requested
-            if (options[AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION] == true) {
-                try {
+                val createResponse = runInterruptible { kmsClient.createKey(requestBuilder.build()) }
+                val keyId = createResponse.keyMetadata().keyId()
+                val keyArn = createResponse.keyMetadata().arn()
+
+                // Enable automatic rotation if requested
+                if (options[AwsKmsOptionKeys.ENABLE_AUTOMATIC_ROTATION] == true) {
+                    try {
+                        runInterruptible {
+                            kmsClient.enableKeyRotation(
+                                EnableKeyRotationRequest
+                                    .builder()
+                                    .keyId(keyId)
+                                    .build(),
+                            )
+                        }
+                        logger.debug("Enabled automatic rotation for key: $keyId")
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        // Log warning but don't fail key creation
+                        // Automatic rotation may not be available for all key types
+                        logger.warn("Failed to enable automatic rotation for key $keyId: ${e.message}", e)
+                    }
+                }
+
+                // Create alias if provided
+                val alias = options[AwsKmsOptionKeys.ALIAS] as? String
+                alias?.let { aliasName ->
+                    try {
+                        val aliasValue = if (aliasName.startsWith("alias/")) aliasName else "alias/$aliasName"
+                        runInterruptible {
+                            kmsClient.createAlias(
+                                CreateAliasRequest
+                                    .builder()
+                                    .aliasName(aliasValue)
+                                    .targetKeyId(keyId)
+                                    .build(),
+                            )
+                        }
+                        logger.debug("Created alias $aliasValue for key: $keyId")
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        // If alias creation fails, continue with key ID
+                        // The key is still usable by its ID/ARN
+                        logger.warn("Failed to create alias $aliasName for key $keyId: ${e.message}", e)
+                    }
+                }
+
+                // Get public key to include in KeyHandle
+                val publicKeyResponse =
                     runInterruptible {
-                        kmsClient.enableKeyRotation(
-                            EnableKeyRotationRequest.builder()
+                        kmsClient.getPublicKey(
+                            GetPublicKeyRequest
+                                .builder()
                                 .keyId(keyId)
-                                .build()
+                                .build(),
                         )
                     }
-                    logger.debug("Enabled automatic rotation for key: $keyId")
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    // Log warning but don't fail key creation
-                    // Automatic rotation may not be available for all key types
-                    logger.warn("Failed to enable automatic rotation for key $keyId: ${e.message}", e)
-                }
-            }
 
-            // Create alias if provided
-            val alias = options[AwsKmsOptionKeys.ALIAS] as? String
-            alias?.let { aliasName ->
-                try {
-                    val aliasValue = if (aliasName.startsWith("alias/")) aliasName else "alias/$aliasName"
-                    runInterruptible {
-                        kmsClient.createAlias(
-                            CreateAliasRequest.builder()
-                                .aliasName(aliasValue)
-                                .targetKeyId(keyId)
-                                .build()
+                val publicKeyBytes = publicKeyResponse.publicKey().asByteArray()
+                val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
+
+                GenerateKeyResult.Success(
+                    KeyHandle(
+                        id = KeyId(keyArn ?: keyId), // Prefer ARN for full identification
+                        algorithm = algorithm.name,
+                        publicKeyJwk = publicKeyJwk,
+                    ),
+                )
+            } catch (e: AwsServiceException) {
+                val errorCode = e.awsErrorDetails()?.errorCode()
+                val requestId = e.requestId()
+                logger.error(
+                    "Failed to generate key",
+                    mapOf(
+                        "algorithm" to algorithm.name,
+                        "errorCode" to (errorCode ?: "unknown"),
+                        "requestId" to (requestId ?: "unknown"),
+                        "statusCode" to e.statusCode(),
+                    ),
+                    e,
+                )
+
+                when (errorCode) {
+                    "InvalidKeyUsageException" ->
+                        GenerateKeyResult.Failure.InvalidOptions(
+                            algorithm = algorithm,
+                            reason = "Invalid key usage: ${e.message ?: "Unknown error"}",
+                            invalidOptions = options,
                         )
-                    }
-                    logger.debug("Created alias $aliasValue for key: $keyId")
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    // If alias creation fails, continue with key ID
-                    // The key is still usable by its ID/ARN
-                    logger.warn("Failed to create alias $aliasName for key $keyId: ${e.message}", e)
+                    else ->
+                        GenerateKeyResult.Failure.Error(
+                            algorithm = algorithm,
+                            reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
+                            cause = e,
+                        )
                 }
-            }
-
-            // Get public key to include in KeyHandle
-            val publicKeyResponse = runInterruptible {
-                kmsClient.getPublicKey(
-                    GetPublicKeyRequest.builder()
-                        .keyId(keyId)
-                        .build()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error during key generation",
+                    mapOf(
+                        "algorithm" to algorithm.name,
+                    ),
+                    e,
                 )
-            }
-
-            val publicKeyBytes = publicKeyResponse.publicKey().asByteArray()
-            val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
-
-            GenerateKeyResult.Success(
-                KeyHandle(
-                    id = KeyId(keyArn ?: keyId), // Prefer ARN for full identification
-                    algorithm = algorithm.name,
-                    publicKeyJwk = publicKeyJwk
-                )
-            )
-        } catch (e: AwsServiceException) {
-            val errorCode = e.awsErrorDetails()?.errorCode()
-            val requestId = e.requestId()
-            logger.error("Failed to generate key", mapOf(
-                "algorithm" to algorithm.name,
-                "errorCode" to (errorCode ?: "unknown"),
-                "requestId" to (requestId ?: "unknown"),
-                "statusCode" to e.statusCode()
-            ), e)
-            
-            when (errorCode) {
-                "InvalidKeyUsageException" -> GenerateKeyResult.Failure.InvalidOptions(
-                    algorithm = algorithm,
-                    reason = "Invalid key usage: ${e.message ?: "Unknown error"}",
-                    invalidOptions = options
-                )
-                else -> GenerateKeyResult.Failure.Error(
+                GenerateKeyResult.Failure.Error(
                     algorithm = algorithm,
                     reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    cause = e,
                 )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Unexpected error during key generation", mapOf(
-                "algorithm" to algorithm.name
-            ), e)
-            GenerateKeyResult.Failure.Error(
-                algorithm = algorithm,
-                reason = "Failed to generate key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
         }
-    }
 
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
-        try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
+        withContext(Dispatchers.IO) {
+            try {
+                val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
-            // Get key metadata to determine algorithm (use cache)
-            val keyMetadata = getCachedKeyMetadata(resolvedKeyId)
-                ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
-            val keySpec = keyMetadata.keySpec()
-            val algorithmName = keySpec.toString()
-            val algorithm = parseAlgorithmFromKeySpec(algorithmName)
-                ?: return@withContext GetPublicKeyResult.Failure.Error(
-                    keyId = keyId,
-                    reason = "Unknown key spec: $algorithmName"
+                // Get key metadata to determine algorithm (use cache)
+                val keyMetadata =
+                    getCachedKeyMetadata(resolvedKeyId)
+                        ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+                val keySpec = keyMetadata.keySpec()
+                val algorithmName = keySpec.toString()
+                val algorithm =
+                    parseAlgorithmFromKeySpec(algorithmName)
+                        ?: return@withContext GetPublicKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Unknown key spec: $algorithmName",
+                        )
+
+                // Get public key
+                val publicKeyResponse =
+                    runInterruptible {
+                        kmsClient.getPublicKey(
+                            GetPublicKeyRequest
+                                .builder()
+                                .keyId(resolvedKeyId)
+                                .build(),
+                        )
+                    }
+                val publicKeyBytes = publicKeyResponse.publicKey().asByteArray()
+                val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
+
+                GetPublicKeyResult.Success(
+                    KeyHandle(
+                        id = KeyId(keyMetadata.arn() ?: keyMetadata.keyId()),
+                        algorithm = algorithm.name,
+                        publicKeyJwk = publicKeyJwk,
+                    ),
                 )
-
-            // Get public key
-            val publicKeyResponse = runInterruptible {
-                kmsClient.getPublicKey(
-                    GetPublicKeyRequest.builder()
-                        .keyId(resolvedKeyId)
-                        .build()
+            } catch (e: AwsServiceException) {
+                val requestId = e.requestId()
+                if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
+                    logger.debug(
+                        "Key not found: ${keyId.value}",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "requestId" to (requestId ?: "unknown"),
+                        ),
+                    )
+                    GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+                } else {
+                    logger.error(
+                        "Failed to get public key",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
+                            "requestId" to (requestId ?: "unknown"),
+                            "statusCode" to e.statusCode(),
+                        ),
+                        e,
+                    )
+                    GetPublicKeyResult.Failure.Error(
+                        keyId = keyId,
+                        reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
+                        cause = e,
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error getting public key",
+                    mapOf(
+                        "keyId" to keyId.value,
+                    ),
+                    e,
                 )
-            }
-            val publicKeyBytes = publicKeyResponse.publicKey().asByteArray()
-            val publicKeyJwk = AlgorithmMapping.publicKeyToJwk(publicKeyBytes, algorithm)
-
-            GetPublicKeyResult.Success(
-                KeyHandle(
-                    id = KeyId(keyMetadata.arn() ?: keyMetadata.keyId()),
-                    algorithm = algorithm.name,
-                    publicKeyJwk = publicKeyJwk
-                )
-            )
-        } catch (e: AwsServiceException) {
-            val requestId = e.requestId()
-            if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
-                logger.debug("Key not found: ${keyId.value}", mapOf(
-                    "keyId" to keyId.value,
-                    "requestId" to (requestId ?: "unknown")
-                ))
-                GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
-            } else {
-                logger.error("Failed to get public key", mapOf(
-                    "keyId" to keyId.value,
-                    "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
-                    "requestId" to (requestId ?: "unknown"),
-                    "statusCode" to e.statusCode()
-                ), e)
                 GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
                     reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    cause = e,
                 )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Unexpected error getting public key", mapOf(
-                "keyId" to keyId.value
-            ), e)
-            GetPublicKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to get public key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
         }
-    }
 
+    /**
+     * Signs [data] with AWS KMS `Sign` (`MessageType.RAW`; AWS hashes the message itself).
+     *
+     * **Empty data is rejected.** The AWS KMS `Sign` API defines `Message` with a length constraint of
+     * 1 to 4096 bytes, so a zero-length message cannot be signed here. Messages over 4096 bytes are
+     * rejected too; do not pre-hash, as the pre-hash would be hashed again. Both are reported as
+     * [SignResult.Failure.Error] naming the constraint, without a round trip to AWS.
+     */
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithm: Algorithm?
-    ): SignResult = withContext(Dispatchers.IO) {
-        // AWS KMS hashes internally (MessageType.RAW); callers must pass raw data, not a pre-hash.
-        // Validate input data
-        val dataValidationError = KmsInputValidator.validateSignData(data)
-        if (dataValidationError != null) {
-            logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
-            return@withContext SignResult.Failure.Error(
-                keyId = keyId,
-                reason = dataValidationError
-            )
-        }
-
-        try {
-            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
-
-            // Get key metadata (use cache)
-            val keyMetadata = getCachedKeyMetadata(resolvedKeyId)
-                ?: return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
-            val keySpec = keyMetadata.keySpec().toString()
-            val keyAlgorithm = parseAlgorithmFromKeySpec(keySpec)
-                ?: return@withContext SignResult.Failure.Error(
-                    keyId = keyId,
-                    reason = "Cannot determine key algorithm for key: ${keyId.value}"
+        algorithm: Algorithm?,
+    ): SignResult =
+        withContext(Dispatchers.IO) {
+            // AWS KMS hashes internally (MessageType.RAW); callers must pass raw data, not a pre-hash.
+            // Validate input data
+            val dataValidationError =
+                KmsInputValidator.validateSignData(
+                    data,
+                    emptyDataMessage =
+                        "Cannot sign empty data: the AWS KMS Sign API requires a Message of 1 to 4096 bytes " +
+                            "(Message length constraint, minimum 1), so a zero-length message is rejected by the service",
                 )
-
-            // Determine signing algorithm (use provided or key's default)
-            val signingAlgorithm = algorithm ?: keyAlgorithm
-
-            // Check if algorithm is compatible with key
-            if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
-                logger.warn("Algorithm incompatibility detected", mapOf(
-                    "keyId" to keyId.value,
-                    "requestedAlgorithm" to algorithm.name,
-                    "keyAlgorithm" to keyAlgorithm.name
-                ))
-                return@withContext SignResult.Failure.UnsupportedAlgorithm(
-                    keyId = keyId,
-                    requestedAlgorithm = algorithm,
-                    keyAlgorithm = keyAlgorithm,
-                    reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'"
-                )
-            }
-
-            val awsSigningAlgorithm = AlgorithmMapping.toAwsSigningAlgorithm(signingAlgorithm)
-
-            // AWS KMS rejects payloads larger than 4096 bytes for ALL algorithm types when using
-            // MessageType.RAW.  The guard must be before the algorithm dispatch so that RSA
-            // payloads exceeding the limit are caught with a clear message rather than failing
-            // at AWS with a confusing InvalidRequestException.
-            //
-            // NOTE: do NOT advise callers to pre-hash. This service always sends
-            // MessageType.RAW, so AWS hashes the payload server-side; a pre-hashed payload
-            // would be hashed AGAIN and the signature would never verify. Supporting
-            // MessageType.DIGEST safely would require an explicit caller opt-in, and the
-            // KeyManagementService.sign() API has no per-call options parameter — so payloads
-            // over 4096 bytes are simply not signable through this provider today.
-            if (data.size > 4096) {
+            if (dataValidationError != null) {
+                logger.warn("Invalid data for signing: keyId={}, error={}", keyId.value, dataValidationError)
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Payload size ${data.size} bytes exceeds the AWS KMS 4096-byte limit for " +
-                        "raw-message signing. AWS KMS hashes the payload internally (MessageType.RAW); " +
-                        "do NOT pre-hash — a pre-hashed payload would be double-hashed and the " +
-                        "signature would not verify. Payloads larger than 4096 bytes cannot be " +
-                        "signed through this provider."
+                    reason = dataValidationError,
                 )
             }
 
-            // AWS KMS always uses MessageType.RAW — it performs the hash internally for both
-            // ECDSA and RSASSA operations.
-            val messageToSign = data
-            val messageType = MessageType.RAW
+            try {
+                val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
-            val signRequest = SignRequest.builder()
-                .keyId(resolvedKeyId)
-                .message(SdkBytes.fromByteArray(messageToSign))
-                .signingAlgorithm(awsSigningAlgorithm)
-                .messageType(messageType)
-                .build()
+                // Get key metadata (use cache)
+                val keyMetadata =
+                    getCachedKeyMetadata(resolvedKeyId)
+                        ?: return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
+                val keySpec = keyMetadata.keySpec().toString()
+                val keyAlgorithm =
+                    parseAlgorithmFromKeySpec(keySpec)
+                        ?: return@withContext SignResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Cannot determine key algorithm for key: ${keyId.value}",
+                        )
 
-            val signResponse = runInterruptible { kmsClient.sign(signRequest) }
-            // AWS KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService contract
-            // requires P1363 (raw r||s) with low-s for secp256k1, so normalize before returning.
-            // RSA signatures pass through unchanged.
-            SignResult.Success(
-                EcdsaSignatureCodec.normalize(signResponse.signature().asByteArray(), signingAlgorithm)
-            )
-        } catch (e: AwsServiceException) {
-            val requestId = e.requestId()
-            if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
-                logger.debug("Key not found for signing: ${keyId.value}", mapOf(
-                    "keyId" to keyId.value,
-                    "requestId" to (requestId ?: "unknown")
-                ))
-                SignResult.Failure.KeyNotFound(keyId = keyId)
-            } else {
-                logger.error("Failed to sign data", mapOf(
-                    "keyId" to keyId.value,
-                    "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
-                    "requestId" to (requestId ?: "unknown"),
-                    "statusCode" to e.statusCode()
-                ), e)
+                // Determine signing algorithm (use provided or key's default)
+                val signingAlgorithm = algorithm ?: keyAlgorithm
+
+                // Check if algorithm is compatible with key
+                if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                    logger.warn(
+                        "Algorithm incompatibility detected",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "requestedAlgorithm" to algorithm.name,
+                            "keyAlgorithm" to keyAlgorithm.name,
+                        ),
+                    )
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = keyAlgorithm,
+                        reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
+                    )
+                }
+
+                val awsSigningAlgorithm = AlgorithmMapping.toAwsSigningAlgorithm(signingAlgorithm)
+
+                // AWS KMS rejects payloads larger than 4096 bytes for ALL algorithm types when using
+                // MessageType.RAW.  The guard must be before the algorithm dispatch so that RSA
+                // payloads exceeding the limit are caught with a clear message rather than failing
+                // at AWS with a confusing InvalidRequestException.
+                //
+                // NOTE: do NOT advise callers to pre-hash. This service always sends
+                // MessageType.RAW, so AWS hashes the payload server-side; a pre-hashed payload
+                // would be hashed AGAIN and the signature would never verify. Supporting
+                // MessageType.DIGEST safely would require an explicit caller opt-in, and the
+                // KeyManagementService.sign() API has no per-call options parameter — so payloads
+                // over 4096 bytes are simply not signable through this provider today.
+                if (data.size > 4096) {
+                    return@withContext SignResult.Failure.Error(
+                        keyId = keyId,
+                        reason =
+                            "Payload size ${data.size} bytes exceeds the AWS KMS 4096-byte limit for " +
+                                "raw-message signing. AWS KMS hashes the payload internally (MessageType.RAW); " +
+                                "do NOT pre-hash — a pre-hashed payload would be double-hashed and the " +
+                                "signature would not verify. Payloads larger than 4096 bytes cannot be " +
+                                "signed through this provider.",
+                    )
+                }
+
+                // AWS KMS always uses MessageType.RAW — it performs the hash internally for both
+                // ECDSA and RSASSA operations.
+                val messageToSign = data
+                val messageType = MessageType.RAW
+
+                val signRequest =
+                    SignRequest
+                        .builder()
+                        .keyId(resolvedKeyId)
+                        .message(SdkBytes.fromByteArray(messageToSign))
+                        .signingAlgorithm(awsSigningAlgorithm)
+                        .messageType(messageType)
+                        .build()
+
+                val signResponse = runInterruptible { kmsClient.sign(signRequest) }
+                // AWS KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService contract
+                // requires P1363 (raw r||s) with low-s for secp256k1, so normalize before returning.
+                // RSA signatures pass through unchanged.
+                SignResult.Success(
+                    EcdsaSignatureCodec.normalize(signResponse.signature().asByteArray(), signingAlgorithm),
+                )
+            } catch (e: AwsServiceException) {
+                val requestId = e.requestId()
+                if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
+                    logger.debug(
+                        "Key not found for signing: ${keyId.value}",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "requestId" to (requestId ?: "unknown"),
+                        ),
+                    )
+                    SignResult.Failure.KeyNotFound(keyId = keyId)
+                } else {
+                    logger.error(
+                        "Failed to sign data",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
+                            "requestId" to (requestId ?: "unknown"),
+                            "statusCode" to e.statusCode(),
+                        ),
+                        e,
+                    )
+                    SignResult.Failure.Error(
+                        keyId = keyId,
+                        reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
+                        cause = e,
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error during signing",
+                    mapOf(
+                        "keyId" to keyId.value,
+                    ),
+                    e,
+                )
                 SignResult.Failure.Error(
                     keyId = keyId,
                     reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    cause = e,
                 )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Unexpected error during signing", mapOf(
-                "keyId" to keyId.value
-            ), e)
-            SignResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to sign data: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
         }
-    }
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
-        val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
+        withContext(Dispatchers.IO) {
+            val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
-        try {
-            // Get pending window from config or use default
-            val pendingWindowInDays = config.pendingWindowInDays ?: DEFAULT_PENDING_WINDOW_DAYS
+            try {
+                // Get pending window from config or use default
+                val pendingWindowInDays = config.pendingWindowInDays ?: DEFAULT_PENDING_WINDOW_DAYS
 
-            runInterruptible {
-                kmsClient.scheduleKeyDeletion(
-                    ScheduleKeyDeletionRequest.builder()
-                        .keyId(resolvedKeyId)
-                        .pendingWindowInDays(pendingWindowInDays)
-                        .build()
+                runInterruptible {
+                    kmsClient.scheduleKeyDeletion(
+                        ScheduleKeyDeletionRequest
+                            .builder()
+                            .keyId(resolvedKeyId)
+                            .pendingWindowInDays(pendingWindowInDays)
+                            .build(),
+                    )
+                }
+
+                logger.info(
+                    "Scheduled key deletion",
+                    mapOf(
+                        "keyId" to keyId.value,
+                        "pendingWindowInDays" to pendingWindowInDays,
+                    ),
                 )
-            }
 
-            logger.info("Scheduled key deletion", mapOf(
-                "keyId" to keyId.value,
-                "pendingWindowInDays" to pendingWindowInDays
-            ))
-
-            // Invalidate cache after scheduleKeyDeletion returns so that any concurrent
-            // getCachedKeyMetadata fetch that races to re-insert will be caught by the
-            // PENDING_DELETION guard in getCachedKeyMetadata instead of surviving in cache.
-            invalidateCache(resolvedKeyId)
-
-            DeleteKeyResult.Deleted
-        } catch (e: AwsServiceException) {
-            val requestId = e.requestId()
-            if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
-                logger.debug("Key not found for deletion (idempotent): ${keyId.value}", mapOf(
-                    "keyId" to keyId.value,
-                    "requestId" to (requestId ?: "unknown")
-                ))
-                // Invalidate cache even if key not found (cleanup)
+                // Invalidate cache after scheduleKeyDeletion returns so that any concurrent
+                // getCachedKeyMetadata fetch that races to re-insert will be caught by the
+                // PENDING_DELETION guard in getCachedKeyMetadata instead of surviving in cache.
                 invalidateCache(resolvedKeyId)
-                DeleteKeyResult.NotFound // Key doesn't exist (idempotent success)
-            } else {
-                logger.error("Failed to delete key", mapOf(
-                    "keyId" to keyId.value,
-                    "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
-                    "requestId" to (requestId ?: "unknown"),
-                    "statusCode" to e.statusCode()
-                ), e)
+
+                DeleteKeyResult.Deleted
+            } catch (e: AwsServiceException) {
+                val requestId = e.requestId()
+                if (e.statusCode() == 404 || e.awsErrorDetails()?.errorCode() == "NotFoundException") {
+                    logger.debug(
+                        "Key not found for deletion (idempotent): ${keyId.value}",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "requestId" to (requestId ?: "unknown"),
+                        ),
+                    )
+                    // Invalidate cache even if key not found (cleanup)
+                    invalidateCache(resolvedKeyId)
+                    DeleteKeyResult.NotFound // Key doesn't exist (idempotent success)
+                } else {
+                    logger.error(
+                        "Failed to delete key",
+                        mapOf(
+                            "keyId" to keyId.value,
+                            "errorCode" to (e.awsErrorDetails()?.errorCode() ?: "unknown"),
+                            "requestId" to (requestId ?: "unknown"),
+                            "statusCode" to e.statusCode(),
+                        ),
+                        e,
+                    )
+                    DeleteKeyResult.Failure.Error(
+                        keyId = keyId,
+                        reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
+                        cause = e,
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(
+                    "Unexpected error during key deletion",
+                    mapOf(
+                        "keyId" to keyId.value,
+                    ),
+                    e,
+                )
                 DeleteKeyResult.Failure.Error(
                     keyId = keyId,
                     reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
-                    cause = e
+                    cause = e,
                 )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Unexpected error during key deletion", mapOf(
-                "keyId" to keyId.value
-            ), e)
-            DeleteKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to delete key: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
         }
-    }
 
     /**
      * Parses algorithm from AWS KMS key spec string.
      */
-    private fun parseAlgorithmFromKeySpec(keySpec: String): Algorithm? {
-        return when (keySpec.uppercase()) {
+    private fun parseAlgorithmFromKeySpec(keySpec: String): Algorithm? =
+        when (keySpec.uppercase()) {
             "ECC_ED25519" -> null // Ed25519 is not supported by AWS KMS
             "ECC_SECG_P256K1" -> Algorithm.Secp256k1
             "ECC_NIST_P256" -> Algorithm.P256
@@ -558,11 +650,8 @@ class AwsKeyManagementService(
             "RSA_4096" -> Algorithm.RSA.RSA_4096
             else -> null
         }
-    }
-
 
     override fun close() {
         kmsClient.close()
     }
 }
-

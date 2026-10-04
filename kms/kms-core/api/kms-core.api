@@ -681,6 +681,9 @@ public final class org/trustweave/kms/util/KmsInputValidator {
 	public final fun validateKeyId (Ljava/lang/String;)Ljava/lang/String;
 	public final fun validateKeyIdWithResult (Ljava/lang/String;)Lkotlin/Pair;
 	public final fun validateSignData ([B)Ljava/lang/String;
+	public final fun validateSignData ([BZ)Ljava/lang/String;
+	public final fun validateSignData ([BZLjava/lang/String;)Ljava/lang/String;
+	public static synthetic fun validateSignData$default (Lorg/trustweave/kms/util/KmsInputValidator;[BZLjava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
 	public final fun validateSignDataWithResult ([B)Lkotlin/Pair;
 }
 

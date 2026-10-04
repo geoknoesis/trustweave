@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
     implementation(libs.okhttp)
+    implementation(libs.slf4j.api)
     implementation(libs.bouncycastle.prov)
 
     testImplementation(project(":testkit"))

@@ -29,7 +29,6 @@ import org.trustweave.did.registrar.model.*
  * ```
  */
 interface UniversalRegistrarProtocolAdapter {
-
     /**
      * Creates a new DID using the Universal Registrar protocol.
      *
@@ -41,7 +40,7 @@ interface UniversalRegistrarProtocolAdapter {
     suspend fun createDid(
         baseUrl: String,
         method: String,
-        options: CreateDidOptions
+        options: CreateDidOptions,
     ): DidRegistrationResponse
 
     /**
@@ -57,7 +56,7 @@ interface UniversalRegistrarProtocolAdapter {
         baseUrl: String,
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions
+        options: UpdateDidOptions,
     ): DidRegistrationResponse
 
     /**
@@ -71,7 +70,7 @@ interface UniversalRegistrarProtocolAdapter {
     suspend fun deactivateDid(
         baseUrl: String,
         did: String,
-        options: DeactivateDidOptions
+        options: DeactivateDidOptions,
     ): DidRegistrationResponse
 
     /**
@@ -83,7 +82,18 @@ interface UniversalRegistrarProtocolAdapter {
      */
     suspend fun getOperationStatus(
         baseUrl: String,
-        jobId: String
+        jobId: String,
     ): DidRegistrationResponse
-}
 
+    /**
+     * Returns an adapter that authenticates every request with [apiKey], using this provider's
+     * mechanism. Called by `DefaultUniversalRegistrar` when an API key is configured.
+     *
+     * The default throws, so a custom adapter that cannot send credentials fails loudly instead
+     * of the key being silently dropped.
+     */
+    fun withApiKey(apiKey: String): UniversalRegistrarProtocolAdapter =
+        throw UnsupportedOperationException(
+            "${this::class.simpleName} does not support API-key authentication; override withApiKey",
+        )
+}

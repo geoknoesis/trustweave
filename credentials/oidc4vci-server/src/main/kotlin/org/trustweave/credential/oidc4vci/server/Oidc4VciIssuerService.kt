@@ -13,7 +13,6 @@ import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 data class OfferState(
     val credentialTypes: List<String>,
@@ -67,7 +66,7 @@ class IssuerCapacityExceededException(
 ) : IllegalStateException(message)
 
 /** A deferred credential awaiting pickup, with the time it was registered (for expiry). */
-internal data class DeferredEntry(
+data class DeferredEntry(
     val credential: String,
     val issuedAt: Long,
 )
@@ -129,18 +128,17 @@ class Oidc4VciIssuerService
         val deferredTtlSeconds: Long = 3600,
         /** Upper bound on retained deferred credentials. */
         val maxDeferredCredentials: Int = 10_000,
-    ) {
-        private val pendingOffers = ConcurrentHashMap<String, OfferState>()
-        private val activeTokens = ConcurrentHashMap<String, TokenEntry>()
-
         /**
-         * Credentials awaiting pickup at the deferred endpoint, keyed by transaction id. Nothing in
-         * this service defers issuance by itself; a host that does registers results through
-         * [registerDeferredCredential]. Entries expire after [deferredTtlSeconds] and the map is
+         * Where offers, access tokens and deferred credentials are kept. Defaults to a process-local
+         * in-memory store; supply another [Oidc4VciIssuerStateStore] to share or persist issuer state.
+         *
+         * Deferred credentials awaiting pickup at the deferred endpoint are keyed by transaction id.
+         * Nothing in this service defers issuance by itself; a host that does registers results through
+         * [registerDeferredCredential]. Entries expire after [deferredTtlSeconds] and the store is
          * bounded by [maxDeferredCredentials].
          */
-        private val deferredCredentials = ConcurrentHashMap<String, DeferredEntry>()
-
+        val stateStore: Oidc4VciIssuerStateStore = InMemoryOidc4VciIssuerStateStore(),
+    ) {
         fun getMetadata(): CredentialIssuerMetadata =
             CredentialIssuerMetadata(
                 credentialIssuer = baseUrl,
@@ -157,11 +155,10 @@ class Oidc4VciIssuerService
             txCodeValue: String? = null,
         ): CreateOfferResponse {
             purgeExpired()
-            if (pendingOffers.size >= maxPendingOffers) {
+            val preAuthCode = UUID.randomUUID().toString()
+            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue), maxPendingOffers)) {
                 throw IssuerCapacityExceededException("Too many pending credential offers ($maxPendingOffers)")
             }
-            val preAuthCode = UUID.randomUUID().toString()
-            pendingOffers[preAuthCode] = OfferState(credentialTypes, txCode, txCodeValue)
             return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
         }
 
@@ -228,7 +225,7 @@ class Oidc4VciIssuerService
             // Removed before it is judged, so a redemption attempt consumes the code either way: a
             // wrong tx_code must not leave the offer available for another guess.
             val offerState =
-                pendingOffers.remove(preAuthCode)
+                stateStore.consumeOffer(preAuthCode)
                     ?: throw IllegalArgumentException("Unknown or expired pre-authorized_code")
             if (System.currentTimeMillis() - offerState.issuedAt >= offerTtlSeconds * 1000) {
                 throw IllegalArgumentException("Unknown or expired pre-authorized_code")
@@ -240,12 +237,11 @@ class Oidc4VciIssuerService
                     "Invalid tx_code"
                 }
             }
-            if (activeTokens.size >= maxActiveTokens) {
-                throw IssuerCapacityExceededException("Too many active access tokens ($maxActiveTokens)")
-            }
             val accessToken = UUID.randomUUID().toString()
             val entry = TokenEntry(offerState)
-            activeTokens[accessToken] = entry
+            if (!stateStore.putToken(accessToken, entry, maxActiveTokens)) {
+                throw IssuerCapacityExceededException("Too many active access tokens ($maxActiveTokens)")
+            }
             return TokenResponse(
                 accessToken = accessToken,
                 expiresIn = tokenTtlSeconds,
@@ -298,7 +294,7 @@ class Oidc4VciIssuerService
             accessToken: String,
         ): CredentialServerResponse? {
             requireValidToken(accessToken)
-            val entry = deferredCredentials.remove(transactionId) ?: return null
+            val entry = stateStore.consumeDeferred(transactionId) ?: return null
             if (System.currentTimeMillis() - entry.issuedAt >= deferredTtlSeconds * 1000) return null
             return CredentialServerResponse(credential = entry.credential)
         }
@@ -312,10 +308,9 @@ class Oidc4VciIssuerService
             credentialJson: String,
         ) {
             purgeExpired()
-            if (deferredCredentials.size >= maxDeferredCredentials) {
+            if (!stateStore.putDeferred(transactionId, DeferredEntry(credentialJson, System.currentTimeMillis()), maxDeferredCredentials)) {
                 throw IssuerCapacityExceededException("Too many deferred credentials ($maxDeferredCredentials)")
             }
-            deferredCredentials[transactionId] = DeferredEntry(credentialJson, System.currentTimeMillis())
         }
 
         /** Throws [InvalidTokenException] unless [accessToken] is a live access token. */
@@ -339,27 +334,26 @@ class Oidc4VciIssuerService
          * times TTL rather than by uptime. Public so a host can also run it on its own schedule, and
          * so the bound is testable.
          */
-        fun purgeExpired(now: Long = System.currentTimeMillis()): Int {
-            val before = pendingOffers.size + activeTokens.size + deferredCredentials.size
-            pendingOffers.values.removeIf { now - it.issuedAt >= offerTtlSeconds * 1000 }
-            activeTokens.values.removeIf { now - it.issuedAt >= tokenTtlSeconds * 1000 }
-            deferredCredentials.values.removeIf { now - it.issuedAt >= deferredTtlSeconds * 1000 }
-            return before - (pendingOffers.size + activeTokens.size + deferredCredentials.size)
-        }
+        fun purgeExpired(now: Long = System.currentTimeMillis()): Int =
+            stateStore.purgeExpired(
+                offersIssuedAtOrBefore = now - offerTtlSeconds * 1000,
+                tokensIssuedAtOrBefore = now - tokenTtlSeconds * 1000,
+                deferredIssuedAtOrBefore = now - deferredTtlSeconds * 1000,
+            )
 
         /** Retained offer and token counts, for a host metric or a test. Never the secrets themselves. */
-        fun retainedState(): Pair<Int, Int> = pendingOffers.size to activeTokens.size
+        fun retainedState(): Pair<Int, Int> = stateStore.offerCount() to stateStore.tokenCount()
 
         /** Retained deferred-credential count, for a host metric or a test. */
-        fun retainedDeferredCount(): Int = deferredCredentials.size
+        fun retainedDeferredCount(): Int = stateStore.deferredCount()
 
         /** Returns the live [TokenEntry] or throws [InvalidTokenException] (unknown/expired). */
         private fun requireValidToken(accessToken: String): TokenEntry {
             val entry =
-                activeTokens[accessToken]
+                stateStore.getToken(accessToken)
                     ?: throw InvalidTokenException("Invalid or expired access_token")
             if (System.currentTimeMillis() - entry.issuedAt >= tokenTtlSeconds * 1000) {
-                activeTokens.remove(accessToken)
+                stateStore.removeToken(accessToken)
                 throw InvalidTokenException("access_token expired")
             }
             return entry
@@ -368,8 +362,8 @@ class Oidc4VciIssuerService
         /** Rotates the `c_nonce` bound to [accessToken] and returns the fresh value. */
         private fun rotateCNonce(accessToken: String): String {
             val fresh = UUID.randomUUID().toString()
-            activeTokens.computeIfPresent(accessToken) { _, entry ->
-                entry.copy(cNonce = fresh, cNonceIssuedAt = System.currentTimeMillis())
+            stateStore.updateToken(accessToken) { entry ->
+                entry.copy(cNonce = fresh, cNonceIssuedAt = System.currentTimeMillis()) to Unit
             }
             return fresh
         }
@@ -445,7 +439,7 @@ class Oidc4VciIssuerService
                 payload["nonce"]?.jsonPrimitive?.contentOrNull
                     ?: reject("proof.jwt is missing the nonce claim")
             // Atomic consume-and-rotate: the compare and the rotation happen inside one
-            // computeIfPresent so a c_nonce is strictly single-use — two concurrent
+            // updateToken step so a c_nonce is strictly single-use — two concurrent
             // credential requests echoing the same nonce cannot both pass.
             if (!consumeCNonce(accessToken, nonce)) {
                 reject("proof.jwt nonce does not match the current c_nonce (or it expired) — retry with the fresh c_nonce")
@@ -456,14 +450,13 @@ class Oidc4VciIssuerService
 
         /**
          * Atomically validates [presentedNonce] against the token's live, unexpired `c_nonce`
-         * and rotates it in the same [ConcurrentHashMap.computeIfPresent] step (single-use).
+         * and rotates it in the same [Oidc4VciIssuerStateStore.updateToken] step (single-use).
          */
         private fun consumeCNonce(
             accessToken: String,
             presentedNonce: String,
-        ): Boolean {
-            var consumed = false
-            activeTokens.computeIfPresent(accessToken) { _, entry ->
+        ): Boolean =
+            stateStore.updateToken(accessToken) { entry ->
                 val live = System.currentTimeMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
                 val matches =
                     MessageDigest.isEqual(
@@ -471,14 +464,11 @@ class Oidc4VciIssuerService
                         entry.cNonce.toByteArray(Charsets.UTF_8),
                     )
                 if (live && matches) {
-                    consumed = true
-                    entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = System.currentTimeMillis())
+                    entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = System.currentTimeMillis()) to true
                 } else {
-                    entry
+                    entry to false
                 }
-            }
-            return consumed
-        }
+            } ?: false
 
         /** A verified proof key: the JCA public key plus the subject DID it binds the credential to. */
         private data class ProofKey(

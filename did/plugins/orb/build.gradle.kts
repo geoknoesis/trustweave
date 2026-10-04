@@ -21,6 +21,7 @@ dependencies {
 
     // HTTP client for Orb API
     implementation(libs.okhttp)
+    implementation(libs.slf4j.api)
 
     // JSON serialization
     implementation(libs.jackson.module.kotlin)
@@ -32,4 +33,3 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.junit)
 }
-

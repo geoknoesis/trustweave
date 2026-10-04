@@ -2,11 +2,61 @@
 
 version: 2
 updates:
+  # Root Gradle build. Related libraries move together (one PR instead of one per artifact). A
+  # dependency joins the FIRST group whose patterns match, so the specific groups come before
+  # `minor-and-patch`. Major upgrades are never grouped: each arrives as its own PR, except the
+  # deliberately deferred ones listed under `ignore`
+  # (see docs/contributing/dependency-upgrade-plan.md; remove an entry in the PR that migrates it).
   - package-ecosystem: gradle
     directory: "/"
     schedule:
       interval: weekly
     open-pull-requests-limit: 15
+    groups:
+      kotlin-and-coroutines:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.kotlinx:kotlinx-coroutines*"
+          - "org.jetbrains.kotlinx:kotlinx-serialization*"
+        update-types: [minor, patch]
+      aws-sdk:
+        patterns:
+          - "software.amazon.awssdk*"
+        update-types: [minor, patch]
+      test-libs:
+        patterns:
+          - "org.junit*"
+          - "io.kotest*"
+          - "io.mockk*"
+          - "org.testcontainers*"
+          - "com.squareup.okhttp3:mockwebserver*"
+        update-types: [minor, patch]
+      minor-and-patch:
+        patterns: ["*"]
+        # kotlinx-datetime 0.x minors (0.6 -> 0.7) are breaking API migrations, so they stay out
+        # of the batch and arrive on their own.
+        exclude-patterns:
+          - "org.jetbrains.kotlinx:kotlinx-datetime*"
+        update-types: [minor, patch]
+    ignore:
+      # Ktor 2 -> 3 changes server and client APIs (~14 build files).
+      - dependency-name: "io.ktor*"
+        update-types: ["version-update:semver-major"]
+      # Spring Boot major (library module did:registrar-server-spring only).
+      - dependency-name: "org.springframework.boot*"
+        update-types: ["version-update:semver-major"]
+      # OkHttp 4 -> 5 touches 36 build files.
+      - dependency-name: "com.squareup.okhttp3*"
+        update-types: ["version-update:semver-major"]
+      # Kotest 5 -> 6 changes the runner and assertion artifacts.
+      - dependency-name: "io.kotest*"
+        update-types: ["version-update:semver-major"]
+      # Testcontainers 1 -> 2 renames artifacts and modules.
+      - dependency-name: "org.testcontainers*"
+        update-types: ["version-update:semver-major"]
+      # bitcoinj 0.16 -> 0.17 (0.x: the minor is the breaking step); patch updates still flow.
+      - dependency-name: "org.bitcoinj*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     labels:
       - dependencies
       - gradle
@@ -16,10 +66,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # One weekly PR for every action, majors included. Every action is pinned by commit SHA, so a
+    # major arrives as a reviewable SHA diff, and one PR beats a PR per action (they otherwise
+    # conflict on the same `uses:` lines). Read the release notes of any major in the batch
+    # before merging; split the PR by hand if one major needs separate validation.
     groups:
       github-actions:
         patterns: ["*"]
-        update-types: [minor, patch]
     labels:
       - dependencies
       - github-actions
@@ -33,6 +86,10 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # TypeScript 7 is the native (Go) toolchain, not a drop-in compiler upgrade; defer it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
       - reference-wallet
@@ -46,6 +103,10 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # TypeScript major follows the Expo SDK; 7 is the native toolchain, defer it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
       - reference-wallet
@@ -57,8 +118,17 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # Compose libraries (and the BOM that pins them) move together.
+      android-compose:
+        patterns:
+          - "androidx.compose*"
+        update-types: [minor, patch]
       android-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # The Gradle wrapper is bumped by hand together with the AGP/Kotlin it supports.
+      - dependency-name: "gradle-wrapper"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
       - reference-wallet

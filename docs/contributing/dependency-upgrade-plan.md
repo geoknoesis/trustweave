@@ -9,7 +9,8 @@ nav_order: 90
 Major-version upgrades and unmaintained libraries that are deliberately **not** done as routine
 Dependabot bumps. Each needs its own PR because it changes APIs that TrustWeave code, tests or
 consumers compile against. Minor and patch updates within the current major still go through
-Dependabot and `gradle/libs.versions.toml` as usual.
+Dependabot and `gradle/libs.versions.toml` as usual. The deferred majors below are mirrored as `ignore`
+entries in `.github/dependabot.yml`; remove the entry in the PR that completes the migration.
 
 Status as of 3 October 2026. Versions are the catalog versions on `main`; "latest" is the newest
 release on Maven Central when this was written. Update this page in the same PR that completes an item.

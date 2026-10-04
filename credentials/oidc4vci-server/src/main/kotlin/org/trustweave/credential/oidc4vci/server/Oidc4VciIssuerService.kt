@@ -102,7 +102,7 @@ private val ED25519_SPKI_PREFIX =
         0x00,
     )
 
-class Oidc4VciIssuerService(
+class Oidc4VciIssuerService @JvmOverloads constructor(
     val baseUrl: String,
     val issuerDid: String,
     val supportedConfigurations: Map<String, CredentialConfiguration> = emptyMap(),

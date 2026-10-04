@@ -56,6 +56,11 @@ public final class org/trustweave/ethrdid/EthrDidMethod : org/trustweave/did/bas
 	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class org/trustweave/ethrdid/EvmNetworks {
+	public static final field INSTANCE Lorg/trustweave/ethrdid/EvmNetworks;
+	public static final fun requireConsistent (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+}
+
 public final class org/trustweave/ethrdid/spi/EthrDidMethodProvider : org/trustweave/did/base/AbstractDidMethodProvider {
 	public fun <init> ()V
 	public fun create (Ljava/lang/String;Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/did/DidMethod;

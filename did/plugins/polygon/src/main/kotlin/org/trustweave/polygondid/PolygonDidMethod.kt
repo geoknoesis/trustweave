@@ -15,6 +15,7 @@ import org.trustweave.did.model.rebasedTo
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.util.ResolvedDocumentId
 import org.trustweave.ethrdid.EthrDidMethod
+import org.trustweave.ethrdid.EvmNetworks
 import org.trustweave.kms.KeyManagementService
 
 /**
@@ -53,6 +54,7 @@ class PolygonDidMethod(
     private val delegate: EthrDidMethod
 
     init {
+        EvmNetworks.requireConsistent(config.chainId, config.network, "did:polygon")
         // Convert PolygonDidConfig to EthrDidConfig for delegation
         val ethrConfig =
             org.trustweave.ethrdid.EthrDidConfig(
@@ -65,6 +67,33 @@ class PolygonDidMethod(
             )
 
         delegate = EthrDidMethod(kms, anchorClient, ethrConfig)
+    }
+
+    /**
+     * Maps `did:polygon:[<network>:]<address>` to the delegate's `did:ethr:<network>:<address>`
+     * (prefix swap only, never a substring replace), and refuses a DID whose network segment is not
+     * the network this method is configured for. An omitted network segment means the Polygon
+     * mainnet (`polygon`).
+     *
+     * @throws IllegalArgumentException when the DID names a different network than the configured one
+     */
+    private fun toEthrDid(polygonDid: String): String {
+        val segments = polygonDid.removePrefix("did:polygon:").split(":")
+        val configured = config.network ?: POLYGON_MAINNET
+        if (segments.size < 2) {
+            // No network segment: it names the Polygon mainnet, under either of its two names.
+            require(configured.lowercase() in MAINNET_NAMES) {
+                "network mismatch: DID declares no network (Polygon mainnet) but this resolver is configured for " +
+                    "'$configured' (chain ${config.chainId}); refusing to answer for a different network"
+            }
+            return "did:ethr:$configured:${segments.first()}"
+        }
+        val declared = segments.first()
+        require(declared.equals(configured, ignoreCase = true)) {
+            "network mismatch: DID declares network '$declared' but this resolver is configured for " +
+                "'$configured' (chain ${config.chainId}); refusing to answer for a different network"
+        }
+        return "did:ethr:$declared:${segments.drop(1).joinToString(":")}"
     }
 
     override fun getBlockchainAnchorClient(): BlockchainAnchorClient = anchorClient
@@ -87,7 +116,7 @@ class PolygonDidMethod(
                 val ethrDocument = delegate.createDid(options)
 
                 // Convert did:ethr to did:polygon
-                val polygonDidString = ethrDocument.id.value.replace("did:ethr:", "did:polygon:")
+                val polygonDidString = "did:polygon:" + ethrDocument.id.value.removePrefix("did:ethr:")
                 val polygonDid = Did(polygonDidString)
 
                 // Rebuild document with polygon DID
@@ -115,7 +144,7 @@ class PolygonDidMethod(
 
                 val didString = did.value
                 // Convert did:polygon to did:ethr for resolution
-                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDidString = toEthrDid(didString)
                 val ethrDid = Did(ethrDidString)
 
                 // Resolve using delegate
@@ -238,7 +267,7 @@ class PolygonDidMethod(
 
                 val didString = did.value
                 // Convert did:polygon to did:ethr for update
-                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDidString = toEthrDid(didString)
                 val ethrDid = Did(ethrDidString)
 
                 // Update using delegate
@@ -273,7 +302,7 @@ class PolygonDidMethod(
 
                 val didString = did.value
                 // Convert did:polygon to did:ethr for deactivation
-                val ethrDidString = didString.replace("did:polygon:", "did:ethr:")
+                val ethrDidString = toEthrDid(didString)
                 val ethrDid = Did(ethrDidString)
 
                 val deactivated = delegate.deactivateDid(ethrDid)
@@ -294,3 +323,6 @@ class PolygonDidMethod(
             }
         }
 }
+
+private const val POLYGON_MAINNET = "polygon"
+private val MAINNET_NAMES = setOf("polygon", "mainnet")

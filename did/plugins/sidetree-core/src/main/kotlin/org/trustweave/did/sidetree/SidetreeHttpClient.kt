@@ -62,7 +62,7 @@ class SidetreeHttpClient(
                         rawBody = responseBody,
                         success = false,
                         httpStatus = response.code,
-                        error = "HTTP ${response.code}: $responseBody",
+                        error = "HTTP ${response.code}",
                     )
                 }
                 val didFromBody = runCatching {
@@ -113,7 +113,7 @@ class SidetreeHttpClient(
                         metadata = null,
                         success = false,
                         httpStatus = response.code,
-                        error = "HTTP ${response.code}: $responseBody",
+                        error = "HTTP ${response.code}",
                     )
                 }
                 val parsed = runCatching { Json.parseToJsonElement(responseBody) as? JsonObject }.getOrNull()

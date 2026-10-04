@@ -1,9 +1,12 @@
 public final class org/trustweave/did/registrar/adapter/StandardUniversalRegistrarAdapter : org/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter {
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun createDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/CreateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deactivateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getOperationStatus (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun updateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun withApiKey (Ljava/lang/String;)Lorg/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter;
 }
 
 public abstract interface class org/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter {
@@ -11,6 +14,11 @@ public abstract interface class org/trustweave/did/registrar/adapter/UniversalRe
 	public abstract fun deactivateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/registrar/model/DeactivateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getOperationStatus (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateDid (Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/registrar/model/UpdateDidOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun withApiKey (Ljava/lang/String;)Lorg/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter;
+}
+
+public final class org/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter$DefaultImpls {
+	public static fun withApiKey (Lorg/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter;Ljava/lang/String;)Lorg/trustweave/did/registrar/adapter/UniversalRegistrarProtocolAdapter;
 }
 
 public final class org/trustweave/did/registrar/client/DefaultUniversalRegistrar : org/trustweave/did/registrar/DidRegistrar, org/trustweave/did/registrar/PollableRegistrar {

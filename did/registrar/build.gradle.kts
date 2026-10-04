@@ -23,5 +23,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.platform.launcher)
+    testImplementation(libs.mockwebserver)
 }
-

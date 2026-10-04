@@ -20,6 +20,17 @@ export const IssuerTrustPolicy = {
   },
 }
 
+/**
+ * The credential signature is valid but its issuer is not trusted. Carries the issuer so a UI can
+ * ask the user to confirm it explicitly; nothing is trusted or persisted by throwing this.
+ */
+export class UntrustedIssuerError extends Error {
+  constructor(readonly issuerDid: string) {
+    super(`Issuer ${issuerDid} is not trusted by this wallet`)
+    this.name = 'UntrustedIssuerError'
+  }
+}
+
 export interface VerifyImportOptions {
   /** Which issuers are trusted. Defaults to [IssuerTrustPolicy.NONE]: untrusted issuers are rejected. */
   issuerPolicy?: IssuerTrustPolicy
@@ -28,6 +39,11 @@ export interface VerifyImportOptions {
    * always requires it.
    */
   requireHolderKeyBinding?: boolean
+  /**
+   * When set, the credential's `sub` must equal this holder DID (parity with the Android wallet).
+   * Omit only where no wallet holder exists, e.g. a verifier checking a presentation.
+   */
+  holderDid?: string
 }
 
 /**
@@ -55,10 +71,12 @@ export function verifyImportedCredential(
   if (header.kid !== undefined && header.kid !== untrusted.iss && header.kid !== canonicalKid)
     throw new Error('Issuer signing key does not match the credential issuer')
   const payload = verifyJws(jwt, didKeyToPublicKey(untrusted.iss))
-  if (!issuerPolicy.isTrusted(untrusted.iss)) throw new Error(`Issuer ${untrusted.iss} is not trusted by this wallet`)
+  if (!issuerPolicy.isTrusted(untrusted.iss)) throw new UntrustedIssuerError(untrusted.iss)
   const now = Math.floor(Date.now() / 1000)
   const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
   if (typeof payload.sub !== 'string' || !payload.sub) throw new Error('Credential holder is missing')
+  if (options.holderDid !== undefined && payload.sub !== options.holderDid)
+    throw new Error(`Credential is bound to ${payload.sub}, not to this wallet's holder ${options.holderDid}`)
   if (format === 'vc+jwt') {
     if (!object(payload.vc) || payload.vct !== undefined || payload._sd !== undefined) throw new Error('Unsupported VC-JWT payload profile')
     const vc = payload.vc
@@ -78,10 +96,13 @@ export function verifyImportedCredential(
     if (payload[claim] !== undefined && (typeof payload[claim] !== 'number' || !Number.isFinite(payload[claim])))
       throw new Error('Invalid credential time claim')
   }
-  if (typeof payload.exp === 'number' && payload.exp <= now) throw new Error('Credential has expired')
-  if (typeof payload.nbf === 'number' && payload.nbf > now) throw new Error('Credential is not yet valid')
-  if (typeof payload.iat === 'number' && payload.iat > now) throw new Error('Credential issue time is in the future')
-  if (typeof payload.exp === 'number' && ['nbf', 'iat'].some(claim => typeof payload[claim] === 'number' && (payload[claim] as number) >= (payload.exp as number))) throw new Error('Inconsistent credential validity interval')
+  // Whole seconds, truncated toward zero, exactly like the Android wallet (Double.toLong()).
+  const seconds = (claim: string): number | undefined => typeof payload[claim] === 'number' ? Math.trunc(payload[claim] as number) : undefined
+  const exp = seconds('exp'), nbf = seconds('nbf'), iat = seconds('iat')
+  if (exp !== undefined && exp <= now) throw new Error('Credential has expired')
+  if (nbf !== undefined && nbf > now) throw new Error('Credential is not yet valid')
+  if (iat !== undefined && iat > now) throw new Error('Credential issue time is in the future')
+  if (exp !== undefined && ((nbf !== undefined && nbf >= exp) || (iat !== undefined && iat >= exp))) throw new Error('Inconsistent credential validity interval')
   if (format === 'vc+sd-jwt') {
     if (payload._sd_alg !== undefined && payload._sd_alg !== 'sha-256') throw new Error('Unsupported disclosure digest algorithm')
     const decoded = decodeSdJwtVc(compact)

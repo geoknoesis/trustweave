@@ -1,5 +1,7 @@
 import { withWalletLock } from './wallet-lock'
-import { IssuerTrustPolicy, verifyImportedCredential } from './credential-verification'
+import { IssuerTrustPolicy, UntrustedIssuerError, verifyImportedCredential } from './credential-verification'
+import { configuredTrustedIssuers, loadBackendIssuers } from './issuer-trust'
+export { UntrustedIssuerError }
 import { MissingHolderKeysError, importHolderKeys, loadHolderKeys, signHolderJws, clearHolderKeys } from './key-store'
 /**
  * Wallet facade — the holder-side API surface for the reference wallet.
@@ -33,8 +35,10 @@ import {
   loadHolder,
   saveHolder,
   saveCredentials,
-  loadAcceptedIssuers,
   addAcceptedIssuer,
+  loadAcceptedIssuers,
+  removeAcceptedIssuer,
+  isPlausibleIssuerDid,
   loadCredentials,
   upsertCredential,
   deleteCredential as deleteCredFromStorage,
@@ -135,14 +139,24 @@ export interface StoreResult {
 }
 
 /**
- * Issuers this wallet accepts credentials from: those named in NEXT_PUBLIC_TRUSTED_ISSUERS
- * (comma-separated DIDs) plus issuers accepted at an earlier import and [extra] (the backend's offer
- * issuer, or the issuers of stored credentials being re-verified). Anything else is rejected (fail closed).
+ * Issuers this wallet accepts credentials from. Exactly three sources, none of which is the offer:
+ *  1. the configured allow-list (`NEXT_PUBLIC_TRUSTED_ISSUERS`);
+ *  2. the wallet's own backend, [backendIssuers], read from a same-origin configuration endpoint
+ *     (see [loadBackendIssuers]) and never from an offer payload;
+ *  3. issuers the user explicitly confirmed earlier (stored via [StoreOptions.confirmedIssuer]).
+ * Anything else is rejected with [UntrustedIssuerError] (fail closed).
  */
-export function walletIssuerPolicy(...extra: Array<string | null | undefined>): IssuerTrustPolicy {
-  // `process` exists under Next (which inlines NEXT_PUBLIC_*) but not in a bare browser module graph.
-  const configured = ((typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_TRUSTED_ISSUERS : undefined) ?? '').split(',').map(id => id.trim())
-  return IssuerTrustPolicy.allowList([...configured, ...loadAcceptedIssuers(), ...extra])
+export function walletIssuerPolicy(backendIssuers: readonly string[] = []): IssuerTrustPolicy {
+  return IssuerTrustPolicy.allowList([...configuredTrustedIssuers(), ...backendIssuers, ...loadAcceptedIssuers()])
+}
+
+export interface StoreOptions {
+  /**
+   * An issuer DID the user has just explicitly confirmed (after an [UntrustedIssuerError]). It is
+   * trusted for this import only; it is persisted to the accepted-issuer list after the credential
+   * has passed every check. Never derive it from the offer, QR code or backend response.
+   */
+  confirmedIssuer?: string
 }
 
 /**
@@ -151,23 +165,34 @@ export function walletIssuerPolicy(...extra: Array<string | null | undefined>): 
  * Re-scanning or re-receiving the same logical credential (same issuer, subject, type,
  * and identifying claims) updates the existing record instead of adding a duplicate.
  *
+ * Behaviour change (security): the issuer named in an offer is no longer trusted merely because the
+ * offer names it. If the issuer is not configured, not this wallet's backend and not already
+ * accepted, this throws [UntrustedIssuerError]; show the issuer DID, and on explicit user
+ * confirmation call again with [StoreOptions.confirmedIssuer].
+ *
  * @param credential the credential string (compact JWS or SD-JWT VC compact form)
  * @param format media type identifier
  * @param selectivelyDisclosable for SD-JWT VC, the issuer-declared list of
  *   selectively-disclosable claim names; ignored for VC-JWT
- * @param offerIssuer issuer DID reported by the configured backend's offer response; trusted
- *   for this import in addition to the configured trusted issuers (same as the Android wallet)
  */
 export async function store(
   credential: string,
   format: StoredCredential['format'],
   selectivelyDisclosable: string[] = [],
-  offerIssuer?: string,
+  options: StoreOptions = {},
 ): Promise<StoreResult> {
+  if (typeof options !== 'object' || options === null) throw new Error('store() options must be an object; an offer-named issuer is no longer trusted')
+  const backendIssuers = await loadBackendIssuers()
   return withWalletLock(() => {
   const holder = loadHolder()
   if (!holder) throw new Error("Open the wallet before importing a credential")
-  verifyImportedCredential(credential, format, { issuerPolicy: walletIssuerPolicy(offerIssuer) })
+  const base = walletIssuerPolicy(backendIssuers)
+  const confirmed = options.confirmedIssuer
+  if (confirmed !== undefined && !isPlausibleIssuerDid(confirmed)) throw new Error('Not a valid issuer identifier')
+  verifyImportedCredential(credential, format, {
+    issuerPolicy: { isTrusted: did => base.isTrusted(did) || (confirmed !== undefined && did === confirmed) },
+    holderDid: holder.did,
+  })
   const meta = format === 'vc+sd-jwt'
     ? extractSdJwtMeta(credential)
     : extractVcJwtMeta(credential)
@@ -183,7 +208,6 @@ export async function store(
     selectivelyDisclosable,
   }
   if (!isCredentialBoundToHolder(cred, holder.did)) throw new Error("Credential was not issued to this wallet")
-  addAcceptedIssuer(meta.issuerDid)
   const result = upsertCredential(cred)
   pruneStaleCredentialsForBusinessIdentity(cred)
   // Never delete user data merely by opening the wallet; selection enforces holder binding.
@@ -191,13 +215,19 @@ export async function store(
     deleteCredFromStorage(result.credential.id)
     throw new Error('Credential was not issued to this wallet. Scan the issuer QR again.')
   }
+  // Persist trust only now: the user confirmed this issuer AND the credential passed every check.
+  if (confirmed !== undefined && confirmed === meta.issuerDid && !base.isTrusted(confirmed)) addAcceptedIssuer(confirmed)
   return result
   })
 }
 
-/** Drop older copies of the same credential issued to a previous wallet identity. */
+export interface RestoreOptions {
+  /** Issuer DIDs the user explicitly confirmed (after an [UntrustedIssuerError]); persisted only after a successful restore. */
+  confirmedIssuers?: readonly string[]
+}
+
 /** Restore verified credentials only; identity and non-extractable keys are never replaced. */
-export async function restoreCredentials(backup: string): Promise<{ added: number; skipped: number }> {
+export async function restoreCredentials(backup: string, options: RestoreOptions = {}): Promise<{ added: number; skipped: number }> {
   if (new TextEncoder().encode(backup).byteLength > 5 * 1024 * 1024) throw new Error('Backup exceeds the 5 MB limit')
   const data = JSON.parse(backup)
   if (!data || ![null, '1', '2'].includes(data.version) || typeof data.credentials !== 'string' || typeof data.holder?.did !== 'string') {
@@ -205,6 +235,9 @@ export async function restoreCredentials(backup: string): Promise<{ added: numbe
   }
   const records: unknown = JSON.parse(data.credentials)
   if (!Array.isArray(records) || records.length > 500) throw new Error('A backup must contain at most 500 credentials')
+  const backendIssuers = await loadBackendIssuers()
+  const confirmedIssuers = new Set(options.confirmedIssuers ?? [])
+  if ([...confirmedIssuers].some(did => !isPlausibleIssuerDid(did))) throw new Error('Not a valid issuer identifier')
   return withWalletLock(async () => {
     const holder = loadHolder()
     if (!holder || holder.did !== data.holder.did) throw new Error('This backup belongs to a different wallet identity. Ask the issuer to reissue credentials to this wallet.')
@@ -212,13 +245,20 @@ export async function restoreCredentials(backup: string): Promise<{ added: numbe
     const existing = loadCredentials()
     const seen = new Set(existing.map(credentialDedupKey))
     const additions: StoredCredential[] = []
+    const base = walletIssuerPolicy(backendIssuers)
+    const newlyConfirmed = new Set<string>()
     let skipped = 0
     for (const raw of records) {
       const record = raw && typeof raw === 'object' ? { ...raw, credential: raw.credential ?? raw.vcJwt, format: raw.format ?? 'vc+jwt' } : raw;
       if (!record || typeof record.credential !== 'string' || !['vc+jwt', 'vc+sd-jwt'].includes(record.format)) throw new Error('Invalid credential in backup. Nothing was restored.')
-      // Never trust labels, holder fields or disclosure hints from the backup envelope.
-      verifyImportedCredential(record.credential, record.format, { issuerPolicy: walletIssuerPolicy(...existing.map(c => c.issuerDid)) })
+      // Never trust labels, holder fields or disclosure hints from the backup envelope, and never
+      // trust an issuer merely because the backup (or an already stored credential) names it.
+      verifyImportedCredential(record.credential, record.format, {
+        issuerPolicy: { isTrusted: did => base.isTrusted(did) || confirmedIssuers.has(did) },
+        holderDid: holder.did,
+      })
       const meta = record.format === 'vc+sd-jwt' ? extractSdJwtMeta(record.credential) : extractVcJwtMeta(record.credential)
+      if (!base.isTrusted(meta.issuerDid)) newlyConfirmed.add(meta.issuerDid)
       const credential: StoredCredential = {
         id: randomUuid(), format: record.format, credential: record.credential,
         receivedAt: new Date().toISOString(), issuerDid: meta.issuerDid,
@@ -233,10 +273,20 @@ export async function restoreCredentials(backup: string): Promise<{ added: numbe
     }
     // One storage write, after every signature and holder check; existing records win duplicates.
     if (additions.length) saveCredentials([...existing, ...additions])
+    for (const did of newlyConfirmed) addAcceptedIssuer(did)
     return { added: additions.length, skipped }
   })
 }
 
+/** Issuers the user can review: configured (read-only) and explicitly accepted (removable). */
+export { reviewableIssuers } from './issuer-trust'
+
+/** Stop trusting a previously confirmed issuer. Its stored credentials can no longer be presented. */
+export async function removeIssuer(issuerDid: string): Promise<void> {
+  await withWalletLock(() => removeAcceptedIssuer(issuerDid))
+}
+
+/** Drop older copies of the same credential issued to a previous wallet identity. */
 function pruneStaleCredentialsForBusinessIdentity(latest: StoredCredential): void {
   const businessKey = credentialBusinessKey(latest)
   for (const existing of loadCredentials()) {
@@ -292,6 +342,7 @@ export async function createPresentation(
   challenge: string,
   disclose: string[] = [],
 ): Promise<string> {
+  const backendIssuers = await loadBackendIssuers()
   return withWalletLock(async () => {
   const holder = loadHolder()
   if (!holder) throw new Error('Wallet not bootstrapped')
@@ -301,7 +352,7 @@ export async function createPresentation(
   if (creds.length > 1 && creds.some(credential => credential.format === 'vc+sd-jwt'))
     throw new Error('Share SD-JWT credentials one at a time; multiple selective-disclosure credentials are not supported')
   for (const credential of creds) {
-    verifyImportedCredential(credential.credential, credential.format, { issuerPolicy: walletIssuerPolicy(credential.issuerDid) })
+    verifyImportedCredential(credential.credential, credential.format, { issuerPolicy: walletIssuerPolicy(backendIssuers) })
     if (!isCredentialBoundToHolder(credential, holder.did)) throw new Error('Credential belongs to another holder')
   }
 

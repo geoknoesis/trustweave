@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { isCredentialBoundToHolder } from '@/lib/holder-binding'
 import { CredentialBackup } from '@/components/CredentialBackup'
+import { AcceptedIssuers } from '@/components/AcceptedIssuers'
 import { WalletRecovery } from '@/components/WalletRecovery'
 import { useEffect, useState } from 'react'
 import { CredentialDetailPanel } from '@/components/CredentialDetailPanel'
@@ -98,6 +99,7 @@ export default function HomePage() {
       )}
 
       <CredentialBackup onRestored={async () => { setState(await bootstrap()) }} />
+      <AcceptedIssuers />
 
       <details className="identity-section">
         <summary>Your digital identity</summary>

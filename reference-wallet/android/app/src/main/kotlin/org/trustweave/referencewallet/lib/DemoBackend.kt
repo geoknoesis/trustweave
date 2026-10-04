@@ -83,6 +83,32 @@ class DemoBackend(
         }
     }
 
+    /**
+     * The issuer DIDs of the backend this wallet is configured to use (build-time base URL), read
+     * from its identity endpoint, never from an offer. Fails closed: any problem yields an empty set.
+     */
+    suspend fun backendIssuers(): Set<String> =
+        try {
+            withContext(Dispatchers.IO) {
+                val req = Request.Builder().url("$baseUrl/api/demo-issuer/identity").get().build()
+                http.newCall(req).execute().use { response ->
+                    if (!response.isSuccessful) return@use emptySet<String>()
+                    val body = response.body?.string() ?: return@use emptySet<String>()
+                    val dids = json.decodeFromString(IssuerIdentity.serializer(), body).issuerDids
+                    if (dids.size > 16 || !dids.all(IssuerTrust::isPlausibleDid)) emptySet() else dids.toSet()
+                }
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: java.io.IOException) {
+            emptySet()
+        } catch (e: kotlinx.serialization.SerializationException) {
+            emptySet()
+        }
+
+    @Serializable
+    private data class IssuerIdentity(val issuerDids: List<String> = emptyList())
+
     suspend fun fetchPresentationRequest(): PresentationRequestParams = withContext(Dispatchers.IO) {
         val req = Request.Builder().url("$baseUrl/api/demo-verifier/request").get().build()
         http.newCall(req).execute().use { response ->

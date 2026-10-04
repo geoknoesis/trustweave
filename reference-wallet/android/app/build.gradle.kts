@@ -23,6 +23,8 @@ android {
             "DEMO_BACKEND_BASE_URL",
             "\"${project.findProperty("DEMO_BACKEND_BASE_URL") ?: "http://10.0.2.2:3000"}\"",
         )
+        // Comma-separated issuer DIDs this wallet trusts (-PTRUSTED_ISSUERS=did:key:...,did:key:...).
+        buildConfigField("String", "TRUSTED_ISSUERS", "\"${project.findProperty("TRUSTED_ISSUERS") ?: ""}\"")
     }
 
     buildFeatures {

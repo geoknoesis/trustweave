@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -13,6 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,12 +31,14 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.trustweave.referencewallet.lib.DemoBackend
 import org.trustweave.referencewallet.lib.Storage
+import org.trustweave.referencewallet.lib.UntrustedIssuerException
 import org.trustweave.referencewallet.lib.Wallet
 
 private sealed interface ReceiveStatus {
     data object Idle : ReceiveStatus
     data object Requesting : ReceiveStatus
     data class Success(val cred: Storage.StoredCredential, val format: String, val disclosable: List<String>) : ReceiveStatus
+    data class ConfirmIssuer(val issuerDid: String, val offer: DemoBackend.CredentialOffer, val backendIssuers: Set<String>) : ReceiveStatus
     data class Error(val message: String) : ReceiveStatus
 }
 
@@ -76,13 +80,12 @@ fun ReceiveScreen(onDone: () -> Unit) {
                                 status = ReceiveStatus.Requesting
                                 try {
                                     val offer = backend.receiveCredential(did)
-                                    val stored = wallet.store(
-                                        credential = offer.credential,
-                                        format = offer.format,
-                                        selectivelyDisclosable = offer.selectivelyDisclosable,
-                                        offerIssuer = offer.issuer, // the demo issuer of the configured backend
-                                    )
-                                    status = ReceiveStatus.Success(stored, offer.format, offer.selectivelyDisclosable)
+                                    // The issuer named in the offer is deliberately not passed on: trust comes from
+                                    // configuration, the wallet's own backend identity, or user confirmation.
+                                    val backendIssuers = backend.backendIssuers()
+                                    status = importOffer(wallet, offer, backendIssuers, confirmedIssuer = null)
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    throw e
                                 } catch (e: Exception) {
                                     status = ReceiveStatus.Error(e.message ?: e::class.simpleName ?: "unknown")
                                 }
@@ -103,6 +106,29 @@ fun ReceiveScreen(onDone: () -> Unit) {
         }
 
         when (val s = status) {
+            is ReceiveStatus.ConfirmIssuer -> AlertDialog(
+                onDismissRequest = { status = ReceiveStatus.Idle },
+                title = { Text("Trust this issuer?") },
+                text = {
+                    Column {
+                        Text("This credential is signed by an issuer your wallet does not know. Only continue if you recognise this identifier and expected a credential from it.")
+                        Spacer(Modifier.height(8.dp))
+                        Text(s.issuerDid, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        status = try {
+                            importOffer(wallet, s.offer, s.backendIssuers, confirmedIssuer = s.issuerDid)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            ReceiveStatus.Error(e.message ?: e::class.simpleName ?: "unknown")
+                        }
+                    }) { Text("Trust and add") }
+                },
+                dismissButton = { TextButton(onClick = { status = ReceiveStatus.Idle }) { Text("Cancel") } },
+            )
             is ReceiveStatus.Success -> Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f))) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Received and stored", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.secondary)
@@ -129,3 +155,23 @@ fun ReceiveScreen(onDone: () -> Unit) {
         }
     }
 }
+
+/** Stores [offer]; an unknown issuer yields [ReceiveStatus.ConfirmIssuer] instead of being trusted. */
+private fun importOffer(
+    wallet: Wallet,
+    offer: DemoBackend.CredentialOffer,
+    backendIssuers: Set<String>,
+    confirmedIssuer: String?,
+): ReceiveStatus =
+    try {
+        val stored = wallet.store(
+            credential = offer.credential,
+            format = offer.format,
+            selectivelyDisclosable = offer.selectivelyDisclosable,
+            backendIssuers = backendIssuers,
+            confirmedIssuer = confirmedIssuer,
+        )
+        ReceiveStatus.Success(stored, offer.format, offer.selectivelyDisclosable)
+    } catch (e: UntrustedIssuerException) {
+        ReceiveStatus.ConfirmIssuer(e.issuerDid, offer, backendIssuers)
+    }

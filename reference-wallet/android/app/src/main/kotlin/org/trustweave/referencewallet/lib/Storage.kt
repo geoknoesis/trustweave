@@ -90,6 +90,29 @@ class Storage(context: Context) {
         ).apply()
     }
 
+    /** Issuers the user explicitly confirmed. Sanitised on every read (shape, duplicates, size). */
+    fun loadAcceptedIssuers(): List<String> =
+        try {
+            prefs.getString(KEY_ACCEPTED_ISSUERS, null)
+                ?.let { json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.serializer<String>()), it) }
+                ?.let(IssuerTrust::sanitize)
+                ?: emptyList()
+        } catch (e: kotlinx.serialization.SerializationException) {
+            emptyList()
+        }
+
+    /** Persist an issuer only after an explicit user confirmation. */
+    fun addAcceptedIssuer(did: String) = saveAcceptedIssuers(IssuerTrust.withAccepted(loadAcceptedIssuers(), did))
+
+    fun removeAcceptedIssuer(did: String) = saveAcceptedIssuers(loadAcceptedIssuers().filterNot { it == did })
+
+    private fun saveAcceptedIssuers(issuers: List<String>) {
+        prefs.edit().putString(
+            KEY_ACCEPTED_ISSUERS,
+            json.encodeToString(kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.serializer<String>()), issuers),
+        ).apply()
+    }
+
     fun addCredential(cred: StoredCredential) { saveCredentials(loadCredentials() + cred) }
     fun deleteCredential(id: String) { saveCredentials(loadCredentials().filterNot { it.id == id }) }
     fun reset() { prefs.edit().clear().apply() }
@@ -97,6 +120,7 @@ class Storage(context: Context) {
     companion object {
         private const val KEY_HOLDER = "holder"
         private const val KEY_CREDENTIALS = "credentials"
+        private const val KEY_ACCEPTED_ISSUERS = "accepted-issuers"
         private const val KEY_SCHEMA_VERSION = "schema-version"
         private const val CURRENT_VERSION = 2
     }

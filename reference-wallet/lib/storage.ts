@@ -156,22 +156,51 @@ export function resetWallet(): void {
   window.localStorage.removeItem(ISSUERS_KEY)
 }
 
-/** Issuers whose credentials this wallet already accepted at import (used to re-verify backups). */
+/** Upper bounds for the persisted accepted-issuer list (it lives in plaintext localStorage). */
+export const MAX_ACCEPTED_ISSUERS = 200
+export const MAX_ISSUER_DID_LENGTH = 256
+const ISSUER_DID_SHAPE = /^did:[a-z0-9]+:[A-Za-z0-9._:%#-]+$/
+
+/** True when [value] looks like a DID this wallet is willing to store in its accepted-issuer list. */
+export function isPlausibleIssuerDid(value: unknown): value is string {
+  return typeof value === 'string' && value.length <= MAX_ISSUER_DID_LENGTH && ISSUER_DID_SHAPE.test(value)
+}
+
+/**
+ * Issuers the user explicitly confirmed at an earlier import (used to re-verify backups and to
+ * authorise presentations). The list is plaintext localStorage, so it is shape- and size-checked on
+ * every read: anything that is not a plausible DID, duplicates and entries beyond
+ * [MAX_ACCEPTED_ISSUERS] are dropped. It is NOT integrity protected; see CUSTODY.md.
+ */
 export function loadAcceptedIssuers(): string[] {
   if (!isBrowser()) return []
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(ISSUERS_KEY) ?? '[]')
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []
+    if (!Array.isArray(parsed)) return []
+    return [...new Set(parsed.filter(isPlausibleIssuerDid))].slice(0, MAX_ACCEPTED_ISSUERS)
   } catch {
     return []
   }
 }
 
+/**
+ * Persist an issuer the user explicitly confirmed. Call only after a confirmation step: an issuer
+ * named by an offer, QR code or backend response must never be added automatically.
+ */
 export function addAcceptedIssuer(issuerDid: string): void {
   if (!isBrowser()) return
+  if (!isPlausibleIssuerDid(issuerDid)) throw new Error('Not a valid issuer identifier')
   const issuers = new Set(loadAcceptedIssuers())
+  if (!issuers.has(issuerDid) && issuers.size >= MAX_ACCEPTED_ISSUERS)
+    throw new Error(`At most ${MAX_ACCEPTED_ISSUERS} accepted issuers are supported. Remove one first.`)
   issuers.add(issuerDid)
   window.localStorage.setItem(ISSUERS_KEY, JSON.stringify([...issuers]))
+}
+
+/** Stop trusting an issuer that was accepted earlier (configured allow-list entries are unaffected). */
+export function removeAcceptedIssuer(issuerDid: string): void {
+  if (!isBrowser()) return
+  window.localStorage.setItem(ISSUERS_KEY, JSON.stringify(loadAcceptedIssuers().filter(id => id !== issuerDid)))
 }
 
 /** Recovery export intentionally excludes private key material, including legacy seeds. */

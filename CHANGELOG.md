@@ -49,9 +49,11 @@ working code fail until it is adjusted.**
   `CredentialRejectedException`, storing nothing, unless the credential verifies, names the offer's
   issuer and is bound to the holder DID; without a verifier it fails before contacting the issuer.
   did:web derivation from the issuer URL now follows the did:web spec (percent-encoded port, https only).
-  A new optional `issuerTrustPolicy` (`IssuerTrustPolicy.allowList(...)` or a registry lookup) decides
-  whether the offered issuer is trusted at all; without one, offers are still accepted from any issuer
-  that verifies and matches the offer, and a warning is logged once per process.
+  An `issuerTrustPolicy` (`IssuerTrustPolicy.allowList(...)` or a registry lookup) decides whether the
+  offered issuer is trusted at all and is now **required**: without one the offer fails before the issuer
+  is contacted. `IssuerTrustPolicy.acceptAnyIssuer()` is the explicit, documented-unsafe opt-in for tests
+  and demos (it logs a warning once per process). `issuerDidFor` works on the raw URL path and rejects
+  ambiguous encodings (`%2F`, `%3A`, `%5C`, dot segments, control characters).
 
 - **`fromJwt` rejects unsecured (`alg: none`) JWTs** unless the caller passes `allowUnsecured = true`,
   and there is no raw-JSON fallback. `toJwt` throws instead of silently returning plain JSON.
@@ -95,6 +97,22 @@ working code fail until it is adjusted.**
   issuance and refuses an issuer JWT whose `typ` is not `dc+sd-jwt` or `vc+sd-jwt`; an absent `typ`
   is accepted only with `additionalOptions["allowLegacySdJwtTyp"] = true`. (An opt-in single-use
   KB-JWT nonce store, `kbJwtNonceStore`, is additive.)
+
+- **Contract activation and execution are gated.** A contract can only become `ACTIVE` once a credential
+  is bound (and an anchor, when an anchor registry is configured). `updateStatus` refuses `EXECUTED`:
+  execute through `executeContract` (a `Manual` contract with no conditions executes; one with conditions
+  is refused). `verifyAnchorOnVerify = true` now fails closed when no anchor client is registered for the
+  anchor's chain. Per-contract locks replace the lock stripes, and `ContractStoreLimits` bounds the number
+  of contracts and the status history kept per contract.
+
+- **`FileWallet` records are bound to their wallet.** New writes use format version 2 with AES-GCM
+  associated data (wallet id, record kind, SHA-256 of the credential id). Version 1 records are still
+  read; a wallet must be reopened with the `walletId` it was written with.
+
+- **Reference wallet issuer trust (web and Android).** An issuer named by an offer is no longer trusted
+  or persisted by being named. Trust comes from the configured allow-list, the wallet's own backend
+  identity, or an explicit user confirmation; the web `store()` takes `{ confirmedIssuer }` instead of the
+  offer-issuer string, and a "Trusted issuers" list lets the user review and remove accepted issuers.
 
 - **`bindContract` is only legal from `DRAFT` or `PENDING`.** Binding an executed or terminated
   contract no longer succeeds. `verifyContract` now requires the credential issuer to be a party,

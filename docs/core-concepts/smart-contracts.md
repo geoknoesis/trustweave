@@ -315,12 +315,13 @@ Valid state transitions are enforced:
 - Terminal states (`EXECUTED`, `EXPIRED`, `CANCELLED`, `TERMINATED`) cannot transition
 
 ```kotlin
-// Invalid transition will throw InvalidOperationException
+// updateStatus never moves a contract to EXECUTED: execution goes through executeContract, and
+// ACTIVE requires a bound credential. An illegal transition is a failed result.
 val trustweave = TrustWeave.build { ... }
 try {
     trustweave.contracts.updateStatus(
         contractId = contract.id,
-        newStatus = ContractStatus.EXECUTED // Must be ACTIVE first
+        newStatus = ContractStatus.EXECUTED // Refused: use executeContract
     ).getOrThrow()
 } catch (e: Exception) {
     println("State transition failed: ${e.message}")

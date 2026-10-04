@@ -104,7 +104,7 @@ class CyberArkKeyManagementService(
             if (!response.isSuccessful) {
                 return@withContext GenerateKeyResult.Failure.Error(
                     algorithm = algorithm,
-                    reason = "CyberArk Conjur API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "CyberArk Conjur API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -206,7 +206,7 @@ class CyberArkKeyManagementService(
                 }
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "CyberArk Conjur API error: ${metadataResponse.code} - ${metadataResponse.message ?: "Unknown error"}. Response: $metadataBody",
+                    reason = "CyberArk Conjur API error: ${metadataResponse.code} - ${metadataResponse.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -277,7 +277,7 @@ class CyberArkKeyManagementService(
                 }
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Failed to get private key: ${privateKeyResponse.code} - ${privateKeyResponse.message ?: "Unknown error"}. Response: $privateKeyBody",
+                    reason = "Failed to get private key: ${privateKeyResponse.code} - ${privateKeyResponse.message ?: "Unknown error"}",
                     cause = null
                 )
             }

@@ -92,7 +92,7 @@ class FortanixKeyManagementService(
             if (!response.isSuccessful) {
                 return@withContext GenerateKeyResult.Failure.Error(
                     algorithm = algorithm,
-                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -163,7 +163,7 @@ class FortanixKeyManagementService(
                 }
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -199,7 +199,7 @@ class FortanixKeyManagementService(
             if (!exportResponse.isSuccessful) {
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Failed to get public key: ${exportResponse.code} - ${exportResponse.message ?: "Unknown error"}. Response: $exportBody",
+                    reason = "Failed to get public key: ${exportResponse.code} - ${exportResponse.message ?: "Unknown error"}",
                     cause = null
                 )
             }
@@ -289,7 +289,7 @@ class FortanixKeyManagementService(
                 }
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                    reason = "Fortanix DSM API error: ${response.code} - ${response.message ?: "Unknown error"}",
                     cause = null
                 )
             }

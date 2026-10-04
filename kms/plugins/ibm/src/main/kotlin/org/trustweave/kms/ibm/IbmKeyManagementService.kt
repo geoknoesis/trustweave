@@ -155,7 +155,7 @@ class IbmKeyManagementService(
                         logger.error("Invalid request to IBM Key Protect", context)
                         GenerateKeyResult.Failure.InvalidOptions(
                             algorithm = algorithm,
-                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}",
                             invalidOptions = options
                         )
                     }
@@ -171,7 +171,7 @@ class IbmKeyManagementService(
                         logger.error("Failed to generate key in IBM Key Protect", context)
                         GenerateKeyResult.Failure.Error(
                             algorithm = algorithm,
-                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody",
+                            reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}",
                             cause = null
                         )
                     }
@@ -264,7 +264,7 @@ class IbmKeyManagementService(
                 ))
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody"
+                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}",
                 )
             }
 
@@ -308,7 +308,7 @@ class IbmKeyManagementService(
                 ))
                 return@withContext GetPublicKeyResult.Failure.Error(
                     keyId = keyId,
-                    reason = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}. Response: $publicKeyBody"
+                    reason = "Failed to get public key: ${publicKeyResponse.code} - ${publicKeyResponse.message ?: "Unknown error"}",
                 )
             }
 
@@ -466,7 +466,7 @@ class IbmKeyManagementService(
                 ))
                 return@withContext SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}. Response: $responseBody"
+                    reason = "IBM Key Protect API error: ${response.code} - ${response.message ?: "Unknown error"}",
                 )
             }
 

@@ -78,7 +78,7 @@ export function b64uEncode(bytes: Uint8Array): string {
 }
 
 /** Base64url-decode to a Uint8Array. */
-export function b64uDecode(s: string): Uint8Array {
+export function b64uDecode(s: string): Uint8Array<ArrayBuffer> {
   const padded = s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)
   const binary = atob(padded)
   const bytes = new Uint8Array(binary.length)

@@ -40,7 +40,7 @@ function hkdfSha256(shared: Uint8Array, info: string, length = 32): Uint8Array {
 }
 
 async function importAesKey(raw: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
+  return crypto.subtle.importKey('raw', raw.slice(), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
 }
 
 async function aesGcmDecrypt(ciphertext: Uint8Array, tag: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
@@ -48,7 +48,7 @@ async function aesGcmDecrypt(ciphertext: Uint8Array, tag: Uint8Array, key: Uint8
   const combined = new Uint8Array(ciphertext.length + tag.length)
   combined.set(ciphertext)
   combined.set(tag, ciphertext.length)
-  return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, combined))
+  return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv.slice() }, cryptoKey, combined))
 }
 
 /** Decrypt using the device-bound agreement key; no raw holder key leaves custody. */

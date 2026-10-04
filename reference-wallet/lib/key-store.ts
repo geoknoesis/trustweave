@@ -48,7 +48,7 @@ export async function loadHolderKeys(did: string): Promise<HolderKeys> {
   // Check the actual private keys, not mutable metadata beside them. Recheck on
   // every load so another tab cannot silently replace either key between uses.
   const publicBytes = didKeyToPublicKey(did)
-  const publicSigning = await crypto.subtle.importKey('raw', publicBytes, 'Ed25519', false, ['verify'])
+  const publicSigning = await crypto.subtle.importKey('raw', publicBytes.slice(), 'Ed25519', false, ['verify'])
   const challenge = crypto.getRandomValues(new Uint8Array(32))
   const signature = await crypto.subtle.sign('Ed25519', keys.signing, challenge)
   if (!await crypto.subtle.verify('Ed25519', publicSigning, signature, challenge)) {
@@ -70,8 +70,8 @@ export async function loadHolderKeys(did: string): Promise<HolderKeys> {
 /** Import a legacy/generated seed once, then discard it. Metadata is updated only after commit. */
 export async function importHolderKeys(did: string, seed: Uint8Array): Promise<void> {
   let agreementSeed: Uint8Array | undefined
-  let signingBytes: Uint8Array | undefined
-  let agreementBytes: Uint8Array | undefined
+  let signingBytes: Uint8Array<ArrayBuffer> | undefined
+  let agreementBytes: Uint8Array<ArrayBuffer> | undefined
   try {
     if (publicKeyToDidKey(ed25519.getPublicKey(seed)) !== did) {
       throw new Error('Legacy private key does not match the wallet identity. Original data has been preserved.')

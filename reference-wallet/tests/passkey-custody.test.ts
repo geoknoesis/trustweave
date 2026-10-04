@@ -4,7 +4,7 @@ import { b64uEncode, b64uEncodeString } from '../lib/crypto'
 import { verifyPasskeyProof, type PasskeyIdentity } from '../lib/custody/passkey'
 import { verifyPasskeyPayload } from '../lib/custody'
 
-const hash = async (bytes: Uint8Array) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
+const hash = async (bytes: Uint8Array<ArrayBuffer>) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
 async function fixture(flags = 5, origin = 'https://wallet.example') {
   const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify'])
   const identity: PasskeyIdentity = { profile: 'passkey', credentialId: 'credential', rpId: 'wallet.example', origin: 'https://wallet.example', publicKeySpki: b64uEncode(new Uint8Array(await crypto.subtle.exportKey('spki', pair.publicKey))) }

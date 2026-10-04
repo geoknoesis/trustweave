@@ -196,8 +196,8 @@ describe('holder custody and recovery', () => {
     const cek = crypto.getRandomValues(new Uint8Array(32))
     const encrypt = async (raw: Uint8Array, key: Uint8Array) => {
       const iv = crypto.getRandomValues(new Uint8Array(12))
-      const imported = await crypto.subtle.importKey('raw', key, 'AES-GCM', false, ['encrypt'])
-      const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, imported, raw))
+      const imported = await crypto.subtle.importKey('raw', key.slice(), 'AES-GCM', false, ['encrypt'])
+      const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, imported, raw.slice()))
       return { iv: b64uEncode(iv), ciphertext: b64uEncode(data.slice(0,-16)), tag: b64uEncode(data.slice(-16)) }
     }
     const body = await encrypt(new TextEncoder().encode('private value'), cek), key = await encrypt(cek, wrap)

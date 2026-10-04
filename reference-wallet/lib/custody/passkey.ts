@@ -16,7 +16,7 @@ export interface PasskeyProof {
   clientDataJSON: string
   signature: string
 }
-const hash = async (bytes: Uint8Array) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
+const hash = async (bytes: Uint8Array<ArrayBuffer>) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
 const equal = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((value, i) => value === b[i])
 
 function checkOrigin(origin: string, rpId: string) {
@@ -56,7 +56,7 @@ export async function verifyPasskeyProof(identity: PasskeyIdentity, proof: Passk
   return new DataView(auth.buffer, auth.byteOffset, auth.byteLength).getUint32(33)
 }
 
-export async function signWithPasskey(identity: PasskeyIdentity, challenge: Uint8Array): Promise<PasskeyProof> {
+export async function signWithPasskey(identity: PasskeyIdentity, challenge: Uint8Array<ArrayBuffer>): Promise<PasskeyProof> {
   identity = { ...identity }; challenge = challenge.slice()
   checkOrigin(identity.origin, identity.rpId)
   if (location.origin !== identity.origin || challenge.length !== 32) throw new Error('Passkey origin or challenge mismatch')

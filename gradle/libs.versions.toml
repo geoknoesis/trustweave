@@ -51,7 +51,7 @@ titanium-rdfc = "3.0.0"
 jakarta-json = "2.0.1"
 
 # Cloud SDKs
-aws-sdk-bom = "2.43.0"
+aws-sdk-bom = "2.55.9"
 azure-sdk-bom = "1.3.6"
 google-cloud-bom = "26.80.0"
 

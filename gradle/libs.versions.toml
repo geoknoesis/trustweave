@@ -38,7 +38,7 @@ cardano-client = "0.5.1"
 
 # Database
 postgresql = "42.7.13"
-mysql = "9.7.0"
+mysql = "26.7.0"
 h2 = "2.4.240"
 hikaricp = "7.0.2"
 

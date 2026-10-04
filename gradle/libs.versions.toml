@@ -17,6 +17,9 @@ wiremock = "3.13.2"
 ktor = "3.4.3"
 okhttp = "4.12.0"
 jackson = "2.22.3"
+# Jackson 3 (tools.jackson) arrives transitively through web3j 6; pinned to a patched 3.1.x for GHSA-2m67-wjpj-xhg9,
+# GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55 and GHSA-rcqc-6cw3-h962 (core >= 3.1.1, databind >= 3.1.4).
+jackson3 = "3.1.4"
 gson = "2.14.0"
 jayway-jsonpath = "2.9.0"
 spring-boot = "4.1.1"

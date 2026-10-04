@@ -37,6 +37,7 @@ val dokkaJavadoc =
 
 // Read here, not inside subprojects {}: there `libs` would resolve against each subproject.
 val kotlinVersion = libs.versions.kotlin.get()
+val jackson3Version = libs.versions.jackson3.get()
 
 subprojects {
 
@@ -193,6 +194,16 @@ subprojects {
         resolutionStrategy {
             force("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
             force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+            // web3j 6 brings Jackson 3 (tools.jackson) transitively at 3.1.0, which carries known advisories.
+            // Keep every Jackson 3 artifact (and its BOM) on one patched version.
+            eachDependency {
+                if (requested.group == "tools.jackson.core" ||
+                    (requested.group == "tools.jackson" && requested.name == "jackson-bom")
+                ) {
+                    useVersion(jackson3Version)
+                    because("Jackson 3.1.0 advisories GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55, GHSA-rcqc-6cw3-h962")
+                }
+            }
         }
     }
 

@@ -77,6 +77,34 @@ class HostAuthenticationTest {
         }
 
     @Test
+    fun `protected prefixes survive percent-encoding, dot segments and doubled slashes`() =
+        testApplication {
+            application {
+                HostAuthentication.bearerToken(token).protectingPathPrefixes("/secret/").install(this)
+                routing { get("/{...}") { call.respond(HttpStatusCode.OK, "reached") } }
+            }
+            val variants =
+                listOf(
+                    "/secret/item",
+                    "/%73ecret/item",
+                    "/SECRET/item",
+                    "/secret//item",
+                    "/open/../secret/item",
+                    "/./secret/item",
+                    "/secret%2Fitem",
+                    "/open/%2e%2e/secret/item",
+                    "/secret\\item",
+                )
+            for (path in variants) {
+                val status = runCatching { client.request(path) { method = HttpMethod.Get }.status }.getOrNull()
+                // A request the test client cannot even form is not a bypass; one that reaches the
+                // route must have been gated.
+                assertTrue(status == null || status == HttpStatusCode.Unauthorized, "$path -> $status")
+            }
+            assertEquals(HttpStatusCode.OK, client.request("/open/item") { method = HttpMethod.Get }.status)
+        }
+
+    @Test
     fun `a bearer token admits the right caller and refuses everyone else`() =
         testApplication {
             application {

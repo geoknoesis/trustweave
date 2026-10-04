@@ -68,7 +68,7 @@ class WebDidMethod(
          * Characters that must never appear in a percent-decoded PATH segment.
          * `@` is legal inside a URL path, so it is allowed here.
          */
-        private const val PATH_FORBIDDEN_CHARS = "/?#"
+        private const val PATH_FORBIDDEN_CHARS = "/\\?#"
 
         /**
          * Redirect hops followed when [WebDidConfig.followRedirects] is enabled. Each hop is

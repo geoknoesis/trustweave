@@ -233,7 +233,7 @@ public class HostAuthentication private constructor(
             }
             val gate = authenticator
             if (gate != null &&
-                (call.request.httpMethod in protectedMethods || protectedPathPrefixes.any { path.startsWith(it) })
+                (call.request.httpMethod in protectedMethods || underProtectedPrefix(path))
             ) {
                 val admitted =
                     try {
@@ -251,6 +251,42 @@ public class HostAuthentication private constructor(
             }
             proceed()
         }
+    }
+
+    /**
+     * Whether [rawPath] falls under a protected prefix once it is normalised the way a router
+     * would: percent-escapes decoded, empty and `.` segments dropped, `..` resolved. Compared
+     * case-insensitively, which can only gate more, never less. A raw match also counts.
+     */
+    private fun underProtectedPrefix(rawPath: String): Boolean {
+        if (protectedPathPrefixes.isEmpty()) return false
+        val normalised = normalisePath(rawPath)
+        return protectedPathPrefixes.any { prefix ->
+            rawPath.startsWith(prefix) ||
+                normalised.startsWith(normalisePath(prefix).trimEnd('/') + "/", ignoreCase = true) ||
+                normalised.equals(normalisePath(prefix), ignoreCase = true)
+        }
+    }
+
+    private fun normalisePath(path: String): String {
+        val segments = ArrayDeque<String>()
+        for (segment in path.split('/')) {
+            val decoded =
+                try {
+                    java.net.URLDecoder.decode(segment.replace("+", "%2B"), Charsets.UTF_8)
+                } catch (_: IllegalArgumentException) {
+                    segment
+                }
+            // A decoded slash would have split the path in a router that decodes first.
+            for (part in decoded.split('/', '\\')) {
+                when (part) {
+                    "", "." -> Unit
+                    ".." -> segments.removeLastOrNull()
+                    else -> segments.addLast(part)
+                }
+            }
+        }
+        return "/" + segments.joinToString("/")
     }
 
     private suspend fun ApplicationCall.refuse(

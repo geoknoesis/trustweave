@@ -41,6 +41,14 @@ class WebDidMethodUrlTest {
     }
 
     @Test
+    fun `backslash in a path segment is rejected because HTTP clients read it as a slash`() {
+        // OkHttp treats "\\" as "/" and then normalises "..", so x\..\y would walk the URL.
+        assertThrows<IllegalArgumentException> {
+            method.getDocumentUrl("did:web:example.com:x%5C..%5Cy")
+        }
+    }
+
+    @Test
     fun `bare domain resolves to well-known location`() {
         assertEquals(
             "https://example.com/.well-known/did.json",

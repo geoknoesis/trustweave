@@ -1,6 +1,6 @@
 package org.trustweave.signatures.trustlists
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Outcome of [TrustAnchorResolver.resolve].

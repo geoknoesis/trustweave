@@ -1,8 +1,6 @@
 package org.trustweave.did.resolver
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.trustweave.did.identifiers.Did
@@ -12,9 +10,11 @@ import org.trustweave.did.resolution.ResolutionOptions
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /**
  * Tests for [CachingDidResolver]: hit/miss, TTL expiry (injected clock),

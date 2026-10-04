@@ -2,8 +2,6 @@ package org.trustweave.credential.proof.internal.engines
 
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
@@ -35,7 +33,9 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 /**
  * Security tests for the SD-JWT `cnf` (RFC 7800) holder-binding chain:

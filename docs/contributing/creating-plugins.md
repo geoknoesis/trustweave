@@ -68,7 +68,7 @@ interface DidMethod : DidMethodResolver {
 
 ### Example Implementation
 
-**Reference:** Copy from **`org.trustweave.testkit.did.DidKeyMockMethod`** — it shows **`GenerateKeyResult`**, **`VerificationMethodId`**, **`Did`**, **`kotlinx.datetime.Clock`**, and correct **`DidDocument`** construction.
+**Reference:** Copy from **`org.trustweave.testkit.did.DidKeyMockMethod`** — it shows **`GenerateKeyResult`**, **`VerificationMethodId`**, **`Did`**, **`kotlin.time.Clock`**, and correct **`DidDocument`** construction.
 
 **Resolution** must return **`DidResolutionResult.Success`**, **`Deactivated`** (for a deactivated DID — never `Success`, even if your backend still has the document), or a **`Failure`** subtype (e.g. **`NotFound`**, **`InvalidFormat`**, **`MethodNotRegistered`**, **`ResolutionError`**, **`OptionsError`**). If your method extends one of the blockchain/web base classes, prefer **`DidMethodUtils.createSuccessResolutionResult`** (in **`did:plugins:base`**), which picks `Success`/`Deactivated` for you from a `deactivated: Boolean` flag:
 
@@ -78,7 +78,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 // private val documents: MutableMap<String, DidDocument> = ...
 

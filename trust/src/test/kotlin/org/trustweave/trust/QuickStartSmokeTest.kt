@@ -1,7 +1,6 @@
 package org.trustweave.trust
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.getOrThrow
@@ -14,6 +13,7 @@ import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Release-blocking smoke test: BARE `TrustWeave.quickStart()` (no factories supplied) must

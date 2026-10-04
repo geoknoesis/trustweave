@@ -3,8 +3,8 @@ package org.trustweave.contract
 import org.trustweave.contract.models.*
 import org.trustweave.core.util.ValidationResult
 import org.trustweave.did.validation.DidValidator
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Validates contract-related data.

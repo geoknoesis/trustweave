@@ -114,9 +114,9 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
 
 3. **Credential expired**
    ```kotlin
-   import kotlinx.datetime.Clock
+   import kotlin.time.Clock
 
-   // credential.expirationDate is already a kotlinx.datetime.Instant?
+   // credential.expirationDate is already a kotlin.time.Instant?
    val expiration = credential.expirationDate
    if (expiration != null && expiration < Clock.System.now()) {
        println("Credential expired")

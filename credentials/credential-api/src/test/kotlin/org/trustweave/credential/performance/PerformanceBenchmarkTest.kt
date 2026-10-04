@@ -1,7 +1,6 @@
 package org.trustweave.credential.performance
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
@@ -14,6 +13,7 @@ import org.trustweave.credential.transform.toCredential
 import org.trustweave.credential.transform.toJsonLd
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Performance benchmark tests for key operations.

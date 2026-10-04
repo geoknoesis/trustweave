@@ -160,7 +160,7 @@ class CredentialQueryBuilder {
     fun notExpired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now() < expirationDate
             } ?: true // No expiration date means not expired
         }
@@ -172,7 +172,7 @@ class CredentialQueryBuilder {
     fun expired() {
         filters.add { credential ->
             credential.expirationDate?.let { expirationDate ->
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now() > expirationDate
             } ?: false
         }
@@ -219,7 +219,7 @@ class CredentialQueryBuilder {
             credential.proof != null &&
                 (
                     credential.expirationDate?.let { expirationDate ->
-                        kotlinx.datetime.Clock.System
+                        kotlin.time.Clock.System
                             .now() < expirationDate
                     } ?: true
                 ) &&

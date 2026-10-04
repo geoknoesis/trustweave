@@ -169,7 +169,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.trustweave.did.resolver.errorMessage
 
 fun main() = runBlocking {
@@ -337,7 +337,7 @@ import org.trustweave.trust.types.getOrThrow
 import org.trustweave.wallet.withLifecycle
 import org.trustweave.wallet.withOrganization
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
@@ -444,7 +444,7 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.identifiers.extractKeyId
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {
@@ -537,7 +537,7 @@ import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.wallet.withOrganization
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.quickStart()

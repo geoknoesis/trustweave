@@ -105,7 +105,7 @@ val delegation = trustWeave.delegate {
 ```kotlin
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.getOrThrow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val credential = trustWeave.issue {
     credential {

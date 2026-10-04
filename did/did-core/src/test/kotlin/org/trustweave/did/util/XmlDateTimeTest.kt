@@ -1,10 +1,10 @@
 package org.trustweave.did.util
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 
 class XmlDateTimeTest {
     @Serializable

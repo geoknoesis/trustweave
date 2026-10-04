@@ -276,8 +276,8 @@ class CredentialQueryBuilder {
 Collection model.
 
 ```kotlin
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import kotlin.time.Instant
+import kotlin.time.Clock
 
 data class CredentialCollection(
     val id: String,

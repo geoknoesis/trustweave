@@ -113,7 +113,7 @@ Create verifiable credentials using a fluent builder:
 ```kotlin
 import org.trustweave.trust.dsl.credential.credential
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 val issuerDid = Did("did:key:university")
@@ -160,7 +160,7 @@ import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.results.IssuanceResult
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -210,7 +210,7 @@ import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.results.IssuanceResult
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {

@@ -2,7 +2,6 @@ package org.trustweave.credential.mdl.engine
 
 import com.upokecenter.cbor.CBORObject
 import com.upokecenter.cbor.CBORType
-import kotlinx.datetime.Instant
 import org.trustweave.credential.mdl.MdocException
 import org.trustweave.credential.mdl.model.DeviceAuth
 import org.trustweave.credential.mdl.model.DeviceKeyInfo
@@ -14,6 +13,7 @@ import org.trustweave.credential.mdl.model.MobileSecurityObject
 import org.trustweave.credential.mdl.model.ValidityInfo
 import java.security.MessageDigest
 import java.security.SecureRandom
+import kotlin.time.Instant
 
 /**
  * CBOR encoding/decoding for ISO 18013-5 mDoc structures.

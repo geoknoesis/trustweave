@@ -1,9 +1,9 @@
 package org.trustweave.credential.revocation
 
 import org.trustweave.credential.identifiers.StatusListId
-import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.StatusPurpose
-import kotlinx.datetime.Instant
+import org.trustweave.credential.model.vc.VerifiableCredential
+import kotlin.time.Instant
 
 /**
  * Credential revocation manager interface for credential revocation and suspension.

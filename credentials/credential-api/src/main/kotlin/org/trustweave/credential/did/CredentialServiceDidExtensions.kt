@@ -1,7 +1,6 @@
 package org.trustweave.credential.did
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.Claims
@@ -17,6 +16,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
+import kotlin.time.Clock
 
 /**
  * DID-linked credential service extensions.

@@ -1,9 +1,9 @@
 package org.trustweave.contract.models
 
-import org.trustweave.anchor.AnchorRef
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.datetime.Instant
+import org.trustweave.anchor.AnchorRef
+import kotlin.time.Instant
 
 /**
  * Execution context for contract execution.

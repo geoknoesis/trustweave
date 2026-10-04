@@ -22,7 +22,6 @@ release on Maven Central when this was written. Update this page in the same PR 
 | [OkHttp 5](#okhttp-5) | 4.12.0 | 5.x (latest 5.5.0) | 36 build files | Medium | TBD (assign) |
 | [Kotest 6](#kotest-6) | 5.9.1 | 6.x (latest 6.2.5) | 2 build files, 6 test sources | Low | TBD (assign) |
 | [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
-| [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High | TBD (assign) |
 
 ## Routine bumps done in the current cycle
 
@@ -148,23 +147,3 @@ Steps:
    `testcontainers-postgresql`) to the 2.x artifact names.
 2. Update imports and any `@Container`/`@Testcontainers` usage; remove JUnit 4 rule usage.
 3. Run the Docker-backed suites in CI (they cannot run where Docker is unavailable).
-
-## kotlinx-datetime
-
-`kotlinx.datetime.Instant`/`Clock` appear in about 230 source files across 58 modules,
-including **public API** (credential and DID document models).
-
-Risk: high. kotlinx-datetime 0.7 removes `kotlinx.datetime.Instant` and `Clock` in favour of
-Kotlin's `kotlin.time.Instant`/`kotlin.time.Clock` (stable in Kotlin 2.3). Every public signature
-that exposes `kotlinx.datetime.Instant` changes, which is a binary-incompatible change for
-consumers and for serialized formats that rely on its serializer.
-
-Steps:
-
-1. Decide the public API type (`kotlin.time.Instant` is the forward path) and announce the break
-   in `CHANGELOG.md` for the next minor release.
-2. Optionally stage it: move to the `0.7.x-0.6.x-compat` / `0.8.0-0.6.x-compat` artifact first,
-   which keeps the old classes while the code migrates.
-3. Migrate module by module, regenerate ABI dumps (`./gradlew updateKotlinAbi`) and review the
-   diffs, and verify JSON serialization of timestamps is unchanged (ISO-8601) with the existing
-   round-trip tests.

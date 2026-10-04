@@ -42,7 +42,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     try {
@@ -389,7 +389,7 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.*
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonPrimitive
 
 val credential = VerifiableCredential(

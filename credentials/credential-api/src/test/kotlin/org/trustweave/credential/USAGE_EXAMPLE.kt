@@ -13,7 +13,6 @@
 
 package org.trustweave.credential
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
@@ -26,6 +25,7 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
+import kotlin.time.Clock
 
 /**
  * Example: Complete credential issuance and verification flow.

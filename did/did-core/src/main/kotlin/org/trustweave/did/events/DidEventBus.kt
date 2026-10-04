@@ -5,9 +5,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
+import kotlin.time.Instant
 
 /**
  * DID Event Bus.
@@ -88,7 +88,7 @@ sealed class DidEvent {
         override val did: Did,
         val document: DidDocument? = null,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -100,7 +100,7 @@ sealed class DidEvent {
         val previousDocument: DidDocument? = null,
         val updatedDocument: DidDocument? = null,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -111,7 +111,7 @@ sealed class DidEvent {
         override val did: Did,
         val document: DidDocument? = null,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -122,7 +122,7 @@ sealed class DidEvent {
         override val did: Did,
         val methodId: String,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -133,7 +133,7 @@ sealed class DidEvent {
         override val did: Did,
         val methodId: String,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -144,7 +144,7 @@ sealed class DidEvent {
         override val did: Did,
         val serviceId: String,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 
@@ -155,7 +155,7 @@ sealed class DidEvent {
         override val did: Did,
         val serviceId: String,
         override val timestamp: Instant =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now(),
     ) : DidEvent()
 }

@@ -13,6 +13,18 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **BREAKING — timestamps are now `kotlin.time.Instant` and `kotlin.time.Clock` (kotlinx-datetime
+  0.8.0).** kotlinx-datetime 0.7 moved `Instant`/`Clock` into the Kotlin standard library and 0.8
+  no longer ships `kotlinx.datetime.Instant`/`Clock`. Every public signature, model field and
+  default clock that used them (credential and DID document models, signatures, wallets, trust
+  registry, anchors) now uses `kotlin.time.Instant`/`kotlin.time.Clock`. Migration for consumers:
+  replace `import kotlinx.datetime.Instant` with `import kotlin.time.Instant` and
+  `import kotlinx.datetime.Clock` with `import kotlin.time.Clock`; `Instant.parse`,
+  `Clock.System.now()`, `toLocalDateTime` and the other `kotlinx.datetime` extension functions keep
+  working. JSON stays ISO-8601 (verified by the existing serialization round-trip tests). The ABI
+  dumps changed only by this type rename. Other kotlinx-datetime 0.7 changes (`TimeZone.UTC` id
+  `"UTC"`, `dayOfMonth`/`monthNumber` renamed) do not affect TrustWeave sources.
+
 - **BREAKING — `DidRegistrarServer`, `VcApiServer`, `StatusListServer`, `Oidc4VciServer`,
   `AvpAuthorizationServer` and `TrustRegistryServer` refuse mutating requests until authentication
   is configured.** These servers create and deactivate DIDs, sign credentials with whatever keys

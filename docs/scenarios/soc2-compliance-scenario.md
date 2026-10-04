@@ -174,7 +174,7 @@ import org.trustweave.trust.dsl.credential.DidMethods.KEY
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import org.trustweave.core.json.jsonData
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.trust.types.getOrThrow

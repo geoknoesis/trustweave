@@ -304,7 +304,7 @@ override suspend fun verify(
     // Check expiration if requested (validUntil for VC 2.0, expirationDate for VC 1.1)
     val effectiveExpiry = credential.validUntil ?: credential.expirationDate
     if (options.checkExpiration && effectiveExpiry != null) {
-        val now = kotlinx.datetime.Clock.System.now()
+        val now = kotlin.time.Clock.System.now()
         if (now > effectiveExpiry) {
             return VerificationResult.Invalid.Expired(
                 credential = credential,

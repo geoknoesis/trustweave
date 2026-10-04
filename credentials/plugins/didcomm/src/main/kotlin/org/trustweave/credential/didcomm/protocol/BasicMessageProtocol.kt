@@ -1,10 +1,10 @@
 package org.trustweave.credential.didcomm.protocol
 
+import kotlinx.serialization.json.*
 import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.models.DidCommMessageTypes
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Clock
 import java.util.*
+import kotlin.time.Clock
 
 /**
  * Helper functions for Basic Message Protocol.

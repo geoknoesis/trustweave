@@ -124,7 +124,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     // Setup (same as Example 1)

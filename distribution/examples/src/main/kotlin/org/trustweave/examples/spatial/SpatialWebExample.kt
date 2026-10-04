@@ -1,7 +1,6 @@
 package org.trustweave.examples.spatial
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
@@ -24,6 +23,7 @@ import org.trustweave.trust.types.PresentationResult
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import org.trustweave.wallet.Wallet
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

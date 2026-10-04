@@ -1,6 +1,5 @@
 package org.trustweave.trust.services
 
-import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.trust.TrustRegistry
@@ -9,6 +8,7 @@ import org.trustweave.trust.types.TrustAnchor
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * Default [TrustRegistryFactory] used when `trust { provider("inMemory") }` is configured

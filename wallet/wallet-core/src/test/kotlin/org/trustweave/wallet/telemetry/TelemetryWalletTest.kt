@@ -1,7 +1,6 @@
 package org.trustweave.wallet.telemetry
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.telemetry.Operation
 import org.trustweave.core.telemetry.Outcome
@@ -22,6 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class TelemetryWalletTest {
     private val recorded = CopyOnWriteArrayList<TelemetryEvent>()

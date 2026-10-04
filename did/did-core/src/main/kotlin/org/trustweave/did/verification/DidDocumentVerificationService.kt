@@ -1,9 +1,9 @@
 package org.trustweave.did.verification
 
-import kotlinx.datetime.Clock
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionMetadata
+import kotlin.time.Clock
 
 /**
  * DID Document Verification Service.
@@ -150,7 +150,7 @@ data class VerificationResult(
     val valid: Boolean,
     val errors: List<String> = emptyList(),
     val warnings: List<String> = emptyList(),
-    val verifiedAt: kotlinx.datetime.Instant = Clock.System.now(),
+    val verifiedAt: kotlin.time.Instant = Clock.System.now(),
     val verificationMethod: String? = null,
     val integrityVerified: Boolean = false,
 )

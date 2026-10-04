@@ -3,12 +3,12 @@ package org.trustweave.credential.didcomm.storage.analytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.sql.Timestamp
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import java.time.Instant as JavaInstant
+import javax.sql.DataSource
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
-import javax.sql.DataSource
+import kotlin.time.Instant
+import java.time.Instant as JavaInstant
 
 /**
  * PostgreSQL-based analytics implementation.

@@ -1,15 +1,15 @@
 package org.trustweave.credential.didcomm.protocol
 
-import org.trustweave.credential.didcomm.models.DidCommMessage
-import org.trustweave.credential.didcomm.models.DidCommMessageTypes
+import kotlinx.serialization.json.*
 import org.trustweave.credential.didcomm.models.DidCommAttachment
 import org.trustweave.credential.didcomm.models.DidCommAttachmentData
+import org.trustweave.credential.didcomm.models.DidCommMessage
+import org.trustweave.credential.didcomm.models.DidCommMessageTypes
 import org.trustweave.credential.didcomm.protocol.models.DidCommGoalCode
 import org.trustweave.credential.didcomm.protocol.util.toJsonObject
 import org.trustweave.credential.model.vc.VerifiableCredential
-import kotlinx.serialization.json.*
-import kotlinx.datetime.Clock
 import java.util.*
+import kotlin.time.Clock
 
 /**
  * Helper functions for creating DIDComm protocol messages.

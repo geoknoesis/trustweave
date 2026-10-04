@@ -6,8 +6,6 @@ import com.nimbusds.jose.util.Base64URL
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -34,6 +32,8 @@ import java.sql.Timestamp
 import java.util.Base64
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * IETF Token Status List implementation of [CredentialRevocationManager].

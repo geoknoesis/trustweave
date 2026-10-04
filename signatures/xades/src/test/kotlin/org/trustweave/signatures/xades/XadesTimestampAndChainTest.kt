@@ -4,7 +4,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
@@ -45,6 +44,7 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.Base64
 import java.util.Date
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -59,7 +59,7 @@ class XadesTimestampAndChainTest {
             .apply { initialize(ECGenParameterSpec("secp256r1")) }
             .generateKeyPair()
 
-    private fun match(withdrawnAt: kotlinx.datetime.Instant? = null): TrustAnchorMatch =
+    private fun match(withdrawnAt: kotlin.time.Instant? = null): TrustAnchorMatch =
         if (withdrawnAt != null) {
             TrustAnchorMatch.QualifiedWithdrawn("Test TSP", withdrawnAt)
         } else {

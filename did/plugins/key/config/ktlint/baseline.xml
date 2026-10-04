@@ -4,8 +4,7 @@
         <error line="25" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/org/trustweave/keydid/KeyDidMethod.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
+        <error line="10" column="1" source="standard:no-wildcard-imports" />
         <error line="19" column="1" source="standard:blank-line-before-declaration" />
         <error line="44" column="30" source="standard:trailing-comma-on-declaration-site" />
         <error line="46" column="1" source="standard:no-empty-first-line-in-class-body" />
@@ -28,7 +27,7 @@
         <error line="179" column="80" source="standard:trailing-comma-on-call-site" />
         <error line="185" column="32" source="standard:multiline-expression-wrapping" />
         <error line="190" column="85" source="standard:trailing-comma-on-call-site" />
-        <error line="198" column="56" source="standard:chain-method-continuation" />
+        <error line="198" column="51" source="standard:chain-method-continuation" />
         <error line="200" column="47" source="standard:multiline-expression-wrapping" />
         <error line="201" column="34" source="standard:trailing-comma-on-call-site" />
         <error line="213" column="26" source="standard:trailing-comma-on-call-site" />

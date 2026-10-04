@@ -1,6 +1,5 @@
 package org.trustweave.signatures.trustlists
 
-import kotlinx.datetime.Instant
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -11,6 +10,7 @@ import java.security.cert.X509Certificate
 import java.util.Base64
 import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.time.Instant
 
 /**
  * Default ETSI TS 119 612 trust-list parser.

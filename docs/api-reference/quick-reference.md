@@ -108,7 +108,7 @@ trustWeave.updateDid {
 ```kotlin
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val credential = trustWeave.issue {
     credential {

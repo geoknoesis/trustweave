@@ -1,8 +1,5 @@
 package org.trustweave.wallet.database
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -17,6 +14,9 @@ import org.trustweave.wallet.CredentialFilter
 import org.trustweave.wallet.StoredCredentialStatus
 import org.trustweave.wallet.WalletStatusResolver
 import org.trustweave.wallet.resolveStoredStatus
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 // Row <-> model mapping helpers of [DatabaseWallet]. Internal; behaviour identical to the
 // members they were extracted from.

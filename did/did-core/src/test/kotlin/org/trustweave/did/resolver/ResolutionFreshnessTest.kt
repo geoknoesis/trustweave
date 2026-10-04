@@ -1,8 +1,6 @@
 package org.trustweave.did.resolver
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
@@ -10,7 +8,9 @@ import org.trustweave.did.model.DidDocumentMetadata
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 /**
  * Local-cache freshness tests for [DecentralizedResolutionStrategy].

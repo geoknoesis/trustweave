@@ -5,8 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -42,6 +40,8 @@ import java.util.BitSet
 import java.util.UUID
 import java.util.zip.GZIPOutputStream
 import javax.sql.DataSource
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * W3C Bitstring Status List v1.0 implementation of [CredentialRevocationManager].

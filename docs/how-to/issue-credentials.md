@@ -236,7 +236,7 @@ subject {
 Set an expiration date for time-sensitive credentials:
 
 ```kotlin
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 val credential = trustWeave.issue {

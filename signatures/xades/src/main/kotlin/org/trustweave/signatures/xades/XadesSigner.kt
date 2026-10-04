@@ -3,8 +3,6 @@ package org.trustweave.signatures.xades
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.kms.KeyManagementService
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -28,6 +26,8 @@ import javax.xml.crypto.dsig.keyinfo.KeyInfo
 import javax.xml.crypto.dsig.keyinfo.X509Data
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec
 import javax.xml.crypto.dsig.spec.TransformParameterSpec
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Builds an XAdES enveloped signature.

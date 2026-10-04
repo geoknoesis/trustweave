@@ -1,7 +1,6 @@
 package org.trustweave.trust
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
@@ -18,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class TrustWeaveVerificationAdapterNotReadyTest {
     @Test

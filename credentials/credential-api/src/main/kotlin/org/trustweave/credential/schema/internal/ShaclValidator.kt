@@ -1,6 +1,5 @@
 package org.trustweave.credential.schema.internal
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -19,6 +18,7 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.schema.SchemaValidationError
 import org.trustweave.credential.schema.SchemaValidationResult
 import org.trustweave.credential.schema.SchemaValidator
+import kotlin.time.Instant
 
 /**
  * SHACL (Shapes Constraint Language) validator implementation.

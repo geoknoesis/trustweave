@@ -1,7 +1,6 @@
 package org.trustweave.examples.trust
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.ProofType
 import org.trustweave.credential.results.VerificationResult
@@ -13,6 +12,7 @@ import org.trustweave.trust.dsl.credential.KeyAlgorithms
 import org.trustweave.trust.dsl.credential.KmsProviders.IN_MEMORY
 import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
+import kotlin.time.Clock
 
 /**
  * Web of Trust Example Scenario.

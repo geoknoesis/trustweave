@@ -1,9 +1,9 @@
 package org.trustweave.did.resolver
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolution.ResolutionOptions
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 

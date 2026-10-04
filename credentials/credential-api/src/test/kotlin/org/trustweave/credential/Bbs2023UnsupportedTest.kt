@@ -1,7 +1,6 @@
 package org.trustweave.credential
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.Iri
@@ -18,6 +17,7 @@ import org.trustweave.did.resolver.DidResolver
 import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * `bbs-2023` is a recognised identifier with nothing behind it.

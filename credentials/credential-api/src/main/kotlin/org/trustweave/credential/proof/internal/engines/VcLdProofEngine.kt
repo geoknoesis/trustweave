@@ -4,7 +4,6 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.util.Base64URL
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -39,6 +38,7 @@ import org.trustweave.did.model.VerificationMethod
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import java.util.UUID
+import kotlin.time.Clock
 
 /**
  * VC-LD (Verifiable Credentials Linked Data) proof engine.
@@ -376,7 +376,7 @@ internal class VcLdProofEngine(
             issuerIri = issuerIri,
             subjectIri = credential.credentialSubject.id,
             issuedAt =
-                credential.issuanceDate ?: credential.validFrom ?: kotlinx.datetime.Clock.System
+                credential.issuanceDate ?: credential.validFrom ?: kotlin.time.Clock.System
                     .now(),
             expiresAt = credential.expirationDate ?: credential.validUntil,
             warnings = emptyList(),

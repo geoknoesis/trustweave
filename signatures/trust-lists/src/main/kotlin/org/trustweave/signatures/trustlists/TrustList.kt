@@ -1,7 +1,7 @@
 package org.trustweave.signatures.trustlists
 
-import kotlinx.datetime.Instant
 import java.security.cert.X509Certificate
+import kotlin.time.Instant
 
 /**
  * Parsed European trust graph: one root LoTL (List of Trusted Lists) plus N per-Member-State

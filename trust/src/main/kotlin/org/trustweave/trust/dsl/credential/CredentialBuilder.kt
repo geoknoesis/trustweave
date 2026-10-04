@@ -1,7 +1,5 @@
 package org.trustweave.trust.dsl.credential
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -24,8 +22,10 @@ import org.trustweave.credential.model.vc.RefreshService
 import org.trustweave.credential.model.vc.TermsOfUse
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import org.trustweave.credential.model.vc.SubjectBuilder as VcSubjectBuilder
 
 // Approximation: uses 365.25-day average. For calendar-exact expiry use validUntil(instant) directly.

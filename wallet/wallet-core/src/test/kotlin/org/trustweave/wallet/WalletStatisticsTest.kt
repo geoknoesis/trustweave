@@ -1,7 +1,6 @@
 package org.trustweave.wallet
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.StatusListId
@@ -15,6 +14,7 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

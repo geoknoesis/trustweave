@@ -1,7 +1,5 @@
 package org.trustweave.did.base
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.did.*
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.identifiers.Did
@@ -15,6 +13,8 @@ import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyHandle
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Common utilities for DID method implementations.

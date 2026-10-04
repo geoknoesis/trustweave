@@ -1,13 +1,13 @@
 package org.trustweave.trust.domain.treasury
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.trust.domain.DomainId
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * Handle returned by [DomainTreasury.reserve]. Captures the amount locked

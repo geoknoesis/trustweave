@@ -292,7 +292,7 @@ import org.trustweave.trust.types.getOrThrow
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() = runBlocking {
     val trustWeave = TrustWeave.build {

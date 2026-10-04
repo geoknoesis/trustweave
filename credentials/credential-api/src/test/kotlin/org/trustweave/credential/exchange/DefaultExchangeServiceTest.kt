@@ -2,7 +2,6 @@ package org.trustweave.credential.exchange
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.CredentialService
@@ -38,6 +37,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * The exchange service is a router: it picks a protocol, checks the protocol will do the thing,

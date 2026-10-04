@@ -1,6 +1,5 @@
 package org.trustweave.testkit.credential
 
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.model.CredentialType
@@ -23,6 +22,7 @@ import org.trustweave.wallet.DidManagement
 import org.trustweave.wallet.Wallet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * In-memory full-featured wallet for testing.

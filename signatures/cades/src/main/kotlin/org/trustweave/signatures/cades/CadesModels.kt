@@ -1,12 +1,12 @@
 package org.trustweave.signatures.cades
 
-import kotlinx.datetime.Instant
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
 import java.security.cert.X509Certificate
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * CAdES baseline profile (ETSI EN 319 122-1 §5).
@@ -34,7 +34,7 @@ enum class CadesProfile {
  *                                  build the CMS `SignerInfo` and the `signing-certificate-v2`
  *                                  signed attribute.
  * @property signingTime            Optional claimed signing time (CMS `signing-time` attribute).
- *                                  Defaults to `kotlinx.datetime.Clock.System.now()` when null.
+ *                                  Defaults to `kotlin.time.Clock.System.now()` when null.
  * @property detached               When `true`, the produced CMS does NOT embed the payload
  *                                  (detached signature — the standard CAdES form for large
  *                                  binary documents). When `false` the payload is encapsulated

@@ -1,7 +1,6 @@
 package org.trustweave.examples.national
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -30,6 +29,7 @@ import org.trustweave.trust.types.issuerValid
 import org.trustweave.trust.types.notExpired
 import org.trustweave.trust.types.notRevoked
 import org.trustweave.trust.types.proofValid
+import kotlin.time.Clock
 
 /**
  * National Education Credentials Algeria Scenario (AlgeroPass) - Complete Example

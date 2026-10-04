@@ -123,7 +123,7 @@ class EudiwExchangeProtocol : CredentialExchangeProtocol {
         metadata["nonce_issued_at"]?.let { raw ->
             val issuedAt = (raw as? JsonPrimitive)?.content?.toLongOrNull()
             val now =
-                kotlinx.datetime.Clock.System
+                kotlin.time.Clock.System
                     .now()
                     .epochSeconds
             when {

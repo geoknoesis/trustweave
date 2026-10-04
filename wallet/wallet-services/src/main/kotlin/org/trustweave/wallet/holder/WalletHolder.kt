@@ -1,6 +1,5 @@
 package org.trustweave.wallet.holder
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
@@ -29,6 +28,7 @@ import org.trustweave.wallet.Wallet
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Clock
 
 /**
  * Wallet holder convenience API for wallet applications.

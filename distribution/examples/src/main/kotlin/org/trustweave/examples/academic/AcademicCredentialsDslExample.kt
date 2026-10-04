@@ -1,7 +1,6 @@
 package org.trustweave.examples.academic
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.examples.ExampleContexts
@@ -20,6 +19,7 @@ import org.trustweave.trust.types.issuerValid
 import org.trustweave.trust.types.proofValid
 import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.Wallet
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

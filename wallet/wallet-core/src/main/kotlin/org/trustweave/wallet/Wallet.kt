@@ -1,6 +1,6 @@
 package org.trustweave.wallet
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Unified wallet interface.

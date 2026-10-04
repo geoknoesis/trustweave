@@ -1,5 +1,6 @@
 package org.trustweave.testkit.integration
 
+import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.StatusPurpose
@@ -11,12 +12,11 @@ import org.trustweave.credential.revocation.RevocationManagers
 import org.trustweave.did.model.DidDocument
 import org.trustweave.testkit.TrustWeaveTestFixture
 import org.trustweave.testkit.credential.InMemoryWallet
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.datetime.Clock
-import kotlin.test.assertNotNull
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Reusable test scenario for full credential lifecycle.

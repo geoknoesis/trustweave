@@ -2,7 +2,6 @@ package org.trustweave.credential.revocation.internal
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -14,6 +13,7 @@ import org.trustweave.credential.revocation.StatusUpdate
 import java.util.BitSet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * In-memory credential revocation manager implementation.

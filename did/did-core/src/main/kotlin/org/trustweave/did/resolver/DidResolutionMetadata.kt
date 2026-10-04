@@ -1,6 +1,5 @@
 package org.trustweave.did.resolver
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -12,6 +11,7 @@ import kotlinx.serialization.json.put
 import org.trustweave.did.representation.DidMediaTypes
 import org.trustweave.did.util.XmlDateTimeSerializer
 import org.trustweave.did.util.toXmlDateTime
+import kotlin.time.Instant
 
 /**
  * DID resolution metadata per DID Resolution 1.0 §4.2 — metadata about the resolution *process*.

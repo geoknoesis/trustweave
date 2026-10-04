@@ -82,7 +82,7 @@ class InMemoryDocumentStorage : DidDocumentStorage {
             metadata[did.value] =
                 currentMeta.copy(
                     updated =
-                        kotlinx.datetime.Clock.System
+                        kotlin.time.Clock.System
                             .now(),
                 )
 
@@ -99,7 +99,7 @@ class InMemoryDocumentStorage : DidDocumentStorage {
             metadata[did.value] =
                 currentMeta.copy(
                     updated =
-                        kotlinx.datetime.Clock.System
+                        kotlin.time.Clock.System
                             .now(),
                 )
         }

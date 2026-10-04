@@ -175,7 +175,7 @@ class SchemaDslTest {
                                 .Did("did:key:subject"),
                             claims = mapOf("name" to kotlinx.serialization.json.JsonPrimitive("Alice")),
                         ),
-                    issuanceDate = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                    issuanceDate = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
                 )
 
             // Note: Actual validation requires a registered validator
@@ -259,7 +259,7 @@ class SchemaDslTest {
                                 .Did("did:key:subject"),
                             claims = emptyMap(),
                         ),
-                    issuanceDate = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                    issuanceDate = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
                 )
 
             assertFailsWith<IllegalArgumentException> {

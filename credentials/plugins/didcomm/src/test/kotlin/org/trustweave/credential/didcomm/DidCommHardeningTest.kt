@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -36,6 +35,7 @@ import org.trustweave.credential.exchange.request.ProofRequest
 import org.trustweave.credential.identifiers.ExchangeProtocolName
 import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 class DidCommHardeningTest {

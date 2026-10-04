@@ -3,8 +3,6 @@ package org.trustweave.signatures.cades
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import org.bouncycastle.asn1.ASN1Set
 import org.bouncycastle.asn1.cms.CMSAttributes
 import org.bouncycastle.asn1.cms.Time
@@ -22,6 +20,8 @@ import java.security.MessageDigest
 import java.security.Security
 import java.security.cert.X509Certificate
 import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 /**
  * Verifier for CAdES B-B and B-T profiles. Pure: never makes network calls.

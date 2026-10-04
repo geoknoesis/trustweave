@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl.wallet
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
@@ -19,6 +18,7 @@ import org.trustweave.trust.types.getOrThrow
 import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Contract tests for [presentationFromWalletResult]: wallet credential resolution and sealed errors.

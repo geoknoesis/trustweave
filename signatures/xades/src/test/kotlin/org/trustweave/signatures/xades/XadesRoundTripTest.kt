@@ -1,7 +1,6 @@
 package org.trustweave.signatures.xades
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,6 +22,7 @@ import org.trustweave.signatures.xades.XadesValidationResult.Valid
 import org.w3c.dom.Document
 import java.security.cert.X509Certificate
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.time.Clock
 
 class XadesRoundTripTest {
 

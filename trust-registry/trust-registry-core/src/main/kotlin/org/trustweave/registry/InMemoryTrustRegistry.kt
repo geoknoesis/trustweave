@@ -1,9 +1,9 @@
 package org.trustweave.registry
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * In-memory [TrustRegistry].

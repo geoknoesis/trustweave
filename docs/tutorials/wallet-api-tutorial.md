@@ -98,7 +98,7 @@ val inMemory = InMemoryWallet(holderDid = "did:key:test-holder")
 ### Basic Storage
 
 In 0.6.0 the `VerifiableCredential` constructor was tightened to use typed
-identifiers (`Issuer`, `CredentialSubject`, `kotlinx.datetime.Instant`,
+identifiers (`Issuer`, `CredentialSubject`, `kotlin.time.Instant`,
 `List<CredentialType>`). Always build credentials through the issuance DSL — never
 the raw constructor — and store the result. Storage itself is unchanged.
 

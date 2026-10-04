@@ -1,7 +1,6 @@
 package org.trustweave.credential.revocation
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.model.StatusPurpose
@@ -15,6 +14,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /** JVM-side contract checks for the interface defaults and option semantics shared by all managers. */
 class RevocationManagerDefaultsTest {

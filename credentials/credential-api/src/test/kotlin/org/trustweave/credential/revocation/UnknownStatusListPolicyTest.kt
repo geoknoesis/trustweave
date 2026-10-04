@@ -1,7 +1,6 @@
 package org.trustweave.credential.revocation
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.StatusListId
@@ -19,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * The point of making an unknown status list throw: the host's policy gets consulted.

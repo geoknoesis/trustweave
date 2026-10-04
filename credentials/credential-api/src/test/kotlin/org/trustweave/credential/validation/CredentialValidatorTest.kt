@@ -1,6 +1,5 @@
 package org.trustweave.credential.validation
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
@@ -15,6 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Structure validation, which runs before anything cryptographic and had no tests.

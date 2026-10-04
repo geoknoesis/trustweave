@@ -256,7 +256,7 @@ not to redefine them.
 
 Every `-mp` module ships an empty `jvmMain/kotlin/` directory (marked with
 `.gitkeep`). It exists to host JVM-only convenience aliases — for example,
-extension functions that convert a `kotlinx.datetime.Instant` from
+extension functions that convert a `kotlin.time.Instant` from
 `commonMain` into a `java.time.Instant` — without forcing those aliases into
 `commonMain`. Today most `jvmMain` directories are empty; that is the correct
 state until a real JVM-specific affordance is needed.

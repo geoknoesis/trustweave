@@ -3,7 +3,6 @@ package org.trustweave.wallet.cloud
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -23,6 +22,7 @@ import org.trustweave.wallet.StoredCredentialRecord
 import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.WalletStatistics
 import java.util.UUID
+import kotlin.time.Clock
 
 /**
  * Cloud storage-backed wallet implementation.

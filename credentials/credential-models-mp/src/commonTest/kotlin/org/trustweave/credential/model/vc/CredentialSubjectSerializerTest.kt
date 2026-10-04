@@ -1,9 +1,5 @@
 package org.trustweave.credential.model.vc
 
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.serialization.SerializationModule
-import org.trustweave.credential.model.CredentialType
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -15,12 +11,16 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.credential.model.CredentialType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Tests for the symmetric [CredentialSubjectSerializer] that flattens

@@ -76,7 +76,7 @@ credential {
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
@@ -151,7 +151,7 @@ import org.trustweave.did.resolver.errorMessage
 import org.trustweave.did.identifiers.extractKeyId
 import org.trustweave.credential.results.getOrThrow
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 fun main() = runBlocking {
@@ -293,7 +293,7 @@ fun main() = runBlocking {
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave
@@ -588,7 +588,7 @@ TrustWeave uses sealed result types for all I/O operations, providing type-safe,
 ```kotlin
 // Kotlin stdlib
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 // TrustWeave core
 import org.trustweave.trust.TrustWeave

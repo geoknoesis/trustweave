@@ -1,12 +1,12 @@
 package org.trustweave.testkit.credential
 
-import kotlinx.datetime.Clock
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.CredentialFilter
 import org.trustweave.wallet.CredentialQueryBuilder
 import org.trustweave.wallet.Wallet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * Basic wallet implementation.
@@ -62,7 +62,7 @@ class BasicWallet(
                         {
                             credential.expirationDate?.let { expirationDate ->
                                 val isExpired =
-                                    kotlinx.datetime.Clock.System
+                                    kotlin.time.Clock.System
                                         .now() > expirationDate
                                 isExpired == filter.expired
                             } ?: (filter.expired == false)

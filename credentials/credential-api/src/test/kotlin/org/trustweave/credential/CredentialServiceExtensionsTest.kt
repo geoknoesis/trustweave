@@ -10,7 +10,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.*
 import kotlin.test.Test
 import kotlin.test.assertNotNull

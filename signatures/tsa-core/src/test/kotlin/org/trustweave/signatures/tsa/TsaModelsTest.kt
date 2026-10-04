@@ -1,10 +1,10 @@
 package org.trustweave.signatures.tsa
 
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import kotlin.time.Instant
 
 class TsaModelsTest {
     @Test

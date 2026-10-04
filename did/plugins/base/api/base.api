@@ -37,7 +37,7 @@ public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave
 	protected final fun getDocuments ()Ljava/util/concurrent/ConcurrentHashMap;
 	protected final fun getKms ()Lorg/trustweave/kms/KeyManagementService;
 	protected final fun getLastFetched ()Ljava/util/concurrent/ConcurrentHashMap;
-	protected final fun getLastFetched (Ljava/lang/Object;)Lkotlinx/datetime/Instant;
+	protected final fun getLastFetched (Ljava/lang/Object;)Lkotlin/time/Instant;
 	protected fun getMaxCachedDocuments ()I
 	protected fun getMaxDeactivatedRecords ()I
 	public fun getMethod ()Ljava/lang/String;
@@ -46,8 +46,8 @@ public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave
 	protected final fun jsonElementToDocument (Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/did/model/DidDocument;
 	protected final fun removeStoredDocument (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	protected final fun storeDocument (Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun storeDocument$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlinx/datetime/Instant;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	protected final fun storeDocument (Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun storeDocument$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public fun updateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun validateDidFormat (Lorg/trustweave/did/identifiers/Did;)V
 }
@@ -88,8 +88,8 @@ public final class org/trustweave/did/base/DidMethodUtils {
 	public final fun compressEcPublicKey (Ljava/lang/String;[B)[B
 	public final fun createErrorResolutionResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/resolver/DidResolutionResult;
 	public static synthetic fun createErrorResolutionResult$default (Lorg/trustweave/did/base/DidMethodUtils;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult;
-	public final fun createSuccessResolutionResult (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLkotlinx/datetime/Instant;)Lorg/trustweave/did/resolver/DidResolutionResult;
-	public static synthetic fun createSuccessResolutionResult$default (Lorg/trustweave/did/base/DidMethodUtils;Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;ZLkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult;
+	public final fun createSuccessResolutionResult (Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;Lkotlin/time/Instant;ZLkotlin/time/Instant;)Lorg/trustweave/did/resolver/DidResolutionResult;
+	public static synthetic fun createSuccessResolutionResult$default (Lorg/trustweave/did/base/DidMethodUtils;Lorg/trustweave/did/model/DidDocument;Ljava/lang/String;Lkotlin/time/Instant;Lkotlin/time/Instant;ZLkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/did/resolver/DidResolutionResult;
 	public final fun createVerificationMethod (Ljava/lang/String;Lorg/trustweave/kms/KeyHandle;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/did/model/VerificationMethod;
 	public final fun createVerificationMethod (Ljava/lang/String;Lorg/trustweave/kms/KeyHandle;Lorg/trustweave/did/KeyAlgorithm;Ljava/lang/String;)Lorg/trustweave/did/model/VerificationMethod;
 	public static synthetic fun createVerificationMethod$default (Lorg/trustweave/did/base/DidMethodUtils;Ljava/lang/String;Lorg/trustweave/kms/KeyHandle;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/did/model/VerificationMethod;

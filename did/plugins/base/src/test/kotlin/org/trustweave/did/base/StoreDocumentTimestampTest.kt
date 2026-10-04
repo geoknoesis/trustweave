@@ -2,7 +2,6 @@ package org.trustweave.did.base
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.did.DidCreationOptions
@@ -17,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Timestamp-fidelity tests for [AbstractDidMethod.storeDocument].

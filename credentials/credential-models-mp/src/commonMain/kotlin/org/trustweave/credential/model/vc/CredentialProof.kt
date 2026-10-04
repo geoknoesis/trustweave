@@ -1,9 +1,9 @@
 package org.trustweave.credential.model.vc
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * VC Proof - format-specific (VC-LD, VC-JWT, SD-JWT-VC).

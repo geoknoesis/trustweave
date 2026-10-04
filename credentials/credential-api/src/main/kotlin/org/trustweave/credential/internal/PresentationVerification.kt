@@ -583,9 +583,9 @@ internal object PresentationVerification {
                     reason = "Key Binding JWT is missing the 'iat' claim",
                     errors = listOf("KB-JWT iat is required"),
                 )
-        val iatInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(issuedAt.time)
+        val iatInstant = kotlin.time.Instant.fromEpochMilliseconds(issuedAt.time)
         val now =
-            kotlinx.datetime.Clock.System
+            kotlin.time.Clock.System
                 .now()
         if (iatInstant > now.plus(options.clockSkewTolerance)) {
             return VerificationResult.Invalid.InvalidProof(

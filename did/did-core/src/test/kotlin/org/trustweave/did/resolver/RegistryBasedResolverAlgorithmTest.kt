@@ -55,7 +55,7 @@ class RegistryBasedResolverAlgorithmTest {
             val options =
                 ResolutionOptions(
                     versionId = "3",
-                    versionTime = kotlinx.datetime.Instant.parse("2021-05-10T17:00:00Z"),
+                    versionTime = kotlin.time.Instant.parse("2021-05-10T17:00:00Z"),
                 )
             assertEquals(DidErrorType.INVALID_OPTIONS, resolver.resolve(did, options).errorType)
         }
@@ -69,7 +69,7 @@ class RegistryBasedResolverAlgorithmTest {
             val options =
                 ResolutionOptions(
                     versionId = "3",
-                    versionTime = kotlinx.datetime.Instant.parse("2021-05-10T17:00:00Z"),
+                    versionTime = kotlin.time.Instant.parse("2021-05-10T17:00:00Z"),
                     accept = "application/did+cbor",
                 )
             assertEquals(DidErrorType.INVALID_OPTIONS, resolver.resolve(did, options).errorType)

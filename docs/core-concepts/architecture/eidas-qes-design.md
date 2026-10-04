@@ -155,7 +155,7 @@ credentials/credential-api/          [MODIFIED]
 ```kotlin
 package org.trustweave.signatures.tsa
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * RFC 3161 Time-Stamp Authority client.
@@ -245,8 +245,8 @@ import java.security.cert.X509Certificate
 data class TrustList(
     val schemeOperator: String,                    // "European Commission" for the LoTL
     val sequenceNumber: Int,
-    val issuedAt: kotlinx.datetime.Instant,
-    val nextUpdateAt: kotlinx.datetime.Instant?,
+    val issuedAt: kotlin.time.Instant,
+    val nextUpdateAt: kotlin.time.Instant?,
     val memberStateLists: List<MemberStateTsl>
 )
 
@@ -254,7 +254,7 @@ data class MemberStateTsl(
     val territory: String,                         // ISO 3166-1 alpha-2 (e.g. "DE", "FR")
     val schemeOperator: String,
     val sequenceNumber: Int,
-    val issuedAt: kotlinx.datetime.Instant,
+    val issuedAt: kotlin.time.Instant,
     val trustedTsps: List<TrustedTSP>
 )
 
@@ -268,7 +268,7 @@ data class TspService(
     val serviceName: String,
     val serviceType: TspServiceType,
     val status: TspServiceStatus,
-    val statusStartingTime: kotlinx.datetime.Instant,
+    val statusStartingTime: kotlin.time.Instant,
     val serviceCertificates: List<X509Certificate>,
     val qualifierUris: List<String>                // e.g. URIs under http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/
 )
@@ -316,7 +316,7 @@ sealed class TrustAnchorMatch {
     ) : TrustAnchorMatch()
 
     /** Chains to a qualified CA but the service status is `WITHDRAWN` as of the signing time. */
-    data class QualifiedWithdrawn(val tspName: String, val withdrawnAt: kotlinx.datetime.Instant) : TrustAnchorMatch()
+    data class QualifiedWithdrawn(val tspName: String, val withdrawnAt: kotlin.time.Instant) : TrustAnchorMatch()
 
     /** No chain found. */
     object NotTrusted : TrustAnchorMatch()
@@ -403,7 +403,7 @@ data class JadesSigningRequest(
     val signerCertificateChain: List<ByteArray>,       // DER X.509, signer first; required for x5c / x5t#S256
     val headerOverrides: Map<String, JsonElement> = emptyMap(),
     val signaturePolicyId: SignaturePolicyIdentifier? = null,
-    val signingTime: kotlinx.datetime.Instant? = null, // defaults to Clock.System.now()
+    val signingTime: kotlin.time.Instant? = null, // defaults to Clock.System.now()
     val tsaConfig: org.trustweave.signatures.tsa.TsaConfig? = null  // required iff profile == B_T
 )
 
@@ -451,8 +451,8 @@ sealed class JadesValidationResult {
         val header: JadesHeader,
         val payload: JsonElement,
         val trust: org.trustweave.signatures.trustlists.TrustAnchorMatch,
-        val signingTime: kotlinx.datetime.Instant,
-        val signatureTimeStamp: kotlinx.datetime.Instant?     // null for B-B
+        val signingTime: kotlin.time.Instant,
+        val signatureTimeStamp: kotlin.time.Instant?     // null for B-B
     ) : JadesValidationResult()
 
     sealed class Invalid : JadesValidationResult() {
@@ -461,7 +461,7 @@ sealed class JadesValidationResult {
         data class WrongProfile(val found: JadesProfile, val required: JadesProfile) : Invalid()
         data class MissingTimeStamp(val reason: String) : Invalid()
         data class TimeStampMismatch(val reason: String) : Invalid()
-        data class CertificateExpired(val notAfter: kotlinx.datetime.Instant) : Invalid()
+        data class CertificateExpired(val notAfter: kotlin.time.Instant) : Invalid()
         data class Malformed(val reason: String) : Invalid()
     }
 }

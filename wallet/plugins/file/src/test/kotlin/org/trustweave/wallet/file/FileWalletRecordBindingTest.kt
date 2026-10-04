@@ -1,7 +1,6 @@
 package org.trustweave.wallet.file
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -26,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /** Records are bound to their wallet, kind and credential id; legacy (no AAD) records still read. */
 class FileWalletRecordBindingTest {

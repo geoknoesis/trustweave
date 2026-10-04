@@ -366,7 +366,7 @@ import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonPrimitive
 
 val credential = VerifiableCredential(
@@ -396,7 +396,7 @@ VC proofs are modeled as `org.trustweave.credential.model.vc.CredentialProof` (V
 ```kotlin
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 val did = Did("did:key:z6Mk...")
 val proof = CredentialProof.LinkedDataProof(

@@ -2,13 +2,13 @@ package org.trustweave.core.serialization
 
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Common serialization module for TrustWeave SDK.
  *
  * Provides serializers for types that require contextual serialization,
- * such as kotlinx.datetime.Instant.
+ * such as kotlin.time.Instant.
  *
  * **Usage:**
  * ```kotlin

@@ -1,7 +1,5 @@
 package org.trustweave.signatures.xades
 
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinInstant
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cms.CMSSignedData
@@ -14,6 +12,8 @@ import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import java.util.Base64
 import javax.xml.crypto.dsig.CanonicalizationMethod
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 /**
  * Verification of the XAdES `SignatureTimeStamp` unsigned property (ETSI EN 319 132-1 §5.5.2):

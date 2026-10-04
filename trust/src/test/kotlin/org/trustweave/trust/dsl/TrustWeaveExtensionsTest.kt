@@ -1,7 +1,6 @@
 package org.trustweave.trust.dsl
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.credential.results.getOrThrow
@@ -13,6 +12,7 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.types.getOrThrow
 import kotlin.test.*
+import kotlin.time.Instant
 
 /**
  * Unit tests for workflow helpers in `TrustWeaveExtensions.kt` ([createDidAndIssue], [completeWorkflow], etc.).

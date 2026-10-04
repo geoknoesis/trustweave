@@ -2,11 +2,11 @@ package org.trustweave.credential.didcomm.storage.archive
 
 import kotlinx.coroutines.CancellationException
 import org.trustweave.credential.didcomm.models.DidCommMessage
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
-import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Instant
 
 /**
  * Defines when messages should be archived.

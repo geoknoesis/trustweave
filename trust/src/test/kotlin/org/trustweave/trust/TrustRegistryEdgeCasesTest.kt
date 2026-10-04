@@ -1,7 +1,6 @@
 package org.trustweave.trust
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.trust.InMemoryTrustRegistry
 import org.trustweave.trust.types.IssuerIdentity
@@ -11,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Edge case and comprehensive tests for Trust Registry.

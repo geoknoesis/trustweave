@@ -1,7 +1,6 @@
 package org.trustweave.credential.proof.internal.engines
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -28,6 +27,7 @@ import org.trustweave.did.resolver.DidResolver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Cross-stack interoperability test: verifies a credential that was SIGNED BY ANOTHER

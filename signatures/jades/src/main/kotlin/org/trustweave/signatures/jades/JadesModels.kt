@@ -1,11 +1,11 @@
 package org.trustweave.signatures.jades
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * JAdES profile level. Per ETSI TS 119 182-1 §5.
@@ -143,7 +143,7 @@ data class EncodedTimeStampToken(val tstTokensB64: List<String>, val canonAlg: S
  *                                   cert for development; production callers SHOULD include the
  *                                   issuing intermediates.
  * @property signingTime             Claimed signing time (`sigT`). Defaults to
- *                                   `kotlinx.datetime.Clock.System.now()` when null.
+ *                                   `kotlin.time.Clock.System.now()` when null.
  * @property contentType             Optional JOSE `cty` (payload content type).
  * @property additionalHeaders       Free-form header parameters added to the protected header
  *                                   verbatim. Useful for application-specific JAdES extensions

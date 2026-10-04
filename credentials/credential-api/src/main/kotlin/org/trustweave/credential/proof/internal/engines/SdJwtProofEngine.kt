@@ -5,8 +5,6 @@ import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -45,6 +43,8 @@ import java.security.SecureRandom
 import java.util.Base64
 import java.util.Date
 import java.util.UUID
+import kotlin.time.Clock
+import kotlin.time.Instant
 import java.time.Instant as JavaInstant
 
 /**
@@ -287,13 +287,13 @@ internal class SdJwtProofEngine(
             val subjectIri =
                 claimsSet.subject?.takeIf { it.isNotBlank() }?.let { Iri(it) }
                     ?: credential.credentialSubject.id
-            val issuedAt: kotlinx.datetime.Instant =
+            val issuedAt: kotlin.time.Instant =
                 claimsSet.issueTime
                     ?.toInstant()
                     ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
                     ?: credential.issuanceDate
                     ?: credential.validFrom
-                    ?: kotlinx.datetime.Clock.System
+                    ?: kotlin.time.Clock.System
                         .now()
             val expiresAt =
                 claimsSet.expirationTime

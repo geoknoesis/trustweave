@@ -4,7 +4,6 @@ import com.nimbusds.jwt.SignedJWT
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.core.exception.ConfigException
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.Iri
@@ -32,6 +31,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /** Fail-closed status lookups and real-key signing of the Token Status List manager. */
 class TokenStatusListFailClosedTest {

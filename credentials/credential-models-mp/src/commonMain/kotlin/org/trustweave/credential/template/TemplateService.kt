@@ -1,13 +1,13 @@
 package org.trustweave.credential.template
 
+import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.SchemaId
 import org.trustweave.credential.model.Claims
-import org.trustweave.credential.requests.IssuanceRequest
-import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.CredentialSubject
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.requests.IssuanceRequest
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Service for managing credential templates.

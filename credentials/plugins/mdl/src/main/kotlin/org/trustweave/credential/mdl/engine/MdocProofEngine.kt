@@ -2,9 +2,7 @@ package org.trustweave.credential.mdl.engine
 
 import com.upokecenter.cbor.CBORObject
 import com.upokecenter.cbor.CBORType
-import kotlinx.datetime.Clock
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -25,8 +23,8 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.spi.proof.ProofEngine
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.spi.proof.ProofEngineConfig
-import org.trustweave.credential.spi.status.CredentialStatusChecker
 import org.trustweave.credential.spi.status.CredentialStatusCheckResult
+import org.trustweave.credential.spi.status.CredentialStatusChecker
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyManagementService
 import java.io.ByteArrayInputStream
@@ -37,6 +35,8 @@ import java.security.cert.CertificateFactory
 import java.security.cert.PKIXParameters
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * ISO 18013-5 mDL/mDoc proof engine.

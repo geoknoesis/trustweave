@@ -1,10 +1,10 @@
 package org.trustweave.wallet.database
 
-import kotlinx.datetime.Clock
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.wallet.StoredCredentialStatus
 import org.trustweave.wallet.WalletStatusResolver
 import org.trustweave.wallet.resolveStoredStatus
+import kotlin.time.Clock
 
 /** Folds credentials into the counters behind [org.trustweave.wallet.WalletStatistics]. */
 internal class StatisticsAccumulator(

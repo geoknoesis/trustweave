@@ -1,11 +1,11 @@
 package org.trustweave.trust.domain.treasury
 
-import kotlinx.datetime.Instant
 import org.trustweave.anchor.payment.FeeStrategy
 import org.trustweave.anchor.payment.TokenAmount
 import java.math.BigInteger
 import kotlin.reflect.KClass
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * Single cap evaluated against an estimated spend.

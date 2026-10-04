@@ -1,7 +1,6 @@
 package org.trustweave.credential.mdl
 
 import com.upokecenter.cbor.CBORObject
-import kotlinx.datetime.Instant
 import org.trustweave.credential.mdl.engine.MdocCbor
 import org.trustweave.credential.mdl.model.DeviceAuth
 import org.trustweave.credential.mdl.model.DeviceKeyInfo
@@ -16,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /** Direct tests of the CBOR layer: round trips, determinism and fail-loud decoding. */
 class MdocCborTest {

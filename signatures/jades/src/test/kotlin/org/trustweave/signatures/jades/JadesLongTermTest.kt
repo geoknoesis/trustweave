@@ -243,21 +243,21 @@ class JadesLongTermTest {
             serviceName = "Test CA",
             serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
             status = TspServiceStatus.GRANTED,
-            statusStartingTime = kotlinx.datetime.Clock.System.now(),
+            statusStartingTime = kotlin.time.Clock.System.now(),
             serviceCertificates = listOf(trustedCa),
             qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
         )
         val trustList = TrustList(
             schemeOperator = "Test",
             sequenceNumber = 1,
-            issuedAt = kotlinx.datetime.Clock.System.now(),
+            issuedAt = kotlin.time.Clock.System.now(),
             nextUpdateAt = null,
             memberStateLists = listOf(
                 MemberStateTsl(
                     territory = "EU",
                     schemeOperator = "Test",
                     sequenceNumber = 1,
-                    issuedAt = kotlinx.datetime.Clock.System.now(),
+                    issuedAt = kotlin.time.Clock.System.now(),
                     trustedTsps = listOf(
                         TrustedTSP(name = "Test TSP", tradeName = null, services = listOf(service)),
                     ),

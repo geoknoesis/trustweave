@@ -1,7 +1,6 @@
 package org.trustweave.conformance
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.trustweave.core.identifiers.Iri
@@ -27,6 +26,7 @@ import org.trustweave.keydid.KeyDidMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

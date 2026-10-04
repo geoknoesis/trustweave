@@ -1,7 +1,6 @@
 package org.trustweave.credential.internal
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.model.CredentialType
@@ -18,6 +17,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Comprehensive tests for PresentationVerification utility.

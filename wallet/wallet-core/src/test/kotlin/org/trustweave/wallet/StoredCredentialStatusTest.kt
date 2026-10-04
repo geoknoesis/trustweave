@@ -1,7 +1,6 @@
 package org.trustweave.wallet
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.identifiers.StatusListId
@@ -17,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class StoredCredentialStatusTest {
     private fun credential(withStatus: Boolean) =

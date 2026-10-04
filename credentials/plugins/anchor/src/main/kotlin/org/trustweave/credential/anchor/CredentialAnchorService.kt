@@ -2,7 +2,6 @@ package org.trustweave.credential.anchor
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.booleanOrNull
@@ -16,6 +15,7 @@ import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.util.DigestUtils
 import org.trustweave.credential.model.Evidence
 import org.trustweave.credential.model.vc.VerifiableCredential
+import kotlin.time.Clock
 
 /**
  * Credential anchoring service.

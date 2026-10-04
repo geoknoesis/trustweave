@@ -1,6 +1,5 @@
 package org.trustweave.did.resolution
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
@@ -8,6 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.util.XmlDateTimeSerializer
+import kotlin.time.Instant
 
 /**
  * Input options to the DID resolution function per DID Resolution 1.0 §4.1.

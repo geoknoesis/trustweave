@@ -1,6 +1,5 @@
 package org.trustweave.did
 
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -15,6 +14,7 @@ import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import kotlin.test.*
+import kotlin.time.Instant
 
 /**
  * Branch coverage tests for Did models.
@@ -184,7 +184,7 @@ class DidModelsBranchCoverageTest {
                 document = doc,
                 documentMetadata =
                     DidDocumentMetadata(
-                        created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
+                        created = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
                     ),
                 resolutionMetadata = DidResolutionMetadata(duration = 100L),
             )

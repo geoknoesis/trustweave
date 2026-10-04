@@ -1,13 +1,11 @@
 package org.trustweave.did
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.telemetry.TelemetryDidMethod
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
@@ -17,10 +15,12 @@ import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.telemetry.TelemetryDidMethod
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Comprehensive edge case tests for DidMethod interface and DidRegistry.
@@ -197,8 +197,8 @@ class DidMethodEdgeCasesTest {
                             document = DidDocument(id = did),
                             documentMetadata =
                                 DidDocumentMetadata(
-                                    created = kotlinx.datetime.Instant.parse("2024-01-01T00:00:00Z"),
-                                    updated = kotlinx.datetime.Instant.parse("2024-01-02T00:00:00Z"),
+                                    created = kotlin.time.Instant.parse("2024-01-01T00:00:00Z"),
+                                    updated = kotlin.time.Instant.parse("2024-01-02T00:00:00Z"),
                                 ),
                             resolutionMetadata =
                                 DidResolutionMetadata(

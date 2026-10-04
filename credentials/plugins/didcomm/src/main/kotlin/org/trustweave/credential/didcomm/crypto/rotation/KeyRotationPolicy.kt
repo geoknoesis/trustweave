@@ -1,9 +1,9 @@
 package org.trustweave.credential.didcomm.crypto.rotation
 
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /**
  * Defines when keys should be rotated.

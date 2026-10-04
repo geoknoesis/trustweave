@@ -522,7 +522,7 @@ val issuanceResult = trustWeave.issue {
             "test" to "value"
         }
         // TrustWeave's DSL uses kotlinx-datetime, not java.time.
-        issued(kotlinx.datetime.Clock.System.now())
+        issued(kotlin.time.Clock.System.now())
     }
     signedBy(issuerDid = issuerDid, keyId = keyId) // Use extracted key ID
 }

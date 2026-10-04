@@ -1,6 +1,6 @@
 package org.trustweave.signatures.tsa
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Validated RFC 3161 time-stamp token in eagerly-parsed value-object form.

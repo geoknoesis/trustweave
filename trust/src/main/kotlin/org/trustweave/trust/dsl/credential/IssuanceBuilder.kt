@@ -447,7 +447,7 @@ class IssuanceBuilder(
                         type = credentialToIssue.type,
                         id = credentialToIssue.id,
                         issuedAt =
-                            credentialToIssue.issuanceDate ?: kotlinx.datetime.Clock.System
+                            credentialToIssue.issuanceDate ?: kotlin.time.Clock.System
                                 .now(),
                         // null for VC 2.0-only credentials
                         validFrom = credentialToIssue.validFrom,

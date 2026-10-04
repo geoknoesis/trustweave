@@ -1,7 +1,6 @@
 package org.trustweave.did.rotation
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.did.identifiers.Did
@@ -12,6 +11,7 @@ import org.trustweave.did.registrar.model.CreateDidOptions
 import org.trustweave.did.registrar.model.KeyManagementMode
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
+import kotlin.time.Clock
 
 /**
  * DID Rotation Service.
@@ -100,7 +100,7 @@ data class RotationResult(
     val success: Boolean,
     val updatedDocument: DidDocument? = null,
     val error: String? = null,
-    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now(),
+    val rotatedAt: kotlin.time.Instant = Clock.System.now(),
 )
 
 /**
@@ -112,7 +112,7 @@ data class DidRotationResult(
     val newDid: Did? = null,
     val migrationGuide: MigrationGuide? = null,
     val error: String? = null,
-    val rotatedAt: kotlinx.datetime.Instant = Clock.System.now(),
+    val rotatedAt: kotlin.time.Instant = Clock.System.now(),
 )
 
 /**

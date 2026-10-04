@@ -37,9 +37,9 @@ public final class org/trustweave/registry/InMemoryTrustRegistry : org/trustweav
 
 public final class org/trustweave/registry/IssuerRecord {
 	public static final field Companion Lorg/trustweave/registry/IssuerRecord$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component10 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
@@ -47,22 +47,22 @@ public final class org/trustweave/registry/IssuerRecord {
 	public final fun component4 ()Ljava/util/List;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Lorg/trustweave/registry/AccreditationStatus;
-	public final fun component7 ()Lkotlinx/datetime/Instant;
-	public final fun component8 ()Lkotlinx/datetime/Instant;
+	public final fun component7 ()Lkotlin/time/Instant;
+	public final fun component8 ()Lkotlin/time/Instant;
 	public final fun component9 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/registry/IssuerRecord;
-	public static synthetic fun copy$default (Lorg/trustweave/registry/IssuerRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/registry/IssuerRecord;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/registry/IssuerRecord;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/IssuerRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/registry/IssuerRecord;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCredentialTypes ()Ljava/util/List;
 	public final fun getDescription ()Ljava/lang/String;
 	public final fun getDid ()Ljava/lang/String;
 	public final fun getMetadata ()Ljava/util/Map;
 	public final fun getName ()Ljava/lang/String;
-	public final fun getRegisteredAt ()Lkotlinx/datetime/Instant;
+	public final fun getRegisteredAt ()Lkotlin/time/Instant;
 	public final fun getRevocationReason ()Ljava/lang/String;
 	public final fun getServiceEndpoint ()Ljava/lang/String;
 	public final fun getStatus ()Lorg/trustweave/registry/AccreditationStatus;
-	public final fun getUpdatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getUpdatedAt ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -211,18 +211,18 @@ public final class org/trustweave/registry/RegistryFilter$Companion {
 
 public final class org/trustweave/registry/StatusChange {
 	public static final field Companion Lorg/trustweave/registry/StatusChange$Companion;
-	public fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/trustweave/registry/ParticipantRole;
 	public final fun component3 ()Lorg/trustweave/registry/AccreditationStatus;
 	public final fun component4 ()Lorg/trustweave/registry/AccreditationStatus;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun component6 ()Lkotlinx/datetime/Instant;
-	public final fun copy (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lorg/trustweave/registry/StatusChange;
-	public static synthetic fun copy$default (Lorg/trustweave/registry/StatusChange;Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lorg/trustweave/registry/StatusChange;
+	public final fun component6 ()Lkotlin/time/Instant;
+	public final fun copy (Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlin/time/Instant;)Lorg/trustweave/registry/StatusChange;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/StatusChange;Ljava/lang/String;Lorg/trustweave/registry/ParticipantRole;Lorg/trustweave/registry/AccreditationStatus;Lorg/trustweave/registry/AccreditationStatus;Ljava/lang/String;Lkotlin/time/Instant;ILjava/lang/Object;)Lorg/trustweave/registry/StatusChange;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getChangedAt ()Lkotlinx/datetime/Instant;
+	public final fun getChangedAt ()Lkotlin/time/Instant;
 	public final fun getDid ()Ljava/lang/String;
 	public final fun getFrom ()Lorg/trustweave/registry/AccreditationStatus;
 	public final fun getReason ()Ljava/lang/String;
@@ -297,30 +297,30 @@ public final class org/trustweave/registry/TrustRegistryProvider$DefaultImpls {
 
 public final class org/trustweave/registry/VerifierRecord {
 	public static final field Companion Lorg/trustweave/registry/VerifierRecord$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Lorg/trustweave/registry/AccreditationStatus;
-	public final fun component6 ()Lkotlinx/datetime/Instant;
-	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component6 ()Lkotlin/time/Instant;
+	public final fun component7 ()Lkotlin/time/Instant;
 	public final fun component8 ()Ljava/util/Map;
 	public final fun component9 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/registry/VerifierRecord;
-	public static synthetic fun copy$default (Lorg/trustweave/registry/VerifierRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/registry/VerifierRecord;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;)Lorg/trustweave/registry/VerifierRecord;
+	public static synthetic fun copy$default (Lorg/trustweave/registry/VerifierRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/trustweave/registry/AccreditationStatus;Lkotlin/time/Instant;Lkotlin/time/Instant;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/registry/VerifierRecord;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDescription ()Ljava/lang/String;
 	public final fun getDid ()Ljava/lang/String;
 	public final fun getMetadata ()Ljava/util/Map;
 	public final fun getName ()Ljava/lang/String;
-	public final fun getRegisteredAt ()Lkotlinx/datetime/Instant;
+	public final fun getRegisteredAt ()Lkotlin/time/Instant;
 	public final fun getRevocationReason ()Ljava/lang/String;
 	public final fun getServiceEndpoint ()Ljava/lang/String;
 	public final fun getStatus ()Lorg/trustweave/registry/AccreditationStatus;
-	public final fun getUpdatedAt ()Lkotlinx/datetime/Instant;
+	public final fun getUpdatedAt ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

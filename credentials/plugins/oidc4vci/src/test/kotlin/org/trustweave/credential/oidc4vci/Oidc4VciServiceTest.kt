@@ -1,7 +1,6 @@
 package org.trustweave.credential.oidc4vci
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -26,6 +25,7 @@ import org.trustweave.testkit.did.DidKeyMockMethod
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import java.util.Base64
 import kotlin.test.*
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

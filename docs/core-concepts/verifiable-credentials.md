@@ -141,7 +141,7 @@ Detailed API signatures live in the [Credential Service API reference](../api-re
 ```kotlin
 import org.trustweave.trust.TrustWeave
 import org.trustweave.did.identifiers.Did
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 suspend fun issueEmployeeBadge(trustWeave: TrustWeave, issuerDid: Did, issuerKeyId: String) =
     trustWeave.issue {
@@ -315,7 +315,7 @@ import org.trustweave.credential.results.getOrThrow
 import org.trustweave.trust.TrustWeave
 import org.trustweave.did.identifiers.Did
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 // Issue credential using TrustWeave DSL API
 val issuedCredential = runBlocking {

@@ -1,6 +1,5 @@
 package org.trustweave.credential
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.credential.format.ProofSuiteId
@@ -10,6 +9,7 @@ import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.credentialTypes
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.did.identifiers.Did
+import kotlin.time.Clock
 import kotlin.time.Duration
 
 /**

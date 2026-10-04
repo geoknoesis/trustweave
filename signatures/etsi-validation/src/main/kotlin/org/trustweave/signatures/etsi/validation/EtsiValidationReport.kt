@@ -1,6 +1,6 @@
 package org.trustweave.signatures.etsi.validation
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Full report produced by [EtsiSignatureValidator.validate].

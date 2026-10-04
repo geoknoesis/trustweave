@@ -1,11 +1,10 @@
 package org.trustweave.contract
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlin.time.Duration
 import org.trustweave.contract.models.*
+import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.CredentialService
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
@@ -22,10 +21,11 @@ import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.spi.proof.ProofEngineCapabilities
 import org.trustweave.credential.trust.TrustEvaluator
-import org.trustweave.core.identifiers.Iri
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Duration
 
 /**
  * Tests that [DefaultSmartContractService.issueContractCredential] correctly delegates to

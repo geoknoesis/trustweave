@@ -4,7 +4,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import org.trustweave.signatures.trustlists.DefaultTrustAnchorResolver
 import org.trustweave.signatures.trustlists.MemberStateTsl
@@ -21,6 +20,7 @@ import java.security.KeyPairGenerator
 import java.security.cert.X509Certificate
 import java.security.spec.ECGenParameterSpec
 import java.util.Date
+import kotlin.time.Clock
 
 class XadesAntiWrappingTest {
     private val ca = TestCa()

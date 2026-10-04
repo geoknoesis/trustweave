@@ -1,5 +1,8 @@
 package org.trustweave.testkit.proof
 
+import kotlinx.serialization.json.*
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.model.CredentialType
@@ -10,27 +13,24 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.proof.ProofOptions
 import org.trustweave.credential.proof.ProofPurpose
 import org.trustweave.credential.proof.proofOptions
-import org.trustweave.credential.proof.proofOptionsForIssuance
 import org.trustweave.credential.proof.proofOptionsForAuthentication
+import org.trustweave.credential.proof.proofOptionsForIssuance
 import org.trustweave.credential.proof.proofOptionsForPresentation
-import org.trustweave.credential.spi.proof.ProofEngine
-import org.trustweave.credential.spi.proof.ProofEngineConfig
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.kms.Algorithm
-import org.trustweave.kms.KeyManagementService
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.core.identifiers.Iri
+import org.trustweave.credential.spi.proof.ProofEngine
+import org.trustweave.credential.spi.proof.ProofEngineConfig
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
-import kotlinx.serialization.json.*
-import kotlin.time.Duration as KotlinDuration
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.KeyManagementService
+import java.util.*
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
-import java.util.*
+import kotlin.time.Instant
+import kotlin.time.Duration as KotlinDuration
 
 /**
  * Convenience methods for testing proof engines.

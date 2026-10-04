@@ -55,7 +55,7 @@
         <error line="278" column="65" source="standard:function-expression-body" />
     </file>
     <file name="src/main/kotlin/org/trustweave/signatures/trustlists/LotlSignatureVerifier.kt">
-        <error line="15" column="1" source="standard:no-unused-imports" />
+        <error line="14" column="1" source="standard:no-unused-imports" />
         <error line="60" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="68" column="42" source="standard:class-signature" />
         <error line="68" column="60" source="standard:class-signature" />
@@ -126,7 +126,7 @@
         <error line="54" column="25" source="standard:multiline-expression-wrapping" />
         <error line="70" column="25" source="standard:multiline-expression-wrapping" />
         <error line="88" column="21" source="standard:multiline-expression-wrapping" />
-        <error line="91" column="53" source="standard:chain-method-continuation" />
+        <error line="91" column="48" source="standard:chain-method-continuation" />
         <error line="102" column="19" source="standard:multiline-expression-wrapping" />
         <error line="106" column="24" source="standard:multiline-expression-wrapping" />
         <error line="134" column="19" source="standard:multiline-expression-wrapping" />

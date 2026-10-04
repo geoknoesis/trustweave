@@ -1,5 +1,7 @@
 package org.trustweave.testkit.trust
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.TrustAnchorMetadata
 import org.trustweave.trust.TrustRegistry
@@ -7,11 +9,9 @@ import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustAnchor
 import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * In-memory implementation of TrustRegistry for testing.

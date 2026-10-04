@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import org.didcommx.didcomm.common.VerificationMaterial
 import org.didcommx.didcomm.common.VerificationMaterialFormat
 import org.didcommx.didcomm.common.VerificationMethodType
@@ -15,6 +14,7 @@ import org.trustweave.credential.didcomm.crypto.secret.LocalKeyStore
 import org.trustweave.kms.KeyManagementService
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * Supplies real creation / usage metadata for a stored DIDComm key.

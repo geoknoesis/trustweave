@@ -1,5 +1,5 @@
 /** WebAuthn assertion custody primitive. Assertions are not JWT signatures. */
-import { p256 } from '@noble/curves/p256'
+import { p256 } from '@noble/curves/nist.js'
 import { b64uDecode, b64uEncode } from '../crypto'
 
 export interface PasskeyIdentity {
@@ -51,7 +51,7 @@ export async function verifyPasskeyProof(identity: PasskeyIdentity, proof: Passk
   const input = new Uint8Array(auth.length + 32)
   input.set(auth); input.set(await hash(clientBytes), auth.length)
   const publicKey = await crypto.subtle.importKey('spki', b64uDecode(identity.publicKeySpki), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify'])
-  const rawSignature = p256.Signature.fromDER(b64uDecode(proof.signature)).toCompactRawBytes()
+  const rawSignature = p256.Signature.fromBytes(b64uDecode(proof.signature), 'der').toBytes('compact')
   if (!await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, publicKey, rawSignature, input)) throw new Error('Invalid passkey signature')
   return new DataView(auth.buffer, auth.byteOffset, auth.byteLength).getUint32(33)
 }

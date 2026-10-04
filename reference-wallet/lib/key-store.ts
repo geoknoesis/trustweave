@@ -1,5 +1,5 @@
 /** Browser-managed, non-extractable signing and agreement keys. Never persist raw seed material. */
-import { ed25519, edwardsToMontgomeryPriv, edwardsToMontgomeryPub } from '@noble/curves/ed25519'
+import { ed25519 } from '@noble/curves/ed25519.js'
 import { b64uDecode, b64uEncode, b64uEncodeString, publicKeyToDidKey, didKeyToPublicKey } from './crypto'
 
 type HolderKeys = { signing: CryptoKey; agreement: CryptoKey }
@@ -55,7 +55,7 @@ export async function loadHolderKeys(did: string): Promise<HolderKeys> {
     throw new Error('Stored signing key does not match the wallet identity. Existing data has been preserved.')
   }
   const ephemeral = await crypto.subtle.generateKey('X25519', false, ['deriveBits']) as CryptoKeyPair
-  const publicAgreement = await crypto.subtle.importKey('raw', edwardsToMontgomeryPub(publicBytes), 'X25519', false, [])
+  const publicAgreement = await crypto.subtle.importKey('raw', ed25519.utils.toMontgomery(publicBytes), 'X25519', false, [])
   const expected = new Uint8Array(await crypto.subtle.deriveBits({ name: 'X25519', public: publicAgreement }, ephemeral.privateKey, 256))
   let actual: Uint8Array | undefined
   try {
@@ -76,7 +76,7 @@ export async function importHolderKeys(did: string, seed: Uint8Array): Promise<v
     if (publicKeyToDidKey(ed25519.getPublicKey(seed)) !== did) {
       throw new Error('Legacy private key does not match the wallet identity. Original data has been preserved.')
     }
-    agreementSeed = edwardsToMontgomeryPriv(seed)
+    agreementSeed = ed25519.utils.toMontgomerySecret(seed)
     // RFC 8410 PKCS#8 wrapper around a 32-byte Ed25519 / X25519 private seed.
     const pkcs8 = (raw: Uint8Array, oid: number) => {
       const bytes = new Uint8Array(48)

@@ -185,13 +185,13 @@ describe('holder custody and recovery', () => {
 
   it('shares a selected content key while preserving issuer-committed encrypted disclosures', async () => {
     const holder = (await bootstrap()).holder
-    const { x25519, edwardsToMontgomeryPub } = await import('@noble/curves/ed25519')
+    const { x25519, ed25519 } = await import('@noble/curves/ed25519.js')
     const { hkdf } = await import('@noble/hashes/hkdf')
     const { sha256 } = await import('@noble/hashes/sha256')
     const { b64uDecode } = await import('../lib/crypto')
     const { issueSdJwtVc, decodeSdJwtVc, disclosureHash } = await import('../lib/sdjwt')
-    const ephemeral = x25519.utils.randomPrivateKey()
-    const shared = x25519.getSharedSecret(ephemeral, edwardsToMontgomeryPub(b64uDecode(holder.publicKey)))
+    const ephemeral = x25519.utils.randomSecretKey()
+    const shared = x25519.getSharedSecret(ephemeral, ed25519.utils.toMontgomery(b64uDecode(holder.publicKey)))
     const wrap = hkdf(sha256, shared, new Uint8Array(), new TextEncoder().encode('TrustWeave-ClaimJWE-v1-wrap'), 32)
     const cek = crypto.getRandomValues(new Uint8Array(32))
     const encrypt = async (raw: Uint8Array, key: Uint8Array) => {

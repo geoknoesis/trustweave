@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { p256 } from '@noble/curves/p256'
+import { p256 } from '@noble/curves/nist.js'
 import { b64uEncode, b64uEncodeString } from '../lib/crypto'
 import { verifyPasskeyProof, type PasskeyIdentity } from '../lib/custody/passkey'
 import { verifyPasskeyPayload } from '../lib/custody'
@@ -15,7 +15,7 @@ async function fixture(flags = 5, origin = 'https://wallet.example') {
   const clientRaw = new TextEncoder().encode(JSON.stringify({ type: 'webauthn.get', origin, challenge: b64uEncode(challenge), crossOrigin: false }))
   const input = new Uint8Array(69); input.set(auth); input.set(await hash(clientRaw), 37)
   const raw = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, input))
-  const proof = { credentialId: identity.credentialId, clientDataJSON, authenticatorData: b64uEncode(auth), signature: b64uEncode(p256.Signature.fromCompact(raw).toDERRawBytes()) }
+  const proof = { credentialId: identity.credentialId, clientDataJSON, authenticatorData: b64uEncode(auth), signature: b64uEncode(p256.Signature.fromBytes(raw, 'compact').toBytes('der')) }
   return { identity, challenge, proof, envelope: { profile: 'passkey' as const, payload, proof } }
 }
 describe('passkey verifier policy', () => {

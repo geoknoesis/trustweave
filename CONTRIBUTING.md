@@ -303,10 +303,19 @@ are enforced rather than advisory:
 
 - Require a pull request before merging, with at least one approval, dismissing stale approvals on new commits.
 - Require review from Code Owners (`.github/CODEOWNERS` covers `did/`, `kms/`, `credentials/`, `signatures/`,
-  `trust-registry/`, `.github/`, `scripts/` and the build files).
+  `trust-registry/`, `wallet/`, `anchors/`, `observability/`, `contract/`, `trust/`, `common/`, `.github/`,
+  `scripts/`, `config/` and the build files). **Single-maintainer caveat:** the only owner today is one
+  user, and GitHub does not count an author's own approval, so with this rule and "at least one approval"
+  that maintainer's own PRs cannot merge. Either add that user (or an admin role) under "Allow specified
+  actors to bypass required pull requests" in the ruleset, or require a second reviewer. Once a team owns
+  the paths (see the TODO in `.github/CODEOWNERS`), drop the bypass.
+- Enable Settings -> Code security -> Dependency graph; without it the dependency-review check cannot
+  compare snapshots (see SECURITY.md, "Dependency Scanning").
 - Require status checks to pass and the branch to be up to date: the `CI` jobs (lint, build, contracts,
   documentation-examples, verifiable-intent, host-observability, sbom), `Dependency security / Review dependency changes`
-  and `CodeQL / Analyze`.
+  and `CodeQL / Analyze`. CodeQL only runs for PRs touching the analysed modules (path filter) and is skipped
+  for Dependabot and fork PRs; a required check that never reports blocks the PR, so use a ruleset that treats
+  skipped checks as passing, or leave `CodeQL / Analyze` off the required list and rely on the weekly run.
 - Require conversation resolution, linear history, and signed commits if your release process allows it.
 - Block force pushes and branch deletion; restrict who can push to `main` and to `v*` release tags.
 - Set the default `GITHUB_TOKEN` permission to read-only (workflows request more per job), and require

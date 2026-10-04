@@ -1,6 +1,12 @@
 # Code owners. Requests a review from the owner when a pull request touches these paths; combined
-# with "Require review from Code Owners" branch protection (see CONTRIBUTING.md) it makes the review
-# mandatory. Replace @fellahst with a team (for example @geoknoesis/security) once one exists.
+# with "Require review from Code Owners" branch protection it makes the review mandatory.
+#
+# TODO(team): a single user owns everything today. With "Require review from Code Owners" and
+# "Require approvals" on, GitHub does not let an author approve their own PR, so that user's own
+# PRs would block. Until a team exists, either add a bypass for this user in the branch ruleset or
+# require a second reviewer (see CONTRIBUTING.md, "Recommended branch protection"). Once a team such
+# as @geoknoesis/security exists, replace @fellahst below with it (one search/replace) and keep the
+# user as a member.
 # Later patterns take precedence.
 
 # Default
@@ -13,10 +19,15 @@
 /signatures/                    @fellahst
 /trust-registry/                @fellahst
 /wallet/                        @fellahst
+/anchors/                       @fellahst
+/observability/                 @fellahst
+/contract/                      @fellahst
+/trust/                         @fellahst
 /common/                        @fellahst
 
 # CI, supply chain and release
 /.github/                       @fellahst
+/.github/CODEOWNERS             @fellahst
 /scripts/                       @fellahst
 /config/                        @fellahst
 /gradle/                        @fellahst

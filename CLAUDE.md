@@ -107,12 +107,12 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 - **Language**: Kotlin 2.3.21, JVM target 21 (enforced via toolchain)
 - **Build**: Gradle 9.5.0
-- **Testing**: JUnit 5 + Kotest assertions; TestContainers for DB/Docker tests
-- **HTTP**: Ktor 2.3.x (internal servers), OkHttp (client)
+- **Testing**: JUnit 6 + Kotest assertions; TestContainers for DB/Docker tests
+- **HTTP**: Ktor 3.4.x (internal servers), OkHttp 4 (client; 5.x is deferred)
 - **Security**: Bouncy Castle 1.86, Nimbus JOSE JWT
-- **Blockchain**: Web3j, Algorand SDK, Bitcoin-j
+- **Blockchain**: Web3j 6, Algorand SDK, Bitcoin-j 0.17
 - **Spring Boot**: 4.1.x (`did:registrar-server-spring` only; a library module, so its `bootJar` is disabled on purpose)
-- **Coroutines**: kotlinx-coroutines 1.10.x throughout
+- **Coroutines**: kotlinx-coroutines 1.11.x throughout; `Instant`/`Clock` come from `kotlin.time` (kotlinx-datetime 0.8)
 
 ## Coding Conventions
 

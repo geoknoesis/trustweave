@@ -1,16 +1,27 @@
 package org.trustweave.did.registrar.server
 
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.request.receiveNullable
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registrar.DidRegistrar
-import org.trustweave.did.registrar.model.*
-import org.trustweave.did.registrar.server.dto.*
+import org.trustweave.did.registrar.model.CreateDidOptions
+import org.trustweave.did.registrar.model.DeactivateDidOptions
+import org.trustweave.did.registrar.model.DidRegistrationResponse
+import org.trustweave.did.registrar.model.UpdateDidOptions
+import org.trustweave.did.registrar.server.dto.CreateDidRequest
+import org.trustweave.did.registrar.server.dto.DeactivateDidRequest
+import org.trustweave.did.registrar.server.dto.ErrorResponse
+import org.trustweave.did.registrar.server.dto.UpdateDidRequest
 import org.trustweave.did.registrar.storage.JobStorage
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import java.util.UUID
 
 /**
@@ -36,9 +47,8 @@ import java.util.UUID
  */
 fun Routing.configureDidRegistrarRoutes(
     registrar: DidRegistrar,
-    jobStorage: JobStorage
+    jobStorage: JobStorage,
 ) {
-
     /**
      * POST /1.0/dids
      *
@@ -52,12 +62,24 @@ fun Routing.configureDidRegistrarRoutes(
         } catch (e: TrustWeaveException) {
             call.respond(
                 HttpStatusCode.BadRequest,
-                ErrorResponse.fromException(e, "INVALID_REQUEST")
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
             )
+        } catch (e: kotlinx.serialization.SerializationException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (e: io.ktor.server.plugins.BadRequestException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse.fromException(e, "INTERNAL_ERROR")
+                ErrorResponse.fromException(e, "INTERNAL_ERROR"),
             )
         }
     }
@@ -69,23 +91,36 @@ fun Routing.configureDidRegistrarRoutes(
      */
     put("/1.0/dids/{did}") {
         try {
-            val did = call.parameters["did"]
-                ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                    message = "Missing did parameter",
-                    context = mapOf("parameter" to "did")
-                )
+            val did =
+                call.parameters["did"]
+                    ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                        message = "Missing did parameter",
+                        context = mapOf("parameter" to "did"),
+                    )
             val request = call.receive<UpdateDidRequest>()
             val response = handleUpdateOperation(registrar, did, request.didDocument, request.options ?: UpdateDidOptions(), jobStorage)
             call.respond(HttpStatusCode.OK, response)
         } catch (e: TrustWeaveException) {
             call.respond(
                 HttpStatusCode.BadRequest,
-                ErrorResponse.fromException(e, "INVALID_REQUEST")
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
             )
+        } catch (e: kotlinx.serialization.SerializationException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (e: io.ktor.server.plugins.BadRequestException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse.fromException(e, "INTERNAL_ERROR")
+                ErrorResponse.fromException(e, "INTERNAL_ERROR"),
             )
         }
     }
@@ -97,23 +132,36 @@ fun Routing.configureDidRegistrarRoutes(
      */
     delete("/1.0/dids/{did}") {
         try {
-            val did = call.parameters["did"]
-                ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                    message = "Missing did parameter",
-                    context = mapOf("parameter" to "did")
-                )
+            val did =
+                call.parameters["did"]
+                    ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                        message = "Missing did parameter",
+                        context = mapOf("parameter" to "did"),
+                    )
             val request = call.receiveNullable<DeactivateDidRequest>()
             val response = handleDeactivateOperation(registrar, did, request?.options ?: DeactivateDidOptions(), jobStorage)
             call.respond(HttpStatusCode.OK, response)
         } catch (e: TrustWeaveException) {
             call.respond(
                 HttpStatusCode.BadRequest,
-                ErrorResponse.fromException(e, "INVALID_REQUEST")
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
             )
+        } catch (e: kotlinx.serialization.SerializationException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (e: io.ktor.server.plugins.BadRequestException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse.fromException(e, "INTERNAL_ERROR")
+                ErrorResponse.fromException(e, "INTERNAL_ERROR"),
             )
         }
     }
@@ -125,29 +173,32 @@ fun Routing.configureDidRegistrarRoutes(
      */
     get("/1.0/jobs/{jobId}") {
         try {
-            val jobId = call.parameters["jobId"]
-                ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
-                    message = "Missing jobId parameter",
-                    context = mapOf("parameter" to "jobId")
-                )
-            val response = jobStorage.get(jobId)
-                ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
-                    resource = "job:$jobId"
-                )
+            val jobId =
+                call.parameters["jobId"]
+                    ?: throw org.trustweave.core.exception.TrustWeaveException.InvalidOperation(
+                        message = "Missing jobId parameter",
+                        context = mapOf("parameter" to "jobId"),
+                    )
+            val response =
+                jobStorage.get(jobId)
+                    ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
+                        resource = "job:$jobId",
+                    )
             call.respond(HttpStatusCode.OK, response)
         } catch (e: TrustWeaveException) {
             call.respond(
                 HttpStatusCode.NotFound,
-                ErrorResponse.fromException(e, "JOB_NOT_FOUND")
+                ErrorResponse.fromException(e, "JOB_NOT_FOUND"),
             )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ErrorResponse.fromException(e, "INTERNAL_ERROR")
+                ErrorResponse.fromException(e, "INTERNAL_ERROR"),
             )
         }
     }
-
 }
 
 /**
@@ -157,7 +208,7 @@ private suspend fun handleCreateOperation(
     registrar: DidRegistrar,
     method: String,
     options: CreateDidOptions,
-    jobStorage: JobStorage
+    jobStorage: JobStorage,
 ): DidRegistrationResponse {
     val response = registrar.createDid(method, options)
 
@@ -179,7 +230,7 @@ private suspend fun handleUpdateOperation(
     did: String,
     document: DidDocument,
     options: UpdateDidOptions,
-    jobStorage: JobStorage
+    jobStorage: JobStorage,
 ): DidRegistrationResponse {
     val response = registrar.updateDid(did, document, options)
 
@@ -200,7 +251,7 @@ private suspend fun handleDeactivateOperation(
     registrar: DidRegistrar,
     did: String,
     options: DeactivateDidOptions,
-    jobStorage: JobStorage
+    jobStorage: JobStorage,
 ): DidRegistrationResponse {
     val response = registrar.deactivateDid(did, options)
 
@@ -213,4 +264,3 @@ private suspend fun handleDeactivateOperation(
 
     return response
 }
-

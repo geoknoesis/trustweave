@@ -339,4 +339,34 @@ class DefaultUniversalResolverCrTest {
                 server.stop(0)
             }
         }
+
+    @Test
+    fun `a document for a different DID is rejected even when it claims deactivation`() =
+        runBlocking<Unit> {
+            val body = """{"didDocument":{"id":"did:example:victim"},"didDocumentMetadata":{"deactivated":true}}"""
+            val server = startServer(200, body)
+            try {
+                val resolver = DefaultUniversalResolver(baseUrl = "http://localhost:${server.address.port}", timeout = 5)
+
+                val result = resolver.resolveDid("did:example:requested")
+
+                assertTrue(result is DidResolutionResult.Failure.ResolutionError, "expected id-mismatch failure, got $result")
+            } finally {
+                server.stop(0)
+            }
+        }
+
+    @Test
+    fun `an API key is refused over cleartext http to a non-loopback host`() {
+        val e =
+            org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+                DefaultUniversalResolver(baseUrl = "http://resolver.example.org", apiKey = "k")
+            }
+        assertTrue(e.message!!.contains("https"), e.message)
+        // https, loopback http, and http without credentials remain allowed
+        DefaultUniversalResolver(baseUrl = "https://resolver.example.org", apiKey = "k")
+        DefaultUniversalResolver(baseUrl = "http://localhost:8080", apiKey = "k")
+        DefaultUniversalResolver(baseUrl = "http://127.0.0.1:8080", apiKey = "k")
+        DefaultUniversalResolver(baseUrl = "http://resolver.example.org")
+    }
 }

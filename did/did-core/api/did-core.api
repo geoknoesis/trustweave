@@ -2041,6 +2041,12 @@ public final class org/trustweave/did/telemetry/TelemetryDidMethodKt {
 	public static final fun withTelemetry (Lorg/trustweave/did/DidMethod;)Lorg/trustweave/did/DidMethod;
 }
 
+public final class org/trustweave/did/util/CredentialTransport {
+	public static final field INSTANCE Lorg/trustweave/did/util/CredentialTransport;
+	public static final fun requireSecure (Ljava/lang/String;ZLjava/lang/String;)V
+	public static synthetic fun requireSecure$default (Ljava/lang/String;ZLjava/lang/String;ILjava/lang/Object;)V
+}
+
 public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun extractAllVerificationMethodIds (Lorg/trustweave/did/model/DidDocument;)Ljava/util/Set;
 	public static final fun findVerificationMethod (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/identifiers/VerificationMethodId;)Lorg/trustweave/did/model/VerificationMethod;

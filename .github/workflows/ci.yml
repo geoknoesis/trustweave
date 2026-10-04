@@ -17,6 +17,7 @@ jobs:
   reference-wallet:
     name: Reference wallet contracts
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: reference-wallet
@@ -36,6 +37,7 @@ jobs:
   android-wallet:
     name: Android app tests and shared compilation
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: reference-wallet/android
@@ -60,6 +62,7 @@ jobs:
   contracts:
     name: Validation tools and documentation contracts
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -89,6 +92,7 @@ jobs:
   lint:
     name: Lint and API compatibility
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -111,9 +115,13 @@ jobs:
   build:
     name: Build, test and coverage
     runs-on: ubuntu-latest
-    # Only this job builds the SDK modules, including :anchors:plugins:indy, whose integration test
-    # reads this variable ("required" fails instead of skipping when the ledger is unavailable).
-    # Other jobs do not touch that module, so the variable is not set workflow-wide.
+    timeout-minutes: 90
+    # NOTE: inert today. TRUSTWEAVE_INDY_INTEGRATION is read only by the separate
+    # `:anchors:plugins:indy:integrationTest` task (a Testcontainers VON ledger, needs Docker, which
+    # ubuntu-latest has). `./gradlew build` does not depend on that task, so this job produces no
+    # live-ledger evidence and the "required" value never fails anything. It is kept (not removed)
+    # so the day the task is wired into `check` or run as a step, it fails instead of skipping.
+    # No gate is weakened by this comment; the live round trip simply is not part of CI yet.
     env:
       TRUSTWEAVE_INDY_INTEGRATION: required
     steps:
@@ -178,6 +186,7 @@ jobs:
   documentation-examples:
     name: Compiled documentation entry points
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -208,6 +217,7 @@ jobs:
   verifiable-intent:
     name: Verifiable Intent interoperability and operations
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -289,6 +299,7 @@ jobs:
   host-observability:
     name: Shared host coverage and telemetry
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -327,6 +338,7 @@ jobs:
   sbom:
     name: Dependency inventory
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5

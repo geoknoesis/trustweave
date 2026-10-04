@@ -16,6 +16,73 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
     labels:
       - dependencies
       - github-actions
+
+  # Reference wallet web app (Next.js).
+  - package-ecosystem: npm
+    directory: "/reference-wallet"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    labels:
+      - dependencies
+      - reference-wallet
+
+  # Reference wallet mobile app (Expo). Its own package.json and lockfile.
+  - package-ecosystem: npm
+    directory: "/reference-wallet/expo"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    labels:
+      - dependencies
+      - reference-wallet
+
+  # Reference wallet Android app: a separate Gradle build (its own wrapper and version handling).
+  - package-ecosystem: gradle
+    directory: "/reference-wallet/android"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      android-minor-and-patch:
+        update-types: [minor, patch]
+    labels:
+      - dependencies
+      - reference-wallet
+
+  # GitHub Pages site (Jekyll).
+  - package-ecosystem: bundler
+    directory: "/docs"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - documentation
+
+  # Disposable local Indy (VON) test ledger image used by the opt-in integration test.
+  - package-ecosystem: docker
+    directory: "/anchors/plugins/indy/src/integrationTest/resources/indy"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+      - docker
+
+  # Not covered: the digest-pinned prom/prometheus image that ci.yml and release-evidence.yml run with
+  # `docker run ... promtool`. It lives inside workflow `run:` blocks, not a Dockerfile or compose file,
+  # so no Dependabot ecosystem can see it. Bump it by hand when a new Prometheus release is wanted.

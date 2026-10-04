@@ -119,8 +119,8 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21+
-- Gradle 8.5+
+- Kotlin 2.3.21
+- Gradle 9.5.0
 - Basic understanding of Kotlin and coroutines
 
 **Note**: Don't worry if you're new to DIDs, Verifiable Credentials, or blockchain! This guide explains everything step-by-step.

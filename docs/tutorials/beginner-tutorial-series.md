@@ -22,7 +22,7 @@ This series takes you from zero to building production-ready applications with T
 
 Before starting:
 - **Kotlin basics**: Variables, functions, classes, coroutines
-- **Development environment**: Kotlin 2.2.0+, Java 21+, Gradle
+- **Development environment**: Kotlin 2.3.21, Java 21+, Gradle
 - **Installation**: Follow the [Installation Guide](../getting-started/installation.md)
 
 ## Tutorial 1: Your First DID

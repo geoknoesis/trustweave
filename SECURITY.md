@@ -101,18 +101,31 @@ The following are generally considered out of scope:
 Every pull request and every push to `main` runs [`.github/workflows/security.yml`](.github/workflows/security.yml):
 
 - **Dependency review** fails a pull request that adds a dependency with a known *high* or
-  *critical* advisory (Gradle dependency graph via GitHub dependency submission).
+  *critical* advisory (Gradle dependency graph via GitHub dependency submission). **Maintainers must
+  enable Settings -> Code security -> Dependency graph** for this gate to work: while the graph is
+  disabled, the "Submit Gradle dependency graph" job fails with "The Dependency graph is disabled for
+  this repository". That job is `continue-on-error` so pushes to `main` stay green, but review then has
+  no snapshot to compare and is not an effective gate. Fork PRs and Dependabot PRs (read-only token) skip
+  submission and review; review those bumps by hand (OSV and the build still run on them).
 - **OSV-Scanner** scans the aggregate CycloneDX SBOM (`./gradlew cyclonedxBom`) and the contents of
   every resolved JAR, so libraries shaded inside a fat JAR are found too. Results are published to
   code scanning and to the workflow summary. The job **fails for any advisory that is not listed in
   [`config/osv/baseline.json`](config/osv/baseline.json)** (checked by `scripts/check-osv-baseline.py`).
-  The baseline is the existing backlog (96 distinct advisories on 2026-10-03, including the three
-  didcomm entries below), so only new advisories gate a change. Remove entries as dependencies are
-  upgraded; add one only after triage, with a reason. To regenerate it, run `./gradlew cyclonedxBom`,
+  A baseline entry covers an advisory id (or alias) *in the listed packages only*: a baselined GHSA that
+  shows up in a new package still fails. The gate also fails (exit 2) when the report is missing,
+  unparseable or empty while the baseline is not, and when the SBOM has fewer components than the floor
+  (`--min-packages`, default 200, or half the baseline's recorded `package_count`), so a broken scan cannot
+  pass silently. Baseline entries that no longer match anything are listed as stale; add `--strict-stale`
+  to fail on them. The baseline is the existing backlog (96 distinct advisories on 2026-10-03, including
+  the three didcomm entries below), so only new advisories gate a change. Remove entries as dependencies
+  are upgraded; add one only after triage, with a reason. To regenerate it, run `./gradlew cyclonedxBom`,
   `python scripts/collect-sbom-jars.py build/reports/cyclonedx/bom.json --output build/reports/osv/jars`,
   `osv-scanner scan source --no-ignore --experimental-plugins=java/archive --format=json
   --output-file=build/reports/osv/osv.json -L=build/reports/cyclonedx/bom.json -r build/reports/osv/jars`
-  and `python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --update-baseline`.
+  and `python scripts/check-osv-baseline.py --report build/reports/osv/osv.json
+  --sbom build/reports/cyclonedx/bom.json --update-baseline`. The update keeps existing reasons, rewrites
+  every entry with its packages and ecosystems (migrating legacy id-only entries, which match any package
+  until then) and records `package_count` from the SBOM.
 
 Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `gradle/libs.versions.toml`.
 

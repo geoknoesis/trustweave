@@ -11,7 +11,7 @@ name: Dependency security
 #   org.didcommx:didcomm 0.3.2 embeds nimbus-jose-jwt 9.16-preview.1 and json-smart 2.4.7, which
 #   appear in no dependency graph or SBOM. Results go to code scanning (SARIF) and the run summary.
 #   The existing backlog is grandfathered in config/osv/baseline.json; the job fails for any
-#   advisory that is not in that file (scripts/check-osv-baseline.py), so a new dependency, a
+#   advisory/package pair that is not in that file (scripts/check-osv-baseline.py), so a new dependency, a
 #   version change or a newly published advisory is visible instead of lost in the backlog. See
 #   SECURITY.md "Dependency Scanning" and "Known Dependency Risks".
 
@@ -38,8 +38,23 @@ jobs:
     # snapshot and are skipped here; dependency review is skipped for them too (it needs the head
     # snapshot), and OSV below still scans them. Fork PR dependency changes therefore get no
     # dependency-review gate: maintainers must review them by hand.
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    #
+    # Dependabot-triggered runs also get a read-only GITHUB_TOKEN (and Dependabot secrets), so the
+    # snapshot upload (contents: write) would fail on every Dependabot PR; they are skipped too, and
+    # so is dependency review below (it needs this job). Maintainers review Dependabot bumps by hand;
+    # OSV still scans them.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # NON-BLOCKING: the dependency-graph API answers "The Dependency graph is disabled for this
+    # repository" until a maintainer enables Settings > Code security > Dependency graph. Until
+    # then this job must not fail the push to main, but dependency review below has no snapshot to
+    # compare and is therefore NOT an effective gate; the warning step at the end says so in the log.
+    # See SECURITY.md "Dependency Scanning". Remove continue-on-error once the graph is enabled.
+    continue-on-error: true
     # The only job with write access: the dependency-graph API requires contents: write. The
     # workflow default is contents: read, and checkout does not persist credentials.
     permissions:
@@ -57,12 +72,17 @@ jobs:
         with:
           # Test-only configurations (testcontainers, wiremock, ...) are not shipped.
           dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime)Classpath'
+      - name: Warn that the dependency-review gate is inactive
+        if: failure()
+        run: |
+          echo "::warning title=Dependency graph submission failed::Dependency review has no snapshot to compare. If the log says 'Dependency graph is disabled', enable Settings > Code security > Dependency graph (see SECURITY.md)."
 
   dependency-review:
     name: Review dependency changes
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     needs: dependency-submission
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
@@ -78,6 +98,7 @@ jobs:
   osv-scan:
     name: OSV-Scanner (SBOM and JAR contents)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -169,7 +190,9 @@ jobs:
             build/reports/cyclonedx/
           if-no-files-found: warn
 
-      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory and (exit 2)
-      # when the JSON report is missing, so a broken scan cannot pass silently.
+      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory/package pair
+      # and (exit 2) when the JSON report is missing or empty or the SBOM has fewer than the expected
+      # components, so a broken scan cannot pass silently. Stale baseline entries are only listed;
+      # add --strict-stale to fail on them too.
       - name: Fail on advisories outside the baseline
-        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json
+        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json

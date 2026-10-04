@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/geoknoesis/trustweave/blob/main/SECURITY.md
+    about: Never open a public issue for a vulnerability. Follow SECURITY.md (email security@geoknoesis.com).
+  - name: Questions and usage help
+    url: https://github.com/geoknoesis/trustweave/blob/main/docs/getting-started/troubleshooting.md
+    about: Check the troubleshooting guide first.

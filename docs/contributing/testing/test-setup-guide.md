@@ -12,7 +12,7 @@ This guide explains how to set up the test environment for TrustWeave developmen
 
 - **Java 21+**: Required for compilation and runtime
 - **Docker**: Required for TestContainers (integration tests)
-- **Gradle 8.5+**: Automatically downloaded via Gradle Wrapper
+- **Gradle 9.5.0**: Automatically downloaded via Gradle Wrapper
 
 ## Quick Setup
 

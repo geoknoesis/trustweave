@@ -43,7 +43,7 @@ data class SolDidConfig(
 ) {
     /** Redacts [privateKey] and the values of [additionalProperties] so the key never reaches logs. */
     override fun toString(): String =
-        "SolDidConfig(rpcUrl=$rpcUrl, network=$network, programId=$programId, " +
+        "SolDidConfig(rpcUrl=${org.trustweave.did.util.Redaction.url(rpcUrl)}, network=$network, programId=$programId, " +
             "privateKey=${if (privateKey == null) "null" else "<redacted>"}, commitment=$commitment, " +
             "additionalProperties=${additionalProperties.keys})"
 

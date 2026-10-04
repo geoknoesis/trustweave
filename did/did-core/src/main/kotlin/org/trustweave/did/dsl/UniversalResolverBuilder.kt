@@ -51,6 +51,11 @@ class UniversalResolverBuilder(
     var protocolAdapter: UniversalResolverProtocolAdapter = StandardUniversalResolverAdapter()
     private var retryConfig: RetryConfig? = null
 
+    /** Never prints [apiKey]. */
+    override fun toString(): String =
+        "UniversalResolverBuilder(baseUrl=${org.trustweave.did.util.Redaction.url(baseUrl)}, timeout=$timeout, " +
+            "apiKey=${org.trustweave.did.util.Redaction.secret(apiKey)})"
+
     /**
      * Configures retry behavior.
      */

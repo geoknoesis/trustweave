@@ -43,7 +43,8 @@ data class CheqdDidConfig(
 ) {
     /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
     override fun toString(): String =
-        "CheqdDidConfig(cheqdApiUrl=$cheqdApiUrl, network=$network, accountAddress=$accountAddress, " +
+        "CheqdDidConfig(cheqdApiUrl=${org.trustweave.did.util.Redaction.url(cheqdApiUrl)}, " +
+            "network=$network, accountAddress=$accountAddress, " +
             "privateKey=${if (privateKey == null) "null" else "<redacted>"}, timeoutSeconds=$timeoutSeconds, " +
             "additionalProperties=${additionalProperties.keys})"
 

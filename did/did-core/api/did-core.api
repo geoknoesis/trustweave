@@ -175,6 +175,7 @@ public final class org/trustweave/did/dsl/UniversalResolverBuilder {
 	public final fun setApiKey (Ljava/lang/String;)V
 	public final fun setProtocolAdapter (Lorg/trustweave/did/resolver/UniversalResolverProtocolAdapter;)V
 	public final fun setTimeout (I)V
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/trustweave/did/dsl/UniversalResolverBuilderKt {
@@ -2049,6 +2050,13 @@ public final class org/trustweave/did/util/DidUtilsKt {
 	public static final fun normalizeKeyId (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun parseDidOrNull (Ljava/lang/String;)Lorg/trustweave/did/identifiers/Did;
 	public static final fun validateDid (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/did/util/Redaction {
+	public static final field INSTANCE Lorg/trustweave/did/util/Redaction;
+	public static final fun keysOnly (Ljava/util/Map;)Ljava/lang/String;
+	public static final fun secret (Ljava/lang/Object;)Ljava/lang/String;
+	public static final fun url (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class org/trustweave/did/util/ResolvedDocumentId {

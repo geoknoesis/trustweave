@@ -43,7 +43,7 @@ data class EthrDidConfig(
 ) {
     /** Redacts [privateKey] and the values of [additionalProperties] so secrets never reach logs. */
     override fun toString(): String =
-        "EthrDidConfig(rpcUrl=$rpcUrl, chainId=$chainId, registryAddress=$registryAddress, " +
+        "EthrDidConfig(rpcUrl=${org.trustweave.did.util.Redaction.url(rpcUrl)}, chainId=$chainId, registryAddress=$registryAddress, " +
             "privateKey=${if (privateKey == null) "null" else "<redacted>"}, network=$network, " +
             "additionalProperties=${additionalProperties.keys})"
 

@@ -73,19 +73,54 @@ interface DidDocumentVerificationService {
     /**
      * Verify document signature (if method supports it).
      *
-     * **`false` means "not verified", which is not the same as "verified invalid".** Only
-     * methods with an implemented check can return `true`: currently `did:key` (self-certifying).
-     * For every other method, including `did:ion` whose proof chain is not implemented, the
-     * result is `false` (fail-closed) and a warning is logged naming the reason.
+     * **This does not verify any cryptographic signature.** For `did:key`, the only method with an
+     * implemented check, `true` means *self-certification only*: the key encoded in the DID
+     * identifier equals the document's single verification method. Nothing is signed or checked
+     * against a signature. Prefer [checkDocumentSelfCertification], whose result says so, or
+     * [verifyVerificationMethod] to check an actual signature.
+     *
+     * **`false` means "not verified", which is not the same as "verified invalid".** For every
+     * method without an implemented check, including `did:ion` whose proof chain is not
+     * implemented, the result is `false` (fail-closed) and a warning is logged naming the reason.
      *
      * @param document The DID document
      * @param method The DID method name
-     * @return true if signature is valid, false otherwise
+     * @return true if the document is self-certifying for [method] (no signature is verified),
+     *   false otherwise
      */
     suspend fun verifyDocumentSignature(
         document: DidDocument,
         method: String,
     ): Boolean
+
+    /**
+     * Same check as [verifyDocumentSignature], but reported honestly: the returned
+     * [VerificationResult] states that at most a *self-certification* was established and that
+     * **no signature was verified** ([VerificationResult.integrityVerified] is always `false`).
+     *
+     * The default implementation delegates to [verifyDocumentSignature].
+     */
+    suspend fun checkDocumentSelfCertification(
+        document: DidDocument,
+        method: String,
+    ): VerificationResult =
+        if (verifyDocumentSignature(document, method)) {
+            VerificationResult(
+                valid = true,
+                warnings = listOf("did:$method self-certification only: the identifier matches the key; no signature was verified"),
+                integrityVerified = false,
+            )
+        } else {
+            VerificationResult(
+                valid = false,
+                errors =
+                    listOf(
+                        "did:$method document could not be verified " +
+                            "(self-certification failed or is unsupported); no signature was verified",
+                    ),
+                integrityVerified = false,
+            )
+        }
 
     /**
      * Verify verification method signatures.
@@ -291,6 +326,7 @@ class DefaultDidDocumentVerificationService(
         return false
     }
 
+    /** did:key *self-certification* (identifier equals key); no signature is verified. */
     private suspend fun verifyKeyDocumentSignature(document: DidDocument): Boolean {
         // did:key is self-certifying: the DID encodes the public key, so any alteration
         // to the verification method would produce a different DID. Verify by checking
@@ -318,7 +354,18 @@ class DefaultDidDocumentVerificationService(
             )
             return false
         }
+        // Self-certification only: the identifier matches the key. No signature is checked.
         return matchingVms.size == 1 && matchingVms.first().publicKeyMultibase == multibaseFromDid
+    }
+
+    /**
+     * Strict hex: only `[0-9a-fA-F]`. `String.toInt(16)` would also accept `+1` and `-1`
+     * (a signed value that silently becomes a different byte), so it is not used on its own.
+     */
+    private fun decodeStrictHex(hex: String): ByteArray {
+        require(hex.length % 2 == 0) { "Hex digest must have even number of digits, got ${hex.length}" }
+        require(hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) { "Hex digest contains non-hex characters" }
+        return ByteArray(hex.length / 2) { i -> hex.substring(2 * i, 2 * i + 2).toInt(16).toByte() }
     }
 
     /**
@@ -354,16 +401,7 @@ class DefaultDidDocumentVerificationService(
                     .getUrlDecoder()
                     .decode(padded)
             }
-            'f' -> {
-                val hex = encoded.substring(1)
-                require(hex.length % 2 == 0) { "Hex digest must have even number of digits, got ${hex.length}" }
-                hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            }
-            'F' -> {
-                val hex = encoded.substring(1)
-                require(hex.length % 2 == 0) { "Hex digest must have even number of digits, got ${hex.length}" }
-                hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            }
+            'f', 'F' -> decodeStrictHex(encoded.substring(1))
             else -> throw IllegalArgumentException("Unsupported multibase prefix: ${encoded[0]}")
         }
     }

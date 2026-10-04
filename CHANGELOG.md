@@ -167,8 +167,38 @@ working code fail until it is adjusted.**
   from the Ed25519 public key; the waltid KMS no longer registers placeholder did:key/did:web methods
   through SPI.
 
+- **Remaining small gaps (round five).**
+  - `DefaultUniversalRegistrar` now sends its `apiKey` (`Authorization: Bearer`) on every request via
+    `StandardUniversalRegistrarAdapter(apiKey)`; it was accepted and dropped before. The key is refused
+    over cleartext `http://` to a non-loopback host. `UniversalRegistrarProtocolAdapter` gains
+    `withApiKey(apiKey)`; its default throws `UnsupportedOperationException`, so a custom adapter that
+    cannot authenticate fails at construction instead of silently dropping the key.
+  - `DatabaseStatusListManager` revoke/suspend/unrevoke/unsuspend throw `TrustWeaveException.InvalidState`
+    on a database or decoding failure (and when the list is full) instead of returning `false`.
+    `false` now means only "no such status list" or "wrong purpose".
+  - `EbsiException.httpError` and `OrbException.httpError` no longer put the upstream response body in
+    the exception message (status only). The body is written, sanitised and capped at 512 characters,
+    to the debug log. A transport failure surfaces as "Orb node request failed (no HTTP response)".
+  - did:orb long-form DIDs of the shape `did:orb:<anchor>:<suffix>:<initial-state>` are verified (the
+    initial state must hash to the suffix, else `invalidDid`) and may be answered under their canonical
+    short form `did:orb:<anchor>:<suffix>`. Long-form requests whose initial state is not a consistent
+    `{suffixData, delta}` are therefore now rejected. Any other id difference is still a mismatch.
+  - KMS `sign()` rejection of empty data now names the provider constraint: AWS KMS (`Message` is
+    1 to 4096 bytes) and Google Cloud KMS (`AsymmetricSign` needs non-empty `data` or `digest`).
+    Vault Transit now accepts empty data and sends an empty base64 `input`; a Vault refusal is returned
+    as `SignResult.Failure.Error`.
+  - `EudiwOid4VciProfile.validateCredentialOffer` no longer echoes anything but the scheme of a rejected
+    offer URI (it may carry a pre-authorized code).
+
 ### Added
 
+- `Oidc4VciIssuerStateStore` (with the default `InMemoryOidc4VciIssuerStateStore`) makes the OID4VCI
+  issuer's offers, access tokens and deferred credentials pluggable through the new trailing
+  `stateStore` constructor parameter of `Oidc4VciIssuerService`; existing constructors and behaviour
+  are unchanged. `Oidc4VciIssuerStateStoreContract` (module test fixtures) is the abstract contract
+  test a database-backed store reuses. `DeferredEntry` is now public.
+- `SidetreeLongForm` in `sidetree-core` parses and verifies Sidetree long-form DIDs;
+  `KmsInputValidator.validateSignData` gains `allowEmpty` and `emptyDataMessage` parameters.
 - `HostAuthentication` in `observability`: constant-time bearer tokens, host-supplied authorizers,
   an explicit `frontedByProxy` declaration, and per-caller fixed-window rate limiting with bounded
   caller tracking.

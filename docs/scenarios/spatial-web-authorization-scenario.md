@@ -176,8 +176,8 @@ Credentials that grant agents permission to:
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21+
-- Gradle 8.5+
+- Kotlin 2.3.21
+- Gradle 9.5.0
 - Basic understanding of Kotlin and coroutines
 - Basic understanding of geospatial concepts (coordinates, bounding boxes, polygons)
 - Familiarity with DIDs and Verifiable Credentials (see [Core Concepts](../core-concepts/README.md))

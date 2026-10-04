@@ -744,8 +744,8 @@ Kotlin version mismatch
 ```
 
 **Solution:**
-- Use Kotlin 2.2.0+ as required
-- Update Kotlin version in `buildSrc/src/main/kotlin/Versions.kt`
+- Use Kotlin 2.3.21 as required
+- Update the Kotlin version in `gradle/libs.versions.toml`
 - Sync Gradle dependencies
 
 ### Coroutine Context Issues

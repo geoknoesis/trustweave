@@ -36,7 +36,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 **Why Java 21?**
 - Java 21 provides required language features (records, pattern matching, etc.)
 - Long-term support (LTS) release
-- Required for Kotlin 2.2.0+ compatibility
+- Required by Kotlin 2.3.21 and the Gradle 9.5.0 build
 
 ### Kotlin
 

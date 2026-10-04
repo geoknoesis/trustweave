@@ -51,7 +51,7 @@ exclude:
   - book.json
   - SUMMARY.md
   - .internal
-  # Kept in the repository as the historical record, but not published. docs/reviews holds ~40 MB
+  # Kept in the repository as the historical record, but not published. docs/reviews holds ~7 MB
   # of raw review evidence (JUnit/JaCoCo XML, SBOMs, zipped reports, screenshots); docs/sales,
   # docs/superpowers and docs/archive are internal planning and superseded notes, not product docs.
   - reviews

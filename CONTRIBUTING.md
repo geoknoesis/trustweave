@@ -25,8 +25,8 @@ TrustWeave is committed to providing a welcoming and inclusive environment for a
 ### Prerequisites
 
 - **Java 21+** - Required for compilation and runtime
-- **Kotlin 2.2.0+** - Included via Gradle plugin
-- **Gradle 8.5+** - Automatically downloaded via Gradle Wrapper
+- **Kotlin 2.3.21** - Included via Gradle plugin
+- **Gradle 9.5.0** - Automatically downloaded via Gradle Wrapper
 - **Git** - For version control
 - **Docker** (optional) - Required for some integration tests using TestContainers
 

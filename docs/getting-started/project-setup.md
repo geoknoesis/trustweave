@@ -13,8 +13,8 @@ Set up your development environment for working with TrustWeave.
 ## Prerequisites
 
 - **Java 21+**: Download from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/)
-- **Kotlin 2.2.0+**: Included with Gradle or download from [Kotlin releases](https://github.com/JetBrains/kotlin/releases)
-- **Gradle 8.5+**: Download from [Gradle releases](https://gradle.org/releases/)
+- **Kotlin 2.3.21**: Included with Gradle or download from [Kotlin releases](https://github.com/JetBrains/kotlin/releases)
+- **Gradle 9.5.0**: Download from [Gradle releases](https://gradle.org/releases/)
 - **Node.js** (optional): Automatically downloaded by Gradle for `chains/plugins/ganache` module tests. If you want to use a system installation, install from [nodejs.org](https://nodejs.org/)
 
 ## IDE Setup

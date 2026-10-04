@@ -542,4 +542,22 @@ class TokenStatusListManagerTest {
             org.junit.jupiter.api
                 .assertThrows<IllegalArgumentException> { manager.buildStatusListToken(id, ttlSeconds = 0) }
         }
+
+    @Test
+    fun `a database failure while deleting a list is an error, not false`() =
+        runBlocking<Unit> {
+            val id = manager.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            dataSource.connection.use { conn ->
+                conn.createStatement().execute("DROP TABLE token_credential_indices")
+            }
+            org.junit.jupiter.api.assertThrows<Exception> { manager.deleteStatusList(id) }
+        }
+
+    @Test
+    fun `deleting an unknown list is false`() =
+        runBlocking<Unit> {
+            val id = manager.createStatusList(issuerDid = issuerDid, purpose = StatusPurpose.REVOCATION)
+            assertTrue(manager.deleteStatusList(id))
+            assertFalse(manager.deleteStatusList(id))
+        }
 }

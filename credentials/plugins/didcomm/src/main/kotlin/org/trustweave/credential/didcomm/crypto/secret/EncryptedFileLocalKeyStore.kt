@@ -1,14 +1,22 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.didcommx.didcomm.common.VerificationMaterial
 import org.didcommx.didcomm.common.VerificationMaterialFormat
 import org.didcommx.didcomm.common.VerificationMethodType
 import org.didcommx.didcomm.secret.Secret
-import org.trustweave.credential.didcomm.crypto.secret.encryption.*
+import org.trustweave.credential.didcomm.crypto.secret.encryption.EncryptedData
+import org.trustweave.credential.didcomm.crypto.secret.encryption.KeyEncryption
+import org.trustweave.credential.didcomm.crypto.secret.encryption.MasterKeyDerivation
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -69,14 +77,9 @@ class EncryptedFileLocalKeyStore(
 
     override suspend fun get(keyId: String): Secret? =
         withContext(Dispatchers.IO) {
-            try {
-                val keys = loadKeys()
-                keys[keyId]
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (e: Exception) {
-                null
-            }
+            // A missing key is null; an unreadable or undecryptable key file is an error
+            // (loadKeys throws IllegalStateException), not "no such key".
+            loadKeys()[keyId]
         }
 
     override suspend fun store(
@@ -100,14 +103,7 @@ class EncryptedFileLocalKeyStore(
 
     override suspend fun list(): List<String> =
         withContext(Dispatchers.IO) {
-            try {
-                val keys = loadKeys()
-                keys.keys.toList()
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (e: Exception) {
-                emptyList()
-            }
+            loadKeys().keys.toList()
         }
 
     private fun loadKeys(): Map<String, Secret> {

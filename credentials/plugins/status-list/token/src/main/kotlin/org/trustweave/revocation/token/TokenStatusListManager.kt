@@ -640,10 +640,12 @@ class TokenStatusListManager(
                     conn.commit()
                     deleted
                 } catch (cancelled: CancellationException) {
+                    conn.rollback()
                     throw cancelled
                 } catch (e: Exception) {
+                    // false means "no such list"; a database failure must not read as that.
                     conn.rollback()
-                    false
+                    throw e
                 }
             }
         }

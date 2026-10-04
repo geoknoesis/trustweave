@@ -1,9 +1,9 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
+import org.junit.jupiter.api.io.TempDir
 import org.trustweave.credential.didcomm.crypto.secret.encryption.EncryptedData
 import org.trustweave.credential.didcomm.crypto.secret.encryption.KeyEncryption
 import org.trustweave.credential.didcomm.crypto.secret.encryption.MasterKeyDerivation
-import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * (path-derived salt) stores and corrupt salt files, and AES-GCM tamper detection.
  */
 class EncryptedFileLocalKeyStoreTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -29,8 +28,7 @@ class EncryptedFileLocalKeyStoreTest {
 
     private fun newKeyFile(name: String): File = File(tempDir, name)
 
-    private fun saltFileContent(keyFile: File): ByteArray =
-        EncryptedFileLocalKeyStoreFactory.saltFileFor(keyFile).readBytes()
+    private fun saltFileContent(keyFile: File): ByteArray = EncryptedFileLocalKeyStoreFactory.saltFileFor(keyFile).readBytes()
 
     private fun saltBytes(keyFile: File): ByteArray {
         val content = saltFileContent(keyFile)
@@ -40,8 +38,10 @@ class EncryptedFileLocalKeyStoreTest {
     /** Parses the key store file format: [4B version][4B iv length][iv][ciphertext]. */
     private fun parseStoreFile(keyFile: File): EncryptedData {
         val content = keyFile.readBytes()
-        val ivLength = content.sliceArray(4 until 8)
-            .fold(0) { acc, byte -> (acc shl 8) or (byte.toInt() and 0xFF) }
+        val ivLength =
+            content
+                .sliceArray(4 until 8)
+                .fold(0) { acc, byte -> (acc shl 8) or (byte.toInt() and 0xFF) }
         return EncryptedData(
             iv = content.sliceArray(8 until 8 + ivLength),
             ciphertext = content.sliceArray(8 + ivLength until content.size),
@@ -81,11 +81,12 @@ class EncryptedFileLocalKeyStoreTest {
         EncryptedFileLocalKeyStoreFactory.create(keyFile, password)
 
         // Re-derive the master key from the persisted salt; it must open the store file.
-        val masterKey = MasterKeyDerivation.deriveKey(
-            password = password,
-            salt = saltBytes(keyFile),
-            iterations = EncryptedFileLocalKeyStoreFactory.DEFAULT_PBKDF2_ITERATIONS,
-        )
+        val masterKey =
+            MasterKeyDerivation.deriveKey(
+                password = password,
+                salt = saltBytes(keyFile),
+                iterations = EncryptedFileLocalKeyStoreFactory.DEFAULT_PBKDF2_ITERATIONS,
+            )
         val plaintext = KeyEncryption(masterKey).decrypt(parseStoreFile(keyFile))
         assertEquals("{}", String(plaintext, Charsets.UTF_8), "Fresh store holds an encrypted empty key map")
     }
@@ -105,9 +106,10 @@ class EncryptedFileLocalKeyStoreTest {
         val keyFile = newKeyFile("legacy.enc")
         keyFile.writeBytes(byteArrayOf(0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C) + ByteArray(40))
 
-        val error = assertFailsWith<IllegalStateException> {
-            EncryptedFileLocalKeyStoreFactory.create(keyFile, password)
-        }
+        val error =
+            assertFailsWith<IllegalStateException> {
+                EncryptedFileLocalKeyStoreFactory.create(keyFile, password)
+            }
         assertTrue(
             error.message.orEmpty().contains("Regenerate", ignoreCase = true),
             "Legacy stores must fail with a clear regenerate-keystore error, got: ${error.message}",
@@ -141,17 +143,30 @@ class EncryptedFileLocalKeyStoreTest {
         EncryptedFileLocalKeyStoreFactory.create(keyFile, password)
 
         val encrypted = parseStoreFile(keyFile)
-        val tamperedCiphertext = encrypted.ciphertext.clone().apply {
-            this[0] = (this[0].toInt() xor 0x01).toByte()
-        }
-        val masterKey = MasterKeyDerivation.deriveKey(
-            password = password,
-            salt = saltBytes(keyFile),
-            iterations = EncryptedFileLocalKeyStoreFactory.DEFAULT_PBKDF2_ITERATIONS,
-        )
+        val tamperedCiphertext =
+            encrypted.ciphertext.clone().apply {
+                this[0] = (this[0].toInt() xor 0x01).toByte()
+            }
+        val masterKey =
+            MasterKeyDerivation.deriveKey(
+                password = password,
+                salt = saltBytes(keyFile),
+                iterations = EncryptedFileLocalKeyStoreFactory.DEFAULT_PBKDF2_ITERATIONS,
+            )
 
         assertFails("AES-GCM must reject a tampered ciphertext") {
             KeyEncryption(masterKey).decrypt(encrypted.copy(ciphertext = tamperedCiphertext))
+        }
+    }
+
+    @Test
+    fun corruptKeyFileIsAnErrorNotAnAbsentKey() {
+        val keyFile = newKeyFile("corrupt.enc")
+        val store = EncryptedFileLocalKeyStoreFactory.create(keyFile, password)
+        keyFile.writeBytes(ByteArray(64) { 0x7F })
+        kotlinx.coroutines.runBlocking {
+            assertFailsWith<IllegalStateException> { store.get("any-key") }
+            assertFailsWith<IllegalStateException> { store.list() }
         }
     }
 }

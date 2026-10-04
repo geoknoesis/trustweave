@@ -297,6 +297,7 @@ class SdJwtTypAndNonceTest {
                     shared.consume(key)
                 }
             val presentation = rig.present(rig.issue(), "nonce-1")
+
             fun scoped(scope: String) =
                 options(recording).let {
                     it.copy(additionalOptions = it.additionalOptions + (PresentationNonceStore.SCOPE_OPTION_KEY to scope))

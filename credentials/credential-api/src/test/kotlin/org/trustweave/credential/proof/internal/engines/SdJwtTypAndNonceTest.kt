@@ -261,4 +261,62 @@ class SdJwtTypAndNonceTest {
             assertTrue(store.consume("c"))
             assertTrue(store.consume("a"), "expired nonces are forgotten")
         }
+
+    @Test
+    fun `a full nonce store yields an Invalid result instead of throwing`() =
+        runBlocking<Unit> {
+            val rig = Rig()
+            val store = InMemoryPresentationNonceStore(capacity = 1)
+            assertTrue(store.consume("filler"))
+            val presentation = rig.present(rig.issue(), "nonce-1")
+            val result = rig.service.verifyPresentation(presentation, null, options(store))
+            assertTrue(result is VerificationResult.Invalid.InvalidProof, "got $result")
+            assertTrue(result.reason.contains("exhausted"), result.reason)
+        }
+
+    @Test
+    fun `a failing nonce store fails closed with an Invalid result`() =
+        runBlocking<Unit> {
+            val rig = Rig()
+            val broken = PresentationNonceStore { throw java.io.IOException("redis down") }
+            val presentation = rig.present(rig.issue(), "nonce-1")
+            val result = rig.service.verifyPresentation(presentation, null, options(broken))
+            assertTrue(result is VerificationResult.Invalid.InvalidProof, "got $result")
+            assertTrue(result.errors.any { it.contains("redis down") }, "$result")
+        }
+
+    @Test
+    fun `the store key is scoped by verifier scope and nonce`() =
+        runBlocking<Unit> {
+            val rig = Rig()
+            val seen = mutableListOf<String>()
+            val shared = InMemoryPresentationNonceStore()
+            val recording =
+                PresentationNonceStore { key ->
+                    seen += key
+                    shared.consume(key)
+                }
+            val presentation = rig.present(rig.issue(), "nonce-1")
+            fun scoped(scope: String) =
+                options(recording).let {
+                    it.copy(additionalOptions = it.additionalOptions + (PresentationNonceStore.SCOPE_OPTION_KEY to scope))
+                }
+            assertTrue(rig.service.verifyPresentation(presentation, null, scoped("verifier-A")) is VerificationResult.Valid)
+            // Same nonce under a different verifier scope is a different transaction.
+            assertTrue(rig.service.verifyPresentation(presentation, null, scoped("verifier-B")) is VerificationResult.Valid)
+            assertTrue(rig.service.verifyPresentation(presentation, null, scoped("verifier-A")) is VerificationResult.Invalid)
+            assertEquals(listOf("10:verifier-A:nonce-1", "10:verifier-B:nonce-1", "10:verifier-A:nonce-1"), seen)
+        }
+
+    @Test
+    fun `a nonce store with a proof type that cannot honour it is rejected, not silently skipped`() =
+        runBlocking<Unit> {
+            val rig = Rig()
+            val presentation = rig.present(rig.issue(), "nonce-1").copy(proof = CredentialProof.JwtProof("a.b.c"))
+            val result =
+                org.trustweave.credential.internal.PresentationVerification
+                    .consumeKbJwtNonce(presentation, options(InMemoryPresentationNonceStore()))
+            assertTrue(result is VerificationResult.Invalid.InvalidProof, "got $result")
+            assertTrue(result.reason.contains("cannot honour"), result.reason)
+        }
 }

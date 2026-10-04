@@ -53,6 +53,19 @@ import kotlin.concurrent.withLock
  * stored bytes is detected during decryption and surfaces as a
  * [WalletException.StorageError] instead of returning corrupted data.
  *
+ * **Record binding (format version 2).** New writes use format version 2, which authenticates
+ * additional data (AAD): the wallet id, the kind of record (credential or metadata) and the SHA-256 of the
+ * credential id, which is also the record's file name. Someone with write access to the wallet
+ * directory therefore cannot swap the encrypted record of one credential for another's, move a
+ * record between wallets, or put a metadata sidecar where a credential belongs: the GCM tag fails and
+ * the read throws [WalletException.StorageError]. The wallet id is part of the binding, so a wallet
+ * must be reopened with the same `walletId` it was written with.
+ *
+ * **Legacy records (format version 1, no AAD)** written by earlier versions are still read: a record's
+ * version byte decides, and a version-2 record is never accepted without its AAD (no downgrade by
+ * stripping it). Legacy records stay swappable until they are written again; storing a credential
+ * again upgrades it to version 2.
+ *
  * **Key material:** the key must be 16, 24, or 32 bytes of AES key material
  * (AES-128/192/256), given either Base64-encoded (`String` or `CharArray`) or raw
  * (`ByteArray`). Invalid keys are rejected at construction time. The `ByteArray` and
@@ -230,7 +243,14 @@ class FileWallet private constructor(
         private val logger = LoggerFactory.getLogger(FileWallet::class.java)
 
         private const val CIPHER_TRANSFORMATION = "AES/GCM/NoPadding"
-        private const val FORMAT_VERSION: Byte = 1
+
+        /** Legacy blob: AES-GCM without additional authenticated data. Read-only. */
+        private const val FORMAT_VERSION_LEGACY: Byte = 1
+
+        /** Current blob: AES-GCM with the record's wallet, kind and credential-id hash as AAD. */
+        private const val FORMAT_VERSION: Byte = 2
+        private const val KIND_CREDENTIAL = "credential"
+        private const val KIND_METADATA = "metadata"
         private const val GCM_IV_LENGTH_BYTES = 12
         private const val GCM_TAG_LENGTH_BITS = 128
         private val VALID_AES_KEY_LENGTHS = setOf(16, 24, 32)
@@ -310,10 +330,12 @@ class FileWallet private constructor(
             val id = credential.id?.value ?: "urn:trustweave:stored:${sha256Hex(credentialJson)}"
 
             val credentialFile = resolveDataFile(credentialsDir, id)
-            withRecordLocks(credentialFile, resolveDataFile(metadataDir, id)) {
+            val metadataFile = resolveDataFile(metadataDir, id)
+            val recordHash = sha256Hex(id)
+            withRecordLocks(credentialFile, metadataFile) {
                 val content =
                     if (secretKey != null) {
-                        encrypt(credentialJson)
+                        encrypt(credentialJson, aad(KIND_CREDENTIAL, recordHash))
                     } else {
                         credentialJson.toByteArray(Charsets.UTF_8)
                     }
@@ -321,7 +343,13 @@ class FileWallet private constructor(
                 // Initialize metadata if not exists. The sidecar embeds the raw credential id
                 // (ids can be PII-bearing URNs), so it is protected with the same AES-GCM
                 // scheme as the credential file whenever an encryption key is configured.
-                val metadataFile = resolveDataFile(metadataDir, id)
+                //
+                // Order: sidecar first, credential second. A crash between the two leaves at worst an
+                // orphan sidecar, which nothing reads (records are enumerated from the credential
+                // files) and which the next store of the same id reuses; the reverse order would leave a
+                // credential without a sidecar, which makes listing fail. A failure of the credential
+                // write rolls back a sidecar created by THIS call, so a failed store leaves nothing behind.
+                var createdMetadata = false
                 if (!Files.exists(metadataFile)) {
                     val metadata =
                         buildJsonObject {
@@ -335,14 +363,26 @@ class FileWallet private constructor(
                     val metadataJson = json.encodeToString(JsonObject.serializer(), metadata)
                     val metadataContent =
                         if (secretKey != null) {
-                            encrypt(metadataJson)
+                            encrypt(metadataJson, aad(KIND_METADATA, recordHash))
                         } else {
                             metadataJson.toByteArray(Charsets.UTF_8)
                         }
                     atomicWrite(metadataFile, metadataContent)
+                    createdMetadata = true
                 }
 
-                atomicWrite(credentialFile, content)
+                try {
+                    atomicWrite(credentialFile, content)
+                } catch (e: Throwable) {
+                    if (createdMetadata) {
+                        try {
+                            Files.deleteIfExists(metadataFile)
+                        } catch (cleanup: Exception) {
+                            e.addSuppressed(cleanup)
+                        }
+                    }
+                    throw e
+                }
                 id
             }
         }
@@ -357,7 +397,7 @@ class FileWallet private constructor(
             val content = readBytes(credentialFile)
             val credentialJson =
                 if (secretKey != null) {
-                    decrypt(content)
+                    decrypt(content, aad(KIND_CREDENTIAL, sha256Hex(credentialId)))
                 } else {
                     String(content, Charsets.UTF_8)
                 }
@@ -502,9 +542,19 @@ class FileWallet private constructor(
 
     private fun readRecord(path: Path): StoredCredentialRecord =
         withRecordLocks(path, metadataDir.resolve(path.fileName)) {
-            fun decode(bytes: ByteArray) = if (secretKey != null) decrypt(bytes) else String(bytes, Charsets.UTF_8)
-            val credential = json.decodeFromString(VerifiableCredential.serializer(), decode(readBytes(path)))
-            val metadata = json.parseToJsonElement(decode(readBytes(metadataDir.resolve(path.fileName)))).jsonObject
+            // The record's identity is its file name (the SHA-256 of the credential id); it is the AAD
+            // of both blobs, so a record moved or swapped under another name fails authentication.
+            val recordHash = path.fileName.toString().removeSuffix(".json")
+
+            fun decode(
+                bytes: ByteArray,
+                kind: String,
+            ) = if (secretKey != null) decrypt(bytes, aad(kind, recordHash)) else String(bytes, Charsets.UTF_8)
+            val credential = json.decodeFromString(VerifiableCredential.serializer(), decode(readBytes(path), KIND_CREDENTIAL))
+            val metadata =
+                json
+                    .parseToJsonElement(decode(readBytes(metadataDir.resolve(path.fileName)), KIND_METADATA))
+                    .jsonObject
             val handle = metadata.getValue("credentialId").jsonPrimitive.content
             check(resolveDataFile(credentialsDir, handle) == path) { "Metadata handle does not match credential file" }
             StoredCredentialRecord(handle, credential)
@@ -554,12 +604,21 @@ class FileWallet private constructor(
             )
         }
 
+    /** AAD of one record: wallet scope, record kind and the SHA-256 hex of the credential id. */
+    private fun aad(
+        kind: String,
+        recordHash: String,
+    ): ByteArray = "trustweave-filewallet/v2\u0000$walletId\u0000$kind\u0000$recordHash".toByteArray(Charsets.UTF_8)
+
     /**
-     * Encrypt data using AES/GCM/NoPadding with a fresh random 12-byte IV.
+     * Encrypt data using AES/GCM/NoPadding with a fresh random 12-byte IV, authenticating [aad].
      *
-     * Output layout: `[1-byte format version][12-byte IV][ciphertext + 128-bit tag]`.
+     * Output layout: `[1-byte format version = 2][12-byte IV][ciphertext + 128-bit tag]`.
      */
-    private fun encrypt(data: String): ByteArray {
+    private fun encrypt(
+        data: String,
+        aad: ByteArray,
+    ): ByteArray {
         val key =
             secretKey
                 ?: throw IllegalStateException("Encryption key not provided")
@@ -567,6 +626,7 @@ class FileWallet private constructor(
         val iv = ByteArray(GCM_IV_LENGTH_BYTES).also { secureRandom.nextBytes(it) }
         val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+        cipher.updateAAD(aad)
         val ciphertext = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
 
         val blob = ByteArray(1 + iv.size + ciphertext.size)
@@ -577,18 +637,24 @@ class FileWallet private constructor(
     }
 
     /**
-     * Decrypt an AES-GCM blob produced by [encrypt].
+     * Decrypt an AES-GCM blob produced by [encrypt] (version 2, [aad] authenticated) or by an earlier
+     * version (version 1, no AAD). The version byte alone selects the scheme: a version-2 blob is
+     * never tried without its AAD, and a blob without a known version marker is rejected.
      *
-     * Tampered or malformed data fails GCM authentication and surfaces as a
+     * Tampered, swapped or malformed data fails GCM authentication and surfaces as a
      * [WalletException.StorageError] — corrupted plaintext is never returned.
      */
-    private fun decrypt(encryptedData: ByteArray): String {
+    private fun decrypt(
+        encryptedData: ByteArray,
+        aad: ByteArray,
+    ): String {
         val key =
             secretKey
                 ?: throw IllegalStateException("Encryption key not provided")
 
         val minLength = 1 + GCM_IV_LENGTH_BYTES + GCM_TAG_LENGTH_BITS / 8
-        if (encryptedData.size < minLength || encryptedData[0] != FORMAT_VERSION) {
+        val version = encryptedData.firstOrNull()
+        if (encryptedData.size < minLength || (version != FORMAT_VERSION && version != FORMAT_VERSION_LEGACY)) {
             throw WalletException.StorageError(
                 operation = "decrypt",
                 reason =
@@ -601,6 +667,7 @@ class FileWallet private constructor(
         val ciphertext = encryptedData.copyOfRange(1 + GCM_IV_LENGTH_BYTES, encryptedData.size)
         val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
         cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+        if (version == FORMAT_VERSION) cipher.updateAAD(aad)
 
         val decrypted =
             try {
@@ -608,7 +675,7 @@ class FileWallet private constructor(
             } catch (e: GeneralSecurityException) {
                 throw WalletException.StorageError(
                     operation = "decrypt",
-                    reason = "Credential decryption failed: data is corrupted or has been tampered with",
+                    reason = "Credential decryption failed: data is corrupted, tampered with, or does not belong to this record",
                     cause = e,
                 )
             }

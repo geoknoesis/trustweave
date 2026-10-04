@@ -24,6 +24,8 @@ release on Maven Central when this was written. Update this page in the same PR 
 | [Testcontainers 2](#testcontainers-2) | 1.21.4 | 2.x (latest 2.0.5) | 10 build files | Medium | TBD (assign) |
 | [kotlinx-datetime 0.7+](#kotlinx-datetime) | 0.6.2 | 0.7.x / 0.8.x | 58 build files, ~230 sources; **public API** | High | TBD (assign) |
 | [bitcoinj 0.17](#bitcoinj) | 0.16.2 (`bitcoinj-legacy`) | 0.17.x | 2 build files | Medium | TBD (assign) |
+| Deferred: [Expo SDK 54 pins](#reference-wallet-deferrals) | react 19.1.0, react-native 0.81.5, async-storage 2.2.0, safe-area-context ~5.6.0, jest 29 | react 19.3 / RN 0.87 / async-storage 3.1 / safe-area 5.10 / jest 30 | `reference-wallet/expo` | High | TBD (assign) |
+| Deferred: [Android toolchain](#reference-wallet-deferrals) | AGP 8.5.0, Kotlin 2.0.0, Gradle 8.9, compileSdk 34, Compose BOM 2024.06.00, OkHttp 4.12.0 | Kotlin 2.4.20, Gradle 9.8, BOM 2026.09.00, OkHttp 5.5.0 | `reference-wallet/android` | High | TBD (assign) |
 
 ## Routine bumps done in the current cycle
 
@@ -172,3 +174,26 @@ Steps:
 Already recorded in `gradle/libs.versions.toml`: two consumers still build against 0.16.2 through
 the `bitcoinj-legacy` alias because 0.17 moves `Transaction`, `NetworkParameters`, `HEX` and
 `isOpReturn`. Migrate those two modules, then delete the legacy alias.
+
+## Reference wallet deferrals
+
+Dependabot PRs #31 to #50 for `reference-wallet/` were resolved in one pass. Applied: the web npm
+group, `jose` 6, `@noble/curves` 2, TypeScript 7, React 19.3, Android `security-crypto` 1.1.0 and
+`bcprov` 1.86. Deferred, each as its own PR:
+
+- **Expo `react`/`react-dom` 19.3 and `react-native` 0.87 (#34).** Expo SDK 54 is built for React 19.1
+  and React Native 0.81; the renderer rejects a different React version and the Expo native
+  modules are not built for RN 0.87. Next step: upgrade the Expo SDK (`npx expo install --fix`) as one change.
+- **Expo `async-storage` 3.1.1 (#38) and `react-native-safe-area-context` 5.10.1 (#40).** `expo install
+  --check` pins 2.2.0 and ~5.6.0 for SDK 54; async-storage 3 is a major with a new native module.
+  Next step: take them with the Expo SDK upgrade, then adapt `lib/storage.ts`.
+- **Expo `jest` 30 and `@types/jest` 30 (#37, #39).** `jest-expo` 54 is built for Jest 29 and
+  `jest-watch-typeahead` requires `^29`; a clean install nests a second Jest 29 and the suites fail to
+  load Babel presets. Next step: retry with the `jest-expo` release that supports Jest 30.
+- **Android Kotlin 2.4.20, `core-ktx` 1.19, `navigation-compose` 2.10, kotlinx-serialization 1.11,
+  coroutines 1.11, datetime 0.8 (#43).** They need a newer Android Gradle Plugin and `compileSdk` than
+  the 8.5.0 and 34 in use, and `kotlinOptions { }` is removed in current Kotlin. Next step: upgrade AGP,
+  `compileSdk` and Kotlin together on a machine with the Android SDK, then the libraries.
+- **Compose BOM 2026.09.00 (#44), Gradle wrapper 9.8.0 (#45), OkHttp 5.5.0 (#48).** Not verifiable
+  without an Android build; each changes the build or the HTTP client API. Next step: one PR each so
+  the CI job "Android app tests and shared compilation" validates them; the wrapper must match the AGP.

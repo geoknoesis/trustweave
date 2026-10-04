@@ -288,6 +288,16 @@ class WebDidMethod(
                 // Apply updater
                 val updatedDocument = updater(currentDocument)
 
+                // An updater must not be able to publish (and cache) a document for another DID
+                // at this DID's location: its id is the DID being updated, exactly.
+                if (updatedDocument.id.value != didString) {
+                    throw TrustWeaveException.InvalidOperation(
+                        message =
+                            "did:web update refused: the updated document's id '${updatedDocument.id.value}' " +
+                                "does not equal the DID being updated '$didString'",
+                    )
+                }
+
                 // Publish updated document
                 updateDocumentOnHttp(didString, updatedDocument)
 

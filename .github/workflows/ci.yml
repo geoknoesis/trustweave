@@ -151,6 +151,11 @@ jobs:
           echo "SOFTHSM2_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
           echo "SOFTHSM2_CONF=$RUNNER_TEMP/trustweave-softhsm2.conf" >> "$GITHUB_ENV"
 
+      - name: Pre-pull digest-pinned test images
+        # Testcontainers has a short pull timeout; a cold runner or a slow registry otherwise fails an
+        # unrelated test with ContainerFetchException. Pull with retries so the cause is visible here.
+        run: bash scripts/prepull-test-images.sh
+
       # ktlint and the ABI check run in the `lint` job; excluding them here avoids doing them twice.
       - name: Build with Gradle
         run: ./gradlew build -x ktlintCheck -x checkKotlinAbi --no-daemon --stacktrace

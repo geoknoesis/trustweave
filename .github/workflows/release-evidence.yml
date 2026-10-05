@@ -57,6 +57,11 @@ jobs:
           python scripts/check-container-images.py
           python scripts/check-cancellation-guards.py
 
+      - name: Pre-pull digest-pinned test images
+        # Testcontainers has a short pull timeout; a cold runner or a slow registry otherwise fails an
+        # unrelated test with ContainerFetchException. Pull with retries so the cause is visible here.
+        run: bash scripts/prepull-test-images.sh
+
       - name: Validate release and generate dependency inventories
         run: |
           ./gradlew build ktlintCheck checkKotlinAbi koverXmlReport cyclonedxBom --no-daemon --stacktrace

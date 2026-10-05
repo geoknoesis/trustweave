@@ -9,7 +9,9 @@ class ResolvedDocumentIdTest {
     fun `equal ids match`() = assertNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:b"))
 
     @Test
-    fun `different ids mismatch`() = assertNotNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:c"))
+    fun `different ids mismatch`() {
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:c"))
+    }
 
     private val suffix = "Ei" + "A".repeat(44)
 
@@ -28,5 +30,7 @@ class ResolvedDocumentIdTest {
     }
 
     @Test
-    fun `case differences are mismatches`() = assertNotNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:B"))
+    fun `case differences are mismatches`() {
+        assertNotNull(ResolvedDocumentId.mismatchReason("did:a:b", "did:a:B"))
+    }
 }

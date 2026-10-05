@@ -77,7 +77,7 @@ class CacheBoundsTest {
 
     @Test
     fun `deactivation records survive lru and ttl eviction`() =
-        runBlocking {
+        runBlocking<Unit> {
             val m = M(InMemoryKeyManagementService(), max = 5, ttl = 20.milliseconds)
             m.cache("did:test:dead")
             m.markDeactivated("did:test:dead")

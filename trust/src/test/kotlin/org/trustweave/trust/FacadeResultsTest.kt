@@ -74,7 +74,7 @@ class FacadeResultsTest {
 
     @Test
     fun `getKeyIdResult returns Failure instead of throwing for an unresolvable DID`() =
-        runBlocking {
+        runBlocking<Unit> {
             val result = trustWeave.getKeyIdResult(Did("did:nonexistent:abc"))
             val failure = assertIs<KeyIdResult.Failure>(result)
             assertNotNull(failure.reason)
@@ -104,7 +104,7 @@ class FacadeResultsTest {
 
     @Test
     fun `revokeResult reports NotConfigured InvalidRequest and the manager's answer`() =
-        runBlocking {
+        runBlocking<Unit> {
             assertIs<RevocationResult.NotConfigured>(
                 trustWeave.revokeResult(10.seconds) {
                     credential("c")

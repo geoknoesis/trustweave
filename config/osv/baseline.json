@@ -296,18 +296,6 @@
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },
     {
-      "id": "GHSA-5mg8-w23w-74h3",
-      "aliases": [
-        "CVE-2020-8908",
-        "SNYK-JAVA-COMGOOGLEGUAVA-1015415"
-      ],
-      "packages": [
-        "com.google.guava:guava@31.0.1-android",
-        "guava@31.0.1-android"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
       "id": "GHSA-5pvg-856g-cp85",
       "aliases": [
         "CVE-2026-47691"
@@ -420,17 +408,6 @@
         "com.google.protobuf:protobuf-javalite@3.18.0",
         "protobuf-java@3.14.0",
         "protobuf-javalite@3.18.0"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
-      "id": "GHSA-7g45-4rm6-3mm3",
-      "aliases": [
-        "CVE-2023-2976"
-      ],
-      "packages": [
-        "com.google.guava:guava@31.0.1-android",
-        "guava@31.0.1-android"
       ],
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },
@@ -795,16 +772,6 @@
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },
     {
-      "id": "GHSA-hfcf-v2f8-x9pc",
-      "aliases": [
-        "CVE-2026-44714"
-      ],
-      "packages": [
-        "bitcoinj-core@0.16.2"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
       "id": "GHSA-hgj6-7826-r7m5",
       "aliases": [
         "CVE-2026-54514"
@@ -826,16 +793,6 @@
       ],
       "packages": [
         "org.apache.httpcomponents.client5:httpclient5@5.0.3"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
-      "id": "GHSA-hr8g-6v94-x4m9",
-      "aliases": [
-        "CVE-2023-33201"
-      ],
-      "packages": [
-        "bcprov-jdk15to18@1.69"
       ],
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },
@@ -1262,16 +1219,6 @@
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },
     {
-      "id": "GHSA-wjxj-5m7g-mg7q",
-      "aliases": [
-        "CVE-2023-33202"
-      ],
-      "packages": [
-        "bcprov-jdk15to18@1.69"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
       "id": "GHSA-wrvw-hg22-4m67",
       "aliases": [
         "CVE-2021-22569"
@@ -1328,17 +1275,6 @@
         "io.netty:netty-resolver-dns@4.1.128.Final",
         "netty-resolver-dns@4.1.115.Final",
         "netty-resolver-dns@4.1.128.Final"
-      ],
-      "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
-    },
-    {
-      "id": "GHSA-xq3w-v528-46rv",
-      "aliases": [
-        "CVE-2024-47535"
-      ],
-      "packages": [
-        "io.netty:netty-common@4.1.111.Final",
-        "netty-common@4.1.111.Final"
       ],
       "reason": "Pre-existing at baseline date; not yet triaged individually. See docs/contributing/dependency-upgrade-plan.md."
     },

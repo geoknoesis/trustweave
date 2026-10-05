@@ -25,38 +25,37 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Real HTTP/S3 SDK contract against MinIO; this is not a claim of live AWS coverage. */
+/** Real HTTP/S3 SDK contract against an S3-compatible server (Adobe S3Mock); this is not a claim of live AWS coverage. */
 class S3StorageContractTest {
     private companion object {
         /**
-         * Pinned by digest on MinIO's own registry.
+         * Adobe S3Mock, pinned by digest (the multi-arch index of `adobe/s3mock:latest`).
          *
-         * The Docker Hub copy of this release is no longer resolvable, so the previous
-         * `minio/minio:RELEASE.…` reference failed to pull on any runner without a warm cache —
-         * it passed locally and failed in CI. A digest also makes the image immutable, which a
-         * `RELEASE.` tag is not: MinIO retags and removes them.
+         * MinIO withdrew its public images: `quay.io/minio/minio` and Docker Hub's `minio/minio` now
+         * answer 401, so every runner without a warm cache failed to pull. This test only needs the
+         * plain S3 API (buckets, put/get/list with continuation tokens, delete), which S3Mock
+         * implements. A digest also makes the image immutable, which a tag is not.
          */
-        const val MINIO_IMAGE =
-            "quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e"
+        const val S3_PORT = 9090
+
+        const val S3_IMAGE =
+            "adobe/s3mock@sha256:ab01a6946750f451ca215a47e91030695b260e4003b8a5a6201d25029b8fca92"
     }
 
     @Test
     fun `S3 storage preserves anonymous credentials paginates and reports corrupt objects`() =
         runBlocking {
             val storage =
-                GenericContainer<Nothing>(MINIO_IMAGE).apply {
-                    withEnv("MINIO_ROOT_USER", "contract-user")
-                    withEnv("MINIO_ROOT_PASSWORD", "contract-password")
-                    withCommand("server", "/data")
-                    withExposedPorts(9000)
-                    waitingFor(Wait.forHttp("/minio/health/ready").forPort(9000))
+                GenericContainer<Nothing>(S3_IMAGE).apply {
+                    withExposedPorts(S3_PORT)
+                    waitingFor(Wait.forListeningPort())
                 }
             storage.start()
             try {
                 var listCalls = 0
                 S3Client
                     .builder()
-                    .endpointOverride(URI("http://${storage.host}:${storage.getMappedPort(9000)}"))
+                    .endpointOverride(URI("http://${storage.host}:${storage.getMappedPort(S3_PORT)}"))
                     .region(Region.US_EAST_1)
                     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("contract-user", "contract-password")))
                     .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())

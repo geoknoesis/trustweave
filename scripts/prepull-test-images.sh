@@ -11,7 +11,7 @@ set -euo pipefail
 
 root="${1:-.}"
 mapfile -t images < <(
-  grep -rhoE --include='*.kt' '"[A-Za-z0-9._-]+(\.[A-Za-z0-9._-]+)+/[A-Za-z0-9._/-]+@sha256:[0-9a-f]{64}"' \
+  grep -rhoE --include='*.kt' '"[A-Za-z0-9._/-]+@sha256:[0-9a-f]{64}"' \
     "$root" --exclude-dir=build --exclude-dir=.git --exclude-dir=.claude 2>/dev/null |
     tr -d '"' | sort -u
 )

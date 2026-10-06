@@ -74,7 +74,10 @@ interface XadesVerifier {
  *   trust result is accepted only for a time-stamped signature that predates the withdrawal
  *   (or when `allowWithdrawnTrustWithoutAuthenticatedTime` is set).
  * - The chain built from `<ds:KeyInfo>` is checked structurally (validity window, `basicConstraints`,
- *   `pathLenConstraint`, `keyUsage`); revocation is NOT checked (`revocationChecked` is false).
+ *   `pathLenConstraint`, `keyUsage`). Revocation is evaluated only when
+ *   [XadesVerificationOptions.revocationPolicy] asks for it: CRLs and OCSP responses (embedded
+ *   `RevocationValues` plus caller-supplied evidence) are verified against the issuing CA, must be fresh
+ *   for the signature, and the signer and each CA below the trust anchor must be shown not revoked.
  * - `SigningTime` is read only from the signed `SignedSignatureProperties`. A malformed value is
  *   [Invalid.Malformed]. When it is missing, the certificate validity window is checked against
  *   the CURRENT time (so a signature by a since-expired certificate is rejected, and the result's
@@ -299,6 +302,34 @@ class DefaultXadesVerifier : XadesVerifier {
                 }
             }
 
+            // 12. Revocation (CRL / OCSP), only when requested.
+            var revocationChecked = false
+            if (options.revocationPolicy != XadesRevocationPolicy.NOT_CHECKED) {
+                val statuses =
+                    XadesRevocation.evaluate(
+                        signer = signerCert,
+                        chain = chainCerts,
+                        issuerCertificates = options.revocationIssuerCertificates,
+                        evidence = options.revocationEvidence + XadesRevocation.embedded(qp),
+                        authenticatedTime = authenticatedTime,
+                        now = Clock.System.now(),
+                        skewMillis = options.maxClockSkewSeconds * 1000,
+                    )
+                statuses.filterIsInstance<XadesRevocation.Status.Revoked>().firstOrNull()?.let {
+                    return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
+                }
+                val unavailable = statuses.filterIsInstance<XadesRevocation.Status.Unavailable>()
+                if (statuses.isEmpty() && options.revocationPolicy == XadesRevocationPolicy.REQUIRED) {
+                    return@withContext Invalid.RevocationUnavailable(
+                        "no certificate below a trust anchor was available to check for revocation",
+                    )
+                }
+                if (unavailable.isNotEmpty() && options.revocationPolicy == XadesRevocationPolicy.REQUIRED) {
+                    return@withContext Invalid.RevocationUnavailable(unavailable.joinToString("; ") { it.reason })
+                }
+                revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+            }
+
             XadesValidationResult.Valid(
                 signerCert = signerCert,
                 trust = trust,
@@ -306,7 +337,7 @@ class DefaultXadesVerifier : XadesVerifier {
                 profile = if (authenticatedTime != null) XadesProfile.B_T else XadesProfile.B_B,
                 signingTimeAuthenticated = authenticatedTime != null,
                 signatureTimeStamp = authenticatedTime,
-                revocationChecked = false,
+                revocationChecked = revocationChecked,
             )
         }
 
@@ -632,6 +663,5 @@ class DefaultXadesVerifier : XadesVerifier {
     }
 }
 
-// TODO(B-LT): revocation (CRL/OCSP) data is not evaluated; Valid.revocationChecked is always false.
 // TODO(detached): support detached XAdES — verify that external URIs resolve.
 // TODO(enveloping): support enveloping XAdES — verify the wrapped <ds:Object> reference.

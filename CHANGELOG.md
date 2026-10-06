@@ -133,7 +133,7 @@ working code fail until it is adjusted.**
   - XAdES refuses a `QualifiedWithdrawn` trust result unless a time-stamp predates the withdrawal
     (`allowWithdrawnTrustWithoutAuthenticatedTime` opts out), validates CA validity, `basicConstraints`,
     `pathLen` and key usage, and can verify an RFC 3161 signature time-stamp (`requireSignatureTimestamp`,
-    `timestampTrustAnchors`; verify-only `XadesProfile.B_T`). Revocation is still not evaluated.
+    `timestampTrustAnchors`; verify-only `XadesProfile.B_T`). Revocation is opt-in; see the XAdES revocation entry under "Added".
   - Token Status List: `lst` data with a valid ZLIB header must decode as ZLIB (corrupt or trailing bytes
     throw); ES256 (P-256) is supported; `defaultTtlSeconds` / `requireTtl` are new options.
   - The OID4VCI server maps errors per RFC (`invalid_proof` 400 with a fresh `c_nonce`, `invalid_token` 401
@@ -204,6 +204,18 @@ working code fail until it is adjusted.**
 
 ### Added
 
+- XAdES revocation checking. `XadesVerificationOptions` gains `revocationPolicy`
+  (`NOT_CHECKED` by default, so existing callers are unaffected; `CHECK_IF_AVAILABLE`; `REQUIRED`, which
+  fails closed), `revocationEvidence` (caller-supplied CRLs / OCSP responses) and
+  `revocationIssuerCertificates`. Evidence also comes from the signature's `<xades:RevocationValues>`.
+  Each CRL / OCSP response is verified against the issuing CA (an OCSP responder certificate needs the
+  OCSP-signing purpose), CRLs with critical extensions are ignored, and evidence must be fresh for the
+  signature: issued at or after an authenticated time-stamp, or current when the time is only claimed.
+  A revocation dated after an authenticated signing time does not invalidate the signature. New results:
+  `Invalid.CertificateRevoked` and `Invalid.RevocationUnavailable`; `Valid.revocationChecked` is `true`
+  only when every certificate below the trust anchor was shown good. `XadesVerificationOptions.copy()`
+  gains three parameters (ABI dump updated); the constructor keeps its overloads. The generic
+  `etsi-validation` REVOCATION step is not wired to this yet.
 - `Oidc4VciIssuerStateStore` (with the default `InMemoryOidc4VciIssuerStateStore`) makes the OID4VCI
   issuer's offers, access tokens and deferred credentials pluggable through the new trailing
   `stateStore` constructor parameter of `Oidc4VciIssuerService`; existing constructors and behaviour

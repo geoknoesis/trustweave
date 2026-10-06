@@ -110,6 +110,14 @@ data class XadesSignature(
  *                                                 refused). Default `false`.
  * @property maxClockSkewSeconds                   Tolerance between the claimed `SigningTime` and the
  *                                                 time-stamp's `genTime`.
+ * @property revocationPolicy                      Whether and how CRL / OCSP evidence is evaluated; see
+ *                                                 [XadesRevocationPolicy]. Default
+ *                                                 [XadesRevocationPolicy.NOT_CHECKED].
+ * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses, used together with
+ *                                                 any `<xades:RevocationValues>` embedded in the signature.
+ * @property revocationIssuerCertificates          CA certificates (typically the trust anchors) used to
+ *                                                 verify revocation evidence for certificates whose issuer
+ *                                                 is not carried in `<ds:KeyInfo>`.
  */
 data class XadesVerificationOptions
     @JvmOverloads
@@ -122,6 +130,9 @@ data class XadesVerificationOptions
         val timestampTrustAnchors: List<X509Certificate> = emptyList(),
         val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
         val maxClockSkewSeconds: Long = 300,
+        val revocationPolicy: XadesRevocationPolicy = XadesRevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: XadesRevocationEvidence = XadesRevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
     )
 
 /**
@@ -141,9 +152,10 @@ sealed class XadesValidationResult {
      *                        [signingTime] is merely what the signer claimed and proves nothing
      *                        about when the document was signed.
      * @property signatureTimeStamp The time-stamp's `genTime` when one was validated, else null.
-     * @property revocationChecked Always `false` at present: this verifier does not evaluate CRL /
-     *                        OCSP data, so certificate revocation is NOT checked. Callers needing
-     *                        revocation status must check it themselves.
+     * @property revocationChecked `true` only when a [XadesRevocationPolicy] other than `NOT_CHECKED`
+     *                        was requested AND the signer and every CA certificate below the trust
+     *                        anchor were shown not revoked by verified, fresh CRL / OCSP evidence.
+     *                        `false` means revocation status is unknown, not that it is good.
      */
     data class Valid
         @JvmOverloads
@@ -211,6 +223,21 @@ sealed class XadesValidationResult {
          * [XadesProfile.B_T]) but is absent, untrusted, malformed or does not match the signature.
          */
         data class TimeStampInvalid(
+            val reason: String,
+        ) : Invalid()
+
+        /** A certificate in the chain was revoked at or before the (authenticated, else current) time. */
+        data class CertificateRevoked(
+            val cert: X509Certificate,
+            val revokedAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /**
+         * [XadesRevocationPolicy.REQUIRED] was requested and at least one certificate has no usable
+         * revocation evidence (missing, unverifiable, stale, or its issuer is unavailable).
+         */
+        data class RevocationUnavailable(
             val reason: String,
         ) : Invalid()
 

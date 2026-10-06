@@ -1,4 +1,4 @@
-package org.trustweave.signatures.xades
+package org.trustweave.signatures.revocation
 
 import kotlinx.coroutines.CancellationException
 import org.bouncycastle.asn1.x509.KeyPurposeId
@@ -9,26 +9,24 @@ import org.bouncycastle.cert.ocsp.RevokedStatus
 import org.bouncycastle.cert.ocsp.SingleResp
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
-import org.w3c.dom.Element
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
-import java.util.Base64
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 
 /**
- * How [DefaultXadesVerifier] treats certificate revocation.
+ * How a verifier treats certificate revocation.
  *
- * Revocation evidence (CRLs and OCSP responses) comes from the signature's own
- * `<xades:RevocationValues>` (XAdES-B-LT) and from
- * [XadesVerificationOptions.revocationEvidence]. Every item is verified against the issuing CA's
+ * Revocation evidence (CRLs and OCSP responses) comes from the signature itself (XAdES
+ * `<xades:RevocationValues>`, JAdES `rVals`) and from
+ * the verifier options' `revocationEvidence`. Every item is verified against the issuing CA's
  * key before it is used, so an attacker who edits the (unsigned) `RevocationValues` can only strip
  * evidence or replace it with something equally genuine; the freshness rules described on
- * [XadesRevocationEvidence] stop a stale "good" answer from standing in for a current one.
+ * [RevocationEvidence] stop a stale "good" answer from standing in for a current one.
  */
-enum class XadesRevocationPolicy {
+enum class RevocationPolicy {
     /** Revocation is not evaluated (the default). `Valid.revocationChecked` stays `false`. */
     NOT_CHECKED,
 
@@ -42,7 +40,7 @@ enum class XadesRevocationPolicy {
     /**
      * Fail closed: the signer and every CA certificate below the trust anchor must have usable
      * evidence showing it good, otherwise the signature is refused
-     * ([XadesValidationResult.Invalid.RevocationUnavailable]).
+     * (the verifier's `RevocationUnavailable` result).
      */
     REQUIRED,
 }
@@ -63,7 +61,7 @@ enum class XadesRevocationPolicy {
  *                         issuer are used; delta CRLs and CRLs with critical extensions are ignored.
  * @property ocspResponses DER-encoded `OCSPResponse` structures (RFC 6960).
  */
-class XadesRevocationEvidence
+class RevocationEvidence
     @JvmOverloads
     constructor(
         val crls: List<ByteArray> = emptyList(),
@@ -71,17 +69,20 @@ class XadesRevocationEvidence
     ) {
         val isEmpty: Boolean get() = crls.isEmpty() && ocspResponses.isEmpty()
 
-        internal operator fun plus(other: XadesRevocationEvidence): XadesRevocationEvidence =
-            XadesRevocationEvidence(crls + other.crls, ocspResponses + other.ocspResponses)
+        operator fun plus(other: RevocationEvidence): RevocationEvidence =
+            RevocationEvidence(crls + other.crls, ocspResponses + other.ocspResponses)
 
         companion object {
             @JvmField
-            val NONE = XadesRevocationEvidence()
+            val NONE = RevocationEvidence()
         }
     }
 
-/** Evaluates CRL and OCSP evidence for a certificate chain. */
-internal object XadesRevocation {
+/**
+ * Evaluates CRL and OCSP evidence for a certificate chain. Shared by the XAdES and JAdES verifiers and
+ * the ETSI validation pipeline; format-specific code only has to extract the evidence.
+ */
+object CertificateRevocationEvaluator {
     sealed class Status {
         object Good : Status()
 
@@ -96,41 +97,29 @@ internal object XadesRevocation {
         ) : Status()
     }
 
-    private const val XADES_NS = "http://uri.etsi.org/01903/v1.3.2#"
-    private const val MAX_ITEMS = 64
-    private const val MAX_ITEM_BYTES = 4 * 1024 * 1024
-
-    /** Evidence embedded in `<xades:UnsignedProperties>/<xades:UnsignedSignatureProperties>/<xades:RevocationValues>`. */
-    fun embedded(qualifyingProperties: Element): XadesRevocationEvidence {
-        val crls = mutableListOf<ByteArray>()
-        val ocsp = mutableListOf<ByteArray>()
-        val values =
-            children(qualifyingProperties, "UnsignedProperties")
-                .flatMap { children(it, "UnsignedSignatureProperties") }
-                .flatMap { children(it, "RevocationValues") }
-        for (rv in values) {
-            children(rv, "CRLValues").flatMap { children(it, "EncapsulatedCRLValue") }.forEach { decode(it)?.let(crls::add) }
-            children(rv, "OCSPValues").flatMap { children(it, "EncapsulatedOCSPValue") }.forEach { decode(it)?.let(ocsp::add) }
-        }
-        return XadesRevocationEvidence(crls.take(MAX_ITEMS), ocsp.take(MAX_ITEMS))
-    }
+    /** Most CRLs / OCSP responses considered per signature, and the largest accepted item. */
+    const val MAX_ITEMS = 64
+    const val MAX_ITEM_BYTES = 4 * 1024 * 1024
 
     /**
-     * Evaluate the signer ([chain] first element is the signer) and every CA below the trust anchor.
+     * Evaluate the signer and every CA below the trust anchor. [candidates] are the certificates the
+     * signature carries (any order, unrelated ones are ignored): the chain is walked upwards from [signer]
+     * by issuer name and signature, so a stray certificate cannot add a failing "unavailable" entry.
+     * The top of the walked chain is verified with [issuerCertificates] when its issuer is not carried.
      * Returns one [Status] per certificate checked; a revoked certificate is reported first.
      */
     fun evaluate(
         signer: X509Certificate,
-        chain: List<X509Certificate>,
+        candidates: List<X509Certificate>,
         issuerCertificates: List<X509Certificate>,
-        evidence: XadesRevocationEvidence,
+        evidence: RevocationEvidence,
         authenticatedTime: Instant?,
         now: Instant,
         skewMillis: Long,
     ): List<Status> {
         val crls = parseCrls(evidence.crls.take(MAX_ITEMS))
         val ocsp = parseOcsp(evidence.ocspResponses.take(MAX_ITEMS))
-        val path = listOf(signer) + chain
+        val path = listOf(signer) + walkChain(signer, candidates)
         val results = mutableListOf<Status>()
         path.forEachIndexed { index, cert ->
             if (cert.subjectX500Principal == cert.issuerX500Principal) return@forEachIndexed // self-signed anchor
@@ -145,6 +134,24 @@ internal object XadesRevocation {
                 }
         }
         return results.sortedBy { if (it is Status.Revoked) 0 else 1 }
+    }
+
+    private fun walkChain(
+        signer: X509Certificate,
+        candidates: List<X509Certificate>,
+    ): List<X509Certificate> {
+        val chain = mutableListOf<X509Certificate>()
+        var current = signer
+        val remaining = candidates.filter { it != signer }.distinct().toMutableList()
+        while (current.subjectX500Principal != current.issuerX500Principal) {
+            val issuer =
+                remaining.firstOrNull { it.subjectX500Principal == current.issuerX500Principal && signedBy(current, it) }
+                    ?: break
+            remaining.remove(issuer)
+            chain.add(issuer)
+            current = issuer
+        }
+        return chain
     }
 
     private fun statusOf(
@@ -372,26 +379,6 @@ internal object XadesRevocation {
             throw cancelled
         } catch (_: Exception) {
             false
-        }
-
-    private fun children(
-        parent: Element,
-        localName: String,
-    ): List<Element> {
-        val out = mutableListOf<Element>()
-        val nodes = parent.childNodes
-        for (i in 0 until nodes.length) {
-            val node = nodes.item(i)
-            if (node is Element && node.namespaceURI == XADES_NS && node.localName == localName) out += node
-        }
-        return out
-    }
-
-    private fun decode(element: Element): ByteArray? =
-        try {
-            Base64.getMimeDecoder().decode(element.textContent.trim()).takeIf { it.size <= MAX_ITEM_BYTES }
-        } catch (_: IllegalArgumentException) {
-            null
         }
 
     private const val KU_DIGITAL_SIGNATURE = 0

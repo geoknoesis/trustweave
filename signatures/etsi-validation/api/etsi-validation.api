@@ -10,16 +10,28 @@ public final class org/trustweave/signatures/etsi/validation/DefaultEtsiSignatur
 }
 
 public final class org/trustweave/signatures/etsi/validation/EtsiSignaturePolicy {
-	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Set;)V
+	public fun <init> (Ljava/util/Set;Ljava/util/Set;)V
+	public fun <init> (Ljava/util/Set;Ljava/util/Set;Z)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Set;ZJZLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/Set;
 	public final fun component2 ()Ljava/util/Set;
 	public final fun component3 ()Z
 	public final fun component4-UwyO8pc ()J
 	public final fun component5 ()Z
 	public final fun component6 ()Ljava/util/Set;
-	public final fun copy-gwCluXo (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
-	public static synthetic fun copy-gwCluXo$default (Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
+	public final fun component7 ()Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public final fun component8 ()Lorg/trustweave/signatures/revocation/RevocationEvidence;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy-SBKQj6I (Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
+	public static synthetic fun copy-SBKQj6I$default (Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Ljava/util/Set;Ljava/util/Set;ZJZLjava/util/Set;Lorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAcceptedDigestAlgorithms ()Ljava/util/Set;
 	public final fun getAcceptedSignatureAlgorithms ()Ljava/util/Set;
@@ -27,6 +39,9 @@ public final class org/trustweave/signatures/etsi/validation/EtsiSignaturePolicy
 	public final fun getMaxClockSkew-UwyO8pc ()J
 	public final fun getRequireSigningTime ()Z
 	public final fun getRequireTimeStamp ()Z
+	public final fun getRevocationEvidence ()Lorg/trustweave/signatures/revocation/RevocationEvidence;
+	public final fun getRevocationIssuerCertificates ()Ljava/util/List;
+	public final fun getRevocationPolicy ()Lorg/trustweave/signatures/revocation/RevocationPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

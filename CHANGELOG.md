@@ -204,18 +204,30 @@ working code fail until it is adjusted.**
 
 ### Added
 
-- XAdES revocation checking. `XadesVerificationOptions` gains `revocationPolicy`
-  (`NOT_CHECKED` by default, so existing callers are unaffected; `CHECK_IF_AVAILABLE`; `REQUIRED`, which
-  fails closed), `revocationEvidence` (caller-supplied CRLs / OCSP responses) and
-  `revocationIssuerCertificates`. Evidence also comes from the signature's `<xades:RevocationValues>`.
-  Each CRL / OCSP response is verified against the issuing CA (an OCSP responder certificate needs the
-  OCSP-signing purpose), CRLs with critical extensions are ignored, and evidence must be fresh for the
-  signature: issued at or after an authenticated time-stamp, or current when the time is only claimed.
-  A revocation dated after an authenticated signing time does not invalidate the signature. New results:
-  `Invalid.CertificateRevoked` and `Invalid.RevocationUnavailable`; `Valid.revocationChecked` is `true`
-  only when every certificate below the trust anchor was shown good. `XadesVerificationOptions.copy()`
-  gains three parameters (ABI dump updated); the constructor keeps its overloads. The generic
-  `etsi-validation` REVOCATION step is not wired to this yet.
+- Certificate revocation checking (CRL and OCSP) for XAdES, JAdES and the ETSI validation pipeline, and XAdES
+  B-T / B-LT output. The shared evaluator is `org.trustweave.signatures.revocation.CertificateRevocationEvaluator`
+  in `tsa-core`, with `RevocationPolicy` (`NOT_CHECKED` by default, so existing callers are unaffected;
+  `CHECK_IF_AVAILABLE`; `REQUIRED`, which fails closed) and `RevocationEvidence`. Each CRL / OCSP response is
+  verified against the issuing CA (an OCSP responder certificate needs the OCSP-signing purpose), CRLs with
+  critical extensions are ignored, and evidence must be fresh for the signature: issued at or after an
+  authenticated time-stamp, or current when the time is only claimed. A revocation dated after an
+  authenticated signing time does not invalidate the signature.
+  - XAdES: `XadesVerificationOptions` gains `revocationPolicy`, `revocationEvidence` and
+    `revocationIssuerCertificates`; evidence also comes from `<xades:RevocationValues>`. New results
+    `Invalid.CertificateRevoked` and `Invalid.RevocationUnavailable`; `Valid.revocationChecked` is `true` only
+    when every certificate below the trust anchor was shown good. `XadesProfile.B_LT` is new: it is reported
+    only when the time-stamp is trusted and the evidence embedded in the signature itself covers the chain
+    (otherwise B-T), and requiring it implies `REQUIRED`. `DefaultXadesSigner` now produces B-T and B-LT
+    (`XadesSigningRequest.tsaConfig` / `validationData`, new optional `tsaClientFactory`); it throws for no
+    other profile. `XadesVerificationOptions.copy()` and `XadesSigningRequest.copy()` gain parameters (ABI dumps
+    updated); the constructors keep their overloads.
+  - JAdES: `JadesVerificationOptions` gains the same three options and evaluates `rVals`; `Valid.revocationChecked`
+    and `Invalid.CertificateRevoked` / `Invalid.RevocationUnavailable` are new (`JAdESProofEngine` maps them to an
+    invalid proof). The `sigTst` is not trust-validated by this verifier, so its time is never treated as
+    authenticated: evidence must be current and any revocation counts.
+  - `etsi-validation`: `EtsiSignaturePolicy` gains the same options. The REVOCATION step passes, fails or is
+    inconclusive from the evidence, and LONG_TERM_VALIDATION reports on B-LT / B-LTA data; both stay
+    not-applicable under the default `NOT_CHECKED`.
 - `Oidc4VciIssuerStateStore` (with the default `InMemoryOidc4VciIssuerStateStore`) makes the OID4VCI
   issuer's offers, access tokens and deferred credentials pluggable through the new trailing
   `stateStore` constructor parameter of `Oidc4VciIssuerService`; existing constructors and behaviour

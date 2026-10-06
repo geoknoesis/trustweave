@@ -1,6 +1,9 @@
 package org.trustweave.signatures.etsi.validation
 
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TspServiceStatus
+import java.security.cert.X509Certificate
 import kotlin.time.Duration
 
 /**
@@ -26,14 +29,26 @@ import kotlin.time.Duration
  * @property allowedTrustStatusUris      ETSI service-status URIs the caller considers
  *                                        acceptable for §5.5.3 signature-policy compliance.
  *                                        Defaults to GRANTED only.
+ * @property revocationPolicy            Whether the REVOCATION step evaluates CRL / OCSP evidence
+ *                                        (embedded `rVals` plus [revocationEvidence]). Default
+ *                                        [RevocationPolicy.NOT_CHECKED]: the step is not applicable.
+ * @property revocationEvidence          Caller-supplied CRLs / OCSP responses.
+ * @property revocationIssuerCertificates CA certificates used to verify evidence for a certificate
+ *                                        whose issuer is not in the signature's `x5c`.
  */
-data class EtsiSignaturePolicy(
-    val acceptedSignatureAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
-    val acceptedDigestAlgorithms: Set<String> = setOf("SHA-256", "SHA-384", "SHA-512"),
-    val requireSigningTime: Boolean = true,
-    val maxClockSkew: Duration = Duration.parse("PT5M"),
-    val requireTimeStamp: Boolean = false,
-    val allowedTrustStatusUris: Set<String> = setOf(
-        TspServiceStatus.GRANTED.uri,
-    ),
-)
+data class EtsiSignaturePolicy
+    @JvmOverloads
+    constructor(
+        val acceptedSignatureAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
+        val acceptedDigestAlgorithms: Set<String> = setOf("SHA-256", "SHA-384", "SHA-512"),
+        val requireSigningTime: Boolean = true,
+        val maxClockSkew: Duration = Duration.parse("PT5M"),
+        val requireTimeStamp: Boolean = false,
+        val allowedTrustStatusUris: Set<String> =
+            setOf(
+                TspServiceStatus.GRANTED.uri,
+            ),
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+    )

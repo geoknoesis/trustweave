@@ -2,8 +2,11 @@ package org.trustweave.signatures.jades
 
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
+import java.security.cert.X509Certificate
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -14,7 +17,9 @@ import kotlin.time.Instant
  * lower level required and adds new `etsiU` entries on top. Verifiers compare the requested
  * minimum against what is actually present in the unsigned-properties block.
  */
-enum class JadesProfile(val ordinalLevel: Int) {
+enum class JadesProfile(
+    val ordinalLevel: Int,
+) {
     /** Basic signature — JWS + JAdES protected-header parameters only. No time-stamp. */
     B_B(0),
 
@@ -103,7 +108,9 @@ data class JadesUnsignedProperties(
  *
  * @property certB64 Base64 (standard, NOT base64URL) of the DER certificate bytes.
  */
-data class EncodedCertificate(val certB64: String)
+data class EncodedCertificate(
+    val certB64: String,
+)
 
 /**
  * A single `rVals` entry — base64-encoded revocation data with a type tag so verifiers know
@@ -130,7 +137,10 @@ data class EncodedRevocationData(
  *                       data is the base64URL signature value itself, no canonicalisation needed),
  *                       so this is typically null.
  */
-data class EncodedTimeStampToken(val tstTokensB64: List<String>, val canonAlg: String? = null)
+data class EncodedTimeStampToken(
+    val tstTokensB64: List<String>,
+    val canonAlg: String? = null,
+)
 
 /**
  * Input to [JadesSigner.sign].
@@ -221,8 +231,7 @@ data class JadesSignature(
      * properties (i.e. strict B-B). Returns null for B-T and beyond, where the unsigned `etsiU`
      * block can only ride along the JSON Flattened form.
      */
-    fun compact(): String? =
-        if (unsigned.sigTst.isEmpty()) "$protectedHeaderB64u.$payloadB64u.$signatureB64u" else null
+    fun compact(): String? = if (unsigned.sigTst.isEmpty()) "$protectedHeaderB64u.$payloadB64u.$signatureB64u" else null
 }
 
 /**
@@ -241,11 +250,26 @@ data class JadesSignature(
  *                                                 is false.
  * @property maxClockSkew                          Tolerance applied to signing-time / TSA-time
  *                                                 comparisons. Default 5 minutes.
+ * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see
+ *                                                 [RevocationPolicy]. Default `NOT_CHECKED`. The embedded
+ *                                                 `rVals` and [revocationEvidence] are both used. The
+ *                                                 `sigTst` is not validated against TSA trust anchors by
+ *                                                 this verifier, so the signing time is never treated as
+ *                                                 authenticated: evidence must be current and any
+ *                                                 revocation counts.
+ * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses.
+ * @property revocationIssuerCertificates          CA certificates used to verify evidence for a certificate
+ *                                                 whose issuer is not in `x5c`.
  */
-data class JadesVerificationOptions(
-    val requiredProfile: JadesProfile,
-    val trustAnchorResolver: TrustAnchorResolver,
-    val acceptedAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
-    val allowExpiredCertificateAtSigningTime: Boolean = false,
-    val maxClockSkew: Duration = Duration.parse("PT5M"),
-)
+data class JadesVerificationOptions
+    @JvmOverloads
+    constructor(
+        val requiredProfile: JadesProfile,
+        val trustAnchorResolver: TrustAnchorResolver,
+        val acceptedAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
+        val allowExpiredCertificateAtSigningTime: Boolean = false,
+        val maxClockSkew: Duration = Duration.parse("PT5M"),
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+    )

@@ -7,6 +7,8 @@ import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.GeneralName
 import org.bouncycastle.asn1.x509.IssuerSerial
+import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.xades.XadesValidationResult.Invalid
 import org.w3c.dom.Document
@@ -217,7 +219,7 @@ class DefaultXadesVerifier : XadesVerifier {
 
             // 8. Signature time-stamp (B-T). Without one, SigningTime is the signer's own claim.
             val timestampRequired =
-                options.requireSignatureTimestamp || options.requiredProfile == XadesProfile.B_T
+                options.requireSignatureTimestamp || options.requiredProfile.atLeast(XadesProfile.B_T)
             val authenticatedTime: Instant? =
                 when (
                     val ts =
@@ -302,39 +304,74 @@ class DefaultXadesVerifier : XadesVerifier {
                 }
             }
 
-            // 12. Revocation (CRL / OCSP), only when requested.
+            // 12. Revocation (CRL / OCSP). Requesting B-LT implies REQUIRED: a long-term signature is only
+            //     as good as the validation data it proves.
+            val revocationPolicy =
+                if (options.requiredProfile == XadesProfile.B_LT && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
+                    RevocationPolicy.REQUIRED
+                } else {
+                    options.revocationPolicy
+                }
+            val embeddedEvidence = XadesRevocationValues.embedded(qp)
+            val skewMillis = options.maxClockSkewSeconds * 1000
             var revocationChecked = false
-            if (options.revocationPolicy != XadesRevocationPolicy.NOT_CHECKED) {
+            var embeddedCoversChain = false
+            if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val now = Clock.System.now()
                 val statuses =
-                    XadesRevocation.evaluate(
+                    CertificateRevocationEvaluator.evaluate(
                         signer = signerCert,
-                        chain = chainCerts,
+                        candidates = keyInfoCerts,
                         issuerCertificates = options.revocationIssuerCertificates,
-                        evidence = options.revocationEvidence + XadesRevocation.embedded(qp),
+                        evidence = options.revocationEvidence + embeddedEvidence,
                         authenticatedTime = authenticatedTime,
-                        now = Clock.System.now(),
-                        skewMillis = options.maxClockSkewSeconds * 1000,
+                        now = now,
+                        skewMillis = skewMillis,
                     )
-                statuses.filterIsInstance<XadesRevocation.Status.Revoked>().firstOrNull()?.let {
+                statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
                     return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
                 }
-                val unavailable = statuses.filterIsInstance<XadesRevocation.Status.Unavailable>()
-                if (statuses.isEmpty() && options.revocationPolicy == XadesRevocationPolicy.REQUIRED) {
+                val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
+                if (statuses.isEmpty() && revocationPolicy == RevocationPolicy.REQUIRED) {
                     return@withContext Invalid.RevocationUnavailable(
                         "no certificate below a trust anchor was available to check for revocation",
                     )
                 }
-                if (unavailable.isNotEmpty() && options.revocationPolicy == XadesRevocationPolicy.REQUIRED) {
+                if (unavailable.isNotEmpty() && revocationPolicy == RevocationPolicy.REQUIRED) {
                     return@withContext Invalid.RevocationUnavailable(unavailable.joinToString("; ") { it.reason })
                 }
                 revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+                // B-LT: the evidence carried inside the signature must, on its own, cover the chain.
+                if (revocationChecked && authenticatedTime != null && !embeddedEvidence.isEmpty) {
+                    val own =
+                        CertificateRevocationEvaluator.evaluate(
+                            signer = signerCert,
+                            candidates = keyInfoCerts,
+                            issuerCertificates = options.revocationIssuerCertificates,
+                            evidence = embeddedEvidence,
+                            authenticatedTime = authenticatedTime,
+                            now = now,
+                            skewMillis = skewMillis,
+                        )
+                    embeddedCoversChain = own.isNotEmpty() && own.all { it is CertificateRevocationEvaluator.Status.Good }
+                }
+            }
+
+            val foundProfile =
+                when {
+                    authenticatedTime != null && embeddedCoversChain -> XadesProfile.B_LT
+                    authenticatedTime != null -> XadesProfile.B_T
+                    else -> XadesProfile.B_B
+                }
+            if (!foundProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
             }
 
             XadesValidationResult.Valid(
                 signerCert = signerCert,
                 trust = trust,
                 signingTime = signingTime,
-                profile = if (authenticatedTime != null) XadesProfile.B_T else XadesProfile.B_B,
+                profile = foundProfile,
                 signingTimeAuthenticated = authenticatedTime != null,
                 signatureTimeStamp = authenticatedTime,
                 revocationChecked = revocationChecked,

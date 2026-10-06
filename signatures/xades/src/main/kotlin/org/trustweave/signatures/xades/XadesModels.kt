@@ -1,29 +1,48 @@
 package org.trustweave.signatures.xades
 
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
+import org.trustweave.signatures.tsa.TsaConfig
 import java.security.cert.X509Certificate
 import kotlin.time.Instant
 
 /**
- * XAdES baseline profile (ETSI EN 319 132-1 §5).
+ * XAdES baseline profile (ETSI EN 319 132-1 §6). Each level includes the one before it.
  *
- * MVP scope: B-B only. The B-T / B-LT / B-LTA profiles are out of MVP scope per
- * [docs/architecture/eidas-qes-design.md](../../../../../../docs/architecture/eidas-qes-design.md) §13;
- * adding them requires wiring an RFC 3161 TSA into the XAdES `SignatureTimeStamp` element and
- * encoding the signed-properties block according to ETSI EN 319 132-1 §5.2.
+ * B-LTA (archival time-stamps) is not implemented.
  */
 enum class XadesProfile {
     /** Basic XAdES — XML-DSig signature with the XAdES `SignedProperties` reference. */
     B_B,
 
-    /**
-     * XAdES-B-T: B-B plus an RFC 3161 `SignatureTimeStamp` over the `ds:SignatureValue`.
-     * Verification only; [XadesSigner] cannot produce it.
-     */
+    /** XAdES-B-T: B-B plus an RFC 3161 `SignatureTimeStamp` over the `ds:SignatureValue`. */
     B_T,
+
+    /**
+     * XAdES-B-LT: B-T plus the validation data embedded in the signature — `CertificateValues` and
+     * `RevocationValues` (CRLs / OCSP responses). A verifier reports B-LT only when the time-stamp is
+     * trusted and the embedded revocation evidence was itself verified and shows the signer and every
+     * CA below the trust anchor not revoked; otherwise the signature is reported as B-T.
+     */
+    B_LT,
+    ;
+
+    fun atLeast(other: XadesProfile): Boolean = ordinal >= other.ordinal
 }
+
+/**
+ * Validation data a B-LT signature embeds. [certificates] are DER certificates (the chain, TSA and
+ * OCSP responder certificates); [revocation] is the CRL / OCSP evidence for the chain.
+ */
+class XadesValidationData
+    @JvmOverloads
+    constructor(
+        val certificates: List<ByteArray> = emptyList(),
+        val revocation: RevocationEvidence = RevocationEvidence.NONE,
+    )
 
 /**
  * Input to [XadesSigner.sign].
@@ -43,20 +62,35 @@ enum class XadesProfile {
  *                                  XML-DSig `<KeyInfo>/<X509Data>`.
  * @property signingTime            Optional claimed signing time placed in the XAdES `SigningTime`
  *                                  qualifying property. Defaults to `Clock.System.now()`.
+ * @property tsaConfig              RFC 3161 time-stamp authority; required for B-T and B-LT.
+ * @property validationData         Certificates and CRL / OCSP evidence embedded for B-LT; required
+ *                                  (with at least one CRL or OCSP response) for B-LT.
  */
-data class XadesSigningRequest(
-    val profile: XadesProfile,
-    val keyId: KeyId,
-    val document: org.w3c.dom.Document,
-    val signerCertificateChain: List<ByteArray>,
-    val signingTime: Instant? = null,
-) {
-    init {
-        require(signerCertificateChain.isNotEmpty()) {
-            "signerCertificateChain must include at least the signer's certificate"
+data class XadesSigningRequest
+    @JvmOverloads
+    constructor(
+        val profile: XadesProfile,
+        val keyId: KeyId,
+        val document: org.w3c.dom.Document,
+        val signerCertificateChain: List<ByteArray>,
+        val signingTime: Instant? = null,
+        val tsaConfig: TsaConfig? = null,
+        val validationData: XadesValidationData? = null,
+    ) {
+        init {
+            require(signerCertificateChain.isNotEmpty()) {
+                "signerCertificateChain must include at least the signer's certificate"
+            }
+            if (profile.atLeast(XadesProfile.B_T)) {
+                require(tsaConfig != null) { "tsaConfig is required for XadesProfile.$profile" }
+            }
+            if (profile.atLeast(XadesProfile.B_LT)) {
+                require(validationData != null && !validationData.revocation.isEmpty) {
+                    "validationData with at least one CRL or OCSP response is required for XadesProfile.$profile"
+                }
+            }
         }
     }
-}
 
 /**
  * A produced XAdES signature.
@@ -111,8 +145,8 @@ data class XadesSignature(
  * @property maxClockSkewSeconds                   Tolerance between the claimed `SigningTime` and the
  *                                                 time-stamp's `genTime`.
  * @property revocationPolicy                      Whether and how CRL / OCSP evidence is evaluated; see
- *                                                 [XadesRevocationPolicy]. Default
- *                                                 [XadesRevocationPolicy.NOT_CHECKED].
+ *                                                 [RevocationPolicy]. Default
+ *                                                 [RevocationPolicy.NOT_CHECKED].
  * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses, used together with
  *                                                 any `<xades:RevocationValues>` embedded in the signature.
  * @property revocationIssuerCertificates          CA certificates (typically the trust anchors) used to
@@ -130,8 +164,8 @@ data class XadesVerificationOptions
         val timestampTrustAnchors: List<X509Certificate> = emptyList(),
         val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
         val maxClockSkewSeconds: Long = 300,
-        val revocationPolicy: XadesRevocationPolicy = XadesRevocationPolicy.NOT_CHECKED,
-        val revocationEvidence: XadesRevocationEvidence = XadesRevocationEvidence.NONE,
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
         val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
     )
 
@@ -152,7 +186,7 @@ sealed class XadesValidationResult {
      *                        [signingTime] is merely what the signer claimed and proves nothing
      *                        about when the document was signed.
      * @property signatureTimeStamp The time-stamp's `genTime` when one was validated, else null.
-     * @property revocationChecked `true` only when a [XadesRevocationPolicy] other than `NOT_CHECKED`
+     * @property revocationChecked `true` only when a [RevocationPolicy] other than `NOT_CHECKED`
      *                        was requested AND the signer and every CA certificate below the trust
      *                        anchor were shown not revoked by verified, fresh CRL / OCSP evidence.
      *                        `false` means revocation status is unknown, not that it is good.
@@ -234,7 +268,7 @@ sealed class XadesValidationResult {
         ) : Invalid()
 
         /**
-         * [XadesRevocationPolicy.REQUIRED] was requested and at least one certificate has no usable
+         * [RevocationPolicy.REQUIRED] was requested and at least one certificate has no usable
          * revocation evidence (missing, unverifiable, stale, or its issuer is unavailable).
          */
         data class RevocationUnavailable(

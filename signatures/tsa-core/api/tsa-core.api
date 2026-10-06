@@ -1,3 +1,54 @@
+public final class org/trustweave/signatures/revocation/CertificateRevocationEvaluator {
+	public static final field INSTANCE Lorg/trustweave/signatures/revocation/CertificateRevocationEvaluator;
+	public static final field MAX_ITEMS I
+	public static final field MAX_ITEM_BYTES I
+	public final fun evaluate (Ljava/security/cert/X509Certificate;Ljava/util/List;Ljava/util/List;Lorg/trustweave/signatures/revocation/RevocationEvidence;Lkotlin/time/Instant;Lkotlin/time/Instant;J)Ljava/util/List;
+}
+
+public abstract class org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status {
+}
+
+public final class org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status$Good : org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status {
+	public static final field INSTANCE Lorg/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status$Good;
+}
+
+public final class org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status$Revoked : org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;)V
+	public final fun getAt ()Lkotlin/time/Instant;
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public final fun getReason ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status$Unavailable : org/trustweave/signatures/revocation/CertificateRevocationEvaluator$Status {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getReason ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/revocation/RevocationEvidence {
+	public static final field Companion Lorg/trustweave/signatures/revocation/RevocationEvidence$Companion;
+	public static final field NONE Lorg/trustweave/signatures/revocation/RevocationEvidence;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCrls ()Ljava/util/List;
+	public final fun getOcspResponses ()Ljava/util/List;
+	public final fun isEmpty ()Z
+	public final fun plus (Lorg/trustweave/signatures/revocation/RevocationEvidence;)Lorg/trustweave/signatures/revocation/RevocationEvidence;
+}
+
+public final class org/trustweave/signatures/revocation/RevocationEvidence$Companion {
+}
+
+public final class org/trustweave/signatures/revocation/RevocationPolicy : java/lang/Enum {
+	public static final field CHECK_IF_AVAILABLE Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public static final field NOT_CHECKED Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public static final field REQUIRED Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public static fun values ()[Lorg/trustweave/signatures/revocation/RevocationPolicy;
+}
+
 public final class org/trustweave/signatures/tsa/BouncyCastleTsaClient : org/trustweave/signatures/tsa/TsaClient {
 	public static final field Companion Lorg/trustweave/signatures/tsa/BouncyCastleTsaClient$Companion;
 	public fun <init> (Lorg/trustweave/signatures/tsa/TsaConfig;Lokhttp3/OkHttpClient;)V

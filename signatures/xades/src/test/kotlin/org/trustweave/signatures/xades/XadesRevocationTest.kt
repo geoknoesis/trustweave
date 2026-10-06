@@ -24,6 +24,9 @@ import org.bouncycastle.cert.ocsp.RevokedStatus
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
 import org.junit.jupiter.api.Test
+import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.QualifierUris
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
@@ -91,8 +94,8 @@ class XadesRevocationTest {
         }
 
     private fun options(
-        policy: XadesRevocationPolicy,
-        evidence: XadesRevocationEvidence = XadesRevocationEvidence.NONE,
+        policy: RevocationPolicy,
+        evidence: RevocationEvidence = RevocationEvidence.NONE,
         issuers: List<X509Certificate> = emptyList(),
     ) = XadesVerificationOptions(
         XadesProfile.B_B,
@@ -203,7 +206,7 @@ class XadesRevocationTest {
     private fun evidence(
         crls: List<ByteArray> = emptyList(),
         ocsp: List<ByteArray> = emptyList(),
-    ) = XadesRevocationEvidence(crls, ocsp)
+    ) = RevocationEvidence(crls, ocsp)
 
     // ------------------------------------------------------------------- verifier
 
@@ -211,7 +214,7 @@ class XadesRevocationTest {
     fun `revocation is not evaluated by default`() =
         runTest {
             val revoked = crl(listOf(signerCert.serialNumber to ago(2)))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.NOT_CHECKED, evidence(crls = listOf(revoked))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.NOT_CHECKED, evidence(crls = listOf(revoked))))
             result.shouldBeInstanceOf<Valid>()
             result.revocationChecked shouldBe false
         }
@@ -219,7 +222,7 @@ class XadesRevocationTest {
     @Test
     fun `a good CRL satisfies REQUIRED and marks revocation as checked`() =
         runTest {
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(crl()))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(crls = listOf(crl()))))
             result.shouldBeInstanceOf<Valid>()
             result.revocationChecked shouldBe true
         }
@@ -227,7 +230,7 @@ class XadesRevocationTest {
     @Test
     fun `a good OCSP response satisfies REQUIRED`() =
         runTest {
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(ocsp = listOf(ocsp()))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(ocsp()))))
             result.shouldBeInstanceOf<Valid>()
             result.revocationChecked shouldBe true
         }
@@ -236,7 +239,7 @@ class XadesRevocationTest {
     fun `a CRL listing the signer refuses the signature`() =
         runTest {
             val revoked = crl(listOf(signerCert.serialNumber to ago(2)))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(revoked))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(crls = listOf(revoked))))
             result.shouldBeInstanceOf<Invalid.CertificateRevoked>().cert shouldBe signerCert
         }
 
@@ -244,7 +247,7 @@ class XadesRevocationTest {
     fun `an OCSP response reporting the signer revoked refuses the signature`() =
         runTest {
             val response = ocsp(status = revokedStatus(ago(2)))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.CHECK_IF_AVAILABLE, evidence(ocsp = listOf(response))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.CHECK_IF_AVAILABLE, evidence(ocsp = listOf(response))))
             result.shouldBeInstanceOf<Invalid.CertificateRevoked>()
         }
 
@@ -256,7 +259,7 @@ class XadesRevocationTest {
             val result =
                 verifier.verify(
                     signed(),
-                    options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(revoked), ocsp = listOf(good))),
+                    options(RevocationPolicy.REQUIRED, evidence(crls = listOf(revoked), ocsp = listOf(good))),
                 )
             result.shouldBeInstanceOf<Invalid.CertificateRevoked>()
         }
@@ -264,14 +267,14 @@ class XadesRevocationTest {
     @Test
     fun `REQUIRED fails closed when there is no evidence`() =
         runTest {
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
     @Test
     fun `CHECK_IF_AVAILABLE accepts a signature with no evidence but does not claim it was checked`() =
         runTest {
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.CHECK_IF_AVAILABLE))
+            val result = verifier.verify(signed(), options(RevocationPolicy.CHECK_IF_AVAILABLE))
             result.shouldBeInstanceOf<Valid>()
             result.revocationChecked shouldBe false
         }
@@ -281,7 +284,7 @@ class XadesRevocationTest {
         runTest {
             val forger = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
             val forged = crl(signingKey = forger.private)
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(forged))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(crls = listOf(forged))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -290,7 +293,7 @@ class XadesRevocationTest {
         runTest {
             val forger = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
             val forged = crl(listOf(signerCert.serialNumber to ago(2)), signingKey = forger.private)
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.CHECK_IF_AVAILABLE, evidence(crls = listOf(forged))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.CHECK_IF_AVAILABLE, evidence(crls = listOf(forged))))
             result.shouldBeInstanceOf<Valid>()
             result.revocationChecked shouldBe false
         }
@@ -299,7 +302,7 @@ class XadesRevocationTest {
     fun `a CRL past its nextUpdate is not fresh`() =
         runTest {
             val stale = crl(thisUpdate = ago(72), nextUpdate = ago(48))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(stale))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(crls = listOf(stale))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -307,7 +310,7 @@ class XadesRevocationTest {
     fun `a CRL with a critical extension is not used`() =
         runTest {
             val scoped = crl(withCriticalExtension = true)
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(scoped))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(crls = listOf(scoped))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -320,7 +323,7 @@ class XadesRevocationTest {
                         org.bouncycastle.cert.ocsp
                             .UnknownStatus(),
                 )
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(ocsp = listOf(unknown))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(unknown))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -328,7 +331,7 @@ class XadesRevocationTest {
     fun `an OCSP response for a different certificate does not cover the signer`() =
         runTest {
             val other = ca.issue(ec().public, "CN=Other")
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(ocsp = listOf(ocsp(subject = other)))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(ocsp(subject = other)))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -336,7 +339,7 @@ class XadesRevocationTest {
     fun `an OCSP response from a delegated responder with the OCSP signing purpose is accepted`() =
         runTest {
             val response = ocsp(responder = delegatedResponder(withOcspEku = true))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(ocsp = listOf(response))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(response))))
             result.shouldBeInstanceOf<Valid>()
         }
 
@@ -344,7 +347,7 @@ class XadesRevocationTest {
     fun `an OCSP responder certificate without the OCSP signing purpose is rejected`() =
         runTest {
             val response = ocsp(responder = delegatedResponder(withOcspEku = false))
-            val result = verifier.verify(signed(), options(XadesRevocationPolicy.REQUIRED, evidence(ocsp = listOf(response))))
+            val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(response))))
             result.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
@@ -352,7 +355,7 @@ class XadesRevocationTest {
     fun `evidence embedded in RevocationValues is used`() =
         runTest {
             val doc = embed(signed(), crls = listOf(crl()))
-            val result = verifier.verify(doc, options(XadesRevocationPolicy.REQUIRED))
+            val result = verifier.verify(doc, options(RevocationPolicy.REQUIRED))
             result.shouldBeInstanceOf<Valid>().revocationChecked shouldBe true
         }
 
@@ -360,35 +363,35 @@ class XadesRevocationTest {
     fun `embedded revocation of the signer is enforced`() =
         runTest {
             val doc = embed(signed(), ocsp = listOf(ocsp(status = revokedStatus(ago(3)))))
-            verifier.verify(doc, options(XadesRevocationPolicy.REQUIRED)).shouldBeInstanceOf<Invalid.CertificateRevoked>()
+            verifier.verify(doc, options(RevocationPolicy.REQUIRED)).shouldBeInstanceOf<Invalid.CertificateRevoked>()
         }
 
     @Test
     fun `garbage in RevocationValues is ignored and REQUIRED then fails closed`() =
         runTest {
             val doc = embed(signed(), crls = listOf("not a crl".toByteArray()), ocsp = listOf("nor this".toByteArray()))
-            verifier.verify(doc, options(XadesRevocationPolicy.REQUIRED)).shouldBeInstanceOf<Invalid.RevocationUnavailable>()
+            verifier.verify(doc, options(RevocationPolicy.REQUIRED)).shouldBeInstanceOf<Invalid.RevocationUnavailable>()
         }
 
     @Test
     fun `an issuer missing from KeyInfo can be supplied through revocationIssuerCertificates`() =
         runTest {
             val doc = signed(keyInfo = listOf(signerCert))
-            val noIssuer = verifier.verify(doc, options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(crl()))))
+            val noIssuer = verifier.verify(doc, options(RevocationPolicy.REQUIRED, evidence(crls = listOf(crl()))))
             noIssuer.shouldBeInstanceOf<Invalid.RevocationUnavailable>()
             val withIssuer =
-                verifier.verify(doc, options(XadesRevocationPolicy.REQUIRED, evidence(crls = listOf(crl())), issuers = listOf(ca.caCert)))
+                verifier.verify(doc, options(RevocationPolicy.REQUIRED, evidence(crls = listOf(crl())), issuers = listOf(ca.caCert)))
             withIssuer.shouldBeInstanceOf<Valid>().revocationChecked shouldBe true
         }
 
     // ------------------------------------------------- authenticated-time semantics (evaluator)
 
     private fun evaluate(
-        evidence: XadesRevocationEvidence,
+        evidence: RevocationEvidence,
         authenticatedTime: Instant?,
-    ) = XadesRevocation.evaluate(
+    ) = CertificateRevocationEvaluator.evaluate(
         signer = signerCert,
-        chain = listOf(ca.caCert),
+        candidates = listOf(ca.caCert),
         issuerCertificates = emptyList(),
         evidence = evidence,
         authenticatedTime = authenticatedTime,
@@ -400,14 +403,21 @@ class XadesRevocationTest {
     fun `a revocation after the authenticated signing time does not invalidate the signature`() {
         val signedAt = (Clock.System.now() - 10.hours)
         val laterRevocation = crl(listOf(signerCert.serialNumber to ago(2)), thisUpdate = ago(1))
-        evaluate(evidence(crls = listOf(laterRevocation)), signedAt).single().shouldBeInstanceOf<XadesRevocation.Status.Good>()
+        evaluate(
+            evidence(crls = listOf(laterRevocation)),
+            signedAt,
+        ).single().shouldBeInstanceOf<CertificateRevocationEvaluator.Status.Good>()
     }
 
     @Test
     fun `a revocation before the authenticated signing time invalidates the signature`() {
         val signedAt = (Clock.System.now() - 1.hours)
         val earlier = crl(listOf(signerCert.serialNumber to ago(5)), thisUpdate = ago(1))
-        val revoked = evaluate(evidence(crls = listOf(earlier)), signedAt).single().shouldBeInstanceOf<XadesRevocation.Status.Revoked>()
+        val revoked =
+            evaluate(
+                evidence(crls = listOf(earlier)),
+                signedAt,
+            ).single().shouldBeInstanceOf<CertificateRevocationEvaluator.Status.Revoked>()
         (revoked.at < signedAt) shouldBe true
     }
 
@@ -415,14 +425,14 @@ class XadesRevocationTest {
     fun `evidence issued before the authenticated signing time says nothing about it`() {
         val signedAt = (Clock.System.now() - 1.hours)
         val tooOld = crl(thisUpdate = ago(10), nextUpdate = ahead(24))
-        evaluate(evidence(crls = listOf(tooOld)), signedAt).single().shouldBeInstanceOf<XadesRevocation.Status.Unavailable>()
+        evaluate(evidence(crls = listOf(tooOld)), signedAt).single().shouldBeInstanceOf<CertificateRevocationEvaluator.Status.Unavailable>()
     }
 
     @Test
     fun `a CRL whose nextUpdate has passed still covers an authenticated signature it postdates`() {
         val signedAt = (Clock.System.now() - 30.hours)
         val postdating = crl(thisUpdate = ago(24), nextUpdate = ago(1))
-        evaluate(evidence(crls = listOf(postdating)), signedAt).single().shouldBeInstanceOf<XadesRevocation.Status.Good>()
+        evaluate(evidence(crls = listOf(postdating)), signedAt).single().shouldBeInstanceOf<CertificateRevocationEvaluator.Status.Good>()
     }
 
     @Test

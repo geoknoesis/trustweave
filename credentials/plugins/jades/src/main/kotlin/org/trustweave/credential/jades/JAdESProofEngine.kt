@@ -26,7 +26,6 @@ import org.trustweave.signatures.jades.JadesVerificationOptions
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
-import kotlin.time.Clock
 
 /**
  * JAdES proof engine — implements the [ProofEngine] SPI for ETSI TS 119 182-1 signatures over
@@ -63,20 +62,20 @@ class JAdESProofEngine(
     private val trustAnchorResolver: TrustAnchorResolver? = null,
     private val config: ProofEngineConfig = ProofEngineConfig(),
 ) : ProofEngine {
-
     private val signer = DefaultJadesSigner(kms)
     private val verifier = DefaultJadesVerifier()
 
     override val format: ProofSuiteId = ProofSuiteId.JADES
     override val formatName: String = "ETSI TS 119 182-1 JAdES"
     override val formatVersion: String = "B-B, B-T"
-    override val capabilities: ProofEngineCapabilities = ProofEngineCapabilities(
-        selectiveDisclosure = false,
-        zeroKnowledge = false,
-        revocation = true,
-        presentation = false,
-        predicates = false,
-    )
+    override val capabilities: ProofEngineCapabilities =
+        ProofEngineCapabilities(
+            selectiveDisclosure = false,
+            zeroKnowledge = false,
+            revocation = true,
+            presentation = false,
+            predicates = false,
+        )
 
     private var resolvedAnchorResolver: TrustAnchorResolver? = trustAnchorResolver
 
@@ -91,17 +90,19 @@ class JAdESProofEngine(
 
     override suspend fun issue(request: IssuanceRequest): VerifiableCredential {
         val opts = request.proofOptions?.additionalOptions ?: emptyMap()
-        val keyIdValue = (opts["keyId"] as? String)
-            ?: request.issuerKeyId?.keyId?.value
-            ?: throw JAdESEngineException(
-                "JAdES issuance requires either request.issuerKeyId or proofOptions.additionalOptions[\"keyId\"]",
-            )
-        val signerCertChain = (opts["signerCertificateChain"] as? List<*>)
-            ?.filterIsInstance<ByteArray>()
-            ?: throw JAdESEngineException(
-                "JAdES issuance requires proofOptions.additionalOptions[\"signerCertificateChain\"] " +
-                    "as a non-empty List<ByteArray> of DER X.509 certs (signer first)",
-            )
+        val keyIdValue =
+            (opts["keyId"] as? String)
+                ?: request.issuerKeyId?.keyId?.value
+                ?: throw JAdESEngineException(
+                    "JAdES issuance requires either request.issuerKeyId or proofOptions.additionalOptions[\"keyId\"]",
+                )
+        val signerCertChain =
+            (opts["signerCertificateChain"] as? List<*>)
+                ?.filterIsInstance<ByteArray>()
+                ?: throw JAdESEngineException(
+                    "JAdES issuance requires proofOptions.additionalOptions[\"signerCertificateChain\"] " +
+                        "as a non-empty List<ByteArray> of DER X.509 certs (signer first)",
+                )
         if (signerCertChain.isEmpty()) {
             throw JAdESEngineException("signerCertificateChain is empty")
         }
@@ -118,21 +119,24 @@ class JAdESProofEngine(
         // over the proof-less credential and the redundant copy of the credential fields outside
         // the JWS is what makes the result greppable / human-inspectable.
         val unproven = request.toCredentialWithoutProof()
-        val payloadJson = STABLE_JSON.encodeToJsonElement(
-            VerifiableCredential.serializer(),
-            unproven,
-        )
+        val payloadJson =
+            STABLE_JSON.encodeToJsonElement(
+                VerifiableCredential.serializer(),
+                unproven,
+            )
 
-        val signature = signer.sign(
-            payloadJson = payloadJson,
-            request = JadesSigningRequest(
-                profile = profile,
-                keyId = KeyId(keyIdValue),
-                signerCertificateChain = signerCertChain,
-                contentType = opts["contentType"] as? String,
-                tsaConfig = tsaConfig,
-            ),
-        )
+        val signature =
+            signer.sign(
+                payloadJson = payloadJson,
+                request =
+                    JadesSigningRequest(
+                        profile = profile,
+                        keyId = KeyId(keyIdValue),
+                        signerCertificateChain = signerCertChain,
+                        contentType = opts["contentType"] as? String,
+                        tsaConfig = tsaConfig,
+                    ),
+            )
 
         // Prefer the JWS Compact form for B-B (smaller, single-line); fall back to JSON Flattened
         // (the only form that can carry the etsiU block) for B-T.
@@ -148,29 +152,37 @@ class JAdESProofEngine(
         credential: VerifiableCredential,
         options: VerificationOptions,
     ): VerificationResult {
-        val proof = credential.proof as? CredentialProof.JAdES
-            ?: return invalidProof(credential, "credential.proof is not a JAdES variant")
+        val proof =
+            credential.proof as? CredentialProof.JAdES
+                ?: return invalidProof(credential, "credential.proof is not a JAdES variant")
 
-        val anchorResolver = resolveAnchorResolver(options)
-            ?: return invalidProof(credential, "no TrustAnchorResolver supplied; configure one in ProofEngineConfig or VerificationOptions")
+        val anchorResolver =
+            resolveAnchorResolver(options)
+                ?: return invalidProof(
+                    credential,
+                    "no TrustAnchorResolver supplied; configure one in ProofEngineConfig or VerificationOptions",
+                )
 
-        val requiredProfile = parseProfile(
-            options.additionalOptions["requiredProfile"] as? String ?: proof.profile,
-        )
+        val requiredProfile =
+            parseProfile(
+                options.additionalOptions["requiredProfile"] as? String ?: proof.profile,
+            )
         val acceptedAlgorithms =
             (options.additionalOptions["acceptedAlgorithms"] as? Set<*>)
                 ?.filterIsInstance<String>()
                 ?.toSet()
                 ?: setOf("ES256", "ES384", "ES512", "EdDSA")
 
-        val result = verifier.verify(
-            jadesSerialized = proof.jws,
-            options = JadesVerificationOptions(
-                requiredProfile = requiredProfile,
-                trustAnchorResolver = anchorResolver,
-                acceptedAlgorithms = acceptedAlgorithms,
-            ),
-        )
+        val result =
+            verifier.verify(
+                jadesSerialized = proof.jws,
+                options =
+                    JadesVerificationOptions(
+                        requiredProfile = requiredProfile,
+                        trustAnchorResolver = anchorResolver,
+                        acceptedAlgorithms = acceptedAlgorithms,
+                    ),
+            )
 
         return mapVerifierResult(credential, result)
     }
@@ -186,89 +198,100 @@ class JAdESProofEngine(
     private fun mapVerifierResult(
         credential: VerifiableCredential,
         result: JadesValidationResult,
-    ): VerificationResult = when (result) {
-        is JadesValidationResult.Valid -> VerificationResult.Valid(
-            credential = credential,
-            issuerIri = Iri(credential.issuer.id.value),
-            subjectIri = credential.credentialSubject.id?.let { Iri(it.value) },
-            issuedAt = result.signingTime,
-            expiresAt = credential.validUntil ?: credential.expirationDate,
-            formatMetadata = buildFormatMetadata(result),
-        )
-        is JadesValidationResult.Invalid.BadSignature ->
-            invalidProof(credential, "JAdES BadSignature: ${result.reason}")
-        is JadesValidationResult.Invalid.UntrustedSigner ->
-            invalidProof(credential, "JAdES UntrustedSigner: ${result.cert.subjectX500Principal}")
-        is JadesValidationResult.Invalid.WrongProfile ->
-            invalidProof(credential, "JAdES WrongProfile: found ${result.found}, required ${result.required}")
-        is JadesValidationResult.Invalid.MissingTimeStamp ->
-            invalidProof(credential, "JAdES MissingTimeStamp: ${result.reason}")
-        is JadesValidationResult.Invalid.TimeStampMismatch ->
-            invalidProof(credential, "JAdES TimeStampMismatch: ${result.reason}")
-        is JadesValidationResult.Invalid.CertificateExpired ->
-            invalidProof(credential, "JAdES CertificateExpired (notAfter=${result.notAfter})")
-        is JadesValidationResult.Invalid.Malformed ->
-            invalidProof(credential, "JAdES Malformed: ${result.reason}")
-    }
-
-    private fun buildFormatMetadata(valid: JadesValidationResult.Valid): Map<String, JsonElement> = buildJsonObject {
-        put("alg", JsonPrimitive(valid.header.alg))
-        put("sigT", JsonPrimitive(valid.header.sigT))
-        valid.signatureTimeStamp?.let { put("sigTstGenTime", JsonPrimitive(it.toString())) }
-        when (val trust = valid.trust) {
-            is TrustAnchorMatch.QualifiedActive -> {
-                put("trustStatus", JsonPrimitive("qualifiedActive"))
-                put("trustTerritory", JsonPrimitive(trust.territory))
-                put("trustTsp", JsonPrimitive(trust.tspName))
-                put("qcWithSscd", JsonPrimitive(trust.qcWithSscd))
-                put("qcForESig", JsonPrimitive(trust.qcForESig))
-            }
-            is TrustAnchorMatch.QualifiedWithdrawn -> {
-                put("trustStatus", JsonPrimitive("qualifiedWithdrawn"))
-                put("trustTsp", JsonPrimitive(trust.tspName))
-                put("trustWithdrawnAt", JsonPrimitive(trust.withdrawnAt.toString()))
-            }
-            TrustAnchorMatch.NotTrusted -> {
-                // Should not happen for a Valid result, but keep the branch exhaustive.
-                put("trustStatus", JsonPrimitive("notTrusted"))
-            }
+    ): VerificationResult =
+        when (result) {
+            is JadesValidationResult.Valid ->
+                VerificationResult.Valid(
+                    credential = credential,
+                    issuerIri = Iri(credential.issuer.id.value),
+                    subjectIri = credential.credentialSubject.id?.let { Iri(it.value) },
+                    issuedAt = result.signingTime,
+                    expiresAt = credential.validUntil ?: credential.expirationDate,
+                    formatMetadata = buildFormatMetadata(result),
+                )
+            is JadesValidationResult.Invalid.BadSignature ->
+                invalidProof(credential, "JAdES BadSignature: ${result.reason}")
+            is JadesValidationResult.Invalid.UntrustedSigner ->
+                invalidProof(credential, "JAdES UntrustedSigner: ${result.cert.subjectX500Principal}")
+            is JadesValidationResult.Invalid.WrongProfile ->
+                invalidProof(credential, "JAdES WrongProfile: found ${result.found}, required ${result.required}")
+            is JadesValidationResult.Invalid.MissingTimeStamp ->
+                invalidProof(credential, "JAdES MissingTimeStamp: ${result.reason}")
+            is JadesValidationResult.Invalid.TimeStampMismatch ->
+                invalidProof(credential, "JAdES TimeStampMismatch: ${result.reason}")
+            is JadesValidationResult.Invalid.CertificateExpired ->
+                invalidProof(credential, "JAdES CertificateExpired (notAfter=${result.notAfter})")
+            is JadesValidationResult.Invalid.Malformed ->
+                invalidProof(credential, "JAdES Malformed: ${result.reason}")
+            is JadesValidationResult.Invalid.CertificateRevoked ->
+                invalidProof(credential, "JAdES CertificateRevoked: ${result.reason}")
+            is JadesValidationResult.Invalid.RevocationUnavailable ->
+                invalidProof(credential, "JAdES RevocationUnavailable: ${result.reason}")
         }
-    }.let { obj: JsonObject -> obj.toMap() }
+
+    private fun buildFormatMetadata(valid: JadesValidationResult.Valid): Map<String, JsonElement> =
+        buildJsonObject {
+            put("alg", JsonPrimitive(valid.header.alg))
+            put("sigT", JsonPrimitive(valid.header.sigT))
+            valid.signatureTimeStamp?.let { put("sigTstGenTime", JsonPrimitive(it.toString())) }
+            when (val trust = valid.trust) {
+                is TrustAnchorMatch.QualifiedActive -> {
+                    put("trustStatus", JsonPrimitive("qualifiedActive"))
+                    put("trustTerritory", JsonPrimitive(trust.territory))
+                    put("trustTsp", JsonPrimitive(trust.tspName))
+                    put("qcWithSscd", JsonPrimitive(trust.qcWithSscd))
+                    put("qcForESig", JsonPrimitive(trust.qcForESig))
+                }
+                is TrustAnchorMatch.QualifiedWithdrawn -> {
+                    put("trustStatus", JsonPrimitive("qualifiedWithdrawn"))
+                    put("trustTsp", JsonPrimitive(trust.tspName))
+                    put("trustWithdrawnAt", JsonPrimitive(trust.withdrawnAt.toString()))
+                }
+                TrustAnchorMatch.NotTrusted -> {
+                    // Should not happen for a Valid result, but keep the branch exhaustive.
+                    put("trustStatus", JsonPrimitive("notTrusted"))
+                }
+            }
+        }.let { obj: JsonObject -> obj.toMap() }
 
     private fun invalidProof(
         credential: VerifiableCredential?,
         reason: String,
-    ): VerificationResult.Invalid.InvalidProof =
-        VerificationResult.Invalid.InvalidProof(credential = credential, reason = reason)
+    ): VerificationResult.Invalid.InvalidProof = VerificationResult.Invalid.InvalidProof(credential = credential, reason = reason)
 
     // ---------------------------------------------------------------- profile <-> string
 
-    private fun parseProfile(s: String): JadesProfile = when (s.uppercase()) {
-        PROFILE_B_B, "BB", "BASIC" -> JadesProfile.B_B
-        PROFILE_B_T, "BT" -> JadesProfile.B_T
-        else -> throw JAdESEngineException("Unknown JAdES profile '$s'; expected 'B-B' or 'B-T'")
-    }
+    private fun parseProfile(s: String): JadesProfile =
+        when (s.uppercase()) {
+            PROFILE_B_B, "BB", "BASIC" -> JadesProfile.B_B
+            PROFILE_B_T, "BT" -> JadesProfile.B_T
+            else -> throw JAdESEngineException("Unknown JAdES profile '$s'; expected 'B-B' or 'B-T'")
+        }
 
-    private fun JadesProfile.asString(): String = when (this) {
-        JadesProfile.B_B -> PROFILE_B_B
-        JadesProfile.B_T -> PROFILE_B_T
-        JadesProfile.B_LT -> "B-LT"
-        JadesProfile.B_LTA -> "B-LTA"
-    }
+    private fun JadesProfile.asString(): String =
+        when (this) {
+            JadesProfile.B_B -> PROFILE_B_B
+            JadesProfile.B_T -> PROFILE_B_T
+            JadesProfile.B_LT -> "B-LT"
+            JadesProfile.B_LTA -> "B-LTA"
+        }
 
     companion object {
         const val PROFILE_B_B: String = "B-B"
         const val PROFILE_B_T: String = "B-T"
 
         /** JSON formatter used to produce the JAdES payload bytes. Stable across runs. */
-        private val STABLE_JSON = Json {
-            prettyPrint = false
-            encodeDefaults = false
-            ignoreUnknownKeys = true
-        }
+        private val STABLE_JSON =
+            Json {
+                prettyPrint = false
+                encodeDefaults = false
+                ignoreUnknownKeys = true
+            }
     }
 }
 
 /** Thrown when the JAdES engine cannot proceed because of a configuration or input error. */
-class JAdESEngineException(message: String, cause: Throwable? = null) :
-    RuntimeException(message, cause)
+class JAdESEngineException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

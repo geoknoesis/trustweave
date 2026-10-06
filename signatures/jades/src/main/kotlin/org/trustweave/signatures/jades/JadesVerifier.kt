@@ -11,6 +11,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.trustweave.signatures.jades.JadesValidationResult.Invalid
 import org.trustweave.signatures.jades.internal.AlgorithmMapping
 import org.trustweave.signatures.jades.internal.EcdsaSignatureConversion
+import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.security.Signature
@@ -222,6 +225,44 @@ class DefaultJadesVerifier : JadesVerifier {
                 }
             }
 
+            // 8d. Revocation (CRL / OCSP), only when requested. The sigTst is not trust-validated here, so
+            // the time is not authenticated (null): evidence must be current and any revocation counts.
+            var revocationChecked = false
+            if (options.revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val embedded =
+                    RevocationEvidence(
+                        crls = decodeRVals(parsed.unsigned.rVals, "CRL"),
+                        ocspResponses = decodeRVals(parsed.unsigned.rVals, "OCSP"),
+                    )
+                val statuses =
+                    CertificateRevocationEvaluator.evaluate(
+                        signer = signerCert,
+                        candidates = chain,
+                        issuerCertificates = options.revocationIssuerCertificates,
+                        evidence = options.revocationEvidence + embedded,
+                        authenticatedTime = null,
+                        now =
+                            kotlin.time.Clock.System
+                                .now(),
+                        skewMillis = options.maxClockSkew.inWholeMilliseconds,
+                    )
+                statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
+                    return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
+                }
+                val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
+                if (options.revocationPolicy == RevocationPolicy.REQUIRED) {
+                    if (statuses.isEmpty()) {
+                        return@withContext Invalid.RevocationUnavailable(
+                            "no certificate below a trust anchor was available to check for revocation",
+                        )
+                    }
+                    if (unavailable.isNotEmpty()) {
+                        return@withContext Invalid.RevocationUnavailable(unavailable.joinToString("; ") { it.reason })
+                    }
+                }
+                revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+            }
+
             // 9. Decode payload + return Valid.
             val payloadBytes =
                 try {
@@ -250,8 +291,25 @@ class DefaultJadesVerifier : JadesVerifier {
                 xValsCount = parsed.unsigned.xVals.size,
                 rValsCount = parsed.unsigned.rVals.size,
                 archivalTimeStamp = arcTstInstant,
+                revocationChecked = revocationChecked,
             )
         }
+
+    private fun decodeRVals(
+        rVals: List<EncodedRevocationData>,
+        type: String,
+    ): List<ByteArray> =
+        rVals
+            .filter { it.type == type }
+            .mapNotNull {
+                try {
+                    Base64.getMimeDecoder().decode(it.dataB64).takeIf { bytes ->
+                        bytes.size <= CertificateRevocationEvaluator.MAX_ITEM_BYTES
+                    }
+                } catch (_: IllegalArgumentException) {
+                    null
+                }
+            }.take(CertificateRevocationEvaluator.MAX_ITEMS)
 
     // ---------------------------------------------------------------- profile inference
 

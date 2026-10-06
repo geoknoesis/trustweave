@@ -120,14 +120,6 @@ jobs:
     name: Build, test and coverage
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    # NOTE: inert today. TRUSTWEAVE_INDY_INTEGRATION is read only by the separate
-    # `:anchors:plugins:indy:integrationTest` task (a Testcontainers VON ledger, needs Docker, which
-    # ubuntu-latest has). `./gradlew build` does not depend on that task, so this job produces no
-    # live-ledger evidence and the "required" value never fails anything. It is kept (not removed)
-    # so the day the task is wired into `check` or run as a step, it fails instead of skipping.
-    # No gate is weakened by this comment; the live round trip simply is not part of CI yet.
-    env:
-      TRUSTWEAVE_INDY_INTEGRATION: required
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

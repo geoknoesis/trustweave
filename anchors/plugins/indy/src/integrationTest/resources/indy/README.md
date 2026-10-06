@@ -10,8 +10,10 @@ persistent ledger. Only the HTTP adapter port is exposed; validator connections
 remain inside the container. Testcontainers removes the container after the suite.
 
 Run `TRUSTWEAVE_INDY_INTEGRATION=required ./gradlew :anchors:plugins:indy:integrationTest`
-on a Docker-equipped machine. CI and release evidence require this mode: missing
-Docker or failed consensus is a failure, never a successful skipped qualification.
+on a Docker-equipped machine. The `Indy ledger integration` workflow
+(`.github/workflows/indy-integration.yml`: weekly, on demand and when this plugin changes) runs this
+mode: missing Docker or failed consensus is a failure, never a successful skipped qualification.
+The main `CI` workflow does not run this suite.
 Default local mode skips only when Docker is unavailable and produces no live evidence.
 
 This fixture validates SDK requests against local Indy consensus and the native

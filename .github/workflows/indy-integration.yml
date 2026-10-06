@@ -1,0 +1,61 @@
+name: Indy ledger integration
+
+# Live round trip against a disposable Indy ledger (BC Gov VON network node image, started by
+# Testcontainers) through the native indy-vdr library. It is kept out of `ci.yml` so a slow or
+# unavailable legacy image cannot block unrelated changes, but it is a real gate in its own right:
+# the suite runs in `required` mode, so missing Docker or failed ledger consensus fails this
+# workflow instead of skipping. It runs weekly, on demand, and whenever the Indy plugin changes.
+# See anchors/plugins/indy/README.md.
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'anchors/plugins/indy/**'
+      - '.github/workflows/indy-integration.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indy-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  indy-integration:
+    name: Indy ledger round trip (required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TRUSTWEAVE_INDY_INTEGRATION: required
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+
+      - name: Pre-pull digest-pinned test images
+        run: bash scripts/prepull-test-images.sh anchors/plugins/indy
+
+      - name: Run the Indy integration suite
+        run: ./gradlew :anchors:plugins:indy:integrationTest --no-daemon --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: indy-integration-reports
+          path: anchors/plugins/indy/build/**/test-results/
+          if-no-files-found: warn

@@ -14,13 +14,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  # NOTE: inert today. Only the separate `:anchors:plugins:indy:integrationTest` task reads it, and
-  # neither `build` nor any step here runs that task, so no live-ledger evidence is produced by this
-  # workflow. Add an explicit `./gradlew :anchors:plugins:indy:integrationTest` step (Docker is
-  # available on ubuntu-latest) before relying on it; see anchors/plugins/indy/README.md.
-  TRUSTWEAVE_INDY_INTEGRATION: required
-
 jobs:
   evidence:
     runs-on: ubuntu-latest

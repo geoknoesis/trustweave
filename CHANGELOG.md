@@ -306,7 +306,8 @@ working code fail until it is adjusted.**
   coverage output); it is a CI artifact. Git history still holds the blobs. Stale one-off
   migration scripts and superseded root reports moved to `docs/archive` or were deleted.
 
-- CI is split into parallel jobs; `TRUSTWEAVE_INDY_INTEGRATION` applies to the build job only.
+- CI is split into parallel jobs. The Indy ledger suite now has its own workflow (`indy-integration.yml`,
+  `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
 

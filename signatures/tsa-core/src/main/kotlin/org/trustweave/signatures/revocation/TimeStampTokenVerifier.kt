@@ -40,6 +40,15 @@ object TimeStampTokenVerifier {
         ) : Result()
     }
 
+    /** JCA digest name for the message-imprint algorithm [oid] (SHA-256, SHA-384 or SHA-512), or `null`. */
+    fun digestFor(oid: String): String? =
+        when (oid) {
+            "2.16.840.1.101.3.4.2.1" -> "SHA-256"
+            "2.16.840.1.101.3.4.2.2" -> "SHA-384"
+            "2.16.840.1.101.3.4.2.3" -> "SHA-512"
+            else -> null
+        }
+
     fun verify(
         tokenDer: ByteArray,
         anchors: List<X509Certificate>,

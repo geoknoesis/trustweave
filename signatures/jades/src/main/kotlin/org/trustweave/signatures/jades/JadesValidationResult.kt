@@ -102,6 +102,11 @@ sealed class JadesValidationResult {
             val notAfter: Instant,
         ) : Invalid()
 
+        /** The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing). */
+        data class SignerCertificateInvalid(
+            val reason: String,
+        ) : Invalid()
+
         /** The signer's trust-list service was withdrawn at (or the signature cannot be shown to predate) [withdrawnAt]. */
         data class TrustWithdrawn(
             val cert: X509Certificate,

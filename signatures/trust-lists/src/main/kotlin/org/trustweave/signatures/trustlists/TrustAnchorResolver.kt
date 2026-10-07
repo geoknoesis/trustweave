@@ -105,11 +105,19 @@ class DefaultTrustAnchorResolver(
         val pathCerts = listOf(signerCert) + intermediates
         val certPath: CertPath = CERT_FACTORY.generateCertPath(pathCerts)
 
+        // Every matching service is considered, not the first in list order: when the same CA is listed both
+        // granted and withdrawn the signature is qualified if any granted service covers it, and a granted
+        // service only vouches for signatures made after it was granted.
+        var withdrawn: TrustAnchorMatch? = null
         for (candidate in candidates) {
             val match = tryValidate(certPath, candidate, validationTime)
-            if (match != null) return match
+            when (match) {
+                is TrustAnchorMatch.QualifiedActive -> return match
+                is TrustAnchorMatch.QualifiedWithdrawn -> if (withdrawn == null) withdrawn = match
+                else -> Unit
+            }
         }
-        return TrustAnchorMatch.NotTrusted
+        return withdrawn ?: TrustAnchorMatch.NotTrusted
     }
 
     private fun tryValidate(
@@ -122,6 +130,13 @@ class DefaultTrustAnchorResolver(
                 .map { TrustAnchor(it, null) }
                 .toSet()
         if (anchors.isEmpty()) return null
+        // A service granted after the signature's trusted time did not qualify it then.
+        if (validationTime != null &&
+            candidate.service.status == TspServiceStatus.GRANTED &&
+            validationTime < candidate.service.statusStartingTime
+        ) {
+            return null
+        }
 
         val params =
             try {

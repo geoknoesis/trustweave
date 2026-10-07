@@ -192,7 +192,7 @@ class JAdESProofEngineTest {
             serviceName = "Test CA",
             serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
             status = TspServiceStatus.GRANTED,
-            statusStartingTime = Clock.System.now(),
+            statusStartingTime = Clock.System.now() - kotlin.time.Duration.parse("PT8760H"),
             serviceCertificates = listOf(testCa.caCert),
             qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
         )

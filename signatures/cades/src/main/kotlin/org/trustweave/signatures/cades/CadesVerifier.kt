@@ -15,6 +15,10 @@ import org.bouncycastle.cms.SignerInformation
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder
 import org.bouncycastle.tsp.TimeStampToken
 import org.trustweave.signatures.cades.CadesValidationResult.Invalid
+import org.trustweave.signatures.revocation.CertificatePaths
+import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
+import org.trustweave.signatures.revocation.RevocationPolicy
+import org.trustweave.signatures.revocation.TimeStampTokenVerifier
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import java.security.MessageDigest
 import java.security.Security
@@ -136,37 +140,107 @@ class DefaultCadesVerifier : CadesVerifier {
                 }
             }
 
-            // 8. Trust anchor resolution.
-            val otherCerts = collectAllCerts(cms).filter { it != signerCert }
-            val trustMatch = options.trustAnchorResolver.resolve(signerCert, otherCerts)
+            // 8. Signer certificate constraints (a CA certificate or one that cannot sign must not sign documents).
+            CertificatePaths.signerProblem(signerCert)?.let { return@withContext Invalid.SignerCertificateInvalid(it) }
+
+            // 9. Time-stamp. A token authenticates a time only once its TSA signature and certificate verify against
+            //    `timestampTrustAnchors`; otherwise it is structurally checked and its time stays the signer's claim.
+            var authenticatedTime: Instant? = null
+            var hasSigTst = false
+            when (val sigTstResult = validateSigTst(signerInfo, signingTime, options.maxClockSkew, options.timestampTrustAnchors)) {
+                SigTstResult.None -> Unit
+                is SigTstResult.Ok -> {
+                    hasSigTst = true
+                    if (sigTstResult.trusted) authenticatedTime = sigTstResult.genTime
+                }
+                is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp(sigTstResult.reason)
+                is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch(sigTstResult.reason)
+            }
+            val foundProfile = if (authenticatedTime != null) CadesProfile.B_T else CadesProfile.B_B
+            if (!foundProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
+            }
+
+            // 10. Trust anchor resolution over an ordered chain, validating the path as of the authenticated time
+            //     when there is one (never the claimed signing time: that would let a signer back-date).
+            val chain = CertificatePaths.walk(signerCert, collectAllCerts(cms))
+            val trustMatch = options.trustAnchorResolver.resolve(signerCert, chain, authenticatedTime)
             // Exhaustive: a new TrustAnchorMatch subtype must be classified here, never pass by default.
             when (trustMatch) {
                 is TrustAnchorMatch.NotTrusted -> return@withContext Invalid.UntrustedSigner(signerCert)
-                is TrustAnchorMatch.QualifiedActive,
-                is TrustAnchorMatch.QualifiedWithdrawn,
-                -> Unit
+                is TrustAnchorMatch.QualifiedActive -> Unit
+                is TrustAnchorMatch.QualifiedWithdrawn -> {
+                    // A withdrawn service only vouches for signatures made before it was withdrawn.
+                    if (authenticatedTime != null) {
+                        if (authenticatedTime >= trustMatch.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "time-stamped at $authenticatedTime, not before the withdrawal at ${trustMatch.withdrawnAt}",
+                            )
+                        }
+                    } else {
+                        if (!options.allowWithdrawnTrustWithoutAuthenticatedTime) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "the trust-list service was withdrawn and the signing time is not authenticated by a " +
+                                    "trusted time-stamp; set allowWithdrawnTrustWithoutAuthenticatedTime to accept",
+                            )
+                        }
+                        if (signingTime != null && signingTime >= trustMatch.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "claimed signing time $signingTime is not before the withdrawal at ${trustMatch.withdrawnAt}",
+                            )
+                        }
+                    }
+                }
             }
 
-            // 9. Profile detection + sigTst handling (B-T).
-            val sigTstResult = validateSigTst(signerInfo, signingTime, options.maxClockSkew)
-            val foundProfile = if (sigTstResult is SigTstResult.None) CadesProfile.B_B else CadesProfile.B_T
-            if (options.requiredProfile == CadesProfile.B_T && foundProfile == CadesProfile.B_B) {
-                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
-            }
-            val sigTstInstant =
-                when (sigTstResult) {
-                    is SigTstResult.Ok -> sigTstResult.genTime
-                    is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp(sigTstResult.reason)
-                    is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch(sigTstResult.reason)
-                    SigTstResult.None -> null
+            // 11. Revocation (CRL / OCSP), only when requested.
+            var revocationChecked = false
+            if (options.revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val statuses =
+                    CertificateRevocationEvaluator.evaluate(
+                        signer = signerCert,
+                        candidates = chain,
+                        issuerCertificates = options.revocationIssuerCertificates,
+                        evidence = options.revocationEvidence,
+                        authenticatedTime = authenticatedTime,
+                        now =
+                            kotlin.time.Clock.System
+                                .now(),
+                        skewMillis = options.maxClockSkew.inWholeMilliseconds,
+                    )
+                statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
+                    return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
                 }
+                val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
+                if (options.revocationPolicy == RevocationPolicy.REQUIRED) {
+                    if (statuses.isEmpty()) {
+                        return@withContext Invalid.RevocationUnavailable(
+                            "no certificate below a trust anchor was available to check for revocation",
+                        )
+                    }
+                    if (unavailable.isNotEmpty()) {
+                        return@withContext Invalid.RevocationUnavailable(unavailable.joinToString("; ") { it.reason })
+                    }
+                }
+                revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+            }
+            if (hasSigTst && authenticatedTime == null && options.requiredProfile == CadesProfile.B_T) {
+                return@withContext Invalid.WrongProfile(found = CadesProfile.B_B, required = CadesProfile.B_T)
+            }
 
             CadesValidationResult.Valid(
                 signerCert = signerCert,
                 trust = trustMatch,
                 signingTime = signingTime,
-                signatureTimeStamp = sigTstInstant,
+                signatureTimeStamp = authenticatedTime,
                 profile = foundProfile,
+                revocationChecked = revocationChecked,
             )
         }
 
@@ -210,6 +284,7 @@ class DefaultCadesVerifier : CadesVerifier {
 
         data class Ok(
             val genTime: Instant,
+            val trusted: Boolean,
         ) : SigTstResult()
 
         data class Missing(
@@ -225,6 +300,7 @@ class DefaultCadesVerifier : CadesVerifier {
         signerInfo: SignerInformation,
         signingTime: Instant?,
         maxClockSkew: Duration,
+        anchors: List<X509Certificate>,
     ): SigTstResult {
         val unsigned = signerInfo.unsignedAttributes ?: return SigTstResult.None
         val attr =
@@ -235,37 +311,47 @@ class DefaultCadesVerifier : CadesVerifier {
                 ?: return SigTstResult.Mismatch("sigTst attribute has no values")
         if (set.size() == 0) return SigTstResult.Mismatch("sigTst attribute is empty")
 
-        val tokenBytes =
-            try {
-                set.getObjectAt(0).toASN1Primitive().encoded
-            } catch (t: Throwable) {
-                return SigTstResult.Mismatch("sigTst token could not be re-encoded: ${t.message}")
+        var earliest: Instant? = null
+        for (i in 0 until set.size()) {
+            val tokenBytes =
+                try {
+                    set.getObjectAt(i).toASN1Primitive().encoded
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    return SigTstResult.Mismatch("sigTst token could not be re-encoded: ${t.message}")
+                }
+            val bcToken =
+                try {
+                    TimeStampToken(org.bouncycastle.cms.CMSSignedData(tokenBytes))
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    return SigTstResult.Mismatch("sigTst token is not a valid CMS SignedData: ${t.message}")
+                }
+            val info = bcToken.timeStampInfo
+            val digest =
+                TimeStampTokenVerifier.digestFor(info.messageImprintAlgOID.id)
+                    ?: return SigTstResult.Mismatch("unsupported time-stamp digest ${info.messageImprintAlgOID.id}")
+            val expectedImprint = MessageDigest.getInstance(digest).digest(signerInfo.signature)
+            if (!MessageDigest.isEqual(expectedImprint, info.messageImprintDigest)) {
+                return SigTstResult.Mismatch("sigTst messageImprint does not match $digest(signature)")
             }
-        val bcToken =
-            try {
-                TimeStampToken(org.bouncycastle.cms.CMSSignedData(tokenBytes))
-            } catch (t: Throwable) {
-                return SigTstResult.Mismatch("sigTst token is not a valid CMS SignedData: ${t.message}")
+            val tsaGenTime = info.genTime.toInstant().toKotlinInstant()
+            // A time-stamp may legitimately come later than the claimed time; one that predates it does not.
+            if (signingTime != null &&
+                signingTime.toEpochMilliseconds() > tsaGenTime.toEpochMilliseconds() + maxClockSkew.inWholeMilliseconds
+            ) {
+                return SigTstResult.Mismatch("claimed signingTime ($signingTime) is later than the time-stamp ($tsaGenTime)")
             }
-        val expectedImprint = MessageDigest.getInstance("SHA-256").digest(signerInfo.signature)
-        if (!expectedImprint.contentEquals(bcToken.timeStampInfo.messageImprintDigest)) {
-            return SigTstResult.Mismatch("sigTst messageImprint does not match SHA-256(signature)")
+            if (anchors.isNotEmpty()) {
+                val verified = TimeStampTokenVerifier.verify(tokenBytes, anchors)
+                if (verified is TimeStampTokenVerifier.Result.Invalid) {
+                    return SigTstResult.Mismatch("sigTst is not trusted: ${verified.reason}")
+                }
+            }
+            if (earliest == null || tsaGenTime < earliest) earliest = tsaGenTime
         }
-        val tsaGenTime =
-            bcToken.timeStampInfo.genTime
-                .toInstant()
-                .toKotlinInstant()
-        if (signingTime != null) {
-            val deltaMs =
-                kotlin.math.abs(
-                    tsaGenTime.toEpochMilliseconds() - signingTime.toEpochMilliseconds(),
-                )
-            if (deltaMs > maxClockSkew.inWholeMilliseconds) {
-                return SigTstResult.Mismatch(
-                    "TSA genTime ($tsaGenTime) is more than $maxClockSkew away from signingTime ($signingTime)",
-                )
-            }
-        }
-        return SigTstResult.Ok(tsaGenTime)
+        return SigTstResult.Ok(earliest!!, trusted = anchors.isNotEmpty())
     }
 }

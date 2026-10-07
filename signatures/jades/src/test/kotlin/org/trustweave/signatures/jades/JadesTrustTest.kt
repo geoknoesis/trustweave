@@ -82,7 +82,7 @@ class JadesTrustTest {
                     serviceName = "Test CA",
                     serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
                     status = TspServiceStatus.GRANTED,
-                    statusStartingTime = Clock.System.now(),
+                    statusStartingTime = Clock.System.now() - kotlin.time.Duration.parse("PT8760H"),
                     serviceCertificates = listOf(ca.caCert),
                     qualifierUris = listOf(QualifierUris.QC_WITH_SSCD),
                 ),
@@ -240,5 +240,46 @@ class JadesTrustTest {
             assertTrue(result is Valid, "got $result")
             assertEquals(JadesProfile.B_T, (result as Valid).foundProfile)
             assertTrue(result.revocationChecked)
+        }
+
+    // ------------------------------------------------------------------ malformed input is Invalid, never a crash
+
+    private fun withX5c(
+        envelope: String,
+        x5c: kotlinx.serialization.json.JsonArray,
+    ): String {
+        val flattened =
+            kotlinx.serialization.json.Json
+                .parseToJsonElement(envelope) as kotlinx.serialization.json.JsonObject
+        val protectedJson =
+            kotlinx.serialization.json.Json.parseToJsonElement(
+                String(Base64.getUrlDecoder().decode((flattened["protected"] as JsonPrimitive).content)),
+            ) as kotlinx.serialization.json.JsonObject
+        val changed = kotlinx.serialization.json.JsonObject(protectedJson + ("x5c" to x5c))
+        val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(changed.toString().toByteArray())
+        return kotlinx.serialization.json
+            .JsonObject(flattened + ("protected" to JsonPrimitive(encoded)))
+            .toString()
+    }
+
+    @Test
+    fun `an x5c entry that is not base64 or a certificate is Malformed, not an exception`() =
+        runBlocking<Unit> {
+            val envelope = signed(JadesProfile.B_B)
+            val notBase64 = withX5c(envelope, kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive("***not base64***"))))
+            assertTrue(verifier.verify(notBase64, options(JadesProfile.B_B)) is Invalid.Malformed)
+            val notACertificate =
+                withX5c(
+                    envelope,
+                    kotlinx.serialization.json.JsonArray(listOf(JsonPrimitive(Base64.getEncoder().encodeToString(ByteArray(16))))),
+                )
+            assertTrue(verifier.verify(notACertificate, options(JadesProfile.B_B)) is Invalid.Malformed)
+        }
+
+    @Test
+    fun `an empty x5c is Malformed, not an exception`() =
+        runBlocking<Unit> {
+            val empty = withX5c(signed(JadesProfile.B_B), kotlinx.serialization.json.JsonArray(emptyList()))
+            assertTrue(verifier.verify(empty, options(JadesProfile.B_B)) is Invalid.Malformed)
         }
 }

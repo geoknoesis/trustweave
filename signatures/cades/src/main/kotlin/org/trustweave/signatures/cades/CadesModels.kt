@@ -1,6 +1,8 @@
 package org.trustweave.signatures.cades
 
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
@@ -21,6 +23,9 @@ enum class CadesProfile {
 
     /** Basic + at least one signature-time-stamp (`id-aa-signatureTimeStampToken`) unsigned attribute. */
     B_T,
+    ;
+
+    fun atLeast(other: CadesProfile): Boolean = ordinal >= other.ordinal
 }
 
 /**
@@ -104,8 +109,10 @@ data class CadesSignature(
     val profile: CadesProfile,
 ) {
     override fun equals(other: Any?): Boolean =
-        other is CadesSignature && encoded.contentEquals(other.encoded) &&
-            detached == other.detached && profile == other.profile
+        other is CadesSignature &&
+            encoded.contentEquals(other.encoded) &&
+            detached == other.detached &&
+            profile == other.profile
 
     override fun hashCode(): Int {
         var r = encoded.contentHashCode()
@@ -129,14 +136,37 @@ data class CadesSignature(
  *                                                 at the claimed signing time.
  * @property maxClockSkew                          Tolerance applied to signing-time / TSA-time
  *                                                 comparisons. Default 5 minutes.
+ * @property timestampTrustAnchors                 TSA certificates (or the CAs that issued them) trusted to
+ *                                                 time-stamp. A signature time-stamp is trusted only when its TSA
+ *                                                 signature and certificate verify against these; otherwise it is
+ *                                                 only structurally checked, its time is the signer's own claim and
+ *                                                 the signature is reported as B-B. A token from an untrusted TSA is
+ *                                                 rejected when anchors are configured. Empty (default) trusts none.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                                 A signer whose trust-list service is `QualifiedWithdrawn` is
+ *                                                 accepted only when a trusted time-stamp predates the withdrawal.
+ *                                                 `true` also accepts it when the signing time is merely claimed (a
+ *                                                 claimed time at or after the withdrawal is still refused).
+ * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see [RevocationPolicy].
+ *                                                 Evidence is supplied through [revocationEvidence] (embedded CMS
+ *                                                 revocation values are not read).
+ * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses.
+ * @property revocationIssuerCertificates          Trust-anchor CA certificates used to verify evidence.
  */
-data class CadesVerificationOptions(
-    val requiredProfile: CadesProfile,
-    val trustAnchorResolver: TrustAnchorResolver,
-    val detachedPayload: ByteArray? = null,
-    val allowExpiredCertificateAtSigningTime: Boolean = false,
-    val maxClockSkew: Duration = Duration.parse("PT5M"),
-)
+data class CadesVerificationOptions
+    @JvmOverloads
+    constructor(
+        val requiredProfile: CadesProfile,
+        val trustAnchorResolver: TrustAnchorResolver,
+        val detachedPayload: ByteArray? = null,
+        val allowExpiredCertificateAtSigningTime: Boolean = false,
+        val maxClockSkew: Duration = Duration.parse("PT5M"),
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+    )
 
 /**
  * Outcome of [CadesVerifier.verify].
@@ -145,7 +175,6 @@ data class CadesVerificationOptions(
  * [Invalid] for the specific failure modes a B-B/B-T CAdES verifier produces.
  */
 sealed class CadesValidationResult {
-
     /**
      * @property signerCert        The certificate that produced the signature.
      * @property trust             Trust-graph match returned by the [TrustAnchorResolver].
@@ -153,7 +182,11 @@ sealed class CadesValidationResult {
      *                             when the producer omitted it.
      * @property signatureTimeStamp Time recorded by the TSA in the embedded sig-time-stamp; null
      *                             for B-B.
-     * @property profile           Profile actually detected on the wire.
+     * @property profile           Profile the verification established: B-T only when the time-stamp verified
+     *                             against `timestampTrustAnchors`.
+     * @property revocationChecked `true` only when a revocation policy other than `NOT_CHECKED` was requested AND the
+     *                             signer and every CA below the trust anchor were shown not revoked by verified,
+     *                             fresh evidence. `false` means status is unknown.
      */
     data class Valid(
         val signerCert: X509Certificate,
@@ -161,35 +194,77 @@ sealed class CadesValidationResult {
         val signingTime: Instant?,
         val signatureTimeStamp: Instant?,
         val profile: CadesProfile,
+        val revocationChecked: Boolean = false,
     ) : CadesValidationResult()
 
     sealed class Invalid : CadesValidationResult() {
         /** Cryptographic verification of the SignerInfo failed. */
-        data class BadSignature(val reason: String) : Invalid()
+        data class BadSignature(
+            val reason: String,
+        ) : Invalid()
 
         /** Chain did not anchor to a trusted CA/QC service. */
-        data class UntrustedSigner(val cert: X509Certificate) : Invalid()
+        data class UntrustedSigner(
+            val cert: X509Certificate,
+        ) : Invalid()
 
         /** Required profile was B-T but the signature carries no signature-time-stamp. */
-        data class WrongProfile(val found: CadesProfile, val required: CadesProfile) : Invalid()
+        data class WrongProfile(
+            val found: CadesProfile,
+            val required: CadesProfile,
+        ) : Invalid()
 
         /** B-T was required but no time-stamp token could be parsed. */
-        data class MissingTimeStamp(val reason: String) : Invalid()
+        data class MissingTimeStamp(
+            val reason: String,
+        ) : Invalid()
 
         /** Time-stamp present but its `messageImprint` does not match the signature value. */
-        data class TimeStampMismatch(val reason: String) : Invalid()
+        data class TimeStampMismatch(
+            val reason: String,
+        ) : Invalid()
 
         /** Signer certificate had already expired at the asserted signing time. */
-        data class CertificateExpired(val notAfter: Instant) : Invalid()
+        data class CertificateExpired(
+            val notAfter: Instant,
+        ) : Invalid()
+
+        /** The signer's trust-list service was withdrawn at (or the signature cannot be shown to predate) [withdrawnAt]. */
+        data class TrustWithdrawn(
+            val cert: X509Certificate,
+            val withdrawnAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /** The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing). */
+        data class SignerCertificateInvalid(
+            val reason: String,
+        ) : Invalid()
+
+        /** A certificate in the chain was revoked at or before the verification time. */
+        data class CertificateRevoked(
+            val cert: X509Certificate,
+            val revokedAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /** Revocation checking was required but a certificate has no usable evidence. */
+        data class RevocationUnavailable(
+            val reason: String,
+        ) : Invalid()
 
         /** Input was not well-formed CMS SignedData or lacked a required CAdES attribute. */
-        data class Malformed(val reason: String) : Invalid()
+        data class Malformed(
+            val reason: String,
+        ) : Invalid()
 
         /**
          * Verifier was given a detached signature but no detached-payload bytes — or an
          * encapsulated signature with a non-null detached payload that disagrees with the
          * embedded content.
          */
-        data class MissingDetachedPayload(val reason: String) : Invalid()
+        data class MissingDetachedPayload(
+            val reason: String,
+        ) : Invalid()
     }
 }

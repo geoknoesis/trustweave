@@ -27,6 +27,28 @@ working code fail until it is adjusted.**
   already did. `EtsiSignaturePolicy` gains `timestampTrustAnchors`; the TIME_STAMP_TOKEN step reports a `sigTst`
   as validated only when an anchor accepted it, and a policy that lists the WITHDRAWN status URI is what permits
   a withdrawn service.
+- **BREAKING (security) — CAdES gets the same trust rules as XAdES and JAdES.** `CadesVerificationOptions`
+  gains `timestampTrustAnchors`, `allowWithdrawnTrustWithoutAuthenticatedTime` and the revocation options.
+  A signature time-stamp is trusted only when its TSA signature and certificate verify against the anchors
+  (a forged token no longer yields B-T; without anchors the result is B-B, so callers requiring `B_T` must pass
+  their TSA certificates); `QualifiedWithdrawn` trust is refused unless a trusted time-stamp predates the
+  withdrawal (`Invalid.TrustWithdrawn`); the path is validated as of the trusted time over an ordered chain;
+  a CA or non-signing certificate is refused (`Invalid.SignerCertificateInvalid`, also new in JAdES); caller
+  supplied CRL / OCSP evidence is enforced (`Invalid.CertificateRevoked`, `Invalid.RevocationUnavailable`,
+  `Valid.revocationChecked`). Embedded CMS revocation values are not read yet.
+- Time-stamp handling is aligned across formats: every token is checked (not only the first), SHA-256, SHA-384
+  and SHA-512 imprints are accepted, and a time-stamp later than the claimed signing time is accepted while one
+  that predates it is rejected (JAdES previously rejected a late stamp). A malformed or empty JAdES `x5c`
+  is `Invalid.Malformed` instead of an exception, and the chain handed to PKIX is ordered and filtered.
+- Trust lists: a service granted after the validation time does not qualify that signature, and a CA listed both
+  withdrawn and granted resolves to granted whatever the list order. The ETSI validator no longer reports
+  "cert path validated" for results that never reached path validation (time-stamp, profile, expiry) and fails
+  the time-stamp step on a bad archival token.
+- Revocation evaluation: an OCSP / CRL response without `nextUpdate` vouches for the present only for 24 hours;
+  a signature-verified "revoked" entry in a CRL with critical extensions (delta, partitioned) is honoured though
+  such a CRL cannot vouch that a certificate is good; and `revocationIssuerCertificates` are trust anchors:
+  evaluation stops at a carried certificate that is one, so an intermediate must be carried in the signature.
+  The evaluator, time-stamp verifier and path helper now have direct tests in `tsa-core`.
 - **Trust path validation uses the trusted time.** `TrustAnchorResolver` gains
   `resolve(signerCert, chain, validationTime)` (default: ignore the time); `DefaultTrustAnchorResolver`
   validates the PKIX path as of that time, and the XAdES and JAdES verifiers pass the authenticated time-stamp

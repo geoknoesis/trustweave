@@ -181,6 +181,13 @@ class DefaultEtsiSignatureValidator(
                         StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
                     is JadesValidationResult.Invalid.TrustWithdrawn ->
                         StepOutcome.Failed("trust-list service withdrawn: ${jadesResult.reason}")
+                    is JadesValidationResult.Invalid.SignerCertificateInvalid ->
+                        StepOutcome.Failed("signer certificate unusable: ${jadesResult.reason}")
+                    // The verifier rejects these before it resolves the certificate path, so the path was not evaluated.
+                    is JadesValidationResult.Invalid.TimeStampMismatch,
+                    is JadesValidationResult.Invalid.MissingTimeStamp,
+                    is JadesValidationResult.Invalid.WrongProfile,
+                    is JadesValidationResult.Invalid.CertificateExpired,
                     is JadesValidationResult.Invalid.BadSignature,
                     is JadesValidationResult.Invalid.Malformed,
                     -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
@@ -315,6 +322,13 @@ class DefaultEtsiSignatureValidator(
         policy: EtsiSignaturePolicy,
         parsed: ParsedEnvelope,
     ): StepOutcome {
+        // An archival-only envelope has no sigTst, but a bad archival token must still fail the step.
+        if (jadesResult is JadesValidationResult.Invalid.TimeStampMismatch) {
+            return StepOutcome.Failed("time-stamp mismatch: ${jadesResult.reason}")
+        }
+        if (jadesResult is JadesValidationResult.Invalid.MissingTimeStamp) {
+            return StepOutcome.Failed("time-stamp missing: ${jadesResult.reason}")
+        }
         if (policy.requireTimeStamp && !parsed.hasSigTst) {
             return StepOutcome.Failed("policy requires sigTst but the envelope has none")
         }

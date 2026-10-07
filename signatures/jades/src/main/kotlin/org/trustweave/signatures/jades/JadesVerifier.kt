@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.trustweave.signatures.jades.JadesValidationResult.Invalid
 import org.trustweave.signatures.jades.internal.AlgorithmMapping
 import org.trustweave.signatures.jades.internal.EcdsaSignatureConversion
+import org.trustweave.signatures.revocation.CertificatePaths
 import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
 import org.trustweave.signatures.revocation.RevocationEvidence
 import org.trustweave.signatures.revocation.RevocationPolicy
@@ -100,18 +101,16 @@ class DefaultJadesVerifier : JadesVerifier {
             }
 
             // 4. Decode signer cert chain.
-            val chainDer =
-                header.x5c?.map { Base64.getDecoder().decode(it) }
-                    ?: return@withContext Invalid.Malformed("protected header lacks x5c chain")
+            val x5c = header.x5c ?: return@withContext Invalid.Malformed("protected header lacks x5c chain")
             val chain =
                 try {
-                    chainDer.map { decodeCertificate(it) }
+                    x5c.map { decodeCertificate(Base64.getDecoder().decode(it)) }
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("x5c contains an invalid certificate: ${t.message}")
                 }
-            val signerCert = chain.first()
+            val signerCert = chain.firstOrNull() ?: return@withContext Invalid.Malformed("x5c is empty")
 
             // 5. Signature-bytes validation (mathematical).
             val signatureRaw =
@@ -172,6 +171,9 @@ class DefaultJadesVerifier : JadesVerifier {
                 }
             }
 
+            // 6b. The signer certificate must be one that may sign documents (not a CA, keyUsage permitting).
+            CertificatePaths.signerProblem(signerCert)?.let { return@withContext Invalid.SignerCertificateInvalid(it) }
+
             // 7. Time-stamps. A token only authenticates a time once its TSA signature and certificate are
             //    verified against `timestampTrustAnchors`; without anchors the token is structurally checked but
             //    its time stays the signer's own claim and the signature cannot be reported as B-T or above.
@@ -216,7 +218,12 @@ class DefaultJadesVerifier : JadesVerifier {
 
             // 8. Trust-anchor resolution, validating the path as of the authenticated time when there is one
             //    (never the claimed sigT: that would let a signer back-date a signature).
-            val trustMatch = options.trustAnchorResolver.resolve(signerCert, chain.drop(1), authenticatedTime)
+            val trustMatch =
+                options.trustAnchorResolver.resolve(
+                    signerCert,
+                    CertificatePaths.walk(signerCert, chain.drop(1)),
+                    authenticatedTime,
+                )
             // Exhaustive: a new TrustAnchorMatch subtype must be classified here, never pass by default.
             when (trustMatch) {
                 is org.trustweave.signatures.trustlists.TrustAnchorMatch.NotTrusted ->
@@ -565,46 +572,45 @@ class DefaultJadesVerifier : JadesVerifier {
         maxClockSkew: kotlin.time.Duration,
         anchors: List<X509Certificate>,
     ): SigTstResult {
-        val firstEntry =
-            sigTsts.firstOrNull()
-                ?: return SigTstResult.Missing("etsiU.sigTst array was empty")
-        val firstTokenB64 =
-            firstEntry.tstTokensB64.firstOrNull()
-                ?: return SigTstResult.Missing("sigTst.tstTokens array was empty")
-        val tokenBytes =
-            try {
-                Base64.getDecoder().decode(firstTokenB64)
-            } catch (t: Throwable) {
-                return SigTstResult.Mismatch("sigTst token is not valid base64: ${t.message}")
+        val tokens = sigTsts.flatMap { it.tstTokensB64 }
+        if (tokens.isEmpty()) return SigTstResult.Missing("etsiU.sigTst carries no tstTokens")
+        var earliest: Instant? = null
+        for (tokenB64 in tokens) {
+            val tokenBytes =
+                try {
+                    Base64.getDecoder().decode(tokenB64)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    return SigTstResult.Mismatch("sigTst token is not valid base64: ${t.message}")
+                }
+            val bcToken =
+                try {
+                    org.bouncycastle.tsp.TimeStampToken(
+                        org.bouncycastle.cms.CMSSignedData(tokenBytes),
+                    )
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    return SigTstResult.Mismatch("sigTst token is not a valid CMS SignedData: ${t.message}")
+                }
+            val info = bcToken.timeStampInfo
+            val digest =
+                TimeStampTokenVerifier.digestFor(info.messageImprintAlgOID.id)
+                    ?: return SigTstResult.Mismatch("unsupported time-stamp digest ${info.messageImprintAlgOID.id}")
+            val expectedImprint = MessageDigest.getInstance(digest).digest(signatureBytes)
+            if (!MessageDigest.isEqual(expectedImprint, info.messageImprintDigest)) {
+                return SigTstResult.Mismatch("sigTst messageImprint does not match $digest(signature)")
             }
-        val bcToken =
-            try {
-                org.bouncycastle.tsp.TimeStampToken(
-                    org.bouncycastle.cms.CMSSignedData(tokenBytes),
-                )
-            } catch (t: Throwable) {
-                return SigTstResult.Mismatch("sigTst token is not a valid CMS SignedData: ${t.message}")
+            val tsaGenTime = info.genTime.toInstant().toKotlinInstant()
+            // A time-stamp may legitimately arrive later than the claimed time; one that predates it does not.
+            if (signingTime.toEpochMilliseconds() > tsaGenTime.toEpochMilliseconds() + maxClockSkew.inWholeMilliseconds) {
+                return SigTstResult.Mismatch("claimed sigT ($signingTime) is later than the time-stamp ($tsaGenTime)")
             }
-        val expectedImprint = MessageDigest.getInstance("SHA-256").digest(signatureBytes)
-        val actualImprint = bcToken.timeStampInfo.messageImprintDigest
-        if (!expectedImprint.contentEquals(actualImprint)) {
-            return SigTstResult.Mismatch("sigTst messageImprint does not match SHA-256(signature)")
+            if (verifyTsa(tokenBytes, anchors) == null) return SigTstResult.Mismatch("sigTst is not trusted")
+            if (earliest == null || tsaGenTime < earliest) earliest = tsaGenTime
         }
-        val tsaGenTime =
-            bcToken.timeStampInfo.genTime
-                .toInstant()
-                .toKotlinInstant()
-        // Soft sanity-check: TSA gen-time should be at or near the claimed sigT.
-        val deltaMs = kotlin.math.abs(tsaGenTime.toEpochMilliseconds() - signingTime.toEpochMilliseconds())
-        if (deltaMs > maxClockSkew.inWholeMilliseconds) {
-            return SigTstResult.Mismatch(
-                "TSA genTime ($tsaGenTime) is more than $maxClockSkew away from sigT ($signingTime)",
-            )
-        }
-        return SigTstResult.Ok(
-            tsaGenTime,
-            trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("sigTst is not trusted"),
-        )
+        return SigTstResult.Ok(earliest!!, trusted = anchors.isNotEmpty())
     }
 
     /**

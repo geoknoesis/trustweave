@@ -102,10 +102,20 @@ object CertificateRevocationEvaluator {
     const val MAX_ITEM_BYTES = 4 * 1024 * 1024
 
     /**
+     * How old a CRL or OCSP response without `nextUpdate` may be before it stops counting as current. RFC 6960
+     * reads an absent `nextUpdate` as "newer information is always available", so such a response vouches for
+     * the present only while it is recent: without a bound, a years-old "good" would stand in for today's status.
+     */
+    const val MAX_AGE_WITHOUT_NEXT_UPDATE_MILLIS = 24L * 60 * 60 * 1000
+
+    /**
      * Evaluate the signer and every CA below the trust anchor. [candidates] are the certificates the
      * signature carries (any order, unrelated ones are ignored): the chain is walked upwards from [signer]
      * by issuer name and signature, so a stray certificate cannot add a failing "unavailable" entry.
-     * The top of the walked chain is verified with [issuerCertificates] when its issuer is not carried.
+     * [issuerCertificates] are TRUST ANCHORS: the CAs the caller already trusts. A carried certificate that is
+     * one of them is not itself evaluated (an anchor is trusted, not revocation-checked), nothing above it is
+     * either, and the certificate it issued is verified with it. An intermediate CA must therefore be carried in
+     * the signature (or be an anchor); one that is only "supplied" would be trusted without being checked.
      * Returns one [Status] per certificate checked; a revoked certificate is reported first.
      */
     fun evaluate(
@@ -119,13 +129,18 @@ object CertificateRevocationEvaluator {
     ): List<Status> {
         val crls = parseCrls(evidence.crls.take(MAX_ITEMS))
         val ocsp = parseOcsp(evidence.ocspResponses.take(MAX_ITEMS))
-        val path = listOf(signer) + walkChain(signer, candidates)
+        val full = listOf(signer) + CertificatePaths.walk(signer, candidates)
+        // The chain ends at the first certificate the caller trusts as an anchor; it and everything above it are not checked.
+        val path = full.takeWhile { it == signer || it !in issuerCertificates }
         val results = mutableListOf<Status>()
         path.forEachIndexed { index, cert ->
-            if (isSelfSigned(cert)) return@forEachIndexed // self-signed anchor
+            if (CertificatePaths.isSelfSigned(cert)) return@forEachIndexed // self-signed anchor
             val issuer =
-                path.getOrNull(index + 1)?.takeIf { signedBy(cert, it) }
-                    ?: issuerCertificates.firstOrNull { it.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, it) }
+                full.getOrNull(index + 1)?.takeIf { CertificatePaths.signedBy(cert, it) }
+                    ?: issuerCertificates.firstOrNull {
+                        it.subjectX500Principal == cert.issuerX500Principal &&
+                            CertificatePaths.signedBy(cert, it)
+                    }
             results +=
                 if (issuer == null) {
                     Status.Unavailable("the issuer of '${cert.subjectX500Principal.name}' is not available to verify revocation evidence")
@@ -134,27 +149,6 @@ object CertificateRevocationEvaluator {
                 }
         }
         return results.sortedBy { if (it is Status.Revoked) 0 else 1 }
-    }
-
-    /** Self-signed means signed by its own key: a matching name alone also describes a re-keyed self-issued certificate. */
-    private fun isSelfSigned(cert: X509Certificate): Boolean = cert.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, cert)
-
-    private fun walkChain(
-        signer: X509Certificate,
-        candidates: List<X509Certificate>,
-    ): List<X509Certificate> {
-        val chain = mutableListOf<X509Certificate>()
-        var current = signer
-        val remaining = candidates.filter { it != signer }.distinct().toMutableList()
-        while (!isSelfSigned(current)) {
-            val issuer =
-                remaining.firstOrNull { it.subjectX500Principal == current.issuerX500Principal && signedBy(current, it) }
-                    ?: break
-            remaining.remove(issuer)
-            chain.add(issuer)
-            current = issuer
-        }
-        return chain
     }
 
     private fun statusOf(
@@ -209,16 +203,23 @@ object CertificateRevocationEvaluator {
 
         for (crl in crls) {
             if (crl.issuerX500Principal != cert.issuerX500Principal) continue
-            if (!crlUsable(crl, issuer)) {
-                detail = "a CRL for '$name' is not a verifiable direct CRL from its issuer"
+            if (!crlVerified(crl, issuer)) {
+                detail = "a CRL for '$name' is not signed by its issuer"
                 continue
             }
+            // A signature-verified "revoked" entry counts whatever else the CRL says it covers: a delta or
+            // partitioned CRL (critical extensions) cannot vouch that a certificate is good, but it can still
+            // prove one is revoked. `removeFromCRL` (delta CRLs) means the opposite and is not a revocation.
             val entry = crl.getRevokedCertificate(cert)
-            if (entry != null) {
+            if (entry != null && entry.revocationReason != java.security.cert.CRLReason.REMOVE_FROM_CRL) {
                 val at = entry.revocationDate.toInstant().toKotlinInstant()
                 if (revokedAtReference(at, authenticatedTime, now, skewMillis)) {
                     return Status.Revoked(cert, at, "CRL lists '$name' as revoked at $at")
                 }
+            }
+            if (!crl.criticalExtensionOIDs.isNullOrEmpty()) {
+                detail = "a CRL for '$name' carries critical extensions (delta, partitioned or scoped) and cannot vouch that it is good"
+                continue
             }
             val thisUpdate = crl.thisUpdate.toInstant().toKotlinInstant()
             val nextUpdate = crl.nextUpdate?.toInstant()?.toKotlinInstant()
@@ -242,7 +243,11 @@ object CertificateRevocationEvaluator {
         return if (authenticatedTime != null) {
             thisUpdate.toEpochMilliseconds() >= authenticatedTime.toEpochMilliseconds() - skewMillis
         } else {
-            nextUpdate == null || nextUpdate.toEpochMilliseconds() >= now.toEpochMilliseconds() - skewMillis
+            if (nextUpdate == null) {
+                thisUpdate.toEpochMilliseconds() >= now.toEpochMilliseconds() - MAX_AGE_WITHOUT_NEXT_UPDATE_MILLIS - skewMillis
+            } else {
+                nextUpdate.toEpochMilliseconds() >= now.toEpochMilliseconds() - skewMillis
+            }
         }
     }
 
@@ -272,16 +277,11 @@ object CertificateRevocationEvaluator {
         }
     }
 
-    /**
-     * A direct CRL signed by [issuer]. Critical extensions (delta CRL indicator, issuing
-     * distribution point, ...) change what the list covers and are not interpreted here, so a CRL
-     * carrying one is not used.
-     */
-    private fun crlUsable(
+    /** A CRL whose signature verifies under [issuer], which may sign CRLs. Says nothing about what it covers. */
+    private fun crlVerified(
         crl: X509CRL,
         issuer: X509Certificate,
     ): Boolean {
-        if (!crl.criticalExtensionOIDs.isNullOrEmpty()) return false
         issuer.keyUsage?.let { if (it.size <= KU_CRL_SIGN || !it[KU_CRL_SIGN]) return false }
         return try {
             crl.verify(issuer.publicKey)
@@ -362,7 +362,7 @@ object CertificateRevocationEvaluator {
         issuer: X509Certificate,
         producedAt: java.util.Date,
     ): Boolean {
-        if (!signedBy(responder, issuer)) return false
+        if (!CertificatePaths.signedBy(responder, issuer)) return false
         try {
             responder.checkValidity(producedAt)
         } catch (_: java.security.cert.CertificateException) {
@@ -380,19 +380,6 @@ object CertificateRevocationEvaluator {
     }
 
     // ------------------------------------------------------------- helpers
-
-    private fun signedBy(
-        cert: X509Certificate,
-        issuer: X509Certificate,
-    ): Boolean =
-        try {
-            cert.verify(issuer.publicKey)
-            true
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Exception) {
-            false
-        }
 
     private const val KU_DIGITAL_SIGNATURE = 0
     private const val KU_CRL_SIGN = 6

@@ -223,6 +223,8 @@ class JAdESProofEngine(
                 invalidProof(credential, "JAdES CertificateExpired (notAfter=${result.notAfter})")
             is JadesValidationResult.Invalid.Malformed ->
                 invalidProof(credential, "JAdES Malformed: ${result.reason}")
+            is JadesValidationResult.Invalid.SignerCertificateInvalid ->
+                invalidProof(credential, "JAdES SignerCertificateInvalid: ${result.reason}")
             is JadesValidationResult.Invalid.TrustWithdrawn ->
                 invalidProof(credential, "JAdES TrustWithdrawn: ${result.reason}")
             is JadesValidationResult.Invalid.CertificateRevoked ->

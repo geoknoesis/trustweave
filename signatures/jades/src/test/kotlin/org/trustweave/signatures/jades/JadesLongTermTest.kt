@@ -282,7 +282,7 @@ class JadesLongTermTest {
                 status = TspServiceStatus.GRANTED,
                 statusStartingTime =
                     kotlin.time.Clock.System
-                        .now(),
+                        .now() - kotlin.time.Duration.parse("PT8760H"),
                 serviceCertificates = listOf(trustedCa),
                 qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
             )

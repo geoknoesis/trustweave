@@ -1,5 +1,14 @@
+public final class org/trustweave/signatures/revocation/CertificatePaths {
+	public static final field INSTANCE Lorg/trustweave/signatures/revocation/CertificatePaths;
+	public final fun isSelfSigned (Ljava/security/cert/X509Certificate;)Z
+	public final fun signedBy (Ljava/security/cert/X509Certificate;Ljava/security/cert/X509Certificate;)Z
+	public final fun signerProblem (Ljava/security/cert/X509Certificate;)Ljava/lang/String;
+	public final fun walk (Ljava/security/cert/X509Certificate;Ljava/util/List;)Ljava/util/List;
+}
+
 public final class org/trustweave/signatures/revocation/CertificateRevocationEvaluator {
 	public static final field INSTANCE Lorg/trustweave/signatures/revocation/CertificateRevocationEvaluator;
+	public static final field MAX_AGE_WITHOUT_NEXT_UPDATE_MILLIS J
 	public static final field MAX_ITEMS I
 	public static final field MAX_ITEM_BYTES I
 	public final fun evaluate (Ljava/security/cert/X509Certificate;Ljava/util/List;Ljava/util/List;Lorg/trustweave/signatures/revocation/RevocationEvidence;Lkotlin/time/Instant;Lkotlin/time/Instant;J)Ljava/util/List;
@@ -51,6 +60,7 @@ public final class org/trustweave/signatures/revocation/RevocationPolicy : java/
 
 public final class org/trustweave/signatures/revocation/TimeStampTokenVerifier {
 	public static final field INSTANCE Lorg/trustweave/signatures/revocation/TimeStampTokenVerifier;
+	public final fun digestFor (Ljava/lang/String;)Ljava/lang/String;
 	public final fun verify ([BLjava/util/List;)Lorg/trustweave/signatures/revocation/TimeStampTokenVerifier$Result;
 }
 

@@ -6,17 +6,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class DefaultTrustAnchorResolverTest {
-
     private val parser = EtsiTrustListParser()
 
     @Test
     fun `signer issued by trusted CA resolves to QualifiedActive`() {
         val ca = TrustListFixtures.generateCaAndSigner()
-        val trustList = parseTrustList(
-            ca = ca,
-            statusUri = TspServiceStatus.GRANTED.uri,
-            qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
-        )
+        val trustList =
+            parseTrustList(
+                ca = ca,
+                statusUri = TspServiceStatus.GRANTED.uri,
+                qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
+            )
 
         val resolver = DefaultTrustAnchorResolver(trustList)
         val match = resolver.resolve(ca.signerCert, emptyList())
@@ -32,11 +32,12 @@ class DefaultTrustAnchorResolverTest {
     @Test
     fun `QC_SSCD_STATUS_AS_IN_CERT also counts as qcWithSscd`() {
         val ca = TrustListFixtures.generateCaAndSigner()
-        val trustList = parseTrustList(
-            ca = ca,
-            statusUri = TspServiceStatus.GRANTED.uri,
-            qualifierUris = listOf(QualifierUris.QC_SSCD_STATUS_AS_IN_CERT),
-        )
+        val trustList =
+            parseTrustList(
+                ca = ca,
+                statusUri = TspServiceStatus.GRANTED.uri,
+                qualifierUris = listOf(QualifierUris.QC_SSCD_STATUS_AS_IN_CERT),
+            )
         val resolver = DefaultTrustAnchorResolver(trustList)
         val match = resolver.resolve(ca.signerCert, emptyList())
         assertTrue(match is TrustAnchorMatch.QualifiedActive)
@@ -47,15 +48,17 @@ class DefaultTrustAnchorResolverTest {
     @Test
     fun `signer not issued by any listed CA resolves to NotTrusted`() {
         val listedCa = TrustListFixtures.generateCaAndSigner()
-        val unrelatedCa = TrustListFixtures.generateCaAndSigner(
-            caSubject = "CN=Unrelated CA",
-            signerSubject = "CN=Unrelated Signer",
-        )
-        val trustList = parseTrustList(
-            ca = listedCa,
-            statusUri = TspServiceStatus.GRANTED.uri,
-            qualifierUris = emptyList(),
-        )
+        val unrelatedCa =
+            TrustListFixtures.generateCaAndSigner(
+                caSubject = "CN=Unrelated CA",
+                signerSubject = "CN=Unrelated Signer",
+            )
+        val trustList =
+            parseTrustList(
+                ca = listedCa,
+                statusUri = TspServiceStatus.GRANTED.uri,
+                qualifierUris = emptyList(),
+            )
 
         val resolver = DefaultTrustAnchorResolver(trustList)
         val match = resolver.resolve(unrelatedCa.signerCert, emptyList())
@@ -67,12 +70,13 @@ class DefaultTrustAnchorResolverTest {
     fun `withdrawn CA returns QualifiedWithdrawn`() {
         val ca = TrustListFixtures.generateCaAndSigner()
         val withdrawnAt = "2025-06-01T00:00:00Z"
-        val trustList = parseTrustList(
-            ca = ca,
-            statusUri = TspServiceStatus.WITHDRAWN.uri,
-            qualifierUris = listOf(QualifierUris.QC_FOR_ESIG),
-            statusStartingTime = withdrawnAt,
-        )
+        val trustList =
+            parseTrustList(
+                ca = ca,
+                statusUri = TspServiceStatus.WITHDRAWN.uri,
+                qualifierUris = listOf(QualifierUris.QC_FOR_ESIG),
+                statusStartingTime = withdrawnAt,
+            )
         val resolver = DefaultTrustAnchorResolver(trustList)
         val match = resolver.resolve(ca.signerCert, emptyList())
 
@@ -85,13 +89,16 @@ class DefaultTrustAnchorResolverTest {
     @Test
     fun `empty trust list always resolves to NotTrusted`() {
         val ca = TrustListFixtures.generateCaAndSigner()
-        val empty = TrustList(
-            schemeOperator = "Test",
-            sequenceNumber = 1,
-            issuedAt = kotlin.time.Clock.System.now(),
-            nextUpdateAt = null,
-            memberStateLists = emptyList(),
-        )
+        val empty =
+            TrustList(
+                schemeOperator = "Test",
+                sequenceNumber = 1,
+                issuedAt =
+                    kotlin.time.Clock.System
+                        .now(),
+                nextUpdateAt = null,
+                memberStateLists = emptyList(),
+            )
         val resolver = DefaultTrustAnchorResolver(empty)
         assertEquals(TrustAnchorMatch.NotTrusted, resolver.resolve(ca.signerCert, emptyList()))
     }
@@ -99,27 +106,72 @@ class DefaultTrustAnchorResolverTest {
     @Test
     fun `non-CA-QC services (e g qualified TSAs) do not anchor a signature`() {
         val ca = TrustListFixtures.generateCaAndSigner()
-        val tsl = TrustListFixtures.renderTslXml(
-            territory = "EU",
-            schemeOperator = "Demo",
-            tspName = "Demo TSA Operator",
-            services = listOf(
-                TrustListFixtures.TslServiceSpec(
-                    serviceName = "Qualified TSA",
-                    serviceTypeUri = TspServiceType.QUALIFIED_TIMESTAMP.uri,
-                    statusUri = TspServiceStatus.GRANTED.uri,
-                    statusStartingTime = "2024-01-01T00:00:00Z",
-                    caCertBase64 = ca.caCertBase64,
-                    qualifierUris = emptyList(),
-                ),
-            ),
-        )
+        val tsl =
+            TrustListFixtures.renderTslXml(
+                territory = "EU",
+                schemeOperator = "Demo",
+                tspName = "Demo TSA Operator",
+                services =
+                    listOf(
+                        TrustListFixtures.TslServiceSpec(
+                            serviceName = "Qualified TSA",
+                            serviceTypeUri = TspServiceType.QUALIFIED_TIMESTAMP.uri,
+                            statusUri = TspServiceStatus.GRANTED.uri,
+                            statusStartingTime = "2024-01-01T00:00:00Z",
+                            caCertBase64 = ca.caCertBase64,
+                            qualifierUris = emptyList(),
+                        ),
+                    ),
+            )
         val trustList = parser.parse(TrustListFixtures.renderLotlXml(), mapOf("EU" to tsl))
 
         val resolver = DefaultTrustAnchorResolver(trustList)
         // Even though the cert IS the TSA cert, the service type is TSA/QTST not CA/QC, so it
         // cannot anchor a signing cert. The resolver should report NotTrusted.
         assertEquals(TrustAnchorMatch.NotTrusted, resolver.resolve(ca.signerCert, emptyList()))
+    }
+
+    @Test
+    fun `a service granted after the validation time did not qualify the signature then`() {
+        val ca = TrustListFixtures.generateCaAndSigner()
+        val grantedLater =
+            parseTrustList(ca, TspServiceStatus.GRANTED.uri, listOf(QualifierUris.QC_FOR_ESIG), statusStartingTime = "2099-01-01T00:00:00Z")
+        val resolver = DefaultTrustAnchorResolver(grantedLater)
+        val now =
+            kotlin.time.Clock.System
+                .now()
+        assertEquals(TrustAnchorMatch.NotTrusted, resolver.resolve(ca.signerCert, emptyList(), now))
+        // Without a trusted time the path is validated as of now and the current status applies.
+        assertTrue(resolver.resolve(ca.signerCert, emptyList()) is TrustAnchorMatch.QualifiedActive)
+        val grantedEarlier =
+            parseTrustList(ca, TspServiceStatus.GRANTED.uri, listOf(QualifierUris.QC_FOR_ESIG), statusStartingTime = "2024-01-01T00:00:00Z")
+        assertTrue(DefaultTrustAnchorResolver(grantedEarlier).resolve(ca.signerCert, emptyList(), now) is TrustAnchorMatch.QualifiedActive)
+    }
+
+    @Test
+    fun `a CA listed as both withdrawn and granted resolves to granted whatever the list order`() {
+        val ca = TrustListFixtures.generateCaAndSigner()
+
+        fun service(
+            name: String,
+            status: TspServiceStatus,
+        ) = TrustListFixtures.TslServiceSpec(
+            serviceName = name,
+            serviceTypeUri = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES.uri,
+            statusUri = status.uri,
+            statusStartingTime = "2024-01-01T00:00:00Z",
+            caCertBase64 = ca.caCertBase64,
+            qualifierUris = listOf(QualifierUris.QC_FOR_ESIG),
+        )
+        listOf(
+            listOf(service("Old", TspServiceStatus.WITHDRAWN), service("New", TspServiceStatus.GRANTED)),
+            listOf(service("New", TspServiceStatus.GRANTED), service("Old", TspServiceStatus.WITHDRAWN)),
+        ).forEach { services ->
+            val tsl = TrustListFixtures.renderTslXml("DE", "Bundesnetzagentur", "D-Trust GmbH", services)
+            val trustList = parser.parse(TrustListFixtures.renderLotlXml(), mapOf("DE" to tsl))
+            val match = DefaultTrustAnchorResolver(trustList).resolve(ca.signerCert, emptyList())
+            assertTrue(match is TrustAnchorMatch.QualifiedActive, "got $match for ${services.map { it.serviceName }}")
+        }
     }
 
     // ---------------------------------------------------------------- helpers
@@ -131,21 +183,23 @@ class DefaultTrustAnchorResolverTest {
         statusStartingTime: String = "2024-01-01T00:00:00Z",
     ): TrustList {
         val lotl = TrustListFixtures.renderLotlXml()
-        val tsl = TrustListFixtures.renderTslXml(
-            territory = "DE",
-            schemeOperator = "Bundesnetzagentur",
-            tspName = "D-Trust GmbH",
-            services = listOf(
-                TrustListFixtures.TslServiceSpec(
-                    serviceName = "D-Trust Root CA",
-                    serviceTypeUri = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES.uri,
-                    statusUri = statusUri,
-                    statusStartingTime = statusStartingTime,
-                    caCertBase64 = ca.caCertBase64,
-                    qualifierUris = qualifierUris,
-                ),
-            ),
-        )
+        val tsl =
+            TrustListFixtures.renderTslXml(
+                territory = "DE",
+                schemeOperator = "Bundesnetzagentur",
+                tspName = "D-Trust GmbH",
+                services =
+                    listOf(
+                        TrustListFixtures.TslServiceSpec(
+                            serviceName = "D-Trust Root CA",
+                            serviceTypeUri = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES.uri,
+                            statusUri = statusUri,
+                            statusStartingTime = statusStartingTime,
+                            caCertBase64 = ca.caCertBase64,
+                            qualifierUris = qualifierUris,
+                        ),
+                    ),
+            )
         return parser.parse(lotl, mapOf("DE" to tsl))
     }
 }

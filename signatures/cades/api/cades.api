@@ -1,6 +1,7 @@
 public final class org/trustweave/signatures/cades/CadesProfile : java/lang/Enum {
 	public static final field B_B Lorg/trustweave/signatures/cades/CadesProfile;
 	public static final field B_T Lorg/trustweave/signatures/cades/CadesProfile;
+	public final fun atLeast (Lorg/trustweave/signatures/cades/CadesProfile;)Z
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/trustweave/signatures/cades/CadesProfile;
 	public static fun values ()[Lorg/trustweave/signatures/cades/CadesProfile;
@@ -82,6 +83,21 @@ public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$CertificateRevoked : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$CertificateRevoked;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$CertificateRevoked;Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$CertificateRevoked;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getRevokedAt ()Lkotlin/time/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$Malformed : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -115,6 +131,28 @@ public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$RevocationUnavailable : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$RevocationUnavailable;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$RevocationUnavailable;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$RevocationUnavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$SignerCertificateInvalid : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$SignerCertificateInvalid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$SignerCertificateInvalid;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$SignerCertificateInvalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$TimeStampMismatch : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -122,6 +160,21 @@ public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid
 	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$TimeStampMismatch;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$TimeStampMismatch;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid$TrustWithdrawn : org/trustweave/signatures/cades/CadesValidationResult$Invalid {
+	public fun <init> (Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/security/cert/X509Certificate;
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$TrustWithdrawn;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$TrustWithdrawn;Ljava/security/cert/X509Certificate;Lkotlin/time/Instant;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Invalid$TrustWithdrawn;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCert ()Ljava/security/cert/X509Certificate;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getWithdrawnAt ()Lkotlin/time/Instant;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -151,16 +204,19 @@ public final class org/trustweave/signatures/cades/CadesValidationResult$Invalid
 }
 
 public final class org/trustweave/signatures/cades/CadesValidationResult$Valid : org/trustweave/signatures/cades/CadesValidationResult {
-	public fun <init> (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;)V
+	public fun <init> (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;Z)V
+	public synthetic fun <init> (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/security/cert/X509Certificate;
 	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
 	public final fun component3 ()Lkotlin/time/Instant;
 	public final fun component4 ()Lkotlin/time/Instant;
 	public final fun component5 ()Lorg/trustweave/signatures/cades/CadesProfile;
-	public final fun copy (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;)Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;
-	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;
+	public final fun component6 ()Z
+	public final fun copy (Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;Z)Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;
+	public static synthetic fun copy$default (Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;Ljava/security/cert/X509Certificate;Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;Lkotlin/time/Instant;Lkotlin/time/Instant;Lorg/trustweave/signatures/cades/CadesProfile;ZILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesValidationResult$Valid;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getProfile ()Lorg/trustweave/signatures/cades/CadesProfile;
+	public final fun getRevocationChecked ()Z
 	public final fun getSignatureTimeStamp ()Lkotlin/time/Instant;
 	public final fun getSignerCert ()Ljava/security/cert/X509Certificate;
 	public final fun getSigningTime ()Lkotlin/time/Instant;
@@ -170,20 +226,38 @@ public final class org/trustweave/signatures/cades/CadesValidationResult$Valid :
 }
 
 public final class org/trustweave/signatures/cades/CadesVerificationOptions {
-	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;)V
+	public fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[B)V
+	public fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZ)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/trustweave/signatures/cades/CadesProfile;
+	public final fun component10 ()Ljava/util/List;
 	public final fun component2 ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
 	public final fun component3 ()[B
 	public final fun component4 ()Z
 	public final fun component5-UwyO8pc ()J
-	public final fun copy-9VgGkz4 (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJ)Lorg/trustweave/signatures/cades/CadesVerificationOptions;
-	public static synthetic fun copy-9VgGkz4$default (Lorg/trustweave/signatures/cades/CadesVerificationOptions;Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesVerificationOptions;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Z
+	public final fun component8 ()Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public final fun component9 ()Lorg/trustweave/signatures/revocation/RevocationEvidence;
+	public final fun copy-pBtzt7M (Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;)Lorg/trustweave/signatures/cades/CadesVerificationOptions;
+	public static synthetic fun copy-pBtzt7M$default (Lorg/trustweave/signatures/cades/CadesVerificationOptions;Lorg/trustweave/signatures/cades/CadesProfile;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;[BZJLjava/util/List;ZLorg/trustweave/signatures/revocation/RevocationPolicy;Lorg/trustweave/signatures/revocation/RevocationEvidence;Ljava/util/List;ILjava/lang/Object;)Lorg/trustweave/signatures/cades/CadesVerificationOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAllowExpiredCertificateAtSigningTime ()Z
+	public final fun getAllowWithdrawnTrustWithoutAuthenticatedTime ()Z
 	public final fun getDetachedPayload ()[B
 	public final fun getMaxClockSkew-UwyO8pc ()J
 	public final fun getRequiredProfile ()Lorg/trustweave/signatures/cades/CadesProfile;
+	public final fun getRevocationEvidence ()Lorg/trustweave/signatures/revocation/RevocationEvidence;
+	public final fun getRevocationIssuerCertificates ()Ljava/util/List;
+	public final fun getRevocationPolicy ()Lorg/trustweave/signatures/revocation/RevocationPolicy;
+	public final fun getTimestampTrustAnchors ()Ljava/util/List;
 	public final fun getTrustAnchorResolver ()Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

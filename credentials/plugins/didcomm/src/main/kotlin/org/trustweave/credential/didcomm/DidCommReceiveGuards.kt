@@ -71,7 +71,7 @@ internal class DidCommReceiveGuards(
         val retainUntil = minOf(expiresAt ?: (now + defaultRetentionSeconds), now + maxRetentionSeconds)
         val recorded =
             try {
-                replayStore.recordIfAbsent(message.id, retainUntil, now)
+                replayStore.recordIfAbsent(message.from, message.id, retainUntil, now)
             } catch (e: DidCommReplayStoreFullException) {
                 throw DidCommException.UnpackingFailed(
                     reason = "cannot record message ${message.id} for replay protection: ${e.message}",

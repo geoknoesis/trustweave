@@ -26,6 +26,7 @@ class Oidc4VciServerTest {
         Oidc4VciIssuerService(
             baseUrl = issuerUrl,
             issuerDid = "did:key:z6MkTestIssuer",
+            credentialBuilder = TestCredentialBuilder(),
         )
 
     private val holderKeyPair: KeyPair = KeyPairGenerator.getInstance("Ed25519").generateKeyPair()
@@ -327,6 +328,7 @@ class Oidc4VciServerTest {
                 baseUrl = issuerUrl,
                 issuerDid = "did:key:z6MkTestIssuer",
                 tokenTtlSeconds = 0, // every token is immediately expired
+                credentialBuilder = TestCredentialBuilder(),
             )
         testOidc(expiringService) {
             val offer = expiringService.createOffer(listOf("DegreeCredential"))

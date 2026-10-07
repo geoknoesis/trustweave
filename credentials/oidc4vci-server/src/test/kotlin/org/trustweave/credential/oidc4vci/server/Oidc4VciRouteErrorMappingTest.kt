@@ -37,6 +37,7 @@ class Oidc4VciRouteErrorMappingTest {
         maxActiveTokens = maxActiveTokens,
         deferredTtlSeconds = deferredTtlSeconds,
         maxDeferredCredentials = maxDeferredCredentials,
+        credentialBuilder = TestCredentialBuilder(),
     )
 
     private fun host(

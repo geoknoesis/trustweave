@@ -14,6 +14,7 @@ import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.observability.HostAuthentication
 import org.trustweave.observability.HostKind
 import org.trustweave.observability.HostObservability
+import org.trustweave.observability.RequestBodyLimit
 import org.trustweave.registry.TrustRegistry
 
 /**
@@ -31,10 +32,13 @@ import org.trustweave.registry.TrustRegistry
  *
  * Configuring neither leaves mutations disabled (503). Configuring [withAuthentication] is what
  * authorizes the call; the [apiToken] check then steps aside rather than demanding a second
- * credential the gate has no way to supply.
+ * credential the gate has no way to supply — but only when the gate covers every mutating method
+ * ([HostAuthentication.coversMutations]). A gate that protects just GET leaves writes to the
+ * [apiToken] check, or to the 503 when there is none.
  *
  * @param apiToken bearer token required on mutating routes
- *   (`Authorization: Bearer <token>`). When null (the default), all
+ *   (`Authorization: Bearer <token>`), at least 32 characters like [HostAuthentication.bearerToken]
+ *   (shorter is refused with [IllegalArgumentException]). When null (the default), all
  *   mutating routes are disabled and respond 503 — the server fails
  *   closed. Read-only routes are always available.
  * @param host Bind address. Defaults to loopback: exposing an embedded server to the network
@@ -48,8 +52,18 @@ class TrustRegistryServer(
     private val apiToken: String? = null,
 ) {
     private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
+
+    init {
+        // The same floor HostAuthentication.bearerToken applies: a short shared secret is
+        // guessable, and "configured" must not mean "weakly protected".
+        require(apiToken.isNullOrBlank() || apiToken.length >= MIN_API_TOKEN_LENGTH) {
+            "apiToken must be at least $MIN_API_TOKEN_LENGTH characters"
+        }
+    }
+
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
+    private var maxRequestBytes: Long = RequestBodyLimit.DEFAULT_MAX_BYTES
 
     /** Configure tracing, protected metrics and optional admission limits before starting. */
     fun withObservability(configuration: HostObservability): TrustRegistryServer {
@@ -71,6 +85,17 @@ class TrustRegistryServer(
         return this
     }
 
+    /**
+     * Sets the largest request body, in bytes, this server accepts; anything larger is answered
+     * with 413 before it is parsed. Defaults to [RequestBodyLimit.DEFAULT_MAX_BYTES] (1 MiB).
+     */
+    fun withMaxRequestBytes(bytes: Long): TrustRegistryServer {
+        check(server == null) { "Configure the request limit before starting the server" }
+        require(bytes > 0) { "maxRequestBytes must be positive" }
+        maxRequestBytes = bytes
+        return this
+    }
+
     fun start(wait: Boolean = false) {
         server =
             embeddedServer(Netty, port = port, host = host) {
@@ -88,6 +113,8 @@ class TrustRegistryServer(
         // When the host gate is configured it has already decided; the route-level token check
         // then stands down instead of demanding a second credential the gate cannot supply.
         authentication?.install(this)
+        // Bound the body before ContentNegotiation (or any handler) reads it.
+        RequestBodyLimit.install(this, maxRequestBytes)
         install(ContentNegotiation) {
             json(
                 Json {
@@ -98,7 +125,13 @@ class TrustRegistryServer(
             )
         }
         routing {
-            configureTrustRegistryRoutes(registry, apiToken, hostAuthenticated = authentication != null)
+            // A gate that leaves POST/PUT/PATCH/DELETE unprotected has decided nothing about writes,
+            // so only a gate that covers them lets the route-level token check stand down.
+            configureTrustRegistryRoutes(registry, apiToken, hostAuthenticated = authentication?.coversMutations() == true)
         }
+    }
+
+    private companion object {
+        const val MIN_API_TOKEN_LENGTH = 32
     }
 }

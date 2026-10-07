@@ -17,6 +17,7 @@ import org.trustweave.did.serialization.DidJsonSerialization
 import org.trustweave.observability.HostAuthentication
 import org.trustweave.observability.HostKind
 import org.trustweave.observability.HostObservability
+import org.trustweave.observability.RequestBodyLimit
 
 /**
  * DID Registrar Server implementation.
@@ -65,6 +66,7 @@ class DidRegistrarServer(
     private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
+    private var maxRequestBytes: Long = RequestBodyLimit.DEFAULT_MAX_BYTES
 
     /** Configure tracing, protected metrics and optional admission limits before starting. */
     fun withObservability(configuration: HostObservability): DidRegistrarServer {
@@ -83,6 +85,17 @@ class DidRegistrarServer(
     fun withAuthentication(configuration: HostAuthentication): DidRegistrarServer {
         check(server == null) { "Configure authentication before starting the server" }
         authentication = configuration
+        return this
+    }
+
+    /**
+     * Sets the largest request body, in bytes, this server accepts; anything larger is answered
+     * with 413 before it is parsed. Defaults to [RequestBodyLimit.DEFAULT_MAX_BYTES] (1 MiB).
+     */
+    fun withMaxRequestBytes(bytes: Long): DidRegistrarServer {
+        check(server == null) { "Configure the request limit before starting the server" }
+        require(bytes > 0) { "maxRequestBytes must be positive" }
+        maxRequestBytes = bytes
         return this
     }
 
@@ -109,7 +122,7 @@ class DidRegistrarServer(
     /**
      * Configures the Ktor application with routing and serialization.
      */
-    private fun Application.configureApplication() {
+    internal fun Application.configureApplication() {
         observability?.install(this, HostKind.DID_REGISTRAR)
         // No authentication configured is not the same as no authentication needed:
         // refuse mutations until the host states which of the two it means.
@@ -117,6 +130,8 @@ class DidRegistrarServer(
         authentication?.forRegistrar()?.install(this)
             ?: HostAuthentication.Unconfigured("The DID registrar").install(this)
         // Configure JSON serialization
+        // Bound the body before ContentNegotiation (or any handler) reads it.
+        RequestBodyLimit.install(this, maxRequestBytes)
         install(ContentNegotiation) {
             json(registrarJson())
         }

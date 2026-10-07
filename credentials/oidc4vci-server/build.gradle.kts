@@ -8,10 +8,10 @@ group = "org.trustweave.credentials"
 
 dependencies {
     api(project(":observability"))
-    implementation(project(":credentials:credential-api"))
+    api(project(":credentials:credential-api"))
     implementation(project(":credentials:plugins:oidc4vci"))
     implementation(project(":common"))
-    implementation(project(":did:did-core"))
+    api(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)

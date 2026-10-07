@@ -13,6 +13,36 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**
+  `Oidc4VciIssuerService` takes an `Oidc4VciCredentialBuilder` (`credentialBuilder`); without one every
+  credential request is refused with `unsupported_credential_format`, and so is any format the builder does not
+  list in `supportedFormats` (the requested `format` is no longer echoed back). `CredentialServiceCredentialBuilder`
+  signs through a `CredentialService`/KMS (`ldp_vc` by default; map further formats with `formats`).
+  `issueCredential` is now `suspend`, `createOffer` / `POST /api/offer` accept `claims`, which are carried into
+  `credentialSubject`, and the proof JWT's `typ` header must be `openid4vci-proof+jwt` (previously only checked when
+  present). `registerDeferredCredential` takes an optional `ownerAccessToken`; a credential registered with one can
+  only be collected with that access token (`Oidc4VciIssuerStateStore.consumeDeferredOwnedBy`).
+  `credential-api` and `did-core` are now `api` dependencies of the module.
+- **BREAKING (security) — embedded servers refuse oversized request bodies.** `vc-api-server`, `oidc4vci-server`,
+  `trust-registry-server` and `registrar-server-ktor` answer `413` for a body over 1 MiB (declared `Content-Length`
+  or, for chunked requests, the bounded read), before `ContentNegotiation` parses it. Raise or lower it with
+  `withMaxRequestBytes(...)`; the shared guard is `org.trustweave.observability.RequestBodyLimit`.
+- **VC API `verified: true` is explicit about trust.** The verify endpoints accept an optional `TrustEvaluator`
+  (`VcApiServer.withTrustEvaluator`); every response carries a `trust:evaluated` or `trust:not-evaluated` check and,
+  in the latter case, a warning, because without an evaluator `verified` covers the proof and enabled checks only.
+  Error responses carry a fixed message instead of the exception text (details are logged), and
+  `/presentations/prove` answers `400` when any listed credential cannot be parsed instead of dropping it.
+- **BREAKING (security) — trust registry host gates must cover writes.** `TrustRegistryServer` only stands its
+  `apiToken` check down when the `HostAuthentication` gate covers every mutating method
+  (`HostAuthentication.coversMutations()`); a gate that protects only `GET` no longer authorizes `POST`/`PUT`.
+  `apiToken` must be at least 32 characters, as for `HostAuthentication.bearerToken`.
+- **BREAKING (security) — mDoc status checks follow `RevocationFailurePolicy`.** `MdocProofEngine` treated
+  `CheckFailed` as success; it now fails closed by default like the SD-JWT and VC-LD engines (new public
+  `org.trustweave.credential.status.StatusCheckPolicy` for engines outside `credential-api`).
+- **DIDComm replay ids are scoped to the sender and bounded per sender.** `DidCommReplayStore` gains a
+  `recordIfAbsent(sender, ...)` overload (default: key on sender and id); `InMemoryDidCommReplayStore` takes
+  `maxPerSender` (default 10,000) and refuses a sender's new messages past it, so one sender can neither fill the
+  store nor make another sender's reused id look like a replay.
 - **BREAKING (security) — JAdES time-stamps are only trusted against configured TSA anchors.**
   `JadesVerificationOptions` gains `timestampTrustAnchors` (empty by default). A `sigTst` / `arcTst` is
   authenticated only when its TSA signature and certificate verify against those anchors

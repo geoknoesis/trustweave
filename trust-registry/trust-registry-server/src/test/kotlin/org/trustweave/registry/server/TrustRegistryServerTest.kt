@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TrustRegistryServerTest {
-    private val testToken = "test-api-token"
+    private val testToken = "test-api-token".padEnd(40, 'x')
 
     private fun testServer(
         apiToken: String? = testToken,

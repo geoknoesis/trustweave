@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TrustRegistryRoutesErrorMappingTest {
-    private val token = "t"
+    private val token = "t".repeat(40)
 
     private fun server(
         registry: TrustRegistry = InMemoryTrustRegistry(),

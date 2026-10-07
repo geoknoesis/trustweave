@@ -13,6 +13,7 @@ import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 import java.util.UUID
+import kotlin.time.Clock
 
 data class OfferState(
     val credentialTypes: List<String>,
@@ -191,7 +192,11 @@ class Oidc4VciIssuerService
          * an unsigned credential is not something a wallet can rely on.
          */
         val credentialBuilder: Oidc4VciCredentialBuilder? = null,
+        /** Time source for offer, token, `c_nonce` and deferred-credential lifetimes; replaceable in tests. */
+        private val clock: Clock = Clock.System,
     ) {
+        private fun nowMillis(): Long = clock.now().toEpochMilliseconds()
+
         fun getMetadata(): CredentialIssuerMetadata =
             CredentialIssuerMetadata(
                 credentialIssuer = baseUrl,
@@ -210,7 +215,7 @@ class Oidc4VciIssuerService
         ): CreateOfferResponse {
             purgeExpired()
             val preAuthCode = UUID.randomUUID().toString()
-            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue, claims), maxPendingOffers)) {
+            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue, claims, issuedAt = nowMillis()), maxPendingOffers)) {
                 throw IssuerCapacityExceededException("Too many pending credential offers ($maxPendingOffers)")
             }
             return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
@@ -281,7 +286,7 @@ class Oidc4VciIssuerService
             val offerState =
                 stateStore.consumeOffer(preAuthCode)
                     ?: throw IllegalArgumentException("Unknown or expired pre-authorized_code")
-            if (System.currentTimeMillis() - offerState.issuedAt >= offerTtlSeconds * 1000) {
+            if (nowMillis() - offerState.issuedAt >= offerTtlSeconds * 1000) {
                 throw IllegalArgumentException("Unknown or expired pre-authorized_code")
             }
             if (offerState.txCode != null) {
@@ -292,7 +297,7 @@ class Oidc4VciIssuerService
                 }
             }
             val accessToken = UUID.randomUUID().toString()
-            val entry = TokenEntry(offerState)
+            val entry = TokenEntry(offerState, issuedAt = nowMillis(), cNonceIssuedAt = nowMillis())
             if (!stateStore.putToken(accessToken, entry, maxActiveTokens)) {
                 throw IssuerCapacityExceededException("Too many active access tokens ($maxActiveTokens)")
             }
@@ -370,7 +375,7 @@ class Oidc4VciIssuerService
             // Only the access token the credential was registered for may collect it; a mismatch
             // leaves the entry in place for its rightful owner.
             val entry = stateStore.consumeDeferredOwnedBy(transactionId, tokenHash(accessToken)) ?: return null
-            if (System.currentTimeMillis() - entry.issuedAt >= deferredTtlSeconds * 1000) return null
+            if (nowMillis() - entry.issuedAt >= deferredTtlSeconds * 1000) return null
             return CredentialServerResponse(credential = entry.credential)
         }
 
@@ -389,7 +394,7 @@ class Oidc4VciIssuerService
             ownerAccessToken: String? = null,
         ) {
             purgeExpired()
-            val entry = DeferredEntry(credentialJson, System.currentTimeMillis(), ownerAccessToken?.let(::tokenHash))
+            val entry = DeferredEntry(credentialJson, nowMillis(), ownerAccessToken?.let(::tokenHash))
             if (!stateStore.putDeferred(transactionId, entry, maxDeferredCredentials)) {
                 throw IssuerCapacityExceededException("Too many deferred credentials ($maxDeferredCredentials)")
             }
@@ -422,7 +427,7 @@ class Oidc4VciIssuerService
          * times TTL rather than by uptime. Public so a host can also run it on its own schedule, and
          * so the bound is testable.
          */
-        fun purgeExpired(now: Long = System.currentTimeMillis()): Int =
+        fun purgeExpired(now: Long = nowMillis()): Int =
             stateStore.purgeExpired(
                 offersIssuedAtOrBefore = now - offerTtlSeconds * 1000,
                 tokensIssuedAtOrBefore = now - tokenTtlSeconds * 1000,
@@ -440,7 +445,7 @@ class Oidc4VciIssuerService
             val entry =
                 stateStore.getToken(accessToken)
                     ?: throw InvalidTokenException("Invalid or expired access_token")
-            if (System.currentTimeMillis() - entry.issuedAt >= tokenTtlSeconds * 1000) {
+            if (nowMillis() - entry.issuedAt >= tokenTtlSeconds * 1000) {
                 stateStore.removeToken(accessToken)
                 throw InvalidTokenException("access_token expired")
             }
@@ -451,7 +456,7 @@ class Oidc4VciIssuerService
         private fun rotateCNonce(accessToken: String): String {
             val fresh = UUID.randomUUID().toString()
             stateStore.updateToken(accessToken) { entry ->
-                entry.copy(cNonce = fresh, cNonceIssuedAt = System.currentTimeMillis()) to Unit
+                entry.copy(cNonce = fresh, cNonceIssuedAt = nowMillis()) to Unit
             }
             return fresh
         }
@@ -548,14 +553,14 @@ class Oidc4VciIssuerService
             presentedNonce: String,
         ): Boolean =
             stateStore.updateToken(accessToken) { entry ->
-                val live = System.currentTimeMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
+                val live = nowMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
                 val matches =
                     MessageDigest.isEqual(
                         presentedNonce.toByteArray(Charsets.UTF_8),
                         entry.cNonce.toByteArray(Charsets.UTF_8),
                     )
                 if (live && matches) {
-                    entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = System.currentTimeMillis()) to true
+                    entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = nowMillis()) to true
                 } else {
                     entry to false
                 }

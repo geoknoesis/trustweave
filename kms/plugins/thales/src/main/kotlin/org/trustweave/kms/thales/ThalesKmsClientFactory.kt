@@ -141,7 +141,12 @@ object ThalesKmsClientFactory {
                     logger.debug("OAuth2 token acquisition failed with HTTP {}", response.code)
                     throw IllegalStateException("OAuth2 token acquisition failed: HTTP ${response.code}")
                 }
-                val jsonResponse = Json.parseToJsonElement(response.body?.string() ?: "{}").jsonObject
+                val jsonResponse =
+                    Json
+                        .parseToJsonElement(
+                            response.body?.string()?.takeIf { it.isNotBlank() }
+                                ?: throw IllegalStateException("OAuth2 token response had an empty body"),
+                        ).jsonObject
                 val accessToken =
                     jsonResponse["access_token"]?.jsonPrimitive?.content
                         ?: throw IllegalStateException("No access_token in OAuth2 response")

@@ -101,7 +101,7 @@ class KmsBasedRegistrar(
     private suspend fun respond(state: DidState): DidRegistrationResponse {
         val jobId = UUID.randomUUID().toString()
         val response = DidRegistrationResponse(jobId = jobId, didState = state)
-        jobStorage.store(jobId, response)
+        withContext(Dispatchers.IO) { jobStorage.store(jobId, response) }
         return response
     }
 

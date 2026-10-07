@@ -1,6 +1,8 @@
 package org.trustweave.credential.didcomm.crypto.secret
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -18,7 +20,11 @@ import org.trustweave.credential.didcomm.crypto.secret.encryption.EncryptedData
 import org.trustweave.credential.didcomm.crypto.secret.encryption.KeyEncryption
 import org.trustweave.credential.didcomm.crypto.secret.encryption.MasterKeyDerivation
 import java.io.File
+import java.nio.channels.FileChannel
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermission
 
 /**
@@ -62,6 +68,14 @@ class EncryptedFileLocalKeyStore(
             ignoreUnknownKeys = true
         }
 
+    /** Serializes every load/mutate/save cycle so concurrent writers cannot lose updates. */
+    private val mutex = Mutex()
+
+    /** Atomic replace of [target] by [source]; overridable in tests to simulate a failing move. */
+    internal var atomicMove: (Path, Path) -> Unit = { source, target ->
+        Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    }
+
     init {
         // Ensure file exists and has correct permissions
         if (!keyFile.exists()) {
@@ -76,34 +90,42 @@ class EncryptedFileLocalKeyStore(
     }
 
     override suspend fun get(keyId: String): Secret? =
-        withContext(Dispatchers.IO) {
-            // A missing key is null; an unreadable or undecryptable key file is an error
-            // (loadKeys throws IllegalStateException), not "no such key".
-            loadKeys()[keyId]
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                // A missing key is null; an unreadable or undecryptable key file is an error
+                // (loadKeys throws IllegalStateException), not "no such key".
+                loadKeys()[keyId]
+            }
         }
 
     override suspend fun store(
         keyId: String,
         secret: Secret,
-    ) = withContext(Dispatchers.IO) {
-        val keys = loadKeys().toMutableMap()
-        keys[keyId] = secret
-        saveKeys(keys)
+    ) = mutex.withLock {
+        withContext(Dispatchers.IO) {
+            val keys = loadKeys().toMutableMap()
+            keys[keyId] = secret
+            saveKeys(keys)
+        }
     }
 
     override suspend fun delete(keyId: String): Boolean =
-        withContext(Dispatchers.IO) {
-            val keys = loadKeys().toMutableMap()
-            val removed = keys.remove(keyId) != null
-            if (removed) {
-                saveKeys(keys)
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val keys = loadKeys().toMutableMap()
+                val removed = keys.remove(keyId) != null
+                if (removed) {
+                    saveKeys(keys)
+                }
+                removed
             }
-            removed
         }
 
     override suspend fun list(): List<String> =
-        withContext(Dispatchers.IO) {
-            loadKeys().keys.toList()
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                loadKeys().keys.toList()
+            }
         }
 
     private fun loadKeys(): Map<String, Secret> {
@@ -128,16 +150,21 @@ class EncryptedFileLocalKeyStore(
             val keysJson = json.parseToJsonElement(jsonString).jsonObject
 
             return keysJson.entries
-                .mapNotNull { (keyId, secretJson) ->
-                    try {
-                        // Parse Secret from JSON
-                        // Note: didcomm-java Secret may need custom serialization
-                        keyId to parseSecretFromJson(secretJson)
-                    } catch (e: Exception) {
-                        // Skip invalid secrets
-                        null
-                    }
-                }.toMap()
+                .associate { (keyId, secretJson) ->
+                    // An unparsable entry must fail loudly: skipping it would make the next save
+                    // permanently erase it from the store.
+                    val secret =
+                        try {
+                            parseSecretFromJson(secretJson)
+                        } catch (e: Exception) {
+                            throw IllegalStateException(
+                                "Stored secret '$keyId' is unparsable; refusing to load the key store " +
+                                    "so it is not erased by a later save: ${e.message}",
+                                e,
+                            )
+                        }
+                    keyId to secret
+                }
         } catch (e: Exception) {
             throw IllegalStateException("Failed to load keys from encrypted file: ${e.message}", e)
         }
@@ -192,16 +219,21 @@ class EncryptedFileLocalKeyStore(
 
             val fileContent = serializeEncryptedFile(encryptedData)
 
-            // Atomic write: write to temp file, then rename
-            val tempFile = File(keyFile.parent, "${keyFile.name}.tmp")
-            tempFile.writeBytes(fileContent)
-            setSecurePermissions(tempFile)
-
-            // Atomic rename
-            if (keyFile.exists()) {
-                keyFile.delete()
+            // Atomic write: fsync a temp file, then atomically replace the key file. The old file
+            // is never deleted first, so a failed move leaves the previous store intact.
+            val parent = keyFile.absoluteFile.parentFile.toPath()
+            val temporary = Files.createTempFile(parent, ".${keyFile.name}-", ".tmp")
+            try {
+                setSecurePermissions(temporary.toFile())
+                FileChannel.open(temporary, StandardOpenOption.WRITE).use { channel ->
+                    val bytes = java.nio.ByteBuffer.wrap(fileContent)
+                    while (bytes.hasRemaining()) channel.write(bytes)
+                    channel.force(true)
+                }
+                atomicMove(temporary, keyFile.toPath())
+            } finally {
+                Files.deleteIfExists(temporary)
             }
-            tempFile.renameTo(keyFile)
             setSecurePermissions(keyFile)
         } catch (e: Exception) {
             throw IllegalStateException("Failed to save keys to encrypted file: ${e.message}", e)

@@ -354,6 +354,8 @@ working code fail until it is adjusted.**
 
 ### Fixed
 
+- The Fortanix, Thales, CyberArk and IBM KMS plugins now close every vendor HTTP response on all paths (previously failed deletes and some error paths leaked the connection) and report an empty response body as an error instead of parsing it as `{}`.
+
 - `VerifiableCredential.isValid`, `isExpired`, `isExpiredAt` and `isValidAt` now share one temporal check, `VerifiableCredential.temporalValidity` (new `TemporalValidity` enum): the earliest of `expirationDate`/`validUntil` expires a credential, and it is not valid before the latest of `validFrom`/`issuanceDate`. The extension functions previously ignored VC 2.0 `validUntil`, and `isValidAt` ignored not-yet-valid credentials. These are temporal only, not revocation or proof checks.
 - `EncryptedFileLocalKeyStore` serializes load/modify/save, replaces the key file atomically (fsync plus atomic move, never delete-then-rename), and fails loudly on an unparsable stored secret instead of silently dropping it on the next save.
 - DID registrar job storage calls (`JobStorage`) run on `Dispatchers.IO` in `KmsBasedRegistrar` and the Ktor and Spring servers; `GET /1.0/jobs/{jobId}` answers 404 only for an unknown job and 400 for other invalid requests.

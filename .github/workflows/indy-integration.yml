@@ -52,10 +52,30 @@ jobs:
       - name: Run the Indy integration suite
         run: ./gradlew :anchors:plugins:indy:integrationTest --no-daemon --stacktrace
 
+      - name: Require that the ledger test really ran
+        # Gradle reports success when no test is discovered, and a skipped test is not evidence. The
+        # suite must have executed at least one test and skipped none.
+        run: |
+          python3 -I - <<'PY'
+          import glob
+          import re
+          import sys
+
+          files = glob.glob("build/anchors/plugins/indy/test-results/integrationTest/*.xml")
+          tests = skipped = 0
+          for path in files:
+              head = open(path, encoding="utf-8").read(2000)
+              tests += int(re.search(r'tests="(\d+)"', head).group(1))
+              skipped += int(re.search(r'skipped="(\d+)"', head).group(1))
+          print(f"integrationTest: {tests} tests, {skipped} skipped, {len(files)} result files")
+          if tests == 0 or skipped:
+              sys.exit("::error::the Indy ledger suite executed no tests or skipped some")
+          PY
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: indy-integration-reports
-          path: anchors/plugins/indy/build/**/test-results/
+          path: build/anchors/plugins/indy/test-results/
           if-no-files-found: warn

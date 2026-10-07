@@ -35,6 +35,9 @@ import kotlin.time.Duration
  * @property revocationEvidence          Caller-supplied CRLs / OCSP responses.
  * @property revocationIssuerCertificates CA certificates used to verify evidence for a certificate
  *                                        whose issuer is not in the signature's `x5c`.
+ * @property timestampTrustAnchors       TSA certificates (or their issuers) trusted to time-stamp. A `sigTst` is
+ *                                        reported as validated only when it verifies against these; with none
+ *                                        configured it is not trusted and [requireTimeStamp] cannot be met.
  */
 data class EtsiSignaturePolicy
     @JvmOverloads
@@ -51,4 +54,5 @@ data class EtsiSignaturePolicy
         val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
         val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
         val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
     )

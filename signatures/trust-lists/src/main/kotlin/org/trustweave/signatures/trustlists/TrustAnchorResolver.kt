@@ -30,6 +30,21 @@ interface TrustAnchorResolver {
      *         service has been withdrawn; [TrustAnchorMatch.NotTrusted] otherwise.
      */
     fun resolve(signerCert: X509Certificate, chain: List<X509Certificate>): TrustAnchorMatch
+
+    /**
+     * Resolve [signerCert] with the path validated as of [validationTime] instead of now. Verifiers pass the
+     * time of a *trusted* time-stamp so that a signature made while its certificate was valid can still be
+     * validated after the certificate expired. A time that is merely claimed by the signer must never be passed
+     * here: it would let anyone back-date a signature made with an expired or compromised certificate.
+     *
+     * The default implementation ignores [validationTime] and validates as of now, which is the safe choice for
+     * resolvers that cannot honour it.
+     */
+    fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+        validationTime: Instant?,
+    ): TrustAnchorMatch = resolve(signerCert, chain)
 }
 
 /**
@@ -74,6 +89,12 @@ class DefaultTrustAnchorResolver(
     override fun resolve(
         signerCert: X509Certificate,
         chain: List<X509Certificate>,
+    ): TrustAnchorMatch = resolve(signerCert, chain, null)
+
+    override fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+        validationTime: Instant?,
     ): TrustAnchorMatch {
         val candidates = qualifiedCaServices
         if (candidates.isEmpty()) return TrustAnchorMatch.NotTrusted
@@ -84,13 +105,17 @@ class DefaultTrustAnchorResolver(
         val certPath: CertPath = CERT_FACTORY.generateCertPath(pathCerts)
 
         for (candidate in candidates) {
-            val match = tryValidate(certPath, candidate)
+            val match = tryValidate(certPath, candidate, validationTime)
             if (match != null) return match
         }
         return TrustAnchorMatch.NotTrusted
     }
 
-    private fun tryValidate(certPath: CertPath, candidate: MatchedService): TrustAnchorMatch? {
+    private fun tryValidate(
+        certPath: CertPath,
+        candidate: MatchedService,
+        validationTime: Instant?,
+    ): TrustAnchorMatch? {
         val anchors = candidate.service.serviceCertificates
             .map { TrustAnchor(it, null) }
             .toSet()
@@ -103,8 +128,8 @@ class DefaultTrustAnchorResolver(
             return null
         }
         params.isRevocationEnabled = false
-        // Validity-period check happens automatically inside CertPathValidator; we don't need to
-        // override the validation Date — verifiers that need a historical time pass it in.
+        // Validity periods are checked as of now unless the caller supplied the time of a trusted time-stamp.
+        validationTime?.let { params.date = java.util.Date(it.toEpochMilliseconds()) }
 
         val validator = CertPathValidator.getInstance("PKIX")
         try {

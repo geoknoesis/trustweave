@@ -252,14 +252,24 @@ data class JadesSignature(
  *                                                 comparisons. Default 5 minutes.
  * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see
  *                                                 [RevocationPolicy]. Default `NOT_CHECKED`. The embedded
- *                                                 `rVals` and [revocationEvidence] are both used. The
- *                                                 `sigTst` is not validated against TSA trust anchors by
- *                                                 this verifier, so the signing time is never treated as
- *                                                 authenticated: evidence must be current and any
- *                                                 revocation counts.
+ *                                                 `rVals` and [revocationEvidence] are both used. Requiring
+ *                                                 B-LT or above implies `REQUIRED`.
  * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses.
  * @property revocationIssuerCertificates          CA certificates used to verify evidence for a certificate
  *                                                 whose issuer is not in `x5c`.
+ * @property timestampTrustAnchors                 TSA certificates (or the CAs that issued them) trusted to
+ *                                                 time-stamp. A `sigTst` / `arcTst` token is trusted only when its
+ *                                                 TSA signature and certificate verify against these; otherwise it
+ *                                                 is only structurally checked, its time is the signer's own
+ *                                                 claim, and the signature is reported as B-B. A token from an
+ *                                                 untrusted TSA is rejected when anchors are configured. Empty
+ *                                                 (default) trusts no time-stamp.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                                 A signer whose trust-list service is `QualifiedWithdrawn` is
+ *                                                 accepted only when a trusted time-stamp predates the
+ *                                                 withdrawal. Set `true` to also accept it when the signing time is
+ *                                                 merely claimed (a claimed time at or after the withdrawal is
+ *                                                 still refused). Default `false`.
  */
 data class JadesVerificationOptions
     @JvmOverloads
@@ -272,4 +282,6 @@ data class JadesVerificationOptions
         val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
         val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
         val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
     )

@@ -127,7 +127,7 @@ class DefaultEtsiSignatureValidator(
                 }
 
             // ------------------------------------------------------------ Hand off to JAdES verifier
-            val jadesProfile = if (parsed.hasSigTst) JadesProfile.B_T else JadesProfile.B_B
+            val jadesProfile = JadesProfile.B_B
             val jadesResult =
                 jadesVerifier.verify(
                     jadesSerialized,
@@ -144,6 +144,9 @@ class DefaultEtsiSignatureValidator(
                         revocationPolicy = policy.revocationPolicy,
                         revocationEvidence = policy.revocationEvidence,
                         revocationIssuerCertificates = policy.revocationIssuerCertificates,
+                        timestampTrustAnchors = policy.timestampTrustAnchors,
+                        // The policy decides whether a withdrawn service is acceptable (see allowedTrustStatusUris).
+                        allowWithdrawnTrustWithoutAuthenticatedTime = TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
                     ),
                 )
 
@@ -176,6 +179,8 @@ class DefaultEtsiSignatureValidator(
                         }
                     is JadesValidationResult.Invalid.UntrustedSigner ->
                         StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
+                    is JadesValidationResult.Invalid.TrustWithdrawn ->
+                        StepOutcome.Failed("trust-list service withdrawn: ${jadesResult.reason}")
                     is JadesValidationResult.Invalid.BadSignature,
                     is JadesValidationResult.Invalid.Malformed,
                     -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
@@ -280,6 +285,9 @@ class DefaultEtsiSignatureValidator(
         if (jadesResult is JadesValidationResult.Invalid.UntrustedSigner) {
             return StepOutcome.Failed("signer is untrusted — no trust-list service status")
         }
+        if (jadesResult is JadesValidationResult.Invalid.TrustWithdrawn) {
+            return StepOutcome.Failed("trust-list service withdrawn: ${jadesResult.reason}")
+        }
         return StepOutcome.Inconclusive("signature-policy not evaluated — earlier step failed")
     }
 
@@ -316,10 +324,11 @@ class DefaultEtsiSignatureValidator(
         return when (jadesResult) {
             is JadesValidationResult.Valid -> {
                 val ts = jadesResult.signatureTimeStamp
-                if (ts != null) {
-                    StepOutcome.Passed("sigTst validated at $ts")
-                } else {
-                    StepOutcome.Inconclusive("sigTst present but no TSA gen-time recovered")
+                when {
+                    ts != null -> StepOutcome.Passed("sigTst verified against the configured TSA trust anchors, genTime $ts")
+                    policy.requireTimeStamp ->
+                        StepOutcome.Failed("policy requires a trusted sigTst but it is not verified against any TSA trust anchor")
+                    else -> StepOutcome.Inconclusive("sigTst present but not verified: no TSA trust anchor accepted it")
                 }
             }
             is JadesValidationResult.Invalid.MissingTimeStamp ->

@@ -29,7 +29,7 @@ internal object RevocationFixtures {
         ca: X509Certificate,
         caKey: PrivateKey,
         revoked: List<BigInteger> = emptyList(),
-        thisUpdate: Date = ago(1),
+        thisUpdate: Date = Date(),
         nextUpdate: Date = ahead(24),
     ): ByteArray {
         val builder = JcaX509v2CRLBuilder(ca.subjectX500Principal, thisUpdate).setNextUpdate(nextUpdate)
@@ -47,7 +47,7 @@ internal object RevocationFixtures {
         val id = CertificateID(calc.get(CertificateID.HASH_SHA1), JcaX509CertificateHolder(ca), subject.serialNumber)
         val status: CertificateStatus? = if (revoked) RevokedStatus(ago(2), CRLReason.keyCompromise) else CertificateStatus.GOOD
         val builder = BasicOCSPRespBuilder(RespID(JcaX509CertificateHolder(ca).subject))
-        builder.addResponse(id, status, ago(1), ahead(24), null)
+        builder.addResponse(id, status, Date(), ahead(24), null)
         val basic = builder.build(JcaContentSignerBuilder("SHA256withRSA").build(caKey), emptyArray(), Date())
         return OCSPRespBuilder().build(OCSPRespBuilder.SUCCESSFUL, basic).encoded
     }

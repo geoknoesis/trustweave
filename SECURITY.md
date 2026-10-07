@@ -102,10 +102,9 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
 
 - **Dependency review** fails a pull request that adds a dependency with a known *high* or
   *critical* advisory (Gradle dependency graph via GitHub dependency submission). **Maintainers must
-  enable Settings -> Code security -> Dependency graph** for this gate to work: while the graph is
-  disabled, the "Submit Gradle dependency graph" job fails with "The Dependency graph is disabled for
-  this repository". That job is `continue-on-error` so pushes to `main` stay green, but review then has
-  no snapshot to compare and is not an effective gate. Fork PRs and Dependabot PRs (read-only token) skip
+  keep Settings -> Code security -> Dependency graph enabled** (it is) for this gate to work. The
+  "Submit Gradle dependency graph" job is blocking: if it fails, review would have no snapshot to compare.
+  Fork PRs and Dependabot PRs (read-only token) skip
   submission and review; review those bumps by hand (OSV and the build still run on them).
 - **OSV-Scanner** scans the aggregate CycloneDX SBOM (`./gradlew cyclonedxBom`) and the contents of
   every resolved JAR, so libraries shaded inside a fat JAR are found too. Results are published to
@@ -115,8 +114,8 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
   shows up in a new package still fails. The gate also fails (exit 2) when the report is missing,
   unparseable or empty while the baseline is not, and when the SBOM has fewer components than the floor
   (`--min-packages`, default 200, or half the baseline's recorded `package_count`), so a broken scan cannot
-  pass silently. Baseline entries that no longer match anything are listed as stale; add `--strict-stale`
-  to fail on them. The baseline is the existing backlog (96 distinct advisories on 2026-10-03, including
+  pass silently. Baseline entries that no longer match anything fail the job (`--strict-stale`): remove them
+  when a dependency is upgraded. The baseline is the existing backlog (90 distinct advisories on 2026-10-07, including
   the three didcomm entries below), so only new advisories gate a change. Remove entries as dependencies
   are upgraded; add one only after triage, with a reason. To regenerate it, run `./gradlew cyclonedxBom`,
   `python scripts/collect-sbom-jars.py build/reports/cyclonedx/bom.json --output build/reports/osv/jars`,

@@ -104,7 +104,7 @@ class JadesLongTermTest {
                     revocationData = listOf(
                         EncodedRevocationData(
                             type = "CRL",
-                            dataB64 = Base64.getEncoder().encodeToString(makeDummyCrlBytes()),
+                            dataB64 = Base64.getEncoder().encodeToString(realCrl()),
                         ),
                     ),
                 ),
@@ -121,6 +121,7 @@ class JadesLongTermTest {
             JadesVerificationOptions(
                 requiredProfile = JadesProfile.B_LT,
                 trustAnchorResolver = resolverFor(ca.caCert),
+                timestampTrustAnchors = listOf(tsa.cert),
             ),
         )
         assertTrue(result is Valid, "got $result")
@@ -148,8 +149,8 @@ class JadesLongTermTest {
                     revocationData = listOf(
                         EncodedRevocationData(
                             type = "OCSP",
-                            dataB64 = Base64.getEncoder().encodeToString(makeDummyOcspBytes()),
-                            producedAt = "2026-05-01T00:00:00Z",
+                            dataB64 = Base64.getEncoder().encodeToString(realOcsp(chain)),
+                            producedAt = java.time.Instant.now().toString(),
                         ),
                     ),
                 ),
@@ -163,6 +164,7 @@ class JadesLongTermTest {
             JadesVerificationOptions(
                 requiredProfile = JadesProfile.B_LTA,
                 trustAnchorResolver = resolverFor(ca.caCert),
+                timestampTrustAnchors = listOf(tsa.cert),
             ),
         )
         assertTrue(result is Valid, "got $result")
@@ -189,6 +191,7 @@ class JadesLongTermTest {
             JadesVerificationOptions(
                 requiredProfile = JadesProfile.B_LT,
                 trustAnchorResolver = resolverFor(ca.caCert),
+                timestampTrustAnchors = listOf(tsa.cert),
             ),
         )
         assertTrue(result is Invalid.WrongProfile, "got $result")
@@ -216,10 +219,12 @@ class JadesLongTermTest {
             JadesVerificationOptions(
                 requiredProfile = JadesProfile.B_T,
                 trustAnchorResolver = resolverFor(ca.caCert),
+                timestampTrustAnchors = listOf(tsa.cert),
             ),
         )
         assertTrue(result is Valid, "got $result")
-        assertEquals(JadesProfile.B_LTA, (result as Valid).foundProfile)
+        // The envelope claims B-LTA, but it embeds no revocation evidence, so only B-T can be shown.
+        assertEquals(JadesProfile.B_T, (result as Valid).foundProfile)
     }
 
     // ---------------------------------------------------------------- helpers
@@ -233,10 +238,15 @@ class JadesLongTermTest {
         }
     }
 
-    // Synthetic byte blobs — the verifier only does base64 + type checks for MVP, so the
-    // contents don't need to be real CRL / OCSP structures.
-    private fun makeDummyCrlBytes(): ByteArray = ByteArray(64) { it.toByte() }
-    private fun makeDummyOcspBytes(): ByteArray = ByteArray(96) { (255 - it).toByte() }
+    /** A genuine CRL from the test CA (nothing revoked), issued now so it postdates the test time-stamps. */
+    private fun realCrl(): ByteArray = RevocationFixtures.crl(ca.caCert, ca.caPrivateKey(), thisUpdate = java.util.Date())
+
+    /** A genuine "good" OCSP response from the test CA for the signer (the first certificate of [chain]). */
+    private fun realOcsp(chain: List<ByteArray>): ByteArray {
+        val signer = java.security.cert.CertificateFactory.getInstance("X.509")
+            .generateCertificate(chain.first().inputStream()) as X509Certificate
+        return RevocationFixtures.ocsp(ca.caCert, ca.caPrivateKey(), signer)
+    }
 
     private fun resolverFor(trustedCa: X509Certificate): DefaultTrustAnchorResolver {
         val service = TspService(

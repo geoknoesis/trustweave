@@ -49,12 +49,10 @@ jobs:
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # NON-BLOCKING: the dependency-graph API answers "The Dependency graph is disabled for this
-    # repository" until a maintainer enables Settings > Code security > Dependency graph. Until
-    # then this job must not fail the push to main, but dependency review below has no snapshot to
-    # compare and is therefore NOT an effective gate; the warning step at the end says so in the log.
-    # See SECURITY.md "Dependency Scanning". Remove continue-on-error once the graph is enabled.
-    continue-on-error: true
+    # BLOCKING: the repository's Dependency graph is enabled (Settings > Code security), so a failed
+    # submission means dependency review below has no snapshot to compare, which must not pass silently.
+    # If the API ever answers "The Dependency graph is disabled for this repository" again, re-enable the
+    # setting rather than making this job non-blocking.
     # The only job with write access: the dependency-graph API requires contents: write. The
     # workflow default is contents: read, and checkout does not persist credentials.
     permissions:
@@ -197,4 +195,4 @@ jobs:
       # components, so a broken scan cannot pass silently. Stale baseline entries are only listed;
       # add --strict-stale to fail on them too.
       - name: Fail on advisories outside the baseline
-        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json
+        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json --strict-stale

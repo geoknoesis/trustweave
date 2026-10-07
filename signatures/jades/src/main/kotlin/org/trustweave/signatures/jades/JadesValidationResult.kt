@@ -30,7 +30,11 @@ sealed class JadesValidationResult {
         val trust: TrustAnchorMatch,
         val signingTime: Instant,
         val signatureTimeStamp: Instant?,
-        /** Profile actually present in the verified envelope (B-B, B-T, B-LT, or B-LTA). */
+        /**
+         * Profile the verification actually established (B-B, B-T, B-LT or B-LTA): B-T needs a time-stamp that
+         * verified against `timestampTrustAnchors`, B-LT also needs embedded revocation evidence that verified
+         * and covers the chain, B-LTA also a trusted archival time-stamp.
+         */
         val foundProfile: JadesProfile = JadesProfile.B_B,
         /**
          * Number of embedded `xVals` certificates (long-term validation data). 0 for B-B/B-T.
@@ -97,6 +101,9 @@ sealed class JadesValidationResult {
         data class CertificateExpired(
             val notAfter: Instant,
         ) : Invalid()
+
+        /** The signer's trust-list service was withdrawn at (or the signature cannot be shown to predate) [withdrawnAt]. */
+        data class TrustWithdrawn(val cert: X509Certificate, val withdrawnAt: Instant, val reason: String) : Invalid()
 
         /** A certificate in the chain was revoked at or before the verification time. */
         data class CertificateRevoked(

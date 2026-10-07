@@ -146,6 +146,14 @@ subprojects {
         },
     )
 
+    // Reproducible archives: the same sources must yield byte-identical jars, sources jars and zips, so the
+    // published artifacts can be compared with (and attested against) an independent rebuild. Without these a
+    // jar embeds file modification times and the order the filesystem lists entries in.
+    tasks.withType<org.gradle.api.tasks.bundling.AbstractArchiveTask>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+
     // Windows: IDE/antivirus often lock JARs under build/; Gradle fails on "Unable to delete file".
     // 1) Try delete, 2) rename aside in libs/, 3) move to TEMP — then the jar task can write a fresh file.
     tasks.withType<Jar>().configureEach {

@@ -9,7 +9,11 @@ import org.junit.jupiter.api.assertThrows
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.signatures.revocation.RevocationEvidence
 import org.trustweave.signatures.revocation.RevocationPolicy
+import org.trustweave.signatures.trustlists.DefaultTrustAnchorResolver
+import org.trustweave.signatures.trustlists.MemberStateTsl
 import org.trustweave.signatures.trustlists.QualifierUris
+import org.trustweave.signatures.trustlists.TrustList
+import org.trustweave.signatures.trustlists.TrustedTSP
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.trustlists.TspService
@@ -24,6 +28,7 @@ import java.security.cert.X509Certificate
 import java.security.spec.ECGenParameterSpec
 import java.util.Date
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 
 /** XAdES B-T / B-LT: the signer produces them and the verifier reports the profile it can actually prove. */
 class XadesLongTermTest {
@@ -188,5 +193,40 @@ class XadesLongTermTest {
         assertThrows<IllegalArgumentException> {
             XadesSigningRequest(XadesProfile.B_LT, KeyId("k"), doc, chain(), tsaConfig = tsaConfig)
         }
+    }
+
+    @Test
+    fun `the trust resolver validates the path as of the trusted time, not now`() {
+        val now = System.currentTimeMillis()
+        val day = 24L * 3_600_000L
+        val expired = ca.issue(signerKey.public, "CN=Expired Signer", notBefore = Date(now - 10 * day), notAfter = Date(now - day))
+        val service =
+            TspService(
+                serviceName = "Test CA",
+                serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
+                status = TspServiceStatus.GRANTED,
+                statusStartingTime = Clock.System.now(),
+                serviceCertificates = listOf(ca.caCert),
+                qualifierUris = listOf(QualifierUris.QC_WITH_SSCD),
+            )
+        val issued = Clock.System.now()
+        val tsl =
+            MemberStateTsl(
+                territory = "EU",
+                schemeOperator = "Test",
+                sequenceNumber = 1,
+                issuedAt = issued,
+                trustedTsps = listOf(TrustedTSP(name = "Test TSP", tradeName = null, services = listOf(service))),
+            )
+        val resolver =
+            DefaultTrustAnchorResolver(
+                TrustList(schemeOperator = "Test", sequenceNumber = 1, issuedAt = issued, nextUpdateAt = null, memberStateLists = listOf(tsl)),
+            )
+        // Today the certificate has expired; as of five days ago, when a time-stamp vouches it was signed, it was valid.
+        resolver.resolve(expired, listOf(ca.caCert)).shouldBeInstanceOf<TrustAnchorMatch.NotTrusted>()
+        resolver.resolve(expired, listOf(ca.caCert), null).shouldBeInstanceOf<TrustAnchorMatch.NotTrusted>()
+        resolver
+            .resolve(expired, listOf(ca.caCert), Clock.System.now() - 5.days)
+            .shouldBeInstanceOf<TrustAnchorMatch.QualifiedActive>()
     }
 }

@@ -17,6 +17,7 @@ import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.telemetry.TelemetryDidMethod
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -143,17 +144,12 @@ class DidMethodEdgeCasesTest {
         }
 
     @Test
-    fun `test DidMethod deactivateDid with nonexistent DID`() =
+    fun `deactivateDid is true for the method's own DID and false for another method's`() =
         runBlocking<Unit> {
             val method = createMockDidMethod("test")
 
-            // May return false or throw
-            try {
-                val result = method.deactivateDid(Did("did:test:nonexistent"))
-                assertNotNull(result) // Boolean value
-            } catch (e: Exception) {
-                assertTrue(true) // Exception is acceptable
-            }
+            assertTrue(method.deactivateDid(Did("did:test:nonexistent")))
+            assertFalse(method.deactivateDid(Did("did:other:nonexistent")))
         }
 
     /** The instance handed to `register`, recovered from the instrumented entry it is stored as. */

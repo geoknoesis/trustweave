@@ -32,6 +32,10 @@ internal class TestTsa private constructor(
     private val privateKey: PrivateKey,
     val defaultPolicyOid: String = "1.2.3.4.5",
 ) {
+    /** The TSA certificate, for use as a `timestampTrustAnchors` entry. */
+    val cert: java.security.cert.X509Certificate
+        get() = org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().getCertificate(certHolder)
+
     fun stamp(requestBytes: ByteArray): ByteArray {
         val request = TimeStampRequest(requestBytes)
         val digestCalcProvider = JcaDigestCalculatorProviderBuilder().setProvider("BC").build()

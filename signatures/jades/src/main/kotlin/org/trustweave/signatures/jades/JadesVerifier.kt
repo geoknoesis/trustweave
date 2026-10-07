@@ -14,6 +14,7 @@ import org.trustweave.signatures.jades.internal.EcdsaSignatureConversion
 import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
 import org.trustweave.signatures.revocation.RevocationEvidence
 import org.trustweave.signatures.revocation.RevocationPolicy
+import org.trustweave.signatures.revocation.TimeStampTokenVerifier
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.security.Signature
@@ -93,9 +94,9 @@ class DefaultJadesVerifier : JadesVerifier {
                 AlgorithmMapping.forJoseAlg(header.alg)
                     ?: return@withContext Invalid.BadSignature("alg '${header.alg}' has no MVP mapping")
 
-            val foundProfile = inferFoundProfile(parsed.unsigned)
-            if (!foundProfile.atLeast(options.requiredProfile)) {
-                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
+            val structuralProfile = inferFoundProfile(parsed.unsigned)
+            if (!structuralProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = structuralProfile, required = options.requiredProfile)
             }
 
             // 4. Decode signer cert chain.
@@ -171,86 +172,126 @@ class DefaultJadesVerifier : JadesVerifier {
                 }
             }
 
-            // 7. Trust-anchor resolution.
-            val trustMatch = options.trustAnchorResolver.resolve(signerCert, chain.drop(1))
-            // Exhaustive: a new TrustAnchorMatch subtype must be classified here, never pass by default.
-            when (trustMatch) {
-                is org.trustweave.signatures.trustlists.TrustAnchorMatch.NotTrusted ->
-                    return@withContext Invalid.UntrustedSigner(signerCert)
-                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedActive,
-                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedWithdrawn,
-                -> Unit
-            }
-
-            // 8. Signature time-stamp validation (B-T and above).
-            var sigTstInstant: Instant? = null
-            if (foundProfile.atLeast(JadesProfile.B_T)) {
-                val tokenResult =
-                    validateSigTst(
-                        sigTsts = parsed.unsigned.sigTst,
-                        signatureBytes = signatureRaw,
-                        signingTime = signingTime,
-                        maxClockSkew = options.maxClockSkew,
-                    )
-                when (tokenResult) {
-                    is SigTstResult.Ok -> sigTstInstant = tokenResult.genTime
+            // 7. Time-stamps. A token only authenticates a time once its TSA signature and certificate are
+            //    verified against `timestampTrustAnchors`; without anchors the token is structurally checked but
+            //    its time stays the signer's own claim and the signature cannot be reported as B-T or above.
+            var authenticatedTime: Instant? = null
+            if (parsed.unsigned.sigTst.isNotEmpty()) {
+                when (
+                    val tokenResult =
+                        validateSigTst(
+                            sigTsts = parsed.unsigned.sigTst,
+                            signatureBytes = signatureRaw,
+                            signingTime = signingTime,
+                            maxClockSkew = options.maxClockSkew,
+                            anchors = options.timestampTrustAnchors,
+                        )
+                ) {
+                    is SigTstResult.Ok -> if (tokenResult.trusted) authenticatedTime = tokenResult.genTime
                     is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp(tokenResult.reason)
                     is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch(tokenResult.reason)
                 }
             }
 
-            // 8b. Long-term-validation data (B-LT and above): structural check that the embedded
-            // certificates parse as X.509 and that revocation entries carry a recognised type.
-            if (foundProfile.atLeast(JadesProfile.B_LT)) {
-                val ltCheck = validateLongTermData(parsed.unsigned)
-                if (ltCheck != null) return@withContext ltCheck
-            }
-
-            // 8c. Archival time-stamp (B-LTA only): re-derive the canonical archival imprint and
-            // confirm it matches the embedded `arcTst` token's message-imprint.
+            // 7b. Archival time-stamp (B-LTA): re-derive the canonical archival imprint and confirm it matches
+            //     the embedded `arcTst` token, which must itself be trusted to count.
             var arcTstInstant: Instant? = null
-            if (foundProfile == JadesProfile.B_LTA) {
-                val arcResult =
-                    validateArcTst(
-                        arcTsts = parsed.unsigned.arcTst,
-                        signatureB64u = parsed.signatureB64u,
-                        sigTst = parsed.unsigned.sigTst,
-                        xVals = parsed.unsigned.xVals,
-                        rVals = parsed.unsigned.rVals,
-                    )
-                when (arcResult) {
-                    is SigTstResult.Ok -> arcTstInstant = arcResult.genTime
+            if (inferFoundProfile(parsed.unsigned) == JadesProfile.B_LTA) {
+                when (
+                    val arcResult =
+                        validateArcTst(
+                            arcTsts = parsed.unsigned.arcTst,
+                            signatureB64u = parsed.signatureB64u,
+                            sigTst = parsed.unsigned.sigTst,
+                            xVals = parsed.unsigned.xVals,
+                            rVals = parsed.unsigned.rVals,
+                            anchors = options.timestampTrustAnchors,
+                        )
+                ) {
+                    is SigTstResult.Ok -> if (arcResult.trusted) arcTstInstant = arcResult.genTime
                     is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp("arcTst: ${arcResult.reason}")
                     is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch("arcTst: ${arcResult.reason}")
                 }
             }
 
-            // 8d. Revocation (CRL / OCSP), only when requested. The sigTst is not trust-validated here, so
-            // the time is not authenticated (null): evidence must be current and any revocation counts.
+            // 8. Trust-anchor resolution, validating the path as of the authenticated time when there is one
+            //    (never the claimed sigT: that would let a signer back-date a signature).
+            val trustMatch = options.trustAnchorResolver.resolve(signerCert, chain.drop(1), authenticatedTime)
+            // Exhaustive: a new TrustAnchorMatch subtype must be classified here, never pass by default.
+            when (trustMatch) {
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.NotTrusted ->
+                    return@withContext Invalid.UntrustedSigner(signerCert)
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedActive -> Unit
+                is org.trustweave.signatures.trustlists.TrustAnchorMatch.QualifiedWithdrawn -> {
+                    // A withdrawn service only vouches for signatures made before it was withdrawn.
+                    if (authenticatedTime != null) {
+                        if (authenticatedTime >= trustMatch.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "time-stamped at $authenticatedTime, not before the withdrawal at ${trustMatch.withdrawnAt}",
+                            )
+                        }
+                    } else {
+                        if (!options.allowWithdrawnTrustWithoutAuthenticatedTime) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "the trust-list service was withdrawn and the signing time is not authenticated by a " +
+                                    "trusted time-stamp; set allowWithdrawnTrustWithoutAuthenticatedTime to accept",
+                            )
+                        }
+                        if (signingTime >= trustMatch.withdrawnAt) {
+                            return@withContext Invalid.TrustWithdrawn(
+                                signerCert,
+                                trustMatch.withdrawnAt,
+                                "claimed sigT $signingTime is not before the withdrawal at ${trustMatch.withdrawnAt}",
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 8b. Long-term-validation data (B-LT and above): structural check that the embedded
+            // certificates parse as X.509 and that revocation entries carry a recognised type.
+            if (inferFoundProfile(parsed.unsigned).atLeast(JadesProfile.B_LT)) {
+                val ltCheck = validateLongTermData(parsed.unsigned)
+                if (ltCheck != null) return@withContext ltCheck
+            }
+
+            // 8c. Revocation (CRL / OCSP). Requiring B-LT or above implies REQUIRED: a long-term signature is
+            //     only as good as the validation data it proves.
+            val revocationPolicy =
+                if (options.requiredProfile.atLeast(JadesProfile.B_LT) && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
+                    RevocationPolicy.REQUIRED
+                } else {
+                    options.revocationPolicy
+                }
+            val embedded =
+                RevocationEvidence(
+                    crls = decodeRVals(parsed.unsigned.rVals, "CRL"),
+                    ocspResponses = decodeRVals(parsed.unsigned.rVals, "OCSP"),
+                )
+            val skewMillis = options.maxClockSkew.inWholeMilliseconds
             var revocationChecked = false
-            if (options.revocationPolicy != RevocationPolicy.NOT_CHECKED) {
-                val embedded =
-                    RevocationEvidence(
-                        crls = decodeRVals(parsed.unsigned.rVals, "CRL"),
-                        ocspResponses = decodeRVals(parsed.unsigned.rVals, "OCSP"),
-                    )
+            var embeddedCoversChain = false
+            if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val now = kotlin.time.Clock.System.now()
                 val statuses =
                     CertificateRevocationEvaluator.evaluate(
                         signer = signerCert,
                         candidates = chain,
                         issuerCertificates = options.revocationIssuerCertificates,
                         evidence = options.revocationEvidence + embedded,
-                        authenticatedTime = null,
-                        now =
-                            kotlin.time.Clock.System
-                                .now(),
-                        skewMillis = options.maxClockSkew.inWholeMilliseconds,
+                        authenticatedTime = authenticatedTime,
+                        now = now,
+                        skewMillis = skewMillis,
                     )
                 statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
                     return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
                 }
                 val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
-                if (options.revocationPolicy == RevocationPolicy.REQUIRED) {
+                if (revocationPolicy == RevocationPolicy.REQUIRED) {
                     if (statuses.isEmpty()) {
                         return@withContext Invalid.RevocationUnavailable(
                             "no certificate below a trust anchor was available to check for revocation",
@@ -261,7 +302,35 @@ class DefaultJadesVerifier : JadesVerifier {
                     }
                 }
                 revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+                // B-LT: the evidence carried inside the signature must, on its own, cover the chain.
+                if (revocationChecked && authenticatedTime != null && !embedded.isEmpty) {
+                    val own =
+                        CertificateRevocationEvaluator.evaluate(
+                            signer = signerCert,
+                            candidates = chain,
+                            issuerCertificates = options.revocationIssuerCertificates,
+                            evidence = embedded,
+                            authenticatedTime = authenticatedTime,
+                            now = now,
+                            skewMillis = skewMillis,
+                        )
+                    embeddedCoversChain = own.isNotEmpty() && own.all { it is CertificateRevocationEvaluator.Status.Good }
+                }
             }
+
+            // The profile the signature can actually be shown to meet, not merely the one its structure claims.
+            val verifiedProfile =
+                when {
+                    authenticatedTime == null -> JadesProfile.B_B
+                    !embeddedCoversChain -> JadesProfile.B_T
+                    arcTstInstant == null -> JadesProfile.B_LT
+                    else -> JadesProfile.B_LTA
+                }
+            if (!verifiedProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = verifiedProfile, required = options.requiredProfile)
+            }
+            val foundProfile = verifiedProfile
+            val sigTstInstant = authenticatedTime
 
             // 9. Decode payload + return Valid.
             val payloadBytes =
@@ -475,6 +544,7 @@ class DefaultJadesVerifier : JadesVerifier {
     private sealed class SigTstResult {
         data class Ok(
             val genTime: Instant,
+            val trusted: Boolean,
         ) : SigTstResult()
 
         data class Missing(
@@ -491,6 +561,7 @@ class DefaultJadesVerifier : JadesVerifier {
         signatureBytes: ByteArray,
         signingTime: Instant,
         maxClockSkew: kotlin.time.Duration,
+        anchors: List<X509Certificate>,
     ): SigTstResult {
         val firstEntry =
             sigTsts.firstOrNull()
@@ -528,7 +599,23 @@ class DefaultJadesVerifier : JadesVerifier {
                 "TSA genTime ($tsaGenTime) is more than $maxClockSkew away from sigT ($signingTime)",
             )
         }
-        return SigTstResult.Ok(tsaGenTime)
+        return SigTstResult.Ok(tsaGenTime, trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("sigTst is not trusted"))
+    }
+
+    /**
+     * `true` when the token's TSA signature and certificate verify against [anchors]; `false` when there are
+     * no anchors (the token is then only structurally checked and its time stays unauthenticated); `null` when
+     * anchors exist and the token fails them, which the caller reports as a mismatch.
+     */
+    private fun verifyTsa(
+        tokenBytes: ByteArray,
+        anchors: List<X509Certificate>,
+    ): Boolean? {
+        if (anchors.isEmpty()) return false
+        return when (TimeStampTokenVerifier.verify(tokenBytes, anchors)) {
+            is TimeStampTokenVerifier.Result.Valid -> true
+            is TimeStampTokenVerifier.Result.Invalid -> null
+        }
     }
 
     // ---------------------------------------------------------------- long-term-validation data
@@ -577,6 +664,7 @@ class DefaultJadesVerifier : JadesVerifier {
         sigTst: List<EncodedTimeStampToken>,
         xVals: List<EncodedCertificate>,
         rVals: List<EncodedRevocationData>,
+        anchors: List<X509Certificate>,
     ): SigTstResult {
         val firstEntry =
             arcTsts.firstOrNull()
@@ -621,7 +709,7 @@ class DefaultJadesVerifier : JadesVerifier {
             bcToken.timeStampInfo.genTime
                 .toInstant()
                 .toKotlinInstant()
-        return SigTstResult.Ok(genTime)
+        return SigTstResult.Ok(genTime, trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("arcTst is not trusted"))
     }
 
     // ---------------------------------------------------------------- cert helpers

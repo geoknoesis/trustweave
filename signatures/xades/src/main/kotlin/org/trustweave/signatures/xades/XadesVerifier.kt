@@ -268,7 +268,7 @@ class DefaultXadesVerifier : XadesVerifier {
                 ?.let { return@withContext it }
 
             // 11. Trust anchor resolution.
-            val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts)
+            val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts, authenticatedTime)
             // Exhaustive on purpose: a future TrustAnchorMatch subtype must be classified here
             // (accepted or refused) before this compiles, so it can never pass by default.
             when (trust) {

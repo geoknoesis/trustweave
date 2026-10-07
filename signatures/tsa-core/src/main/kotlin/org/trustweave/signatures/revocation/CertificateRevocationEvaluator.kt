@@ -122,7 +122,7 @@ object CertificateRevocationEvaluator {
         val path = listOf(signer) + walkChain(signer, candidates)
         val results = mutableListOf<Status>()
         path.forEachIndexed { index, cert ->
-            if (cert.subjectX500Principal == cert.issuerX500Principal) return@forEachIndexed // self-signed anchor
+            if (isSelfSigned(cert)) return@forEachIndexed // self-signed anchor
             val issuer =
                 path.getOrNull(index + 1)?.takeIf { signedBy(cert, it) }
                     ?: issuerCertificates.firstOrNull { it.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, it) }
@@ -136,6 +136,10 @@ object CertificateRevocationEvaluator {
         return results.sortedBy { if (it is Status.Revoked) 0 else 1 }
     }
 
+    /** Self-signed means signed by its own key: a matching name alone also describes a re-keyed self-issued certificate. */
+    private fun isSelfSigned(cert: X509Certificate): Boolean =
+        cert.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, cert)
+
     private fun walkChain(
         signer: X509Certificate,
         candidates: List<X509Certificate>,
@@ -143,7 +147,7 @@ object CertificateRevocationEvaluator {
         val chain = mutableListOf<X509Certificate>()
         var current = signer
         val remaining = candidates.filter { it != signer }.distinct().toMutableList()
-        while (current.subjectX500Principal != current.issuerX500Principal) {
+        while (!isSelfSigned(current)) {
             val issuer =
                 remaining.firstOrNull { it.subjectX500Principal == current.issuerX500Principal && signedBy(current, it) }
                     ?: break
@@ -168,26 +172,37 @@ object CertificateRevocationEvaluator {
         var detail = "no CRL or OCSP response covers '$name'"
 
         for (response in ocsp) {
-            val single = singleFor(response, cert, issuer) ?: continue
+            val singles = singlesFor(response, cert, issuer)
+            if (singles.isEmpty()) continue
             if (!ocspSignedByIssuer(response, issuer)) {
                 detail = "an OCSP response for '$name' is not signed by its issuer or an authorised responder"
                 continue
             }
-            val thisUpdate = single.thisUpdate.toInstant().toKotlinInstant()
-            val nextUpdate = single.nextUpdate?.toInstant()?.toKotlinInstant()
-            if (!fresh(thisUpdate, nextUpdate, authenticatedTime, now, skewMillis)) {
-                detail = "the OCSP response for '$name' is not fresh enough for this signature"
-                continue
-            }
-            when (val s = single.certStatus) {
-                null -> good = true
-                is RevokedStatus -> {
+            // Revocation is monotonic: a genuine "revoked" statement counts however old it is, so freshness
+            // is only required before a response may vouch that the certificate is good.
+            for (single in singles) {
+                val s = single.certStatus
+                if (s is RevokedStatus) {
                     val at = s.revocationTime.toInstant().toKotlinInstant()
                     if (revokedAtReference(at, authenticatedTime, now, skewMillis)) {
                         return Status.Revoked(cert, at, "OCSP reports '$name' revoked at $at")
                     }
-                    good = true
                 }
+            }
+            val vouching = singles.filter { it.certStatus == null || it.certStatus is RevokedStatus }
+            val single = vouching.firstOrNull { single ->
+                fresh(
+                    single.thisUpdate.toInstant().toKotlinInstant(),
+                    single.nextUpdate?.toInstant()?.toKotlinInstant(),
+                    authenticatedTime,
+                    now,
+                    skewMillis,
+                )
+            }
+            when {
+                single == null && singles.any { it.certStatus == null || it.certStatus is RevokedStatus } ->
+                    detail = "the OCSP response for '$name' is not fresh enough for this signature"
+                single != null -> good = true
                 else -> detail = "the OCSP responder does not know '$name'"
             }
         }
@@ -198,22 +213,20 @@ object CertificateRevocationEvaluator {
                 detail = "a CRL for '$name' is not a verifiable direct CRL from its issuer"
                 continue
             }
+            val entry = crl.getRevokedCertificate(cert)
+            if (entry != null) {
+                val at = entry.revocationDate.toInstant().toKotlinInstant()
+                if (revokedAtReference(at, authenticatedTime, now, skewMillis)) {
+                    return Status.Revoked(cert, at, "CRL lists '$name' as revoked at $at")
+                }
+            }
             val thisUpdate = crl.thisUpdate.toInstant().toKotlinInstant()
             val nextUpdate = crl.nextUpdate?.toInstant()?.toKotlinInstant()
             if (!fresh(thisUpdate, nextUpdate, authenticatedTime, now, skewMillis)) {
                 detail = "the CRL for '$name' is not fresh enough for this signature"
                 continue
             }
-            val entry = crl.getRevokedCertificate(cert)
-            if (entry == null) {
-                good = true
-            } else {
-                val at = entry.revocationDate.toInstant().toKotlinInstant()
-                if (revokedAtReference(at, authenticatedTime, now, skewMillis)) {
-                    return Status.Revoked(cert, at, "CRL lists '$name' as revoked at $at")
-                }
-                good = true
-            }
+            good = true
         }
         return if (good) Status.Good else Status.Unavailable(detail)
     }
@@ -295,14 +308,14 @@ object CertificateRevocationEvaluator {
             }
         }
 
-    private fun singleFor(
+    private fun singlesFor(
         response: BasicOCSPResp,
         cert: X509Certificate,
         issuer: X509Certificate,
-    ): SingleResp? {
+    ): List<SingleResp> {
         val calculators = JcaDigestCalculatorProviderBuilder().build()
         val issuerHolder = JcaX509CertificateHolder(issuer)
-        return response.responses.firstOrNull { single ->
+        return response.responses.filter { single ->
             try {
                 single.certID.serialNumber == cert.serialNumber && single.certID.matchesIssuer(issuerHolder, calculators)
             } catch (cancelled: CancellationException) {

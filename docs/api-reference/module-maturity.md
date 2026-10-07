@@ -53,14 +53,14 @@ defect claim, but it is a reason to run your own integration tests before depend
 
 | Module | Tests | Maturity |
 |--------|-------|----------|
-| `did:registrar` | 8 | Experimental |
-| `did:registrar-server-ktor` | 0 | **Experimental — untested**; verify in your environment |
-| `did:registrar-server-spring` | 0 | **Experimental — untested**; verify in your environment |
-| `credentials:vc-api-server` | 7 | Experimental |
-| `credentials:oidc4vci-server` | 14 | Experimental |
-| `trust-registry:trust-registry-core` | 4 | Experimental |
-| `trust-registry:trust-registry-server` | 12 | Experimental |
-| `wallet:wallet-services` | 0 | **Experimental — untested**; verify in your environment |
+| `did:registrar` | 31 | Experimental |
+| `did:registrar-server-ktor` | 11 | Experimental |
+| `did:registrar-server-spring` | 15 | Experimental |
+| `credentials:vc-api-server` | 15 | Experimental |
+| `credentials:oidc4vci-server` | 38 | Experimental |
+| `trust-registry:trust-registry-core` | 16 | Experimental |
+| `trust-registry:trust-registry-server` | 24 | Experimental |
+| `wallet:wallet-services` | 16 | Experimental |
 | `distribution:all` | n/a | Dependency aggregate only — carries no logic of its own |
 
 ### ETSI / eIDAS signature formats
@@ -72,12 +72,12 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 
 | Module | Tests | Notes |
 |--------|-------|-------|
-| `signatures:jades` | 17 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
+| `signatures:jades` | 32 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
 | `signatures:trust-lists` | 23 | EU trusted-list handling |
-| `signatures:cades` | 8 | ETSI EN 319 122 (CMS) |
-| `signatures:tsa-core` | 8 | RFC 3161 timestamping |
-| `signatures:etsi-validation` | 7 | Validation helpers |
-| `signatures:xades` | 3 | ETSI EN 319 132 (XML) |
+| `signatures:cades` | 9 | ETSI EN 319 122 (CMS) |
+| `signatures:tsa-core` | 13 | RFC 3161 timestamping |
+| `signatures:etsi-validation` | 16 | Validation helpers |
+| `signatures:xades` | 82 | ETSI EN 319 132 (XML) |
 | `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |
 
 ## Plugins and integrations

@@ -84,7 +84,6 @@ class CacheBoundsTest {
             Thread.sleep(60)
             repeat(50) { m.cache("did:test:$it") }
             assertTrue(m.has("did:test:dead"), "deactivated record must never be silently evicted")
-            assertNotNull(m.has("did:test:dead"))
         }
 
     @Test

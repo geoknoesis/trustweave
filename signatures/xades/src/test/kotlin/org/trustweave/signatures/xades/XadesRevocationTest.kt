@@ -440,4 +440,53 @@ class XadesRevocationTest {
         val d = Date()
         (d.toInstant().toKotlinInstant().toEpochMilliseconds()) shouldBe d.time
     }
+
+    // ------------------------------------------------- revoked statements outlive their freshness
+
+    @Test
+    fun `a stale CRL that lists the signer as revoked still refuses the signature`() =
+        runTest {
+            // Revocation is monotonic: an old but genuine "revoked" must not fall through to "unavailable".
+            val stale = crl(listOf(signerCert.serialNumber to ago(48)), thisUpdate = ago(72), nextUpdate = ago(24))
+            val result = verifier.verify(signed(), options(RevocationPolicy.CHECK_IF_AVAILABLE, evidence(crls = listOf(stale))))
+            result.shouldBeInstanceOf<Invalid.CertificateRevoked>()
+        }
+
+    private fun ocspWithEntries(vararg statuses: CertificateStatus?): ByteArray {
+        val calc = JcaDigestCalculatorProviderBuilder().build()
+        val id = CertificateID(calc.get(CertificateID.HASH_SHA1), JcaX509CertificateHolder(ca.caCert), signerCert.serialNumber)
+        val builder = BasicOCSPRespBuilder(RespID(JcaX509CertificateHolder(ca.caCert).subject))
+        statuses.forEach { builder.addResponse(id, it, Date(), ahead(24), null) }
+        val basic = builder.build(JcaContentSignerBuilder("SHA256withRSA").build(ca.caKey.private), emptyArray(), Date())
+        return OCSPRespBuilder().build(OCSPRespBuilder.SUCCESSFUL, basic).encoded
+    }
+
+    @Test
+    fun `an OCSP response that says both good and revoked is revoked whatever the order`() =
+        runTest {
+            val good = CertificateStatus.GOOD
+            val revoked = revokedStatus(ago(2))
+            listOf(arrayOf(good, revoked), arrayOf(revoked, good)).forEach { entries ->
+                val response = ocspWithEntries(*entries)
+                val result = verifier.verify(signed(), options(RevocationPolicy.REQUIRED, evidence(ocsp = listOf(response))))
+                result.shouldBeInstanceOf<Invalid.CertificateRevoked>()
+            }
+        }
+
+    @Test
+    fun `a self-issued certificate signed by another key is not mistaken for a trust anchor`() {
+        // Same subject and issuer name, but signed by the CA key: a re-keyed self-issued certificate, not a root.
+        val rekeyed = ca.issue(ec().public, ca.caSubject)
+        val statuses =
+            CertificateRevocationEvaluator.evaluate(
+                signer = rekeyed,
+                candidates = emptyList(),
+                issuerCertificates = emptyList(),
+                evidence = RevocationEvidence.NONE,
+                authenticatedTime = null,
+                now = Clock.System.now(),
+                skewMillis = 300_000,
+            )
+        statuses.single().shouldBeInstanceOf<CertificateRevocationEvaluator.Status.Unavailable>()
+    }
 }

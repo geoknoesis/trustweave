@@ -249,6 +249,7 @@ class JadesRoundTripTest {
                         JadesVerificationOptions(
                             requiredProfile = JadesProfile.B_T,
                             trustAnchorResolver = resolverFor(ca.caCert),
+                            timestampTrustAnchors = listOf(tsa.cert),
                         ),
                     )
                 assertTrue(result is Valid, "got $result")

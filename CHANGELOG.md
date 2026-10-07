@@ -13,6 +13,30 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **BREAKING (security) — JAdES time-stamps are only trusted against configured TSA anchors.**
+  `JadesVerificationOptions` gains `timestampTrustAnchors` (empty by default). A `sigTst` / `arcTst` is
+  authenticated only when its TSA signature and certificate verify against those anchors
+  (`org.trustweave.signatures.revocation.TimeStampTokenVerifier`); a token from another TSA is rejected as
+  `TimeStampMismatch`, and without anchors the token is only structurally checked, its time is the signer's
+  claim, and the signature is reported as B-B. Callers that required `B_T` or higher must now pass their TSA
+  certificates. `JadesValidationResult.Valid.foundProfile` now means the profile that was *proved*: B-LT also
+  needs embedded revocation evidence that verified and covers the chain, B-LTA also a trusted `arcTst`, and
+  requiring B-LT or above implies `RevocationPolicy.REQUIRED`. Garbage in `rVals` no longer yields B-LT.
+- **BREAKING (security) — JAdES refuses `QualifiedWithdrawn` trust unless a trusted time-stamp predates the
+  withdrawal** (new `Invalid.TrustWithdrawn`, option `allowWithdrawnTrustWithoutAuthenticatedTime`), as XAdES
+  already did. `EtsiSignaturePolicy` gains `timestampTrustAnchors`; the TIME_STAMP_TOKEN step reports a `sigTst`
+  as validated only when an anchor accepted it, and a policy that lists the WITHDRAWN status URI is what permits
+  a withdrawn service.
+- **Trust path validation uses the trusted time.** `TrustAnchorResolver` gains
+  `resolve(signerCert, chain, validationTime)` (default: ignore the time); `DefaultTrustAnchorResolver`
+  validates the PKIX path as of that time, and the XAdES and JAdES verifiers pass the authenticated time-stamp
+  time (never the signer's claimed time). A certificate that has since expired therefore validates for a
+  signature it time-stamped while valid.
+- Revocation evaluation fixes: a genuine CRL / OCSP entry saying "revoked" now counts however old the
+  response is (freshness only decides whether a response may vouch that a certificate is good); an OCSP
+  response with conflicting entries for one certificate is revoked whatever the order; a certificate is
+  self-signed only when its own key verifies its signature.
+
 - **BREAKING — timestamps are now `kotlin.time.Instant` and `kotlin.time.Clock` (kotlinx-datetime
   0.8.0).** kotlinx-datetime 0.7 moved `Instant`/`Clock` into the Kotlin standard library and 0.8
   no longer ships `kotlinx.datetime.Instant`/`Clock`. Every public signature, model field and
@@ -204,6 +228,13 @@ working code fail until it is adjusted.**
 
 ### Added
 
+- Build and test hygiene: `distributionSha256Sum` is pinned in both Gradle wrapper properties; jars, sources
+  jars and zips are reproducible (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`);
+  `scripts/check-module-maturity-counts.py` fails when the test counts in `docs/api-reference/module-maturity.md`
+  drift from the sources (several rows were out by up to 25x and three modules marked untested had tests);
+  the dependency-graph job is blocking and the OSV gate runs with `--strict-stale`. The assertion-free
+  `ScratchUriEquivalenceTest` was removed and the network-dependent, tautological godiddy resolver tests and two
+  other always-true assertions were replaced by deterministic ones.
 - Certificate revocation checking (CRL and OCSP) for XAdES, JAdES and the ETSI validation pipeline, and XAdES
   B-T / B-LT output. The shared evaluator is `org.trustweave.signatures.revocation.CertificateRevocationEvaluator`
   in `tsa-core`, with `RevocationPolicy` (`NOT_CHECKED` by default, so existing callers are unaffected;

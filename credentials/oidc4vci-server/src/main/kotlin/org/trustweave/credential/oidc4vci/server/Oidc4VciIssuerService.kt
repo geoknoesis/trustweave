@@ -215,7 +215,8 @@ class Oidc4VciIssuerService
         ): CreateOfferResponse {
             purgeExpired()
             val preAuthCode = UUID.randomUUID().toString()
-            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue, claims, issuedAt = nowMillis()), maxPendingOffers)) {
+            val offerState = OfferState(credentialTypes, txCode, txCodeValue, claims, issuedAt = nowMillis())
+            if (!stateStore.putOffer(preAuthCode, offerState, maxPendingOffers)) {
                 throw IssuerCapacityExceededException("Too many pending credential offers ($maxPendingOffers)")
             }
             return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)

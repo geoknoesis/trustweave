@@ -10,6 +10,8 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registrar.DidRegistrar
@@ -180,15 +182,20 @@ fun Routing.configureDidRegistrarRoutes(
                         context = mapOf("parameter" to "jobId"),
                     )
             val response =
-                jobStorage.get(jobId)
+                withContext(Dispatchers.IO) { jobStorage.get(jobId) }
                     ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
                         resource = "job:$jobId",
                     )
             call.respond(HttpStatusCode.OK, response)
-        } catch (e: TrustWeaveException) {
+        } catch (e: TrustWeaveException.NotFound) {
             call.respond(
                 HttpStatusCode.NotFound,
                 ErrorResponse.fromException(e, "JOB_NOT_FOUND"),
+            )
+        } catch (e: TrustWeaveException) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse.fromException(e, "INVALID_REQUEST"),
             )
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
@@ -215,7 +222,7 @@ private suspend fun handleCreateOperation(
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
         val jobId = response.jobId ?: UUID.randomUUID().toString()
-        jobStorage.store(jobId, response.copy(jobId = jobId))
+        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
         return response.copy(jobId = jobId)
     }
 
@@ -237,7 +244,7 @@ private suspend fun handleUpdateOperation(
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
         val jobId = response.jobId ?: UUID.randomUUID().toString()
-        jobStorage.store(jobId, response.copy(jobId = jobId))
+        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
         return response.copy(jobId = jobId)
     }
 
@@ -258,7 +265,7 @@ private suspend fun handleDeactivateOperation(
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
         val jobId = response.jobId ?: UUID.randomUUID().toString()
-        jobStorage.store(jobId, response.copy(jobId = jobId))
+        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
         return response.copy(jobId = jobId)
     }
 

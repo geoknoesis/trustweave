@@ -169,4 +169,34 @@ class KmsBasedRegistrarTest {
 
             assertEquals(OperationState.FAILED, response.didState.state)
         }
+
+    @Test
+    fun `job storage is written off the caller thread`() =
+        runBlocking<Unit> {
+            val threads = java.util.concurrent.CopyOnWriteArrayList<String>()
+            val storage =
+                object : org.trustweave.did.registrar.storage.JobStorage {
+                    private val delegate =
+                        org.trustweave.did.registrar.storage
+                            .InMemoryJobStorage()
+
+                    override fun store(
+                        jobId: String,
+                        response: org.trustweave.did.registrar.model.DidRegistrationResponse,
+                    ) {
+                        threads += Thread.currentThread().name
+                        delegate.store(jobId, response)
+                    }
+
+                    override fun get(jobId: String) = delegate.get(jobId)
+
+                    override fun remove(jobId: String) = delegate.remove(jobId)
+
+                    override fun exists(jobId: String) = delegate.exists(jobId)
+                }
+            val registrar = KmsBasedRegistrar(InMemoryKeyManagementService(), storage)
+            registrar.createDid("key", CreateDidOptions())
+            assertTrue(threads.isNotEmpty())
+            assertTrue(threads.all { it.startsWith("DefaultDispatcher-worker") }, threads.toString())
+        }
 }

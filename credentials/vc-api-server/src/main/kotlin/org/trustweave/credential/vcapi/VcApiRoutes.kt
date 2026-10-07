@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -27,7 +28,15 @@ import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
-import org.trustweave.credential.vcapi.dto.*
+import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.credential.vcapi.dto.IssueCredentialRequest
+import org.trustweave.credential.vcapi.dto.IssueCredentialResponse
+import org.trustweave.credential.vcapi.dto.ProvePresentationRequest
+import org.trustweave.credential.vcapi.dto.ProvePresentationResponse
+import org.trustweave.credential.vcapi.dto.VcApiErrorResponse
+import org.trustweave.credential.vcapi.dto.VerifyCredentialRequest
+import org.trustweave.credential.vcapi.dto.VerifyCredentialResponse
+import org.trustweave.credential.vcapi.dto.VerifyPresentationRequest
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 
@@ -46,8 +55,18 @@ private val vcJson =
  * - `POST /credentials/verify`
  * - `POST /presentations/prove`
  * - `POST /presentations/verify`
+ *
+ * **`verified: true` means what was checked, not that the issuer is trusted.** Without a
+ * [trustEvaluator] the verify endpoints check the proof, expiry and (optionally) revocation, and
+ * nothing about whether the issuer is one the caller should believe: any DID can sign a credential
+ * that verifies. The response says so explicitly, with a `trust:not-evaluated` entry in `checks` and
+ * a warning, so a client cannot mistake a signature-only result for a trust decision. Pass a
+ * [trustEvaluator] to have the issuer judged as well (`trust:evaluated`).
  */
-fun Routing.configureVcApiRoutes(service: CredentialService) {
+fun Routing.configureVcApiRoutes(
+    service: CredentialService,
+    trustEvaluator: TrustEvaluator? = null,
+) {
     /**
      * POST /credentials/issue
      *
@@ -70,10 +89,7 @@ fun Routing.configureVcApiRoutes(service: CredentialService) {
                 }
             }
         } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                VcApiErrorResponse("INVALID_REQUEST", e.message ?: "Invalid request"),
-            )
+            call.respondRequestFailure(e)
         }
     }
 
@@ -95,13 +111,10 @@ fun Routing.configureVcApiRoutes(service: CredentialService) {
                     verifyDomain = body.options?.domain != null,
                     expectedDomain = body.options?.domain,
                 )
-            val result = service.verify(credential, null, options)
-            call.respond(HttpStatusCode.OK, result.toVerifyResponse())
+            val result = service.verify(credential, trustEvaluator, options)
+            call.respond(HttpStatusCode.OK, result.toVerifyResponse(trustEvaluator != null))
         } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                VcApiErrorResponse("INVALID_REQUEST", e.message ?: "Invalid request"),
-            )
+            call.respondRequestFailure(e)
         }
     }
 
@@ -129,10 +142,7 @@ fun Routing.configureVcApiRoutes(service: CredentialService) {
             val vp = service.createPresentation(credentials, request)
             call.respond(HttpStatusCode.Created, ProvePresentationResponse(serializeVp(vp)))
         } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                VcApiErrorResponse("INVALID_REQUEST", e.message ?: "Invalid request"),
-            )
+            call.respondRequestFailure(e)
         }
     }
 
@@ -155,13 +165,10 @@ fun Routing.configureVcApiRoutes(service: CredentialService) {
                     checkRevocation = body.options?.checkRevocation ?: true,
                     checkExpiration = body.options?.checkExpiration ?: true,
                 )
-            val result = service.verifyPresentation(vp, null, options)
-            call.respond(HttpStatusCode.OK, result.toVerifyResponse())
+            val result = service.verifyPresentation(vp, trustEvaluator, options)
+            call.respond(HttpStatusCode.OK, result.toVerifyResponse(trustEvaluator != null))
         } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                VcApiErrorResponse("INVALID_REQUEST", e.message ?: "Invalid request"),
-            )
+            call.respondRequestFailure(e)
         }
     }
 }
@@ -246,7 +253,20 @@ private fun parsePresentationCredentials(presentationJson: JsonObject): List<Ver
     )
     val vcs = presentationJson["verifiableCredential"] ?: return emptyList()
     return when (vcs) {
-        is JsonArray -> vcs.mapNotNull { runCatching { deserializeVc(it.jsonObject) }.getOrNull() }
+        // A credential that cannot be parsed fails the request. Dropping it would sign a presentation
+        // that silently lacks something the caller asked to present.
+        is JsonArray ->
+            vcs.mapIndexed { index, element ->
+                try {
+                    deserializeVc(element.jsonObject)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: ClientFault) {
+                    throw e
+                } catch (e: Exception) {
+                    throw ClientFault("verifiableCredential[$index] is not a valid credential")
+                }
+            }
         is JsonObject -> listOf(deserializeVc(vcs))
         else -> emptyList()
     }
@@ -267,9 +287,7 @@ private fun requireWithinSizeLimit(
     what: String,
 ) {
     val sizeBytes = json.toString().toByteArray(Charsets.UTF_8).size
-    require(sizeBytes <= limit) {
-        "$what exceeds the maximum of $limit bytes: $sizeBytes bytes"
-    }
+    if (sizeBytes > limit) throw ClientFault("$what exceeds the maximum of $limit bytes: $sizeBytes bytes")
 }
 
 private fun deserializeVc(json: JsonObject): VerifiableCredential {
@@ -285,18 +303,51 @@ private fun deserializeVp(json: JsonObject): VerifiablePresentation {
     return vcJson.decodeFromJsonElement(VerifiablePresentation.serializer(), json)
 }
 
-private fun VerificationResult.toVerifyResponse(): VerifyCredentialResponse =
-    when (this) {
+/** A request fault whose message is safe, and useful, to show the caller. Anything else is not. */
+private class ClientFault(
+    message: String,
+) : Exception(message)
+
+/**
+ * Answers a failed request. Only a [ClientFault] message reaches the caller; every other exception
+ * is logged here and answered with a fixed message, because its text (parser positions, class
+ * names, resolver or KMS details) describes the server rather than the request.
+ */
+private suspend fun ApplicationCall.respondRequestFailure(e: Exception) {
+    if (e is CancellationException) throw e
+    val message =
+        if (e is ClientFault) {
+            e.message ?: GENERIC_FAILURE
+        } else {
+            application.log.warn("VC API request rejected: ${e::class.simpleName}: ${e.message}", e)
+            GENERIC_FAILURE
+        }
+    respond(HttpStatusCode.BadRequest, VcApiErrorResponse("INVALID_REQUEST", message))
+}
+
+private const val GENERIC_FAILURE = "The request could not be processed"
+
+private const val TRUST_NOT_EVALUATED = "trust:not-evaluated"
+private const val TRUST_EVALUATED = "trust:evaluated"
+private const val TRUST_NOT_EVALUATED_WARNING =
+    "Issuer trust was not evaluated: verified reflects the proof and enabled checks only, not whether the issuer is trusted"
+
+private fun VerificationResult.toVerifyResponse(trustEvaluated: Boolean): VerifyCredentialResponse {
+    val trustCheck = if (trustEvaluated) TRUST_EVALUATED else TRUST_NOT_EVALUATED
+    val trustWarning = if (trustEvaluated) emptyList() else listOf(TRUST_NOT_EVALUATED_WARNING)
+    return when (this) {
         is VerificationResult.Valid ->
             VerifyCredentialResponse(
                 verified = true,
-                checks = listOf("proof"),
-                warnings = warnings,
+                checks = listOf("proof", trustCheck),
+                warnings = warnings + trustWarning,
             )
         is VerificationResult.Invalid ->
             VerifyCredentialResponse(
                 verified = false,
+                checks = listOf(trustCheck),
                 errors = allErrors,
-                warnings = allWarnings,
+                warnings = allWarnings + trustWarning,
             )
     }
+}

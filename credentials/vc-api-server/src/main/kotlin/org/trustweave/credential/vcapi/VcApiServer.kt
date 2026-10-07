@@ -12,9 +12,11 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.CredentialService
+import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.observability.HostAuthentication
 import org.trustweave.observability.HostKind
 import org.trustweave.observability.HostObservability
+import org.trustweave.observability.RequestBodyLimit
 
 /**
  * W3C VC API server (https://w3c-ccg.github.io/vc-api/).
@@ -68,6 +70,8 @@ class VcApiServer(
     private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
+    private var trustEvaluator: TrustEvaluator? = null
+    private var maxRequestBytes: Long = RequestBodyLimit.DEFAULT_MAX_BYTES
 
     /** Configure tracing, protected metrics and optional admission limits before starting. */
     fun withObservability(configuration: HostObservability): VcApiServer {
@@ -89,6 +93,29 @@ class VcApiServer(
         return this
     }
 
+    /**
+     * Has the verify endpoints judge issuer trust with [evaluator].
+     *
+     * Without it a `verified: true` answer covers the proof and enabled checks only, and the response
+     * carries a `trust:not-evaluated` check and a warning saying so.
+     */
+    fun withTrustEvaluator(evaluator: TrustEvaluator): VcApiServer {
+        check(server == null) { "Configure the trust evaluator before starting the server" }
+        trustEvaluator = evaluator
+        return this
+    }
+
+    /**
+     * Sets the largest request body, in bytes, this server accepts; anything larger is answered
+     * with 413 before it is parsed. Defaults to [RequestBodyLimit.DEFAULT_MAX_BYTES] (1 MiB).
+     */
+    fun withMaxRequestBytes(bytes: Long): VcApiServer {
+        check(server == null) { "Configure the request limit before starting the server" }
+        require(bytes > 0) { "maxRequestBytes must be positive" }
+        maxRequestBytes = bytes
+        return this
+    }
+
     fun start(wait: Boolean = false) {
         server =
             embeddedServer(Netty, port = port, host = host) {
@@ -107,6 +134,8 @@ class VcApiServer(
         // refuse mutations until the host states which of the two it means.
         authentication?.install(this)
             ?: HostAuthentication.Unconfigured("The VC API server").install(this)
+        // Bound the body before ContentNegotiation (or any handler) reads it.
+        RequestBodyLimit.install(this, maxRequestBytes)
         install(ContentNegotiation) {
             json(
                 Json {
@@ -117,7 +146,7 @@ class VcApiServer(
             )
         }
         routing {
-            configureVcApiRoutes(credentialService)
+            configureVcApiRoutes(credentialService, trustEvaluator)
         }
     }
 }

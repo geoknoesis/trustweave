@@ -82,9 +82,9 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.86")
 
     // Serialization for VC-JWT payloads + DTOs
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
     // Debug tools
     debugImplementation("androidx.compose.ui:ui-tooling")

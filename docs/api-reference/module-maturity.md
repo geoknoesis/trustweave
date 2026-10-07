@@ -53,13 +53,13 @@ defect claim, but it is a reason to run your own integration tests before depend
 
 | Module | Tests | Maturity |
 |--------|-------|----------|
-| `did:registrar` | 31 | Experimental |
-| `did:registrar-server-ktor` | 11 | Experimental |
+| `did:registrar` | 32 | Experimental |
+| `did:registrar-server-ktor` | 17 | Experimental |
 | `did:registrar-server-spring` | 15 | Experimental |
-| `credentials:vc-api-server` | 15 | Experimental |
-| `credentials:oidc4vci-server` | 38 | Experimental |
+| `credentials:vc-api-server` | 21 | Experimental |
+| `credentials:oidc4vci-server` | 51 | Experimental |
 | `trust-registry:trust-registry-core` | 16 | Experimental |
-| `trust-registry:trust-registry-server` | 24 | Experimental |
+| `trust-registry:trust-registry-server` | 28 | Experimental |
 | `wallet:wallet-services` | 16 | Experimental |
 | `distribution:all` | n/a | Dependency aggregate only — carries no logic of its own |
 
@@ -72,10 +72,10 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 
 | Module | Tests | Notes |
 |--------|-------|-------|
-| `signatures:jades` | 32 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
-| `signatures:trust-lists` | 23 | EU trusted-list handling |
-| `signatures:cades` | 9 | ETSI EN 319 122 (CMS) |
-| `signatures:tsa-core` | 13 | RFC 3161 timestamping |
+| `signatures:jades` | 34 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
+| `signatures:trust-lists` | 25 | EU trusted-list handling |
+| `signatures:cades` | 15 | ETSI EN 319 122 (CMS) |
+| `signatures:tsa-core` | 40 | RFC 3161 timestamping |
 | `signatures:etsi-validation` | 16 | Validation helpers |
 | `signatures:xades` | 82 | ETSI EN 319 132 (XML) |
 | `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |

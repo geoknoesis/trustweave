@@ -19,6 +19,11 @@ data class OfferState(
     val txCode: TxCode?,
     val txCodeValue: String?,
     /**
+     * Claims the issuer will put in the credential's `credentialSubject` (alongside the `id` it
+     * derives from the holder's proven key). Set by whoever creates the offer.
+     */
+    val claims: JsonObject = JsonObject(emptyMap()),
+    /**
      * When the pre-authorized code was minted, so it can stop being redeemable.
      *
      * This used to be absent, which made a pre-authorized code valid forever. The code travels in
@@ -57,6 +62,16 @@ class InvalidProofException(
 ) : SecurityException(message)
 
 /**
+ * The requested credential `format` cannot be issued (→ OID4VCI `unsupported_credential_format`).
+ *
+ * Raised for a format the configured [Oidc4VciCredentialBuilder] does not sign, and for every
+ * format when no builder is configured: the issuer never emits a credential it did not sign.
+ */
+class UnsupportedCredentialFormatException(
+    message: String,
+) : IllegalArgumentException(message)
+
+/**
  * The issuer is holding as many offers, tokens or deferred credentials as it is configured to,
  * even after expired entries were purged. Surfaces as `503 temporarily_unavailable`; refusing is
  * deliberate, because silently evicting a live entry would invalidate a holder's valid offer.
@@ -69,7 +84,39 @@ class IssuerCapacityExceededException(
 data class DeferredEntry(
     val credential: String,
     val issuedAt: Long,
+    /**
+     * SHA-256 (hex) of the access token this credential may be collected with, or `null` for an
+     * entry any live access token may collect. Never the token itself.
+     */
+    val ownerTokenHash: String? = null,
 )
+
+/** What an [Oidc4VciCredentialBuilder] is asked to issue. */
+data class Oidc4VciCredentialRequest(
+    /** The OID4VCI `format` identifier, always one of [Oidc4VciCredentialBuilder.supportedFormats]. */
+    val format: String,
+    val credentialTypes: List<String>,
+    val issuerDid: String,
+    /** The DID derived from the key the holder proved possession of. */
+    val subjectDid: String,
+    /** The claims carried by the offer, without any `id` (the subject id is [subjectDid]). */
+    val claims: JsonObject,
+)
+
+/**
+ * The signing hook of [Oidc4VciIssuerService]: turns a verified request into the credential string
+ * returned to the wallet (a compact JWT for `jwt_vc_json`, a JSON document for `ldp_vc`).
+ *
+ * The issuer service has no way to produce a credential on its own; it fails closed
+ * (`unsupported_credential_format`) until one is configured. [CredentialServiceCredentialBuilder]
+ * adapts a `CredentialService` (and through it the KMS); a host may supply its own.
+ */
+interface Oidc4VciCredentialBuilder {
+    /** OID4VCI `format` identifiers this builder signs. Anything else is refused before issuance. */
+    val supportedFormats: Set<String>
+
+    suspend fun build(request: Oidc4VciCredentialRequest): String
+}
 
 /** Raw Ed25519 public key length in bytes (RFC 8032). */
 private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
@@ -138,6 +185,12 @@ class Oidc4VciIssuerService
          * bounded by [maxDeferredCredentials].
          */
         val stateStore: Oidc4VciIssuerStateStore = InMemoryOidc4VciIssuerStateStore(),
+        /**
+         * Signs the credentials this issuer hands out. When `null` (the default) the issuer fails
+         * closed: every credential request is refused with `unsupported_credential_format`, because
+         * an unsigned credential is not something a wallet can rely on.
+         */
+        val credentialBuilder: Oidc4VciCredentialBuilder? = null,
     ) {
         fun getMetadata(): CredentialIssuerMetadata =
             CredentialIssuerMetadata(
@@ -153,10 +206,11 @@ class Oidc4VciIssuerService
             credentialTypes: List<String>,
             txCode: TxCode? = null,
             txCodeValue: String? = null,
+            claims: JsonObject = JsonObject(emptyMap()),
         ): CreateOfferResponse {
             purgeExpired()
             val preAuthCode = UUID.randomUUID().toString()
-            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue), maxPendingOffers)) {
+            if (!stateStore.putOffer(preAuthCode, OfferState(credentialTypes, txCode, txCodeValue, claims), maxPendingOffers)) {
                 throw IssuerCapacityExceededException("Too many pending credential offers ($maxPendingOffers)")
             }
             return CreateOfferResponse(buildCredentialOfferUri(credentialTypes, preAuthCode, txCode), preAuthCode)
@@ -256,6 +310,7 @@ class Oidc4VciIssuerService
          * The credential request MUST carry a `proof.jwt` (OID4VCI v1.0 §7.2.1.1) whose:
          * - signature verifies against the key carried in its own JOSE header (`jwk` header
          *   with an OKP/Ed25519 key, or a `did:key` `kid`);
+         * - `typ` header equals `openid4vci-proof+jwt`;
          * - `aud` claim equals this issuer's URL;
          * - `nonce` claim equals the current (unexpired) `c_nonce` bound to the access token.
          *
@@ -264,25 +319,43 @@ class Oidc4VciIssuerService
          * an unknown or expired access token throws [InvalidTokenException].
          *
          * The issued credential's subject is bound to the proven key: `credentialSubject.id`
-         * is the `did:key` derived from the proof's `jwk` header (or the `kid` DID).
+         * is the `did:key` derived from the proof's `jwk` header (or the `kid` DID). The credential
+         * is produced and signed by [credentialBuilder] and carries the offer's claims; a format it
+         * does not support (or no builder at all) throws [UnsupportedCredentialFormatException].
          */
-        fun issueCredential(
+        suspend fun issueCredential(
             accessToken: String,
             format: String,
             credentialTypes: List<String>,
             proofJwt: String?,
         ): CredentialServerResponse {
             val entry = requireValidToken(accessToken)
+            // Refused before the proof is judged, so an unsupported format does not burn a c_nonce.
+            val builder = credentialBuilder
+            if (builder == null || format !in builder.supportedFormats) {
+                throw UnsupportedCredentialFormatException(
+                    if (builder == null) {
+                        "This issuer has no credential signing backend configured"
+                    } else {
+                        "Credential format '$format' is not supported; supported: ${builder.supportedFormats.sorted()}"
+                    },
+                )
+            }
             val subjectDid = verifyProofOrThrow(accessToken, proofJwt)
-            val credentialJson =
-                buildMinimalCredential(
-                    types = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
-                    subjectDid = subjectDid,
+            val credential =
+                builder.build(
+                    Oidc4VciCredentialRequest(
+                        format = format,
+                        credentialTypes = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
+                        issuerDid = issuerDid,
+                        subjectDid = subjectDid,
+                        claims = JsonObject(entry.offerState.claims.filterKeys { it != "id" }),
+                    ),
                 )
             // Rotate the c_nonce on success too (OID4VCI v1.0 §7.3): each proof is single-use.
             val freshNonce = rotateCNonce(accessToken)
             return CredentialServerResponse(
-                credential = credentialJson,
+                credential = credential,
                 format = format,
                 cNonce = freshNonce,
                 cNonceExpiresIn = cNonceTtlSeconds,
@@ -294,7 +367,9 @@ class Oidc4VciIssuerService
             accessToken: String,
         ): CredentialServerResponse? {
             requireValidToken(accessToken)
-            val entry = stateStore.consumeDeferred(transactionId) ?: return null
+            // Only the access token the credential was registered for may collect it; a mismatch
+            // leaves the entry in place for its rightful owner.
+            val entry = stateStore.consumeDeferredOwnedBy(transactionId, tokenHash(accessToken)) ?: return null
             if (System.currentTimeMillis() - entry.issuedAt >= deferredTtlSeconds * 1000) return null
             return CredentialServerResponse(credential = entry.credential)
         }
@@ -302,16 +377,29 @@ class Oidc4VciIssuerService
         /**
          * Makes [credentialJson] collectable at the deferred endpoint under [transactionId].
          * Throws [IssuerCapacityExceededException] when the bound is reached.
+         *
+         * Pass the [ownerAccessToken] of the wallet session that requested the credential to bind it
+         * to that session: only that access token can then collect it, so a guessed or leaked
+         * transaction id is useless to anyone else. Without it any live access token can collect it.
          */
+        @JvmOverloads
         fun registerDeferredCredential(
             transactionId: String,
             credentialJson: String,
+            ownerAccessToken: String? = null,
         ) {
             purgeExpired()
-            if (!stateStore.putDeferred(transactionId, DeferredEntry(credentialJson, System.currentTimeMillis()), maxDeferredCredentials)) {
+            val entry = DeferredEntry(credentialJson, System.currentTimeMillis(), ownerAccessToken?.let(::tokenHash))
+            if (!stateStore.putDeferred(transactionId, entry, maxDeferredCredentials)) {
                 throw IssuerCapacityExceededException("Too many deferred credentials ($maxDeferredCredentials)")
             }
         }
+
+        private fun tokenHash(accessToken: String): String =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest(accessToken.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
 
         /** Throws [InvalidTokenException] unless [accessToken] is a live access token. */
         fun requireAccessToken(accessToken: String) {
@@ -406,8 +494,11 @@ class Oidc4VciIssuerService
                 reject("Unsigned proof (alg=none) is not accepted")
             }
             if (alg != "EdDSA") reject("Unsupported proof alg '$alg' — only EdDSA (Ed25519) is supported")
-            header["typ"]?.jsonPrimitive?.contentOrNull?.let { typ ->
-                if (typ != "openid4vci-proof+jwt") reject("proof.jwt typ must be 'openid4vci-proof+jwt', got '$typ'")
+            // OID4VCI v1.0 Appendix F.1: the typ header is REQUIRED, which is what stops a JWT minted
+            // for another purpose from being replayed as a proof of possession.
+            val typ = header["typ"]?.jsonPrimitive?.contentOrNull
+            if (typ != "openid4vci-proof+jwt") {
+                reject("proof.jwt typ must be 'openid4vci-proof+jwt', got '${typ ?: "<absent>"}'")
             }
 
             val proofKey =
@@ -527,33 +618,6 @@ class Oidc4VciIssuerService
             } catch (_: Exception) {
                 null
             }
-        }
-
-        /**
-         * Builds the minimal credential JSON via kotlinx-serialization — no string templates,
-         * so attacker-controlled credential types (or any other value) cannot inject JSON.
-         *
-         * The credential's subject is bound to [subjectDid], the DID proven by the wallet's
-         * proof-of-possession JWT.
-         */
-        private fun buildMinimalCredential(
-            types: List<String>,
-            subjectDid: String,
-        ): String {
-            val credential =
-                buildJsonObject {
-                    put("@context", JsonArray(listOf(JsonPrimitive("https://www.w3.org/2018/credentials/v1"))))
-                    put("type", JsonArray(types.map { JsonPrimitive(it) }))
-                    put("issuer", issuerDid)
-                    put(
-                        "issuanceDate",
-                        java.time.Instant
-                            .now()
-                            .toString(),
-                    )
-                    put("credentialSubject", buildJsonObject { put("id", subjectDid) })
-                }
-            return Json.encodeToString(JsonObject.serializer(), credential)
         }
     }
 

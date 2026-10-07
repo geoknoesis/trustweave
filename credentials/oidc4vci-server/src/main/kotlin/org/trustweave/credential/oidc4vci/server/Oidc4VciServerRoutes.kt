@@ -31,7 +31,7 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
 
     post("/api/offer") {
         val req = call.receive<CreateOfferRequest>()
-        val resp = service.createOffer(req.credentialTypes, req.txCode, req.txCodeValue)
+        val resp = service.createOffer(req.credentialTypes, req.txCode, req.txCodeValue, req.claims)
         call.respond(
             HttpStatusCode.Created,
             buildJsonObject {
@@ -123,6 +123,16 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
                 return@post
             } catch (e: InvalidTokenException) {
                 call.respondInvalidToken(e.message)
+                return@post
+            } catch (e: UnsupportedCredentialFormatException) {
+                // OID4VCI §8.3.1.2: the requested format cannot be issued. Never echoed as if it were.
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    buildJsonObject {
+                        put("error", "unsupported_credential_format")
+                        e.message?.let { m -> put("error_description", m) }
+                    },
+                )
                 return@post
             } catch (e: Exception) {
                 call.application.log.error("OID4VCI credential issuance failed unexpectedly", e)
@@ -217,4 +227,6 @@ data class CreateOfferRequest(
     val credentialTypes: List<String>,
     val txCode: TxCode? = null,
     val txCodeValue: String? = null,
+    /** Claims for the credential's `credentialSubject`, carried into the issued credential. */
+    val claims: JsonObject = JsonObject(emptyMap()),
 )

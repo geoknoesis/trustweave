@@ -10,7 +10,6 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration

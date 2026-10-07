@@ -11,6 +11,7 @@ public final class org/trustweave/signatures/trustlists/DefaultTrustAnchorResolv
 	public static final field Companion Lorg/trustweave/signatures/trustlists/DefaultTrustAnchorResolver$Companion;
 	public fun <init> (Lorg/trustweave/signatures/trustlists/TrustList;)V
 	public fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;Lkotlin/time/Instant;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
 }
 
 public final class org/trustweave/signatures/trustlists/DefaultTrustAnchorResolver$Companion {
@@ -158,6 +159,11 @@ public final class org/trustweave/signatures/trustlists/TrustAnchorMatch$Qualifi
 
 public abstract interface class org/trustweave/signatures/trustlists/TrustAnchorResolver {
 	public abstract fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+	public fun resolve (Ljava/security/cert/X509Certificate;Ljava/util/List;Lkotlin/time/Instant;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
+}
+
+public final class org/trustweave/signatures/trustlists/TrustAnchorResolver$DefaultImpls {
+	public static fun resolve (Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Ljava/security/cert/X509Certificate;Ljava/util/List;Lkotlin/time/Instant;)Lorg/trustweave/signatures/trustlists/TrustAnchorMatch;
 }
 
 public final class org/trustweave/signatures/trustlists/TrustList {

@@ -49,6 +49,26 @@ public final class org/trustweave/signatures/revocation/RevocationPolicy : java/
 	public static fun values ()[Lorg/trustweave/signatures/revocation/RevocationPolicy;
 }
 
+public final class org/trustweave/signatures/revocation/TimeStampTokenVerifier {
+	public static final field INSTANCE Lorg/trustweave/signatures/revocation/TimeStampTokenVerifier;
+	public final fun verify ([BLjava/util/List;)Lorg/trustweave/signatures/revocation/TimeStampTokenVerifier$Result;
+}
+
+public abstract class org/trustweave/signatures/revocation/TimeStampTokenVerifier$Result {
+}
+
+public final class org/trustweave/signatures/revocation/TimeStampTokenVerifier$Result$Invalid : org/trustweave/signatures/revocation/TimeStampTokenVerifier$Result {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getReason ()Ljava/lang/String;
+}
+
+public final class org/trustweave/signatures/revocation/TimeStampTokenVerifier$Result$Valid : org/trustweave/signatures/revocation/TimeStampTokenVerifier$Result {
+	public fun <init> (Lkotlin/time/Instant;Ljava/lang/String;[B)V
+	public final fun getGenTime ()Lkotlin/time/Instant;
+	public final fun getImprintDigest ()[B
+	public final fun getImprintOid ()Ljava/lang/String;
+}
+
 public final class org/trustweave/signatures/tsa/BouncyCastleTsaClient : org/trustweave/signatures/tsa/TsaClient {
 	public static final field Companion Lorg/trustweave/signatures/tsa/BouncyCastleTsaClient$Companion;
 	public fun <init> (Lorg/trustweave/signatures/tsa/TsaConfig;Lokhttp3/OkHttpClient;)V

@@ -1,20 +1,24 @@
 package org.trustweave.godiddy.resolver
 
+import com.sun.net.httpserver.HttpServer
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Test
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.GodiddyConfig
-import com.sun.net.httpserver.HttpServer
-import kotlinx.coroutines.runBlocking
 import java.net.InetSocketAddress
-import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Branch coverage tests for GodiddyResolver.
  */
 class GodiddyResolverBranchCoverageTest {
-
     /** A loopback upstream answering every identifier request with [status] and [body]; never the public API. */
     private fun upstream(
         status: Int,
@@ -88,39 +92,40 @@ class GodiddyResolverBranchCoverageTest {
         }
 
     @Test
-    fun `test GodiddyResolver convertToDidDocument with all fields`() = runBlocking<Unit> {
-        val config = GodiddyConfig.default()
-        val client = GodiddyClient(config)
-        val resolver = GodiddyResolver(client)
+    fun `test GodiddyResolver convertToDidDocument with all fields`() =
+        runBlocking<Unit> {
+            val config = GodiddyConfig.default()
+            val client = GodiddyClient(config)
+            val resolver = GodiddyResolver(client)
 
-        // Test conversion logic indirectly through resolveDid
-        try {
-            val result = resolver.resolveDid("did:key:123")
-            assertNotNull(result)
-        } catch (e: Exception) {
-            // Expected to fail without mock
-            assertIs<TrustWeaveException>(e)
+            // Test conversion logic indirectly through resolveDid
+            try {
+                val result = resolver.resolveDid("did:key:123")
+                assertNotNull(result)
+            } catch (e: Exception) {
+                // Expected to fail without mock
+                assertIs<TrustWeaveException>(e)
+            }
+
+            client.close()
         }
-
-        client.close()
-    }
 
     @Test
-    fun `test GodiddyResolver convertToDidDocument with missing id`() = runBlocking<Unit> {
-        val config = GodiddyConfig.default()
-        val client = GodiddyClient(config)
-        val resolver = GodiddyResolver(client)
+    fun `test GodiddyResolver convertToDidDocument with missing id`() =
+        runBlocking<Unit> {
+            val config = GodiddyConfig.default()
+            val client = GodiddyClient(config)
+            val resolver = GodiddyResolver(client)
 
-        // This will fail in real scenario, but we test the branch
-        try {
-            val result = resolver.resolveDid("did:key:123")
-            assertNotNull(result)
-        } catch (e: Exception) {
-            // Expected to fail without mock
-            assertIs<TrustWeaveException>(e)
+            // This will fail in real scenario, but we test the branch
+            try {
+                val result = resolver.resolveDid("did:key:123")
+                assertNotNull(result)
+            } catch (e: Exception) {
+                // Expected to fail without mock
+                assertIs<TrustWeaveException>(e)
+            }
+
+            client.close()
         }
-
-        client.close()
-    }
 }
-

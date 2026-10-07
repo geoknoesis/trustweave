@@ -33,7 +33,6 @@ import java.security.cert.X509Certificate
 import java.util.Base64
 
 class JadesLongTermTest {
-
     private lateinit var kms: TestKms
     private lateinit var ca: TestCa
     private lateinit var tsa: TestTsa
@@ -55,177 +54,202 @@ class JadesLongTermTest {
     }
 
     @Test
-    fun `signing request rejects B_LT without validationData`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
-        val failed = runCatching {
-            JadesSigningRequest(
-                profile = JadesProfile.B_LT,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-                validationData = null, // missing
-            )
+    fun `signing request rejects B_LT without validationData`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
+            val failed =
+                runCatching {
+                    JadesSigningRequest(
+                        profile = JadesProfile.B_LT,
+                        keyId = keyId,
+                        signerCertificateChain = chain,
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        validationData = null, // missing
+                    )
+                }
+            assertTrue(failed.isFailure)
+            assertTrue(failed.exceptionOrNull()!!.message!!.contains("validationData is required"))
         }
-        assertTrue(failed.isFailure)
-        assertTrue(failed.exceptionOrNull()!!.message!!.contains("validationData is required"))
-    }
 
     @Test
-    fun `signing request rejects B_LT with empty cert chain in validationData`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
-        val failed = runCatching {
-            JadesSigningRequest(
-                profile = JadesProfile.B_LT,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-                validationData = ValidationData(completeCertificateChain = emptyList()),
-            )
+    fun `signing request rejects B_LT with empty cert chain in validationData`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Anyone")
+            val failed =
+                runCatching {
+                    JadesSigningRequest(
+                        profile = JadesProfile.B_LT,
+                        keyId = keyId,
+                        signerCertificateChain = chain,
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        validationData = ValidationData(completeCertificateChain = emptyList()),
+                    )
+                }
+            assertTrue(failed.isFailure)
+            assertTrue(failed.exceptionOrNull()!!.message!!.contains("completeCertificateChain"))
         }
-        assertTrue(failed.isFailure)
-        assertTrue(failed.exceptionOrNull()!!.message!!.contains("completeCertificateChain"))
-    }
 
     @Test
-    fun `roundtrips a JAdES B-LT signature`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LT Signer")
-        val signature = DefaultJadesSigner(kms).sign(
-            payloadJson = buildJsonObject { put("profile", JsonPrimitive("B-LT")) },
-            request = JadesSigningRequest(
-                profile = JadesProfile.B_LT,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-                validationData = ValidationData(
-                    completeCertificateChain = chain, // re-using the chain for the LT material
-                    revocationData = listOf(
-                        EncodedRevocationData(
-                            type = "CRL",
-                            dataB64 = Base64.getEncoder().encodeToString(realCrl()),
+    fun `roundtrips a JAdES B-LT signature`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LT Signer")
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    payloadJson = buildJsonObject { put("profile", JsonPrimitive("B-LT")) },
+                    request =
+                        JadesSigningRequest(
+                            profile = JadesProfile.B_LT,
+                            keyId = keyId,
+                            signerCertificateChain = chain,
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            validationData =
+                                ValidationData(
+                                    completeCertificateChain = chain, // re-using the chain for the LT material
+                                    revocationData =
+                                        listOf(
+                                            EncodedRevocationData(
+                                                type = "CRL",
+                                                dataB64 = Base64.getEncoder().encodeToString(realCrl()),
+                                            ),
+                                        ),
+                                ),
                         ),
+                )
+
+            assertTrue(signature.unsigned.sigTst.isNotEmpty(), "B-LT carries sigTst")
+            assertTrue(signature.unsigned.xVals.isNotEmpty(), "B-LT carries xVals")
+            assertTrue(signature.unsigned.rVals.isNotEmpty(), "B-LT carries rVals")
+            assertTrue(signature.unsigned.arcTst.isEmpty(), "B-LT does NOT carry arcTst")
+
+            val result =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_LT,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
                     ),
-                ),
-            ),
-        )
-
-        assertTrue(signature.unsigned.sigTst.isNotEmpty(), "B-LT carries sigTst")
-        assertTrue(signature.unsigned.xVals.isNotEmpty(), "B-LT carries xVals")
-        assertTrue(signature.unsigned.rVals.isNotEmpty(), "B-LT carries rVals")
-        assertTrue(signature.unsigned.arcTst.isEmpty(), "B-LT does NOT carry arcTst")
-
-        val result = verifier.verify(
-            signature.serializedFlattened,
-            JadesVerificationOptions(
-                requiredProfile = JadesProfile.B_LT,
-                trustAnchorResolver = resolverFor(ca.caCert),
-                timestampTrustAnchors = listOf(tsa.cert),
-            ),
-        )
-        assertTrue(result is Valid, "got $result")
-        result as Valid
-        assertEquals(JadesProfile.B_LT, result.foundProfile)
-        assertTrue(result.xValsCount > 0)
-        assertTrue(result.rValsCount > 0)
-        assertNotNull(result.signatureTimeStamp)
-        assertNull(result.archivalTimeStamp, "B-LT has no arcTst")
-    }
+                )
+            assertTrue(result is Valid, "got $result")
+            result as Valid
+            assertEquals(JadesProfile.B_LT, result.foundProfile)
+            assertTrue(result.xValsCount > 0)
+            assertTrue(result.rValsCount > 0)
+            assertNotNull(result.signatureTimeStamp)
+            assertNull(result.archivalTimeStamp, "B-LT has no arcTst")
+        }
 
     @Test
-    fun `roundtrips a JAdES B-LTA signature including archival time-stamp`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
-        val signature = DefaultJadesSigner(kms).sign(
-            payloadJson = buildJsonObject { put("profile", JsonPrimitive("B-LTA")) },
-            request = JadesSigningRequest(
-                profile = JadesProfile.B_LTA,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-                validationData = ValidationData(
-                    completeCertificateChain = chain,
-                    revocationData = listOf(
-                        EncodedRevocationData(
-                            type = "OCSP",
-                            dataB64 = Base64.getEncoder().encodeToString(realOcsp(chain)),
-                            producedAt = java.time.Instant.now().toString(),
+    fun `roundtrips a JAdES B-LTA signature including archival time-stamp`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    payloadJson = buildJsonObject { put("profile", JsonPrimitive("B-LTA")) },
+                    request =
+                        JadesSigningRequest(
+                            profile = JadesProfile.B_LTA,
+                            keyId = keyId,
+                            signerCertificateChain = chain,
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            validationData =
+                                ValidationData(
+                                    completeCertificateChain = chain,
+                                    revocationData =
+                                        listOf(
+                                            EncodedRevocationData(
+                                                type = "OCSP",
+                                                dataB64 = Base64.getEncoder().encodeToString(realOcsp(chain)),
+                                                producedAt =
+                                                    java.time.Instant
+                                                        .now()
+                                                        .toString(),
+                                            ),
+                                        ),
+                                ),
                         ),
+                )
+
+            assertTrue(signature.unsigned.arcTst.isNotEmpty(), "B-LTA carries arcTst")
+
+            val result =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_LTA,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
                     ),
-                ),
-            ),
-        )
-
-        assertTrue(signature.unsigned.arcTst.isNotEmpty(), "B-LTA carries arcTst")
-
-        val result = verifier.verify(
-            signature.serializedFlattened,
-            JadesVerificationOptions(
-                requiredProfile = JadesProfile.B_LTA,
-                trustAnchorResolver = resolverFor(ca.caCert),
-                timestampTrustAnchors = listOf(tsa.cert),
-            ),
-        )
-        assertTrue(result is Valid, "got $result")
-        result as Valid
-        assertEquals(JadesProfile.B_LTA, result.foundProfile)
-        assertNotNull(result.archivalTimeStamp, "B-LTA must surface archival time-stamp")
-    }
+                )
+            assertTrue(result is Valid, "got $result")
+            result as Valid
+            assertEquals(JadesProfile.B_LTA, result.foundProfile)
+            assertNotNull(result.archivalTimeStamp, "B-LTA must surface archival time-stamp")
+        }
 
     @Test
-    fun `requiring B-LT but receiving only B-T yields WrongProfile`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-T Signer")
-        val signature = DefaultJadesSigner(kms).sign(
-            buildJsonObject { put("k", JsonPrimitive("v")) },
-            JadesSigningRequest(
-                profile = JadesProfile.B_T,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-            ),
-        )
-        val result = verifier.verify(
-            signature.serializedFlattened,
-            JadesVerificationOptions(
-                requiredProfile = JadesProfile.B_LT,
-                trustAnchorResolver = resolverFor(ca.caCert),
-                timestampTrustAnchors = listOf(tsa.cert),
-            ),
-        )
-        assertTrue(result is Invalid.WrongProfile, "got $result")
-        result as Invalid.WrongProfile
-        assertEquals(JadesProfile.B_T, result.found)
-        assertEquals(JadesProfile.B_LT, result.required)
-    }
+    fun `requiring B-LT but receiving only B-T yields WrongProfile`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-T Signer")
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    buildJsonObject { put("k", JsonPrimitive("v")) },
+                    JadesSigningRequest(
+                        profile = JadesProfile.B_T,
+                        keyId = keyId,
+                        signerCertificateChain = chain,
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                    ),
+                )
+            val result =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_LT,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
+                    ),
+                )
+            assertTrue(result is Invalid.WrongProfile, "got $result")
+            result as Invalid.WrongProfile
+            assertEquals(JadesProfile.B_T, result.found)
+            assertEquals(JadesProfile.B_LT, result.required)
+        }
 
     @Test
-    fun `B-LTA signature is accepted when verifier only requires B-T (strict-superset rule)`() = runBlocking<Unit> {
-        val keyId = generateKey(Algorithm.Ed25519)
-        val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
-        val signature = DefaultJadesSigner(kms).sign(
-            buildJsonObject { put("k", JsonPrimitive("v")) },
-            JadesSigningRequest(
-                profile = JadesProfile.B_LTA,
-                keyId = keyId,
-                signerCertificateChain = chain,
-                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
-                validationData = ValidationData(completeCertificateChain = chain),
-            ),
-        )
-        val result = verifier.verify(
-            signature.serializedFlattened,
-            JadesVerificationOptions(
-                requiredProfile = JadesProfile.B_T,
-                trustAnchorResolver = resolverFor(ca.caCert),
-                timestampTrustAnchors = listOf(tsa.cert),
-            ),
-        )
-        assertTrue(result is Valid, "got $result")
-        // The envelope claims B-LTA, but it embeds no revocation evidence, so only B-T can be shown.
-        assertEquals(JadesProfile.B_T, (result as Valid).foundProfile)
-    }
+    fun `B-LTA signature is accepted when verifier only requires B-T (strict-superset rule)`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=B-LTA Signer")
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    buildJsonObject { put("k", JsonPrimitive("v")) },
+                    JadesSigningRequest(
+                        profile = JadesProfile.B_LTA,
+                        keyId = keyId,
+                        signerCertificateChain = chain,
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        validationData = ValidationData(completeCertificateChain = chain),
+                    ),
+                )
+            val result =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_T,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
+                    ),
+                )
+            assertTrue(result is Valid, "got $result")
+            // The envelope claims B-LTA, but it embeds no revocation evidence, so only B-T can be shown.
+            assertEquals(JadesProfile.B_T, (result as Valid).foundProfile)
+        }
 
     // ---------------------------------------------------------------- helpers
 
@@ -243,47 +267,60 @@ class JadesLongTermTest {
 
     /** A genuine "good" OCSP response from the test CA for the signer (the first certificate of [chain]). */
     private fun realOcsp(chain: List<ByteArray>): ByteArray {
-        val signer = java.security.cert.CertificateFactory.getInstance("X.509")
-            .generateCertificate(chain.first().inputStream()) as X509Certificate
+        val signer =
+            java.security.cert.CertificateFactory
+                .getInstance("X.509")
+                .generateCertificate(chain.first().inputStream()) as X509Certificate
         return RevocationFixtures.ocsp(ca.caCert, ca.caPrivateKey(), signer)
     }
 
     private fun resolverFor(trustedCa: X509Certificate): DefaultTrustAnchorResolver {
-        val service = TspService(
-            serviceName = "Test CA",
-            serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
-            status = TspServiceStatus.GRANTED,
-            statusStartingTime = kotlin.time.Clock.System.now(),
-            serviceCertificates = listOf(trustedCa),
-            qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
-        )
-        val trustList = TrustList(
-            schemeOperator = "Test",
-            sequenceNumber = 1,
-            issuedAt = kotlin.time.Clock.System.now(),
-            nextUpdateAt = null,
-            memberStateLists = listOf(
-                MemberStateTsl(
-                    territory = "EU",
-                    schemeOperator = "Test",
-                    sequenceNumber = 1,
-                    issuedAt = kotlin.time.Clock.System.now(),
-                    trustedTsps = listOf(
-                        TrustedTSP(name = "Test TSP", tradeName = null, services = listOf(service)),
+        val service =
+            TspService(
+                serviceName = "Test CA",
+                serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
+                status = TspServiceStatus.GRANTED,
+                statusStartingTime =
+                    kotlin.time.Clock.System
+                        .now(),
+                serviceCertificates = listOf(trustedCa),
+                qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
+            )
+        val trustList =
+            TrustList(
+                schemeOperator = "Test",
+                sequenceNumber = 1,
+                issuedAt =
+                    kotlin.time.Clock.System
+                        .now(),
+                nextUpdateAt = null,
+                memberStateLists =
+                    listOf(
+                        MemberStateTsl(
+                            territory = "EU",
+                            schemeOperator = "Test",
+                            sequenceNumber = 1,
+                            issuedAt =
+                                kotlin.time.Clock.System
+                                    .now(),
+                            trustedTsps =
+                                listOf(
+                                    TrustedTSP(name = "Test TSP", tradeName = null, services = listOf(service)),
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         return DefaultTrustAnchorResolver(trustList)
     }
 
-    private fun stampingDispatcher(tsa: TestTsa): Dispatcher = object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-            val responseBytes = tsa.stamp(request.body.readByteArray())
-            return MockResponse()
-                .setResponseCode(200)
-                .setHeader("Content-Type", "application/timestamp-reply")
-                .setBody(Buffer().apply { write(responseBytes) })
+    private fun stampingDispatcher(tsa: TestTsa): Dispatcher =
+        object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val responseBytes = tsa.stamp(request.body.readByteArray())
+                return MockResponse()
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", "application/timestamp-reply")
+                    .setBody(Buffer().apply { write(responseBytes) })
+            }
         }
-    }
 }

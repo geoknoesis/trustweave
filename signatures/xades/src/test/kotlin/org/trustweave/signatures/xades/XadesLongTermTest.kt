@@ -12,10 +12,10 @@ import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.DefaultTrustAnchorResolver
 import org.trustweave.signatures.trustlists.MemberStateTsl
 import org.trustweave.signatures.trustlists.QualifierUris
-import org.trustweave.signatures.trustlists.TrustList
-import org.trustweave.signatures.trustlists.TrustedTSP
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
+import org.trustweave.signatures.trustlists.TrustList
+import org.trustweave.signatures.trustlists.TrustedTSP
 import org.trustweave.signatures.trustlists.TspService
 import org.trustweave.signatures.trustlists.TspServiceStatus
 import org.trustweave.signatures.trustlists.TspServiceType
@@ -220,7 +220,13 @@ class XadesLongTermTest {
             )
         val resolver =
             DefaultTrustAnchorResolver(
-                TrustList(schemeOperator = "Test", sequenceNumber = 1, issuedAt = issued, nextUpdateAt = null, memberStateLists = listOf(tsl)),
+                TrustList(
+                    schemeOperator = "Test",
+                    sequenceNumber = 1,
+                    issuedAt = issued,
+                    nextUpdateAt = null,
+                    memberStateLists = listOf(tsl),
+                ),
             )
         // Today the certificate has expired; as of five days ago, when a time-stamp vouches it was signed, it was valid.
         resolver.resolve(expired, listOf(ca.caCert)).shouldBeInstanceOf<TrustAnchorMatch.NotTrusted>()

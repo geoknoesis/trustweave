@@ -224,8 +224,8 @@ class JAdESProofEngine(
             is JadesValidationResult.Invalid.Malformed ->
                 invalidProof(credential, "JAdES Malformed: ${result.reason}")
             is JadesValidationResult.Invalid.TrustWithdrawn ->
-            invalidProof(credential, "JAdES TrustWithdrawn: ${result.reason}")
-        is JadesValidationResult.Invalid.CertificateRevoked ->
+                invalidProof(credential, "JAdES TrustWithdrawn: ${result.reason}")
+            is JadesValidationResult.Invalid.CertificateRevoked ->
                 invalidProof(credential, "JAdES CertificateRevoked: ${result.reason}")
             is JadesValidationResult.Invalid.RevocationUnavailable ->
                 invalidProof(credential, "JAdES RevocationUnavailable: ${result.reason}")

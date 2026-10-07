@@ -103,7 +103,11 @@ sealed class JadesValidationResult {
         ) : Invalid()
 
         /** The signer's trust-list service was withdrawn at (or the signature cannot be shown to predate) [withdrawnAt]. */
-        data class TrustWithdrawn(val cert: X509Certificate, val withdrawnAt: Instant, val reason: String) : Invalid()
+        data class TrustWithdrawn(
+            val cert: X509Certificate,
+            val withdrawnAt: Instant,
+            val reason: String,
+        ) : Invalid()
 
         /** A certificate in the chain was revoked at or before the verification time. */
         data class CertificateRevoked(

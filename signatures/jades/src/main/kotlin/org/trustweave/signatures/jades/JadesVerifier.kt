@@ -276,7 +276,9 @@ class DefaultJadesVerifier : JadesVerifier {
             var revocationChecked = false
             var embeddedCoversChain = false
             if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
-                val now = kotlin.time.Clock.System.now()
+                val now =
+                    kotlin.time.Clock.System
+                        .now()
                 val statuses =
                     CertificateRevocationEvaluator.evaluate(
                         signer = signerCert,
@@ -599,7 +601,10 @@ class DefaultJadesVerifier : JadesVerifier {
                 "TSA genTime ($tsaGenTime) is more than $maxClockSkew away from sigT ($signingTime)",
             )
         }
-        return SigTstResult.Ok(tsaGenTime, trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("sigTst is not trusted"))
+        return SigTstResult.Ok(
+            tsaGenTime,
+            trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("sigTst is not trusted"),
+        )
     }
 
     /**

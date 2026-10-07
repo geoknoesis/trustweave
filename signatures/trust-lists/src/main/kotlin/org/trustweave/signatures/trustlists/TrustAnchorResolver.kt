@@ -15,7 +15,6 @@ import kotlin.time.toKotlinInstant
  * eIDAS-qualified.
  */
 interface TrustAnchorResolver {
-
     /**
      * Resolve [signerCert] against the configured trust graph.
      *
@@ -29,7 +28,10 @@ interface TrustAnchorResolver {
      *         status is currently `GRANTED`; [TrustAnchorMatch.QualifiedWithdrawn] when the matched
      *         service has been withdrawn; [TrustAnchorMatch.NotTrusted] otherwise.
      */
-    fun resolve(signerCert: X509Certificate, chain: List<X509Certificate>): TrustAnchorMatch
+    fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+    ): TrustAnchorMatch
 
     /**
      * Resolve [signerCert] with the path validated as of [validationTime] instead of now. Verifiers pass the
@@ -65,7 +67,6 @@ interface TrustAnchorResolver {
 class DefaultTrustAnchorResolver(
     private val trustList: TrustList,
 ) : TrustAnchorResolver {
-
     /**
      * Flattened view: every CA/QC service across every Member State, paired with the territory
      * code so we can attribute matches accurately.
@@ -116,17 +117,19 @@ class DefaultTrustAnchorResolver(
         candidate: MatchedService,
         validationTime: Instant?,
     ): TrustAnchorMatch? {
-        val anchors = candidate.service.serviceCertificates
-            .map { TrustAnchor(it, null) }
-            .toSet()
+        val anchors =
+            candidate.service.serviceCertificates
+                .map { TrustAnchor(it, null) }
+                .toSet()
         if (anchors.isEmpty()) return null
 
-        val params = try {
-            PKIXParameters(anchors)
-        } catch (t: Throwable) {
-            // E.g. anchor certs flagged as non-CA. Don't let one malformed candidate fail the rest.
-            return null
-        }
+        val params =
+            try {
+                PKIXParameters(anchors)
+            } catch (t: Throwable) {
+                // E.g. anchor certs flagged as non-CA. Don't let one malformed candidate fail the rest.
+                return null
+            }
         params.isRevocationEnabled = false
         // Validity periods are checked as of now unless the caller supplied the time of a trusted time-stamp.
         validationTime?.let { params.date = java.util.Date(it.toEpochMilliseconds()) }
@@ -144,21 +147,24 @@ class DefaultTrustAnchorResolver(
     private fun buildMatch(matched: MatchedService): TrustAnchorMatch {
         val service = matched.service
         return when (service.status) {
-            TspServiceStatus.GRANTED -> TrustAnchorMatch.QualifiedActive(
-                tspName = matched.tspName,
-                territory = matched.territory,
-                service = service,
-                qcWithSscd = service.qualifierUris.any {
-                    it == QualifierUris.QC_WITH_SSCD ||
-                        it == QualifierUris.QC_SSCD_STATUS_AS_IN_CERT
-                },
-                qcForESig = service.qualifierUris.any { it == QualifierUris.QC_FOR_ESIG },
-            )
+            TspServiceStatus.GRANTED ->
+                TrustAnchorMatch.QualifiedActive(
+                    tspName = matched.tspName,
+                    territory = matched.territory,
+                    service = service,
+                    qcWithSscd =
+                        service.qualifierUris.any {
+                            it == QualifierUris.QC_WITH_SSCD ||
+                                it == QualifierUris.QC_SSCD_STATUS_AS_IN_CERT
+                        },
+                    qcForESig = service.qualifierUris.any { it == QualifierUris.QC_FOR_ESIG },
+                )
 
-            TspServiceStatus.WITHDRAWN -> TrustAnchorMatch.QualifiedWithdrawn(
-                tspName = matched.tspName,
-                withdrawnAt = service.statusStartingTime,
-            )
+            TspServiceStatus.WITHDRAWN ->
+                TrustAnchorMatch.QualifiedWithdrawn(
+                    tspName = matched.tspName,
+                    withdrawnAt = service.statusStartingTime,
+                )
 
             else -> null ?: TrustAnchorMatch.NotTrusted
         }

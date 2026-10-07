@@ -110,7 +110,8 @@ class JadesTrustTest {
                     keyId = id,
                     signerCertificateChain = chain,
                     tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()).takeIf { profile != JadesProfile.B_B },
-                    validationData = validationData ?: ValidationData(completeCertificateChain = chain).takeIf { profile.atLeast(JadesProfile.B_LT) },
+                    validationData =
+                        validationData ?: ValidationData(completeCertificateChain = chain).takeIf { profile.atLeast(JadesProfile.B_LT) },
                 ),
             ).serializedFlattened
     }
@@ -210,7 +211,9 @@ class JadesTrustTest {
                                 ValidationData(
                                     completeCertificateChain = chain,
                                     revocationData =
-                                        listOf(EncodedRevocationData("CRL", Base64.getEncoder().encodeToString(ByteArray(64) { it.toByte() }))),
+                                        listOf(
+                                            EncodedRevocationData("CRL", Base64.getEncoder().encodeToString(ByteArray(64) { it.toByte() })),
+                                        ),
                                 ),
                         ),
                     ).serializedFlattened

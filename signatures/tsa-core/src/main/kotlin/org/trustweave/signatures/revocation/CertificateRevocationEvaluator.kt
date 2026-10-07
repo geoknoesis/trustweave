@@ -137,8 +137,7 @@ object CertificateRevocationEvaluator {
     }
 
     /** Self-signed means signed by its own key: a matching name alone also describes a re-keyed self-issued certificate. */
-    private fun isSelfSigned(cert: X509Certificate): Boolean =
-        cert.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, cert)
+    private fun isSelfSigned(cert: X509Certificate): Boolean = cert.subjectX500Principal == cert.issuerX500Principal && signedBy(cert, cert)
 
     private fun walkChain(
         signer: X509Certificate,
@@ -190,15 +189,16 @@ object CertificateRevocationEvaluator {
                 }
             }
             val vouching = singles.filter { it.certStatus == null || it.certStatus is RevokedStatus }
-            val single = vouching.firstOrNull { single ->
-                fresh(
-                    single.thisUpdate.toInstant().toKotlinInstant(),
-                    single.nextUpdate?.toInstant()?.toKotlinInstant(),
-                    authenticatedTime,
-                    now,
-                    skewMillis,
-                )
-            }
+            val single =
+                vouching.firstOrNull { single ->
+                    fresh(
+                        single.thisUpdate.toInstant().toKotlinInstant(),
+                        single.nextUpdate?.toInstant()?.toKotlinInstant(),
+                        authenticatedTime,
+                        now,
+                        skewMillis,
+                    )
+                }
             when {
                 single == null && singles.any { it.certStatus == null || it.certStatus is RevokedStatus } ->
                     detail = "the OCSP response for '$name' is not fresh enough for this signature"

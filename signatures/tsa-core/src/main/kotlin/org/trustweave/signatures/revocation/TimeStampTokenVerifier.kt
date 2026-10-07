@@ -54,6 +54,7 @@ object TimeStampTokenVerifier {
                 return Result.Invalid("not an RFC 3161 time-stamp token: ${t.message}")
             }
         val info = token.timeStampInfo
+
         @Suppress("UNCHECKED_CAST")
         val holder =
             (

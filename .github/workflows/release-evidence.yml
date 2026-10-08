@@ -20,8 +20,6 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -128,12 +126,6 @@ jobs:
       - name: Bind validation to the candidate commit
         run: python scripts/record-validation-manifest.py
 
-      - name: Attest build outputs
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: |
-            build/**/libs/*.jar
-            build/reports/cyclonedx/bom.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-evidence
@@ -177,8 +169,11 @@ jobs:
     timeout-minutes: 60
     # Requires a reviewer on the `maven-central` environment, so a tag alone never publishes.
     environment: maven-central
+    # Only this job mints OIDC tokens and writes attestations: it is the one that sees the published files.
     permissions:
       contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -212,12 +207,84 @@ jobs:
           TRUSTWEAVE_PUBLISH_USERNAME: ${{ secrets.TRUSTWEAVE_PUBLISH_USERNAME }}
           TRUSTWEAVE_PUBLISH_PASSWORD: ${{ secrets.TRUSTWEAVE_PUBLISH_PASSWORD }}
           TRUSTWEAVE_PUBLISH_URL: ${{ vars.TRUSTWEAVE_PUBLISH_URL }}
-        run: ./gradlew publishAllPublicationsToCentralRepository --no-daemon --stacktrace
+        # One invocation, two repositories: Central and a local directory receive the same signed task
+        # outputs, so build/release-staging holds byte-for-byte what was uploaded.
+        run: >-
+          ./gradlew publishAllPublicationsToCentralRepository publishAllPublicationsToReleaseStagingRepository
+          --no-daemon --stacktrace
+
+      - name: Generate the aggregate SBOM
+        run: |
+          ./gradlew cyclonedxBom --no-daemon --stacktrace
+          test -s build/reports/cyclonedx/bom.json
+          cp build/reports/cyclonedx/bom.json "build/release-staging/trustweave-${GITHUB_REF_NAME#v}-sbom.cdx.json"
+
+      - name: Checksum the published files
+        # Every file Gradle staged (jars, POMs, module metadata, per-module CycloneDX SBOMs, .asc signatures)
+        # plus the aggregate SBOM. Gradle's own .md5/.sha* sidecars and maven-metadata are excluded.
+        run: |
+          set -euo pipefail
+          cd build/release-staging
+          find . -type f ! -name 'SHA256SUMS' ! -name 'maven-metadata*' \
+            ! -name '*.md5' ! -name '*.sha1' ! -name '*.sha256' ! -name '*.sha512' \
+            | LC_ALL=C sort | sed 's|^\./||' | xargs sha256sum > SHA256SUMS
+          count="$(wc -l < SHA256SUMS)"
+          echo "Checksummed $count files"
+          test "$count" -gt 0
+          # actions/attest-build-provenance accepts at most 1024 subjects per attestation.
+          test "$count" -le 1024 || { echo "Too many subjects ($count) for one attestation; split them" >&2; exit 1; }
+          sha256sum --check --strict SHA256SUMS
+
+      - name: Attest SLSA build provenance for every published file
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: build/release-staging/SHA256SUMS
+
+      - name: Attest the checksum file itself
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/release-staging/SHA256SUMS
 
       - name: Record what was published
-        run: ./gradlew -q :distribution:bom:generatePomFileForMavenPublication --no-daemon && ls -R build/*/publications > published-poms.txt
+        run: |
+          ./gradlew -q :distribution:bom:generatePomFileForMavenPublication --no-daemon
+          ls -R build/*/publications > published-poms.txt
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: published-poms
           path: published-poms.txt
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-artifacts
+          path: build/release-staging/
+          if-no-files-found: error
+
+  release-assets:
+    name: Attach checksums to the GitHub release
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Download the checksums and aggregate SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name release-artifacts --dir release-artifacts
+          test -s release-artifacts/SHA256SUMS
+      - name: Upload to the release for this tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            release-artifacts/SHA256SUMS "release-artifacts/trustweave-${GITHUB_REF_NAME#v}-sbom.cdx.json"

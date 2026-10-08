@@ -11,6 +11,15 @@ documentation review.
 **Read "Breaking and behaviour changes" before upgrading — it lists changes that make previously
 working code fail until it is adjusted.**
 
+### Release provenance
+
+- **Provenance now covers the published files.** The release `publish` job publishes to Maven Central and to a
+  local `build/release-staging` repository in one Gradle invocation, writes `SHA256SUMS` over every staged file
+  plus the aggregate CycloneDX SBOM, and attests all of them (and `SHA256SUMS`) with
+  `actions/attest-build-provenance`. A new `release-assets` job attaches `SHA256SUMS` and the SBOM to the GitHub
+  release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no
+  longer holds `id-token`/`attestations` write. `SECURITY.md` ("Verifying a Release") shows `gh attestation verify`.
+
 ### Breaking and behaviour changes
 
 - **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**

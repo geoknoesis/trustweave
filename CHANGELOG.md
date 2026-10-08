@@ -22,6 +22,19 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**
+  `DefaultLotlSignatureVerifier` now requires exactly one `ds:Signature` (a direct child of the document
+  element), exactly one whole-document `URI=""` reference with the enveloped-signature transform plus at most one
+  `xades:SignedProperties` reference, and no duplicate `Id`/`ID`/`id`; a signature covering only a fragment is
+  rejected as `Malformed`. The signer certificate must be valid at validation time (new
+  `Invalid.SignerCertificateNotValid`, which also reports a `SigningTime` in the future; add a branch if you
+  `when` over `LotlSignatureValidationResult` exhaustively), and the PKIX fallback uses the intermediates carried in
+  `ds:KeyInfo`. `DefaultLotlSignatureVerifier(clock)` is optional (`@JvmOverloads`). `EtsiTrustListParser` now
+  matches the ETSI namespace and the `TrustServiceStatusList` root instead of local names only. `TrustList` and
+  `MemberStateTsl` gained trailing defaulted properties (`tslPointers`, `nextUpdateAt`, `schemeTerritory`), so the
+  old `copy(...)` signatures are gone. New: `DefaultTslSignatureVerifier` and `VerifiedTrustListLoader`, which
+  verifies the LoTL and every TSL against the certificates of its LoTL pointer, enforces `NextUpdate` and
+  sequence-number rollback protection, and accepts stale lists only with `TrustListLoadOptions(allowStale = true)`.
 - **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**
   `Oidc4VciIssuerService` takes an `Oidc4VciCredentialBuilder` (`credentialBuilder`); without one every
   credential request is refused with `unsupported_credential_format`, and so is any format the builder does not

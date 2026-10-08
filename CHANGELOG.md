@@ -491,6 +491,19 @@ working code fail until it is adjusted.**
 
 ### Fixed
 
+- **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying
+  `versionId`, `versionTime` or `additional` options (a versioned result could be returned as the latest, or mask a
+  deactivation), takes the TTL timestamp after the delegate returns, and drops a result fetched before a concurrent
+  `invalidate`/`clear`. `CyberArkKeyManagementService.sign` rejects an algorithm incompatible with the stored key
+  (`UnsupportedAlgorithm`), hashes RSA-3072/4096 with SHA-384/SHA-512 like the in-memory KMS (these keys previously
+  signed with SHA-256), and zeroes decoded private-key bytes. `FileWallet` list/query/get/recover skip a record deleted
+  concurrently. `CloudWallet` percent-encodes credential ids into one object-key segment (ids made of letters, digits
+  and `-_.~:` keep their keys; ids containing `/`, `%`, spaces and similar characters move to encoded keys), refreshes
+  `updatedAt` on re-store, and its KDoc no longer claims encryption (none exists). `DefaultUniversalResolver` bounds the
+  response-body read by `timeout` and refuses redirects, including ones followed by an injected `HttpClient`.
+  `AbstractWebDidMethod` gives its clients a 30 s whole-call deadline when none is set and cancels the HTTP call when the
+  coroutine is cancelled. `KeyManagementServices` and `AlgorithmDiscovery` skip a provider that throws
+  `ServiceConfigurationError` instead of failing for every provider. No public API signature changed.
 - `DefaultXadesSigner` declares `xmlns:xades` and `xmlns:ds` on `QualifyingProperties`. Without them the
   signature was computed over a canonical form that differs from the serialised document's, so a B-B / B-T / B-LT
   signature failed validation after being written out and parsed again (it verified only as the in-memory DOM).

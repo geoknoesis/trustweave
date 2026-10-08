@@ -1,8 +1,8 @@
 package org.trustweave.kms
 
 import org.trustweave.kms.internal.ConfigCacheKey
+import org.trustweave.kms.internal.ProviderLoading
 import org.trustweave.kms.spi.KeyManagementServiceProvider
-import java.util.ServiceLoader
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -44,7 +44,7 @@ object KeyManagementServices {
      * This prevents repeated ServiceLoader calls and ensures consistency.
      */
     private val cachedProviders: List<KeyManagementServiceProvider> by lazy {
-        ServiceLoader.load(KeyManagementServiceProvider::class.java).toList()
+        ProviderLoading.loadAll()
     }
 
     /**

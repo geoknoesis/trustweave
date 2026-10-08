@@ -90,9 +90,11 @@ subprojects {
                 require(signingKey.isPresent) {
                     "Remote publication requires TRUSTWEAVE_SIGNING_KEY; use publishToMavenLocal for development."
                 }
-                require(providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").isPresent) {
-                    "Remote publication requires TRUSTWEAVE_PUBLISH_USERNAME and TRUSTWEAVE_PUBLISH_PASSWORD; " +
-                        "use publishToMavenLocal for development."
+                if (repository.name == "central") {
+                    require(providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").isPresent) {
+                        "Remote publication requires TRUSTWEAVE_PUBLISH_USERNAME and TRUSTWEAVE_PUBLISH_PASSWORD; " +
+                            "use publishToMavenLocal for development."
+                    }
                 }
             }
         }
@@ -336,6 +338,13 @@ subprojects {
                 // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
                 // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
                 repositories {
+                    // Local copy of exactly what `central` receives. Publishing to both repositories in one
+                    // Gradle invocation reuses the same signed task outputs, so the release workflow can
+                    // checksum and attest the very files that were uploaded (see release-evidence.yml).
+                    maven {
+                        name = "releaseStaging"
+                        url = uri(rootProject.layout.buildDirectory.dir("release-staging"))
+                    }
                     maven {
                         name = "central"
                         val release =

@@ -96,6 +96,41 @@ The following are generally considered out of scope:
 
 *If you're unsure whether a vulnerability is in scope, please report it and we'll assess it.*
 
+## Verifying a Release
+
+Every tagged release is published by the `publish` job of `.github/workflows/release-evidence.yml`.
+That job uploads the signed artifacts to Maven Central and, in the same Gradle invocation, to a local
+staging directory, so the files it then checksums and attests are the files that were uploaded.
+It produces:
+
+- `SHA256SUMS`: SHA-256 of every published file (JARs, POMs, Gradle module metadata, per-module
+  CycloneDX SBOMs, `.asc` signatures) and of the aggregate SBOM `trustweave-<version>-sbom.cdx.json`.
+  Both are attached to the GitHub release for the tag.
+- A SLSA build provenance attestation (`actions/attest-build-provenance`) for every file listed in
+  `SHA256SUMS`, and one for `SHA256SUMS` itself, stored in GitHub's attestation store.
+
+To verify an artifact you downloaded (`<version>` is the release without the `v`; requires the
+[GitHub CLI](https://cli.github.com/)):
+
+```bash
+# 1. Fetch the checksum file from the release and check your download against it
+gh release download "v<version>" --repo geoknoesis/trustweave --pattern SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+
+# 2. Verify the provenance of the artifact itself (signer workflow, tag and commit)
+gh attestation verify trustweave-core-<version>.jar --repo geoknoesis/trustweave \
+  --signer-workflow geoknoesis/trustweave/.github/workflows/release-evidence.yml \
+  --source-ref "refs/tags/v<version>"
+
+# 3. Optionally verify the checksum file the same way (and the PGP .asc signature as usual)
+gh attestation verify SHA256SUMS --repo geoknoesis/trustweave
+```
+
+Paths in `SHA256SUMS` follow the Maven repository layout (`org/trustweave/<artifact>/<version>/...`);
+run the check from a directory that mirrors it, or verify single files with `gh attestation verify`.
+A passing attestation proves the file was produced by that workflow at that tag; it does not replace
+reviewing the SBOM for dependency risk.
+
 ## Dependency Scanning
 
 Every pull request and every push to `main` runs [`.github/workflows/security.yml`](.github/workflows/security.yml):

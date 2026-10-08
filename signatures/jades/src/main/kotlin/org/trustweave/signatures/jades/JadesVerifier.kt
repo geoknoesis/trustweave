@@ -26,7 +26,10 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 
-/** Verifier for the JAdES B-B and B-T profiles. Pure: never makes network calls. */
+/**
+ * Verifier for the JAdES B-B, B-T and B-LT profiles. Pure: never makes network calls. B-LTA is never reported:
+ * see [DefaultJadesVerifier].
+ */
 interface JadesVerifier {
     suspend fun verify(
         jadesSerialized: String,
@@ -34,7 +37,13 @@ interface JadesVerifier {
     ): JadesValidationResult
 }
 
-/** Default [JadesVerifier] implementation. */
+/**
+ * Default [JadesVerifier] implementation.
+ *
+ * Certificate validity is judged at the time authenticated by a trusted `sigTst`, else at the current time, never at
+ * the claimed `sigT`. An `arcTst` is validated token by token but never credited as B-LTA (EN 319 182-1 5.3.6
+ * imprint construction is not implemented), so the highest profile reported is B-LT.
+ */
 class DefaultJadesVerifier : JadesVerifier {
     override suspend fun verify(
         jadesSerialized: String,
@@ -150,7 +159,7 @@ class DefaultJadesVerifier : JadesVerifier {
                 )
             }
 
-            // 6. Signing-time / cert-validity check.
+            // 6. Claimed signing time (sigT). It is only the signer's assertion; it is never used for validity.
             val signingTime =
                 try {
                     Instant.parse(header.sigT)
@@ -159,17 +168,6 @@ class DefaultJadesVerifier : JadesVerifier {
                 } catch (t: Throwable) {
                     return@withContext Invalid.Malformed("sigT is not a valid ISO 8601 instant: ${header.sigT}")
                 }
-            if (!options.allowExpiredCertificateAtSigningTime) {
-                val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
-                val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
-                val skew = options.maxClockSkew.inWholeMilliseconds.milliseconds
-                if (signingTime > notAfter + skew) {
-                    return@withContext Invalid.CertificateExpired(notAfter)
-                }
-                if (signingTime + skew < notBefore) {
-                    return@withContext Invalid.CertificateExpired(notAfter)
-                }
-            }
 
             // 6b. The signer certificate must be one that may sign documents (not a CA, keyUsage permitting).
             CertificatePaths.signerProblem(signerCert)?.let { return@withContext Invalid.SignerCertificateInvalid(it) }
@@ -195,26 +193,34 @@ class DefaultJadesVerifier : JadesVerifier {
                 }
             }
 
-            // 7b. Archival time-stamp (B-LTA): re-derive the canonical archival imprint and confirm it matches
-            //     the embedded `arcTst` token, which must itself be trusted to count.
-            var arcTstInstant: Instant? = null
-            if (inferFoundProfile(parsed.unsigned) == JadesProfile.B_LTA) {
-                when (
-                    val arcResult =
-                        validateArcTst(
-                            arcTsts = parsed.unsigned.arcTst,
-                            signatureB64u = parsed.signatureB64u,
-                            sigTst = parsed.unsigned.sigTst,
-                            xVals = parsed.unsigned.xVals,
-                            rVals = parsed.unsigned.rVals,
-                            anchors = options.timestampTrustAnchors,
-                        )
-                ) {
-                    is SigTstResult.Ok -> if (arcResult.trusted) arcTstInstant = arcResult.genTime
-                    is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp("arcTst: ${arcResult.reason}")
-                    is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch("arcTst: ${arcResult.reason}")
+            // 7a. Certificate validity at the AUTHENTICATED time, else the current time. The claimed sigT is the
+            //     signer's own assertion and is never used for this: a signer could back-date it.
+            if (!options.allowExpiredCertificateAtSigningTime) {
+                val checkTime =
+                    authenticatedTime ?: kotlin.time.Clock.System
+                        .now()
+                val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
+                val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
+                val skew = options.maxClockSkew.inWholeMilliseconds.milliseconds
+                if (checkTime > notAfter + skew) {
+                    return@withContext Invalid.CertificateExpired(notAfter)
+                }
+                if (checkTime + skew < notBefore) {
+                    return@withContext Invalid.SignerCertificateInvalid("signer certificate is not valid before $notBefore")
                 }
             }
+
+            // 7b. Archival time-stamps (arcTst). Every token must at least be a well-formed RFC 3161 token and, when
+            //     anchors are configured, trusted. B-LTA is NEVER credited: see [checkArcTst].
+            if (parsed.unsigned.arcTst.isNotEmpty()) {
+                when (val arcResult = checkArcTst(parsed.unsigned.arcTst, options.timestampTrustAnchors)) {
+                    null -> Unit
+                    is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp("arcTst: ${arcResult.reason}")
+                    is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch("arcTst: ${arcResult.reason}")
+                    is SigTstResult.Ok -> Unit
+                }
+            }
+            val arcTstInstant: Instant? = null
 
             // 8. Trust-anchor resolution, validating the path as of the authenticated time when there is one
             //    (never the claimed sigT: that would let a signer back-date a signature).
@@ -669,58 +675,43 @@ class DefaultJadesVerifier : JadesVerifier {
 
     // ---------------------------------------------------------------- arcTst validation
 
-    private fun validateArcTst(
+    /**
+     * Checks EVERY `arcTst` token (not only the first): each must decode, parse as an RFC 3161 token and, when
+     * [anchors] are configured, verify against them. Returns `null` when all pass.
+     *
+     * An `arcTst` is deliberately **not credited toward B-LTA**: ETSI EN 319 182-1 5.3.6 defines the archive
+     * time-stamp imprint over the JWS signing input, the signature value and the canonicalised (`canonAlg`) etsiU
+     * components that precede it. This library cannot build or check that construction in a way that is
+     * verifiable against a reference implementation, and the imprint its signer emits
+     * (SHA-256 over a private dot/comma-joined string) is not the standardised one. Crediting a token whose imprint
+     * is not proven to cover the signature and its validation data would let any trusted time-stamp be glued on,
+     * so verification fails closed: the best profile reported is B-LT.
+     */
+    private fun checkArcTst(
         arcTsts: List<EncodedTimeStampToken>,
-        signatureB64u: String,
-        sigTst: List<EncodedTimeStampToken>,
-        xVals: List<EncodedCertificate>,
-        rVals: List<EncodedRevocationData>,
         anchors: List<X509Certificate>,
-    ): SigTstResult {
-        val firstEntry =
-            arcTsts.firstOrNull()
-                ?: return SigTstResult.Missing("etsiU contains no arcTst entry")
-        val firstTokenB64 =
-            firstEntry.tstTokensB64.firstOrNull()
-                ?: return SigTstResult.Missing("arcTst.tstTokens array was empty")
-        val tokenBytes =
+    ): SigTstResult? {
+        val tokens = arcTsts.flatMap { it.tstTokensB64 }
+        if (tokens.isEmpty()) return SigTstResult.Missing("arcTst carries no tstTokens")
+        for (tokenB64 in tokens) {
+            val tokenBytes =
+                try {
+                    Base64.getDecoder().decode(tokenB64)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    return SigTstResult.Mismatch("arcTst token is not valid base64: ${t.message}")
+                }
             try {
-                Base64.getDecoder().decode(firstTokenB64)
-            } catch (t: Throwable) {
-                return SigTstResult.Mismatch("arcTst token is not valid base64: ${t.message}")
-            }
-        val bcToken =
-            try {
-                org.bouncycastle.tsp.TimeStampToken(
-                    org.bouncycastle.cms.CMSSignedData(tokenBytes),
-                )
+                org.bouncycastle.tsp.TimeStampToken(org.bouncycastle.cms.CMSSignedData(tokenBytes))
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (t: Throwable) {
                 return SigTstResult.Mismatch("arcTst token is not a valid CMS SignedData: ${t.message}")
             }
-
-        // Reconstruct the canonical archival imprint input the signer used.
-        val sb =
-            StringBuilder().apply {
-                append(signatureB64u).append('.')
-                sigTst.forEach { it.tstTokensB64.forEach { tok -> append(tok).append(',') } }
-                append('.')
-                xVals.forEach { append(it.certB64).append(',') }
-                append('.')
-                rVals.forEach { append(it.type).append(':').append(it.dataB64).append(',') }
-            }
-        val expectedImprint =
-            MessageDigest
-                .getInstance("SHA-256")
-                .digest(sb.toString().toByteArray(Charsets.UTF_8))
-        val actualImprint = bcToken.timeStampInfo.messageImprintDigest
-        if (!expectedImprint.contentEquals(actualImprint)) {
-            return SigTstResult.Mismatch("arcTst messageImprint does not match SHA-256(signature || sigTst || xVals || rVals)")
+            if (verifyTsa(tokenBytes, anchors) == null) return SigTstResult.Mismatch("arcTst is not trusted")
         }
-        val genTime =
-            bcToken.timeStampInfo.genTime
-                .toInstant()
-                .toKotlinInstant()
-        return SigTstResult.Ok(genTime, trusted = verifyTsa(tokenBytes, anchors) ?: return SigTstResult.Mismatch("arcTst is not trusted"))
+        return null
     }
 
     // ---------------------------------------------------------------- cert helpers

@@ -47,9 +47,13 @@ internal object XadesArchiveTimestamps {
         /** An archive time-stamp is present but no TSA trust anchor was configured, so it proves nothing. */
         data object NoAnchors : Outcome()
 
-        /** Every archive time-stamp verified; [genTime] is the earliest. */
+        /**
+         * Every archive time-stamp verified; [genTime] is the earliest. [lastStamp] is the last one in document order:
+         * only the unsigned properties before it are covered by an imprint.
+         */
         data class Valid(
             val genTime: Instant,
+            val lastStamp: Element,
         ) : Outcome()
 
         data class Invalid(
@@ -113,7 +117,7 @@ internal object XadesArchiveTimestamps {
                 else -> return Outcome.Invalid("unexpected archive time-stamp state")
             }
         }
-        return Outcome.Valid(earliest!!)
+        return Outcome.Valid(earliest!!, stamps.last())
     }
 
     private fun verifyOne(
@@ -155,7 +159,7 @@ internal object XadesArchiveTimestamps {
         if (!MessageDigest.isEqual(expected, verified.imprintDigest)) {
             return Outcome.Invalid("archive time-stamp message imprint does not match the signature and its unsigned properties")
         }
-        return Outcome.Valid(verified.genTime)
+        return Outcome.Valid(verified.genTime, stamp)
     }
 
     /**

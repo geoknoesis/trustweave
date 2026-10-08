@@ -118,17 +118,15 @@ data class XadesSignature(
  * @property trustAnchorResolver                   Resolves the signer-cert chain against the
  *                                                 caller-supplied trust graph.
  * @property allowExpiredCertificateAtSigningTime  When `true`, certificate validity is not
- *                                                 enforced at the claimed signing time. When
- *                                                 `false` (default) the validity window is checked
- *                                                 against the signed `SigningTime`, or against the
- *                                                 current time when the producer omitted it.
+ *                                                 enforced. When `false` (default) the validity
+ *                                                 window is checked at the time authenticated by a
+ *                                                 trusted `SignatureTimeStamp`, else at the current
+ *                                                 time; the claimed `SigningTime` is never used.
  * @property requireSigningTime                    When `true`, a signature whose signed properties
  *                                                 carry no `SigningTime` is rejected as
  *                                                 [XadesValidationResult.Invalid.Malformed]. When
- *                                                 `false` (default) it is accepted and certificate
- *                                                 validity is judged at verification time, which
- *                                                 cannot show the certificate was valid when the
- *                                                 document was actually signed.
+ *                                                 `false` (default) it is accepted; the claimed time
+ *                                                 plays no part in certificate validity either way.
  * @property requireSignatureTimestamp             When `true`, the signature must carry a valid RFC 3161
  *                                                 `SignatureTimeStamp` (B-T) issued by one of
  *                                                 [timestampTrustAnchors]; otherwise it is rejected
@@ -236,8 +234,8 @@ sealed class XadesValidationResult {
         ) : Invalid()
 
         /**
-         * Signer certificate was not yet valid (`notBefore` in the future) at the asserted
-         * signing time — or, when the producer omitted `SigningTime`, at verification time.
+         * Signer certificate was not yet valid (`notBefore` in the future) at the
+         * authenticated time (trusted time-stamp), or at verification time without one.
          */
         data class CertificateNotYetValid(
             val notBefore: Instant,

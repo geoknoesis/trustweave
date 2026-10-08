@@ -80,6 +80,7 @@ class XadesArchiveTimestampTest {
     private suspend fun sign(
         profile: XadesProfile,
         archiveTsa: TestTsa = tsa,
+        crlIssuer: TestCa = ca,
     ): XadesSignature {
         val signer =
             DefaultXadesSigner(TestKms(), signerKey.private) { _ ->
@@ -103,7 +104,7 @@ class XadesArchiveTimestampTest {
                 validationData =
                     XadesValidationData(
                         certificates = listOf(signerCert.encoded, ca.caCert.encoded),
-                        revocation = RevocationEvidence(crls = listOf(RevocationFixtures.crl(ca, thisUpdate = Date()))),
+                        revocation = RevocationEvidence(crls = listOf(RevocationFixtures.crl(crlIssuer, thisUpdate = Date()))),
                     ).takeIf { profile.atLeast(XadesProfile.B_LT) },
             ),
         )
@@ -219,6 +220,28 @@ class XadesArchiveTimestampTest {
             val values = element(signature.document, xades, "RevocationValues")
             values.parentNode.removeChild(values)
             verifier.verify(signature.document, options(XadesProfile.B_LTA)).shouldBeInstanceOf<Invalid.TimeStampInvalid>()
+        }
+
+    @Test
+    fun `revocation values appended after the last archive time-stamp do not grant B-LTA`() =
+        runTest {
+            // The archived revocation values are useless (a CRL of another CA); the real CRL is added afterwards,
+            // outside the archive time-stamp's imprint.
+            val signature = sign(XadesProfile.B_LTA, crlIssuer = TestCa())
+            val document = signature.document
+            val usp = element(document, xades, "UnsignedSignatureProperties")
+            val late = document.createElementNS(xades, "xades:RevocationValues")
+            val crlValues = document.createElementNS(xades, "xades:CRLValues")
+            crlValues.appendChild(
+                document.createElementNS(xades, "xades:EncapsulatedCRLValue").apply {
+                    textContent = Base64.getEncoder().encodeToString(RevocationFixtures.crl(ca, thisUpdate = Date()))
+                },
+            )
+            late.appendChild(crlValues)
+            usp.appendChild(late)
+            val wrong = verifier.verify(document, options(XadesProfile.B_LTA)).shouldBeInstanceOf<Invalid.WrongProfile>()
+            (wrong.found == XadesProfile.B_LTA) shouldBe false
+            verifier.verify(document, options(XadesProfile.B_T)).shouldBeInstanceOf<Valid>().profile shouldBe XadesProfile.B_T
         }
 
     @Test

@@ -1,5 +1,7 @@
 package org.trustweave.wallet.file
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.io.TempDir
@@ -57,6 +59,23 @@ class FileWalletTest {
             assertFalse(content.contains(issuerDid))
             val reopened = factory.create("file", walletId = "encrypted", holderDid = subjectDid, options = options) as FileWallet
             assertEquals(record.id, reopened.get(id)?.id)
+        }
+
+    @Test
+    fun `list query and get tolerate concurrent deletes`() =
+        runBlocking<Unit> {
+            val wallet = wallet(tempDir.resolve("race"), encryptionKey = null)
+            val ids = (1..300).map { wallet.store(credential()) }
+            val scope = CoroutineScope(Dispatchers.Default)
+            val deleter = scope.launch { ids.forEach { wallet.delete(it) } }
+            while (deleter.isActive) {
+                wallet.list()
+                wallet.query { }
+                val recovered = wallet.recoverRecords()
+                assertTrue(recovered.failures.isEmpty(), "concurrent delete is not a read failure: ${recovered.failures}")
+                ids.forEach { wallet.get(it) }
+            }
+            assertTrue(wallet.list().isEmpty())
         }
 
     @TempDir

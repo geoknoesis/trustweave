@@ -2,8 +2,13 @@ package org.trustweave.did.resolver
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -117,6 +122,40 @@ class DefaultUniversalResolver(
             .getLogger(DefaultUniversalResolver::class.java)
 
     private val maxResponseBytes = 1 * 1024 * 1024 // 1 MB
+
+    private fun isRedirected(response: HttpResponse<*>): Boolean =
+        response.previousResponse().isPresent ||
+            response.statusCode() in 300..399
+
+    private fun redirectStatus(response: HttpResponse<*>): Int =
+        response.previousResponse().map { it.statusCode() }.orElse(response.statusCode())
+
+    /**
+     * Reads at most [maxResponseBytes] + 1 bytes of [stream] within the request [timeout].
+     *
+     * [HttpRequest.timeout] only covers the time until the response headers arrive, so a server
+     * that sends headers and then drips (or stalls) the body would otherwise hold an IO thread
+     * indefinitely. The blocking read is interruptible (so coroutine cancellation and the deadline
+     * stop it) and the stream is closed afterwards, which cancels the underlying request.
+     *
+     * @throws java.net.http.HttpTimeoutException when the body is not complete in time
+     */
+    private suspend fun readBodyBounded(stream: java.io.InputStream): ByteArray {
+        try {
+            return withTimeout(timeout.toLong() * 1000) {
+                runInterruptible(Dispatchers.IO) { stream.readNBytes(maxResponseBytes + 1) }
+            }
+        } catch (e: TimeoutCancellationException) {
+            // Only our own deadline becomes an I/O timeout; an enclosing scope's cancellation stays one.
+            currentCoroutineContext().ensureActive()
+            throw java.net.http.HttpTimeoutException("Timed out after ${timeout}s reading the resolver response body")
+        } catch (e: CancellationException) {
+            throw e
+        } finally {
+            // Closing cancels the underlying request; harmless after a complete read.
+            runCatching { stream.close() }
+        }
+    }
 
     private fun sanitizeDid(did: String): String = did.replace(Regex("[\\r\\n\\t\\x00-\\x1F\\x7F]"), "?").take(200)
 
@@ -243,13 +282,35 @@ class DefaultUniversalResolver(
         val request = requestBuilder.build()
         val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).await()
 
+        // Redirects are never trusted: they would carry the request past the SSRF guard above. The
+        // default client does not follow them; an injected client might, so a followed redirect
+        // (previousResponse present) is refused just like an unfollowed 3xx.
+        if (isRedirected(response)) {
+            response.body().close()
+            val detail = "Upstream resolver redirect (HTTP ${redirectStatus(response)}) refused: redirects are not followed"
+            return DidResolutionResult.Failure.ResolutionError(
+                did = Did(sanitizeDid(did)),
+                reason = detail,
+                cause = null,
+                resolutionMetadata =
+                    DidResolutionMetadata(
+                        error = DidResolutionError.of(DidErrorType.INTERNAL_ERROR, detail),
+                        properties =
+                            mapOf(
+                                "statusCode" to redirectStatus(response).toString(),
+                                "provider" to protocolAdapter.providerName,
+                            ),
+                    ),
+            )
+        }
+
         return response.body().use { bodyStream ->
             when (response.statusCode()) {
                 200 -> {
                     // Parse JSON response
                     val responseBody =
                         run {
-                            val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                            val bytes = readBodyBounded(bodyStream)
                             if (bytes.size > maxResponseBytes) {
                                 return@use DidResolutionResult.Failure.ResolutionError(
                                     did = Did(sanitizeDid(did)),
@@ -442,7 +503,7 @@ class DefaultUniversalResolver(
                     // that to an error.
                     val documentMetadata =
                         try {
-                            val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                            val bytes = readBodyBounded(bodyStream)
                             if (bytes.size > maxResponseBytes) {
                                 null
                             } else {
@@ -452,6 +513,10 @@ class DefaultUniversalResolver(
                                     ?.let { parseDidDocumentMetadata(it) }
                             }
                         } catch (_: kotlinx.serialization.SerializationException) {
+                            null
+                        } catch (_: java.io.IOException) {
+                            // A body that stalls or breaks (including the read deadline) must not
+                            // downgrade the 410 itself, which already establishes deactivation.
                             null
                         } catch (_: IllegalArgumentException) {
                             // Belt-and-braces backstop: parseJsonResponse/extractDocumentMetadata/
@@ -578,8 +643,8 @@ class DefaultUniversalResolver(
                 val response = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).await()
 
                 response.body().use { bodyStream ->
-                    if (response.statusCode() == 200) {
-                        val bytes = bodyStream.readNBytes(maxResponseBytes + 1)
+                    if (!isRedirected(response) && response.statusCode() == 200) {
+                        val bytes = readBodyBounded(bodyStream)
                         if (bytes.size > maxResponseBytes) {
                             return@withContext emptyList()
                         }

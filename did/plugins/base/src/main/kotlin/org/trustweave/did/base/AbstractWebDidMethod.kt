@@ -2,10 +2,13 @@ package org.trustweave.did.base
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -21,8 +24,11 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import java.io.IOException
 import java.net.Proxy
+import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration
+
+private const val DEFAULT_CALL_TIMEOUT_SECONDS = 30L
 
 /**
  * Abstract base class for HTTP-based DID method implementations (e.g., did:web).
@@ -172,21 +178,26 @@ abstract class AbstractWebDidMethod(
      */
     internal val publishClient: OkHttpClient by lazy { buildGuardedClient(forResolution = false) }
 
-    private fun buildGuardedClient(forResolution: Boolean): OkHttpClient =
-        httpClient
-            .newBuilder()
-            .also { if (forResolution) configureResolutionClient(it) }
-            .followRedirects(false)
-            .followSslRedirects(false)
-            .proxy(Proxy.NO_PROXY)
-            .dns(ResolutionGuardedDns(httpClient.dns))
-            .build()
+    private fun buildGuardedClient(forResolution: Boolean): OkHttpClient {
+        val builder =
+            httpClient
+                .newBuilder()
+                .also { if (forResolution) configureResolutionClient(it) }
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .proxy(Proxy.NO_PROXY)
+                .dns(ResolutionGuardedDns(httpClient.dns))
+        // Whole-call deadline (connect through the last body byte) unless one was configured:
+        // without it a host that sends headers and then stalls holds the thread indefinitely.
+        if (builder.build().callTimeoutMillis == 0) builder.callTimeout(DEFAULT_CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        return builder.build()
+    }
 
     /**
      * Fetches the document at [initialUrl], following at most [maxRedirects] redirects and
      * re-validating HTTPS and the SSRF guard on every hop.
      */
-    private fun fetchDocumentJson(initialUrl: String): String {
+    private suspend fun fetchDocumentJson(initialUrl: String): String {
         var url = initialUrl
         var redirects = 0
         while (true) {
@@ -203,48 +214,76 @@ abstract class AbstractWebDidMethod(
 
             // Close the response on every path (including non-2xx) to avoid leaking
             // the underlying OkHttp connection.
-            val next: String =
-                resolutionClient.newCall(request).execute().use { response ->
-                    if (response.isRedirect) {
-                        if (redirects >= maxRedirects) {
+            val call = resolutionClient.newCall(request)
+            val hop: Hop =
+                cancellingCallOnCancellation(call) {
+                    call.execute().use { response ->
+                        if (response.isRedirect) {
+                            if (redirects >= maxRedirects) {
+                                throw TrustWeaveException.Unknown(
+                                    message =
+                                        "DID document request was redirected (HTTP ${response.code}) and " +
+                                            "redirect limit $maxRedirects was reached at: $url",
+                                    context = mapOf("url" to url, "method" to method),
+                                )
+                            }
+                            val location =
+                                response.header("Location")
+                                    ?: throw TrustWeaveException.Unknown(
+                                        message = "HTTP ${response.code} redirect without a Location header at: $url",
+                                        context = mapOf("url" to url, "method" to method),
+                                    )
+                            val target =
+                                response.request.url.resolve(location)
+                                    ?: throw TrustWeaveException.Unknown(
+                                        message = "Invalid redirect Location '$location' at: $url",
+                                        context = mapOf("url" to url, "method" to method),
+                                    )
+                            return@use Hop(next = target.toString())
+                        }
+                        if (!response.isSuccessful) {
+                            if (response.code == 404) {
+                                throw TrustWeaveException.NotFound(
+                                    message = "DID document not found at: $url",
+                                )
+                            }
                             throw TrustWeaveException.Unknown(
-                                message =
-                                    "DID document request was redirected (HTTP ${response.code}) and " +
-                                        "redirect limit $maxRedirects was reached at: $url",
-                                context = mapOf("url" to url, "method" to method),
+                                message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
+                                context = mapOf("statusCode" to response.code, "url" to url, "method" to method),
                             )
                         }
-                        val location =
-                            response.header("Location")
-                                ?: throw TrustWeaveException.Unknown(
-                                    message = "HTTP ${response.code} redirect without a Location header at: $url",
-                                    context = mapOf("url" to url, "method" to method),
-                                )
-                        val target =
-                            response.request.url.resolve(location)
-                                ?: throw TrustWeaveException.Unknown(
-                                    message = "Invalid redirect Location '$location' at: $url",
-                                    context = mapOf("url" to url, "method" to method),
-                                )
-                        return@use target.toString()
+                        Hop(body = readCappedBody(response, url))
                     }
-                    if (!response.isSuccessful) {
-                        if (response.code == 404) {
-                            throw TrustWeaveException.NotFound(
-                                message = "DID document not found at: $url",
-                            )
-                        }
-                        throw TrustWeaveException.Unknown(
-                            message = "Failed to resolve DID document: HTTP ${response.code} ${response.message}",
-                            context = mapOf("statusCode" to response.code, "url" to url, "method" to method),
-                        )
-                    }
-                    return readCappedBody(response, url)
                 }
+            hop.body?.let { return it }
             redirects++
-            url = next
+            url = hop.next!!
         }
     }
+
+    private class Hop(
+        val body: String? = null,
+        val next: String? = null,
+    )
+
+    /**
+     * Runs the blocking [block] (which executes [call] and reads its body) off the caller's thread
+     * and cancels [call] if the coroutine is cancelled, so the blocked IO thread is released
+     * promptly instead of waiting out the network read.
+     */
+    private suspend fun <T> cancellingCallOnCancellation(
+        call: Call,
+        block: () -> T,
+    ): T =
+        coroutineScope {
+            val worker = async(Dispatchers.IO) { block() }
+            try {
+                worker.await()
+            } catch (e: CancellationException) {
+                call.cancel()
+                throw e
+            }
+        }
 
     private fun readCappedBody(
         response: Response,

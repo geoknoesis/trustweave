@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -29,6 +30,13 @@ import kotlin.time.Clock
  *
  * Stores credentials in cloud storage (AWS S3, Azure Blob Storage, or Google Cloud Storage).
  * Enables multi-device wallet synchronization.
+ *
+ * **No encryption:** this class does not encrypt credentials; objects are written as plain JSON.
+ * Confidentiality relies entirely on the storage provider's own at-rest encryption (e.g. S3
+ * SSE, Azure Storage encryption) and access control configured outside this library.
+ *
+ * Credential ids are percent-encoded into a single object-key segment, so an id can never
+ * traverse or alias another key.
  *
  * **Example:**
  * ```kotlin
@@ -87,37 +95,82 @@ abstract class CloudWallet(
      */
     protected abstract suspend fun listKeys(prefix: String): List<String>
 
+    private fun credentialKey(credentialId: String): String = "$credentialsPath/${encodeKeySegment(credentialId)}.json"
+
+    /**
+     * Percent-encodes a credential id for use as exactly one object-key segment, so an id can
+     * never add path separators, climb out of the wallet prefix (`../`), or collide with another
+     * id. Letters, digits and `-_.~:` are kept as-is (so ordinary ids such as `urn:uuid:...` keep
+     * their historical keys); everything else, and a dots-only id, is encoded. Reversible via
+     * [decodeKeySegment].
+     */
+    private fun encodeKeySegment(id: String): String {
+        val out = StringBuilder()
+        for (byte in id.toByteArray(Charsets.UTF_8)) {
+            val c = (byte.toInt() and 0xFF).toChar()
+            if (c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c in "-_~:" || (c == '.' && id.any { it != '.' })) {
+                out.append(c)
+            } else {
+                out.append('%').append("%02X".format(byte.toInt() and 0xFF))
+            }
+        }
+        return out.toString()
+    }
+
+    private fun decodeKeySegment(segment: String): String {
+        val bytes = java.io.ByteArrayOutputStream()
+        var i = 0
+        while (i < segment.length) {
+            val c = segment[i]
+            val hex = if (c == '%' && i + 2 < segment.length) segment.substring(i + 1, i + 3).toIntOrNull(16) else null
+            if (hex != null) {
+                bytes.write(hex)
+                i += 3
+            } else {
+                bytes.write(c.toString().toByteArray(Charsets.UTF_8))
+                i++
+            }
+        }
+        return String(bytes.toByteArray(), Charsets.UTF_8)
+    }
+
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String =
         withContext(Dispatchers.IO) {
             val id = credential.id?.value ?: UUID.randomUUID().toString()
             val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
-            val key = "$credentialsPath/$id.json"
+            val key = credentialKey(id)
             upload(key, credentialJson.toByteArray(Charsets.UTF_8))
 
-            // Initialize metadata if not exists
-            val metadataKey = "$metadataPath/$id.json"
-            val existingMetadata = download(metadataKey)
-            if (existingMetadata == null) {
-                val metadata =
+            // Create metadata on first store; on a re-store keep it but refresh `updatedAt`.
+            val metadataKey = "$metadataPath/${encodeKeySegment(id)}.json"
+            val now = Clock.System.now().toString()
+            val existing =
+                download(metadataKey)?.let {
+                    runCatching { json.parseToJsonElement(String(it, Charsets.UTF_8)) as? JsonObject }.getOrNull()
+                }
+            val metadata =
+                if (existing != null) {
+                    JsonObject(existing + ("updatedAt" to JsonPrimitive(now)))
+                } else {
                     buildJsonObject {
                         put("credentialId", id)
-                        put("createdAt", Clock.System.now().toString())
-                        put("updatedAt", Clock.System.now().toString())
+                        put("createdAt", now)
+                        put("updatedAt", now)
                         put("notes", JsonNull)
                         putJsonArray("tags") { }
                         putJsonObject("metadata") { }
                     }
-                upload(metadataKey, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8))
-            }
+                }
+            upload(metadataKey, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8))
 
             id
         }
 
     override suspend fun get(credentialId: String): VerifiableCredential? =
         withContext(Dispatchers.IO) {
-            val key = "$credentialsPath/$credentialId.json"
+            val key = credentialKey(credentialId)
             val content = download(key) ?: return@withContext null
 
             val credentialJson = String(content, Charsets.UTF_8)
@@ -140,7 +193,7 @@ abstract class CloudWallet(
         require(key.startsWith("$credentialsPath/") && key.endsWith(".json")) { "Unexpected credential key" }
         val content = download(key) ?: return null // Concurrent deletion is a normal object-store race.
         val credential = json.decodeFromString(VerifiableCredential.serializer(), String(content, Charsets.UTF_8))
-        return StoredCredentialRecord(key.removePrefix("$credentialsPath/").removeSuffix(".json"), credential)
+        return StoredCredentialRecord(decodeKeySegment(key.removePrefix("$credentialsPath/").removeSuffix(".json")), credential)
     }
 
     override suspend fun recoverRecords(): CredentialRecoveryResult =
@@ -165,13 +218,13 @@ abstract class CloudWallet(
 
     override suspend fun delete(credentialId: String): Boolean =
         withContext(Dispatchers.IO) {
-            val credentialKey = "$credentialsPath/$credentialId.json"
-            val deleted = deleteFromStorage(credentialKey)
+            val segment = encodeKeySegment(credentialId)
+            val deleted = deleteFromStorage(credentialKey(credentialId))
 
             if (deleted) {
                 // Clean up related files
-                deleteFromStorage("$metadataPath/$credentialId.json")
-                deleteFromStorage("$tagsPath/$credentialId.json")
+                deleteFromStorage("$metadataPath/$segment.json")
+                deleteFromStorage("$tagsPath/$segment.json")
             }
 
             deleted

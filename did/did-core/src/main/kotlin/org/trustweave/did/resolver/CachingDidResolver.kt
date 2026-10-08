@@ -17,6 +17,8 @@ import kotlin.time.Instant
  * Caches **successful and deactivated** resolutions keyed by DID string, with:
  * - a configurable time-to-live ([ttl], default 5 minutes);
  * - a configurable maximum size ([maxSize], default 1000) with least-recently-used eviction;
+ * - requests carrying `versionId`, `versionTime`, `accept`, `expandRelativeUrls` or `additional`
+ *   options bypass the cache (neither read nor written);
  * - `documentMetadata.nextUpdate` honored when it is earlier than the TTL expiry
  *   (the entry expires at `nextUpdate`); a `nextUpdate` in the past means the document
  *   is already due for an update, so the result is returned but **not cached**.
@@ -87,20 +89,27 @@ class CachingDidResolver(
     private val cache = ConcurrentHashMap<String, CacheEntry>()
     private val accessCounter = AtomicLong(0)
 
+    /**
+     * Bumped by [invalidate] and [clear]. A resolution records it before calling the delegate and
+     * only writes its result if it is unchanged, so an answer fetched before an invalidation can
+     * never be re-inserted after it (which would resurrect a revoked/stale document).
+     */
+    private val generation = AtomicLong(0)
+
     /** Current number of cached entries (primarily for diagnostics and tests). */
     val size: Int get() = cache.size
 
     override suspend fun resolve(did: Did): DidResolutionResult =
         Telemetry.measure(Operation.DID_RESOLVE, mapOf("did.method" to did.method)) {
             val key = did.value
-            val now = clock.now()
 
-            readCache(key, now)?.let { cached ->
+            readCache(key, clock.now())?.let { cached ->
                 return@measure cached
             }
 
+            val startGeneration = generation.get()
             val result = delegate.resolve(did)
-            writeCache(key, now, result)
+            writeCache(key, startGeneration, result)
             if (result is DidResolutionResult.Failure) {
                 Telemetry.rejected(
                     Operation.DID_RESOLVE,
@@ -133,30 +142,37 @@ class CachingDidResolver(
         }
 
         val key = did.value
-        val now = clock.now()
 
-        // Options that change the shape of the returned document or its contentType make a result
-        // unsafe to share under a DID-only cache key: caching an `expandRelativeUrls` result would
-        // serve expanded documents to callers who did not ask for expansion, and vice versa.
+        // Options that change the shape of the returned document or its contentType, or that select
+        // a non-latest version (`versionId`, `versionTime`) or carry method-specific `additional`
+        // options, make a result unsafe to share under a DID-only cache key: caching an
+        // `expandRelativeUrls` result would serve expanded documents to callers who did not ask for
+        // expansion, and a versioned result would be served as the latest (or mask a deactivation).
         // Such requests bypass the cache entirely rather than poison it.
-        val cacheable = options.accept == null && !options.expandRelativeUrls
+        val cacheable =
+            options.accept == null &&
+                !options.expandRelativeUrls &&
+                options.versionId == null &&
+                options.versionTime == null &&
+                options.additional.isEmpty()
 
         if (cacheable && !options.noCache) {
-            readCache(key, now)?.let { return it }
+            readCache(key, clock.now())?.let { return it }
         }
+
+        // A `noCache` request must not leave a stale entry behind for other callers: if the fresh
+        // answer is Deactivated while the cache holds a Success, everyone else would keep receiving
+        // the revoked document until TTL expiry. Invalidate before reading the generation so this
+        // request's own write is not suppressed by its own invalidation.
+        if (cacheable && options.noCache) invalidate(did)
+        val startGeneration = generation.get()
 
         // `noCache` has been honoured above, so it is stripped before delegating: the delegate is
         // ultimately a DID method, which would otherwise reject it as an unsupported
         // method-specific option (§4.4 step 3) even though this layer already acted on it.
         val result = delegate.resolve(did, options.copy(noCache = false))
 
-        if (cacheable) {
-            // A `noCache` request must not leave a stale entry behind for other callers: if the
-            // fresh answer is Deactivated while the cache holds a Success, everyone else would keep
-            // receiving the revoked document until TTL expiry.
-            if (options.noCache) invalidate(did)
-            writeCache(key, now, result)
-        }
+        if (cacheable) writeCache(key, startGeneration, result)
         return result
     }
 
@@ -179,15 +195,19 @@ class CachingDidResolver(
     /** Caches [result] for [key] if it is a cacheable variant and its expiry is in the future. */
     private fun writeCache(
         key: String,
-        now: Instant,
+        generationAtStart: Long,
         result: DidResolutionResult,
     ) {
         if (result is DidResolutionResult.Success || result is DidResolutionResult.Deactivated) {
+            // Taken after the delegate returned so a slow resolution does not eat into the TTL.
+            val now = clock.now()
             val expiresAt = expiryFor(now, result)
-            if (expiresAt > now) {
+            if (expiresAt > now && generation.get() == generationAtStart) {
                 val entry = CacheEntry(result, expiresAt)
                 entry.lastAccess = accessCounter.incrementAndGet()
                 cache[key] = entry
+                // Re-check: an invalidate that raced with the insert above must not leave it behind.
+                if (generation.get() != generationAtStart) cache.remove(key, entry)
                 evictLeastRecentlyUsed()
             }
         }
@@ -198,11 +218,13 @@ class CachingDidResolver(
      * will hit the delegate.
      */
     fun invalidate(did: Did) {
+        generation.incrementAndGet()
         cache.remove(did.value)
     }
 
     /** Removes all cached entries. */
     fun clear() {
+        generation.incrementAndGet()
         cache.clear()
     }
 

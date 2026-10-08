@@ -1,7 +1,7 @@
 package org.trustweave.kms
 
+import org.trustweave.kms.internal.ProviderLoading
 import org.trustweave.kms.spi.KeyManagementServiceProvider
-import java.util.ServiceLoader
 
 /**
  * Utility for discovering algorithm support across KMS providers.
@@ -24,7 +24,7 @@ object AlgorithmDiscovery {
      * This prevents repeated ServiceLoader calls and ensures consistency.
      */
     private val cachedProviders: List<KeyManagementServiceProvider> by lazy {
-        ServiceLoader.load(KeyManagementServiceProvider::class.java).toList()
+        ProviderLoading.loadAll()
     }
 
     /**

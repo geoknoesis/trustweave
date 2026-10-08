@@ -15,7 +15,7 @@ import java.nio.ByteBuffer
 /**
  * AWS S3-backed wallet implementation.
  *
- * Stores credentials in AWS S3 buckets with optional encryption.
+ * Stores credentials in AWS S3 buckets. The wallet itself does not encrypt; rely on S3 bucket encryption (SSE) and access policy.
  *
  * **Example:**
  * ```kotlin

@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3Configuration
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import java.net.URI
+import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -48,7 +49,13 @@ class S3StorageContractTest {
             val storage =
                 GenericContainer<Nothing>(S3_IMAGE).apply {
                     withExposedPorts(S3_PORT)
-                    waitingFor(Wait.forListeningPort())
+                    waitingFor(
+                        Wait
+                            .forHttp("/")
+                            .forPort(S3_PORT)
+                            .forStatusCodeMatching { it < 500 }
+                            .withStartupTimeout(Duration.ofMinutes(2)),
+                    )
                 }
             storage.start()
             try {

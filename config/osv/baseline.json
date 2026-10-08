@@ -290,13 +290,14 @@
       "packages": [
         "bcprov-jdk15to18@1.69",
         "bcprov-jdk15to18@1.78",
+        "bcprov-jdk15to18@1.83",
         "bcprov-jdk18on@1.77",
         "bcprov-jdk18on@1.80"
       ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.80.2, 1.81.1, 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69.",
+      "status": "needs-review",
+      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.80.2, 1.81.1, 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-11-15"
     },
     {
       "id": "GHSA-57rv-r2g8-2cj3",
@@ -329,10 +330,12 @@
         "com.fasterxml.jackson.core:jackson-databind@2.21.4",
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
-        "jackson-databind@2.21.4"
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
+        "tools.jackson.core:jackson-databind@3.1.4"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.5, 3.2.1. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.5, 3.2.1. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -468,15 +471,17 @@
         "CVE-2026-18401"
       ],
       "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.16.1",
         "com.fasterxml.jackson.core:jackson-core@2.17.1",
         "com.fasterxml.jackson.core:jackson-core@2.18.2",
         "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "jackson-core@2.16.1",
         "jackson-core@2.17.1",
         "jackson-core@2.18.2",
         "jackson-core@2.18.4.1"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.6, 2.21.1, 3.1.0. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.6, 2.21.1, 3.1.0. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@2.16.1, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -502,19 +507,23 @@
         "CVE-2026-89425"
       ],
       "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.16.1",
         "com.fasterxml.jackson.core:jackson-core@2.17.1",
         "com.fasterxml.jackson.core:jackson-core@2.18.2",
         "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
         "com.fasterxml.jackson.core:jackson-core@2.21.4",
+        "jackson-core@2.16.1",
         "jackson-core@2.17.1",
         "jackson-core@2.18.2",
         "jackson-core@2.18.4.1",
         "jackson-core@2.21.4",
+        "jackson-core@3.1.4",
         "jackson-core@3.1.5",
+        "tools.jackson.core:jackson-core@3.1.4",
         "tools.jackson.core:jackson-core@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@2.16.1, jackson-core@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -596,15 +605,16 @@
       "packages": [
         "bcprov-jdk15to18@1.69",
         "bcprov-jdk15to18@1.78",
+        "bcprov-jdk15to18@1.83",
         "bcprov-jdk18on@1.77",
         "bcprov-jdk18on@1.80",
         "bcprov-jdk18on@1.84",
         "bcprov-lts8on@2.73.8"
       ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on; bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 1.85, 2.73.12. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69, bcprov-jdk18on@1.84.",
+      "status": "needs-review",
+      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on; bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 1.85, 2.73.12. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69, bcprov-jdk18on@1.84. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-11-15"
     },
     {
       "id": "GHSA-c2gf-v879-257j",
@@ -633,13 +643,14 @@
       ],
       "packages": [
         "bcprov-jdk15to18@1.78",
+        "bcprov-jdk15to18@1.83",
         "bcprov-jdk18on@1.77",
         "bcprov-jdk18on@1.80"
       ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test.",
+      "status": "needs-review",
+      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-11-15"
     },
     {
       "id": "GHSA-c4c3-7fpv-j4q5",
@@ -758,11 +769,13 @@
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
         "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
         "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.4",
         "tools.jackson.core:jackson-databind@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -891,11 +904,13 @@
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
         "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
         "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.4",
         "tools.jackson.core:jackson-databind@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1161,11 +1176,13 @@
         "jackson-core@2.18.2",
         "jackson-core@2.18.4.1",
         "jackson-core@2.21.4",
+        "jackson-core@3.1.4",
         "jackson-core@3.1.5",
+        "tools.jackson.core:jackson-core@3.1.4",
         "tools.jackson.core:jackson-core@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1264,11 +1281,13 @@
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
         "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
         "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.4",
         "tools.jackson.core:jackson-databind@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1280,15 +1299,16 @@
       "packages": [
         "bcprov-jdk15to18@1.69",
         "bcprov-jdk15to18@1.78",
+        "bcprov-jdk15to18@1.83",
         "bcprov-jdk18on@1.77",
         "bcprov-jdk18on@1.80",
         "bcprov-jdk18on@1.84",
         "bcprov-lts8on@2.73.8"
       ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on; bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 1.85, 2.73.12. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69, bcprov-jdk18on@1.84.",
+      "status": "needs-review",
+      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on; bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 1.85, 2.73.12. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69, bcprov-jdk18on@1.84. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-11-15"
     },
     {
       "id": "GHSA-r7wm-3cxj-wff9",
@@ -1296,15 +1316,17 @@
         "CVE-2026-68494"
       ],
       "packages": [
+        "com.fasterxml.jackson.core:jackson-core@2.16.1",
         "com.fasterxml.jackson.core:jackson-core@2.17.1",
         "com.fasterxml.jackson.core:jackson-core@2.18.2",
         "com.fasterxml.jackson.core:jackson-core@2.18.4.1",
+        "jackson-core@2.16.1",
         "jackson-core@2.17.1",
         "jackson-core@2.18.2",
         "jackson-core@2.18.4.1"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.8, 2.21.4, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.8, 2.21.4, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@2.16.1, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1398,10 +1420,12 @@
         "jackson-databind@2.17.1",
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
-        "jackson-databind@2.21.4"
+        "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
+        "tools.jackson.core:jackson-databind@3.1.4"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.5, 3.2.1. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.5, 3.2.1. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1457,11 +1481,13 @@
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
         "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
         "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.4",
         "tools.jackson.core:jackson-databind@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },
@@ -1493,11 +1519,13 @@
         "jackson-databind@2.18.2",
         "jackson-databind@2.18.4",
         "jackson-databind@2.21.4",
+        "jackson-databind@3.1.4",
         "jackson-databind@3.1.5",
+        "tools.jackson.core:jackson-databind@3.1.4",
         "tools.jackson.core:jackson-databind@3.1.5"
       ],
       "status": "needs-review",
-      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
+      "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
       "expires": "2026-11-15"
     },

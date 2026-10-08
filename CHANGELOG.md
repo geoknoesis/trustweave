@@ -484,6 +484,13 @@ working code fail until it is adjusted.**
 
 - Dependency scanning: OSV-Scanner and dependency review run on every push and pull request; the
   `org.didcommx:didcomm` 0.3.2 embedded-Nimbus risk is documented in `SECURITY.md`.
+- The OSV gate (`scripts/check-osv-baseline.py`, `config/osv/baseline.json` schema 3) now records a triage
+  for every grandfathered advisory (`status`: affected / not-reachable / false-positive / accepted-risk /
+  needs-review, plus `reason`, `reviewed`, `expires`) and **fails on an expired triage entry**. Matching is
+  version-aware: a new version of a baselined package that the scanner still reports re-surfaces the
+  advisory. Initial triage of the 90 entries: 65 affected, 5 not-reachable, 3 accepted-risk (didcomm) and
+  17 needs-review (versions found in no resolved classpath); `--strict-stale` is unchanged. A baseline
+  entry with a malformed or `TODO` triage is an error (exit 2).
 
 
 ## [0.7.0] - 2026-08-29

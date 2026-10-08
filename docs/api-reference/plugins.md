@@ -142,7 +142,7 @@ Advanced electronic signature support aligned with ETSI / eIDAS for qualified el
 | **Trust lists** | `org.trustweave:signatures-trust-lists` | ETSI TS 119 612 trust list parser, LOTL signature verifier, trust-anchor resolver |
 | **JAdES** | `org.trustweave:signatures-jades` | ETSI TS 119 182-1 JSON Advanced Electronic Signatures |
 | **CAdES** | `org.trustweave:signatures-cades` | ETSI TS 119 122 CMS Advanced Electronic Signatures |
-| **XAdES** | `org.trustweave:signatures-xades` | ETSI TS 119 132 XML Advanced Electronic Signatures |
+| **XAdES** | `org.trustweave:signatures-xades` | ETSI TS 119 132 XML Advanced Electronic Signatures (B-B, B-T, B-LT, B-LTA) |
 | **PAdES** | `org.trustweave:signatures-pades` | ETSI TS 119 142 PDF Advanced Electronic Signatures (skeleton) |
 | **ETSI validation** | `org.trustweave:signatures-etsi-validation` | ETSI EN 319 102 signature validation report engine |
 

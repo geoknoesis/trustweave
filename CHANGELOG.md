@@ -342,6 +342,14 @@ working code fail until it is adjusted.**
   dependency review plus OSV-Scanner over the SBOM and resolved JARs. The OSV job fails for advisories
   outside `config/osv/baseline.json` (`scripts/check-osv-baseline.py`). The documentation check now
   verifies that `org.trustweave.*` imports in docs resolve to main sources.
+- **XAdES B-LTA.** `XadesProfile.B_LTA` is new and `DefaultXadesSigner` produces it: on top of B-LT it appends an
+  XAdES 1.4.1 `ArchiveTimeStamp` (`xades141:ArchiveTimeStamp`, SHA-256 imprint) over the dereferenced reference
+  octets, `SignedInfo`, `SignatureValue`, `KeyInfo` and every unsigned signature property before it
+  (ETSI EN 319 132-1). `DefaultXadesVerifier` verifies each archive token with `TimeStampTokenVerifier` against
+  `timestampTrustAnchors` and recomputes the imprint; a present but untrusted, malformed or non-matching archive
+  token fails as `Invalid.TimeStampInvalid` whatever profile was required. B-LTA is reported only when B-LT is
+  proved too (otherwise B-LT, B-T or B-B, or `WrongProfile` when required), and requiring B-LTA implies
+  `RevocationPolicy.REQUIRED`. `Valid` gains `archiveTimeStamp` (constructor and `copy()` change; ABI dump updated).
 
 ### Changed
 
@@ -406,6 +414,9 @@ working code fail until it is adjusted.**
 
 ### Fixed
 
+- `DefaultXadesSigner` declares `xmlns:xades` and `xmlns:ds` on `QualifyingProperties`. Without them the
+  signature was computed over a canonical form that differs from the serialised document's, so a B-B / B-T / B-LT
+  signature failed validation after being written out and parsed again (it verified only as the in-memory DOM).
 - The Fortanix, Thales, CyberArk and IBM KMS plugins now close every vendor HTTP response on all paths (previously failed deletes and some error paths leaked the connection) and report an empty response body as an error instead of parsing it as `{}`.
 
 - `VerifiableCredential.isValid`, `isExpired`, `isExpiredAt` and `isValidAt` now share one temporal check, `VerifiableCredential.temporalValidity` (new `TemporalValidity` enum): the earliest of `expirationDate`/`validUntil` expires a credential, and it is not valid before the latest of `validFrom`/`issuanceDate`. The extension functions previously ignored VC 2.0 `validUntil`, and `isValidAt` ignored not-yet-valid credentials. These are temporal only, not revocation or proof checks.

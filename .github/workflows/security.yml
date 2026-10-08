@@ -190,9 +190,9 @@ jobs:
             build/reports/cyclonedx/
           if-no-files-found: warn
 
-      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory/package pair
-      # and (exit 2) when the JSON report is missing or empty or the SBOM has fewer than the expected
-      # components, so a broken scan cannot pass silently. Stale baseline entries are only listed;
-      # add --strict-stale to fail on them too.
+      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory/package/version
+      # and on a baseline triage whose `expires` date has passed, and (exit 2) when the JSON report is
+      # missing or empty, the SBOM has fewer than the expected components, or a triage is malformed, so a
+      # broken scan cannot pass silently. --strict-stale also fails on stale baseline entries.
       - name: Fail on advisories outside the baseline
         run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json --strict-stale

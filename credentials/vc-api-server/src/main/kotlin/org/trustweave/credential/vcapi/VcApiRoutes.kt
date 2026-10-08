@@ -29,6 +29,7 @@ import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.IssuanceResult
 import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.credential.vcapi.dto.ChallengeResponse
 import org.trustweave.credential.vcapi.dto.IssueCredentialRequest
 import org.trustweave.credential.vcapi.dto.IssueCredentialResponse
 import org.trustweave.credential.vcapi.dto.ProvePresentationRequest
@@ -55,6 +56,10 @@ private val vcJson =
  * - `POST /credentials/verify`
  * - `POST /presentations/prove`
  * - `POST /presentations/verify`
+ * - `POST /presentations/challenge` (issues a one-time challenge for `/presentations/verify`)
+ *
+ * `/presentations/verify` enforces holder binding and a one-time, server-issued challenge by default;
+ * [verificationPolicy] relaxes either.
  *
  * **`verified: true` means what was checked, not that the issuer is trusted.** Without a
  * [trustEvaluator] the verify endpoints check the proof, expiry and (optionally) revocation, and
@@ -63,9 +68,11 @@ private val vcJson =
  * a warning, so a client cannot mistake a signature-only result for a trust decision. Pass a
  * [trustEvaluator] to have the issuer judged as well (`trust:evaluated`).
  */
+@JvmOverloads
 fun Routing.configureVcApiRoutes(
     service: CredentialService,
     trustEvaluator: TrustEvaluator? = null,
+    verificationPolicy: VcApiVerificationPolicy = VcApiVerificationPolicy(),
 ) {
     /**
      * POST /credentials/issue
@@ -155,15 +162,36 @@ fun Routing.configureVcApiRoutes(
         try {
             val body = call.receive<VerifyPresentationRequest>()
             val vp = deserializeVp(body.verifiablePresentation)
+            val challenge = body.options?.challenge
+            val store = verificationPolicy.challengeStore
+            if (store != null) {
+                if (challenge == null && verificationPolicy.requireChallenge) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        rejected("A challenge issued by POST /presentations/challenge is required"),
+                    )
+                    return@post
+                }
+                // Spent before verification so two concurrent requests cannot both win; an unknown,
+                // expired or already-used challenge never reaches the verifier.
+                if (challenge != null && !store.consume(challenge)) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        rejected("The challenge is unknown, expired or has already been used"),
+                    )
+                    return@post
+                }
+            }
             val options =
                 VerificationOptions(
                     verifyPresentationProof = true,
-                    verifyChallenge = body.options?.challenge != null,
-                    expectedChallenge = body.options?.challenge,
+                    verifyChallenge = challenge != null,
+                    expectedChallenge = challenge,
                     verifyDomain = body.options?.domain != null,
                     expectedDomain = body.options?.domain,
                     checkRevocation = body.options?.checkRevocation ?: true,
                     checkExpiration = body.options?.checkExpiration ?: true,
+                    enforceHolderBinding = verificationPolicy.enforceHolderBinding,
                 )
             val result = service.verifyPresentation(vp, trustEvaluator, options)
             call.respond(HttpStatusCode.OK, result.toVerifyResponse(trustEvaluator != null))
@@ -171,7 +199,35 @@ fun Routing.configureVcApiRoutes(
             call.respondRequestFailure(e)
         }
     }
+
+    /**
+     * POST /presentations/challenge
+     *
+     * Issues a single-use challenge. The holder signs it into the presentation and the verifier passes
+     * it back as `options.challenge` to `/presentations/verify`, which consumes it.
+     */
+    post("/presentations/challenge") {
+        val store = verificationPolicy.challengeStore
+        if (store == null) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                VcApiErrorResponse("NOT_FOUND", "Challenge issuing is not enabled"),
+            )
+            return@post
+        }
+        try {
+            val issued = store.issue()
+            call.respond(HttpStatusCode.Created, ChallengeResponse(issued.challenge, issued.expiresAt.toString()))
+        } catch (e: IllegalStateException) {
+            call.respond(
+                HttpStatusCode.ServiceUnavailable,
+                VcApiErrorResponse("UNAVAILABLE", "Too many outstanding challenges; retry later"),
+            )
+        }
+    }
 }
+
+private fun rejected(error: String) = VerifyCredentialResponse(verified = false, errors = listOf(error))
 
 // ---------------------------------------------------------------------------
 // Mapping helpers

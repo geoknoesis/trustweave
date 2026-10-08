@@ -173,6 +173,12 @@ internal class DefaultCredentialService(
         // Schema validation (format-agnostic)
         CredentialValidation.validateSchema(credential, options, schemaRegistry)?.let { return it }
 
+        // Format-specific verification (the proof) comes first. Revocation checking can fetch a status
+        // list over HTTP and trust evaluation can query a registry, both at the direction of the
+        // credential, so neither may run for a credential whose proof has not been established.
+        val engineResult = engine.verify(credential, options)
+        if (engineResult is VerificationResult.Invalid) return engineResult
+
         // Revocation check (format-agnostic) with proper warning collection
         val revocationWarnings = mutableListOf<String>()
         if (options.checkRevocation) {
@@ -188,9 +194,6 @@ internal class DefaultCredentialService(
 
         // Trust policy check (format-agnostic)
         CredentialValidation.validateTrust(credential, trustEvaluator)?.let { return it }
-
-        // Delegate to proof engine for format-specific verification
-        val engineResult = engine.verify(credential, options)
 
         // Add revocation warnings to the result if verification succeeded
         return when (engineResult) {

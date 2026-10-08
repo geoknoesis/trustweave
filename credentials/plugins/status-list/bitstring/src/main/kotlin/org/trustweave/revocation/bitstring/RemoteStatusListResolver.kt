@@ -284,7 +284,11 @@ data class RemoteStatusList(
  * constructor (from any [StatusListCredentialVerifier]) and hand it to
  * [BitstringStatusListManagerFactory.create] / `BitstringStatusListManagerProvider.remoteStatusLists`.
  *
- * @param maxDecodedBytes Cap on the decompressed bitstring (GZIP-bomb guard).
+ * @param maxDecodedBytes Cap on the decompressed bitstring (GZIP-bomb guard). Defaults to 2 MiB
+ *   (16,777,216 entries); raise it only for a list that genuinely needs more.
+ * @param maxCacheBytes Cap on the decoded bytes held across all cached lists. The least recently used
+ *   lists are dropped to stay under it, and a single list larger than the cap is returned uncached, so
+ *   many distinct large lists cannot pin memory until the entry-count bound is reached.
  */
 class RemoteStatusListResolver(
     private val verifier: StatusListCredentialVerifier,
@@ -294,7 +298,12 @@ class RemoteStatusListResolver(
     private val maxCacheEntries: Int = 256,
     private val clock: Clock = Clock.System,
     private val failureCacheTtl: kotlin.time.Duration = 30.seconds,
+    private val maxCacheBytes: Long = DEFAULT_MAX_CACHE_BYTES,
 ) {
+    init {
+        require(maxCacheBytes > 0) { "maxCacheBytes must be positive" }
+    }
+
     private data class CacheEntry(
         val list: RemoteStatusList,
         val expiresAt: Instant,
@@ -310,10 +319,37 @@ class RemoteStatusListResolver(
         var refs = 0
     }
 
+    /** Guarded by `synchronized(cache)`. Decoded bytes currently held by [cache]. */
+    private var cacheBytes = 0L
+
     private val cache =
         object : LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CacheEntry>?): Boolean = size > maxCacheEntries
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CacheEntry>?): Boolean {
+                val evict = size > maxCacheEntries
+                if (evict && eldest != null) cacheBytes -= eldest.value.list.sizeBits / 8L
+                return evict
+            }
         }
+
+    private fun cachePut(
+        url: String,
+        entry: CacheEntry,
+    ) {
+        val bytes = entry.list.sizeBits / 8L
+        synchronized(cache) {
+            cache.remove(url)?.let { cacheBytes -= it.list.sizeBits / 8L }
+            if (bytes > maxCacheBytes) return
+            cache[url] = entry
+            cacheBytes += bytes
+            val iterator = cache.entries.iterator()
+            while (cacheBytes > maxCacheBytes && iterator.hasNext()) {
+                val eldest = iterator.next()
+                if (eldest.key == url) continue
+                cacheBytes -= eldest.value.list.sizeBits / 8L
+                iterator.remove()
+            }
+        }
+    }
 
     private val failures =
         object : LinkedHashMap<String, FailureEntry>(16, 0.75f, true) {
@@ -459,7 +495,7 @@ class RemoteStatusListResolver(
 
         val ttlMs = (claims["ttl"] as? JsonPrimitive)?.longOrNull?.takeIf { it > 0 }
         val ttl = ttlMs?.let { minOf(cacheTtl, kotlin.time.Duration.parse("${it}ms")) } ?: cacheTtl
-        synchronized(cache) { cache[url] = CacheEntry(list, now + ttl) }
+        cachePut(url, CacheEntry(list, now + ttl))
         return list
     }
 
@@ -497,8 +533,11 @@ class RemoteStatusListResolver(
                 cacheTtl = cacheTtl,
             )
 
-        /** 16 MiB of decoded bitstring = 134,217,728 entries. */
-        const val DEFAULT_MAX_DECODED_BYTES: Int = 16 * 1024 * 1024
+        /** 2 MiB of decoded bitstring = 16,777,216 entries, far above any list in practice. */
+        const val DEFAULT_MAX_DECODED_BYTES: Int = 2 * 1024 * 1024
+
+        /** 32 MiB of decoded bitstring across all cached lists. */
+        const val DEFAULT_MAX_CACHE_BYTES: Long = 32L * 1024 * 1024
 
         private val json =
             Json {

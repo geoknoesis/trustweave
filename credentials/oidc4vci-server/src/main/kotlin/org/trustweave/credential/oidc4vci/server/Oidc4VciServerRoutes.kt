@@ -14,9 +14,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -30,8 +31,29 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
     }
 
     post("/api/offer") {
-        val req = call.receive<CreateOfferRequest>()
-        val resp = service.createOffer(req.credentialTypes, req.txCode, req.txCodeValue, req.claims)
+        val req =
+            try {
+                call.receive<CreateOfferRequest>()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                call.respondInvalidRequest("The offer request body is not valid")
+                return@post
+            }
+        val resp =
+            try {
+                service.createOffer(req.credentialTypes, req.txCode, req.txCodeValue, req.claims)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IssuerCapacityExceededException) {
+                call.application.log.warn("OID4VCI offer endpoint at capacity: ${e.message}")
+                call.respond(HttpStatusCode.ServiceUnavailable, buildJsonObject { put("error", "temporarily_unavailable") })
+                return@post
+            } catch (e: IllegalArgumentException) {
+                // Offers are minted by the authenticated operator, so the reason is theirs to see.
+                call.respondInvalidRequest(e.message)
+                return@post
+            }
         call.respond(
             HttpStatusCode.Created,
             buildJsonObject {
@@ -42,7 +64,15 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
     }
 
     post("/token") {
-        val params = call.receiveParameters()
+        val params =
+            try {
+                call.receiveParameters()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                call.respondInvalidRequest(null)
+                return@post
+            }
         val grantType = params["grant_type"]
         if (grantType != "urn:ietf:params:oauth:grant-type:pre-authorized_code") {
             call.respond(HttpStatusCode.BadRequest, buildJsonObject { put("error", "unsupported_grant_type") })
@@ -64,13 +94,9 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
                 call.respond(HttpStatusCode.ServiceUnavailable, buildJsonObject { put("error", "temporarily_unavailable") })
                 return@post
             } catch (e: IllegalArgumentException) {
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    buildJsonObject {
-                        put("error", "invalid_grant")
-                        e.message?.let { m -> put("error_description", m) }
-                    },
-                )
+                // One answer for an unknown, expired or already-used code and for a wrong tx_code: the
+                // caller must not learn which of them it got right.
+                call.respond(HttpStatusCode.BadRequest, buildJsonObject { put("error", "invalid_grant") })
                 return@post
             } catch (e: Exception) {
                 call.application.log.error("OID4VCI token exchange failed unexpectedly", e)
@@ -94,16 +120,32 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
             call.respondInvalidToken("Missing Bearer access token")
             return@post
         }
-        val body = call.receive<JsonObject>()
-        val format = body["format"]?.jsonPrimitive?.contentOrNull ?: "jwt_vc_json"
-        val types =
-            body["credential_definition"]
-                ?.jsonObject
-                ?.get("type")
-                ?.jsonArray
-                ?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-        // OID4VCI v1.0 §7.2: proof of possession — { "proof": { "proof_type": "jwt", "jwt": "..." } }
-        val proofJwt = (body["proof"] as? JsonObject)?.get("jwt")?.jsonPrimitive?.contentOrNull
+        val format: String
+        val types: List<String>
+        val proofJwt: String?
+        try {
+            val body = call.receive<JsonObject>()
+            format = body.optionalString("format") ?: "jwt_vc_json"
+            types =
+                body["credential_definition"]
+                    ?.takeUnless { it is JsonNull }
+                    ?.jsonObject
+                    ?.get("type")
+                    ?.takeUnless { it is JsonNull }
+                    ?.jsonArray
+                    ?.map { it.jsonPrimitive.content } ?: emptyList()
+            // OID4VCI v1.0 §7.2: proof of possession — { "proof": { "proof_type": "jwt", "jwt": "..." } }
+            proofJwt =
+                body["proof"]
+                    ?.takeUnless { it is JsonNull }
+                    ?.jsonObject
+                    ?.optionalString("jwt")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            call.respondInvalidRequest("The credential request is malformed")
+            return@post
+        }
         val resp =
             try {
                 service.issueCredential(accessToken, format, types, proofJwt)
@@ -123,6 +165,9 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
                 return@post
             } catch (e: InvalidTokenException) {
                 call.respondInvalidToken(e.message)
+                return@post
+            } catch (e: CredentialLimitExceededException) {
+                call.respondInvalidRequest(e.message)
                 return@post
             } catch (e: UnsupportedCredentialFormatException) {
                 // OID4VCI §8.3.1.2: the requested format cannot be issued. Never echoed as if it were.
@@ -165,8 +210,15 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
             call.respondInvalidToken(e.message)
             return@post
         }
-        val body = call.receive<JsonObject>()
-        val transactionId = body["transaction_id"]?.jsonPrimitive?.contentOrNull
+        val transactionId =
+            try {
+                call.receive<JsonObject>().optionalString("transaction_id")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                call.respondInvalidRequest("The deferred credential request is malformed")
+                return@post
+            }
         if (transactionId == null) {
             call.respond(HttpStatusCode.BadRequest, buildJsonObject { put("error", "invalid_transaction_id") })
             return@post
@@ -198,10 +250,38 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
             call.respondInvalidToken(e.message)
             return@post
         }
-        val notification = call.receive<Oidc4VciNotification>()
+        val notification =
+            try {
+                call.receive<Oidc4VciNotification>()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                call.respondInvalidRequest("The notification request is malformed")
+                return@post
+            }
         service.recordNotification(notification)
         call.respond(HttpStatusCode.NoContent)
     }
+}
+
+/** A string member, `null` when absent or JSON null; a member of any other JSON type is a malformed request. */
+private fun JsonObject.optionalString(name: String): String? {
+    val value = this[name] ?: return null
+    if (value is JsonNull) return null
+    val primitive = value as? JsonPrimitive
+    require(primitive != null && primitive.isString) { "'$name' must be a string" }
+    return primitive.content
+}
+
+/** OAuth-style 400 `invalid_request`. */
+private suspend fun ApplicationCall.respondInvalidRequest(description: String?) {
+    respond(
+        HttpStatusCode.BadRequest,
+        buildJsonObject {
+            put("error", "invalid_request")
+            description?.let { put("error_description", it) }
+        },
+    )
 }
 
 private fun ApplicationCall.bearerToken(): String? {

@@ -22,6 +22,35 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **BREAKING (security) — VC API `POST /presentations/verify` enforces holder binding and one-time challenges.**
+  The route now sets `enforceHolderBinding` (credential subjects must be the presentation holder and the proof key
+  must belong to the holder) and requires `options.challenge` to be a challenge this server issued with the new
+  `POST /presentations/challenge`; the challenge is consumed by the verification, so a signed presentation cannot be
+  replayed. A missing, unknown, expired or already-used challenge answers `200 {"verified": false}` without
+  verifying. `VcApiVerificationPolicy` (`VcApiServer.withVerificationPolicy`, or the new third parameter of
+  `configureVcApiRoutes`) relaxes it: `enforceHolderBinding = false`, `requireChallenge = false`, or
+  `challengeStore = null` to restore caller-chosen challenges. `InMemoryVcApiChallengeStore` is bounded (10,000
+  challenges, 5 minute TTL by default) and per process; implement `VcApiChallengeStore` to share it across instances.
+- **BREAKING (security) — OID4VCI access tokens are limited and offers are validated.** An access token obtains at
+  most as many credentials as its offer has `credentialTypes` (`TokenEntry.remainingCredentials`; the next request
+  is `400 invalid_request`). `createOffer` / `POST /api/offer` now reject an empty `credentialTypes`, a type that
+  is not a key of `supportedConfigurations` (an issuer that advertises no configurations can no longer mint
+  offers), and a `txCode` without `txCodeValue` or the reverse; the route answers `400 invalid_request`. `/token`,
+  `/credential`, `/deferred_credential` and `/notification` get their own per-caller, per-endpoint rate limit
+  (`Oidc4VciProtocolRateLimit`, 120 requests per minute by default; `Oidc4VciServer.withProtocolRateLimit(null)` to
+  disable it behind a proxy that limits already). `TokenEntry` gained a field, so its 4-argument `copy` is gone.
+- Wrong-typed fields on `/credential`, `/deferred_credential`, `/notification` and `/token` now answer
+  `400 invalid_request` instead of 500. `/token` answers `invalid_grant` with no description for an unknown, expired
+  or used code and for a wrong `tx_code`, and an unknown and an expired access token share one message.
+- **`DefaultCredentialService.verify` verifies the proof before anything is fetched.** Revocation (status-list
+  fetches) and trust evaluation now run after the proof engine accepts the credential, so an unverified credential
+  cannot make the service call out. A credential that is both revoked and badly signed now reports the proof failure.
+- **Status lists.** `RemoteStatusListResolver.DEFAULT_MAX_DECODED_BYTES` drops from 16 MiB to 2 MiB (16,777,216
+  entries) and a new `maxCacheBytes` (default 32 MiB) bounds the decoded bytes cached across lists. The status-list
+  server answers with `Cache-Control: public, max-age=60` and an `ETag` (`If-None-Match` gives 304;
+  `cacheMaxAge` on `configureStatusListRoutes`), and `BitstringStatusListManager.buildStatusListVc` reuses the
+  signed credential until the list changes or `signedStatusListCacheTtl` (5 minutes) passes instead of re-signing
+  and rewriting it on every request.
 - **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**
   `Oidc4VciIssuerService` takes an `Oidc4VciCredentialBuilder` (`credentialBuilder`); without one every
   credential request is refused with `unsupported_credential_format`, and so is any format the builder does not

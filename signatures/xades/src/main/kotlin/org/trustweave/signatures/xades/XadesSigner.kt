@@ -294,6 +294,8 @@ class DefaultXadesSigner(
                             c14n,
                         ),
                     )
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Exception) {
                     throw XadesSignerException("could not canonicalise the signature for the archive time-stamp: ${t.message}", t)
                 }

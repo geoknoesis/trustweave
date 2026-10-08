@@ -74,7 +74,7 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 |--------|-------|-------|
 | `signatures:jades` | 34 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
 | `signatures:trust-lists` | 25 | EU trusted-list handling |
-| `signatures:cades` | 15 | ETSI EN 319 122 (CMS) |
+| `signatures:cades` | 28 | ETSI EN 319 122 (CMS) |
 | `signatures:tsa-core` | 40 | RFC 3161 timestamping |
 | `signatures:etsi-validation` | 16 | Validation helpers |
 | `signatures:xades` | 82 | ETSI EN 319 132 (XML) |

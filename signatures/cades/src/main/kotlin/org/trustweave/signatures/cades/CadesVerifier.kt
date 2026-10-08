@@ -4,9 +4,15 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.asn1.ASN1Set
+import org.bouncycastle.asn1.cms.Attribute
 import org.bouncycastle.asn1.cms.CMSAttributes
 import org.bouncycastle.asn1.cms.Time
+import org.bouncycastle.asn1.ess.SigningCertificate
+import org.bouncycastle.asn1.ess.SigningCertificateV2
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
+import org.bouncycastle.asn1.x500.X500Name
+import org.bouncycastle.asn1.x509.GeneralName
+import org.bouncycastle.asn1.x509.IssuerSerial
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cms.CMSProcessableByteArray
@@ -124,21 +130,12 @@ class DefaultCadesVerifier : CadesVerifier {
                 return@withContext Invalid.BadSignature("cryptographic verification failed")
             }
 
+            // 5b. The signed signing-certificate(-v2) attribute must name the certificate that was chosen from the
+            //     (unsigned) certificate set; otherwise a second certificate for the same key could be swapped in.
+            signingCertificateProblem(signerInfo, signerCert)?.let { return@withContext it }
+
             // 6. Extract signing-time (optional but expected for CAdES B-B).
             val signingTime = extractSigningTime(signerInfo)
-
-            // 7. Cert validity at signing time.
-            if (!options.allowExpiredCertificateAtSigningTime && signingTime != null) {
-                val skewMs = options.maxClockSkew.inWholeMilliseconds
-                val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
-                val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
-                if (signingTime.toEpochMilliseconds() > notAfter.toEpochMilliseconds() + skewMs) {
-                    return@withContext Invalid.CertificateExpired(notAfter)
-                }
-                if (signingTime.toEpochMilliseconds() + skewMs < notBefore.toEpochMilliseconds()) {
-                    return@withContext Invalid.CertificateExpired(notAfter)
-                }
-            }
 
             // 8. Signer certificate constraints (a CA certificate or one that cannot sign must not sign documents).
             CertificatePaths.signerProblem(signerCert)?.let { return@withContext Invalid.SignerCertificateInvalid(it) }
@@ -161,6 +158,23 @@ class DefaultCadesVerifier : CadesVerifier {
             val earlyRequired = if (options.requiredProfile == CadesProfile.B_LT) CadesProfile.B_T else options.requiredProfile
             if (!timeStampProfile.atLeast(earlyRequired)) {
                 return@withContext Invalid.WrongProfile(found = timeStampProfile, required = options.requiredProfile)
+            }
+
+            // 9b. Certificate validity at the AUTHENTICATED time, else the current time. The claimed signing-time is
+            //     the signer's own assertion and is never used for this: a signer could back-date it.
+            if (!options.allowExpiredCertificateAtSigningTime) {
+                val checkTime =
+                    authenticatedTime ?: kotlin.time.Clock.System
+                        .now()
+                val skewMs = options.maxClockSkew.inWholeMilliseconds
+                val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
+                val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
+                if (checkTime.toEpochMilliseconds() > notAfter.toEpochMilliseconds() + skewMs) {
+                    return@withContext Invalid.CertificateExpired(notAfter)
+                }
+                if (checkTime.toEpochMilliseconds() + skewMs < notBefore.toEpochMilliseconds()) {
+                    return@withContext Invalid.SignerCertificateInvalid("signer certificate is not valid before $notBefore")
+                }
             }
 
             // 10. Trust anchor resolution over an ordered chain, validating the path as of the authenticated time
@@ -301,6 +315,71 @@ class DefaultCadesVerifier : CadesVerifier {
         @Suppress("UNCHECKED_CAST")
         val all = cms.certificates.getMatches(null) as Collection<X509CertificateHolder>
         return all.map { converter.getCertificate(it) }
+    }
+
+    // ---------------------------------------------------------------- signing-certificate binding
+
+    /**
+     * ETSI EN 319 122-1 5.2.2: the signed `signing-certificate-v2` (RFC 5035) or `signing-certificate` (RFC 2634)
+     * attribute carries the digest (and optionally issuer/serial) of the signing certificate; it must be present
+     * and match [signerCert].
+     */
+    private fun signingCertificateProblem(
+        signerInfo: SignerInformation,
+        signerCert: X509Certificate,
+    ): Invalid? {
+        val signed = signerInfo.signedAttributes
+        val v2 = signed?.getAll(PKCSObjectIdentifiers.id_aa_signingCertificateV2)
+        val v1 = signed?.getAll(PKCSObjectIdentifiers.id_aa_signingCertificate)
+        val count = (v2?.size() ?: 0) + (v1?.size() ?: 0)
+        if (count != 1) {
+            return Invalid.Malformed(
+                "expected exactly one signed signing-certificate-v2 / signing-certificate attribute, found $count",
+            )
+        }
+        return try {
+            val isV2 = (v2?.size() ?: 0) == 1
+            val attr = (if (isV2) v2!! else v1!!).get(0) as Attribute
+            if (attr.attrValues.size() != 1) return Invalid.Malformed("signing-certificate attribute must have a single value")
+            val value = attr.attrValues.getObjectAt(0)
+            val hashOid: String
+            val certHash: ByteArray
+            val issuerSerial: IssuerSerial?
+            if (isV2) {
+                val id =
+                    SigningCertificateV2.getInstance(value).certs.firstOrNull()
+                        ?: return Invalid.Malformed("signing-certificate-v2 lists no certificate")
+                hashOid = id.hashAlgorithm.algorithm.id
+                certHash = id.certHash
+                issuerSerial = id.issuerSerial
+            } else {
+                val id =
+                    SigningCertificate.getInstance(value).certs.firstOrNull()
+                        ?: return Invalid.Malformed("signing-certificate lists no certificate")
+                hashOid = org.bouncycastle.asn1.oiw.OIWObjectIdentifiers.idSHA1.id
+                certHash = id.certHash
+                issuerSerial = id.issuerSerial
+            }
+            val actual = MessageDigest.getInstance(hashOid).digest(signerCert.encoded)
+            if (!MessageDigest.isEqual(actual, certHash)) {
+                return Invalid.BadSignature("signing-certificate digest does not match the signer certificate")
+            }
+            if (issuerSerial != null) {
+                val issuer = X500Name.getInstance(signerCert.issuerX500Principal.encoded)
+                val issuerOk =
+                    issuerSerial.issuer.names.any {
+                        it.tagNo == GeneralName.directoryName && X500Name.getInstance(it.name) == issuer
+                    }
+                if (!issuerOk || issuerSerial.serial.value != signerCert.serialNumber) {
+                    return Invalid.BadSignature("signing-certificate issuer/serial does not match the signer certificate")
+                }
+            }
+            null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (t: Exception) {
+            Invalid.Malformed("signing-certificate attribute is malformed: ${t.message}")
+        }
     }
 
     // ---------------------------------------------------------------- signing-time

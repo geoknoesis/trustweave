@@ -81,10 +81,13 @@ interface XadesVerifier {
  *   `RevocationValues` plus caller-supplied evidence) are verified against the issuing CA, must be fresh
  *   for the signature, and the signer and each CA below the trust anchor must be shown not revoked.
  * - `SigningTime` is read only from the signed `SignedSignatureProperties`. A malformed value is
- *   [Invalid.Malformed]. When it is missing, the certificate validity window is checked against
- *   the CURRENT time (so a signature by a since-expired certificate is rejected, and the result's
- *   `signingTime` is `null`); set [XadesVerificationOptions.requireSigningTime] to reject such
- *   signatures outright instead.
+ *   [Invalid.Malformed]. The certificate validity window (signer and CAs) is checked at the
+ *   AUTHENTICATED time (a trusted `SignatureTimeStamp`) and otherwise at the CURRENT time, never at the
+ *   claimed `SigningTime`, which a signer could back-date. A signature by a since-expired certificate
+ *   therefore needs a trusted time-stamp (or `allowExpiredCertificateAtSigningTime`); set
+ *   [XadesVerificationOptions.requireSigningTime] to reject signatures without a claimed time.
+ * - B-LT / B-LTA credit for embedded `RevocationValues` is given only to values covered by a verified
+ *   `ArchiveTimeStamp` (those before it); values appended after the last archive stamp earn none.
  * - Only `<ds:KeyInfo>` certificates that chain to the signer (issuer DN == subject DN and a valid
  *   signature) are passed to the [org.trustweave.signatures.trustlists.TrustAnchorResolver]; unrelated
  *   certificates are ignored. The trust result is handled by an exhaustive `when`, so a new
@@ -268,9 +271,10 @@ class DefaultXadesVerifier : XadesVerifier {
             if (archiveOutcome is XadesArchiveTimestamps.Outcome.Invalid) {
                 return@withContext Invalid.TimeStampInvalid(archiveOutcome.reason)
             }
-            val effectiveTime: Instant = authenticatedTime ?: signingTime ?: Clock.System.now()
+            // The claimed SigningTime is never used for validity windows: a signer could back-date it.
+            val effectiveTime: Instant = authenticatedTime ?: Clock.System.now()
 
-            // 9. Cert validity at the (authenticated, else claimed, else current) time.
+            // 9. Cert validity at the authenticated time, else the current time.
             if (!options.allowExpiredCertificateAtSigningTime) {
                 val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
                 val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
@@ -361,12 +365,18 @@ class DefaultXadesVerifier : XadesVerifier {
                 revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
                 // B-LT: the evidence carried inside the signature must, on its own, cover the chain.
                 if (revocationChecked && authenticatedTime != null && !embeddedEvidence.isEmpty) {
+                    // With a verified archive time-stamp, only the values it covers (those before it) prove B-LT/B-LTA;
+                    // a RevocationValues appended after the last stamp is unauthenticated and earns no credit.
+                    val coveredEvidence =
+                        (archiveOutcome as? XadesArchiveTimestamps.Outcome.Valid)
+                            ?.let { XadesRevocationValues.embedded(qp, it.lastStamp) }
+                            ?: embeddedEvidence
                     val own =
                         CertificateRevocationEvaluator.evaluate(
                             signer = signerCert,
                             candidates = keyInfoCerts,
                             issuerCertificates = options.revocationIssuerCertificates,
-                            evidence = embeddedEvidence,
+                            evidence = coveredEvidence,
                             authenticatedTime = authenticatedTime,
                             now = now,
                             skewMillis = skewMillis,

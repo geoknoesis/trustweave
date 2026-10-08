@@ -143,7 +143,9 @@ data class CadesSignature(
  *                                                 signatures pass `null` and the verifier will use
  *                                                 the embedded `encapContentInfo` content.
  * @property allowExpiredCertificateAtSigningTime  When `true`, certificate validity is not enforced
- *                                                 at the claimed signing time.
+ *                                                 (otherwise it is checked at the time authenticated by a
+ *                                                 trusted time-stamp, else now; never at the claimed
+ *                                                 signing time).
  * @property maxClockSkew                          Tolerance applied to signing-time / TSA-time
  *                                                 comparisons. Default 5 minutes.
  * @property timestampTrustAnchors                 TSA certificates (or the CAs that issued them) trusted to
@@ -237,7 +239,7 @@ sealed class CadesValidationResult {
             val reason: String,
         ) : Invalid()
 
-        /** Signer certificate had already expired at the asserted signing time. */
+        /** Signer certificate had expired at the authenticated time (trusted time-stamp), or at verification time without one. */
         data class CertificateExpired(
             val notAfter: Instant,
         ) : Invalid()

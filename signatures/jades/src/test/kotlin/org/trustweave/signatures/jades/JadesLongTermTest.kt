@@ -1,8 +1,12 @@
 package org.trustweave.signatures.jades
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -185,10 +189,80 @@ class JadesLongTermTest {
                         timestampTrustAnchors = listOf(tsa.cert),
                     ),
                 )
-            assertTrue(result is Valid, "got $result")
-            result as Valid
-            assertEquals(JadesProfile.B_LTA, result.foundProfile)
-            assertNotNull(result.archivalTimeStamp, "B-LTA must surface archival time-stamp")
+            // EN 319 182-1 5.3.6: the library cannot build/verify the standard archive imprint, so it fails closed.
+            assertTrue(result is Invalid.WrongProfile, "arcTst must not be credited as B-LTA, got $result")
+            assertEquals(JadesProfile.B_LT, (result as Invalid.WrongProfile).found)
+
+            val lenient =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_LT,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
+                    ),
+                )
+            assertTrue(lenient is Valid, "got $lenient")
+            lenient as Valid
+            assertEquals(JadesProfile.B_LT, lenient.foundProfile)
+            assertNull(lenient.archivalTimeStamp, "arcTst is never credited")
+        }
+
+    @Test
+    fun `every arcTst token is checked, not only the first`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Second Token Signer")
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    payloadJson = buildJsonObject { put("profile", JsonPrimitive("B-LTA")) },
+                    request =
+                        JadesSigningRequest(
+                            profile = JadesProfile.B_LTA,
+                            keyId = keyId,
+                            signerCertificateChain = chain,
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            validationData =
+                                ValidationData(
+                                    completeCertificateChain = chain,
+                                    revocationData =
+                                        listOf(
+                                            EncodedRevocationData(
+                                                type = "OCSP",
+                                                dataB64 = Base64.getEncoder().encodeToString(realOcsp(chain)),
+                                                producedAt =
+                                                    java.time.Instant
+                                                        .now()
+                                                        .toString(),
+                                            ),
+                                        ),
+                                ),
+                        ),
+                )
+            val garbage = Base64.getEncoder().encodeToString("not a time-stamp token".toByteArray())
+            val root =
+                kotlinx.serialization.json.Json
+                    .parseToJsonElement(signature.serializedFlattened)
+                    .jsonObject
+            val etsiU = root["header"]!!.jsonObject["etsiU"]!!.jsonArray
+            val patched =
+                etsiU.map { entry ->
+                    val arc = entry.jsonObject["arcTst"]?.jsonObject ?: return@map entry
+                    val tokens = arc["tstTokens"]!!.jsonArray + buildJsonObject { put("val", JsonPrimitive(garbage)) }
+                    buildJsonObject { put("arcTst", JsonObject(arc + ("tstTokens" to JsonArray(tokens)))) }
+                }
+            val header = JsonObject(root["header"]!!.jsonObject + ("etsiU" to JsonArray(patched)))
+            val tampered = JsonObject(root + ("header" to header)).toString()
+            val result =
+                verifier.verify(
+                    tampered,
+                    JadesVerificationOptions(
+                        requiredProfile = JadesProfile.B_LT,
+                        trustAnchorResolver = resolverFor(ca.caCert),
+                        timestampTrustAnchors = listOf(tsa.cert),
+                    ),
+                )
+            assertTrue(result is Invalid.TimeStampMismatch, "got $result")
         }
 
     @Test

@@ -35,6 +35,22 @@ working code fail until it is adjusted.**
   old `copy(...)` signatures are gone. New: `DefaultTslSignatureVerifier` and `VerifiedTrustListLoader`, which
   verifies the LoTL and every TSL against the certificates of its LoTL pointer, enforces `NextUpdate` and
   sequence-number rollback protection, and accepts stale lists only with `TrustListLoadOptions(allowStale = true)`.
+- **BREAKING (security) — ETSI verifier hardening (XAdES, CAdES, JAdES, `etsi-validation`).**
+  - XAdES: embedded `RevocationValues` earn B-LT/B-LTA credit only when a verified `ArchiveTimeStamp` covers them
+    (they precede it); values appended after the last archive stamp no longer grant B-LTA.
+  - CAdES: the signed `signing-certificate-v2` / `signing-certificate` attribute is now required and must match the
+    chosen signer certificate (digest and issuer/serial, EN 319 122-1 5.2.2); an absent attribute is `Malformed`, a
+    mismatch is `BadSignature`. Signatures made without it are no longer accepted.
+  - XAdES, CAdES and JAdES judge the signer certificate's validity window at the authenticated time (trusted
+    time-stamp) else now, never at the claimed `SigningTime` / `signing-time` / `sigT`; CAdES no longer skips the
+    check when `signing-time` is absent. A since-expired certificate therefore needs a trusted time-stamp (or
+    `allowExpiredCertificateAtSigningTime`). A not-yet-valid CAdES/JAdES signer certificate is reported as
+    `SignerCertificateInvalid`.
+  - JAdES: an `arcTst` is never credited as B-LTA (the EN 319 182-1 5.3.6 imprint is not implemented and the
+    signer's private imprint is not the standard one), so `DefaultJadesVerifier` reports at most B-LT and
+    `archivalTimeStamp` is always null; every `arcTst` token is checked, not only the first.
+  - `etsi-validation`: the step outcomes over JAdES results are exhaustive `when`s with no fail-open `else`.
+
 - **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**
   `Oidc4VciIssuerService` takes an `Oidc4VciCredentialBuilder` (`credentialBuilder`); without one every
   credential request is refused with `unsupported_credential_format`, and so is any format the builder does not

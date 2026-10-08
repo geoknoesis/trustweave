@@ -162,7 +162,21 @@ class DefaultEtsiSignatureValidator(
                         StepOutcome.Failed(
                             "envelope rejected during crypto check: ${jadesResult.reason}",
                         )
-                    else -> StepOutcome.Passed("crypto verification ok (further step failed)")
+                    // The JAdES verifier checks the signature before any of these, so the crypto itself held.
+                    is JadesValidationResult.Invalid.UntrustedSigner,
+                    is JadesValidationResult.Invalid.TrustWithdrawn,
+                    is JadesValidationResult.Invalid.SignerCertificateInvalid,
+                    is JadesValidationResult.Invalid.TimeStampMismatch,
+                    is JadesValidationResult.Invalid.MissingTimeStamp,
+                    is JadesValidationResult.Invalid.CertificateExpired,
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("crypto verification ok (further step failed)")
+                    // Rejected on structure/profile grounds, possibly before the signature was examined.
+                    is JadesValidationResult.Invalid.WrongProfile ->
+                        StepOutcome.Inconclusive(
+                            "crypto verification not evaluated: ${jadesResult.found} found, ${jadesResult.required} required",
+                        )
                 }
 
             // ------------------------------------------------------------ Step 4: X509_CERT_PATH
@@ -191,7 +205,10 @@ class DefaultEtsiSignatureValidator(
                     is JadesValidationResult.Invalid.BadSignature,
                     is JadesValidationResult.Invalid.Malformed,
                     -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
-                    else -> StepOutcome.Passed("cert path validated")
+                    // Reached only after the path was resolved; the revocation outcome is reported by its own step.
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("cert path validated")
                 }
 
             // ------------------------------------------------------------ Step 5: REVOCATION
@@ -248,7 +265,16 @@ class DefaultEtsiSignatureValidator(
                 StepOutcome.Failed("certificate revoked: ${jadesResult.reason}")
             is JadesValidationResult.Invalid.RevocationUnavailable ->
                 StepOutcome.Failed("revocation evidence required but unavailable: ${jadesResult.reason}")
-            else -> StepOutcome.Inconclusive("revocation not evaluated — earlier step failed")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("revocation not evaluated — earlier step failed")
         }
     }
 
@@ -309,11 +335,21 @@ class DefaultEtsiSignatureValidator(
         return when (jadesResult) {
             is JadesValidationResult.Valid ->
                 StepOutcome.Passed(
-                    "signer cert valid at sigT=${jadesResult.signingTime}",
+                    "signer cert valid at the authenticated time (else now); claimed sigT=${jadesResult.signingTime}",
                 )
             is JadesValidationResult.Invalid.CertificateExpired ->
-                StepOutcome.Failed("signer cert expired at sigT (notAfter=${jadesResult.notAfter})")
-            else -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
+                StepOutcome.Failed("signer cert expired (notAfter=${jadesResult.notAfter})")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
         }
     }
 
@@ -349,7 +385,16 @@ class DefaultEtsiSignatureValidator(
                 StepOutcome.Failed("sigTst missing: ${jadesResult.reason}")
             is JadesValidationResult.Invalid.TimeStampMismatch ->
                 StepOutcome.Failed("sigTst mismatch: ${jadesResult.reason}")
-            else -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
         }
     }
 

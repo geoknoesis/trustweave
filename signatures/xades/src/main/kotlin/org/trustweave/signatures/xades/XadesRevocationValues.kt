@@ -5,18 +5,32 @@ import org.trustweave.signatures.revocation.RevocationEvidence
 import org.w3c.dom.Element
 import java.util.Base64
 
-/** Reads the revocation evidence a XAdES signature carries in its (unsigned) `<xades:RevocationValues>`. */
+/**
+ * Reads the revocation evidence a XAdES signature carries in its (unsigned) `<xades:RevocationValues>`.
+ * With `coveredBy` (an archive time-stamp), only values preceding it count.
+ */
 internal object XadesRevocationValues {
     private const val XADES_NS = "http://uri.etsi.org/01903/v1.3.2#"
 
     /** Evidence in `<xades:UnsignedProperties>/<xades:UnsignedSignatureProperties>/<xades:RevocationValues>`. */
-    fun embedded(qualifyingProperties: Element): RevocationEvidence {
+    fun embedded(
+        qualifyingProperties: Element,
+        coveredBy: Element? = null,
+    ): RevocationEvidence {
         val crls = mutableListOf<ByteArray>()
         val ocsp = mutableListOf<ByteArray>()
         val values =
-            children(qualifyingProperties, "UnsignedProperties")
-                .flatMap { children(it, "UnsignedSignatureProperties") }
-                .flatMap { children(it, "RevocationValues") }
+            if (coveredBy == null) {
+                children(qualifyingProperties, "UnsignedProperties")
+                    .flatMap { children(it, "UnsignedSignatureProperties") }
+                    .flatMap { children(it, "RevocationValues") }
+            } else {
+                // Only values that precede [coveredBy] (an archive time-stamp) are inside its imprint.
+                XadesArchiveTimestamps
+                    .unsignedProperties(qualifyingProperties)
+                    .takeWhile { it !== coveredBy }
+                    .filter { it.namespaceURI == XADES_NS && it.localName == "RevocationValues" }
+            }
         for (rv in values) {
             children(rv, "CRLValues").flatMap { children(it, "EncapsulatedCRLValue") }.forEach { decode(it)?.let(crls::add) }
             children(rv, "OCSPValues").flatMap { children(it, "EncapsulatedOCSPValue") }.forEach { decode(it)?.let(ocsp::add) }

@@ -44,6 +44,38 @@ class JadesRoundTripTest {
         ca = TestCa()
     }
 
+    @Test
+    fun `a back-dated sigT does not rescue an expired certificate`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.Ed25519)
+            val expired =
+                ca.issue(
+                    kms.publicKey(keyId),
+                    "CN=Expired",
+                    notBefore = java.util.Date(System.currentTimeMillis() - 30L * 86_400_000),
+                    notAfter = java.util.Date(System.currentTimeMillis() - 86_400_000),
+                )
+            val signature =
+                DefaultJadesSigner(kms).sign(
+                    payloadJson = buildJsonObject { put("hello", JsonPrimitive("world")) },
+                    request =
+                        JadesSigningRequest(
+                            profile = JadesProfile.B_B,
+                            keyId = keyId,
+                            signerCertificateChain = listOf(expired.encoded, ca.caCert.encoded),
+                            signingTime =
+                                kotlin.time.Clock.System
+                                    .now() - kotlin.time.Duration.parse("P10D"),
+                        ),
+                )
+            val result =
+                verifier.verify(
+                    signature.serializedFlattened,
+                    JadesVerificationOptions(requiredProfile = JadesProfile.B_B, trustAnchorResolver = resolverFor(ca.caCert)),
+                )
+            assertTrue(result is Invalid.CertificateExpired, "got $result")
+        }
+
     // ---------------------------------------------------------------- B-B happy paths
 
     @Test

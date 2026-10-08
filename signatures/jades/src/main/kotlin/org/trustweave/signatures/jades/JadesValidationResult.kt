@@ -33,7 +33,8 @@ sealed class JadesValidationResult {
         /**
          * Profile the verification actually established (B-B, B-T, B-LT or B-LTA): B-T needs a time-stamp that
          * verified against `timestampTrustAnchors`, B-LT also needs embedded revocation evidence that verified
-         * and covers the chain, B-LTA also a trusted archival time-stamp.
+         * and covers the chain. B-LTA is never reported: the EN 319 182-1 5.3.6 archive imprint is not implemented, so
+         * an `arcTst` fails closed (see [DefaultJadesVerifier]).
          */
         val foundProfile: JadesProfile = JadesProfile.B_B,
         /**
@@ -45,8 +46,7 @@ sealed class JadesValidationResult {
          */
         val rValsCount: Int = 0,
         /**
-         * Time recorded by the latest `arcTst` archival time-stamp; null unless the envelope was
-         * B-LTA AND the archival time-stamp validated.
+         * Always null for now: an `arcTst` is never credited (see [foundProfile]).
          */
         val archivalTimeStamp: Instant? = null,
         /**

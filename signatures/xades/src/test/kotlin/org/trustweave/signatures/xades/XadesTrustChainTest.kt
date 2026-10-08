@@ -197,7 +197,7 @@ class XadesTrustChainTest {
         }
 
     @Test
-    fun `without SigningTime a since-expired certificate is rejected at verification time`() =
+    fun `a since-expired certificate is rejected whatever SigningTime claims`() =
         runTest {
             val expired =
                 ca.issue(
@@ -211,13 +211,13 @@ class XadesTrustChainTest {
                 .verify(withoutTime, options(RecordingResolver(activeMatch())))
                 .shouldBeInstanceOf<Invalid.CertificateExpired>()
 
-            // With a claimed SigningTime inside the validity window the same certificate is judged then.
+            // A back-dated claimed SigningTime inside the validity window does not rescue it.
             val withTime =
                 signed(
                     listOf(expired, ca.caCert),
                     signer = expired,
                     signingTimeText = Instant.now().minus(10, ChronoUnit.DAYS).toString(),
                 )
-            verifier.verify(withTime, options(RecordingResolver(activeMatch()))).shouldBeInstanceOf<Valid>()
+            verifier.verify(withTime, options(RecordingResolver(activeMatch()))).shouldBeInstanceOf<Invalid.CertificateExpired>()
         }
 }

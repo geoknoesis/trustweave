@@ -4,8 +4,9 @@
 The dependency backlog is large and some entries (org.didcommx:didcomm 0.3.2 embeds an old Nimbus and
 json-smart) have no upgrade path, so the OSV job cannot simply fail on every finding. Instead it fails
 on any finding that is *new* relative to config/osv/baseline.json. A finding is an advisory in a
-package: it matches the baseline when the advisory id (or any alias) is listed AND the package name
-(group prefix ignored, ecosystem compared when the entry records one) is listed for that entry at the
+package: it matches the baseline when the advisory id (or any alias) is listed AND the package key
+(group:name; a label that records no group, as the JAR scan sometimes reports, matches on the artifact name
+alone; ecosystem compared when the entry records one) is listed for that entry at the
 finding's version. A baselined GHSA that appears in a NEW package therefore fails. Entries without a
 "packages" list are legacy id-only entries and match any package; --update-baseline rewrites them with
 packages.
@@ -72,8 +73,26 @@ def short_name(name):
     return str(name).rpartition(":")[2].lower()
 
 
+def norm_name(name):
+    """The matching key: 'group:name' lower-cased; a bare artifact name stays bare."""
+    return str(name).strip().lower()
+
+
+def names_match(a, b):
+    """Two package keys name the same package: group:name equal when both carry a group, else artifact equal.
+
+    A bare name (no group) cannot be told apart from other groups, so it matches on the artifact alone;
+    two different groups never match, which a bare short name used to allow.
+    """
+    group_a, _, artifact_a = a.rpartition(":")
+    group_b, _, artifact_b = b.rpartition(":")
+    if group_a and group_b and group_a != group_b:
+        return False
+    return artifact_a == artifact_b
+
+
 def label_name(label):
-    return short_name(label.rpartition("@")[0] or label)
+    return norm_name(label.rpartition("@")[0] or label)
 
 
 def label_version(label):
@@ -83,7 +102,7 @@ def label_version(label):
 
 
 def report_advisories(report):
-    """Return {primary id: {"ids": ids+aliases, "packages": {"name@version"}, "pairs": {(short name, ecosystem, version)}}}."""
+    """Return {primary id: {"ids": ids+aliases, "packages": {"name@version"}, "pairs": {(group:name, ecosystem, version)}}}."""
     found = {}
     for result in report.get("results", []):
         for package in result.get("packages", []):
@@ -98,7 +117,7 @@ def report_advisories(report):
                 entry = found.setdefault(vid, {"ids": {vid}, "packages": set(), "pairs": set()})
                 entry["ids"].update(vulnerability.get("aliases", []))
                 entry["packages"].add(label)
-                entry["pairs"].add((short_name(info.get("name", "?")), ecosystem, version))
+                entry["pairs"].add((norm_name(info.get("name", "?")), ecosystem, version))
     return found
 
 
@@ -116,7 +135,7 @@ def _entry_matches(item, ids, name, ecosystem, version=""):
     packages = item.get("packages")
     if not packages:
         return True  # legacy id-only entry
-    recorded = [label_version(p) for p in packages if label_name(p) == name]
+    recorded = [label_version(p) for p in packages if names_match(label_name(p), name)]
     if not recorded:
         return False
     if version and "" not in recorded and version not in recorded:
@@ -130,7 +149,7 @@ def recorded_versions(items, ids, name):
     versions = set()
     for item in items:
         if {item["id"], *item.get("aliases", [])} & ids:
-            versions.update(label_version(p) for p in item.get("packages", []) if label_name(p) == name)
+            versions.update(label_version(p) for p in item.get("packages", []) if names_match(label_name(p), name))
     return {v for v in versions if v}
 
 
@@ -145,7 +164,9 @@ def new_advisories(found, baseline):
             fresh[vid] = {
                 "ids": entry["ids"],
                 "pairs": missing,
-                "packages": {p for p in entry["packages"] if (label_name(p), label_version(p)) in names},
+                "packages": {
+                    p for p in entry["packages"] if any(names_match(label_name(p), n) and label_version(p) == v for n, v in names)
+                },
             }
     return fresh
 
@@ -171,7 +192,7 @@ def stale_versions(found, baseline):
             continue
         for p in item.get("packages", []):
             version = label_version(p)
-            if version and (label_name(p), version) not in seen:
+            if version and not any(names_match(label_name(p), n) and version == v for n, v in seen):
                 lines.add(f"{item['id']} {p}")
     return sorted(lines)
 
@@ -243,11 +264,12 @@ def updated_baseline(found, baseline, package_count=None):
             "ecosystems": sorted({eco for _, eco, _ in found[vid]["pairs"] if eco}),
         }
         old_packages = old.get("packages")
-        recorded = {(label_name(p), label_version(p)) for p in old_packages or []}
+        recorded = [(label_name(p), label_version(p)) for p in old_packages or []]
         added = sorted(
             p
             for p in packages
-            if old_packages and (label_name(p), label_version(p)) not in recorded and (label_name(p), "") not in recorded
+            if old_packages
+            and not any(names_match(label_name(p), n) and v in (label_version(p), "") for n, v in recorded)
         )
         if old and not added:
             # Unchanged (or a legacy id-only entry being migrated): keep the earlier decision as it was.

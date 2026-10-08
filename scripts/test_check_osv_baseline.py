@@ -287,5 +287,28 @@ class OsvBaselineTest(unittest.TestCase):
         self.assertEqual([], osv.stale_entries(osv.report_advisories(rep), baseline))
 
 
+class GroupMatchingTest(unittest.TestCase):
+    def test_same_artifact_in_another_group_is_new(self):
+        baseline = {"schema": 3, "advisories": [triaged(packages=("io.netty:common@1",))]}
+        found = osv.report_advisories(report(("org.evil:common", "GHSA-1", [])))
+        self.assertIn("GHSA-1", osv.new_advisories(found, baseline))
+
+    def test_same_group_and_name_matches(self):
+        baseline = {"schema": 3, "advisories": [triaged(packages=("io.netty:common@1",))]}
+        found = osv.report_advisories(report(("io.netty:common", "GHSA-1", [])))
+        self.assertEqual({}, osv.new_advisories(found, baseline))
+
+    def test_bare_baseline_label_still_matches_grouped_finding(self):
+        baseline = {"schema": 3, "advisories": [triaged(packages=("common@1",))]}
+        found = osv.report_advisories(report(("io.netty:common", "GHSA-1", [])))
+        self.assertEqual({}, osv.new_advisories(found, baseline))
+
+    def test_names_match_rules(self):
+        self.assertTrue(osv.names_match("a:b", "a:b"))
+        self.assertFalse(osv.names_match("a:b", "c:b"))
+        self.assertTrue(osv.names_match("b", "c:b"))
+        self.assertFalse(osv.names_match("a:b", "a:c"))
+
+
 if __name__ == "__main__":
     unittest.main()

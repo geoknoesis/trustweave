@@ -16,7 +16,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-common@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client. Fixed in 4.1.118.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-common@4.1.111.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-38f8-5428-x5cv",
@@ -36,7 +36,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-3g76-f9xq-8vp6",
@@ -50,7 +50,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): vertx-core@4.5.11 in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes. Fixed in 4.5.27, 5.0.12. Reachability from TrustWeave code is not individually assessed. Vert.x 4.5.11 arrives through web3j (tuweni); the fix is a newer web3j or a Vert.x pin.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-3p8m-j85q-pgmj",
@@ -66,7 +66,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client. Fixed in 4.1.125.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec@4.1.111.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-3pjw-73gf-8qr5",
@@ -84,7 +84,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.8, 2.21.4, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-3qp7-7mw8-wx86",
@@ -104,7 +104,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-handler@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-handler@4.1.111.Final, netty-handler@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-4265-ccf5-phj5",
@@ -133,7 +133,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler-proxy@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes; netty-handler-proxy@4.1.130.Final in the runtimeClasspath of 3 module(s), e.g. :credentials:plugins:status-list:publishing via azure-sdk-bom > azure-storage-blob > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-493p-pfq6-5258",
@@ -146,7 +146,7 @@
       "status": "accepted-risk",
       "reason": "Embedded in the org.didcommx:didcomm 0.3.2 fat JAR (credentials:plugins:didcomm); no newer didcomm release exists. Accepted with the mitigations in SECURITY.md \"Known Dependency Risks\"; the resolution is replacing the DIDComm library (docs/contributing/dependency-upgrade-plan.md). Fixed in 2.4.9.",
       "reviewed": "2026-10-08",
-      "expires": "2027-01-08"
+      "expires": "2026-12-29"
     },
     {
       "id": "GHSA-4g8c-wm8x-jfhw",
@@ -162,7 +162,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client. Fixed in 4.1.118.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-handler@4.1.111.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-4g9r-vxhx-9pgx",
@@ -191,7 +191,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): protobuf-java@3.14.0 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > protobuf-java. Fixed in 3.16.3, 3.19.6, 3.20.3, 3.21.7. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md. Recorded versions not in the current graph (shaded, build tooling or stale): protobuf-javalite@3.18.0.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-4h8f-2wvx-gg5w",
@@ -205,7 +205,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on. Fixed in 1.78. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-4jrv-ppp4-jm57",
@@ -220,7 +220,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): gson@2.8.6 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > gson. Fixed in 2.8.9. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-4mp9-239f-g9hg",
@@ -240,7 +240,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-558v-64gr-wgg4",
@@ -260,7 +260,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.136.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec@4.1.111.Final, netty-codec@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-563q-j3cm-6jxm",
@@ -280,7 +280,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-574f-3g2m-x479",
@@ -297,7 +297,7 @@
       "status": "needs-review",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.80.2, 1.81.1, 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-57rv-r2g8-2cj3",
@@ -317,7 +317,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-5gvw-p9qm-jgwh",
@@ -337,7 +337,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.5, 3.2.1. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-5jmj-h7xm-6q6v",
@@ -357,7 +357,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5, 2.22.1, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-5pvg-856g-cp85",
@@ -373,7 +373,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-resolver-dns@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes; netty-resolver-dns@4.1.128.Final in the runtimeClasspath of 3 module(s), e.g. :credentials:plugins:status-list:publishing via azure-sdk-bom > azure-storage-blob > azure-core-http-netty > reactor-netty-http. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-5x3r-wrvg-rp6q",
@@ -393,7 +393,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-10"
     },
     {
       "id": "GHSA-676x-f7gg-47vc",
@@ -409,7 +409,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-resolver-dns@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes; netty-resolver-dns@4.1.128.Final in the runtimeClasspath of 3 module(s), e.g. :credentials:plugins:status-list:publishing via azure-sdk-bom > azure-storage-blob > azure-core-http-netty > reactor-netty-http. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-67mf-3cr5-8w23",
@@ -423,7 +423,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on. Fixed in 1.78. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-6cqp-g7gg-8hr5",
@@ -443,7 +443,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-6jqx-86gh-f27w",
@@ -463,7 +463,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-72hv-8253-57qq",
@@ -483,7 +483,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.6, 2.21.1, 3.1.0. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@2.16.1, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-735f-pc8j-v9w8",
@@ -499,7 +499,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): protobuf-java@3.14.0 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > protobuf-java. Fixed in 3.25.5, 4.27.5, 4.28.2. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md. Recorded versions not in the current graph (shaded, build tooling or stale): protobuf-javalite@3.18.0.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-7hhh-6rmp-j9qf",
@@ -525,7 +525,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@2.16.1, jackson-core@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-84h7-rjj3-6jx4",
@@ -541,7 +541,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client. Fixed in 4.1.129.Final, 4.2.8.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-8c42-7qj2-3j46",
@@ -561,7 +561,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.137.Final, 4.2.17.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-8xfc-gm6g-vgpv",
@@ -575,7 +575,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on. Fixed in 1.78. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-93wv-jw9v-4972",
@@ -595,7 +595,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-9pwp-9qqc-pr26",
@@ -614,7 +614,7 @@
       "status": "needs-review",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on; bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 1.85, 2.73.12. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. Recorded versions not in the current graph (shaded, build tooling or stale): bcprov-jdk15to18@1.69, bcprov-jdk18on@1.84. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-01"
     },
     {
       "id": "GHSA-c2gf-v879-257j",
@@ -634,7 +634,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-c3fc-8qff-9hwx",
@@ -650,7 +650,7 @@
       "status": "needs-review",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk15to18@1.78 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > bcprov-jdk15to18; bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on; bcprov-jdk18on@1.80 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:evm-base via core > abi > utils > bcprov-jdk18on. Fixed in 1.84. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test. The CI scan of 2026-10-08 also reports bcprov-jdk15to18@1.83, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-c4c3-7fpv-j4q5",
@@ -670,7 +670,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-handler@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.137.Final, 4.2.17.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-handler@4.1.111.Final, netty-handler@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-c653-97m9-rcg9",
@@ -690,7 +690,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-handler@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-handler@4.1.111.Final, netty-handler@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-c69g-56f8-xwqj",
@@ -710,7 +710,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-cm33-6792-r9fm",
@@ -726,7 +726,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-dns@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes; netty-codec-dns@4.1.128.Final in the runtimeClasspath of 3 module(s), e.g. :credentials:plugins:status-list:publishing via azure-sdk-bom > azure-storage-blob > azure-core-http-netty > reactor-netty-http. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-cphf-4846-3xx9",
@@ -740,7 +740,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): vertx-core@4.5.11 in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes. Fixed in 4.5.24, 5.0.7. Reachability from TrustWeave code is not individually assessed. Vert.x 4.5.11 arrives through web3j (tuweni); the fix is a newer web3j or a Vert.x pin.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-17"
     },
     {
       "id": "GHSA-cw39-r4h6-8j3x",
@@ -753,7 +753,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): msgpack-core@0.9.9 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > jackson-dataformat-msgpack > msgpack-core. Fixed in 0.9.11. Reachability from TrustWeave code is not individually assessed. msgpack-core 0.9.9 comes from algosdk -> jackson-dataformat-msgpack; fix by upgrading algosdk or pinning 0.9.11.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-cxp5-3px4-pw24",
@@ -777,7 +777,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.3. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-f6hv-jmp6-3vwv",
@@ -805,7 +805,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http2@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http2@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-codec-http2; netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http2@4.1.111.Final, netty-codec-http2@4.1.132.Final, netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-fccg-mwvh-qqg4",
@@ -825,7 +825,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-handler@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-handler@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.137.Final, 4.2.17.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-handler@4.1.111.Final, netty-handler@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-fghv-69vj-qj49",
@@ -841,7 +841,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client. Fixed in 4.1.125.Final, 4.2.5.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-g5ww-5jh7-63cx",
@@ -855,7 +855,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): protobuf-java@3.14.0 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > protobuf-java. Fixed in 3.16.3, 3.19.6, 3.20.3, 3.21.7. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-gcjf-9mgh-3p7g",
@@ -875,7 +875,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-gvpg-vgmx-xg6w",
@@ -888,7 +888,7 @@
       "status": "accepted-risk",
       "reason": "Embedded in the org.didcommx:didcomm 0.3.2 fat JAR (credentials:plugins:didcomm); no newer didcomm release exists. Accepted with the mitigations in SECURITY.md \"Known Dependency Risks\"; the resolution is replacing the DIDComm library (docs/contributing/dependency-upgrade-plan.md). Fixed in 9.37.2.",
       "reviewed": "2026-10-08",
-      "expires": "2027-01-08"
+      "expires": "2026-12-29"
     },
     {
       "id": "GHSA-gx83-3vf8-gh7j",
@@ -912,7 +912,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4, jackson-databind@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.10, 2.21.6, 2.22.2, 3.1.6, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-databind@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-h4h5-3hr4-j3g2",
@@ -928,7 +928,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): protobuf-java@3.14.0 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > protobuf-java. Fixed in 3.16.3, 3.19.6, 3.20.3, 3.21.7. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md. Recorded versions not in the current graph (shaded, build tooling or stale): protobuf-javalite@3.18.0.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-hf6x-8p5f-cgmf",
@@ -958,7 +958,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.8, 2.21.4, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-hjcp-jmpx-g3qm",
@@ -990,7 +990,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.135.Final, 4.2.15.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-j3rv-43j4-c7qm",
@@ -1008,7 +1008,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.17.1, jackson-databind@2.18.2, jackson-databind@2.18.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.8, 2.21.4, 3.1.4. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-jppx-w49h-x2qq",
@@ -1028,7 +1028,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-m44j-cfrm-g8qc",
@@ -1041,7 +1041,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-jdk18on@1.77 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:cardano via cardano-client-lib > cardano-client-core > bcprov-jdk18on. Fixed in 1.78. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-m4cv-j2px-7723",
@@ -1061,7 +1061,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.133.Final, 4.2.13.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-mfg7-5gfp-c4w3",
@@ -1077,7 +1077,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-dns@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes; netty-codec-dns@4.1.128.Final in the runtimeClasspath of 3 module(s), e.g. :credentials:plugins:status-list:publishing via azure-sdk-bom > azure-storage-blob > azure-core-http-netty > reactor-netty-http. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-mhm7-754m-9p8w",
@@ -1093,7 +1093,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-databind@2.18.2, jackson-databind@2.18.4, jackson-databind@2.21.4) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.9, 2.21.5. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-mj4r-2hfc-f8p6",
@@ -1113,7 +1113,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler. Fixed in 4.1.133.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec@4.1.111.Final, netty-codec@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-mvh2-crg5-v77c",
@@ -1133,7 +1133,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): netty-codec-http@4.1.115.Final in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > kms > netty-nio-client; netty-codec-http@4.1.130.Final in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:azure via azure-sdk-bom > azure-identity > azure-core-http-netty > netty-handler-proxy. Fixed in 4.1.136.Final, 4.2.16.Final. Reachability from TrustWeave code is not individually assessed. Netty 4.1.x arrives through the AWS SDK / Azure SDK async HTTP clients and web3j (tuweni, Vert.x); the fix is a newer SDK BOM / web3j or a Netty 4.1 pin, see docs/contributing/dependency-upgrade-plan.md. The embedded Ktor servers resolve Netty 4.2.18.Final and are not on the 4.1 line. Recorded versions not in the current graph (shaded, build tooling or stale): netty-codec-http@4.1.111.Final, netty-codec-http@4.1.132.Final.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-mx76-r943-rf8g",
@@ -1146,7 +1146,7 @@
       "status": "affected",
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): bcprov-lts8on@2.73.8 in the runtimeClasspath of 1 module(s), e.g. :kms:plugins:waltid via waltid-did > waltid-did-jvm > waltid-crypto > waltid-crypto-jvm. Fixed in 2.73.11. Reachability from TrustWeave code is not individually assessed. Bouncy Castle copies pinned by third-party SDKs (cardano-client-lib, algosdk, web3j, walt.id) bypass the catalog's 1.86; the fix is to force the catalog version in those plugin modules or upgrade the SDK, then re-test.",
       "reviewed": "2026-10-08",
-      "expires": "2026-12-31"
+      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-p53j-g8pw-4w5f",
@@ -1184,7 +1184,7 @@
       "status": "needs-review",
       "reason": "Not triaged. None of the recorded versions (jackson-core@2.17.1, jackson-core@2.18.2, jackson-core@2.18.4.1, jackson-core@2.21.4, jackson-core@3.1.5) resolves in any module's runtimeClasspath or testRuntimeClasspath today (Gradle resolution on 2026-10-08) and none is embedded in a cached dependency JAR, so the source is unknown: build tooling, a shaded copy or a version the catalog pins have since replaced (the catalog pins Jackson 2.22.3). Fixed in 2.18.11, 2.21.7, 2.22.3, 3.1.7, 3.2.2. Re-run the OSV scan: if the report no longer lists it, --strict-stale will flag the entry for removal; otherwise find the source and set a real status. The CI scan of 2026-10-08 also reports jackson-core@3.1.4, which local Gradle resolution did not show; the source (a module or tool outside the resolved classpaths) is not yet traced.",
       "reviewed": "2026-10-08",
-      "expires": "2026-11-15"
+      "expires": "2026-11-08"
     },
     {
       "id": "GHSA-p93r-85wp-75v3",

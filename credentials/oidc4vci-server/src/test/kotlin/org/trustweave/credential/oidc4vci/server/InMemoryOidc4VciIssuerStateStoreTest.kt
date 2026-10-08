@@ -13,7 +13,7 @@ class InMemoryOidc4VciIssuerStateStoreTest : Oidc4VciIssuerStateStoreContract() 
         assertEquals(InMemoryOidc4VciIssuerStateStore::class, default.stateStore::class)
 
         val store = InMemoryOidc4VciIssuerStateStore()
-        val service = Oidc4VciIssuerService("https://issuer.example", "did:example:issuer", stateStore = store)
+        val service = Oidc4VciIssuerService("https://issuer.example", "did:example:issuer", TEST_CONFIGURATIONS, stateStore = store)
         assertSame(store, service.stateStore)
         service.createOffer(listOf("A"))
         assertEquals(1, store.offerCount())

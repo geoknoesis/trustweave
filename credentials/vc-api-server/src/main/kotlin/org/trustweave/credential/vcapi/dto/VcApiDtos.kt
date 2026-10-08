@@ -115,3 +115,11 @@ data class VcApiErrorResponse(
     val error: String,
     val message: String,
 )
+
+/** POST /presentations/challenge response body. */
+@Serializable
+data class ChallengeResponse(
+    val challenge: String,
+    /** ISO-8601 instant after which the challenge is no longer accepted. */
+    val expiresAt: String,
+)

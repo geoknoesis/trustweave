@@ -32,6 +32,7 @@ class Oidc4VciRouteErrorMappingTest {
     ) = Oidc4VciIssuerService(
         baseUrl = "https://issuer.example",
         issuerDid = "did:key:z6MkTestIssuer",
+        supportedConfigurations = TEST_CONFIGURATIONS,
         tokenTtlSeconds = tokenTtlSeconds,
         maxPendingOffers = maxPendingOffers,
         maxActiveTokens = maxActiveTokens,

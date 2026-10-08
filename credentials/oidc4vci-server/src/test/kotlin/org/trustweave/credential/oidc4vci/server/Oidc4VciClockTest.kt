@@ -26,6 +26,7 @@ class Oidc4VciClockTest {
         Oidc4VciIssuerService(
             baseUrl = "https://issuer.example",
             issuerDid = "did:key:z6MkTestIssuer",
+            supportedConfigurations = TEST_CONFIGURATIONS,
             offerTtlSeconds = 300,
             tokenTtlSeconds = 3600,
             deferredTtlSeconds = 100,

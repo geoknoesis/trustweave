@@ -43,12 +43,34 @@ data class TokenEntry(
     /** Current `c_nonce` the wallet must echo in its proof-of-possession JWT (OID4VCI v1.0 §7.2). */
     val cNonce: String = UUID.randomUUID().toString(),
     val cNonceIssuedAt: Long = System.currentTimeMillis(),
-)
+    /**
+     * How many more credentials this access token may obtain. Starts at the number of credential
+     * configurations in the offer (at least one), so a single redemption cannot be turned into
+     * unlimited issuance.
+     */
+    val remainingCredentials: Int = offerState.credentialTypes.size.coerceAtLeast(1),
+) {
+    /** Binary-compatible constructor from before [remainingCredentials] existed. */
+    constructor(
+        offerState: OfferState,
+        issuedAt: Long,
+        cNonce: String,
+        cNonceIssuedAt: Long,
+    ) : this(offerState, issuedAt, cNonce, cNonceIssuedAt, offerState.credentialTypes.size.coerceAtLeast(1))
+}
 
 /** The access token is unknown or has outlived its advertised `expires_in` (→ `invalid_token`). */
 class InvalidTokenException(
     message: String,
 ) : SecurityException(message)
+
+/**
+ * The access token has already obtained every credential its offer covered (→ OID4VCI
+ * `invalid_request`, HTTP 400). The token stays valid for deferred pickup and notifications.
+ */
+class CredentialLimitExceededException(
+    message: String,
+) : IllegalStateException(message)
 
 /**
  * The proof of possession is missing/invalid (→ OID4VCI `invalid_proof`).
@@ -118,6 +140,9 @@ interface Oidc4VciCredentialBuilder {
 
     suspend fun build(request: Oidc4VciCredentialRequest): String
 }
+
+/** One message for an unknown and an expired access token, so the response does not say which. */
+private const val INVALID_TOKEN_MESSAGE = "Invalid or expired access_token"
 
 /** Raw Ed25519 public key length in bytes (RFC 8032). */
 private const val ED25519_RAW_PUBLIC_KEY_LENGTH_BYTES = 32
@@ -213,6 +238,15 @@ class Oidc4VciIssuerService
             txCodeValue: String? = null,
             claims: JsonObject = JsonObject(emptyMap()),
         ): CreateOfferResponse {
+            require(credentialTypes.isNotEmpty()) { "credentialTypes must not be empty" }
+            val unsupported = credentialTypes.filter { it !in supportedConfigurations }
+            require(unsupported.isEmpty()) {
+                "credentialTypes not in this issuer's supported configurations: $unsupported"
+            }
+            require((txCode == null) == (txCodeValue == null)) {
+                "txCode and txCodeValue must be provided together"
+            }
+            require(txCodeValue == null || txCodeValue.isNotEmpty()) { "txCodeValue must not be empty" }
             purgeExpired()
             val preAuthCode = UUID.randomUUID().toString()
             val offerState = OfferState(credentialTypes, txCode, txCodeValue, claims, issuedAt = nowMillis())
@@ -336,6 +370,7 @@ class Oidc4VciIssuerService
             proofJwt: String?,
         ): CredentialServerResponse {
             val entry = requireValidToken(accessToken)
+            if (entry.remainingCredentials <= 0) throw tokenExhausted()
             // Refused before the proof is judged, so an unsupported format does not burn a c_nonce.
             val builder = credentialBuilder
             if (builder == null || format !in builder.supportedFormats) {
@@ -348,16 +383,24 @@ class Oidc4VciIssuerService
                 )
             }
             val subjectDid = verifyProofOrThrow(accessToken, proofJwt)
+            // Reserved atomically before signing, so concurrent requests cannot together exceed the
+            // offer; given back if signing fails, since nothing was issued.
+            reserveCredential(accessToken)
             val credential =
-                builder.build(
-                    Oidc4VciCredentialRequest(
-                        format = format,
-                        credentialTypes = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
-                        issuerDid = issuerDid,
-                        subjectDid = subjectDid,
-                        claims = JsonObject(entry.offerState.claims.filterKeys { it != "id" }),
-                    ),
-                )
+                try {
+                    builder.build(
+                        Oidc4VciCredentialRequest(
+                            format = format,
+                            credentialTypes = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
+                            issuerDid = issuerDid,
+                            subjectDid = subjectDid,
+                            claims = JsonObject(entry.offerState.claims.filterKeys { it != "id" }),
+                        ),
+                    )
+                } catch (e: Throwable) {
+                    releaseCredential(accessToken)
+                    throw e
+                }
             // Rotate the c_nonce on success too (OID4VCI v1.0 §7.3): each proof is single-use.
             val freshNonce = rotateCNonce(accessToken)
             return CredentialServerResponse(
@@ -445,12 +488,35 @@ class Oidc4VciIssuerService
         private fun requireValidToken(accessToken: String): TokenEntry {
             val entry =
                 stateStore.getToken(accessToken)
-                    ?: throw InvalidTokenException("Invalid or expired access_token")
+                    ?: throw InvalidTokenException(INVALID_TOKEN_MESSAGE)
             if (nowMillis() - entry.issuedAt >= tokenTtlSeconds * 1000) {
                 stateStore.removeToken(accessToken)
-                throw InvalidTokenException("access_token expired")
+                throw InvalidTokenException(INVALID_TOKEN_MESSAGE)
             }
             return entry
+        }
+
+        private fun tokenExhausted() =
+            CredentialLimitExceededException(
+                "This access token has already obtained the credentials its offer covered",
+            )
+
+        private fun reserveCredential(accessToken: String) {
+            val reserved =
+                stateStore.updateToken(accessToken) { entry ->
+                    if (entry.remainingCredentials > 0) {
+                        entry.copy(remainingCredentials = entry.remainingCredentials - 1) to true
+                    } else {
+                        entry to false
+                    }
+                } ?: throw InvalidTokenException(INVALID_TOKEN_MESSAGE)
+            if (!reserved) throw tokenExhausted()
+        }
+
+        private fun releaseCredential(accessToken: String) {
+            stateStore.updateToken(accessToken) { entry ->
+                entry.copy(remainingCredentials = entry.remainingCredentials + 1) to Unit
+            }
         }
 
         /** Rotates the `c_nonce` bound to [accessToken] and returns the fresh value. */

@@ -501,3 +501,8 @@ For detailed information on specific topics, see:
 
 
 See [SDK release validation](docs/contributing/release-validation.md) for ABI reference updates, merged coverage, signing, and dependency inventories.
+
+Releases: a `v*` tag must point at a commit that is an ancestor of `main` (the release workflow checks this first).
+`scripts/run-contract-checks.sh` is the single list of contract checks that both `ci.yml` and
+`release-evidence.yml` run; add a new check there. See [Publishing](docs/operations/publishing.md) for the
+publish ordering (stage, checksum, attest, then upload to Central last).

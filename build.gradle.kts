@@ -338,9 +338,9 @@ subprojects {
                 // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
                 // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
                 repositories {
-                    // Local copy of exactly what `central` receives. Publishing to both repositories in one
-                    // Gradle invocation reuses the same signed task outputs, so the release workflow can
-                    // checksum and attest the very files that were uploaded (see release-evidence.yml).
+                    // The release workflow publishes ONLY here (no Central credentials), checksums and attests this
+                    // directory, then uploads it to Central with scripts/upload-to-central.py as its last step, so
+                    // the attested bytes are the uploaded bytes. `central` below serves snapshots and manual runs.
                     maven {
                         name = "releaseStaging"
                         url = uri(rootProject.layout.buildDirectory.dir("release-staging"))

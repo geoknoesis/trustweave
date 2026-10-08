@@ -20,6 +20,21 @@ working code fail until it is adjusted.**
   release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no
   longer holds `id-token`/`attestations` write. `SECURITY.md` ("Verifying a Release") shows `gh attestation verify`.
 
+- **Release ordering fixed.** The `publish` job now builds and signs once into `build/release-staging` (no Central
+  credentials), verifies every staged jar is byte-identical to the jar the evidence job validated
+  (`scripts/verify-staged-jars.py`, using the new `jar_sha256` section of `validation-manifest.json`), writes
+  `SHA256SUMS`, attests, and only as its last step uploads that directory to the Central Portal
+  (`scripts/upload-to-central.py`, `USER_MANAGED`, with `--dry-run`). Nothing reaches Central before the checksums
+  and attestations succeed, and the attested bytes are the uploaded bytes. The BOM now publishes to `releaseStaging`
+  too (it was missing). The Central HTTP exchange is unit-tested only up to request construction; a real tag run is
+  the proof.
+- **Tag must be on main.** The evidence job fails a `v*` tag whose commit is not an ancestor of `origin/main`.
+- **One contract-check list.** `scripts/run-contract-checks.sh` is run by both `ci.yml` and `release-evidence.yml`;
+  the release gate now also runs `check-telemetry-operations.py` and `check-workflow-evidence-paths.py`.
+- **OSV baseline.** Triage expiries are staggered (needs-review 1/8/15 Nov 2026, affected 10/17/24/31 Dec 2026,
+  none later than before); package matching uses `group:name` instead of the artifact name alone; the weekly run
+  opens or updates one issue for entries expiring within 30 days (`issues: write` on that job only).
+
 ### Breaking and behaviour changes
 
 - **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**

@@ -14,6 +14,7 @@ name: Dependency security
 #   advisory/package pair that is not in that file (scripts/check-osv-baseline.py), so a new dependency, a
 #   version change or a newly published advisory is visible instead of lost in the backlog. See
 #   SECURITY.md "Dependency Scanning" and "Known Dependency Risks".
+# - The weekly run also opens/updates one issue for baseline entries expiring within 30 days.
 
 on:
   push:
@@ -196,3 +197,39 @@ jobs:
       # broken scan cannot pass silently. --strict-stale also fails on stale baseline entries.
       - name: Fail on advisories outside the baseline
         run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json --strict-stale
+
+  # Notice before the gate goes red: one open issue, created or refreshed weekly, lists baseline entries
+  # that expired or expire within 30 days (scripts/osv-expiry-report.py). It runs only on the schedule and
+  # is the only job in this workflow with `issues: write`.
+  osv-expiry-issue:
+    name: Open or update the OSV expiry issue
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the expiry report
+        run: python3 -I scripts/osv-expiry-report.py --output build/reports/osv/expiry.md
+      - name: Create or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: 'OSV baseline: triage entries expired or expiring within 30 days'
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+            --json number,title --jq "map(select(.title == env.TITLE)) | .[0].number // empty")"
+          if [ -f build/reports/osv/expiry.md ]; then
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --body-file build/reports/osv/expiry.md
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file build/reports/osv/expiry.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --reason completed \
+              --comment "No baseline entry expires within 30 days any more."
+          fi

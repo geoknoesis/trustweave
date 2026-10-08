@@ -99,8 +99,11 @@ The following are generally considered out of scope:
 ## Verifying a Release
 
 Every tagged release is published by the `publish` job of `.github/workflows/release-evidence.yml`.
-That job uploads the signed artifacts to Maven Central and, in the same Gradle invocation, to a local
-staging directory, so the files it then checksums and attests are the files that were uploaded.
+That job builds and signs the artifacts once into a local staging directory, checks that every staged jar is
+byte-identical to the jar the evidence job tested, checksums and attests the directory, and only then, as its
+last step, uploads that same directory to Maven Central. The attested files are therefore the uploaded
+files, and nothing reaches Central if the checksums or attestations fail. The tagged commit must also be an
+ancestor of `main`.
 It produces:
 
 - `SHA256SUMS`: SHA-256 of every published file (JARs, POMs, Gradle module metadata, per-module
@@ -175,6 +178,13 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
   unknown status, a missing reason or date, or a `TODO` reason is a hard error (exit 2). The initial
   triage (2026-10-08) was derived from Gradle's resolved runtime and test classpaths, the OSV records and
   a source search; where the source of a version could not be found the entry says `needs-review`.
+  Expiry dates are deliberately staggered (`needs-review` in November, `affected` across December) so one
+  date cannot fail every entry at once; keep re-triaged dates spread out the same way. Packages are matched on
+  `group:name` (a label with no group, as the JAR scan can report, matches on the artifact name alone).
+  The scheduled run also opens or updates one GitHub issue ("OSV baseline: triage entries expired or expiring
+  within 30 days", `scripts/osv-expiry-report.py`) while any entry expires within 30 days; that job alone holds
+  `issues: write`. The baseline does not yet record `package_count` or `ecosystems`; the next
+  `--update-baseline` from a real scan writes both.
 
 Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `gradle/libs.versions.toml`.
 

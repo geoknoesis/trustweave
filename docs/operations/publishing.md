@@ -34,8 +34,9 @@ These are the parts no script can do for you.
    password.
 4. **Create a `maven-central` GitHub environment** with at least one required reviewer. The publish
    job targets it, so a tag alone never publishes — a person approves each release.
-5. Optionally set the `TRUSTWEAVE_PUBLISH_URL` repository *variable* to a staging repository for
-   rehearsals. Unset, it defaults to Sonatype Central.
+5. `TRUSTWEAVE_PUBLISH_URL` no longer affects tag releases: the workflow uploads to the Central Portal
+   with `scripts/upload-to-central.py`. It still redirects Gradle's `central` repository for manual
+   rehearsals.
 
 ## Release
 
@@ -46,10 +47,22 @@ These are the parts no script can do for you.
 4. `release-evidence.yml` runs the evidence job: tests, lint, ABI, coverage policy, documentation
    execution, the VI cross-stack interoperability check against the pinned Python reference,
    reliability evidence, alert-rule validation, and provenance attestation.
+   Before anything is built it also requires the tagged commit to be an ancestor of `origin/main`,
+   and it records the SHA-256 of every jar in `validation-manifest.json`.
 5. The `publish` job waits for a reviewer on the `maven-central` environment. It then re-verifies
-   the tag against the project version, regenerates and validates every POM, and publishes signed
-   artifacts with their SBOMs.
-6. Release the staged repository in the Sonatype portal.
+   the tag against the project version, regenerates and validates every POM, builds the signed
+   artifacts once into `build/release-staging`, fails unless every staged jar is byte-identical to
+   the jar the evidence job validated, writes `SHA256SUMS`, attests it, and only as its last step
+   uploads that same directory to the Central Portal (`scripts/upload-to-central.py`, deployment
+   type `USER_MANAGED`). A failure at any earlier step means nothing reached Central.
+6. Release the deployment in the Sonatype Central Portal.
+
+What only a real tag run proves: the Portal accepts the bundle layout (including Gradle's checksum
+sidecars), the token-based `Authorization: Bearer` upload, that the rebuilt jars really are
+byte-identical in the CI environment, and that `--min-jars` suits the module count. The script's
+verification, bundling and request construction are unit-tested; the HTTP exchange is not.
+`python scripts/upload-to-central.py --staging build/release-staging --name x --dry-run` rehearses
+everything except the network call.
 
 ## Rehearsing without publishing
 

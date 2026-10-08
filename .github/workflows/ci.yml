@@ -70,19 +70,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Test validation tools and documentation contracts
-        run: |
-          python -m unittest discover -s scripts -p 'test_*.py'
-          python scripts/check-documentation.py --report build/reports/documentation.json
-          python scripts/check-module-maturity-counts.py
-          python scripts/generate-capability-docs.py --check
-          python scripts/check-workflow-pinning.py
-          python scripts/check-dependency-catalog.py
-          python scripts/check-publication.py
-          python scripts/check-capability-coverage.py
-          python scripts/check-container-images.py
-          python scripts/check-cancellation-guards.py
-          python scripts/check-telemetry-operations.py
-          python scripts/check-workflow-evidence-paths.py
+        # One shared list: release-evidence.yml runs the same script, so a check added there gates both.
+        run: bash scripts/run-contract-checks.sh
 
       - name: Upload documentation report
         if: always()

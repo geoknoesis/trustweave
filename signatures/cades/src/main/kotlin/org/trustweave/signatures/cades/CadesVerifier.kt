@@ -28,7 +28,7 @@ import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 
 /**
- * Verifier for CAdES B-B and B-T profiles. Pure: never makes network calls.
+ * Verifier for CAdES B-B, B-T and B-LT profiles. Pure: never makes network calls.
  *
  * For detached signatures the caller must supply the original payload bytes via
  * [CadesVerificationOptions.detachedPayload]; for encapsulated signatures the verifier reads the
@@ -156,9 +156,11 @@ class DefaultCadesVerifier : CadesVerifier {
                 is SigTstResult.Missing -> return@withContext Invalid.MissingTimeStamp(sigTstResult.reason)
                 is SigTstResult.Mismatch -> return@withContext Invalid.TimeStampMismatch(sigTstResult.reason)
             }
-            val foundProfile = if (authenticatedTime != null) CadesProfile.B_T else CadesProfile.B_B
-            if (!foundProfile.atLeast(options.requiredProfile)) {
-                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
+            val timeStampProfile = if (authenticatedTime != null) CadesProfile.B_T else CadesProfile.B_B
+            // B-LT additionally needs the embedded evidence; that is established below, after revocation.
+            val earlyRequired = if (options.requiredProfile == CadesProfile.B_LT) CadesProfile.B_T else options.requiredProfile
+            if (!timeStampProfile.atLeast(earlyRequired)) {
+                return@withContext Invalid.WrongProfile(found = timeStampProfile, required = options.requiredProfile)
             }
 
             // 10. Trust anchor resolution over an ordered chain, validating the path as of the authenticated time
@@ -199,26 +201,42 @@ class DefaultCadesVerifier : CadesVerifier {
                 }
             }
 
-            // 11. Revocation (CRL / OCSP), only when requested.
+            // 11. Revocation (CRL / OCSP). Requesting B-LT implies REQUIRED: a long-term signature is only as good
+            //     as the validation data it proves. Embedded data that is not well-formed is refused, never skipped.
+            val embeddedEvidence =
+                try {
+                    CadesRevocationValues.embedded(cms, signerInfo)
+                } catch (e: MalformedRevocationValuesException) {
+                    return@withContext Invalid.Malformed(e.message ?: "embedded revocation data is malformed")
+                }
+            val revocationPolicy =
+                if (options.requiredProfile == CadesProfile.B_LT && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
+                    RevocationPolicy.REQUIRED
+                } else {
+                    options.revocationPolicy
+                }
             var revocationChecked = false
-            if (options.revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+            var embeddedCoversChain = false
+            if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val now =
+                    kotlin.time.Clock.System
+                        .now()
+                val skewMillis = options.maxClockSkew.inWholeMilliseconds
                 val statuses =
                     CertificateRevocationEvaluator.evaluate(
                         signer = signerCert,
                         candidates = chain,
                         issuerCertificates = options.revocationIssuerCertificates,
-                        evidence = options.revocationEvidence,
+                        evidence = options.revocationEvidence + embeddedEvidence,
                         authenticatedTime = authenticatedTime,
-                        now =
-                            kotlin.time.Clock.System
-                                .now(),
-                        skewMillis = options.maxClockSkew.inWholeMilliseconds,
+                        now = now,
+                        skewMillis = skewMillis,
                     )
                 statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
                     return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
                 }
                 val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
-                if (options.revocationPolicy == RevocationPolicy.REQUIRED) {
+                if (revocationPolicy == RevocationPolicy.REQUIRED) {
                     if (statuses.isEmpty()) {
                         return@withContext Invalid.RevocationUnavailable(
                             "no certificate below a trust anchor was available to check for revocation",
@@ -229,9 +247,27 @@ class DefaultCadesVerifier : CadesVerifier {
                     }
                 }
                 revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+                // B-LT: the evidence carried inside the signature must, on its own, cover the chain.
+                if (revocationChecked && authenticatedTime != null && !embeddedEvidence.isEmpty) {
+                    val own =
+                        CertificateRevocationEvaluator.evaluate(
+                            signer = signerCert,
+                            candidates = chain,
+                            issuerCertificates = options.revocationIssuerCertificates,
+                            evidence = embeddedEvidence,
+                            authenticatedTime = authenticatedTime,
+                            now = now,
+                            skewMillis = skewMillis,
+                        )
+                    embeddedCoversChain = own.isNotEmpty() && own.all { it is CertificateRevocationEvaluator.Status.Good }
+                }
             }
-            if (hasSigTst && authenticatedTime == null && options.requiredProfile == CadesProfile.B_T) {
-                return@withContext Invalid.WrongProfile(found = CadesProfile.B_B, required = CadesProfile.B_T)
+            if (hasSigTst && authenticatedTime == null && options.requiredProfile.atLeast(CadesProfile.B_T)) {
+                return@withContext Invalid.WrongProfile(found = CadesProfile.B_B, required = options.requiredProfile)
+            }
+            val foundProfile = if (embeddedCoversChain) CadesProfile.B_LT else timeStampProfile
+            if (!foundProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
             }
 
             CadesValidationResult.Valid(

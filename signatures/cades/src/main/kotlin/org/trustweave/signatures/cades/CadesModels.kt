@@ -13,8 +13,8 @@ import kotlin.time.Instant
 /**
  * CAdES baseline profile (ETSI EN 319 122-1 §5).
  *
- * MVP scope: B-B (basic signature) and B-T (basic + signature-time-stamp). The longer-term
- * profiles (B-LT, B-LTA) are out of MVP scope per
+ * Verification covers B-B (basic signature), B-T (basic + signature-time-stamp) and B-LT (B-T + embedded
+ * revocation values). The signer produces B-B and B-T only; B-LTA is out of scope per
  * [docs/architecture/eidas-qes-design.md](../../../../../../docs/architecture/eidas-qes-design.md) §13.
  */
 enum class CadesProfile {
@@ -23,6 +23,13 @@ enum class CadesProfile {
 
     /** Basic + at least one signature-time-stamp (`id-aa-signatureTimeStampToken`) unsigned attribute. */
     B_T,
+
+    /**
+     * B-T whose own embedded revocation values (`id-aa-ets-revocationValues` or the CMS `crls` field) alone show the
+     * signer and every CA below the trust anchor not revoked as of a trusted time-stamp. Verification only: the
+     * signer does not produce it.
+     */
+    B_LT,
     ;
 
     fun atLeast(other: CadesProfile): Boolean = ordinal >= other.ordinal
@@ -59,6 +66,9 @@ data class CadesSigningRequest(
     init {
         require(signerCertificateChain.isNotEmpty()) {
             "signerCertificateChain must include at least the signer's certificate"
+        }
+        require(profile != CadesProfile.B_LT) {
+            "CadesProfile.B_LT cannot be signed; it is established by verifying embedded revocation values"
         }
         if (profile == CadesProfile.B_T) {
             require(tsaConfig != null) {
@@ -148,8 +158,10 @@ data class CadesSignature(
  *                                                 `true` also accepts it when the signing time is merely claimed (a
  *                                                 claimed time at or after the withdrawal is still refused).
  * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see [RevocationPolicy].
- *                                                 Evidence is supplied through [revocationEvidence] (embedded CMS
- *                                                 revocation values are not read).
+ *                                                 Evidence comes from [revocationEvidence] and from the signature's
+ *                                                 embedded revocation values (the `revocationValues` unsigned attribute
+ *                                                 and the CMS `crls` field). Requiring [CadesProfile.B_LT] implies
+ *                                                 [RevocationPolicy.REQUIRED] when this is `NOT_CHECKED`.
  * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses.
  * @property revocationIssuerCertificates          Trust-anchor CA certificates used to verify evidence.
  */
@@ -172,7 +184,7 @@ data class CadesVerificationOptions
  * Outcome of [CadesVerifier.verify].
  *
  * Mirrors the JAdES result-tree layout — two top-level branches: [Valid] when every check passed,
- * [Invalid] for the specific failure modes a B-B/B-T CAdES verifier produces.
+ * [Invalid] for the specific failure modes a CAdES verifier produces.
  */
 sealed class CadesValidationResult {
     /**
@@ -183,7 +195,8 @@ sealed class CadesValidationResult {
      * @property signatureTimeStamp Time recorded by the TSA in the embedded sig-time-stamp; null
      *                             for B-B.
      * @property profile           Profile the verification established: B-T only when the time-stamp verified
-     *                             against `timestampTrustAnchors`.
+     *                             against `timestampTrustAnchors`; B-LT only when, in addition, the signature's own
+     *                             embedded revocation values cover the whole chain.
      * @property revocationChecked `true` only when a revocation policy other than `NOT_CHECKED` was requested AND the
      *                             signer and every CA below the trust anchor were shown not revoked by verified,
      *                             fresh evidence. `false` means status is unknown.

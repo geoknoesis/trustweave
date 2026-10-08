@@ -65,7 +65,7 @@ working code fail until it is adjusted.**
   withdrawal (`Invalid.TrustWithdrawn`); the path is validated as of the trusted time over an ordered chain;
   a CA or non-signing certificate is refused (`Invalid.SignerCertificateInvalid`, also new in JAdES); caller
   supplied CRL / OCSP evidence is enforced (`Invalid.CertificateRevoked`, `Invalid.RevocationUnavailable`,
-  `Valid.revocationChecked`). Embedded CMS revocation values are not read yet.
+  `Valid.revocationChecked`). Embedded CMS revocation values are read (see the entry below).
 - Time-stamp handling is aligned across formats: every token is checked (not only the first), SHA-256, SHA-384
   and SHA-512 imprints are accepted, and a time-stamp later than the claimed signing time is accepted while one
   that predates it is rejected (JAdES previously rejected a late stamp). A malformed or empty JAdES `x5c`
@@ -279,6 +279,16 @@ working code fail until it is adjusted.**
     offer URI (it may carry a pre-authorized code).
 
 ### Added
+
+- **CAdES B-LT verification.** `DefaultCadesVerifier` now reads the revocation values a CMS signature carries
+  (the `id-aa-ets-revocationValues` unsigned attribute, whose `ocspVals` are re-wrapped as `OCSPResponse`, and the RFC 5652
+  `SignedData.crls` field including `id-ri-ocsp-response`) and feeds them with caller evidence into
+  `CertificateRevocationEvaluator`, as XAdES and JAdES do. New `CadesProfile.B_LT`: reported only when a trusted
+  time-stamp authenticates the time and the embedded evidence alone shows the signer and every CA below the trust
+  anchor not revoked; requiring `B_LT` implies `RevocationPolicy.REQUIRED`. Embedded data that does not parse is
+  refused (`Invalid.Malformed`); at most 64 items of each kind are kept and items over 4 MiB are dropped.
+  `CadesSigningRequest` rejects `B_LT` (the signer produces B-B and B-T only). Adding an enum entry changes
+  the `CadesProfile` ABI, so exhaustive `when` expressions over it need a branch.
 
 - Build and test hygiene: `distributionSha256Sum` is pinned in both Gradle wrapper properties; jars, sources
   jars and zips are reproducible (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`);

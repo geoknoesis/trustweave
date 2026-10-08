@@ -193,6 +193,8 @@ class DefaultXadesVerifier : XadesVerifier {
             val context = DOMValidateContext(FixedKeySelector(signerCert), signatureElement)
             context.setProperty("org.jcp.xml.dsig.secureValidation", true)
             context.setIdAttributeNS(signedProperties, null, "Id")
+            // Keep the dereferenced reference octets: an ArchiveTimeStamp covers them.
+            context.setProperty("javax.xml.crypto.dsig.cacheReference", true)
             val factory = XMLSignatureFactory.getInstance("DOM")
             val xmlSig: XMLSignature =
                 try {
@@ -216,6 +218,7 @@ class DefaultXadesVerifier : XadesVerifier {
             if (!signatureValid) {
                 return@withContext Invalid.BadSignature("XML-DSig validation failed")
             }
+            val referenceOctets = XadesArchiveTimestamps.referenceOctets(xmlSig)
 
             // 8. Signature time-stamp (B-T). Without one, SigningTime is the signer's own claim.
             val timestampRequired =
@@ -250,6 +253,21 @@ class DefaultXadesVerifier : XadesVerifier {
                             null
                         }
                 }
+
+            // 8b. Archive time-stamps (B-LTA). A present but bad or untrusted token fails, whatever the profile
+            //     required; one is only credited toward B-LTA (below) once B-LT is also proved.
+            val archiveOutcome =
+                XadesArchiveTimestamps.evaluate(
+                    qp,
+                    signatureElement,
+                    referenceOctets,
+                    options.timestampTrustAnchors,
+                    C14N_ALGORITHMS,
+                    authenticatedTime,
+                )
+            if (archiveOutcome is XadesArchiveTimestamps.Outcome.Invalid) {
+                return@withContext Invalid.TimeStampInvalid(archiveOutcome.reason)
+            }
             val effectiveTime: Instant = authenticatedTime ?: signingTime ?: Clock.System.now()
 
             // 9. Cert validity at the (authenticated, else claimed, else current) time.
@@ -307,7 +325,7 @@ class DefaultXadesVerifier : XadesVerifier {
             // 12. Revocation (CRL / OCSP). Requesting B-LT implies REQUIRED: a long-term signature is only
             //     as good as the validation data it proves.
             val revocationPolicy =
-                if (options.requiredProfile == XadesProfile.B_LT && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
+                if (options.requiredProfile.atLeast(XadesProfile.B_LT) && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
                     RevocationPolicy.REQUIRED
                 } else {
                     options.revocationPolicy
@@ -357,8 +375,10 @@ class DefaultXadesVerifier : XadesVerifier {
                 }
             }
 
+            val archiveTime = (archiveOutcome as? XadesArchiveTimestamps.Outcome.Valid)?.genTime
             val foundProfile =
                 when {
+                    authenticatedTime != null && embeddedCoversChain && archiveTime != null -> XadesProfile.B_LTA
                     authenticatedTime != null && embeddedCoversChain -> XadesProfile.B_LT
                     authenticatedTime != null -> XadesProfile.B_T
                     else -> XadesProfile.B_B
@@ -375,6 +395,7 @@ class DefaultXadesVerifier : XadesVerifier {
                 signingTimeAuthenticated = authenticatedTime != null,
                 signatureTimeStamp = authenticatedTime,
                 revocationChecked = revocationChecked,
+                archiveTimeStamp = archiveTime.takeIf { foundProfile == XadesProfile.B_LTA },
             )
         }
 

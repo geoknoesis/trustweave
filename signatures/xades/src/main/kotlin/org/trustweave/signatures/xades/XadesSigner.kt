@@ -38,9 +38,9 @@ import kotlin.time.Instant
  *
  * # MVP scope
  *
- * - **B-B, B-T and B-LT** — B-T adds an RFC 3161 `SignatureTimeStamp` over the signature value; B-LT
- *   also embeds `CertificateValues` and `RevocationValues` from the request's validation data. No
- *   archival time-stamps (B-LTA).
+ * - **B-B, B-T, B-LT and B-LTA** — B-T adds an RFC 3161 `SignatureTimeStamp` over the signature value; B-LT
+ *   also embeds `CertificateValues` and `RevocationValues` from the request's validation data; B-LTA adds an
+ *   XAdES 1.4.1 `ArchiveTimeStamp` over the signature, its signed data and all the unsigned properties above.
  * - **Enveloped signature only** — the produced `<ds:Signature>` is appended inside the supplied
  *   document root. Detached and enveloping forms are NOT implemented; see the `TODO` markers at
  *   the bottom of this file.
@@ -79,14 +79,14 @@ class XadesSignerException(
  *                   "KMS interaction note" on [XadesSigner].
  * @param privateKey The actual private key used for signing. **Scaffold-only** — production
  *                   callers will eventually pass a KMS-backed JCE [PrivateKey] handle.
- * @param tsaClientFactory Builds the RFC 3161 client for B-T / B-LT; defaults to [BouncyCastleTsaClient].
+ * @param tsaClientFactory Builds the RFC 3161 client for B-T / B-LT / B-LTA; defaults to [BouncyCastleTsaClient].
  */
 class DefaultXadesSigner(
     @Suppress("unused") private val kms: KeyManagementService,
     private val privateKey: PrivateKey,
     private val tsaClientFactory: (TsaConfig) -> TsaClient,
 ) : XadesSigner {
-    /** Signer without a time-stamp authority: B-B only (B-T and B-LT need [tsaClientFactory]). */
+    /** Signer without a time-stamp authority: B-B only (B-T, B-LT and B-LTA need [tsaClientFactory]). */
     constructor(kms: KeyManagementService, privateKey: PrivateKey) :
         this(kms, privateKey, ::BouncyCastleTsaClient)
 
@@ -181,6 +181,10 @@ class DefaultXadesSigner(
                 )
 
             val signContext = DOMSignContext(privateKey, root)
+            if (request.profile.atLeast(XadesProfile.B_LTA)) {
+                // The archive time-stamp covers the dereferenced reference octets; keep them from signing.
+                signContext.setProperty("javax.xml.crypto.dsig.cacheReference", true)
+            }
             // Tell JDK XMLDSig that the SignedProperties element's "Id" attribute is the XML ID it
             // can resolve "#signedPropertiesId" against during reference resolution.
             signContext.setIdAttributeNS(signedPropertiesElement, null, "Id")
@@ -193,7 +197,14 @@ class DefaultXadesSigner(
             }
 
             if (request.profile.atLeast(XadesProfile.B_T)) {
-                addUnsignedProperties(document, signatureId, request)
+                val referenceOctets =
+                    if (request.profile.atLeast(XadesProfile.B_LTA)) {
+                        XadesArchiveTimestamps.referenceOctets(xmlSignature)
+                            ?: throw XadesSignerException("Internal: signed reference data was not retained")
+                    } else {
+                        emptyList()
+                    }
+                addUnsignedProperties(document, signatureId, request, referenceOctets)
             }
 
             XadesSignature(document = document, profile = request.profile)
@@ -201,13 +212,14 @@ class DefaultXadesSigner(
 
     /**
      * Appends `<xades:UnsignedProperties>` to the signature just produced: the RFC 3161
-     * `SignatureTimeStamp` (B-T) and, for B-LT, `CertificateValues` and `RevocationValues`. These are
-     * unsigned properties, so adding them does not disturb the signature value.
+     * `SignatureTimeStamp` (B-T), for B-LT `CertificateValues` and `RevocationValues`, and for B-LTA an
+     * `ArchiveTimeStamp` over everything before it. These are unsigned properties, so adding them does not disturb the signature value.
      */
     private suspend fun addUnsignedProperties(
         document: Document,
         signatureId: String,
         request: XadesSigningRequest,
+        referenceOctets: List<ByteArray>,
     ) {
         val xades = "http://uri.etsi.org/01903/v1.3.2#"
         val ds = "http://www.w3.org/2000/09/xmldsig#"
@@ -269,6 +281,39 @@ class DefaultXadesSigner(
             unsignedSignatureProperties.appendChild(revocationValues)
         }
         qualifyingProperties.appendChild(unsignedProperties)
+
+        if (request.profile.atLeast(XadesProfile.B_LTA)) {
+            val c14n = CanonicalizationMethod.INCLUSIVE
+            val archiveImprint =
+                try {
+                    MessageDigest.getInstance("SHA-256").digest(
+                        XadesArchiveTimestamps.imprintInput(
+                            signature,
+                            referenceOctets,
+                            XadesArchiveTimestamps.unsignedProperties(qualifyingProperties),
+                            c14n,
+                        ),
+                    )
+                } catch (t: Exception) {
+                    throw XadesSignerException("could not canonicalise the signature for the archive time-stamp: ${t.message}", t)
+                }
+            val archiveToken =
+                try {
+                    tsa.requestTimeStamp(archiveImprint, TsaHashAlgorithm.SHA_256)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    throw XadesSignerException("TSA request for the archive time-stamp failed: ${t.message}", t)
+                }
+            val xades141 = XadesArchiveTimestamps.XADES141_NS
+            val archiveTimeStamp = document.createElementNS(xades141, "xades141:ArchiveTimeStamp")
+            archiveTimeStamp.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xades141", xades141)
+            archiveTimeStamp.appendChild(
+                document.createElementNS(ds, "ds:CanonicalizationMethod").apply { setAttribute("Algorithm", c14n) },
+            )
+            archiveTimeStamp.appendChild(textElement(document, xades, "xades:EncapsulatedTimeStamp", archiveToken.encoded))
+            unsignedSignatureProperties.appendChild(archiveTimeStamp)
+        }
     }
 
     private fun textElement(
@@ -323,6 +368,11 @@ class DefaultXadesSigner(
 
         val qualifyingProperties = document.createElementNS(xades, "xades:QualifyingProperties")
         qualifyingProperties.setAttribute("Target", "#$signatureId")
+        // Declare the prefixes explicitly: a DOM built with createElementNS carries no xmlns attributes, so the
+        // canonical form the signature (and any time-stamp) is computed over would differ from the one of the
+        // serialised and re-parsed document, which the serialiser adds them to.
+        qualifyingProperties.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xades", xades)
+        qualifyingProperties.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:ds", ds)
 
         val signedProperties = document.createElementNS(xades, "xades:SignedProperties")
         signedProperties.setAttribute("Id", signedPropertiesId)

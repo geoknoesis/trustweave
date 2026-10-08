@@ -56,7 +56,7 @@ defect claim, but it is a reason to run your own integration tests before depend
 | `did:registrar` | 32 | Experimental |
 | `did:registrar-server-ktor` | 17 | Experimental |
 | `did:registrar-server-spring` | 15 | Experimental |
-| `credentials:vc-api-server` | 21 | Experimental |
+| `credentials:vc-api-server` | 29 | Experimental |
 | `credentials:oidc4vci-server` | 51 | Experimental |
 | `trust-registry:trust-registry-core` | 16 | Experimental |
 | `trust-registry:trust-registry-server` | 28 | Experimental |
@@ -73,7 +73,7 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 | Module | Tests | Notes |
 |--------|-------|-------|
 | `signatures:jades` | 34 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
-| `signatures:trust-lists` | 25 | EU trusted-list handling |
+| `signatures:trust-lists` | 49 | EU trusted-list handling |
 | `signatures:cades` | 28 | ETSI EN 319 122 (CMS) |
 | `signatures:tsa-core` | 40 | RFC 3161 timestamping |
 | `signatures:etsi-validation` | 16 | Validation helpers |

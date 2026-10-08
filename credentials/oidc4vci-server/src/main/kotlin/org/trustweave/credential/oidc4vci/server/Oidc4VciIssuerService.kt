@@ -397,6 +397,9 @@ class Oidc4VciIssuerService
                             claims = JsonObject(entry.offerState.claims.filterKeys { it != "id" }),
                         ),
                     )
+                } catch (cancelled: kotlin.coroutines.cancellation.CancellationException) {
+                    releaseCredential(accessToken)
+                    throw cancelled
                 } catch (e: Throwable) {
                     releaseCredential(accessToken)
                     throw e

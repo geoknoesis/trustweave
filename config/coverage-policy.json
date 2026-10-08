@@ -24,6 +24,74 @@
     "org/trustweave/core/telemetry": {
       "LINE": 95.0,
       "BRANCH": 75.0
+    },
+    "org/trustweave/signatures/cades": {
+      "LINE": 79.0,
+      "BRANCH": 55.0
+    },
+    "org/trustweave/signatures/xades": {
+      "LINE": 84.0,
+      "BRANCH": 65.0
+    },
+    "org/trustweave/signatures/jades": {
+      "LINE": 87.0,
+      "BRANCH": 64.0
+    },
+    "org/trustweave/signatures/tsa": {
+      "LINE": 81.0,
+      "BRANCH": 58.0
+    },
+    "org/trustweave/signatures/revocation": {
+      "LINE": 80.0,
+      "BRANCH": 62.0
+    },
+    "org/trustweave/signatures/trustlists": {
+      "LINE": 86.0,
+      "BRANCH": 59.0
+    },
+    "org/trustweave/signatures/etsi/validation": {
+      "LINE": 80.0,
+      "BRANCH": 57.0
+    },
+    "org/trustweave/credential/proof/internal/engines": {
+      "LINE": 77.0,
+      "BRANCH": 60.0
+    },
+    "org/trustweave/credential/internal": {
+      "LINE": 70.0,
+      "BRANCH": 62.0
+    },
+    "org/trustweave/credential/revocation/internal": {
+      "LINE": 93.0,
+      "BRANCH": 72.0
+    },
+    "org/trustweave/credential/schema/internal": {
+      "LINE": 91.0,
+      "BRANCH": 76.0
+    },
+    "org/trustweave/credential/exchange/internal": {
+      "LINE": 75.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/resolver": {
+      "LINE": 76.0,
+      "BRANCH": 52.0
+    },
+    "org/trustweave/did/verification": {
+      "LINE": 72.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/rotation": {
+      "LINE": 96.0,
+      "BRANCH": 85.0
+    },
+    "org/trustweave/did/resolution": {
+      "LINE": 96.0,
+      "BRANCH": 47.0
+    },
+    "org/trustweave/did/util": {
+      "LINE": 81.0,
+      "BRANCH": 71.0
     }
   }
 }

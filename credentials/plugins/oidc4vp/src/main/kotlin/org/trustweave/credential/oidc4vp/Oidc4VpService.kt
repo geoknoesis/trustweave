@@ -294,6 +294,14 @@ class Oidc4VpService(
                         }
                     } else {
                         // No request_uri: all data must come from URL params directly
+                        if (isDidClientSignal(urlRequest.clientId, urlRequest.clientIdScheme)) {
+                            throw Oidc4VpException.UrlParseFailed(
+                                url = authorizationUrl,
+                                reason =
+                                    "Unsigned authorization request refused for a DID client_id / " +
+                                        "client_id_scheme=did: pass a request_uri serving a signed request object",
+                            )
+                        }
                         if (urlRequest.responseUri == null && urlRequest.redirectUri == null) {
                             throw Oidc4VpException.UrlParseFailed(
                                 url = authorizationUrl,
@@ -440,6 +448,8 @@ class Oidc4VpService(
                         verifierUrl = request.verifierUrl ?: "unknown",
                     )
 
+            requireHttpsOrLoopback(responseUri)
+
             // OID4VP direct_post response mode (v1.0 §7.2): the Authorization Response is
             // posted as application/x-www-form-urlencoded form parameters. vp_token and state
             // are plain form values; presentation_submission is its JSON serialization.
@@ -471,6 +481,29 @@ class Oidc4VpService(
                 )
             }
         }
+
+    private fun isDidClientSignal(
+        clientId: String?,
+        scheme: ClientIdScheme?,
+    ): Boolean = scheme == ClientIdScheme.DID || clientId?.startsWith("did:") == true
+
+    /** The presentation (and its credentials) may only be posted over https; plain http only to loopback. */
+    private fun requireHttpsOrLoopback(responseUri: String) {
+        val uri =
+            runCatching { java.net.URI(responseUri) }.getOrNull()
+                ?: throw Oidc4VpException.PresentationSubmissionFailed(
+                    reason = "response endpoint is not a valid URI",
+                    verifierUrl = responseUri,
+                )
+        val scheme = uri.scheme?.lowercase()
+        val host = uri.host?.lowercase()
+        val loopback = host == "localhost" || host == "::1" || host == "[::1]" || host?.startsWith("127.") == true
+        if (scheme == "https" || (scheme == "http" && loopback)) return
+        throw Oidc4VpException.PresentationSubmissionFailed(
+            reason = "response endpoint must use https (plain http is only allowed for loopback hosts)",
+            verifierUrl = responseUri,
+        )
+    }
 
     /** Result of fetching a request_uri: the parsed request and whether it was a signed JWT request object. */
     private data class FetchedAuthorizationRequest(
@@ -522,8 +555,23 @@ class Oidc4VpService(
         val trimmed = body.trim()
         return if (trimmed.startsWith("{")) {
             val jsonElement = lenientJson.parseToJsonElement(trimmed).jsonObject
+            val unsigned = buildAuthorizationRequestFromJson(jsonElement)
+            // A DID client_id promises a verifier identity pinned to its DID document, which only a
+            // signed request object can prove; a plain JSON document would let anyone claim the DID
+            // and choose the response_uri the presentation is posted to.
+            if (
+                isDidClientSignal(urlClientId, urlClientIdScheme) ||
+                isDidClientSignal(unsigned.clientId, unsigned.clientIdScheme)
+            ) {
+                throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason =
+                        "Unsigned request object refused for a DID client_id / client_id_scheme=did: " +
+                            "the request must be a signed JWT verified against the client's DID document",
+                )
+            }
             FetchedAuthorizationRequest(
-                request = buildAuthorizationRequestFromJson(jsonElement),
+                request = unsigned,
                 fromSignedRequestObject = false,
             )
         } else {

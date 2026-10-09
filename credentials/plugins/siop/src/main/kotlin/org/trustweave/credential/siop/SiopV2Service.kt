@@ -35,6 +35,7 @@ import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.pex.PresentationDefinition
 import org.trustweave.credential.pex.PresentationSubmission
+import org.trustweave.credential.siop.models.SiopClientIdScheme
 import org.trustweave.credential.siop.models.SiopV2AuthorizationRequest
 import org.trustweave.credential.siop.models.SiopV2AuthorizationResponse
 import org.trustweave.credential.siop.models.SiopV2Session
@@ -152,6 +153,7 @@ class SiopV2Service(
                 }
             val requestUri = params["request_uri"]
             val json = Json { ignoreUnknownKeys = true }
+            var signed = false
             val requestJson: JsonObject =
                 if (requestUri != null) {
                     requireHttpsOrLoopback(requestUri)
@@ -176,6 +178,7 @@ class SiopV2Service(
                         // signature to verify — trust rests on the TLS channel to request_uri.
                         json.parseToJsonElement(trimmed).jsonObject
                     } else {
+                        signed = true
                         parseAndVerifyRequestObjectJwt(
                             jwtString = trimmed,
                             requestUri = requestUri,
@@ -189,6 +192,23 @@ class SiopV2Service(
                     }
                 }
             val request = json.decodeFromJsonElement<SiopV2AuthorizationRequest>(requestJson)
+            if (!signed) {
+                // A DID client_id promises a pinned verifier identity that only a signed request
+                // object can deliver; an unsigned document (or bare URL parameters) would let
+                // anyone claim a DID and choose the response_uri the wallet posts to.
+                val didSignal =
+                    request.clientIdScheme == SiopClientIdScheme.DID ||
+                        request.clientId.startsWith("did:") ||
+                        params["client_id_scheme"] == "did" ||
+                        params["client_id"]?.startsWith("did:") == true
+                if (didSignal) {
+                    throw SiopV2Exception(
+                        "UNSIGNED_REQUEST_OBJECT",
+                        "Unsigned authorization request refused for a DID client_id / client_id_scheme=did: " +
+                            "the request must be a signed request object verified against the client's DID document",
+                    )
+                }
+            }
             val session = SiopV2Session(sessionId = UUID.randomUUID().toString(), request = request)
             sessions[session.sessionId] = session
             session
@@ -279,6 +299,9 @@ class SiopV2Service(
         val responseUri =
             session.request.responseUri
                 ?: throw SiopV2Exception("NO_RESPONSE_URI", "No response_uri in authorization request")
+        httpsOrLoopbackViolation(responseUri)?.let {
+            throw SiopV2Exception("INSECURE_RESPONSE_URI", "response_uri $it")
+        }
         val json =
             Json {
                 ignoreUnknownKeys = true

@@ -15,6 +15,22 @@ working code fail until it is adjusted.**
 
 - **Provenance now covers the published files.** The release `publish` job builds into a local
   `build/release-staging` repository (the upload to Central is separate and last, see below), writes `SHA256SUMS` over every staged file
+- **Release hardening round 2.** `upload-to-central.py` now requires an `.asc` for every non-sidecar Maven file
+  (and rejects orphan or unlisted ones), can `gpg --verify` them (`--verify-signatures`; the workflow imports the
+  public key from the optional `TRUSTWEAVE_SIGNING_PUBLIC_KEY` variable), reads each file once and hashes and zips
+  the same bytes, refuses symlinks and absolute or `..` paths in `SHA256SUMS`, refuses checksum sidecars of
+  unlisted files, validates the returned deployment id, never follows redirects (the request carries the
+  credentials) and refuses plain http to a non-loopback host. `verify-staged-jars.py` now requires the staged
+  jar names to equal the evidence jar names minus `config/release-unpublished-jars.json`, the manifest head to
+  equal `GITHUB_SHA` and a clean tree, and derives its jar-count floor from the manifest (the `--min-jars 10`
+  guess is gone). The workflow re-verifies the `SHA256SUMS` attestation with `gh attestation verify` right before
+  the upload, runs `check-osv-baseline.py` as a new `osv-gate` job that `publish` needs, and `release-assets` now
+  creates a draft GitHub release. `check-osv-baseline.py` no longer lets a bare (group-less) baseline label cover a
+  finding that has a group; `osv-expiry-report.py` lists entries with an unreadable `expires` instead of
+  skipping them and exits 2 on an unreadable baseline.
+
+- **Provenance now covers the published files.** The release `publish` job publishes to Maven Central and to a
+  local `build/release-staging` repository in one Gradle invocation, writes `SHA256SUMS` over every staged file
   plus the aggregate CycloneDX SBOM, and attests all of them (and `SHA256SUMS`) with
   `actions/attest-build-provenance`. A new `release-assets` job attaches `SHA256SUMS` and the SBOM to the GitHub
   release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no

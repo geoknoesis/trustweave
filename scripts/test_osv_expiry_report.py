@@ -33,6 +33,32 @@ class ExpiryReportTest(unittest.TestCase):
         edge = (TODAY + datetime.timedelta(days=30)).isoformat()
         self.assertEqual(1, expiry.build_report({"advisories": [item("E", edge)]}, TODAY)[1])
 
+    def test_malformed_expires_values_are_reported_not_dropped(self):
+        for raw in ("soon", "2026-13-45", "20261201", "", 20261201, ["2026-12-01"], "2026-1-5"):
+            text, count = expiry.build_report({"advisories": [item("BAD", raw)]}, TODAY)
+            self.assertEqual(1, count, raw)
+            self.assertIn("BAD", text)
+            self.assertIn("not a YYYY-MM-DD date", text)
+
+    def test_missing_expires_is_ignored_and_malformed_counts_with_valid_rows(self):
+        baseline = {"advisories": [{"id": "NOEXP", "status": "not-reachable"}, item("GONE", "2026-10-01"), item("BAD", "x")]}
+        text, count = expiry.build_report(baseline, TODAY)
+        self.assertEqual(2, count)
+        self.assertNotIn("NOEXP", text)
+        self.assertIn("GONE", text)
+        self.assertIn("BAD", text)
+
+    def test_unparseable_baseline_exits_2_without_writing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "expiry.md"
+            for content in ("{not json", "[]", '{"advisories": 5}', ""):
+                base = Path(tmp) / "b.json"
+                base.write_text(content)
+                self.assertEqual(2, expiry.main(["--baseline", str(base), "--output", str(out), "--today", "2026-10-08"]), content)
+                self.assertFalse(out.exists())
+            missing = Path(tmp) / "missing.json"
+            self.assertEqual(2, expiry.main(["--baseline", str(missing), "--output", str(out), "--today", "2026-10-08"]))
+
     def test_main_writes_file_only_when_needed(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp) / "b.json"

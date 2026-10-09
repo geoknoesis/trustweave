@@ -5,8 +5,9 @@ The dependency backlog is large and some entries (org.didcommx:didcomm 0.3.2 emb
 json-smart) have no upgrade path, so the OSV job cannot simply fail on every finding. Instead it fails
 on any finding that is *new* relative to config/osv/baseline.json. A finding is an advisory in a
 package: it matches the baseline when the advisory id (or any alias) is listed AND the package key
-(group:name; a label that records no group, as the JAR scan sometimes reports, matches on the artifact name
-alone; ecosystem compared when the entry records one) is listed for that entry at the
+(group:name; a label that records no group, as the JAR scan sometimes reports, matches only a finding that
+also has no group, on the artifact name alone, and never a finding that carries a group; ecosystem compared
+when the entry records one) is listed for that entry at the
 finding's version. A baselined GHSA that appears in a NEW package therefore fails. Entries without a
 "packages" list are legacy id-only entries and match any package; --update-baseline rewrites them with
 packages.
@@ -78,14 +79,19 @@ def norm_name(name):
     return str(name).strip().lower()
 
 
-def names_match(a, b):
-    """Two package keys name the same package: group:name equal when both carry a group, else artifact equal.
+def names_match(baseline_name, finding_name):
+    """A baseline package key names the same package as a scan finding.
 
-    A bare name (no group) cannot be told apart from other groups, so it matches on the artifact alone;
-    two different groups never match, which a bare short name used to allow.
+    Both carry a group: group:name must be equal. Both bare: the artifact must be equal. A bare BASELINE label
+    never matches a finding that has a group, so a short name recorded once cannot silently cover the same
+    artifact published under any other group (dependency confusion); re-record such an entry with the grouped
+    name the scan reports. A grouped baseline label does match a bare finding on the artifact alone, because the
+    finding then carries no group to contradict it.
     """
-    group_a, _, artifact_a = a.rpartition(":")
-    group_b, _, artifact_b = b.rpartition(":")
+    group_a, _, artifact_a = baseline_name.rpartition(":")
+    group_b, _, artifact_b = finding_name.rpartition(":")
+    if group_b and not group_a:
+        return False
     if group_a and group_b and group_a != group_b:
         return False
     return artifact_a == artifact_b

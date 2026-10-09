@@ -298,15 +298,28 @@ class GroupMatchingTest(unittest.TestCase):
         found = osv.report_advisories(report(("io.netty:common", "GHSA-1", [])))
         self.assertEqual({}, osv.new_advisories(found, baseline))
 
-    def test_bare_baseline_label_still_matches_grouped_finding(self):
+    def test_bare_baseline_label_does_not_cover_grouped_finding(self):
         baseline = {"schema": 3, "advisories": [triaged(packages=("common@1",))]}
         found = osv.report_advisories(report(("io.netty:common", "GHSA-1", [])))
+        self.assertIn("GHSA-1", osv.new_advisories(found, baseline))
+        self.assertEqual(["GHSA-1"], osv.stale_entries(found, baseline))
+
+    def test_bare_baseline_label_still_covers_bare_finding(self):
+        baseline = {"schema": 3, "advisories": [triaged(packages=("common@1",))]}
+        found = osv.report_advisories(report(("common", "GHSA-1", [])))
+        self.assertEqual({}, osv.new_advisories(found, baseline))
+
+    def test_grouped_baseline_label_covers_bare_finding(self):
+        baseline = {"schema": 3, "advisories": [triaged(packages=("io.netty:common@1",))]}
+        found = osv.report_advisories(report(("common", "GHSA-1", [])))
         self.assertEqual({}, osv.new_advisories(found, baseline))
 
     def test_names_match_rules(self):
         self.assertTrue(osv.names_match("a:b", "a:b"))
         self.assertFalse(osv.names_match("a:b", "c:b"))
-        self.assertTrue(osv.names_match("b", "c:b"))
+        self.assertFalse(osv.names_match("b", "c:b"))
+        self.assertTrue(osv.names_match("b", "b"))
+        self.assertTrue(osv.names_match("c:b", "b"))
         self.assertFalse(osv.names_match("a:b", "a:c"))
 
 

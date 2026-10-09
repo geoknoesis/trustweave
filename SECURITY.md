@@ -103,7 +103,11 @@ That job builds and signs the artifacts once into a local staging directory, che
 byte-identical to the jar the evidence job tested, checksums and attests the directory, and only then, as its
 last step, uploads that same directory to Maven Central. The attested files are therefore the uploaded
 files, and nothing reaches Central if the checksums or attestations fail. The tagged commit must also be an
-ancestor of `main`.
+ancestor of `main`, the staged jar names must equal the evidence jar names (minus a documented allowlist) and the
+evidence must come from the tagged commit, every non-sidecar file must carry an `.asc` signature (checked with
+`gpg --verify` when the release public key is configured as a repository variable), the OSV baseline gate must
+pass at the tag, and the attestation is re-verified immediately before the upload. The GitHub release is created
+as a draft and published by a person after the Central deployment is released.
 It produces:
 
 - `SHA256SUMS`: SHA-256 of every published file (JARs, POMs, Gradle module metadata, per-module

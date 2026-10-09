@@ -24,7 +24,7 @@ import kotlin.time.Clock
  */
 class PresentationVerificationTest {
     @Test
-    fun `kbJwtMaxAge defaults to 10 minutes when not configured`() {
+    fun `kbJwtMaxAge defaults to 2 minutes when not configured`() {
         val options = VerificationOptions()
 
         assertEquals(
@@ -32,7 +32,7 @@ class PresentationVerificationTest {
             PresentationVerification.kbJwtMaxAge(options),
             "Default KB-JWT max age must apply when the option is absent",
         )
-        assertEquals(kotlin.time.Duration.parse("PT10M"), PresentationVerification.DEFAULT_KB_JWT_MAX_AGE)
+        assertEquals(kotlin.time.Duration.parse("PT2M"), PresentationVerification.DEFAULT_KB_JWT_MAX_AGE)
     }
 
     @Test

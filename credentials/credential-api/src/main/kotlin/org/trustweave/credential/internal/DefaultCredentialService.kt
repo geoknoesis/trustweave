@@ -182,9 +182,12 @@ internal class DefaultCredentialService(
         // Revocation check (format-agnostic) with proper warning collection
         val revocationWarnings = mutableListOf<String>()
         if (options.checkRevocation) {
+            // Check the credential the engine verified: for SD-JWT-VC its credentialStatus is the
+            // issuer-signed one, not the (strippable) unsigned envelope copy.
+            val verified = (engineResult as? VerificationResult.Valid)?.credential ?: credential
             val (revocationFailure, warnings) =
                 RevocationChecker.checkRevocationStatus(
-                    credential = credential,
+                    credential = verified,
                     revocationManager = revocationManager,
                     policy = options.revocationFailurePolicy,
                 )

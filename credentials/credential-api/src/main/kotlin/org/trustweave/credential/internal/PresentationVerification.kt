@@ -48,15 +48,17 @@ internal object PresentationVerification {
      * A KB-JWT proves *fresh* possession of the holder's key; an arbitrarily old `iat`
      * would let a captured presentation be replayed indefinitely (subject only to the
      * nonce policy of the verifier). When the option is absent,
-     * [DEFAULT_KB_JWT_MAX_AGE] applies. The verifier's `clockSkewTolerance` is added on
-     * top of the max age.
+     * [DEFAULT_KB_JWT_MAX_AGE] (two minutes) applies. The verifier's `clockSkewTolerance`
+     * is added on top of the max age. Within that window the nonce is the only replay defence,
+     * so verifiers that cannot tolerate any replay should also supply a
+     * [org.trustweave.credential.proof.PresentationNonceStore].
      *
      * Example: `VerificationOptions(additionalOptions = mapOf("kbJwtMaxAge" to 5.minutes))`
      */
     const val KB_JWT_MAX_AGE_OPTION = "kbJwtMaxAge"
 
     /** Default maximum accepted age of a KB-JWT `iat` (see [KB_JWT_MAX_AGE_OPTION]). */
-    val DEFAULT_KB_JWT_MAX_AGE: kotlin.time.Duration = 10.minutes
+    val DEFAULT_KB_JWT_MAX_AGE: kotlin.time.Duration = 2.minutes
 
     /**
      * Verify challenge if required.
@@ -475,6 +477,26 @@ internal object PresentationVerification {
                     ),
             )
         }
+        // The KB-JWT's sd_hash covers only the presentation-level token, i.e. the FIRST credential.
+        // Any further SD-JWT credential is not covered by it, so it is only acceptable when its own
+        // issuer-signed cnf binds it to the (single, checked below) holder DID. A cnf-less extra would be
+        // a bearer credential carried along by someone else's key binding.
+        presentation.verifiableCredential.drop(1).forEach { extra ->
+            val extraProof = extra.proof as? CredentialProof.SdJwtVcProof ?: return@forEach
+            if (extractCnfBinding(extraProof.sdJwtVc) == null) {
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = extra,
+                    reason =
+                        "A presented SD-JWT credential beyond the first carries no 'cnf' holder binding, " +
+                            "so the Key Binding JWT (which covers only the first credential) does not bind it",
+                    errors =
+                        listOf(
+                            "Additional SD-JWT credentials must be bound to the holder by an issuer-signed cnf claim",
+                        ),
+                )
+            }
+        }
+
         val cnfKids = cnfBindings.filterIsInstance<CnfBinding.Kid>().map { it.kid }.distinct()
         if (cnfKids.size > 1) {
             return VerificationResult.Invalid.InvalidProof(
@@ -572,6 +594,30 @@ internal object PresentationVerification {
                 credential = firstCredential,
                 reason = "Key Binding JWT sd_hash does not match the presented SD-JWT",
                 errors = listOf("KB-JWT sd_hash mismatch (disclosures may have been altered)"),
+            )
+        }
+
+        // The disclosures sd_hash covers are the segments of the presentation token; the credential's
+        // `disclosures` field is what per-credential verification actually evaluated. They must be the
+        // same set, otherwise the holder's signature does not vouch for what is being disclosed.
+        val signedDisclosures =
+            compactSdJwt
+                .split("~")
+                .drop(1)
+                .dropLast(1)
+                .filter { it.isNotEmpty() }
+                .sorted()
+        val evaluatedDisclosures =
+            ((firstCredential.proof as? CredentialProof.SdJwtVcProof)?.disclosures ?: emptyList()).sorted()
+        if (signedDisclosures != evaluatedDisclosures) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = firstCredential,
+                reason = "Key Binding JWT does not cover the credential's disclosures",
+                errors =
+                    listOf(
+                        "The disclosures in the sd_hash-covered presentation token differ from the " +
+                            "credential's disclosures (${signedDisclosures.size} vs ${evaluatedDisclosures.size})",
+                    ),
             )
         }
 

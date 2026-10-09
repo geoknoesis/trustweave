@@ -220,6 +220,6 @@ class DatabaseReplayProtectionTest {
                 }
             val service = DatabaseDidCommService(packer(), { null }, storageWithDurableReplay(ds), explicit)
             service.receiveMessage(plain("m1"), "did:example:me", "k")
-            seen shouldBe listOf("m1")
+            seen shouldBe listOf(DidCommReplayStore.scopedKey("unauthenticated", "m1"))
         }
 }

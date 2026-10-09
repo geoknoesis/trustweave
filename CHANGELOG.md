@@ -90,6 +90,38 @@ working code fail until it is adjusted.**
   - XAdES `SignatureTimeStamp` verification now reuses `TimeStampTokenVerifier` (same decision, reworded reasons).
   - JAdES: the payload must still be JSON (documented limitation on `DefaultJadesVerifier`; not changed because the
     result type carries a `JsonElement`).
+- **Behaviour (security) — SD-JWT-VC revocation is evaluated on the signed `credentialStatus`.**
+  `SdJwtProofEngine.verify` reads `vc.credentialStatus` from the issuer-signed JWT, rejects an envelope
+  `credentialStatus` that differs from it (an absent envelope value is allowed), and runs the status check on the signed
+  value; `VerificationResult.Valid.credential` now carries that signed status, and `DefaultCredentialService` runs its
+  revocation check on `Valid.credential`. Stripping or repointing the unsigned envelope no longer hides a revoked
+  credential.
+- **Behaviour (security) — DID client_ids need a signed request object (`oidc4vp`, `siop`).** An unsigned request
+  (plain JSON from `request_uri`, or bare URL parameters) whose `client_id` is a DID or whose scheme is `did` is
+  refused (`Oidc4VpException.AuthorizationRequestFetchFailed` / `UrlParseFailed`, `SiopV2Exception` code
+  `UNSIGNED_REQUEST_OBJECT`; SIOP's model also defaults an absent scheme to `did`). `submitPermissionResponse` and
+  `SiopV2Service.submitResponse` refuse a `response_uri` that is not https (plain http only for loopback)
+  (`INSECURE_RESPONSE_URI` for SIOP).
+- **Behaviour — OID4VCI issuer (`oidc4vci-server`).** A credential is now issued for one configuration of the offer
+  (named by `credential_configuration_id`, else the first of the request's types still open, else the next in offer
+  order) instead of every configuration in each credential; `Oidc4VciIssuerService.issueCredential` has an overload taking
+  `credentialConfigurationId`, and `TokenEntry` gained `remainingConfigurations` (constructor/`copy` signature changed;
+  the 4- and 5-argument constructors remain). A failed credential build gives the consumed `c_nonce` back so the wallet
+  can retry with the nonce it holds; malformed proof JWT members (array `aud`, object `alg`, ...) are `invalid_proof`
+  rather than a 500. `Oidc4VciProtocolRateLimit` sweeps expired windows at most once per tenth of a window and spreads
+  overflow callers over 64 hashed buckets per endpoint instead of one shared window.
+- **Behaviour (security) — DIDComm replay ids are scoped by the authenticated sender.** `DidCommService` and
+  `DatabaseDidCommService` key replay state on the sender the unpacking step authenticated (authcrypt sender or verified
+  signer), not the attacker-controlled `from` header; messages with no authenticated sender share one bounded bucket and
+  are remembered for ten minutes at most. Custom `DidCommReplayStore`s now see the scope `unauthenticated` for such
+  messages.
+- **Behaviour (security) — SD-JWT key binding.** The default maximum KB-JWT age is now 2 minutes (was 10; the
+  verifier's clock-skew tolerance is still added; override with `kbJwtMaxAge`). Presentations whose KB-JWT `sd_hash`
+  does not cover the credential's `disclosures` are rejected, as are additional SD-JWT credentials without an
+  issuer-signed `cnf` (the KB-JWT only covers the first credential).
+- **Behaviour — remote status lists.** `RemoteStatusListResolver` stops serving a cached list at the credential's
+  `validUntil`/`expirationDate`, and one host may hold at most an eighth of the cache (and of the failure cache).
+
 - **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**
   `DefaultLotlSignatureVerifier` now requires exactly one `ds:Signature` (a direct child of the document
   element), exactly one whole-document `URI=""` reference with the enveloped-signature transform plus at most one

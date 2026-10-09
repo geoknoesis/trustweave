@@ -69,6 +69,11 @@ sealed class TrustListLoadResult {
  *    refused, and sequence numbers may not go backwards relative to the caller-supplied
  *    previous values.
  *
+ * Rollback protection that does not depend on the caller remembering: pass a [TrustListStateStore] and the loader
+ * records, per list, the sequence number and document hash it accepted, and refuses a lower sequence and also a
+ * *different* document at an equal sequence. The store is updated only after the whole load succeeded. The explicit
+ * `previous*` options still work and are combined with the store (the higher sequence wins).
+ *
  * Territories listed by the LoTL but absent from the supplied map are omitted from the result, as
  * with [TrustListParser.parse].
  */
@@ -79,6 +84,7 @@ class VerifiedTrustListLoader
         private val clock: Clock = Clock.System,
         private val lotlVerifier: LotlSignatureVerifier = DefaultLotlSignatureVerifier(clock),
         private val tslVerifier: TslSignatureVerifier = DefaultTslSignatureVerifier(clock),
+        private val stateStore: TrustListStateStore? = null,
     ) {
         @JvmOverloads
         fun load(
@@ -89,6 +95,7 @@ class VerifiedTrustListLoader
         ): TrustListLoadResult {
             val now = clock.now()
             val stale = mutableListOf<String>()
+            val accepted = LinkedHashMap<String, TrustListState>()
 
             when (val sig = lotlVerifier.verify(lotlXml, lotlSigningCerts)) {
                 is LotlSignatureValidationResult.Valid -> Unit
@@ -115,6 +122,9 @@ class VerifiedTrustListLoader
                 options,
                 now,
                 stale,
+                LOTL_KEY,
+                lotlXml,
+                accepted,
             )?.let { return it }
 
             val certsByTerritory =
@@ -170,8 +180,12 @@ class VerifiedTrustListLoader
                     options,
                     now,
                     stale,
+                    "TSL:${tsl.territory}",
+                    normalised.getValue(tsl.territory),
+                    accepted,
                 )?.let { return it }
             }
+            stateStore?.let { store -> accepted.forEach { (key, state) -> store.put(key, state) } }
             return TrustListLoadResult.Loaded(trustList, stale)
         }
 
@@ -186,14 +200,28 @@ class VerifiedTrustListLoader
             options: TrustListLoadOptions,
             now: Instant,
             stale: MutableList<String>,
+            stateKey: String,
+            document: ByteArray,
+            accepted: MutableMap<String, TrustListState>,
         ): TrustListLoadResult.Rejected? {
-            if (previousSequence != null && sequence < previousSequence) {
+            val stored = stateStore?.get(stateKey)
+            val highestSeen = listOfNotNull(previousSequence, stored?.sequence).maxOrNull()
+            if (highestSeen != null && sequence < highestSeen) {
                 return TrustListLoadResult.Rejected(
                     TrustListRejection.ROLLBACK,
-                    "$label sequence number $sequence is lower than the previously seen $previousSequence",
+                    "$label sequence number $sequence is lower than the previously seen $highestSeen",
                     territory,
                 )
             }
+            val hash = TrustListState.hashOf(document)
+            if (stored != null && sequence == stored.sequence && hash != stored.documentSha256) {
+                return TrustListLoadResult.Rejected(
+                    TrustListRejection.ROLLBACK,
+                    "$label sequence number $sequence was already accepted with a different document",
+                    territory,
+                )
+            }
+            accepted[stateKey] = TrustListState(sequence, hash)
             if (issuedAt > now + MAX_CLOCK_SKEW) {
                 return TrustListLoadResult.Rejected(
                     TrustListRejection.ISSUED_IN_FUTURE,
@@ -228,5 +256,6 @@ class VerifiedTrustListLoader
 
         private companion object {
             val MAX_CLOCK_SKEW = 5.minutes
+            const val LOTL_KEY = "LOTL"
         }
     }

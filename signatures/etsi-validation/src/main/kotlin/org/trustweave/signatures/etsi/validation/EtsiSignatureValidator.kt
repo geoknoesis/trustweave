@@ -150,8 +150,11 @@ class DefaultEtsiSignatureValidator internal constructor(
                         revocationEvidence = policy.revocationEvidence,
                         revocationIssuerCertificates = policy.revocationIssuerCertificates,
                         timestampTrustAnchors = policy.timestampTrustAnchors,
-                        // The policy decides whether a withdrawn service is acceptable (see allowedTrustStatusUris).
-                        allowWithdrawnTrustWithoutAuthenticatedTime = TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
+                        // Accepting a withdrawn service (allowedTrustStatusUris) never by itself accepts an
+                        // unauthenticated, back-datable signing time; that needs its own explicit opt-in.
+                        allowWithdrawnTrustWithoutAuthenticatedTime =
+                            policy.allowWithdrawnTrustWithoutAuthenticatedTime &&
+                                TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
                     ),
                 )
 

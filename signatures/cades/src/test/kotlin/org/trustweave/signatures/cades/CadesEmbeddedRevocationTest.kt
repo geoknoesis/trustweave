@@ -323,12 +323,25 @@ class CadesEmbeddedRevocationTest {
         runBlocking<Unit> {
             val s = signed()
             val junk = Attribute(PKCSObjectIdentifiers.id_aa_ets_revocationValues, DERSet(DERSequence(DERSequence())))
-            val result = verifier.verify(withUnsignedAttribute(s.cms, junk), options(CadesProfile.B_T))
+            val result = verifier.verify(withUnsignedAttribute(s.cms, junk), options(CadesProfile.B_T, RevocationPolicy.CHECK_IF_AVAILABLE))
             assertTrue(result is Invalid.Malformed, "got $result")
             val empty = Attribute(PKCSObjectIdentifiers.id_aa_ets_revocationValues, DERSet())
-            assertTrue(verifier.verify(withUnsignedAttribute(s.cms, empty), options(CadesProfile.B_T)) is Invalid.Malformed)
+            val checked = options(CadesProfile.B_T, RevocationPolicy.CHECK_IF_AVAILABLE)
+            assertTrue(verifier.verify(withUnsignedAttribute(s.cms, empty), checked) is Invalid.Malformed)
             val notRv = Attribute(PKCSObjectIdentifiers.id_aa_ets_revocationValues, DERSet(ASN1ObjectIdentifier("1.2.3")))
-            assertTrue(verifier.verify(withUnsignedAttribute(s.cms, notRv), options(CadesProfile.B_T)) is Invalid.Malformed)
+            assertTrue(verifier.verify(withUnsignedAttribute(s.cms, notRv), checked) is Invalid.Malformed)
+        }
+
+    @Test
+    fun `junk embedded revocation data does not fail a signature when revocation is not checked`() =
+        runBlocking<Unit> {
+            val s = signed(CadesProfile.B_B)
+            val junk = Attribute(PKCSObjectIdentifiers.id_aa_ets_revocationValues, DERSet(DERSequence(DERSequence())))
+            val bytes = withUnsignedAttribute(s.cms, junk)
+            val result = verifier.verify(bytes, options(CadesProfile.B_B))
+            assertTrue(result is Valid && result.profile == CadesProfile.B_B && !result.revocationChecked, "got $result")
+            // Once revocation is evaluated the same junk is refused.
+            assertTrue(verifier.verify(bytes, options(CadesProfile.B_B, RevocationPolicy.REQUIRED)) is Invalid.Malformed)
         }
 
     @Test
@@ -340,7 +353,7 @@ class CadesEmbeddedRevocationTest {
             val garbage = DERTaggedObject(false, 1, OtherRevocationInfoFormat(CMSObjectIdentifiers.id_ri_ocsp_response, DERSequence()))
             val rebuilt = SignedData(sd.digestAlgorithms, sd.encapContentInfo, sd.certificates, DERSet(garbage), sd.signerInfos)
             val bytes = ContentInfo(CMSObjectIdentifiers.signedData, rebuilt).getEncoded("DER")
-            val result = verifier.verify(bytes, options(CadesProfile.B_T))
+            val result = verifier.verify(bytes, options(CadesProfile.B_T, RevocationPolicy.CHECK_IF_AVAILABLE))
             assertTrue(result is Invalid.Malformed, "got $result")
         }
 

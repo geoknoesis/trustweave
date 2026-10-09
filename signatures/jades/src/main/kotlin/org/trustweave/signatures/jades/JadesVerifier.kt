@@ -43,6 +43,12 @@ interface JadesVerifier {
  * Certificate validity is judged at the time authenticated by a trusted `sigTst`, else at the current time, never at
  * the claimed `sigT`. An `arcTst` is validated token by token but never credited as B-LTA (EN 319 182-1 5.3.6
  * imprint construction is not implemented), so the highest profile reported is B-LT.
+ *
+ * Known limitation: the payload must be JSON. EN 319 182-1 allows an arbitrary (for example binary) JWS payload, but
+ * [JadesValidationResult.Valid.payload] is a parsed `JsonElement`, and a non-JSON payload is reported as
+ * [JadesValidationResult.Invalid.Malformed] ("payload is not valid JSON") even though its signature is genuine.
+ * Representing raw bytes needs a new result field, which would break the public API, so it is deliberately not
+ * guessed at here; the signer is JSON-only too, so signatures made by [DefaultJadesSigner] always verify.
  */
 class DefaultJadesVerifier : JadesVerifier {
     override suspend fun verify(

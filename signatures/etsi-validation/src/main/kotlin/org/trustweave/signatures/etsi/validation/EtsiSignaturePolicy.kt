@@ -38,6 +38,12 @@ import kotlin.time.Duration
  * @property timestampTrustAnchors       TSA certificates (or their issuers) trusted to time-stamp. A `sigTst` is
  *                                        reported as validated only when it verifies against these; with none
  *                                        configured it is not trusted and [requireTimeStamp] cannot be met.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                        Only relevant when [allowedTrustStatusUris] contains WITHDRAWN. A signer
+ *                                        under a withdrawn service is then accepted only if a trusted time-stamp
+ *                                        ([timestampTrustAnchors]) proves the signature predates the withdrawal.
+ *                                        Setting this to `true` additionally accepts a merely claimed signing time
+ *                                        before the withdrawal, which a signer can back-date. Default `false`.
  */
 data class EtsiSignaturePolicy
     @JvmOverloads
@@ -55,4 +61,5 @@ data class EtsiSignaturePolicy
         val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
         val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
         val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
     )

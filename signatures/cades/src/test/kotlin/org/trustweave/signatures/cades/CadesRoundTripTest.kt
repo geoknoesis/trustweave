@@ -108,6 +108,37 @@ class CadesRoundTripTest {
         }
 
     @Test
+    fun `an encapsulated signature rejects a supplied payload that differs from the embedded content`() =
+        runBlocking<Unit> {
+            val keyId = generateKey(Algorithm.P256)
+            val chain = ca.issueChainBytes(kms.publicKey(keyId), "CN=Encapsulated Mismatch Signer")
+            val payload = "the real document".toByteArray()
+            val signature =
+                DefaultCadesSigner(kms).sign(
+                    CadesSigningRequest(
+                        profile = CadesProfile.B_B,
+                        keyId = keyId,
+                        payload = payload,
+                        signerCertificateChain = chain,
+                        detached = false,
+                    ),
+                )
+
+            fun options(supplied: ByteArray?) =
+                CadesVerificationOptions(
+                    requiredProfile = CadesProfile.B_B,
+                    trustAnchorResolver = resolverFor(ca.caCert),
+                    detachedPayload = supplied,
+                )
+
+            val different = verifier.verify(signature.encoded, options("another document".toByteArray()))
+            assertTrue(different is Invalid.MissingDetachedPayload, "expected MissingDetachedPayload, got $different")
+            val same = verifier.verify(signature.encoded, options(payload.copyOf()))
+            assertTrue(same is Valid, "identical payload must verify, got $same")
+            assertTrue(verifier.verify(signature.encoded, options(null)) is Valid)
+        }
+
+    @Test
     fun `roundtrips a CAdES B-T detached signature using an in-process TSA`() =
         runBlocking<Unit> {
             val tsa = TestTsa.generate()

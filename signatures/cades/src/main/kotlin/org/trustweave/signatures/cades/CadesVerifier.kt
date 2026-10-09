@@ -93,6 +93,17 @@ class DefaultCadesVerifier : CadesVerifier {
                 } else {
                     probe
                 }
+            // 2b. An encapsulated CMS carries its own content. A caller-supplied payload must be the very same bytes:
+            //     the signature is checked against the embedded content, so a caller who believes it verified its own
+            //     document would otherwise be told "valid" for different bytes.
+            if (!isDetached && options.detachedPayload != null) {
+                val embedded = probe.signedContent?.content as? ByteArray
+                if (embedded == null || !MessageDigest.isEqual(embedded, options.detachedPayload)) {
+                    return@withContext Invalid.MissingDetachedPayload(
+                        "CMS embeds its content and the supplied detachedPayload is not byte-identical to it",
+                    )
+                }
+            }
 
             // 3. Extract the (single) signer.
             val signerInfo: SignerInformation =
@@ -216,13 +227,7 @@ class DefaultCadesVerifier : CadesVerifier {
             }
 
             // 11. Revocation (CRL / OCSP). Requesting B-LT implies REQUIRED: a long-term signature is only as good
-            //     as the validation data it proves. Embedded data that is not well-formed is refused, never skipped.
-            val embeddedEvidence =
-                try {
-                    CadesRevocationValues.embedded(cms, signerInfo)
-                } catch (e: MalformedRevocationValuesException) {
-                    return@withContext Invalid.Malformed(e.message ?: "embedded revocation data is malformed")
-                }
+            //     as the validation data it proves. Embedded data that is not well-formed is refused, never skipped, but it is only read when revocation is evaluated.
             val revocationPolicy =
                 if (options.requiredProfile == CadesProfile.B_LT && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
                     RevocationPolicy.REQUIRED
@@ -232,6 +237,14 @@ class DefaultCadesVerifier : CadesVerifier {
             var revocationChecked = false
             var embeddedCoversChain = false
             if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                // Parsed only when revocation is evaluated: unsigned junk must not fail a valid signature whose
+                // revocation data is not used.
+                val embeddedEvidence =
+                    try {
+                        CadesRevocationValues.embedded(cms, signerInfo)
+                    } catch (e: MalformedRevocationValuesException) {
+                        return@withContext Invalid.Malformed(e.message ?: "embedded revocation data is malformed")
+                    }
                 val now =
                     kotlin.time.Clock.System
                         .now()

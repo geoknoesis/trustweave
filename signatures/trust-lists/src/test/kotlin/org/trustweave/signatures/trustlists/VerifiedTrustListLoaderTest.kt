@@ -185,4 +185,63 @@ class VerifiedTrustListLoaderTest {
                 is TrustListLoadResult.Loaded,
         )
     }
+
+    private fun storeLoader(store: TrustListStateStore) =
+        VerifiedTrustListLoader(
+            clock = clock,
+            lotlVerifier = DefaultLotlSignatureVerifier(),
+            tslVerifier = DefaultTslSignatureVerifier(),
+            stateStore = store,
+        )
+
+    @Test
+    fun `a state store rejects a lower sequence without any previous options`() {
+        val store = InMemoryTrustListStateStore()
+        val stored = storeLoader(store)
+        val anchors = listOf(lotlSigner.signerCert)
+        assertTrue(stored.load(lotl(sequence = 10), mapOf("DE" to tsl(sequence = 5)), anchors) is TrustListLoadResult.Loaded)
+        assertEquals(10, store.get("LOTL")?.sequence)
+        assertEquals(5, store.get("TSL:DE")?.sequence)
+
+        val lowerLotl = stored.load(lotl(sequence = 9), mapOf("DE" to tsl(sequence = 5)), anchors)
+        assertRejected(TrustListRejection.ROLLBACK, lowerLotl)
+        val lowerTsl = stored.load(lotl(sequence = 11), mapOf("DE" to tsl(sequence = 4)), anchors)
+        assertRejected(TrustListRejection.ROLLBACK, lowerTsl)
+        // A rejected load must not advance the store.
+        assertEquals(10, store.get("LOTL")?.sequence)
+        assertTrue(stored.load(lotl(sequence = 11), mapOf("DE" to tsl(sequence = 6)), anchors) is TrustListLoadResult.Loaded)
+        assertEquals(11, store.get("LOTL")?.sequence)
+    }
+
+    @Test
+    fun `a state store rejects a different document at an equal sequence but accepts the identical one`() {
+        val store = InMemoryTrustListStateStore()
+        val stored = storeLoader(store)
+        val anchors = listOf(lotlSigner.signerCert)
+        val lotlBytes = lotl(sequence = 10)
+        val tslBytes = tsl(sequence = 5)
+        assertTrue(stored.load(lotlBytes, mapOf("DE" to tslBytes), anchors) is TrustListLoadResult.Loaded)
+        assertTrue(stored.load(lotlBytes, mapOf("DE" to tslBytes), anchors) is TrustListLoadResult.Loaded)
+
+        val reSignedTsl = tsl(sequence = 5, nextUpdate = "2026-08-02T00:00:00Z")
+        assertRejected(TrustListRejection.ROLLBACK, stored.load(lotlBytes, mapOf("DE" to reSignedTsl), anchors))
+        val otherLotl = lotl(sequence = 10, nextUpdate = "2026-09-02T00:00:00Z")
+        assertRejected(TrustListRejection.ROLLBACK, stored.load(otherLotl, mapOf("DE" to tslBytes), anchors))
+    }
+
+    @Test
+    fun `explicit previous options and the store are combined`() {
+        val store = InMemoryTrustListStateStore()
+        val stored = storeLoader(store)
+        val anchors = listOf(lotlSigner.signerCert)
+        assertTrue(stored.load(lotl(sequence = 10), mapOf("DE" to tsl(sequence = 5)), anchors) is TrustListLoadResult.Loaded)
+        val result =
+            stored.load(
+                lotl(sequence = 10, nextUpdate = "2026-09-03T00:00:00Z"),
+                mapOf("DE" to tsl(sequence = 5)),
+                anchors,
+                TrustListLoadOptions(previousLotlSequence = 12),
+            )
+        assertRejected(TrustListRejection.ROLLBACK, result)
+    }
 }

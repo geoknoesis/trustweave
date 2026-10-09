@@ -76,7 +76,7 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 | `signatures:trust-lists` | 49 | EU trusted-list handling |
 | `signatures:cades` | 28 | ETSI EN 319 122 (CMS) |
 | `signatures:tsa-core` | 40 | RFC 3161 timestamping |
-| `signatures:etsi-validation` | 16 | Validation helpers |
+| `signatures:etsi-validation` | 23 | Validation helpers |
 | `signatures:xades` | 82 | ETSI EN 319 132 (XML) |
 | `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |
 

@@ -13,6 +13,7 @@ import org.trustweave.signatures.jades.DefaultJadesVerifier
 import org.trustweave.signatures.jades.JadesProfile
 import org.trustweave.signatures.jades.JadesValidationResult
 import org.trustweave.signatures.jades.JadesVerificationOptions
+import org.trustweave.signatures.jades.JadesVerifier
 import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
@@ -65,9 +66,13 @@ interface EtsiSignatureValidator {
  *     [StepOutcome.NotApplicable] otherwise.
  *  5. Aggregate the per-step outcomes into the final verdict.
  */
-class DefaultEtsiSignatureValidator(
-    private val jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier(),
+class DefaultEtsiSignatureValidator internal constructor(
+    private val jadesVerifier: JadesVerifier,
 ) : EtsiSignatureValidator {
+    @JvmOverloads
+    @Suppress("USELESS_CAST")
+    constructor(jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier()) : this(jadesVerifier as JadesVerifier)
+
     override suspend fun validate(
         jadesSerialized: String,
         policy: EtsiSignaturePolicy,

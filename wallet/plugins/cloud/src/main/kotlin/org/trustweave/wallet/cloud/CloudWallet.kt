@@ -98,6 +98,23 @@ abstract class CloudWallet(
     private fun credentialKey(credentialId: String): String = "$credentialsPath/${encodeKeySegment(credentialId)}.json"
 
     /**
+     * The key objects were stored under before ids were percent-encoded (`{credentials}/{id}.json`),
+     * or `null` when that raw key could address anything outside the credentials prefix (empty, `.`
+     * or `..` segments, backslashes, control characters) or is identical to [credentialKey]. Such
+     * objects stay reachable; an id that could traverse never gets a fallback.
+     */
+    private fun legacyCredentialKey(credentialId: String): String? {
+        if (credentialId.isEmpty() || credentialId.any { it == '\\' || it.isISOControl() }) return null
+        if (credentialId.split('/').any { it == "." || it == ".." }) return null
+        val key = "$credentialsPath/$credentialId.json"
+        return key.takeIf { it != credentialKey(credentialId) }
+    }
+
+    private suspend fun downloadWithLegacyFallback(credentialId: String): ByteArray? =
+        download(credentialKey(credentialId))
+            ?: legacyCredentialKey(credentialId)?.let { download(it) }
+
+    /**
      * Percent-encodes a credential id for use as exactly one object-key segment, so an id can
      * never add path separators, climb out of the wallet prefix (`../`), or collide with another
      * id. Letters, digits and `-_.~:` are kept as-is (so ordinary ids such as `urn:uuid:...` keep
@@ -170,8 +187,7 @@ abstract class CloudWallet(
 
     override suspend fun get(credentialId: String): VerifiableCredential? =
         withContext(Dispatchers.IO) {
-            val key = credentialKey(credentialId)
-            val content = download(key) ?: return@withContext null
+            val content = downloadWithLegacyFallback(credentialId) ?: return@withContext null
 
             val credentialJson = String(content, Charsets.UTF_8)
             json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
@@ -184,17 +200,41 @@ abstract class CloudWallet(
             listKeys("$credentialsPath/")
                 .filter { it.endsWith(".json") }
                 .sorted()
-                .mapNotNull { key ->
-                    readRecord(key)
-                }.filter { filter == null || matchesFilter(it.credential, filter) }
+                .mapNotNull { key -> readRecordOrSkip(key) }
+                .distinctBy { it.storageId }
+                .filter { filter == null || matchesFilter(it.credential, filter) }
         }
 
     private suspend fun readRecord(key: String): StoredCredentialRecord? {
         require(key.startsWith("$credentialsPath/") && key.endsWith(".json")) { "Unexpected credential key" }
         val content = download(key) ?: return null // Concurrent deletion is a normal object-store race.
         val credential = json.decodeFromString(VerifiableCredential.serializer(), String(content, Charsets.UTF_8))
-        return StoredCredentialRecord(decodeKeySegment(key.removePrefix("$credentialsPath/").removeSuffix(".json")), credential)
+        return StoredCredentialRecord(handleFor(key), credential)
     }
+
+    /**
+     * The handle for an object key: the decoded id when that id maps back to exactly this key,
+     * otherwise (an object written before ids were encoded) the raw id, which [get] and [delete]
+     * reach through the legacy-key fallback. Either way the handle round-trips to the same key.
+     */
+    private fun handleFor(key: String): String {
+        val segment = key.removePrefix("$credentialsPath/").removeSuffix(".json")
+        val decoded = decodeKeySegment(segment)
+        return if (credentialKey(decoded) == key) decoded else segment
+    }
+
+    /**
+     * Like [readRecord] but an object that cannot be parsed is skipped rather than failing the
+     * whole scan ([recoverRecords] is the call that reports it). Storage failures still propagate.
+     */
+    private suspend fun readRecordOrSkip(key: String): StoredCredentialRecord? =
+        try {
+            readRecord(key)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (corrupt: IllegalArgumentException) {
+            null // includes kotlinx.serialization.SerializationException
+        }
 
     override suspend fun recoverRecords(): CredentialRecoveryResult =
         withContext(Dispatchers.IO) {
@@ -219,7 +259,9 @@ abstract class CloudWallet(
     override suspend fun delete(credentialId: String): Boolean =
         withContext(Dispatchers.IO) {
             val segment = encodeKeySegment(credentialId)
-            val deleted = deleteFromStorage(credentialKey(credentialId))
+            val deleted =
+                deleteFromStorage(credentialKey(credentialId)) ||
+                    (legacyCredentialKey(credentialId)?.let { deleteFromStorage(it) } ?: false)
 
             if (deleted) {
                 // Clean up related files
@@ -291,7 +333,7 @@ abstract class CloudWallet(
             var expired = 0
             var unknown = 0
             for (key in listKeys("$credentialsPath/").filter { it.endsWith(".json") }) {
-                val credential = readRecord(key)?.credential ?: continue
+                val credential = readRecordOrSkip(key)?.credential ?: continue
                 total++
                 val expiry =
                     if (credential.isVc2 &&

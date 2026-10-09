@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -111,7 +110,7 @@ class S3StorageContractTest {
                         val other = AwsS3Wallet("other", "did:key:o", "did:key:o", bucket, "other", client)
                         assertTrue(other.listRecords().isEmpty())
                         client.putObject({ it.bucket(bucket).key("contract/credentials/broken.json") }, RequestBody.fromString("not-json"))
-                        assertFailsWith<Exception> { wallet.listRecords() }
+                        assertEquals(6, wallet.listRecords().size) // a corrupt object is skipped, recovery reports it
                         val recovered = wallet.recoverRecords()
                         assertFalse(recovered.complete)
                         assertEquals(6, recovered.records.size)

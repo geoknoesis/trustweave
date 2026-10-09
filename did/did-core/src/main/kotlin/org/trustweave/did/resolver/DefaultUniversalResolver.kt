@@ -20,7 +20,6 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import org.trustweave.did.exception.DidException
@@ -823,7 +822,9 @@ class DefaultUniversalResolver(
         return try {
             val element = json.parseToJsonElement(jsonString)
             val array = element as? JsonArray ?: return null
-            array.mapNotNull { it.jsonPrimitive?.content }
+            // Only string elements are method names: objects/arrays would make `.jsonPrimitive` throw,
+            // and a JSON null is a JsonPrimitive whose content is the text "null".
+            array.mapNotNull { element -> (element as? JsonPrimitive)?.takeIf { it !is JsonNull && it.isString }?.content }
         } catch (e: kotlinx.serialization.SerializationException) {
             null
         }

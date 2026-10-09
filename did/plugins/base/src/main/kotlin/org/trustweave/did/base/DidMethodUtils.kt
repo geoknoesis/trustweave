@@ -432,6 +432,15 @@ object DidMethodUtils {
                 else -> null
             }
         if (expected != null && body.size != expected) return null
+        // EC bodies must be a valid curve point: right length, and on the curve. Without this a
+        // truncated or off-curve key resolves as a bogus verification method.
+        if (ecCurves.containsKey(algorithm)) {
+            try {
+                decompressEcPublicKey(algorithm, body)
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
+        }
         return algorithm to body
     }
 
@@ -544,7 +553,21 @@ object DidMethodUtils {
                 ?: throw IllegalArgumentException("Not a supported EC algorithm: $algorithm")
         val size = curve.coordinateSize
         return when {
-            point.size == 2 * size + 1 && point[0] == 0x04.toByte() -> point
+            point.size == 2 * size + 1 && point[0] == 0x04.toByte() -> {
+                val p = curve.p
+                val x = java.math.BigInteger(1, point.copyOfRange(1, 1 + size))
+                val y = java.math.BigInteger(1, point.copyOfRange(1 + size, point.size))
+                require(x < p && y < p) { "EC point coordinate out of range for $algorithm" }
+                val rhs =
+                    x
+                        .multiply(x)
+                        .multiply(x)
+                        .add(curve.a.multiply(x))
+                        .add(curve.b)
+                        .mod(p)
+                require(y.multiply(y).mod(p) == rhs) { "Invalid EC point: not on curve $algorithm" }
+                point
+            }
             point.size == size + 1 && (point[0] == 0x02.toByte() || point[0] == 0x03.toByte()) -> {
                 val p = curve.p
                 val x = java.math.BigInteger(1, point.copyOfRange(1, 1 + size))

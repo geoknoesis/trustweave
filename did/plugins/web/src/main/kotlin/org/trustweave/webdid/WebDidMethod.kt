@@ -397,6 +397,15 @@ class WebDidMethod(
 
         val segments = rawSegments.map { DidMethodUtils.percentDecode(it) }
 
+        // A segment is decoded exactly once. A '%' that survives decoding is a double encoding
+        // (%252e -> %2e): it would reach the URL as a literal that servers and proxies commonly
+        // decode a second time into '.', '/' or '\\', defeating every check below.
+        if (segments.any { '%' in it }) {
+            throw IllegalArgumentException(
+                "Invalid did:web DID: segment is still percent-encoded after decoding (double encoding): $did",
+            )
+        }
+
         val host = segments.first()
         if (host.any { it in HOST_FORBIDDEN_CHARS || it.isWhitespace() || it.isISOControl() }) {
             throw IllegalArgumentException(

@@ -129,7 +129,26 @@ class CyberArkKeyManagementService(
                         .post(metadataBody.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
-                httpClient.newCall(metadataRequest).execute().use { /* Store metadata */ }
+                val metadataResponse =
+                    try {
+                        httpClient.callAndClose(metadataRequest)
+                    } catch (cancelled: CancellationException) {
+                        removeOrphanedSecret(secretPath)
+                        throw cancelled
+                    } catch (e: Exception) {
+                        removeOrphanedSecret(secretPath)
+                        throw e
+                    }
+                if (!metadataResponse.isSuccessful) {
+                    // The private key is already stored; without its metadata the key is unusable,
+                    // so remove it rather than leave an orphan secret behind a "success".
+                    removeOrphanedSecret(secretPath)
+                    return@withContext GenerateKeyResult.Failure.Error(
+                        algorithm = algorithm,
+                        reason = "CyberArk Conjur API error storing key metadata: ${metadataResponse.code} - ${metadataResponse.message}",
+                        cause = null,
+                    )
+                }
 
                 GenerateKeyResult.Success(
                     KeyHandle(
@@ -148,6 +167,23 @@ class CyberArkKeyManagementService(
                 )
             }
         }
+
+    /** Best-effort removal of the secrets written by a [generateKey] that did not complete. */
+    private fun removeOrphanedSecret(secretPath: String) {
+        for (suffix in listOf("private", "metadata")) {
+            try {
+                val request =
+                    Request
+                        .Builder()
+                        .url("${config.conjurUrl}/secrets$secretPath/$suffix")
+                        .delete()
+                        .build()
+                httpClient.callAndClose(request)
+            } catch (ignored: Exception) {
+                // Cleanup is best effort; the original failure is what the caller must see.
+            }
+        }
+    }
 
     /**
      * Generates a key pair locally for the given algorithm.

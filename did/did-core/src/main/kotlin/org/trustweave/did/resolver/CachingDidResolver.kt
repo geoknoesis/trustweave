@@ -6,6 +6,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolution.ResolutionOptions
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicLongArray
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -90,11 +91,20 @@ class CachingDidResolver(
     private val accessCounter = AtomicLong(0)
 
     /**
-     * Bumped by [invalidate] and [clear]. A resolution records it before calling the delegate and
-     * only writes its result if it is unchanged, so an answer fetched before an invalidation can
-     * never be re-inserted after it (which would resurrect a revoked/stale document).
+     * Race guard against re-inserting an answer fetched before an invalidation (which would
+     * resurrect a revoked/stale document). A resolution records [generationOf] its key before
+     * calling the delegate and only writes its result if that value is unchanged.
+     *
+     * Generations are striped by key hash: [invalidate] bumps only the stripe of the DID it
+     * invalidates, so an invalidation (or a `noCache` resolve) for one DID cannot suppress the
+     * cache writes of unrelated in-flight resolutions. [clear] bumps [clearGeneration], which
+     * every key observes. Two DIDs sharing a stripe merely lose a cache write, never gain a stale one.
      */
-    private val generation = AtomicLong(0)
+    private val stripes = AtomicLongArray(GENERATION_STRIPES)
+    private val clearGeneration = AtomicLong(0)
+
+    private fun generationOf(key: String): Long =
+        stripes.get(Math.floorMod(key.hashCode(), GENERATION_STRIPES)) + clearGeneration.get()
 
     /** Current number of cached entries (primarily for diagnostics and tests). */
     val size: Int get() = cache.size
@@ -107,7 +117,7 @@ class CachingDidResolver(
                 return@measure cached
             }
 
-            val startGeneration = generation.get()
+            val startGeneration = generationOf(key)
             val result = delegate.resolve(did)
             writeCache(key, startGeneration, result)
             if (result is DidResolutionResult.Failure) {
@@ -165,7 +175,7 @@ class CachingDidResolver(
         // the revoked document until TTL expiry. Invalidate before reading the generation so this
         // request's own write is not suppressed by its own invalidation.
         if (cacheable && options.noCache) invalidate(did)
-        val startGeneration = generation.get()
+        val startGeneration = generationOf(key)
 
         // `noCache` has been honoured above, so it is stripped before delegating: the delegate is
         // ultimately a DID method, which would otherwise reject it as an unsupported
@@ -202,12 +212,12 @@ class CachingDidResolver(
             // Taken after the delegate returned so a slow resolution does not eat into the TTL.
             val now = clock.now()
             val expiresAt = expiryFor(now, result)
-            if (expiresAt > now && generation.get() == generationAtStart) {
+            if (expiresAt > now && generationOf(key) == generationAtStart) {
                 val entry = CacheEntry(result, expiresAt)
                 entry.lastAccess = accessCounter.incrementAndGet()
                 cache[key] = entry
                 // Re-check: an invalidate that raced with the insert above must not leave it behind.
-                if (generation.get() != generationAtStart) cache.remove(key, entry)
+                if (generationOf(key) != generationAtStart) cache.remove(key, entry)
                 evictLeastRecentlyUsed()
             }
         }
@@ -218,13 +228,13 @@ class CachingDidResolver(
      * will hit the delegate.
      */
     fun invalidate(did: Did) {
-        generation.incrementAndGet()
+        stripes.incrementAndGet(Math.floorMod(did.value.hashCode(), GENERATION_STRIPES))
         cache.remove(did.value)
     }
 
     /** Removes all cached entries. */
     fun clear() {
-        generation.incrementAndGet()
+        clearGeneration.incrementAndGet()
         cache.clear()
     }
 
@@ -256,5 +266,9 @@ class CachingDidResolver(
             val lru = cache.entries.minByOrNull { it.value.lastAccess } ?: return
             cache.remove(lru.key, lru.value)
         }
+    }
+
+    private companion object {
+        const val GENERATION_STRIPES = 64
     }
 }

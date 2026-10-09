@@ -19,9 +19,11 @@ import io.ktor.server.response.respondText
  * the signing backend behind `/credential` cannot be driven at will.
  *
  * Each (caller, endpoint) pair gets [permits] requests per fixed window of [windowMillis]. At most
- * [maxTrackedCallers] pairs are tracked; when the table is full, expired windows are dropped and any
- * remaining untracked pairs share one overflow window per endpoint, so a spray of distinct callers cannot
- * reset anyone's spend. Behind a proxy that does not forward the client address every request shares one
+ * [maxTrackedCallers] pairs are tracked; when the table is full, expired windows are dropped (a sweep that
+ * runs at most once per [SWEEP_DIVISOR]th of a window, so a full table does not cost a scan per request) and
+ * any remaining untracked pairs share a small fixed set of overflow windows per endpoint, picked by a hash
+ * of the caller, so a spray of distinct callers cannot reset anyone's spend and exhausts only the buckets
+ * its own addresses hash to rather than locking every other new caller out. Behind a proxy that does not forward the client address every request shares one
  * caller: apply the limit at the proxy and pass `null` to [Oidc4VciServer.withProtocolRateLimit].
  */
 class Oidc4VciProtocolRateLimit
@@ -45,6 +47,15 @@ class Oidc4VciProtocolRateLimit
 
         private val windows = HashMap<String, Window>()
         private val overflow = HashMap<String, Window>()
+        private var nextSweepAt = 0L
+
+        /** Number of expired-window sweeps run so far (observable for tests). */
+        @Volatile
+        internal var sweepCount = 0
+            private set
+
+        /** The overflow bucket [caller] falls into once the table is full. */
+        internal fun overflowBucket(caller: String): Int = Math.floorMod(caller.hashCode() * 31 + 17, OVERFLOW_BUCKETS)
 
         /** True when [caller] still has budget on [path] in the current window. */
         @Synchronized
@@ -56,10 +67,15 @@ class Oidc4VciProtocolRateLimit
             val key = "$path\n$caller"
             var window = windows[key]
             if (window == null) {
-                if (windows.size >= maxTrackedCallers) windows.values.removeIf { now - it.startedAt >= windowMillis }
+                if (windows.size >= maxTrackedCallers && now >= nextSweepAt) {
+                    windows.values.removeIf { now - it.startedAt >= windowMillis }
+                    overflow.values.removeIf { now - it.startedAt >= windowMillis }
+                    nextSweepAt = now + maxOf(1L, windowMillis / SWEEP_DIVISOR)
+                    sweepCount++
+                }
                 window =
                     if (windows.size >= maxTrackedCallers) {
-                        overflow.getOrPut(path) { Window(now) }
+                        overflow.getOrPut("$path\n${overflowBucket(caller)}") { Window(now) }
                     } else {
                         Window(now).also { windows[key] = it }
                     }
@@ -92,5 +108,10 @@ class Oidc4VciProtocolRateLimit
                 }
                 proceed()
             }
+        }
+    
+        private companion object {
+            const val OVERFLOW_BUCKETS = 64
+            const val SWEEP_DIVISOR = 10
         }
     }

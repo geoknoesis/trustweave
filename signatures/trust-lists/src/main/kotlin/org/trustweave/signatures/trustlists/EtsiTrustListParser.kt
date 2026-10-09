@@ -3,7 +3,6 @@ package org.trustweave.signatures.trustlists
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import org.w3c.dom.NodeList
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -261,12 +260,19 @@ class EtsiTrustListParser : TrustListParser {
                 setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
                 isXIncludeAware = false
                 isExpandEntityReferences = false
+                TrustListXml.limitDepth(this)
             }
-        return try {
-            factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
-        } catch (t: Throwable) {
-            throw TrustListParseException("$where: XML is not well-formed: ${t.message}", t)
+        TrustListXml.sizeProblem(bytes)?.let { throw TrustListParseException("$where: XML rejected: $it") }
+        val document =
+            try {
+                factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
+            } catch (t: Throwable) {
+                throw TrustListParseException("$where: XML is not well-formed: ${t.message ?: t.javaClass.simpleName}", t)
+            }
+        if (TrustListXml.exceedsDepth(document.documentElement)) {
+            throw TrustListParseException("$where: XML is nested more than ${TrustListXml.MAX_DEPTH} levels deep")
         }
+        return document
     }
 
     /**
@@ -280,13 +286,16 @@ class EtsiTrustListParser : TrustListParser {
         ns: String? = TSL_NS,
     ): Element? {
         if (parent == null) return null
-        val children: NodeList = parent.childNodes
-        for (i in 0 until children.length) {
-            val child = children.item(i)
-            if (child is Element && child.namespaceURI != XMLDSIG_NS) {
-                if (matches(child, localName, ns)) return child
-                val nested = findFirst(child, localName, ns)
-                if (nested != null) return nested
+        val pending = ArrayDeque<Node>()
+        pending.addLast(parent)
+        while (pending.isNotEmpty()) {
+            val node = pending.removeLast()
+            if (node !== parent && node is Element && matches(node, localName, ns)) return node
+            // Reverse order on the stack so children are visited in document order.
+            var child = node.lastChild
+            while (child != null) {
+                if (child is Element && child.namespaceURI != XMLDSIG_NS) pending.addLast(child)
+                child = child.previousSibling
             }
         }
         return null
@@ -307,27 +316,25 @@ class EtsiTrustListParser : TrustListParser {
     ): List<Element> {
         if (parent == null) return emptyList()
         val result = mutableListOf<Element>()
-        collectMatches(parent, localName, ns, result)
-        return result
-    }
-
-    private fun collectMatches(
-        node: Node,
-        localName: String,
-        ns: String?,
-        into: MutableList<Element>,
-    ) {
-        val children = node.childNodes
-        for (i in 0 until children.length) {
-            val child = children.item(i)
-            if (child is Element && child.namespaceURI != XMLDSIG_NS) {
-                if (matches(child, localName, ns)) {
-                    into.add(child)
-                } else {
-                    collectMatches(child, localName, ns, into)
+        val pending = ArrayDeque<Node>()
+        pending.addLast(parent)
+        while (pending.isNotEmpty()) {
+            val node = pending.removeLast()
+            if (node !== parent) {
+                if (node !is Element || node.namespaceURI == XMLDSIG_NS) continue
+                if (matches(node, localName, ns)) {
+                    result.add(node)
+                    continue
                 }
             }
+            // Reverse order on the stack so children are visited in document order.
+            var child = node.lastChild
+            while (child != null) {
+                pending.addLast(child)
+                child = child.previousSibling
+            }
         }
+        return result
     }
 
     private fun matches(

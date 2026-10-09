@@ -37,6 +37,29 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **Behaviour (security) — signature-module follow-ups (`signatures:cades`, `etsi-validation`, `trust-lists`, `xades`).**
+  - CAdES: for an *encapsulated* CMS, a non-null `CadesVerificationOptions.detachedPayload` was silently ignored.
+    It must now be byte-identical to the embedded content, otherwise the result is
+    `Invalid.MissingDetachedPayload`. Pass `null` to verify the embedded content as before.
+  - CAdES: embedded revocation data (`revocationValues`, `SignedData.crls`) is now read only when revocation is
+    evaluated (policy other than `NOT_CHECKED`, or `B_LT` requested). Junk in those unsigned fields no longer fails
+    a valid B-B signature that does not use them; with a revocation policy malformed data is still `Malformed`.
+  - `EtsiSignaturePolicy`: listing WITHDRAWN in `allowedTrustStatusUris` used to also accept an unauthenticated,
+    back-datable signing time for a withdrawn service. That now needs the new, separate
+    `allowWithdrawnTrustWithoutAuthenticatedTime = true` (default `false`); otherwise a trusted time-stamp
+    (`timestampTrustAnchors`) before the withdrawal is required. The constructor stays source- and
+    binary-compatible (`@JvmOverloads`); the data class gained a trailing property, so `copy`/`componentN` change.
+  - Trust lists: new optional `TrustListStateStore` (+ `InMemoryTrustListStateStore`) as the last parameter of
+    `VerifiedTrustListLoader`. With a store the loader records `(sequence, SHA-256)` per list, and rejects a lower
+    sequence and a *different* document at an equal sequence (`TrustListRejection.ROLLBACK`); the `previous*`
+    options keep working and are combined with the store. Without a store nothing changes.
+  - Trust-list and XAdES-archive XML handling is bounded: trust-list documents over 32 MiB or nested deeper than
+    200 elements are `Malformed` / `TrustListParseException` (previously a hostile deep document could end in a
+    `StackOverflowError`); the DOM walks are iterative. An archived XAdES unsigned property nested deeper than 200
+    elements is an invalid archive time-stamp.
+  - XAdES `SignatureTimeStamp` verification now reuses `TimeStampTokenVerifier` (same decision, reworded reasons).
+  - JAdES: the payload must still be JSON (documented limitation on `DefaultJadesVerifier`; not changed because the
+    result type carries a `JsonElement`).
 - **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**
   `DefaultLotlSignatureVerifier` now requires exactly one `ds:Signature` (a direct child of the document
   element), exactly one whole-document `URI=""` reference with the enveloped-signature transform plus at most one

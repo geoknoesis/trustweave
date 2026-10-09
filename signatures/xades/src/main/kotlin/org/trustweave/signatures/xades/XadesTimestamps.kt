@@ -1,19 +1,12 @@
 package org.trustweave.signatures.xades
 
-import org.bouncycastle.cert.X509CertificateHolder
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
-import org.bouncycastle.cms.CMSSignedData
-import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.tsp.TimeStampToken
+import org.trustweave.signatures.revocation.TimeStampTokenVerifier
 import org.w3c.dom.Element
-import java.security.GeneralSecurityException
 import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import java.util.Base64
 import javax.xml.crypto.dsig.CanonicalizationMethod
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 
 /**
  * Verification of the XAdES `SignatureTimeStamp` unsigned property (ETSI EN 319 132-1 §5.5.2):
@@ -38,13 +31,6 @@ internal object XadesTimestamps {
             val reason: String,
         ) : Outcome()
     }
-
-    private val digests =
-        mapOf(
-            "2.16.840.1.101.3.4.2.1" to "SHA-256",
-            "2.16.840.1.101.3.4.2.2" to "SHA-384",
-            "2.16.840.1.101.3.4.2.3" to "SHA-512",
-        )
 
     private const val XMLNS_NS = "http://www.w3.org/2000/xmlns/"
 
@@ -180,69 +166,26 @@ internal object XadesTimestamps {
             } catch (_: IllegalArgumentException) {
                 return Outcome.Invalid("EncapsulatedTimeStamp is not base64")
             }
-        val token =
-            try {
-                TimeStampToken(CMSSignedData(tokenBytes))
-            } catch (t: Exception) {
-                return Outcome.Invalid("EncapsulatedTimeStamp is not an RFC 3161 token: ${t.message}")
+        // Token signature, TSA certificate validity and trust: the shared verifier, same as CAdES / JAdES / archive stamps.
+        val verified =
+            when (val r = TimeStampTokenVerifier.verify(tokenBytes, anchors)) {
+                is TimeStampTokenVerifier.Result.Invalid -> return Outcome.Invalid("time-stamp: ${r.reason}")
+                is TimeStampTokenVerifier.Result.Valid -> r
             }
-        val info = token.timeStampInfo
         val jca =
-            digests[info.messageImprintAlgOID.id]
-                ?: return Outcome.Invalid("unsupported time-stamp digest ${info.messageImprintAlgOID.id}")
+            TimeStampTokenVerifier.digestFor(verified.imprintOid)
+                ?: return Outcome.Invalid("unsupported time-stamp digest ${verified.imprintOid}")
         val expected =
             try {
                 MessageDigest.getInstance(jca).digest(imprintInput(signatureValue, c14n))
             } catch (t: Exception) {
                 return Outcome.Invalid("could not canonicalise <ds:SignatureValue>: ${t.message}")
             }
-        if (!MessageDigest.isEqual(expected, info.messageImprintDigest)) {
+        if (!MessageDigest.isEqual(expected, verified.imprintDigest)) {
             return Outcome.Invalid("time-stamp message imprint does not match the signature value")
         }
-        @Suppress("UNCHECKED_CAST")
-        val holders =
-            token.certificates.getMatches(
-                token.sid as org.bouncycastle.util.Selector<X509CertificateHolder>,
-            ) as Collection<X509CertificateHolder>
-        val holder = holders.firstOrNull() ?: return Outcome.Invalid("time-stamp carries no TSA certificate")
-        val genTime = info.genTime.toInstant().toKotlinInstant()
-        val tsaCert: X509Certificate
-        try {
-            token.validate(JcaSimpleSignerInfoVerifierBuilder().setProvider(BouncyCastleProvider()).build(holder))
-            tsaCert = JcaX509CertificateConverter().getCertificate(holder)
-        } catch (t: Exception) {
-            return Outcome.Invalid("time-stamp signature is invalid: ${t.message}")
-        }
-        if (!validAt(tsaCert, info.genTime)) return Outcome.Invalid("TSA certificate was not valid at the time-stamp's genTime")
-        val trusted =
-            anchors.any { anchor ->
-                (anchor == tsaCert || signedBy(tsaCert, anchor)) && validAt(anchor, info.genTime)
-            }
-        if (!trusted) return Outcome.Invalid("TSA certificate is not one of (or issued by) the configured timestampTrustAnchors")
-        return Outcome.Valid(genTime)
+        return Outcome.Valid(verified.genTime)
     }
-
-    private fun validAt(
-        cert: X509Certificate,
-        at: java.util.Date,
-    ): Boolean =
-        try {
-            cert.checkValidity(at)
-            true
-        } catch (_: GeneralSecurityException) {
-            false
-        }
-
-    private fun signedBy(
-        cert: X509Certificate,
-        issuer: X509Certificate,
-    ): Boolean =
-        try {
-            cert.verify(issuer.publicKey)
-            cert.issuerX500Principal == issuer.subjectX500Principal
-        } catch (_: GeneralSecurityException) {
-            false
-        }
 
     private fun children(
         parent: Element,

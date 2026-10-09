@@ -169,14 +169,22 @@ internal class EnvelopedTrustListSignatureValidator(
         trustedSigningCerts: List<X509Certificate>,
     ): LotlSignatureValidationResult {
         val now = clock.now()
+        TrustListXml.sizeProblem(xml)?.let {
+            return LotlSignatureValidationResult.Invalid.Malformed("trusted-list XML rejected: $it")
+        }
         val doc =
             try {
                 parseDocument(xml)
             } catch (t: Throwable) {
                 return LotlSignatureValidationResult.Invalid.Malformed(
-                    "trusted-list XML is not well-formed: ${t.message}",
+                    "trusted-list XML is not well-formed: ${t.message ?: t.javaClass.simpleName}",
                 )
             }
+        if (TrustListXml.exceedsDepth(doc.documentElement)) {
+            return LotlSignatureValidationResult.Invalid.Malformed(
+                "trusted-list XML is nested more than ${TrustListXml.MAX_DEPTH} levels deep",
+            )
+        }
 
         val signatures = doc.getElementsByTagNameNS(XMLDSIG_NS, "Signature")
         if (signatures.length == 0) return LotlSignatureValidationResult.Invalid.MissingSignature
@@ -278,6 +286,7 @@ internal class EnvelopedTrustListSignatureValidator(
                 setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
                 isXIncludeAware = false
                 isExpandEntityReferences = false
+                TrustListXml.limitDepth(this)
             }
         return factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
     }
@@ -288,7 +297,7 @@ internal class EnvelopedTrustListSignatureValidator(
      * to satisfy `ds:Reference URI="#…"` lookups; without this, valid signatures fail to validate.
      */
     private fun registerIdAttributes(root: Element) {
-        walkElements(root) { el ->
+        TrustListXml.forEachElement(root) { el ->
             for (name in ID_ATTRIBUTE_NAMES) {
                 val attr = el.getAttributeNode(name) ?: continue
                 if (!attr.isId) {
@@ -302,30 +311,19 @@ internal class EnvelopedTrustListSignatureValidator(
     private fun findDuplicateId(root: Element): String? {
         val seen = HashSet<String>()
         var duplicate: String? = null
-        walkElements(root) { el ->
-            if (duplicate != null) return@walkElements
+        TrustListXml.forEachElement(root) { el ->
+            if (duplicate != null) return@forEachElement
             val attrs = el.attributes
             for (i in 0 until attrs.length) {
                 val attr = attrs.item(i)
                 val name = attr.localName ?: attr.nodeName
                 if (name in ID_ATTRIBUTE_NAMES && !seen.add(attr.nodeValue)) {
                     duplicate = attr.nodeValue
-                    return@walkElements
+                    return@forEachElement
                 }
             }
         }
         return duplicate
-    }
-
-    private fun walkElements(
-        node: Node,
-        action: (Element) -> Unit,
-    ) {
-        if (node is Element) action(node)
-        val children = node.childNodes
-        for (i in 0 until children.length) {
-            walkElements(children.item(i), action)
-        }
     }
 
     private fun findFirstByNs(

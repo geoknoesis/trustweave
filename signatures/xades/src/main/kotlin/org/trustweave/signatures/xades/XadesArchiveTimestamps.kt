@@ -40,6 +40,9 @@ internal object XadesArchiveTimestamps {
     private const val DS_NS = "http://www.w3.org/2000/09/xmldsig#"
     private const val XMLNS_NS = "http://www.w3.org/2000/xmlns/"
 
+    /** Deepest element nesting an archived property may have; real properties are a handful of levels deep. */
+    private const val MAX_DEPTH = 200
+
     sealed class Outcome {
         /** No `ArchiveTimeStamp` element at all. */
         data object None : Outcome()
@@ -155,6 +158,8 @@ internal object XadesArchiveTimestamps {
                 MessageDigest.getInstance(jca).digest(imprintInput(signatureElement, referenceData, preceding, c14n))
             } catch (t: Exception) {
                 return Outcome.Invalid("could not canonicalise the archived signature: ${t.message}")
+            } catch (_: StackOverflowError) {
+                return Outcome.Invalid("could not canonicalise the archived signature: nesting too deep")
             }
         if (!MessageDigest.isEqual(expected, verified.imprintDigest)) {
             return Outcome.Invalid("archive time-stamp message imprint does not match the signature and its unsigned properties")
@@ -171,6 +176,7 @@ internal object XadesArchiveTimestamps {
         element: Element,
         algorithm: String,
     ): ByteArray {
+        require(!exceedsDepth(element)) { "unsigned property is nested more than $MAX_DEPTH levels deep" }
         val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
         val detached = factory.newDocumentBuilder().newDocument()
         val copy = detached.importNode(element, true) as Element
@@ -188,19 +194,21 @@ internal object XadesArchiveTimestamps {
         }
         declareUsedNamespaces(copy, emptyMap())
         val nodes = mutableListOf<Node>()
-
-        fun collect(n: Node) {
+        val pending = ArrayDeque<Node>()
+        pending.addLast(copy)
+        while (pending.isNotEmpty()) {
+            val n = pending.removeLast()
             nodes += n
             if (n is Element) {
                 for (i in 0 until n.attributes.length) nodes += n.attributes.item(i)
             }
-            var c = n.firstChild
+            // Pushed in reverse so the node set stays in document order.
+            var c = n.lastChild
             while (c != null) {
-                collect(c)
-                c = c.nextSibling
+                pending.addLast(c)
+                c = c.previousSibling
             }
         }
-        collect(copy)
         val method =
             XMLSignatureFactory.getInstance("DOM").newCanonicalizationMethod(algorithm, null as C14NMethodParameterSpec?)
         val context: XMLCryptoContext =
@@ -230,36 +238,56 @@ internal object XadesArchiveTimestamps {
      * does not carry, so the canonical form is the same as for the serialised and re-parsed document.
      */
     private fun declareUsedNamespaces(
-        element: Element,
+        root: Element,
         inherited: Map<String, String>,
     ) {
-        val scope = inherited.toMutableMap()
-        val attrs = element.attributes
-        for (i in 0 until attrs.length) {
-            val a = attrs.item(i)
-            if (a.nodeName == "xmlns") {
-                scope[""] = a.nodeValue
-            } else if (a.nodeName.startsWith("xmlns:")) {
-                scope[a.nodeName.removePrefix("xmlns:")] = a.nodeValue
+        val pending = ArrayDeque<Pair<Element, Map<String, String>>>()
+        pending.addLast(root to inherited)
+        while (pending.isNotEmpty()) {
+            val (element, outer) = pending.removeLast()
+            val scope = outer.toMutableMap()
+            val attrs = element.attributes
+            for (i in 0 until attrs.length) {
+                val a = attrs.item(i)
+                if (a.nodeName == "xmlns") {
+                    scope[""] = a.nodeValue
+                } else if (a.nodeName.startsWith("xmlns:")) {
+                    scope[a.nodeName.removePrefix("xmlns:")] = a.nodeValue
+                }
+            }
+
+            fun declare(
+                prefix: String,
+                uri: String,
+            ) {
+                if ((scope[prefix] ?: "") == uri) return
+                element.setAttributeNS(XMLNS_NS, if (prefix.isEmpty()) "xmlns" else "xmlns:$prefix", uri)
+                scope[prefix] = uri
+            }
+            declare(element.prefix ?: "", element.namespaceURI ?: "")
+            val plain = (0 until attrs.length).map { attrs.item(it) }.filter { !it.nodeName.startsWith("xmlns") && it.prefix != null }
+            plain.forEach { declare(it.prefix, it.namespaceURI ?: "") }
+            var c = element.firstChild
+            while (c != null) {
+                if (c is Element) pending.addLast(c to scope)
+                c = c.nextSibling
             }
         }
+    }
 
-        fun declare(
-            prefix: String,
-            uri: String,
-        ) {
-            if ((scope[prefix] ?: "") == uri) return
-            element.setAttributeNS(XMLNS_NS, if (prefix.isEmpty()) "xmlns" else "xmlns:$prefix", uri)
-            scope[prefix] = uri
+    private fun exceedsDepth(root: Element): Boolean {
+        val pending = ArrayDeque<Pair<Element, Int>>()
+        pending.addLast(root to 1)
+        while (pending.isNotEmpty()) {
+            val (element, depth) = pending.removeLast()
+            if (depth > MAX_DEPTH) return true
+            var c = element.firstChild
+            while (c != null) {
+                if (c is Element) pending.addLast(c to depth + 1)
+                c = c.nextSibling
+            }
         }
-        declare(element.prefix ?: "", element.namespaceURI ?: "")
-        val plain = (0 until attrs.length).map { attrs.item(it) }.filter { !it.nodeName.startsWith("xmlns") && it.prefix != null }
-        plain.forEach { declare(it.prefix, it.namespaceURI ?: "") }
-        var c = element.firstChild
-        while (c != null) {
-            if (c is Element) declareUsedNamespaces(c, scope)
-            c = c.nextSibling
-        }
+        return false
     }
 
     private fun childElements(

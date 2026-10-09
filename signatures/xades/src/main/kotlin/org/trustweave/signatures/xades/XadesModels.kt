@@ -264,6 +264,8 @@ sealed class XadesValidationResult {
          * A time-stamp was required ([XadesVerificationOptions.requireSignatureTimestamp] or
          * [XadesProfile.B_T]) but is absent, untrusted, malformed or does not match the signature; or an
          * `ArchiveTimeStamp` is present but untrusted, malformed or does not match what it covers.
+         * One subtype covers all of these; CAdES and JAdES report an imprint mismatch separately as
+         * `TimeStampMismatch` and an absent stamp as `MissingTimeStamp`.
          */
         data class TimeStampInvalid(
             val reason: String,

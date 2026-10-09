@@ -13,8 +13,8 @@ working code fail until it is adjusted.**
 
 ### Release provenance
 
-- **Provenance now covers the published files.** The release `publish` job publishes to Maven Central and to a
-  local `build/release-staging` repository in one Gradle invocation, writes `SHA256SUMS` over every staged file
+- **Provenance now covers the published files.** The release `publish` job builds into a local
+  `build/release-staging` repository (the upload to Central is separate and last, see below), writes `SHA256SUMS` over every staged file
   plus the aggregate CycloneDX SBOM, and attests all of them (and `SHA256SUMS`) with
   `actions/attest-build-provenance`. A new `release-assets` job attaches `SHA256SUMS` and the SBOM to the GitHub
   release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no
@@ -50,6 +50,15 @@ working code fail until it is adjusted.**
   old `copy(...)` signatures are gone. New: `DefaultTslSignatureVerifier` and `VerifiedTrustListLoader`, which
   verifies the LoTL and every TSL against the certificates of its LoTL pointer, enforces `NextUpdate` and
   sequence-number rollback protection, and accepts stale lists only with `TrustListLoadOptions(allowStale = true)`.
+- **Behaviour — `CyberArkKeyManagementService.sign` hashes RSA-3072/4096 with SHA-384/SHA-512** like the
+  in-memory KMS; these keys previously signed with SHA-256. Signatures are still valid RSA signatures but differ
+  from earlier output, so a verifier that pinned SHA-256 for these keys must accept the new digest, and any
+  stored expectation of the old signature bytes or JWS `alg` must be regenerated.
+- **Behaviour — `CloudWallet` percent-encodes credential ids into one object-key segment.** Ids made of letters,
+  digits and `-_.~:` keep their keys; ids containing `/`, `%`, spaces and similar characters move to encoded
+  keys, so objects already stored under a raw key for such an id are not found at the new key. A legacy-key read
+  fallback is being added in a parallel change and is not in this branch (verify and update this entry once it
+  lands); until then, re-store or copy such objects to the encoded key.
 - **BREAKING (security) — ETSI verifier hardening (XAdES, CAdES, JAdES, `etsi-validation`).**
   - XAdES: embedded `RevocationValues` earn B-LT/B-LTA credit only when a verified `ArchiveTimeStamp` covers them
     (they precede it); values appended after the last archive stamp no longer grant B-LTA.
@@ -510,11 +519,8 @@ working code fail until it is adjusted.**
   `versionId`, `versionTime` or `additional` options (a versioned result could be returned as the latest, or mask a
   deactivation), takes the TTL timestamp after the delegate returns, and drops a result fetched before a concurrent
   `invalidate`/`clear`. `CyberArkKeyManagementService.sign` rejects an algorithm incompatible with the stored key
-  (`UnsupportedAlgorithm`), hashes RSA-3072/4096 with SHA-384/SHA-512 like the in-memory KMS (these keys previously
-  signed with SHA-256), and zeroes decoded private-key bytes. `FileWallet` list/query/get/recover skip a record deleted
-  concurrently. `CloudWallet` percent-encodes credential ids into one object-key segment (ids made of letters, digits
-  and `-_.~:` keep their keys; ids containing `/`, `%`, spaces and similar characters move to encoded keys), refreshes
-  `updatedAt` on re-store, and its KDoc no longer claims encryption (none exists). `DefaultUniversalResolver` bounds the
+  (`UnsupportedAlgorithm`) and zeroes decoded private-key bytes. `FileWallet` list/query/get/recover skip a record deleted
+  concurrently. `CloudWallet` refreshes `updatedAt` on re-store, and its KDoc no longer claims encryption (none exists). `DefaultUniversalResolver` bounds the
   response-body read by `timeout` and refuses redirects, including ones followed by an injected `HttpClient`.
   `AbstractWebDidMethod` gives its clients a 30 s whole-call deadline when none is set and cancels the HTTP call when the
   coroutine is cancelled. `KeyManagementServices` and `AlgorithmDiscovery` skip a provider that throws

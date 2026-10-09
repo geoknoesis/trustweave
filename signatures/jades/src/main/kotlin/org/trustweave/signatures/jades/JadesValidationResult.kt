@@ -102,7 +102,11 @@ sealed class JadesValidationResult {
             val notAfter: Instant,
         ) : Invalid()
 
-        /** The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing). */
+        /**
+         * The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing).
+         * A key-usage/role failure, unlike the validity-window failures [CertificateExpired] and the
+         * trust-lists `LotlSignatureValidationResult.Invalid.SignerCertificateNotValid`.
+         */
         data class SignerCertificateInvalid(
             val reason: String,
         ) : Invalid()

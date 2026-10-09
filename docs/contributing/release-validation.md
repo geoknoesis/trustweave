@@ -40,14 +40,21 @@ these through the release runner's secret store. Never place key material in Gra
 properties committed to Git. `publishToMavenLocal` supports unsigned local development.
 Repository credentials and publication destinations remain release-owner configuration.
 
-The Release evidence workflow builds and validates a tagged revision (or the selected
-revision for a manual run), then produces GitHub build attestations and downloadable
-JARs/inventories. It does not publish packages. A configured workflow is not evidence
-of a successful release: retain the actual run and verify the downloaded artifact:
+The Release evidence workflow (`.github/workflows/release-evidence.yml`) has three jobs:
 
-```sh
-gh attestation verify path/to/artifact.jar -R geoknoesis/trustweave
-```
+1. `evidence` builds and validates the tagged revision (or the selected revision for a manual run) and
+   uploads the validation manifest, JARs and inventories. A `v*` tag must be an ancestor of `origin/main`.
+   It publishes nothing and holds no attestation permission.
+2. `publish` (tags only, behind the `maven-central` environment approval) builds and signs once into
+   `build/release-staging`, checks that every staged JAR is byte-identical to the one `evidence` validated,
+   writes `SHA256SUMS` (including the aggregate SBOM), attests every file and `SHA256SUMS` itself, and only as
+   its last step uploads that same directory to the Central Portal (`USER_MANAGED`, so a person still releases
+   the deployment there).
+3. `release-assets` attaches `SHA256SUMS` and the aggregate SBOM to the GitHub release for the tag.
+
+A configured workflow is not evidence of a successful release: retain the actual run. To verify a downloaded
+artifact, follow "Verifying a Release" in [SECURITY.md](../../SECURITY.md), which covers checking the download
+against `SHA256SUMS` and `gh attestation verify`.
 
 Module reports are under the root `build/<module-path>/reports/` directory; root reports are under `build/reports/`. On Windows,
 this repository normally redirects build outputs to

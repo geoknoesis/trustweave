@@ -87,8 +87,8 @@ sealed class LotlSignatureValidationResult {
 
         /**
          * The signer certificate is not valid at validation time (expired or not yet valid), or the
-         * signature claims a signing time in the future. Operationally this means the pinned
-         * certificate must be rotated or the clock is wrong; it is not evidence of tampering.
+         * signature claims a future signing time: rotate the pinned certificate or fix the clock. This is
+         * a date check; the key-usage check is cades/jades `SignerCertificateInvalid`, not this.
          */
         data class SignerCertificateNotValid(
             val cert: X509Certificate,

@@ -141,9 +141,9 @@ working code fail until it is adjusted.**
   stored expectation of the old signature bytes or JWS `alg` must be regenerated.
 - **Behaviour — `CloudWallet` percent-encodes credential ids into one object-key segment.** Ids made of letters,
   digits and `-_.~:` keep their keys; ids containing `/`, `%`, spaces and similar characters move to encoded
-  keys, so objects already stored under a raw key for such an id are not found at the new key. A legacy-key read
-  fallback is being added in a parallel change and is not in this branch (verify and update this entry once it
-  lands); until then, re-store or copy such objects to the encoded key.
+  keys. Objects already stored under the old raw key remain readable and deletable: `get` and `delete` fall back to
+  the raw key on a miss (refused for ids with `.`/`..` segments, backslashes or control characters), but new writes use
+  the encoded key, so re-store such objects to migrate them.
 - **BREAKING (security) — ETSI verifier hardening (XAdES, CAdES, JAdES, `etsi-validation`).**
   - XAdES: embedded `RevocationValues` earn B-LT/B-LTA credit only when a verified `ArchiveTimeStamp` covers them
     (they precede it); values appended after the last archive stamp no longer grant B-LTA.

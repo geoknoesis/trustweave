@@ -12,6 +12,7 @@ import java.security.PublicKey
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
+import java.util.Optional
 import java.util.UUID
 import kotlin.time.Clock
 
@@ -49,6 +50,11 @@ data class TokenEntry(
      * unlimited issuance.
      */
     val remainingCredentials: Int = offerState.credentialTypes.size.coerceAtLeast(1),
+    /**
+     * The offer's credential configurations this token has not obtained a credential for yet. Each
+     * credential is issued for exactly one of them, which is then removed.
+     */
+    val remainingConfigurations: List<String> = offerState.credentialTypes,
 ) {
     /** Binary-compatible constructor from before [remainingCredentials] existed. */
     constructor(
@@ -57,6 +63,15 @@ data class TokenEntry(
         cNonce: String,
         cNonceIssuedAt: Long,
     ) : this(offerState, issuedAt, cNonce, cNonceIssuedAt, offerState.credentialTypes.size.coerceAtLeast(1))
+
+    /** Binary-compatible constructor from before [remainingConfigurations] existed. */
+    constructor(
+        offerState: OfferState,
+        issuedAt: Long,
+        cNonce: String,
+        cNonceIssuedAt: Long,
+        remainingCredentials: Int,
+    ) : this(offerState, issuedAt, cNonce, cNonceIssuedAt, remainingCredentials, offerState.credentialTypes)
 }
 
 /** The access token is unknown or has outlived its advertised `expires_in` (→ `invalid_token`). */
@@ -368,6 +383,22 @@ class Oidc4VciIssuerService
             format: String,
             credentialTypes: List<String>,
             proofJwt: String?,
+        ): CredentialServerResponse = issueCredential(accessToken, format, credentialTypes, proofJwt, null)
+
+        /**
+         * As [issueCredential] above, for the credential configuration [credentialConfigurationId]
+         * (OID4VCI `credential_configuration_id`). Each credential is issued for exactly one
+         * configuration of the offer and uses it up: an offer for several configurations yields one
+         * credential per configuration, never every configuration in every credential. When the request
+         * names none, the first configuration of [credentialTypes] still open in the offer is used, and
+         * failing that the next open configuration in offer order.
+         */
+        suspend fun issueCredential(
+            accessToken: String,
+            format: String,
+            credentialTypes: List<String>,
+            proofJwt: String?,
+            credentialConfigurationId: String?,
         ): CredentialServerResponse {
             val entry = requireValidToken(accessToken)
             if (entry.remainingCredentials <= 0) throw tokenExhausted()
@@ -382,26 +413,31 @@ class Oidc4VciIssuerService
                     },
                 )
             }
-            val subjectDid = verifyProofOrThrow(accessToken, proofJwt)
+            val configuration = chooseConfiguration(entry, credentialTypes, credentialConfigurationId)
+            val proven = verifyProofOrThrow(accessToken, proofJwt)
             // Reserved atomically before signing, so concurrent requests cannot together exceed the
             // offer; given back if signing fails, since nothing was issued.
-            reserveCredential(accessToken)
+            reserveCredential(accessToken, configuration)
             val credential =
                 try {
                     builder.build(
                         Oidc4VciCredentialRequest(
                             format = format,
-                            credentialTypes = entry.offerState.credentialTypes.ifEmpty { credentialTypes },
+                            credentialTypes = listOf(configuration ?: credentialTypes.firstOrNull() ?: ""),
                             issuerDid = issuerDid,
-                            subjectDid = subjectDid,
+                            subjectDid = proven.subjectDid,
                             claims = JsonObject(entry.offerState.claims.filterKeys { it != "id" }),
                         ),
                     )
                 } catch (cancelled: kotlin.coroutines.cancellation.CancellationException) {
-                    releaseCredential(accessToken)
+                    releaseCredential(accessToken, configuration)
+                    restoreCNonce(accessToken, proven)
                     throw cancelled
                 } catch (e: Throwable) {
-                    releaseCredential(accessToken)
+                    // Nothing was issued: give back the credential slot and the c_nonce the proof used,
+                    // so the wallet (which never saw a replacement nonce) can retry with the one it holds.
+                    releaseCredential(accessToken, configuration)
+                    restoreCNonce(accessToken, proven)
                     throw e
                 }
             // Rotate the c_nonce on success too (OID4VCI v1.0 §7.3): each proof is single-use.
@@ -412,6 +448,25 @@ class Oidc4VciIssuerService
                 cNonce = freshNonce,
                 cNonceExpiresIn = cNonceTtlSeconds,
             )
+        }
+
+        /** The offer configuration this request is for, or `null` for a (legacy) token with none recorded. */
+        private fun chooseConfiguration(
+            entry: TokenEntry,
+            credentialTypes: List<String>,
+            requestedId: String?,
+        ): String? {
+            val open = entry.remainingConfigurations
+            if (open.isEmpty()) return null
+            if (requestedId != null) {
+                if (requestedId in open) return requestedId
+                throw if (requestedId in entry.offerState.credentialTypes) {
+                    tokenExhausted()
+                } else {
+                    CredentialLimitExceededException("Credential configuration '$requestedId' is not part of this token's offer")
+                }
+            }
+            return credentialTypes.firstOrNull { it in open } ?: open.first()
         }
 
         fun getDeferredCredential(
@@ -504,11 +559,22 @@ class Oidc4VciIssuerService
                 "This access token has already obtained the credentials its offer covered",
             )
 
-        private fun reserveCredential(accessToken: String) {
+        private fun reserveCredential(
+            accessToken: String,
+            configuration: String?,
+        ) {
             val reserved =
                 stateStore.updateToken(accessToken) { entry ->
-                    if (entry.remainingCredentials > 0) {
-                        entry.copy(remainingCredentials = entry.remainingCredentials - 1) to true
+                    if (entry.remainingCredentials > 0 && (configuration == null || configuration in entry.remainingConfigurations)) {
+                        entry.copy(
+                            remainingCredentials = entry.remainingCredentials - 1,
+                            remainingConfigurations =
+                                if (configuration == null) {
+                                    entry.remainingConfigurations
+                                } else {
+                                    entry.remainingConfigurations.toMutableList().apply { remove(configuration) }
+                                },
+                        ) to true
                     } else {
                         entry to false
                     }
@@ -516,9 +582,33 @@ class Oidc4VciIssuerService
             if (!reserved) throw tokenExhausted()
         }
 
-        private fun releaseCredential(accessToken: String) {
+        private fun releaseCredential(
+            accessToken: String,
+            configuration: String?,
+        ) {
             stateStore.updateToken(accessToken) { entry ->
-                entry.copy(remainingCredentials = entry.remainingCredentials + 1) to Unit
+                entry.copy(
+                    remainingCredentials = entry.remainingCredentials + 1,
+                    remainingConfigurations =
+                        if (configuration == null) entry.remainingConfigurations else entry.remainingConfigurations + configuration,
+                ) to Unit
+            }
+        }
+
+        /**
+         * Puts back the `c_nonce` a failed issuance consumed, unless it has been rotated again since
+         * (another request already moved on), in which case the newer nonce stays.
+         */
+        private fun restoreCNonce(
+            accessToken: String,
+            proven: ProvenProof,
+        ) {
+            stateStore.updateToken(accessToken) { entry ->
+                if (entry.cNonce == proven.rotatedTo) {
+                    entry.copy(cNonce = proven.consumedNonce, cNonceIssuedAt = proven.consumedNonceIssuedAt) to Unit
+                } else {
+                    entry to Unit
+                }
             }
         }
 
@@ -542,7 +632,7 @@ class Oidc4VciIssuerService
         private fun verifyProofOrThrow(
             accessToken: String,
             proofJwt: String?,
-        ): String {
+        ): ProvenProof {
             fun reject(reason: String): Nothing = throw InvalidProofException(reason, rotateCNonce(accessToken), cNonceTtlSeconds)
 
             if (proofJwt.isNullOrBlank()) reject("Missing proof.jwt in credential request")
@@ -564,21 +654,37 @@ class Oidc4VciIssuerService
                     lenientJson.parseToJsonElement(String(decoder.decode(parts[1]), Charsets.UTF_8)).jsonObject
                 }.getOrNull() ?: reject("proof.jwt payload is not valid base64url JSON")
 
-            val alg = header["alg"]?.jsonPrimitive?.contentOrNull
+            // A member of the wrong JSON type (object/array/number where a string is required) is a
+            // malformed proof, never an unexpected server error.
+            fun JsonObject.text(
+                name: String,
+                where: String,
+            ): String? {
+                val value = this[name] ?: return null
+                if (value is JsonNull) return null
+                val primitive = value as? JsonPrimitive
+                if (primitive == null || !primitive.isString) reject("proof.jwt $where '$name' must be a string")
+                return primitive.content
+            }
+
+            val alg = header.text("alg", "header")
             if (alg == null || alg.equals("none", ignoreCase = true)) {
                 reject("Unsigned proof (alg=none) is not accepted")
             }
             if (alg != "EdDSA") reject("Unsupported proof alg '$alg' — only EdDSA (Ed25519) is supported")
             // OID4VCI v1.0 Appendix F.1: the typ header is REQUIRED, which is what stops a JWT minted
             // for another purpose from being replayed as a proof of possession.
-            val typ = header["typ"]?.jsonPrimitive?.contentOrNull
+            val typ = header.text("typ", "header")
             if (typ != "openid4vci-proof+jwt") {
                 reject("proof.jwt typ must be 'openid4vci-proof+jwt', got '${typ ?: "<absent>"}'")
             }
 
             val proofKey =
-                extractProofKey(header)
-                    ?: reject("proof.jwt carries no usable key (jwk header with OKP/Ed25519, or did:key kid, required)")
+                try {
+                    extractProofKey(header)
+                } catch (_: RuntimeException) {
+                    null
+                } ?: reject("proof.jwt carries no usable key (jwk header with OKP/Ed25519, or did:key kid, required)")
 
             val signature =
                 runCatching { decoder.decode(parts[2]) }.getOrNull()
@@ -596,32 +702,45 @@ class Oidc4VciIssuerService
                 }.getOrDefault(false)
             if (!verified) reject("proof.jwt signature verification failed against the key in its header")
 
-            val aud = payload["aud"]?.jsonPrimitive?.contentOrNull
+            val aud = payload.text("aud", "payload")
             if (aud != baseUrl) {
                 reject("proof.jwt aud '${aud ?: "<absent>"}' does not match credential issuer '$baseUrl'")
             }
 
-            val nonce =
-                payload["nonce"]?.jsonPrimitive?.contentOrNull
-                    ?: reject("proof.jwt is missing the nonce claim")
+            val nonce = payload.text("nonce", "payload") ?: reject("proof.jwt is missing the nonce claim")
             // Atomic consume-and-rotate: the compare and the rotation happen inside one
             // updateToken step so a c_nonce is strictly single-use — two concurrent
             // credential requests echoing the same nonce cannot both pass.
-            if (!consumeCNonce(accessToken, nonce)) {
-                reject("proof.jwt nonce does not match the current c_nonce (or it expired) — retry with the fresh c_nonce")
-            }
+            val consumed =
+                consumeCNonce(accessToken, nonce)
+                    ?: reject("proof.jwt nonce does not match the current c_nonce (or it expired) — retry with the fresh c_nonce")
 
-            return proofKey.subjectDid
+            return ProvenProof(proofKey.subjectDid, consumed.consumedNonce, consumed.consumedNonceIssuedAt, consumed.rotatedTo)
         }
+
+        /** The outcome of a verified proof: the proven subject and the `c_nonce` it consumed (for rollback). */
+        private class ProvenProof(
+            val subjectDid: String,
+            val consumedNonce: String,
+            val consumedNonceIssuedAt: Long,
+            val rotatedTo: String,
+        )
+
+        private class ConsumedNonce(
+            val consumedNonce: String,
+            val consumedNonceIssuedAt: Long,
+            val rotatedTo: String,
+        )
 
         /**
          * Atomically validates [presentedNonce] against the token's live, unexpired `c_nonce`
          * and rotates it in the same [Oidc4VciIssuerStateStore.updateToken] step (single-use).
+         * Returns what was consumed (so a failed issuance can put it back), or `null` on mismatch.
          */
         private fun consumeCNonce(
             accessToken: String,
             presentedNonce: String,
-        ): Boolean =
+        ): ConsumedNonce? =
             stateStore.updateToken(accessToken) { entry ->
                 val live = nowMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
                 val matches =
@@ -630,11 +749,13 @@ class Oidc4VciIssuerService
                         entry.cNonce.toByteArray(Charsets.UTF_8),
                     )
                 if (live && matches) {
-                    entry.copy(cNonce = UUID.randomUUID().toString(), cNonceIssuedAt = nowMillis()) to true
+                    val fresh = UUID.randomUUID().toString()
+                    entry.copy(cNonce = fresh, cNonceIssuedAt = nowMillis()) to
+                        Optional.of(ConsumedNonce(entry.cNonce, entry.cNonceIssuedAt, fresh))
                 } else {
-                    entry to false
+                    entry to Optional.empty()
                 }
-            } ?: false
+            }?.orElse(null)
 
         /** A verified proof key: the JCA public key plus the subject DID it binds the credential to. */
         private data class ProofKey(
@@ -649,16 +770,16 @@ class Oidc4VciIssuerService
          */
         private fun extractProofKey(header: JsonObject): ProofKey? {
             (header["jwk"] as? JsonObject)?.let { jwk ->
-                if (jwk["kty"]?.jsonPrimitive?.contentOrNull != "OKP") return null
-                if (jwk["crv"]?.jsonPrimitive?.contentOrNull != "Ed25519") return null
-                val x = jwk["x"]?.jsonPrimitive?.contentOrNull ?: return null
+                if ((jwk["kty"] as? JsonPrimitive)?.contentOrNull != "OKP") return null
+                if ((jwk["crv"] as? JsonPrimitive)?.contentOrNull != "Ed25519") return null
+                val x = (jwk["x"] as? JsonPrimitive)?.contentOrNull ?: return null
                 val raw = runCatching { Base64.getUrlDecoder().decode(x) }.getOrNull() ?: return null
                 val publicKey = createEd25519PublicKey(raw) ?: return null
                 val didKey = "did:key:z" + (ED25519_MULTICODEC_PREFIX + raw).encodeBase58()
                 return ProofKey(publicKey, didKey)
             }
 
-            (header["kid"]?.jsonPrimitive?.contentOrNull)?.let { kid ->
+            ((header["kid"] as? JsonPrimitive)?.contentOrNull)?.let { kid ->
                 if (!kid.startsWith("did:key:z")) return null
                 val didKey = kid.substringBefore("#")
                 val multibase = didKey.removePrefix("did:key:")

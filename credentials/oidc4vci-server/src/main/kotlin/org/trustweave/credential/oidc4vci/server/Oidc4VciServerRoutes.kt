@@ -123,9 +123,11 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
         val format: String
         val types: List<String>
         val proofJwt: String?
+        val configurationId: String?
         try {
             val body = call.receive<JsonObject>()
             format = body.optionalString("format") ?: "jwt_vc_json"
+            configurationId = body.optionalString("credential_configuration_id")
             types =
                 body["credential_definition"]
                     ?.takeUnless { it is JsonNull }
@@ -148,7 +150,7 @@ fun Routing.configureOidc4VciServerRoutes(service: Oidc4VciIssuerService) {
         }
         val resp =
             try {
-                service.issueCredential(accessToken, format, types, proofJwt)
+                service.issueCredential(accessToken, format, types, proofJwt, configurationId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: InvalidProofException) {

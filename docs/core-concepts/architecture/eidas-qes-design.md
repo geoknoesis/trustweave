@@ -41,16 +41,17 @@ the current `main` branch and link to the actual sources where applicable.
 
 ## 2. Non-goals (MVP)
 
-- CAdES (ETSI EN 319 122-1), XAdES (ETSI EN 319 132-1), PAdES (ETSI EN 319 142-1). Out of scope —
-  the MVP targets JSON payloads only.
-- The B-LT and B-LTA JAdES profiles. Long-term-validation material (validation data references,
-  archival timestamps) is deferred until B-B + B-T are stable.
+- CAdES (ETSI EN 319 122-1), XAdES (ETSI EN 319 132-1), PAdES (ETSI EN 319 142-1). Out of scope for
+  the original MVP, which targeted JSON payloads only. `signatures:cades`, `signatures:xades` and
+  `signatures:pades` modules have since been added; see section 13 for the current status.
+- The B-LT and B-LTA JAdES profiles. Not part of the MVP; B-LT has since been added and JAdES B-LTA
+  remains blocked (section 13).
 - Full conformance to ETSI EN 319 102-1 *Procedures for Creation and Validation of AdES Digital
   Signatures*. The MVP provides cryptographic validation and trust-anchor resolution; the full
   validation procedure (signature policy evaluation, time-of-signing certificate validity,
   PoE-driven status determination) is a follow-up.
-- Self-verification of the LoTL XAdES signature. The MVP treats the LoTL XML as a pre-verified
-  trust-anchor input supplied by the operator.
+- Self-verification of the LoTL XAdES signature. The MVP treated the LoTL XML as a pre-verified
+  trust-anchor input; `VerifiedTrustListLoader` has since added in-band verification (section 13).
 - Conversion of any module to Kotlin Multiplatform. TrustWeave remains JVM-only (Kotlin 2.3.21,
   JVM 21) for this work.
 
@@ -60,7 +61,7 @@ the current `main` branch and link to the actual sources where applicable.
 |---|---|---|
 | eIDAS 2.0 — Regulation (EU) 2024/1183 | OJ L 2024/1183, 30 Apr 2024 | Legal definitions (AES, QES, QSCD, QTSP); Annex VII (qualified certificate content); justifies the trust-list-driven validation model. |
 | ETSI EN 319 122-1 | v1.3.1 (2023-06) | CAdES base — referenced only because JAdES uses several CAdES attribute semantics (`signing-certificate-v2`, signing-time). Out of scope for code. |
-| ETSI EN 319 132-1 | v1.3.1 (2023-06) | XAdES — out of scope for the QES code path, but the LoTL XML uses XAdES signatures (deferred LoTL self-verification will depend on this). |
+| ETSI EN 319 132-1 | v1.3.1 (2023-06) | XAdES — out of scope for the QES code path, but the LoTL XML uses XAdES signatures (in-band LoTL/TSL signature verification now implements this). |
 | **ETSI TS 119 182-1 (JAdES)** | v1.2.1 (2023-06) | **Primary.** Defines JAdES header parameters (`sigT`, `x5t#S256`, `x5c`, `sigPSt`, `sigPId`, `etsiU`, `xVals`, `rVals`, `arcTst`), the B-B and B-T profiles, and the canonical serialization rules used for both signing input and verification. |
 | ETSI EN 319 102-1 | v1.4.1 (2023-06) | Validation procedure model. MVP implements only the building-block "Basic Signature Validation" path; "Validation with Time" and "Validation with Time and Validation Data" are deferred. |
 | ETSI TS 119 612 | v2.3.1 (2024-05) | Trusted List format. Provides the schema for LoTL and per-MS TSL XML — used by `trust-lists` to parse `TrustServiceProvider`, `TSPService`, and `ServiceDigitalIdentity` structures. |
@@ -881,18 +882,21 @@ test-scope fixtures and a CI container image.
 
 In suggested priority order:
 
-1. **JAdES B-LT and B-LTA profiles.** Adds validation-data references (`xVals`, `rVals`,
-   `axVals`, `arVals`) for long-term validation and the archival time-stamp (`arcTst`) for
-   archival validation. Required for documents that must remain verifiable beyond the
-   signer-cert lifetime.
-2. **Self-verification of the LoTL XAdES signature.** Brings the trust-list ingestion in-band
-   so operators no longer need an out-of-band trust path to the LoTL XML. Pulls in an XML
-   Signature implementation (Santuario via the JDK is sufficient).
+1. **JAdES long-term profiles.** *Status:* B-LT is done (validation-data references `xVals` and
+   `rVals`, checked by `DefaultJadesVerifier`). JAdES B-LTA is **blocked**: the verifier never credits an
+   `arcTst` as B-LTA until the archive time-stamp imprint of ETSI EN 319 182-1 5.3.6 is implemented, and the
+   signer's current `arcTst` input is a private imprint, not the standard one. XAdES B-LTA is done
+   (`ArchiveTimeStamp`, with embedded revocation values counting only when a verified archive stamp
+   covers them).
+2. **Self-verification of the LoTL XAdES signature.** *Done.* `DefaultLotlSignatureVerifier`,
+   `DefaultTslSignatureVerifier` and `VerifiedTrustListLoader` verify the LoTL and every Member-State TSL
+   in-band (see [VC API challenges and trust-list loading](../../how-to/vc-api-challenges-and-trust-lists.md)).
 3. **Full ETSI EN 319 102-1 validation pipeline.** Signature policy evaluation, validation
    context initialization, PoE-driven status determination, time-of-signing certificate
    validity. Required for formal conformance claims.
-4. **CAdES (ETSI EN 319 122-1) and PAdES (ETSI EN 319 142-1).** Needed once TrustWeave is used
-   to sign binary documents (CMS containers) and PDFs.
+4. **CAdES (ETSI EN 319 122-1) and PAdES (ETSI EN 319 142-1).** Modules `signatures:cades` and
+   `signatures:pades` now exist for binary documents (CMS containers) and PDFs; conformance claims
+   still depend on item 3.
 5. **Periodic LoTL/TSL refresh.** `TrustListRefreshScheduler` + `TrustListStore` SPI.
 6. **eIDAS-compliant audit logging.** ETSI EN 319 421 sets audit requirements for QTSP
    operations. The signing-side audit trail needs to be reproducible, non-repudiable, and

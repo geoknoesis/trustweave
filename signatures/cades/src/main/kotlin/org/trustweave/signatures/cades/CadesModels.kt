@@ -234,7 +234,10 @@ sealed class CadesValidationResult {
             val reason: String,
         ) : Invalid()
 
-        /** Time-stamp present but its `messageImprint` does not match the signature value. */
+        /**
+         * Time-stamp present but its `messageImprint` does not match the signature value. XAdES has no
+         * such subtype: its `TimeStampInvalid` covers an absent, untrusted, malformed or mismatching stamp.
+         */
         data class TimeStampMismatch(
             val reason: String,
         ) : Invalid()
@@ -251,7 +254,11 @@ sealed class CadesValidationResult {
             val reason: String,
         ) : Invalid()
 
-        /** The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing). */
+        /**
+         * The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing).
+         * A key-usage/role failure, unlike the validity-window failures [CertificateExpired] and the
+         * trust-lists `LotlSignatureValidationResult.Invalid.SignerCertificateNotValid`.
+         */
         data class SignerCertificateInvalid(
             val reason: String,
         ) : Invalid()

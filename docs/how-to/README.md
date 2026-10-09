@@ -44,6 +44,7 @@ These guides cover the essential operations you'll use in most TrustWeave applic
 - **[Anchor to Blockchain](blockchain-anchoring.md)** - Anchor data for tamper evidence
 - **[Multi-Chain Anchoring](multi-chain-anchoring.md)** - Anchor to multiple blockchains for redundancy
 - **[Exchange Credentials](exchange-credentials.md)** - Exchange credentials using multiple protocols (DIDComm, OIDC4VCI, CHAPI)
+- **[VC API Challenges and Trust Lists](vc-api-challenges-and-trust-lists.md)** - One-time presentation challenges, holder binding and signature-verified EU trust-list loading
 - **[Handle Errors](../api-reference/advanced/error-handling.md)** - Error handling patterns and best practices
 
 ### Advanced Tasks

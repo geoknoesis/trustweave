@@ -24,7 +24,7 @@ jackson3 = "3.1.4"
 # and GHSA-rwm7-x88c-3g2p (fixed in 4.2.13 to 4.2.16). Only the 4.2 line is pinned: other libraries use Netty 4.1.
 netty42 = "4.2.18.Final"
 gson = "2.14.0"
-jayway-jsonpath = "2.9.0"
+jayway-jsonpath = "3.0.0"
 spring-boot = "4.1.1"
 
 # Observability

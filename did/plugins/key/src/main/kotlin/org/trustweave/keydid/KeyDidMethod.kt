@@ -2,7 +2,6 @@ package org.trustweave.keydid
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.util.decodeBase58
@@ -141,68 +140,39 @@ class KeyDidMethod(
                     did.value
                 )
 
-            // Use updateMutex to make the cache-check → derive → store sequence atomic.
-            // Without the lock, two concurrent calls for the same uncached DID would both
-            // miss the cache, both derive a new document with independent `created`
-            // timestamps, and both call storeDocument — corrupting the stored metadata.
-            updateMutex.withLock {
-                // Re-check inside the lock in case another coroutine stored the document
-                // while this coroutine was waiting to acquire the lock.
-                val stored = getStoredDocument(did)
-                if (stored != null) {
-                    val storedKey = stored.verificationMethod.firstOrNull()?.publicKeyMultibase
-                    if (storedKey == multibaseEncoded) {
-                        val metadata = getDocumentMetadata(did)
-                        return@withLock DidMethodUtils.createSuccessResolutionResult(
-                            stored,
-                            method,
-                            metadata?.created,
-                            metadata?.updated
-                        )
-                    }
-                    // Key mismatch — cached document is inconsistent; fall through to re-derive
-                }
+            // did:key is self-certifying: reconstruct the document deterministically from the
+            // public key bytes encoded in the DID itself. No external registry required, and the
+            // result is never retained: the DID string is caller-chosen, so caching every resolved
+            // document would be an unbounded-memory vector for no benefit.
+            val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
+            val didStr = did.value
+            val didObj = Did(didStr)
+            val vmIdStr = "$didStr#$multibaseEncoded"
+            val vmId = VerificationMethodId.parse(vmIdStr, didObj)
 
-                // did:key is self-certifying: reconstruct the document deterministically from
-                // the public key bytes encoded in the DID itself. No external registry required.
-                val vmType = DidMethodUtils.algorithmToVerificationMethodType(algorithm)
-                val didStr = did.value
-                val didObj = Did(didStr)
-                val vmIdStr = "$didStr#$multibaseEncoded"
-                val vmId = VerificationMethodId.parse(vmIdStr, didObj)
+            // parseMulticodecKey already rejected malformed EC points, so the JWK is derivable.
+            val jwk = buildJwkFromBytes(algorithm, publicKeyBytes)
+            val verificationMethod = VerificationMethod(
+                id = vmId,
+                type = vmType,
+                controller = didObj,
+                publicKeyMultibase = multibaseEncoded,
+                publicKeyJwk = jwk
+            )
 
-                val verificationMethod = VerificationMethod(
-                    id = vmId,
-                    type = vmType,
-                    controller = didObj,
-                    publicKeyMultibase = multibaseEncoded,
-                    publicKeyJwk = buildJwkFromBytes(algorithm, publicKeyBytes)
-                )
+            // X25519 keys are key-agreement-only (DIDComm encryption); signature
+            // algorithms get authentication/assertion relationships instead.
+            val isKeyAgreementOnly = algorithm.uppercase() == "X25519"
+            val document = DidMethodUtils.buildDidDocument(
+                did = didStr,
+                verificationMethod = listOf(verificationMethod),
+                authentication = if (isKeyAgreementOnly) emptyList() else listOf(vmIdStr),
+                assertionMethod = if (isKeyAgreementOnly) null else listOf(vmIdStr),
+                keyAgreement = if (isKeyAgreementOnly) listOf(vmIdStr) else null
+            )
 
-                // X25519 keys are key-agreement-only (DIDComm encryption); signature
-                // algorithms get authentication/assertion relationships instead.
-                val isKeyAgreementOnly = algorithm.uppercase() == "X25519"
-                val document = DidMethodUtils.buildDidDocument(
-                    did = didStr,
-                    verificationMethod = listOf(verificationMethod),
-                    authentication = if (isKeyAgreementOnly) emptyList() else listOf(vmIdStr),
-                    assertionMethod = if (isKeyAgreementOnly) null else listOf(vmIdStr),
-                    keyAgreement = if (isKeyAgreementOnly) listOf(vmIdStr) else null
-                )
-
-                // Cache the derived document (already inside the lock, writes directly).
-                // did:key is self-certifying and can never be the subject of a real Update
-                // operation, so §4.3 `updated` is omitted rather than fabricated from `now`
-                // (the same defect this branch fixed for the shared storeDocument() path).
-                val didString = didStr
-                val now = kotlin.time.Clock.System.now()
-                documents[didString] = document
-                documentMetadata[didString] = org.trustweave.did.model.DidDocumentMetadata(
-                    created = now
-                )
-
-                DidMethodUtils.createSuccessResolutionResult(document, method, now)
-            }
+            // §4.3 `updated` is omitted: did:key can never be the subject of an Update operation.
+            DidMethodUtils.createSuccessResolutionResult(document, method, kotlin.time.Clock.System.now())
         } catch (e: CancellationException) {
             throw e
         } catch (e: TrustWeaveException) {

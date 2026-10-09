@@ -63,18 +63,8 @@ object ConfigCacheKey {
      * @return Cache key string of the form `provider:<sha256-hex>`
      */
     fun create(providerName: String, options: Map<String, Any?>): String {
-        // Normalize map: sort keys, handle nulls, normalize values
-        val normalizedOptions = normalizeMap(options)
-
-        // Serialize deterministically: key1=value1:key2=value2:...
-        val configPart = normalizedOptions.entries
-            .sortedBy { it.key }
-            .joinToString(":") { (key, value) ->
-                "$key=${normalizeValue(value)}"
-            }
-
-        // Hash the serialized options so the key never contains raw secret values.
-        return "$providerName:${sha256Hex(configPart)}"
+        // Hash the canonical form so the key never contains raw secret values.
+        return "$providerName:${sha256Hex(canonical(options))}"
     }
 
     /**
@@ -86,42 +76,59 @@ object ConfigCacheKey {
             .joinToString("") { "%02x".format(it) }
     }
 
-    /**
-     * Normalizes a map by sorting keys and handling nested structures.
-     */
-    private fun normalizeMap(map: Map<String, Any?>): Map<String, Any?> {
-        return map.entries
-            .sortedBy { it.key }
-            .associate { (key, value) ->
-                key to normalizeValue(value)
-            }
+    /** Appends a type tag and a length-prefixed text, so no value can run into its neighbour. */
+    private fun StringBuilder.text(tag: Char, text: String) {
+        append(tag).append(text.length).append(':').append(text)
     }
 
     /**
-     * Normalizes a value for consistent comparison.
-     * Handles nulls, collections, and nested maps.
+     * Unambiguous, deterministic encoding of a configuration value.
+     *
+     * Every scalar carries a type tag and a length prefix, so a delimiter inside a value
+     * cannot shift the boundary of the next one, `null` cannot collide with the string
+     * `"null"`, and a number cannot collide with its string form. Maps are ordered by key,
+     * sets by their encoded elements (they have no order), and lists, arrays and other ordered
+     * collections keep their order.
      */
-    private fun normalizeValue(value: Any?): String {
-        return when (value) {
-            null -> "null"
-            is Boolean -> value.toString()
-            is Number -> value.toString()
-            is String -> value
+    private fun canonical(value: Any?): String {
+        val out = StringBuilder()
+        encode(value, out)
+        return out.toString()
+    }
+
+    private fun encode(value: Any?, out: StringBuilder) {
+        when (value) {
+            null -> out.append('n')
+            is Boolean -> out.append(if (value) 'T' else 'F')
+            is Number -> out.text('d', value.toString())
+            is String -> out.text('s', value)
+            is CharSequence -> out.text('s', value.toString())
+            is Enum<*> -> out.text('e', value.javaClass.name + "." + value.name)
             is Map<*, *> -> {
-                val normalized = normalizeMap(value.entries.associate { 
-                    (k, v) -> (k?.toString() ?: "null") to v 
-                })
-                normalized.entries
-                    .sortedBy { it.key }
-                    .joinToString(",") { "${it.key}=${normalizeValue(it.value)}" }
+                val entries = value.entries
+                    .map { (k, v) -> canonical(k) to v }
+                    .sortedBy { it.first }
+                out.append('m').append(entries.size).append('{')
+                for ((k, v) in entries) {
+                    out.append(k)
+                    encode(v, out)
+                }
+                out.append('}')
             }
-            is Collection<*> -> {
-                value.map { normalizeValue(it) }
-                    .sorted()
-                    .joinToString(",")
+            is Set<*> -> {
+                val elements = value.map { canonical(it) }.sorted()
+                out.append('S').append(elements.size).append('[')
+                elements.forEach { out.append(it) }
+                out.append(']')
             }
-            else -> value.toString()
+            is Iterable<*> -> {
+                val elements = value.toList()
+                out.append('l').append(elements.size).append('[')
+                elements.forEach { encode(it, out) }
+                out.append(']')
+            }
+            is Array<*> -> encode(value.toList(), out)
+            else -> out.text('o', value.javaClass.name + "|" + value.toString())
         }
     }
 }
-

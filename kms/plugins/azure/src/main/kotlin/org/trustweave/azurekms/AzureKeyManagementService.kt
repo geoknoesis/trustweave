@@ -410,7 +410,7 @@ class AzureKeyManagementService(
                         val client =
                             runInterruptible {
                                 CryptographyClientBuilder()
-                                    .keyIdentifier(resolvedKeyId)
+                                    .keyIdentifier(AlgorithmMapping.toKeyIdentifierUrl(config.vaultUrl, resolvedKeyId))
                                     .credential(azureCredential)
                                     .buildClient()
                             }

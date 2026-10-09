@@ -201,6 +201,19 @@ object AlgorithmMapping {
     }
 
     /**
+     * Builds the full key identifier URL (`https://{vault}/keys/{name}[/{version}]`) that
+     * `CryptographyClientBuilder.keyIdentifier` requires: the SDK rejects a bare key name as
+     * malformed.
+     *
+     * @param vaultUrl The vault URL from configuration
+     * @param resolvedKeyId A value returned by [resolveKeyId] (`name` or `name/version`)
+     */
+    fun toKeyIdentifierUrl(
+        vaultUrl: String,
+        resolvedKeyId: String,
+    ): String = "${vaultUrl.trimEnd('/')}/keys/$resolvedKeyId"
+
+    /**
      * Parses algorithm from Azure Key Vault key type and curve name.
      *
      * @param keyType Azure Key Vault KeyType

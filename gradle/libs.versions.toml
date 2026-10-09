@@ -1,6 +1,6 @@
 [versions]
 # Kotlin
-kotlin = "2.3.21"
+kotlin = "2.4.20"
 kotlinx-serialization = "1.11.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-coroutines-test = "1.11.0"
@@ -63,7 +63,7 @@ mongodb-bson = "4.11.5"
 azure-identity = "1.18.7"
 
 # Build tools
-kover = "0.9.8"
+kover = "0.9.11"
 cyclonedx = "3.4.1"
 dokka = "2.2.0"
 slf4j = "2.0.20"

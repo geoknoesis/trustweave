@@ -1,0 +1,4 @@
+{
+  "_comment": "Binary jars the evidence build (build/**/libs) produces but release never stages. Each entry needs a reason. Anything staged must be validated; anything validated must be staged unless listed here. Empty until a tag run shows which jars, if any, are build-only.",
+  "allowed": []
+}

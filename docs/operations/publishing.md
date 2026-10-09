@@ -29,6 +29,12 @@ These are the parts no script can do for you.
 2. **Create a signing key** and record it as repository secrets:
    - `TRUSTWEAVE_SIGNING_KEY` — the ASCII-armoured private key
    - `TRUSTWEAVE_SIGNING_PASSWORD` — its passphrase
+   - Optionally (recommended) set the repository **variables** `TRUSTWEAVE_SIGNING_PUBLIC_KEY` (the
+     ASCII-armoured PUBLIC key) and `TRUSTWEAVE_SIGNING_FINGERPRINT` (its full fingerprint). When the public
+     key is set, the publish job imports it and runs `gpg --verify` on every staged `.asc` before attesting;
+     the fingerprint, when set, must also match the signing key. Without them the job still requires an
+     `.asc` next to every non-sidecar file but only warns that the signatures were not cryptographically
+     checked.
 3. **Record the portal credentials** as `TRUSTWEAVE_PUBLISH_USERNAME` and
    `TRUSTWEAVE_PUBLISH_PASSWORD`. These are the portal's generated token pair, not an account
    password.
@@ -52,14 +58,29 @@ These are the parts no script can do for you.
 5. The `publish` job waits for a reviewer on the `maven-central` environment. It then re-verifies
    the tag against the project version, regenerates and validates every POM, builds the signed
    artifacts once into `build/release-staging`, fails unless every staged jar is byte-identical to
-   the jar the evidence job validated, writes `SHA256SUMS`, attests it, and only as its last step
-   uploads that same directory to the Central Portal (`scripts/upload-to-central.py`, deployment
-   type `USER_MANAGED`). A failure at any earlier step means nothing reached Central.
+   the jar the evidence job validated (the staged jar names must equal the evidence jar names minus
+   `config/release-unpublished-jars.json`, the manifest must be from the tagged commit, and the minimum jar
+   count derives from the manifest), requires an `.asc` for every non-sidecar file, writes `SHA256SUMS`, attests
+   it, re-verifies that attestation with `gh attestation verify` just before the upload, and only as its last
+   step uploads that same directory to the Central Portal (`scripts/upload-to-central.py`, deployment
+   type `USER_MANAGED`). A failure at any earlier step means nothing reached Central. The publish job also
+   waits for the `osv-gate` job, which runs `scripts/check-osv-baseline.py` against a fresh scan at the tag.
 6. Release the deployment in the Sonatype Central Portal.
+7. Publish the **draft** GitHub release the `release-assets` job created for the tag, once the Portal shows
+   the deployment as published. The job cannot check that itself (it would need a Central API call with the
+   publish credentials, which only the upload step may see), so the release stays a draft until a person
+   confirms it.
+
+If `verify-staged-jars.py` reports a jar "validated by the evidence build but not staged", that jar is built by
+`build` but never published: add it to `config/release-unpublished-jars.json` with a reason. The list starts
+empty; the first tag run shows whether any entry is needed.
 
 What only a real tag run proves: the Portal accepts the bundle layout (including Gradle's checksum
-sidecars), the token-based `Authorization: Bearer` upload, that the rebuilt jars really are
-byte-identical in the CI environment, and that `--min-jars` suits the module count. The script's
+sidecars), the token-based `Authorization: Bearer` upload and that the answer is a deployment id, that the
+rebuilt jars really are byte-identical in the CI environment, that the unpublished-jar allowlist is complete,
+that Gradle signs every non-sidecar file (including the per-module CycloneDX SBOMs), that `gh attestation verify`
+accepts the flags used, that the OSV scan job reproduces `osv.json` at the tag, and that the draft release flow
+works with the installed `gh`. The script's
 verification, bundling and request construction are unit-tested; the HTTP exchange is not.
 `python scripts/upload-to-central.py --staging build/release-staging --name x --dry-run` rehearses
 everything except the network call.

@@ -6,7 +6,7 @@ GitHub issue from the report. The gate itself (scripts/check-osv-baseline.py) st
 entry; this only gives maintainers notice before that happens.
 
     python scripts/osv-expiry-report.py --output build/reports/osv/expiry.md
-Exit status is 0 always when the baseline parses; the number of listed entries is printed, and the file is
+Exit status is 0 when the baseline parses (an entry whose `expires` is unreadable is listed in the report, not skipped), 2 when it does not; the number of listed entries is printed, and the file is
 written only when there is at least one (so a workflow can test for its existence).
 """
 import argparse
@@ -27,13 +27,20 @@ MARKER = "<!-- osv-expiry-report -->"
 def build_report(baseline, today, window=osv.EXPIRY_WARNING_DAYS):
     """Return (markdown or None, count). Entries are grouped by expiry date, earliest first."""
     rows = []
+    malformed = []
     for item in baseline.get("advisories", []):
-        expires = osv.parse_date(item.get("expires"))
-        if expires is None or (expires - today).days > window:
+        raw = item.get("expires")
+        if raw is None:
+            continue  # optional for not-reachable / false-positive; validate_triage requires it elsewhere
+        expires = osv.parse_date(raw)
+        if expires is None:
+            malformed.append((str(item.get("id", "?")), repr(raw)))  # never drop an entry just because its date is unreadable
+            continue
+        if (expires - today).days > window:
             continue
         packages = ", ".join(sorted(item.get("packages", []))[:3]) or "(any package)"
         rows.append((expires, item.get("id", "?"), item.get("status", "?"), packages))
-    if not rows:
+    if not rows and not malformed:
         return None, 0
     rows.sort()
     lines = [
@@ -50,7 +57,14 @@ def build_report(baseline, today, window=osv.EXPIRY_WARNING_DAYS):
     for expires, vid, status, packages in rows:
         flag = " (EXPIRED)" if expires < today else ""
         lines.append(f"| {expires}{flag} | {vid} | {status} | {packages} |")
-    return "\n".join(lines) + "\n", len(rows)
+    if malformed:
+        lines += [
+            "",
+            f"{len(malformed)} entry(ies) have an `expires` value that is not a YYYY-MM-DD date; the gate rejects them (exit 2):",
+            "",
+        ]
+        lines += [f"- {vid}: `expires` = {raw}" for vid, raw in sorted(malformed)]
+    return "\n".join(lines) + "\n", len(rows) + len(malformed)
 
 
 def main(argv=None):
@@ -59,7 +73,13 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--today", type=datetime.date.fromisoformat)
     args = parser.parse_args(argv)
-    baseline = json.loads(args.baseline.read_text(encoding="utf-8"))
+    try:
+        baseline = json.loads(args.baseline.read_text(encoding="utf-8"))
+        if not isinstance(baseline, dict) or not isinstance(baseline.get("advisories", []), list):
+            raise ValueError("expected an object with an 'advisories' list")
+    except (OSError, ValueError) as error:
+        print(f"cannot read the OSV baseline {args.baseline}: {error}", file=sys.stderr)
+        return 2
     today = args.today or datetime.datetime.now(datetime.timezone.utc).date()
     markdown, count = build_report(baseline, today)
     if args.output.exists():

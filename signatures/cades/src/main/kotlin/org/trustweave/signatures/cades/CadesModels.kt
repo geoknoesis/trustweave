@@ -141,7 +141,10 @@ data class CadesSignature(
  * @property detachedPayload                       For detached signatures the caller MUST supply
  *                                                 the original payload bytes here. For encapsulated
  *                                                 signatures pass `null` and the verifier will use
- *                                                 the embedded `encapContentInfo` content.
+ *                                                 the embedded `encapContentInfo` content. If a payload is
+ *                                                 supplied for an encapsulated signature it must be
+ *                                                 byte-identical to the embedded content, otherwise the result
+ *                                                 is [CadesValidationResult.Invalid.MissingDetachedPayload].
  * @property allowExpiredCertificateAtSigningTime  When `true`, certificate validity is not enforced
  *                                                 (otherwise it is checked at the time authenticated by a
  *                                                 trusted time-stamp, else now; never at the claimed

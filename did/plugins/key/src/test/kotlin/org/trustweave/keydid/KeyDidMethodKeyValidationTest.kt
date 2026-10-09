@@ -3,10 +3,8 @@ package org.trustweave.keydid
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.trustweave.core.util.encodeBase58
-import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.base.AbstractDidMethod
 import org.trustweave.did.base.DidMethodUtils
-import org.trustweave.did.didCreationOptions
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.testkit.kms.InMemoryKeyManagementService

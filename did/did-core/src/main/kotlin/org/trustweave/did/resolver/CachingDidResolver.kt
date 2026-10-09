@@ -103,8 +103,7 @@ class CachingDidResolver(
     private val stripes = AtomicLongArray(GENERATION_STRIPES)
     private val clearGeneration = AtomicLong(0)
 
-    private fun generationOf(key: String): Long =
-        stripes.get(Math.floorMod(key.hashCode(), GENERATION_STRIPES)) + clearGeneration.get()
+    private fun generationOf(key: String): Long = stripes.get(Math.floorMod(key.hashCode(), GENERATION_STRIPES)) + clearGeneration.get()
 
     /** Current number of cached entries (primarily for diagnostics and tests). */
     val size: Int get() = cache.size
@@ -267,8 +266,6 @@ class CachingDidResolver(
             cache.remove(lru.key, lru.value)
         }
     }
-
-    private companion object {
-        const val GENERATION_STRIPES = 64
-    }
 }
+
+private const val GENERATION_STRIPES = 64

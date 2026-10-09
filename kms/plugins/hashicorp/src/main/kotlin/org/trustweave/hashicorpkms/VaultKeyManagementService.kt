@@ -342,7 +342,9 @@ class VaultKeyManagementService(
                         keyId = keyId,
                         requestedAlgorithm = algorithm,
                         keyAlgorithm = Algorithm.Custom(keyType ?: "unknown"),
-                        reason = "Cannot determine signing algorithm for key: ${keyId.value} (Vault key type '${keyType ?: "unknown"}' is not a supported signing type)",
+                        reason =
+                            "Cannot determine signing algorithm for key: ${keyId.value} " +
+                                "(Vault key type '${keyType ?: "unknown"}' is not a supported signing type)",
                     )
                 }
 

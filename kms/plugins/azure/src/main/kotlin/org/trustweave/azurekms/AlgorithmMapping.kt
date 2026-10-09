@@ -1,13 +1,13 @@
 package org.trustweave.azurekms
 
-import org.trustweave.kms.Algorithm
-import org.trustweave.kms.JwkKeys
-import org.trustweave.kms.JwkKeyTypes
-import com.azure.security.keyvault.keys.models.KeyType
-import com.azure.security.keyvault.keys.models.KeyCurveName
 import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
-import java.security.KeyFactory
+import com.azure.security.keyvault.keys.models.KeyCurveName
+import com.azure.security.keyvault.keys.models.KeyType
 import kotlinx.coroutines.CancellationException
+import org.trustweave.kms.Algorithm
+import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
+import java.security.KeyFactory
 import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.X509EncodedKeySpec
@@ -24,8 +24,8 @@ object AlgorithmMapping {
      * @return Pair of KeyType and optional KeyCurveName (null for RSA)
      * @throws IllegalArgumentException if algorithm is not supported by Azure Key Vault
      */
-    fun toAzureKeyType(algorithm: Algorithm): Pair<KeyType, KeyCurveName?> {
-        return when (algorithm) {
+    fun toAzureKeyType(algorithm: Algorithm): Pair<KeyType, KeyCurveName?> =
+        when (algorithm) {
             is Algorithm.Ed25519 -> {
                 // Azure Key Vault doesn't natively support Ed25519
                 // We'll use P-256 as a fallback or throw an exception
@@ -38,12 +38,13 @@ object AlgorithmMapping {
             is Algorithm.RSA -> {
                 when (algorithm.keySize) {
                     2048, 3072, 4096 -> Pair(KeyType.RSA, null)
-                    else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}. Azure Key Vault supports 2048, 3072, and 4096.")
+                    else -> throw IllegalArgumentException(
+                        "Unsupported RSA key size: ${algorithm.keySize}. Azure Key Vault supports 2048, 3072, and 4096.",
+                    )
                 }
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Azure Key Vault")
         }
-    }
 
     /**
      * Maps TrustWeave Algorithm to Azure Key Vault SignatureAlgorithm.
@@ -52,8 +53,8 @@ object AlgorithmMapping {
      * @return Azure Key Vault SignatureAlgorithm
      * @throws IllegalArgumentException if algorithm is not supported by Azure Key Vault
      */
-    fun toAzureSignatureAlgorithm(algorithm: Algorithm): SignatureAlgorithm {
-        return when (algorithm) {
+    fun toAzureSignatureAlgorithm(algorithm: Algorithm): SignatureAlgorithm =
+        when (algorithm) {
             is Algorithm.Ed25519 -> {
                 throw IllegalArgumentException("Ed25519 is not directly supported by Azure Key Vault")
             }
@@ -61,15 +62,15 @@ object AlgorithmMapping {
             is Algorithm.P256 -> SignatureAlgorithm.ES256
             is Algorithm.P384 -> SignatureAlgorithm.ES384
             is Algorithm.P521 -> SignatureAlgorithm.ES512
-            is Algorithm.RSA -> when (algorithm.keySize) {
-                2048 -> SignatureAlgorithm.RS256
-                3072 -> SignatureAlgorithm.RS384
-                4096 -> SignatureAlgorithm.RS512
-                else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
-            }
+            is Algorithm.RSA ->
+                when (algorithm.keySize) {
+                    2048 -> SignatureAlgorithm.RS256
+                    3072 -> SignatureAlgorithm.RS384
+                    4096 -> SignatureAlgorithm.RS512
+                    else -> throw IllegalArgumentException("Unsupported RSA key size: ${algorithm.keySize}")
+                }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Azure Key Vault")
         }
-    }
 
     /**
      * Converts Azure Key Vault public key (JWK or raw bytes) to JWK format.
@@ -78,19 +79,24 @@ object AlgorithmMapping {
      * @param algorithm The algorithm type
      * @return JWK map representation
      */
-    fun publicKeyToJwk(publicKeyBytes: ByteArray, algorithm: Algorithm): Map<String, Any?> {
+    fun publicKeyToJwk(
+        publicKeyBytes: ByteArray,
+        algorithm: Algorithm,
+    ): Map<String, Any?> {
         return try {
             when (algorithm) {
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
-                    val curveName = algorithm.curveName
-                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
+                    val curveName =
+                        algorithm.curveName
+                            ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
-                    val coordinateLength = when (algorithm) {
-                        is Algorithm.Secp256k1, is Algorithm.P256 -> 32
-                        is Algorithm.P384 -> 48
-                        is Algorithm.P521 -> 66
-                        else -> 32
-                    }
+                    val coordinateLength =
+                        when (algorithm) {
+                            is Algorithm.Secp256k1, is Algorithm.P256 -> 32
+                            is Algorithm.P384 -> 48
+                            is Algorithm.P521 -> 66
+                            else -> 32
+                        }
 
                     // Azure extractPublicKeyBytesFromJwk returns a raw uncompressed EC point
                     // (0x04 || x || y). X509EncodedKeySpec requires DER/SubjectPublicKeyInfo
@@ -104,7 +110,7 @@ object AlgorithmMapping {
                             JwkKeys.KTY to JwkKeyTypes.EC,
                             JwkKeys.CRV to curveName,
                             JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                            JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                            JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y),
                         )
                     }
 
@@ -139,7 +145,7 @@ object AlgorithmMapping {
                         JwkKeys.KTY to JwkKeyTypes.EC,
                         JwkKeys.CRV to curveName,
                         JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y),
                     )
                 }
                 is Algorithm.RSA -> {
@@ -150,12 +156,30 @@ object AlgorithmMapping {
 
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.RSA,
-                        JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(
-                            modulus.toByteArray().let { b -> if (b.isNotEmpty() && b[0] == 0.toByte()) b.copyOfRange(1, b.size) else b }
-                        ),
-                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(
-                            exponent.toByteArray().let { b -> if (b.isNotEmpty() && b[0] == 0.toByte()) b.copyOfRange(1, b.size) else b }
-                        )
+                        JwkKeys.N to
+                            Base64.getUrlEncoder().withoutPadding().encodeToString(
+                                modulus.toByteArray().let { b ->
+                                    if (b.isNotEmpty() &&
+                                        b[0] == 0.toByte()
+                                    ) {
+                                        b.copyOfRange(1, b.size)
+                                    } else {
+                                        b
+                                    }
+                                },
+                            ),
+                        JwkKeys.E to
+                            Base64.getUrlEncoder().withoutPadding().encodeToString(
+                                exponent.toByteArray().let { b ->
+                                    if (b.isNotEmpty() &&
+                                        b[0] == 0.toByte()
+                                    ) {
+                                        b.copyOfRange(1, b.size)
+                                    } else {
+                                        b
+                                    }
+                                },
+                            ),
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
@@ -221,7 +245,11 @@ object AlgorithmMapping {
      * @param keySize Optional key size for RSA keys
      * @return TrustWeave Algorithm, or null if not recognized or if parameters are incompatible
      */
-    fun parseAlgorithmFromKeyType(keyType: KeyType, curveName: KeyCurveName?, keySize: Int?): Algorithm? {
+    fun parseAlgorithmFromKeyType(
+        keyType: KeyType,
+        curveName: KeyCurveName?,
+        keySize: Int?,
+    ): Algorithm? {
         return when (keyType) {
             KeyType.EC -> {
                 // For EC keys, keySize should be null
@@ -252,4 +280,3 @@ object AlgorithmMapping {
         }
     }
 }
-

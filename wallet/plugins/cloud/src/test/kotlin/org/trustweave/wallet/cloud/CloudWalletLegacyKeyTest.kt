@@ -20,7 +20,10 @@ class CloudWalletLegacyKeyTest {
     private class MapWallet : CloudWallet("id", "did:key:w", "did:key:h", "bucket", "wallet") {
         val objects = ConcurrentHashMap<String, ByteArray>()
 
-        override suspend fun upload(key: String, data: ByteArray) {
+        override suspend fun upload(
+            key: String,
+            data: ByteArray,
+        ) {
             objects[key] = data
         }
 
@@ -41,8 +44,7 @@ class CloudWalletLegacyKeyTest {
             proof = null,
         )
 
-    private fun bytes(c: VerifiableCredential) =
-        Json.encodeToString(VerifiableCredential.serializer(), c).toByteArray()
+    private fun bytes(c: VerifiableCredential) = Json.encodeToString(VerifiableCredential.serializer(), c).toByteArray()
 
     @Test
     fun `objects stored under legacy raw keys stay reachable`() =

@@ -9,7 +9,17 @@ import kotlin.test.assertEquals
 
 /** Documents what the Azure SDK accepts as a cryptography-client key identifier. */
 class AzureCryptoClientKeyIdentifierTest {
-    private val credential = TokenCredential { Mono.just(AccessToken("t", java.time.OffsetDateTime.now().plusHours(1))) }
+    private val credential =
+        TokenCredential {
+            Mono.just(
+                AccessToken(
+                    "t",
+                    java.time.OffsetDateTime
+                        .now()
+                        .plusHours(1),
+                ),
+            )
+        }
 
     @Test
     fun `identifier built by the service is accepted by the SDK`() {

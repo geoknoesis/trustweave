@@ -45,7 +45,9 @@ class ConfigCacheKeyCanonicalTest {
 
     @Test
     fun `an unrecognised object is encoded by class and value`() {
-        data class Opt(val v: Int)
+        data class Opt(
+            val v: Int,
+        )
         assertEquals(key(mapOf("a" to Opt(1))), key(mapOf("a" to Opt(1))))
         assertNotEquals(key(mapOf("a" to Opt(1))), key(mapOf("a" to Opt(2))))
     }

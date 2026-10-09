@@ -11,8 +11,7 @@ import kotlin.test.assertTrue
 
 /** An invalidation of one DID must not stop in-flight resolutions of other DIDs from being cached. */
 class CachingDidResolverGenerationTest {
-    private fun success(did: Did) =
-        DidResolutionResult.Success(document = DidDocument(id = did), documentMetadata = DidDocumentMetadata())
+    private fun success(did: Did) = DidResolutionResult.Success(document = DidDocument(id = did), documentMetadata = DidDocumentMetadata())
 
     private val victims = (1..30).map { Did("did:example:victim$it") }
     private val other = Did("did:example:other")

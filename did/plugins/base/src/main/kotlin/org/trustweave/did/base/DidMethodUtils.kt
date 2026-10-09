@@ -558,7 +558,13 @@ object DidMethodUtils {
                 val x = java.math.BigInteger(1, point.copyOfRange(1, 1 + size))
                 val y = java.math.BigInteger(1, point.copyOfRange(1 + size, point.size))
                 require(x < p && y < p) { "EC point coordinate out of range for $algorithm" }
-                val rhs = x.multiply(x).multiply(x).add(curve.a.multiply(x)).add(curve.b).mod(p)
+                val rhs =
+                    x
+                        .multiply(x)
+                        .multiply(x)
+                        .add(curve.a.multiply(x))
+                        .add(curve.b)
+                        .mod(p)
                 require(y.multiply(y).mod(p) == rhs) { "Invalid EC point: not on curve $algorithm" }
                 point
             }

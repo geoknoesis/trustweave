@@ -2,12 +2,12 @@ package org.trustweave.kms.internal
 
 /**
  * Internal utility for creating cache keys from provider name and configuration.
- * 
+ *
  * This class is used internally by [KeyManagementServices] to create unique
  * cache keys for KMS instances. The cache key is based on the provider name
  * and the configuration options, ensuring that instances with the same
  * configuration are reused from the cache.
- * 
+ *
  * **Cache Key Strategy:**
  * - Provider name and configuration map are combined to create a unique key
  * - Same provider + same configuration = same cache key = same instance
@@ -31,7 +31,7 @@ import java.security.MessageDigest
  * Internal utility for creating cache keys from configurations.
  *
  * Generates stable, comparable keys from both Map and typed configurations.
- * 
+ *
  * Note: Made public for testing purposes.
  */
 object ConfigCacheKey {
@@ -42,7 +42,10 @@ object ConfigCacheKey {
      * @param options Typed configuration options
      * @return Cache key string
      */
-    fun create(providerName: String, options: KmsCreationOptions): String {
+    fun create(
+        providerName: String,
+        options: KmsCreationOptions,
+    ): String {
         // Convert to map and use map-based key generation
         return create(providerName, options.toMap())
     }
@@ -62,7 +65,10 @@ object ConfigCacheKey {
      * @param options Map configuration options
      * @return Cache key string of the form `provider:<sha256-hex>`
      */
-    fun create(providerName: String, options: Map<String, Any?>): String {
+    fun create(
+        providerName: String,
+        options: Map<String, Any?>,
+    ): String {
         // Hash the canonical form so the key never contains raw secret values.
         return "$providerName:${sha256Hex(canonical(options))}"
     }
@@ -70,14 +76,17 @@ object ConfigCacheKey {
     /**
      * Computes the lowercase hex SHA-256 digest of the given string.
      */
-    private fun sha256Hex(input: String): String {
-        return MessageDigest.getInstance("SHA-256")
+    private fun sha256Hex(input: String): String =
+        MessageDigest
+            .getInstance("SHA-256")
             .digest(input.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
-    }
 
     /** Appends a type tag and a length-prefixed text, so no value can run into its neighbour. */
-    private fun StringBuilder.text(tag: Char, text: String) {
+    private fun StringBuilder.text(
+        tag: Char,
+        text: String,
+    ) {
         append(tag).append(text.length).append(':').append(text)
     }
 
@@ -96,7 +105,10 @@ object ConfigCacheKey {
         return out.toString()
     }
 
-    private fun encode(value: Any?, out: StringBuilder) {
+    private fun encode(
+        value: Any?,
+        out: StringBuilder,
+    ) {
         when (value) {
             null -> out.append('n')
             is Boolean -> out.append(if (value) 'T' else 'F')
@@ -105,9 +117,10 @@ object ConfigCacheKey {
             is CharSequence -> out.text('s', value.toString())
             is Enum<*> -> out.text('e', value.javaClass.name + "." + value.name)
             is Map<*, *> -> {
-                val entries = value.entries
-                    .map { (k, v) -> canonical(k) to v }
-                    .sortedBy { it.first }
+                val entries =
+                    value.entries
+                        .map { (k, v) -> canonical(k) to v }
+                        .sortedBy { it.first }
                 out.append('m').append(entries.size).append('{')
                 for ((k, v) in entries) {
                     out.append(k)

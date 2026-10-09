@@ -37,6 +37,20 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
+  that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
+  wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails
+  resolution as `invalidDid`, and resolved `did:key` documents are no longer retained in the in-memory cache.
+  Vault `sign` fails closed with `UnsupportedAlgorithm` for any key type it cannot map, reading key info once.
+  CyberArk `generateKey` fails (and removes the stored private key) when the metadata write is refused, and
+  `AlgorithmMapping.resolveKeyId` rejects `..`, `.`, empty segments and URL-significant characters. Azure signing now
+  passes the full key URL to `CryptographyClientBuilder.keyIdentifier` (a bare name is rejected by the SDK).
+  `ConfigCacheKey` uses an unambiguous typed, length-prefixed encoding, so cache keys change and list order is now
+  significant (sets and maps stay order-insensitive). `CloudWallet` reads, deletes and lists objects stored under
+  the pre-encoding raw keys, and `listRecords`/`list`/`getStatistics` skip objects that cannot be parsed
+  (`recoverRecords` still reports them). `CachingDidResolver` tracks invalidation per key stripe, so invalidating or
+  `noCache`-resolving one DID no longer suppresses cache writes for unrelated DIDs. `getSupportedMethods` on the
+  universal resolver ignores non-string entries instead of throwing or reporting `null` as a method.
 - **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**
   `DefaultLotlSignatureVerifier` now requires exactly one `ds:Signature` (a direct child of the document
   element), exactly one whole-document `URI=""` reference with the enveloped-signature transform plus at most one

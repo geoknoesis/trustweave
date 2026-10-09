@@ -64,7 +64,21 @@ class CyberArkGenerateKeyHardeningTest {
 
     @Test
     fun `resolveKeyId rejects traversal and unexpected segments`() {
-        for (bad in listOf("../x", "a/../b", "/acct/../other/secret", "..", "a/./b", "a//b", "a\\b", "a?b", "a#b", "a%2e%2eb/c", "x y", "a\nb", "")) {
+        for (bad in listOf(
+            "../x",
+            "a/../b",
+            "/acct/../other/secret",
+            "..",
+            "a/./b",
+            "a//b",
+            "a\\b",
+            "a?b",
+            "a#b",
+            "a%2e%2eb/c",
+            "x y",
+            "a\nb",
+            "",
+        )) {
             assertThrows<IllegalArgumentException>("'$bad'") { AlgorithmMapping.resolveKeyId(bad, "acct") }
         }
     }

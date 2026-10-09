@@ -328,46 +328,40 @@ class VaultKeyManagementService(
             try {
                 val keyName = AlgorithmMapping.resolveKeyName(keyId.value, config)
 
-                // Determine signing algorithm
-                val signingAlgorithm =
-                    algorithm ?: run {
-                        val keyInfoPath = "${config.transitPath}/keys/$keyName"
-                        val keyInfo = vaultClient.logical().read(keyInfoPath)
-                        val keyType =
-                            keyInfo.data["type"] as? String
-                                ?: return@withContext SignResult.Failure.Error(
-                                    keyId = keyId,
-                                    reason = "Cannot determine signing algorithm for key: ${keyId.value}",
-                                )
-                        AlgorithmMapping.fromVaultKeyType(keyType)
-                            ?: return@withContext SignResult.Failure.Error(
-                                keyId = keyId,
-                                reason = "Cannot determine signing algorithm for key: ${keyId.value}",
-                            )
-                    }
+                // Read the key's info exactly once; it decides both the signing algorithm and
+                // whether a caller-supplied algorithm is compatible with the key.
+                val keyInfo = vaultClient.logical().read("${config.transitPath}/keys/$keyName")
+                val keyType = keyInfo?.data?.get("type") as? String
+                val keyAlgorithm = keyType?.let { AlgorithmMapping.fromVaultKeyType(it) }
 
-                // Check algorithm compatibility if algorithm was provided
-                if (algorithm != null) {
-                    val keyInfoPath = "${config.transitPath}/keys/$keyName"
-                    val keyInfo = vaultClient.logical().read(keyInfoPath)
-                    val keyType = keyInfo.data["type"] as? String
-                    val keyAlgorithm = keyType?.let { AlgorithmMapping.fromVaultKeyType(it) }
-
-                    if (keyAlgorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
-                        logger.warn(
-                            "Algorithm incompatibility: keyId={}, requestedAlgorithm={}, keyAlgorithm={}",
-                            keyId.value,
-                            algorithm.name,
-                            keyAlgorithm.name,
-                        )
-                        return@withContext SignResult.Failure.UnsupportedAlgorithm(
-                            keyId = keyId,
-                            requestedAlgorithm = algorithm,
-                            keyAlgorithm = keyAlgorithm,
-                            reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
-                        )
-                    }
+                // Fail closed: a key whose type TrustWeave cannot map is never signed with,
+                // whether or not the caller named an algorithm.
+                if (keyAlgorithm == null) {
+                    logger.warn("Unmapped Vault key type: keyId={}, keyType={}", keyId.value, keyType)
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = Algorithm.Custom(keyType ?: "unknown"),
+                        reason = "Cannot determine signing algorithm for key: ${keyId.value} (Vault key type '${keyType ?: "unknown"}' is not a supported signing type)",
+                    )
                 }
+
+                if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                    logger.warn(
+                        "Algorithm incompatibility: keyId={}, requestedAlgorithm={}, keyAlgorithm={}",
+                        keyId.value,
+                        algorithm.name,
+                        keyAlgorithm.name,
+                    )
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = keyAlgorithm,
+                        reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
+                    )
+                }
+
+                val signingAlgorithm = algorithm ?: keyAlgorithm
 
                 val hashAlgorithm = AlgorithmMapping.toVaultHashAlgorithm(signingAlgorithm)
 

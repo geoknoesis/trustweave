@@ -157,6 +157,18 @@ object AlgorithmMapping {
      * @return Conjur secret path
      */
     fun resolveKeyId(keyId: String, account: String): String {
+        // The id is spliced into a request path, so it must be a plain sequence of path segments:
+        // no empty, '.' or '..' segments (which would walk out of the key policy), and none of
+        // the characters that change how a URL is parsed or that an HTTP stack may re-decode.
+        require(keyId.isNotEmpty()) { "Key id must not be empty" }
+        val segments = if (keyId.startsWith("/")) keyId.substring(1).split("/") else keyId.split("/")
+        for (segment in segments) {
+            require(segment.isNotEmpty()) { "Invalid key id: empty path segment" }
+            require(segment != "." && segment != "..") { "Invalid key id: '$segment' path segment is not allowed" }
+            require(segment.all { it.isLetterOrDigit() || it in "-_.@:" }) {
+                "Invalid key id: segment '$segment' contains characters that are not allowed"
+            }
+        }
         // Conjur secret paths: /{account}/{policy}/{variable}
         return if (keyId.startsWith("/")) {
             keyId
@@ -164,5 +176,5 @@ object AlgorithmMapping {
             "/$account/TrustWeave/keys/$keyId"
         }
     }
-}
 
+}

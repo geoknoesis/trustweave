@@ -92,7 +92,13 @@ class SiopV2UnsignedDidRequestTest {
             val session =
                 SiopV2Session(
                     sessionId = "s",
-                    request = SiopV2AuthorizationRequest(responseType = "vp_token", responseUri = "http://169.254.169.254/latest", clientId = "https://x.example", nonce = "n"),
+                    request =
+                        SiopV2AuthorizationRequest(
+                            responseType = "vp_token",
+                            responseUri = "http://169.254.169.254/latest",
+                            clientId = "https://x.example",
+                            nonce = "n",
+                        ),
                 )
             val e = assertFailsWith<SiopV2Exception> { service.submitResponse(session, SiopV2AuthorizationResponse(state = "x")) }
             assertEquals("INSECURE_RESPONSE_URI", e.code)

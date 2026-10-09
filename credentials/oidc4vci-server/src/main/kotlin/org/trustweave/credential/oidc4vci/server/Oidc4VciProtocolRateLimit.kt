@@ -109,9 +109,10 @@ class Oidc4VciProtocolRateLimit
                 proceed()
             }
         }
-    
-        private companion object {
-            const val OVERFLOW_BUCKETS = 64
-            const val SWEEP_DIVISOR = 10
-        }
     }
+
+/** Overflow windows per endpoint once the caller table is full. */
+private const val OVERFLOW_BUCKETS = 64
+
+/** The caller table is swept for expired windows at most once per this fraction of a window. */
+private const val SWEEP_DIVISOR = 10

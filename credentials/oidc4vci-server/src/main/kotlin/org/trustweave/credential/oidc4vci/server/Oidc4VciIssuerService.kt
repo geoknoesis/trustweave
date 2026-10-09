@@ -740,22 +740,25 @@ class Oidc4VciIssuerService
         private fun consumeCNonce(
             accessToken: String,
             presentedNonce: String,
-        ): ConsumedNonce? =
-            stateStore.updateToken(accessToken) { entry ->
-                val live = nowMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
-                val matches =
-                    MessageDigest.isEqual(
-                        presentedNonce.toByteArray(Charsets.UTF_8),
-                        entry.cNonce.toByteArray(Charsets.UTF_8),
-                    )
-                if (live && matches) {
-                    val fresh = UUID.randomUUID().toString()
-                    entry.copy(cNonce = fresh, cNonceIssuedAt = nowMillis()) to
-                        Optional.of(ConsumedNonce(entry.cNonce, entry.cNonceIssuedAt, fresh))
-                } else {
-                    entry to Optional.empty()
+        ): ConsumedNonce? {
+            val outcome =
+                stateStore.updateToken(accessToken) { entry ->
+                    val live = nowMillis() - entry.cNonceIssuedAt < cNonceTtlSeconds * 1000
+                    val matches =
+                        MessageDigest.isEqual(
+                            presentedNonce.toByteArray(Charsets.UTF_8),
+                            entry.cNonce.toByteArray(Charsets.UTF_8),
+                        )
+                    if (live && matches) {
+                        val fresh = UUID.randomUUID().toString()
+                        entry.copy(cNonce = fresh, cNonceIssuedAt = nowMillis()) to
+                            Optional.of(ConsumedNonce(entry.cNonce, entry.cNonceIssuedAt, fresh))
+                    } else {
+                        entry to Optional.empty()
+                    }
                 }
-            }?.orElse(null)
+            return outcome?.orElse(null)
+        }
 
         /** A verified proof key: the JCA public key plus the subject DID it binds the credential to. */
         private data class ProofKey(

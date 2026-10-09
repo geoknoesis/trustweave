@@ -1,6 +1,5 @@
 package org.trustweave.credential.proof.internal.engines
 
-import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import org.trustweave.core.identifiers.Iri
@@ -206,7 +205,6 @@ class SdJwtKeyBindingGapsTest {
         }
     }
 
-
     private fun options() =
         VerificationOptions(
             verifyChallenge = true,
@@ -237,7 +235,10 @@ class SdJwtKeyBindingGapsTest {
                             proofOptions {
                                 challenge = "nonce-123"
                                 domain = "verifier.example.com"
-                                verificationMethod = rig.holderDocument.verificationMethod.first().id.value
+                                verificationMethod =
+                                    rig.holderDocument.verificationMethod
+                                        .first()
+                                        .id.value
                             },
                     ),
                 )
@@ -258,7 +259,10 @@ class SdJwtKeyBindingGapsTest {
                             proofOptions {
                                 challenge = "nonce-123"
                                 domain = "verifier.example.com"
-                                verificationMethod = rig.holderDocument.verificationMethod.first().id.value
+                                verificationMethod =
+                                    rig.holderDocument.verificationMethod
+                                        .first()
+                                        .id.value
                                 option("disclosedClaims", setOf("name"))
                             },
                     ),
@@ -287,6 +291,7 @@ class SdJwtKeyBindingGapsTest {
             val presentation = rig.present(rig.issue())
             val sdProof = presentation.proof as CredentialProof.SdJwtVcProof
             val withoutKb = sdProof.sdJwtVc.substringBeforeLast("~") + "~"
+
             fun withAge(seconds: Long) =
                 runBlocking {
                     val kb = rig.craftKbJwt(withoutKb, rig.holderDocument, iat = Clock.System.now().epochSeconds - seconds)

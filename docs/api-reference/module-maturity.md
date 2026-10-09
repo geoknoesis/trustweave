@@ -57,7 +57,7 @@ defect claim, but it is a reason to run your own integration tests before depend
 | `did:registrar-server-ktor` | 17 | Experimental |
 | `did:registrar-server-spring` | 15 | Experimental |
 | `credentials:vc-api-server` | 29 | Experimental |
-| `credentials:oidc4vci-server` | 51 | Experimental |
+| `credentials:oidc4vci-server` | 71 | Experimental |
 | `trust-registry:trust-registry-core` | 16 | Experimental |
 | `trust-registry:trust-registry-server` | 28 | Experimental |
 | `wallet:wallet-services` | 16 | Experimental |

@@ -147,6 +147,21 @@ class KeyDidMethod(
                             did.value,
                         )
 
+                // A document this instance created keeps the real KMS key id as its verification-method
+                // fragment, which signing depends on. Reuse it when it still matches the DID's key; the
+                // map only ever holds documents created here (bounded), never ones merely resolved.
+                getStoredDocument(did)?.let { stored ->
+                    if (stored.verificationMethod.firstOrNull()?.publicKeyMultibase == multibaseEncoded) {
+                        val metadata = getDocumentMetadata(did)
+                        return@withContext DidMethodUtils.createSuccessResolutionResult(
+                            stored,
+                            method,
+                            metadata?.created,
+                            metadata?.updated,
+                        )
+                    }
+                }
+
                 // did:key is self-certifying: reconstruct the document deterministically from the
                 // public key bytes encoded in the DID itself. No external registry required, and the
                 // result is never retained: the DID string is caller-chosen, so caching every resolved

@@ -1,6 +1,11 @@
 public final class org/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient, java/io/Closeable {
 	public static final field Companion Lorg/trustweave/anchor/bitcoin/BitcoinBlockchainAnchorClient$Companion;
 	public static final field MAINNET Ljava/lang/String;
+	public static final field OPTION_CONFIRMATION_TARGET Ljava/lang/String;
+	public static final field OPTION_EXPECTED_SENDER Ljava/lang/String;
+	public static final field OPTION_FALLBACK_FEE_RATE Ljava/lang/String;
+	public static final field OPTION_MAX_FEE_RATE Ljava/lang/String;
+	public static final field OPTION_MIN_CONFIRMATIONS Ljava/lang/String;
 	public static final field TESTNET Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

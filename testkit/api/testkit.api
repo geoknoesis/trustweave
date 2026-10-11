@@ -85,14 +85,21 @@ public final class org/trustweave/testkit/anchor/FakeEvmJsonRpcServer : java/lan
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
 	public final fun failNextSends ([Ljava/lang/String;)V
+	public final fun getEstimateGasHex ()Ljava/lang/String;
+	public final fun getFailEstimateGas ()Z
+	public final fun getGasPriceHex ()Ljava/lang/String;
 	public final fun getMaxConcurrentRequests ()Ljava/util/concurrent/atomic/AtomicInteger;
 	public final fun getMethods ()Ljava/util/List;
 	public final fun getPendingNonce ()Ljava/util/concurrent/atomic/AtomicLong;
 	public final fun getRawTransactions ()Ljava/util/List;
 	public final fun getUrl ()Ljava/lang/String;
+	public final fun setEstimateGasHex (Ljava/lang/String;)V
+	public final fun setFailEstimateGas (Z)V
+	public final fun setGasPriceHex (Ljava/lang/String;)V
 }
 
 public final class org/trustweave/testkit/anchor/FakeEvmJsonRpcServer$Companion {

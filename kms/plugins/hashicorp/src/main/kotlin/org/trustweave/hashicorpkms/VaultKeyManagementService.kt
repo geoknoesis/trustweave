@@ -116,6 +116,15 @@ class VaultKeyManagementService(
                 }
 
                 val createPath = "${config.transitPath}/keys/$finalKeyName"
+
+                // Transit's key create is idempotent: writing to an existing name returns success
+                // and leaves the old key in place. Refuse so a caller never receives (and signs
+                // with) a pre-existing key while believing it generated a new one.
+                if (keyExists(createPath)) {
+                    logger.warn("Refusing to generate over an existing Vault Transit key: keyName={}", finalKeyName)
+                    return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId("${config.transitPath}/keys/$finalKeyName"))
+                }
+
                 vaultClient.logical().write(createPath, createParams)
 
                 logger.debug("Created key in Vault Transit: keyName={}, algorithm={}", finalKeyName, algorithm.name)
@@ -331,7 +340,11 @@ class VaultKeyManagementService(
                 // Read the key's info exactly once; it decides both the signing algorithm and
                 // whether a caller-supplied algorithm is compatible with the key.
                 val keyInfo = vaultClient.logical().read("${config.transitPath}/keys/$keyName")
-                val keyType = keyInfo?.data?.get("type") as? String
+                if (keyInfo == null || keyInfo.data.isNullOrEmpty()) {
+                    logger.debug("Key not found for signing in Vault Transit: keyId={}", keyId.value)
+                    return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
+                }
+                val keyType = keyInfo.data["type"] as? String
                 val keyAlgorithm = keyType?.let { AlgorithmMapping.fromVaultKeyType(it) }
 
                 // Fail closed: a key whose type TrustWeave cannot map is never signed with,
@@ -373,11 +386,16 @@ class VaultKeyManagementService(
                 // Sign using Vault Transit
                 val signPath = "${config.transitPath}/sign/$keyName"
                 val signParams =
-                    mapOf(
+                    mutableMapOf<String, Any>(
                         "input" to base64Data,
                         "hash_algorithm" to hashAlgorithm,
                         "marshaling_algorithm" to "asn1",
                     )
+                if (signingAlgorithm is Algorithm.RSA) {
+                    // Transit signs RSA with PSS unless told otherwise; the KeyManagementService
+                    // contract (and every other plugin) is RSASSA-PKCS1-v1_5.
+                    signParams["signature_algorithm"] = "pkcs1v15"
+                }
 
                 val signResponse = vaultClient.logical().write(signPath, signParams)
                 val signature =
@@ -525,26 +543,29 @@ class VaultKeyManagementService(
         return "$prefix-${UUID.randomUUID()}"
     }
 
+    /** True when a Transit key already exists at [path]; a 404 or an empty read means it does not. */
+    private fun keyExists(path: String): Boolean =
+        try {
+            val info = vaultClient.logical().read(path)
+            info != null && !info.data.isNullOrEmpty()
+        } catch (e: VaultException) {
+            if (getHttpCode(e) == 404) false else throw e
+        }
+
     /**
-     * Extracts HTTP status code from VaultException.
+     * Extracts the HTTP status code from a VaultException. The driver exposes it as
+     * `getHttpStatusCode()` (field `httpStatusCode`, 0 when the exception was not built from a
+     * response); the message is only a fallback for that case.
      */
     private fun getHttpCode(e: VaultException): Int? {
-        // VaultException may contain HTTP status code in message or as a field
-        // Try to extract from exception message or use reflection
-        return try {
-            // Check if exception has httpCode field via reflection
-            val httpCodeField = e.javaClass.getDeclaredField("httpCode")
-            httpCodeField.isAccessible = true
-            httpCodeField.get(e) as? Int
-        } catch (ex: Exception) {
-            // If httpCode field doesn't exist, try to parse from message
-            val message = e.message ?: ""
-            when {
-                message.contains("404") || message.contains("not found") -> 404
-                message.contains("403") || message.contains("permission denied") -> 403
-                message.contains("401") || message.contains("unauthorized") -> 401
-                else -> null
-            }
+        val status = e.httpStatusCode
+        if (status > 0) return status
+        val message = e.message ?: ""
+        return when {
+            message.contains("404") || message.contains("not found") -> 404
+            message.contains("403") || message.contains("permission denied") -> 403
+            message.contains("401") || message.contains("unauthorized") -> 401
+            else -> null
         }
     }
 

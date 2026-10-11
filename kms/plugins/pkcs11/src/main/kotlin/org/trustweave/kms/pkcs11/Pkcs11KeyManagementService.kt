@@ -54,7 +54,6 @@ import javax.security.auth.x500.X500Principal
 class Pkcs11KeyManagementService(
     private val config: Pkcs11Config,
 ) : KeyManagementService {
-
     private val logger = LoggerFactory.getLogger(Pkcs11KeyManagementService::class.java)
 
     /**
@@ -70,220 +69,260 @@ class Pkcs11KeyManagementService(
      * The PKCS#11 keystore. Eagerly loaded so that PIN errors and token-not-present errors are
      * caught at construction.
      */
-    private val keyStore: KeyStore = loadKeyStore(provider, config.pin)
+    private val keyStore: KeyStore = loadKeyStore(provider, config.pin?.copyOf())
 
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
 
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>,
-    ): GenerateKeyResult = withContext(Dispatchers.IO) {
-        if (algorithm is Algorithm.Custom || algorithm is Algorithm.Secp256k1) {
-            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
-                algorithm = algorithm,
-                supportedAlgorithms = SUPPORTED_ALGORITHMS,
-            )
-        }
-        if (!supportsAlgorithm(algorithm)) {
-            return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
-                algorithm = algorithm,
-                supportedAlgorithms = SUPPORTED_ALGORITHMS,
-            )
-        }
-
-        val label = (options[OPTION_LABEL] as? String)?.takeIf { it.isNotBlank() }
-            ?: java.util.UUID.randomUUID().toString()
-
-        try {
-            val (jcaName, paramSpec, keySize) = mapAlgorithmForKeyGen(algorithm)
-                ?: return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+    ): GenerateKeyResult =
+        withContext(Dispatchers.IO) {
+            if (algorithm is Algorithm.Custom || algorithm is Algorithm.Secp256k1) {
+                return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
                     algorithm = algorithm,
                     supportedAlgorithms = SUPPORTED_ALGORITHMS,
                 )
-
-            val kpg = KeyPairGenerator.getInstance(jcaName, provider)
-            when {
-                paramSpec != null -> kpg.initialize(paramSpec)
-                keySize != null -> kpg.initialize(keySize)
-                else -> error("internal: neither keysize nor paramSpec provided for $algorithm")
             }
-            val keyPair = kpg.generateKeyPair()
-
-            // HSMs require a certificate to store a key entry. Generate a minimal self-signed
-            // placeholder so the token accepts the setKeyEntry call. The certificate is *not*
-            // a trust anchor — it exists only to satisfy the JCA KeyStore contract.
-            val cert = buildPlaceholderCertificate(keyPair, jcaName, algorithm)
-
-            keyStore.setKeyEntry(label, keyPair.private, null, arrayOf<Certificate>(cert))
-            logger.debug("Generated PKCS#11 key: label={}, algorithm={}", label, algorithm.name)
-
-            GenerateKeyResult.Success(
-                KeyHandle(
-                    id = KeyId(label),
-                    algorithm = algorithm.name,
-                    publicKeyJwk = null,
-                    publicKeyMultibase = null,
-                ),
-            )
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Failed to generate PKCS#11 key: label=$label, algorithm=${algorithm.name}", e)
-            GenerateKeyResult.Failure.Error(
-                algorithm = algorithm,
-                reason = "Failed to generate key on PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
-                cause = e,
-            )
-        }
-    }
-
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = withContext(Dispatchers.IO) {
-        try {
-            if (!keyStore.containsAlias(keyId.value)) {
-                return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+            if (!supportsAlgorithm(algorithm)) {
+                return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                    algorithm = algorithm,
+                    supportedAlgorithms = SUPPORTED_ALGORITHMS,
+                )
             }
-            val cert = keyStore.getCertificate(keyId.value)
-                ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
-            val publicKey = cert.publicKey
-            // We can't reliably round-trip the original Algorithm choice from the PKCS#11 public
-            // key alone (RSA key size is known, EC curves require ASN.1 inspection). Report the
-            // JCA algorithm name; callers that need fine-grained Algorithm matching should track
-            // the algorithm out-of-band when issuing.
-            val algorithmName = publicKey.algorithm ?: "unknown"
 
-            GetPublicKeyResult.Success(
-                KeyHandle(
-                    id = keyId,
-                    algorithm = algorithmName,
-                    publicKeyJwk = null,
-                    publicKeyMultibase = null,
-                ),
-            )
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Failed to read PKCS#11 public key: keyId=${keyId.value}", e)
-            GetPublicKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to read public key from PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
-                cause = e,
-            )
+            val label =
+                (options[OPTION_LABEL] as? String)?.takeIf { it.isNotBlank() }
+                    ?: java.util.UUID
+                        .randomUUID()
+                        .toString()
+
+            try {
+                val (jcaName, paramSpec, keySize) =
+                    mapAlgorithmForKeyGen(algorithm)
+                        ?: return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                            algorithm = algorithm,
+                            supportedAlgorithms = SUPPORTED_ALGORITHMS,
+                        )
+
+                // setKeyEntry on an existing alias replaces the key on most tokens, destroying the old
+                // private key. Never do that silently.
+                if (keyStore.containsAlias(label)) {
+                    return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId(label))
+                }
+
+                val kpg = KeyPairGenerator.getInstance(jcaName, provider)
+                when {
+                    paramSpec != null -> kpg.initialize(paramSpec)
+                    keySize != null -> kpg.initialize(keySize)
+                    else -> error("internal: neither keysize nor paramSpec provided for $algorithm")
+                }
+                val keyPair = kpg.generateKeyPair()
+
+                // HSMs require a certificate to store a key entry. Generate a minimal self-signed
+                // placeholder so the token accepts the setKeyEntry call. The certificate is *not*
+                // a trust anchor — it exists only to satisfy the JCA KeyStore contract.
+                val cert = buildPlaceholderCertificate(keyPair, jcaName, algorithm)
+
+                keyStore.setKeyEntry(label, keyPair.private, null, arrayOf<Certificate>(cert))
+                logger.debug("Generated PKCS#11 key: label={}, algorithm={}", label, algorithm.name)
+
+                GenerateKeyResult.Success(
+                    KeyHandle(
+                        id = KeyId(label),
+                        algorithm = algorithm.name,
+                        publicKeyJwk = null,
+                        publicKeyMultibase = null,
+                    ),
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("Failed to generate PKCS#11 key: label=$label, algorithm=${algorithm.name}", e)
+                GenerateKeyResult.Failure.Error(
+                    algorithm = algorithm,
+                    reason = "Failed to generate key on PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
+                    cause = e,
+                )
+            }
         }
-    }
+
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
+        withContext(Dispatchers.IO) {
+            try {
+                if (!keyStore.containsAlias(keyId.value)) {
+                    return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+                }
+                val cert =
+                    keyStore.getCertificate(keyId.value)
+                        ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+                val publicKey = cert.publicKey
+                // We can't reliably round-trip the original Algorithm choice from the PKCS#11 public
+                // key alone (RSA key size is known, EC curves require ASN.1 inspection). Report the
+                // JCA algorithm name; callers that need fine-grained Algorithm matching should track
+                // the algorithm out-of-band when issuing.
+                val algorithmName = publicKey.algorithm ?: "unknown"
+
+                GetPublicKeyResult.Success(
+                    KeyHandle(
+                        id = keyId,
+                        algorithm = algorithmName,
+                        publicKeyJwk = null,
+                        publicKeyMultibase = null,
+                    ),
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("Failed to read PKCS#11 public key: keyId=${keyId.value}", e)
+                GetPublicKeyResult.Failure.Error(
+                    keyId = keyId,
+                    reason = "Failed to read public key from PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
+                    cause = e,
+                )
+            }
+        }
 
     override suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
         algorithm: Algorithm?,
-    ): SignResult = withContext(Dispatchers.IO) {
-        try {
-            if (!keyStore.containsAlias(keyId.value)) {
-                return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
-            }
-
-            val privateKey = try {
-                keyStore.getKey(keyId.value, null) as? java.security.PrivateKey
-                    ?: return@withContext SignResult.Failure.Error(
-                        keyId = keyId,
-                        reason = "PKCS#11 alias '${keyId.value}' does not resolve to a private key",
-                    )
-            } catch (e: KeyStoreException) {
-                // "no such alias" is reported here on some providers
-                return@withContext SignResult.Failure.KeyNotFound(
-                    keyId = keyId,
-                    reason = e.message,
-                )
-            }
-
-            // Map algorithm → JCA signature scheme. If `algorithm` is null, fall back to the
-            // JCA key type. Note: PKCS#11 has no concept of "key default signing algorithm"
-            // beyond key type, and the algorithm is *not* persisted on the token in a way the
-            // JCA layer exposes — so we conservatively map the JCA key type to a deterministic
-            // SHA-256 scheme. Callers that need curve- or key-size-matched hashes (SHA-384 for
-            // P-384/RSA-3072, SHA-512 for P-521/RSA-4096) must pass the algorithm explicitly.
-            val signatureScheme = signatureSchemeFor(algorithm, privateKey.algorithm)
-                ?: return@withContext SignResult.Failure.UnsupportedAlgorithm(
-                    keyId = keyId,
-                    requestedAlgorithm = algorithm,
-                    keyAlgorithm = Algorithm.parse(privateKey.algorithm) ?: Algorithm.Custom(privateKey.algorithm),
-                    reason = "Cannot derive a PKCS#11 signature scheme for algorithm=${algorithm?.name} " +
-                        "keyType=${privateKey.algorithm}",
-                )
-
-            val signer = Signature.getInstance(signatureScheme, provider)
-            signer.initSign(privateKey)
-            signer.update(data)
-            val signature = signer.sign()
-            // JCA/PKCS#11 ECDSA emits ASN.1 DER; the KeyManagementService contract requires
-            // P1363 (raw r||s). Derive the field size from the requested algorithm or, when the
-            // caller passed no algorithm, from the EC key parameters reported by the token.
-            val normalized = if (signatureScheme.contains("ECDSA")) {
-                val fieldSizeBytes = algorithm?.let { EcdsaSignatureCodec.fieldSizeBytes(it) }
-                    ?: (privateKey as? java.security.interfaces.ECKey)
-                        ?.params?.curve?.field?.fieldSize?.let { (it + 7) / 8 }
-                if (fieldSizeBytes != null && EcdsaSignatureCodec.isDer(signature)) {
-                    EcdsaSignatureCodec.derToP1363(signature, fieldSizeBytes)
-                } else {
-                    signature
+    ): SignResult =
+        withContext(Dispatchers.IO) {
+            try {
+                if (!keyStore.containsAlias(keyId.value)) {
+                    return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
                 }
-            } else {
-                signature
-            }
-            SignResult.Success(normalized)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Failed to sign with PKCS#11 key: keyId=${keyId.value}", e)
-            SignResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to sign with PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
-                cause = e,
-            )
-        }
-    }
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = withContext(Dispatchers.IO) {
-        // containsAlias may itself fail on a broken provider; treat any pre-delete failure as
-        // a hard error so callers see what went wrong.
-        val exists = try {
-            keyStore.containsAlias(keyId.value)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("Failed to query PKCS#11 alias: keyId=${keyId.value}", e)
-            return@withContext DeleteKeyResult.Failure.Error(
-                keyId = keyId,
-                reason = "Failed to query PKCS#11 alias: ${e.message ?: e.javaClass.simpleName}",
-                cause = e,
-            )
-        }
-        if (!exists) {
-            return@withContext DeleteKeyResult.NotFound
-        }
+                val privateKey =
+                    try {
+                        keyStore.getKey(keyId.value, null) as? java.security.PrivateKey
+                            ?: return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "PKCS#11 alias '${keyId.value}' does not resolve to a private key",
+                            )
+                    } catch (e: KeyStoreException) {
+                        // "no such alias" is reported here on some providers
+                        return@withContext SignResult.Failure.KeyNotFound(
+                            keyId = keyId,
+                            reason = e.message,
+                        )
+                    }
 
-        try {
-            keyStore.deleteEntry(keyId.value)
-            DeleteKeyResult.Deleted
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            if (config.enableSoftDelete) {
-                logger.warn(
-                    "PKCS#11 device refused deleteEntry for '{}'; soft-delete enabled, returning Deleted",
-                    keyId.value,
-                    e,
-                )
-                DeleteKeyResult.Deleted
-            } else {
-                DeleteKeyResult.Failure.Error(
+                // The key's own algorithm (EC curve, RSA modulus size) is authoritative. PKCS#11 does not
+                // persist a TrustWeave Algorithm, so derive it from the key parameters; the placeholder
+                // certificate carries the same public key when the private key hides its parameters.
+                val publicKey = keyStore.getCertificate(keyId.value)?.publicKey
+                val resolution =
+                    resolveSigning(algorithm, privateKey.algorithm, deriveKeyAlgorithm(privateKey) ?: deriveKeyAlgorithm(publicKey))
+                val (signatureScheme, signingAlgorithm) =
+                    when (resolution) {
+                        is SigningResolution.Ready -> resolution.scheme to resolution.algorithm
+                        is SigningResolution.Incompatible -> return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                            keyId = keyId,
+                            requestedAlgorithm = algorithm,
+                            keyAlgorithm = resolution.keyAlgorithm,
+                            reason =
+                                "Algorithm '${algorithm?.name}' is not compatible with key algorithm " +
+                                    "'${resolution.keyAlgorithm.name}'",
+                        )
+                        is SigningResolution.Unsupported -> return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                            keyId = keyId,
+                            requestedAlgorithm = algorithm,
+                            keyAlgorithm =
+                                resolution.keyAlgorithm
+                                    ?: Algorithm.parse(privateKey.algorithm) ?: Algorithm.Custom(privateKey.algorithm),
+                            reason =
+                                "Cannot derive a PKCS#11 signature scheme for algorithm=${algorithm?.name} " +
+                                    "keyType=${privateKey.algorithm}",
+                        )
+                    }
+
+                val signer = Signature.getInstance(signatureScheme, provider)
+                signer.initSign(privateKey)
+                signer.update(data)
+                val signature = signer.sign()
+                // JCA/PKCS#11 ECDSA emits ASN.1 DER; the KeyManagementService contract requires
+                // P1363 (raw r||s). The field size comes from the key's own curve.
+                val normalized =
+                    if (signatureScheme.contains("ECDSA")) {
+                        if (signingAlgorithm != null) {
+                            EcdsaSignatureCodec.normalize(signature, signingAlgorithm)
+                        } else {
+                            val fieldSizeBytes =
+                                (privateKey as? java.security.interfaces.ECKey)
+                                    ?.params
+                                    ?.curve
+                                    ?.field
+                                    ?.fieldSize
+                                    ?.let { (it + 7) / 8 }
+                            if (fieldSizeBytes != null && EcdsaSignatureCodec.isDer(signature)) {
+                                EcdsaSignatureCodec.derToP1363(signature, fieldSizeBytes)
+                            } else {
+                                signature
+                            }
+                        }
+                    } else {
+                        signature
+                    }
+                SignResult.Success(normalized)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("Failed to sign with PKCS#11 key: keyId=${keyId.value}", e)
+                SignResult.Failure.Error(
                     keyId = keyId,
-                    reason = "PKCS#11 device refused key deletion (set Pkcs11Config.enableSoftDelete=true " +
-                        "to ignore): ${e.message ?: e.javaClass.simpleName}",
+                    reason = "Failed to sign with PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
                     cause = e,
                 )
             }
         }
-    }
+
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
+        withContext(Dispatchers.IO) {
+            // containsAlias may itself fail on a broken provider; treat any pre-delete failure as
+            // a hard error so callers see what went wrong.
+            val exists =
+                try {
+                    keyStore.containsAlias(keyId.value)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.error("Failed to query PKCS#11 alias: keyId=${keyId.value}", e)
+                    return@withContext DeleteKeyResult.Failure.Error(
+                        keyId = keyId,
+                        reason = "Failed to query PKCS#11 alias: ${e.message ?: e.javaClass.simpleName}",
+                        cause = e,
+                    )
+                }
+            if (!exists) {
+                return@withContext DeleteKeyResult.NotFound
+            }
+
+            try {
+                keyStore.deleteEntry(keyId.value)
+                DeleteKeyResult.Deleted
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (config.enableSoftDelete) {
+                    logger.warn(
+                        "PKCS#11 device refused deleteEntry for '{}'; soft-delete enabled, returning Deleted",
+                        keyId.value,
+                        e,
+                    )
+                    DeleteKeyResult.Deleted
+                } else {
+                    DeleteKeyResult.Failure.Error(
+                        keyId = keyId,
+                        reason =
+                            "PKCS#11 device refused key deletion (set Pkcs11Config.enableSoftDelete=true " +
+                                "to ignore): ${e.message ?: e.javaClass.simpleName}",
+                        cause = e,
+                    )
+                }
+            }
+        }
 
     /**
      * Maps a TrustWeave [Algorithm] to:
@@ -293,18 +332,17 @@ class Pkcs11KeyManagementService(
      *
      * Returns `null` for algorithms we don't attempt on PKCS#11.
      */
-    private fun mapAlgorithmForKeyGen(
-        algorithm: Algorithm,
-    ): Triple<String, java.security.spec.AlgorithmParameterSpec?, Int?>? = when (algorithm) {
-        Algorithm.Ed25519 -> Triple("Ed25519", null, null)
-        Algorithm.P256 -> Triple("EC", ECGenParameterSpec("secp256r1"), null)
-        Algorithm.P384 -> Triple("EC", ECGenParameterSpec("secp384r1"), null)
-        Algorithm.P521 -> Triple("EC", ECGenParameterSpec("secp521r1"), null)
-        is Algorithm.RSA -> Triple("RSA", null, algorithm.rsaKeySize)
-        Algorithm.Secp256k1 -> null
-        Algorithm.BLS12_381 -> null
-        is Algorithm.Custom -> null
-    }
+    private fun mapAlgorithmForKeyGen(algorithm: Algorithm): Triple<String, java.security.spec.AlgorithmParameterSpec?, Int?>? =
+        when (algorithm) {
+            Algorithm.Ed25519 -> Triple("Ed25519", null, null)
+            Algorithm.P256 -> Triple("EC", ECGenParameterSpec("secp256r1"), null)
+            Algorithm.P384 -> Triple("EC", ECGenParameterSpec("secp384r1"), null)
+            Algorithm.P521 -> Triple("EC", ECGenParameterSpec("secp521r1"), null)
+            is Algorithm.RSA -> Triple("RSA", null, algorithm.rsaKeySize)
+            Algorithm.Secp256k1 -> null
+            Algorithm.BLS12_381 -> null
+            is Algorithm.Custom -> null
+        }
 
     /**
      * Builds a minimal self-signed certificate sufficient to satisfy [KeyStore.setKeyEntry] on a
@@ -325,32 +363,37 @@ class Pkcs11KeyManagementService(
         val notAfter = Date(notBefore.time + 100L * 365 * 24 * 3600 * 1000)
         val serial = BigInteger(64, java.security.SecureRandom())
 
-        val sigAlg = when {
-            jcaKeyType.equals("Ed25519", ignoreCase = true) -> "Ed25519"
-            jcaKeyType.equals("EC", ignoreCase = true) -> "SHA256withECDSA"
-            jcaKeyType.equals("RSA", ignoreCase = true) -> "SHA256withRSA"
-            else -> throw Pkcs11Exception(
-                "internal: cannot build placeholder certificate for keyType=$jcaKeyType algorithm=$algorithm",
-            )
-        }
+        val sigAlg =
+            when {
+                jcaKeyType.equals("Ed25519", ignoreCase = true) -> "Ed25519"
+                jcaKeyType.equals("EC", ignoreCase = true) -> "SHA256withECDSA"
+                jcaKeyType.equals("RSA", ignoreCase = true) -> "SHA256withRSA"
+                else -> throw Pkcs11Exception(
+                    "internal: cannot build placeholder certificate for keyType=$jcaKeyType algorithm=$algorithm",
+                )
+            }
 
         // Use BouncyCastle's certificate builder via reflection-free direct call. This keeps the
         // code path standard and avoids pulling in additional optional dependencies.
-        val certBuilder = org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder(
-            subject,
-            serial,
-            notBefore,
-            notAfter,
-            subject,
-            keyPair.public,
-        )
+        val certBuilder =
+            org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder(
+                subject,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.public,
+            )
         // The placeholder is signed by the same private key. The private key lives on the token,
         // so we sign through the provider — but at this point [setKeyEntry] has not yet been
         // called, so the in-memory `keyPair.private` is still usable for signing.
-        val signer = org.bouncycastle.operator.jcajce.JcaContentSignerBuilder(sigAlg)
-            .build(keyPair.private)
+        val signer =
+            org.bouncycastle.operator.jcajce
+                .JcaContentSignerBuilder(sigAlg)
+                .build(keyPair.private)
         val holder = certBuilder.build(signer)
-        return org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
+        return org.bouncycastle.cert.jcajce
+            .JcaX509CertificateConverter()
             .getCertificate(holder)
     }
 
@@ -362,15 +405,16 @@ class Pkcs11KeyManagementService(
          * `Secp256k1` is intentionally omitted from the MVP because the JCA name differs by vendor
          * (`secp256k1` vs proprietary names) and would require per-vendor probing.
          */
-        val SUPPORTED_ALGORITHMS: Set<Algorithm> = setOf(
-            Algorithm.Ed25519,
-            Algorithm.P256,
-            Algorithm.P384,
-            Algorithm.P521,
-            Algorithm.RSA.RSA_2048,
-            Algorithm.RSA.RSA_3072,
-            Algorithm.RSA.RSA_4096,
-        )
+        val SUPPORTED_ALGORITHMS: Set<Algorithm> =
+            setOf(
+                Algorithm.Ed25519,
+                Algorithm.P256,
+                Algorithm.P384,
+                Algorithm.P521,
+                Algorithm.RSA.RSA_2048,
+                Algorithm.RSA.RSA_3072,
+                Algorithm.RSA.RSA_4096,
+            )
 
         /**
          * Option key used by [generateKey] to address a generated key by a caller-supplied label.
@@ -389,19 +433,23 @@ class Pkcs11KeyManagementService(
          *
          * Internal for testability (mapping-level unit tests do not require an HSM).
          */
-        internal fun signatureSchemeFor(requested: Algorithm?, keyType: String): String? {
+        internal fun signatureSchemeFor(
+            requested: Algorithm?,
+            keyType: String,
+        ): String? {
             if (requested != null) {
                 return when (requested) {
                     Algorithm.Ed25519 -> "Ed25519"
                     Algorithm.P256 -> "SHA256withECDSA"
                     Algorithm.P384 -> "SHA384withECDSA"
                     Algorithm.P521 -> "SHA512withECDSA"
-                    is Algorithm.RSA -> when (requested.rsaKeySize) {
-                        2048 -> "SHA256withRSA"
-                        3072 -> "SHA384withRSA"
-                        4096 -> "SHA512withRSA"
-                        else -> null
-                    }
+                    is Algorithm.RSA ->
+                        when (requested.rsaKeySize) {
+                            2048 -> "SHA256withRSA"
+                            3072 -> "SHA384withRSA"
+                            4096 -> "SHA512withRSA"
+                            else -> null
+                        }
                     Algorithm.Secp256k1 -> null
                     Algorithm.BLS12_381 -> null
                     is Algorithm.Custom -> null
@@ -417,6 +465,84 @@ class Pkcs11KeyManagementService(
         }
 
         /**
+         * Derives the TrustWeave [Algorithm] of a JCA key from its parameters: the EC curve (field size,
+         * and `a == 0` to tell secp256k1 from P-256) or the RSA modulus size. Returns `null` when the key
+         * does not expose enough to decide (or is not one of the supported kinds).
+         */
+        internal fun deriveKeyAlgorithm(key: java.security.Key?): Algorithm? =
+            when {
+                key == null -> null
+                key is java.security.interfaces.ECKey -> {
+                    val curve = key.params.curve
+                    when (curve.field.fieldSize) {
+                        256 -> if (curve.a.signum() == 0) Algorithm.Secp256k1 else Algorithm.P256
+                        384 -> Algorithm.P384
+                        521 -> Algorithm.P521
+                        else -> null
+                    }
+                }
+                key is java.security.interfaces.RSAKey ->
+                    when (key.modulus.bitLength()) {
+                        2048 -> Algorithm.RSA.RSA_2048
+                        3072 -> Algorithm.RSA.RSA_3072
+                        4096 -> Algorithm.RSA.RSA_4096
+                        else -> null
+                    }
+                key.algorithm.equals("Ed25519", ignoreCase = true) || key.algorithm.equals("EdDSA", ignoreCase = true) ->
+                    Algorithm.Ed25519
+                else -> null
+            }
+
+        /**
+         * Decides how to sign. A known [keyAlgorithm] is authoritative: an incompatible [requested] algorithm
+         * is refused, and the hash follows the key (P-384 -> SHA384withECDSA, RSA-3072 -> SHA384withRSA)
+         * even when nothing was requested. When the key's algorithm cannot be derived, the requested
+         * algorithm (or the bare key type) decides, as before.
+         */
+        internal fun resolveSigning(
+            requested: Algorithm?,
+            keyType: String,
+            keyAlgorithm: Algorithm?,
+        ): SigningResolution {
+            if (keyAlgorithm != null && requested != null && !requested.isCompatibleWith(keyAlgorithm)) {
+                return SigningResolution.Incompatible(keyAlgorithm)
+            }
+            val effective = keyAlgorithm ?: requested
+            val scheme = signatureSchemeFor(effective, keyType) ?: return SigningResolution.Unsupported(keyAlgorithm)
+            return SigningResolution.Ready(scheme, effective)
+        }
+
+        /** Providers registered by this class: effective provider name -> (library, slot). */
+        internal val registeredProviders = java.util.concurrent.ConcurrentHashMap<String, Pair<String, Int>>()
+
+        /**
+         * A provider is bound to one library and slot. Reusing one registered under the same name for a
+         * different library/slot would silently sign with the wrong token, so an existing provider is reused
+         * only when the registration is this plugin's and identical; otherwise this fails and asks for a
+         * distinct name. Returns `null` when no provider of that name exists yet.
+         */
+        internal fun reuseOrReject(
+            effectiveName: String,
+            config: Pkcs11Config,
+        ): Provider? {
+            val existing = Security.getProvider(effectiveName) ?: return null
+            val registered = registeredProviders[effectiveName]
+            if (registered == (config.libraryPath to config.slot)) return existing
+            throw Pkcs11Exception(
+                "A SunPKCS11 provider named '$effectiveName' is already registered " +
+                    (
+                        if (registered != null) {
+                            "for library='${registered.first}' slot=${registered.second}"
+                        } else {
+                            "outside this plugin"
+                        }
+                    ) +
+                    ", which differs from the requested library='${config.libraryPath}' slot=${config.slot}. " +
+                    "Use a distinct Pkcs11Config.providerName per library/slot.",
+            )
+        }
+
+        /**
          * Installs (or reuses) a SunPKCS11 provider for the given configuration.
          *
          * Uses the JDK 17+ approach: `Provider.configure(String)` on the prototype `SunPKCS11`
@@ -427,51 +553,65 @@ class Pkcs11KeyManagementService(
             // Use SunPKCS11's standard inline configuration format (each directive on its own line).
             // The leading "--" tells SunPKCS11 to treat the argument as inline config rather than a
             // path to a config file.
-            val configString = buildString {
-                append("--")
-                append('\n')
-                append("name=").append(config.providerName).append('\n')
-                append("library=").append(config.libraryPath).append('\n')
-                append("slot=").append(config.slot).append('\n')
-            }
+            val configString =
+                buildString {
+                    append("--")
+                    append('\n')
+                    append("name=").append(config.providerName).append('\n')
+                    append("library=").append(config.libraryPath).append('\n')
+                    append("slot=").append(config.slot).append('\n')
+                }
 
             // SunPKCS11's effective registered name is the prefix "SunPKCS11-" + configured name.
             val effectiveName = "SunPKCS11-${config.providerName}"
-            Security.getProvider(effectiveName)?.let { return it }
+            synchronized(registeredProviders) {
+                reuseOrReject(effectiveName, config)?.let { return it }
+            }
 
             // JDK 17+ approach: obtain a prototype SunPKCS11 provider, then call
             // Provider.configure(String) which returns a *new* configured Provider. The prototype
             // is shipped in every mainstream JDK 17+ distribution but is not necessarily
             // auto-registered in java.security — so we fall back to reflective instantiation if
             // Security.getProvider("SunPKCS11") returns null.
-            val prototype: Provider = Security.getProvider("SunPKCS11")
-                ?: try {
-                    @Suppress("UNCHECKED_CAST")
-                    val cls = Class.forName("sun.security.pkcs11.SunPKCS11") as Class<out Provider>
-                    cls.getDeclaredConstructor().newInstance()
+            val prototype: Provider =
+                Security.getProvider("SunPKCS11")
+                    ?: try {
+                        @Suppress("UNCHECKED_CAST")
+                        val cls = Class.forName("sun.security.pkcs11.SunPKCS11") as Class<out Provider>
+                        cls.getDeclaredConstructor().newInstance()
+                    } catch (e: Exception) {
+                        throw Pkcs11Exception(
+                            "SunPKCS11 provider is not available in this JDK; PKCS#11 support requires " +
+                                "OpenJDK 17+ with the sun.security.pkcs11 module on the classpath.",
+                            e,
+                        )
+                    }
+
+            val configured =
+                try {
+                    prototype.configure(configString)
                 } catch (e: Exception) {
                     throw Pkcs11Exception(
-                        "SunPKCS11 provider is not available in this JDK; PKCS#11 support requires " +
-                            "OpenJDK 17+ with the sun.security.pkcs11 module on the classpath.",
+                        "Failed to configure SunPKCS11 provider (libraryPath='${config.libraryPath}', " +
+                            "slot=${config.slot}): ${e.message ?: e.javaClass.simpleName}",
                         e,
                     )
                 }
-
-            val configured = try {
-                prototype.configure(configString)
-            } catch (e: Exception) {
-                throw Pkcs11Exception(
-                    "Failed to configure SunPKCS11 provider (libraryPath='${config.libraryPath}', " +
-                        "slot=${config.slot}): ${e.message ?: e.javaClass.simpleName}",
-                    e,
-                )
+            synchronized(registeredProviders) {
+                // Another thread may have registered the same name while we configured ours.
+                reuseOrReject(effectiveName, config)?.let { return it }
+                Security.addProvider(configured)
+                registeredProviders[effectiveName] = config.libraryPath to config.slot
             }
-            Security.addProvider(configured)
             return configured
         }
 
-        private fun loadKeyStore(provider: Provider, pin: CharArray?): KeyStore {
-            return try {
+        /** Opens the keystore and always zeroes [pin] (which the caller must not reuse) afterwards. */
+        internal fun loadKeyStore(
+            provider: Provider,
+            pin: CharArray?,
+        ): KeyStore =
+            try {
                 val ks = KeyStore.getInstance("PKCS11", provider)
                 ks.load(null, pin)
                 ks
@@ -481,7 +621,27 @@ class Pkcs11KeyManagementService(
                         "${e.message ?: e.javaClass.simpleName}",
                     e,
                 )
+            } finally {
+                pin?.fill('\u0000')
             }
-        }
     }
+}
+
+/** Outcome of [Pkcs11KeyManagementService.resolveSigning]. */
+internal sealed interface SigningResolution {
+    /** Sign with JCA [scheme]; [algorithm] is the effective TrustWeave algorithm when known. */
+    data class Ready(
+        val scheme: String,
+        val algorithm: Algorithm?,
+    ) : SigningResolution
+
+    /** The requested algorithm does not match the key. */
+    data class Incompatible(
+        val keyAlgorithm: Algorithm,
+    ) : SigningResolution
+
+    /** No signature scheme exists for the key or requested algorithm. */
+    data class Unsupported(
+        val keyAlgorithm: Algorithm?,
+    ) : SigningResolution
 }

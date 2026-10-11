@@ -265,33 +265,38 @@ class ThalesKeyManagementService(
             try {
                 val resolvedKeyId = AlgorithmMapping.resolveKeyId(keyId.value)
 
-                // Determine signing algorithm
-                val signingAlgorithm =
-                    algorithm ?: run {
-                        val keyHandleResult = getPublicKey(keyId)
-                        when (keyHandleResult) {
-                            is GetPublicKeyResult.Success -> {
-                                Algorithm.parse(keyHandleResult.keyHandle.algorithm)
-                                    ?: return@withContext SignResult.Failure.Error(
-                                        keyId = keyId,
-                                        reason = "Cannot determine signing algorithm for key: ${keyId.value}",
-                                        cause = null,
-                                    )
-                            }
-                            is GetPublicKeyResult.Failure.KeyNotFound -> {
-                                return@withContext SignResult.Failure.KeyNotFound(keyId)
-                            }
-                            is GetPublicKeyResult.Failure.Error -> {
-                                return@withContext SignResult.Failure.Error(
+                // The key's own algorithm is authoritative: resolve it first so an incompatible
+                // request is rejected before any signing call reaches the server.
+                val keyAlgorithm =
+                    when (val keyHandleResult = getPublicKey(keyId)) {
+                        is GetPublicKeyResult.Success ->
+                            Algorithm.parse(keyHandleResult.keyHandle.algorithm)
+                                ?: return@withContext SignResult.Failure.Error(
                                     keyId = keyId,
-                                    reason = "Failed to get key metadata: ${keyHandleResult.reason}",
-                                    cause = keyHandleResult.cause,
+                                    reason = "Cannot determine signing algorithm for key: ${keyId.value}",
+                                    cause = null,
                                 )
-                            }
-                        }
+                        is GetPublicKeyResult.Failure.KeyNotFound -> return@withContext SignResult.Failure.KeyNotFound(keyId)
+                        is GetPublicKeyResult.Failure.Error ->
+                            return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "Failed to get key metadata: ${keyHandleResult.reason}",
+                                cause = keyHandleResult.cause,
+                            )
                     }
 
+                if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = keyAlgorithm,
+                        reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
+                    )
+                }
+                val signingAlgorithm = keyAlgorithm
+
                 val thalesSigningAlgorithm = AlgorithmMapping.toThalesSigningAlgorithm(signingAlgorithm)
+                val thalesHashAlgorithm = AlgorithmMapping.toThalesHashAlgorithm(signingAlgorithm)
                 val dataBase64 = Base64.getEncoder().encodeToString(data)
 
                 // Thales CipherTrust Manager API: POST /api/v1/keys/{id}/sign
@@ -299,6 +304,8 @@ class ThalesKeyManagementService(
                     buildJsonObject {
                         put("data", dataBase64)
                         put("algorithm", thalesSigningAlgorithm)
+                        // Explicit digest, sized to the key (SHA-256/384/512), never the server default.
+                        put("hashAlgorithm", thalesHashAlgorithm)
                     }
 
                 val request =

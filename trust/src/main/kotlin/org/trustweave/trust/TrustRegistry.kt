@@ -1,6 +1,7 @@
 package org.trustweave.trust
 
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.trust.TypeAwareTrustEvaluator
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.types.IssuerIdentity
 import org.trustweave.trust.types.TrustPath
@@ -39,12 +40,13 @@ import org.trustweave.credential.trust.TrustEvaluator as CredentialTrustPolicy
  * )
  * ```
  */
-interface TrustRegistry : CredentialTrustPolicy {
+interface TrustRegistry : TypeAwareTrustEvaluator {
     /**
      * Checks if an issuer DID is trusted for a specific credential type.
      *
      * @param issuerDid The DID of the issuer to check
-     * @param credentialType The credential type (null means check for any type)
+     * @param credentialType The credential type (null means "trusted for at least one type": an
+     *   existence check, not a statement about any particular credential; see [isTrustedForAllTypes])
      * @return true if the issuer is trusted, false otherwise
      */
     suspend fun isTrustedIssuer(
@@ -53,9 +55,37 @@ interface TrustRegistry : CredentialTrustPolicy {
     ): Boolean
 
     /**
-     * Implementation of CredentialTrustPolicy - checks if issuer is trusted (any credential type).
+     * Whether [issuerDid] is a trust anchor trusted for **every** credential type, i.e. one with no
+     * type restriction.
+     *
+     * This answers a typeless trust question. [isTrustedIssuer] with a `null` type only says the
+     * anchor exists; treating that as "trusted for whatever this credential is" would let an
+     * anchor trusted for one credential type vouch for any other. Implementations must override
+     * this; the default is `false` (fail closed).
      */
-    override suspend fun isTrusted(issuer: Did): Boolean = isTrustedIssuer(issuer.value, null)
+    suspend fun isTrustedForAllTypes(issuerDid: String): Boolean = false
+
+    /**
+     * [CredentialTrustPolicy] without a credential type: trusted only if the anchor is trusted for
+     * every type ([isTrustedForAllTypes]). Verification uses the typed overload when it knows the
+     * credential's types.
+     */
+    override suspend fun isTrusted(issuer: Did): Boolean = isTrustedForAllTypes(issuer.value)
+
+    /**
+     * Checks trust for a credential with the given `type` entries. Every type other than the base
+     * `VerifiableCredential` must be permitted by the anchor; with no specific type, the base type
+     * must be. An empty list is a typeless question and is answered by [isTrusted] (fail closed
+     * for a type-restricted anchor).
+     */
+    override suspend fun isTrusted(
+        issuer: Did,
+        credentialTypes: List<String>,
+    ): Boolean {
+        if (credentialTypes.isEmpty()) return isTrusted(issuer)
+        val specific = credentialTypes.filter { it != BASE_CREDENTIAL_TYPE }.ifEmpty { listOf(BASE_CREDENTIAL_TYPE) }
+        return specific.all { isTrustedIssuer(issuer.value, it) }
+    }
 
     /**
      * Checks if an issuer is trusted for a specific credential type (type-safe overload).
@@ -125,6 +155,8 @@ interface TrustRegistry : CredentialTrustPolicy {
             Did(didString)
         }
 }
+
+private const val BASE_CREDENTIAL_TYPE = "VerifiableCredential"
 
 /**
  * Metadata about a trust anchor.

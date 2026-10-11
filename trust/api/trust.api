@@ -49,12 +49,14 @@ public final class org/trustweave/trust/TrustPolicy$RequireTrustPath : org/trust
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/trustweave/trust/TrustRegistry : org/trustweave/credential/trust/TrustEvaluator {
+public abstract interface class org/trustweave/trust/TrustRegistry : org/trustweave/credential/trust/TypeAwareTrustEvaluator {
 	public abstract fun addTrustAnchor (Ljava/lang/String;Lorg/trustweave/trust/TrustAnchorMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun findTrustPath-hbdn0iQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getTrustedIssuers (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getTrustedIssuers (Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrusted (Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun isTrusted (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTrustedForAllTypes (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun isTrustedIssuer (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun isTrustedIssuer-QWjaZAQ (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun removeTrustAnchor (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -62,7 +64,9 @@ public abstract interface class org/trustweave/trust/TrustRegistry : org/trustwe
 
 public final class org/trustweave/trust/TrustRegistry$DefaultImpls {
 	public static fun getTrustedIssuers (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isTrusted (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/did/identifiers/Did;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun isTrusted (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isTrustedForAllTypes (Lorg/trustweave/trust/TrustRegistry;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun isTrustedIssuer-QWjaZAQ (Lorg/trustweave/trust/TrustRegistry;Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/credential/model/CredentialType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

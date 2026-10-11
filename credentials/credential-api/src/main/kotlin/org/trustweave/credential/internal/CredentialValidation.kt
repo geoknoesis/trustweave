@@ -328,7 +328,11 @@ internal object CredentialValidation {
 
         val isTrusted =
             try {
-                trustPolicy.isTrusted(issuerDid)
+                if (trustPolicy is org.trustweave.credential.trust.TypeAwareTrustEvaluator) {
+                    trustPolicy.isTrusted(issuerDid, credential.type.map { it.value })
+                } else {
+                    trustPolicy.isTrusted(issuerDid)
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {

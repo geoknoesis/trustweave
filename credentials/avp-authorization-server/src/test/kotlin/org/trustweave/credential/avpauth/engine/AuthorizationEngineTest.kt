@@ -14,31 +14,41 @@ import kotlin.test.assertTrue
 
 class AuthorizationEngineTest {
     private val now = Instant.parse("2026-03-25T21:30:30Z")
+
     private fun vector(): JsonObject =
-        Json.parseToJsonElement(
-            this::class.java.getResource("/vectors/02-payment-authorization.json")!!.readText()
-        ).jsonObject
+        Json
+            .parseToJsonElement(
+                this::class.java.getResource("/vectors/02-payment-authorization.json")!!.readText(),
+            ).jsonObject
 
-    private fun engine() = AuthorizationEngine(clock = { now })
+    private fun engine() =
+        AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+            d ==
+                "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+        }, statusResolver = { false })
 
-    @Test fun `first presentation is allowed`() = runTest {
-        val v = engine().decide(vector())
-        assertTrue(v is AuthorizationVerdict.Allow, "expected Allow, got $v")
-    }
-
-    @Test fun `replay of the same nonce is rejected`() = runTest {
-        val e = engine()
-        assertTrue(e.decide(vector()) is AuthorizationVerdict.Allow)
-        val second = e.decide(vector())
-        assertEquals("NONCE_REUSE", (second as AuthorizationVerdict.Reject).reason)
-    }
-
-    @Test fun `concurrent identical requests yield exactly one allow`() = runTest {
-        val e = engine()
-        val results = coroutineScope {
-            (1..8).map { async { e.decide(vector()) } }.awaitAll()
+    @Test fun `first presentation is allowed`() =
+        runTest {
+            val v = engine().decide(vector())
+            assertTrue(v is AuthorizationVerdict.Allow, "expected Allow, got $v")
         }
-        assertEquals(1, results.count { it is AuthorizationVerdict.Allow })
-        assertEquals(7, results.count { it is AuthorizationVerdict.Reject })
-    }
+
+    @Test fun `replay of the same nonce is rejected`() =
+        runTest {
+            val e = engine()
+            assertTrue(e.decide(vector()) is AuthorizationVerdict.Allow)
+            val second = e.decide(vector())
+            assertEquals("NONCE_REUSE", (second as AuthorizationVerdict.Reject).reason)
+        }
+
+    @Test fun `concurrent identical requests yield exactly one allow`() =
+        runTest {
+            val e = engine()
+            val results =
+                coroutineScope {
+                    (1..8).map { async { e.decide(vector()) } }.awaitAll()
+                }
+            assertEquals(1, results.count { it is AuthorizationVerdict.Allow })
+            assertEquals(7, results.count { it is AuthorizationVerdict.Reject })
+        }
 }

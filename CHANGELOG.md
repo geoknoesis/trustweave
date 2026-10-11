@@ -136,6 +136,39 @@ working code fail until it is adjusted.**
   pool error and a matching transaction id (a missing id is rejected; on the pending path the id is recomputed), and
   honour an optional `expectedSender`. Cardano reads require the transaction to be in a block buried under
   `minConfirmations` (default 1) and report that block's time (or `null`) instead of `System.currentTimeMillis()`.
+- **Behaviour (security) — AVP-Micro payments, token status lists and trust (`avp-micro`, `avp-authorization-server`,
+  `status-list:token`, `status-list:database`, `status-list:publishing`, `trust`, `credential-models-mp`).**
+  - `AvpMicro.verifyPayment` / `PaymentVerifier.verify` / `AuthorizationEngine` **fail closed without trust
+    configuration**: a valid signature only proved possession of the key named in the proof. They now require an
+    `IssuerTrustPolicy` (new parameter `issuerTrust`; engine constructor parameters `issuerTrust` and
+    `statusResolver`, appended so existing calls still compile). With none, every authorization is refused as
+    `ISSUER_NOT_TRUSTED`, so an engine built as `AuthorizationEngine()` (and so `AvpAuthorizationServer()` by default)
+    refuses all payments until a policy is supplied. The credential `issuer` must equal the DID that signed its proof
+    (`ISSUER_MISMATCH`), the authorization must be signed by the payer, who must be the credential subject
+    (`AUTHORIZATION_SIGNER_MISMATCH`), and credential, authorization and quote proofs must have
+    `proofPurpose: assertionMethod` (`PROOF_PURPOSE_INVALID`). The engine now also passes its `clockSkewSeconds`
+    to the stateless gate instead of the verifier default.
+  - A credential carrying `credentialStatus` is refused (`STATUS_UNVERIFIABLE`) when no `StatusResolver` is configured
+    or the resolver throws; before, the check was skipped. Amounts of zero or less are refused everywhere
+    (`INVALID_AMOUNT` in the verifier, `StatefulRejection.INVALID_AMOUNT` in `InMemoryAuthorizationStore` and
+    `PostgresAuthorizationStore`; `AuthorizationView` throws `NonPositiveAmountException`). New enum entries were added
+    to `VerificationFailure` and `StatefulRejection`; exhaustive `when` expressions over them need a branch.
+    `PostgresAuthorizationStore` now restores the pooled connection's autoCommit and isolation level.
+  - `TokenStatusListManager`: every write to a list's bit array or index counter now happens in one transaction under
+    `SELECT ... FOR UPDATE` on the list row (lost updates and duplicate index allocation are gone); batch updates and
+    `expandStatusList` are transactional; a unique index on `(status_list_id, entry_index)` is created (an existing
+    database that already holds duplicates logs an error and starts without it); an explicit index outside
+    `[0, size)` is an `IllegalArgumentException`, a full list refuses automatic allocation (`STATUS_LIST_FULL`), and
+    automatic allocation skips explicitly taken indices. The row's stored `bits_per_entry` is used instead of the
+    instance's. `DatabaseStatusListManager.updateCredentialStatus` rolls back when it declines an update.
+  - `LocalFileStatusListPublisher` accepts only identifiers of letters, digits, `.`, `_` and `-` (not starting with
+    `.`); anything else is an `IllegalArgumentException` for `publish`, `delete` and `getUrl`.
+  - `TrustRegistry` now extends the new `TypeAwareTrustEvaluator`, and credential verification passes the credential's
+    `type` entries to such an evaluator. `TrustRegistry.isTrusted(Did)` (the typeless `CredentialTrustPolicy` call) is
+    now true only for an anchor with no type restriction, via the new `isTrustedForAllTypes` (default `false`:
+    third-party registries must override it); with types, every non-base type must be permitted by the anchor.
+    `isTrustedIssuer(did, null)` keeps meaning "the anchor exists". `VerificationBuilder.requireTrustPath` is
+    deprecated: it never searched for a path and ignored `maxPathLength`; use `requireTrust`.
 - **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
   that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
   wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails

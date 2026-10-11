@@ -56,6 +56,19 @@ import java.util.UUID
  *     )
  * )
  * ```
+ *
+ * **Object layout:** every wallet gets its own key prefix, `<storagePath>/wallet-<percent-encoded walletId>/`,
+ * so wallets configured with the same `storagePath` never see each other's credentials. Slashes in
+ * `storagePath` are normalised (empty and `.`/`..` segments are rejected) and an empty bucket or container is
+ * refused.
+ *
+ * **Migration:** wallets created by earlier versions stored objects directly under `<storagePath>/credentials/`,
+ * `/collections/`, `/metadata/` and `/tags/`, shared by every wallet using that path. Those objects are not
+ * visible to the new layout, because the factory cannot tell which wallet owned them. Either copy them under
+ * `<storagePath>/wallet-<walletId>/`, or, for the single wallet that owns the path, pass
+ * `additionalProperties = mapOf("legacyLayout" to true)` to keep using the old prefix.
+ *
+ * **Encryption:** `WalletCreationOptions.encryptionKey` is rejected; objects are written as plain JSON.
  */
 class CloudWalletFactory : WalletFactory {
     override suspend fun create(
@@ -70,6 +83,12 @@ class CloudWalletFactory : WalletFactory {
             throw IllegalArgumentException("Provider name must be 'cloud'")
         }
 
+        require(options.encryptionKey == null && options.additionalProperties["encryptionKey"] == null) {
+            "CloudWalletFactory cannot honour encryptionKey: cloud wallets store credentials as plain JSON and rely on " +
+                "the storage provider's own at-rest encryption (SSE / Azure Storage encryption / CMEK). " +
+                "Remove encryptionKey or use the 'file' wallet provider."
+        }
+
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
         val finalHolderDid =
@@ -80,35 +99,18 @@ class CloudWalletFactory : WalletFactory {
             options.storagePath
                 ?: throw IllegalArgumentException("storagePath is required for CloudWallet")
 
+        require(storagePath.isNotBlank()) { "storagePath must not be empty" }
+
         val provider =
-            options.additionalProperties["provider"] as? String
+            (options.additionalProperties["provider"] as? String)?.lowercase()
                 ?: detectProviderFromPath(storagePath)
                 ?: throw IllegalArgumentException("Cloud storage provider must be specified (aws, azure, or gcs)")
 
-        // Extract bucket/container name and path from storagePath
-        val (bucketName, basePath) =
-            when (provider) {
-                "aws" -> {
-                    val s3Path = storagePath.removePrefix("s3://")
-                    val parts = s3Path.split("/", limit = 2)
-                    parts[0] to (parts.getOrNull(1) ?: "")
-                }
-                "azure" -> {
-                    // Format: https://account.blob.core.windows.net/container/path
-                    val uri = java.net.URI(storagePath)
-                    val pathParts = uri.path.removePrefix("/").split("/", limit = 2)
-                    pathParts[0] to (pathParts.getOrNull(1) ?: "")
-                }
-                "gcs" -> {
-                    val gsPath = storagePath.removePrefix("gs://")
-                    val parts = gsPath.split("/", limit = 2)
-                    parts[0] to (parts.getOrNull(1) ?: "")
-                }
-                else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
-            }
+        val legacyLayout = options.additionalProperties["legacyLayout"].let { it == true || it == "true" }
+        val (bucketName, basePath) = resolveCloudLocation(provider.lowercase(), storagePath, finalWalletId, legacyLayout)
 
         // Create provider-specific wallet implementation
-        return when (provider.lowercase()) {
+        return when (provider) {
             "aws" -> {
                 val region = options.additionalProperties["region"] as? String ?: "us-east-1"
                 val accessKeyId = options.additionalProperties["accessKeyId"] as? String
@@ -239,4 +241,42 @@ class CloudWalletFactory : WalletFactory {
             path.startsWith("gs://") -> "gcs"
             else -> null
         }
+}
+
+internal data class CloudLocation(
+    val bucket: String,
+    val basePath: String,
+)
+
+/**
+ * Splits [storagePath] into bucket/container and a normalised base path and appends the per-wallet
+ * segment (unless [legacyLayout]). Throws [IllegalArgumentException] for an empty bucket or `.`/`..` segments.
+ */
+internal fun resolveCloudLocation(
+    provider: String,
+    storagePath: String,
+    walletId: String,
+    legacyLayout: Boolean,
+): CloudLocation {
+    require(storagePath.isNotBlank()) { "storagePath must not be empty" }
+    val rawPath =
+        when (provider) {
+            "aws" -> storagePath.removePrefix("s3://")
+            "gcs" -> storagePath.removePrefix("gs://")
+            // Format: https://account.blob.core.windows.net/container/path
+            "azure" ->
+                java.net
+                    .URI(storagePath)
+                    .path
+                    .orEmpty()
+            else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
+        }
+    require(provider == "azure" || !rawPath.startsWith("/")) { "storagePath must name a bucket or container" }
+    val segments = rawPath.split('/').filter { it.isNotEmpty() }
+    require(segments.none { it == "." || it == ".." }) { "storagePath must not contain '.' or '..' segments" }
+    require(segments.isNotEmpty()) { "storagePath must name a bucket or container" }
+    val bucket = segments.first()
+    val base = segments.drop(1)
+    val own = if (legacyLayout) base else base + "wallet-${encodeCloudKeySegment(walletId)}"
+    return CloudLocation(bucket, own.joinToString("/"))
 }

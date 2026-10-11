@@ -66,6 +66,7 @@ class EvmAnchorReadIntegrityTest {
             val request = String(exchange.requestBody.readBytes(), StandardCharsets.UTF_8)
             val response =
                 when {
+                    request.contains("eth_chainId") -> """{"jsonrpc":"2.0","id":1,"result":"0x539"}"""
                     request.contains("eth_getTransactionReceipt") ->
                         """{"jsonrpc":"2.0","id":1,"result":{
                             "transactionHash":"$receiptTxHash","transactionIndex":"0x0",

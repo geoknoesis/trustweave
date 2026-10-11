@@ -53,6 +53,44 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **Behaviour (security) — wallet storage isolation.** `CloudWalletFactory` now gives every wallet its own key
+  prefix, `<storagePath>/wallet-<percent-encoded walletId>/`, so two wallets with the same `storagePath` no
+  longer share credentials; slashes in `storagePath` are normalised, an empty bucket or container, empty path or
+  `.`/`..` segment is rejected. **Migration:** objects written by earlier versions sit under
+  `<storagePath>/{credentials,collections,metadata,tags}/` and are not visible to the new layout (the factory cannot
+  know which wallet owned them). Copy them under `<storagePath>/wallet-<walletId>/`, or pass
+  `additionalProperties["legacyLayout"] = true` for the single wallet that owns the path to keep the old prefix.
+  `WalletCreationOptions.encryptionKey` (typed, or `additionalProperties["encryptionKey"]`) now makes
+  `CloudWalletFactory` and `DatabaseWalletFactory` throw `IllegalArgumentException` instead of being silently
+  ignored (neither encrypts; use storage-side encryption or the `file` provider). `AzureBlobWallet` no longer
+  contacts Azure in its constructor (the container is created on first use), and a blob deleted between listing and
+  download is skipped in Azure and GCS like in S3.
+- **Behaviour (schema) — `DatabaseWallet` tables are keyed by `(wallet_id, id)`.** `credentials` and `collections`
+  now have the composite primary key, and `credential_collections`, `credential_tags` and `credential_metadata`
+  carry `wallet_id` with composite foreign keys. A `schema_version` table records version 2; existing databases are
+  migrated automatically and idempotently on first `DatabaseWallet.create` (copy into `*_v2` tables, drop the old,
+  rename; one transaction on PostgreSQL under an advisory lock, resumable on H2 whose DDL auto-commits; tag,
+  membership and metadata rows linking different wallets, only possible by hand-editing, are not carried over). Back up
+  before upgrading, and do not run old and new versions against one database. Two wallets can now store the same
+  credential id; the "may conflict with another wallet" `StorageError` (an existence oracle) is gone.
+- **Behaviour — EVM anchors.** Gas limits cover the EIP-7623 calldata floor (`21000 + 10 * (zeroBytes + 4 *
+  nonZeroBytes)`, i.e. 40 gas per non-zero byte): `EvmGas.txGasLimit`, `txGasLimitForSize` and the Arbitrum and
+  zkSync floors use the new `EvmGas.requiredGas` (max of intrinsic and floor), so limits and fee estimates for
+  payloads rise. The default `deriveGasLimit` now prefers `eth_estimateGas` (+10%) floored at that value, falling back to
+  `requiredGas` + 10%. New `maxGasPrice` option (wei) fails a submission when `eth_gasPrice` is higher.
+  `PaymentContext.maxFee` is enforced at send time against `gasLimit * gasPrice` of the transaction about to be
+  signed (`submitTransaction(data, paymentContext)`), and Algorand checks the fee of the transaction(s) actually
+  built. The first read or submission calls `eth_chainId` and fails closed with `ConfigurationFailed` when it differs
+  from the configured chain or is unanswered (`FakeEvmJsonRpcServer` gained a `chainId` parameter, default 1337).
+- **Behaviour — anchor reads.** Bitcoin reads require a block hash, a best-chain block listing the transaction and
+  `minConfirmations` (default 1); RPC errors while resolving the block are errors, not "unconfirmed"; optional
+  `expectedSender` requires every input to be funded by that address. Bitcoin writes list only confirmed outputs
+  (`minconf` 1), price at `estimatesmartfee` (`confirmationTarget`, `fallbackFeeRateSatPerVb`, `maxFeeRateSatPerVb`)
+  with a script-type-aware vsize, select inputs largest-first instead of spending all, and drop dust change; the flat
+  1000-sat fee is gone and a write fails when no rate is available. Algorand reads require `confirmed-round > 0`, no
+  pool error and a matching transaction id (a missing id is rejected; on the pending path the id is recomputed), and
+  honour an optional `expectedSender`. Cardano reads require the transaction to be in a block buried under
+  `minConfirmations` (default 1) and report that block's time (or `null`) instead of `System.currentTimeMillis()`.
 - **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
   that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
   wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails

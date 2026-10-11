@@ -133,7 +133,7 @@ class CardanoBlockchainAnchorClientTest {
               }
             ]
         """.trimIndent()
-        server.enqueue(MockResponse().setResponseCode(200).setBody(body))
+        server.dispatcher = cardanoDispatcher(body, txContentBody("aa".repeat(32)), latestBlockBody(110))
 
         client().use { c ->
             val ref = AnchorRef(

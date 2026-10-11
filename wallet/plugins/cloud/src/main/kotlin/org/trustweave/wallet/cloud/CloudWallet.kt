@@ -121,18 +121,7 @@ abstract class CloudWallet(
      * their historical keys); everything else, and a dots-only id, is encoded. Reversible via
      * [decodeKeySegment].
      */
-    private fun encodeKeySegment(id: String): String {
-        val out = StringBuilder()
-        for (byte in id.toByteArray(Charsets.UTF_8)) {
-            val c = (byte.toInt() and 0xFF).toChar()
-            if (c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c in "-_~:" || (c == '.' && id.any { it != '.' })) {
-                out.append(c)
-            } else {
-                out.append('%').append("%02X".format(byte.toInt() and 0xFF))
-            }
-        }
-        return out.toString()
-    }
+    private fun encodeKeySegment(id: String): String = encodeCloudKeySegment(id)
 
     private fun decodeKeySegment(segment: String): String {
         val bytes = java.io.ByteArrayOutputStream()
@@ -356,4 +345,18 @@ abstract class CloudWallet(
                 unknownStatusCredentials = unknown,
             )
         }
+}
+
+/** Percent-encodes [id] into exactly one object-key segment; see [CloudWallet]. */
+internal fun encodeCloudKeySegment(id: String): String {
+    val out = StringBuilder()
+    for (byte in id.toByteArray(Charsets.UTF_8)) {
+        val c = (byte.toInt() and 0xFF).toChar()
+        if (c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c in "-_~:" || (c == '.' && id.any { it != '.' })) {
+            out.append(c)
+        } else {
+            out.append('%').append("%02X".format(byte.toInt() and 0xFF))
+        }
+    }
+    return out.toString()
 }

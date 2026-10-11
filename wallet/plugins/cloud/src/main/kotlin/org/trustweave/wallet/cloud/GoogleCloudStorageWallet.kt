@@ -1,6 +1,5 @@
 package org.trustweave.wallet.cloud
 
-import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
@@ -59,10 +58,14 @@ class GoogleCloudStorageWallet(
     override suspend fun download(key: String): ByteArray? =
         withContext(Dispatchers.IO) {
             try {
-                val blobId = BlobId.of(bucketName, key)
-                val blob: Blob? = storage.get(blobId)
-
-                blob?.getContent() ?: null
+                // One call; a blob deleted since it was listed surfaces as a 404, which means "absent".
+                storage.readAllBytes(BlobId.of(bucketName, key))
+            } catch (e: StorageException) {
+                if (e.code == 404) {
+                    null
+                } else {
+                    throw RuntimeException("Failed to download from Google Cloud Storage: ${e.message}", e)
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {

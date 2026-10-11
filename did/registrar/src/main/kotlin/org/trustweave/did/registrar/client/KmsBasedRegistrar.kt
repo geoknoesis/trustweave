@@ -27,6 +27,7 @@ import org.trustweave.did.registrar.model.Secret
 import org.trustweave.did.registrar.model.UpdateDidOptions
 import org.trustweave.did.registrar.storage.InMemoryJobStorage
 import org.trustweave.did.registrar.storage.JobStorage
+import org.trustweave.did.registrar.storage.withoutSecrets
 import org.trustweave.kms.KeyManagementService
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -101,15 +102,19 @@ class KmsBasedRegistrar(
     private suspend fun respond(state: DidState): DidRegistrationResponse {
         val jobId = UUID.randomUUID().toString()
         val response = DidRegistrationResponse(jobId = jobId, didState = state)
-        withContext(Dispatchers.IO) { jobStorage.store(jobId, response) }
+        // The caller that asked for secrets gets them in this response; the stored job never holds them.
+        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.withoutSecrets()) }
         return response
     }
 
     private suspend fun failed(
         did: String?,
-        reason: String,
-    ): DidRegistrationResponse =
-        respond(
+        rawReason: String,
+    ): DidRegistrationResponse {
+        // The reason ends up in the response and in the stored job: strip control characters (log and
+        // header injection) and cap it. Exceptions are never echoed, see [internalFailure].
+        val reason = sanitizeReason(rawReason)
+        return respond(
             DidState(
                 state = OperationState.FAILED,
                 did = did,
@@ -118,6 +123,26 @@ class KmsBasedRegistrar(
                 action = Action(type = "error", description = reason),
             ),
         )
+    }
+
+    /**
+     * A failure caused by an exception. The exception text can carry connection strings, host names,
+     * credentials or stack details, so only its type goes to the client; the full text goes to the log.
+     */
+    private suspend fun internalFailure(
+        did: String?,
+        what: String,
+        e: Exception,
+    ): DidRegistrationResponse {
+        log.warn("{} failed: {}", what, e.toString(), e)
+        return failed(did, "$what (${e::class.simpleName ?: "error"})")
+    }
+
+    private fun sanitizeReason(reason: String): String =
+        reason
+            .map { if (it.isISOControl()) ' ' else it }
+            .joinToString("")
+            .take(MAX_REASON_LENGTH)
 
     override suspend fun createDid(
         method: String,
@@ -161,7 +186,7 @@ class KmsBasedRegistrar(
             } catch (e: UnsupportedOperationException) {
                 failed(null, "did:$method does not support create: ${e.message ?: "not supported"}")
             } catch (e: Exception) {
-                failed(null, "Failed to create DID: ${e.message ?: e::class.simpleName}")
+                internalFailure(null, "Failed to create DID", e)
             }
         }
 
@@ -185,7 +210,7 @@ class KmsBasedRegistrar(
             } catch (e: UnsupportedOperationException) {
                 failed(did, "did:${parsed.method} does not support update: ${e.message ?: "not supported"}")
             } catch (e: Exception) {
-                failed(did, "Failed to update DID: ${e.message ?: e::class.simpleName}")
+                internalFailure(did, "Failed to update DID", e)
             }
         }
 
@@ -208,7 +233,7 @@ class KmsBasedRegistrar(
             } catch (e: UnsupportedOperationException) {
                 failed(did, "did:${parsed.method} does not support deactivate: ${e.message ?: "not supported"}")
             } catch (e: Exception) {
-                failed(did, "Failed to deactivate DID: ${e.message ?: e::class.simpleName}")
+                internalFailure(did, "Failed to deactivate DID", e)
             }
         }
 
@@ -275,3 +300,6 @@ class KmsBasedRegistrar(
                 },
         )
 }
+
+private val log: org.slf4j.Logger = org.slf4j.LoggerFactory.getLogger(KmsBasedRegistrar::class.java)
+private const val MAX_REASON_LENGTH = 300

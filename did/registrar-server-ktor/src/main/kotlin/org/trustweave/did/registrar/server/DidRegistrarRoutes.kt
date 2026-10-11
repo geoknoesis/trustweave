@@ -24,7 +24,7 @@ import org.trustweave.did.registrar.server.dto.DeactivateDidRequest
 import org.trustweave.did.registrar.server.dto.ErrorResponse
 import org.trustweave.did.registrar.server.dto.UpdateDidRequest
 import org.trustweave.did.registrar.storage.JobStorage
-import java.util.UUID
+import org.trustweave.did.registrar.storage.track
 
 /**
  * Ktor routing configuration for DID Registrar endpoints.
@@ -221,9 +221,7 @@ private suspend fun handleCreateOperation(
 
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
-        val jobId = response.jobId ?: UUID.randomUUID().toString()
-        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-        return response.copy(jobId = jobId)
+        return withContext(Dispatchers.IO) { jobStorage.track(response) }
     }
 
     return response
@@ -243,9 +241,7 @@ private suspend fun handleUpdateOperation(
 
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
-        val jobId = response.jobId ?: UUID.randomUUID().toString()
-        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-        return response.copy(jobId = jobId)
+        return withContext(Dispatchers.IO) { jobStorage.track(response) }
     }
 
     return response
@@ -264,9 +260,7 @@ private suspend fun handleDeactivateOperation(
 
     // If operation is long-running, store it and return jobId
     if (response.jobId != null || !response.isComplete()) {
-        val jobId = response.jobId ?: UUID.randomUUID().toString()
-        withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-        return response.copy(jobId = jobId)
+        return withContext(Dispatchers.IO) { jobStorage.track(response) }
     }
 
     return response

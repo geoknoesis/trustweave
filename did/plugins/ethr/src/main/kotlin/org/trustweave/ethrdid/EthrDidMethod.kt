@@ -34,6 +34,12 @@ import java.util.concurrent.ConcurrentHashMap
  * did:ethr implementations will generally not resolve here, and DIDs created here are not
  * visible to standard ethr-did resolvers. Use for experimentation only.
  *
+ * **In-memory only:** the mapping from a DID to the transaction that anchored its document is held
+ * in memory, so a DID is resolvable only by the instance that created or updated it, and only until
+ * that process restarts. After a restart (or on another instance) it resolves as notFound, although
+ * the anchor is still on chain. Persisting the index, or resolving through the registry contract, is
+ * not implemented.
+ *
  * What IS real: Ethereum addresses are derived correctly from the secp256k1 public key
  * (Keccak-256 over the 64-byte uncompressed key, last 20 bytes, EIP-55 checksummed), so
  * the `did:ethr:0x...` identifiers themselves are genuine Ethereum addresses.

@@ -32,7 +32,9 @@ import java.util.concurrent.TimeUnit
  * Format: `did:ebsi:<base58btc-16-bytes>`
  *
  * **Supported operations:**
- * - Resolve: always available (queries the EBSI DID Registry REST API, falls back to in-memory).
+ * - Resolve: always available (queries the EBSI DID Registry REST API). The registry is the
+ *   authority: a locally cached document is never served in place of a 404 or an API error. A DID
+ *   created without a bearer token is not registered and therefore does not resolve.
  * - Create / Update / Deactivate: requires a `bearerToken` in [EbsiDidConfig].
  *
  * **Example:**
@@ -204,9 +206,9 @@ class EbsiDidMethod(
      * Resolves a did:ebsi DID.
      *
      * Resolution order:
-     * 1. Queries the EBSI DID Registry REST API.
-     * 2. On 404, returns the locally cached document (for DIDs created in this session).
-     * 3. On network error, falls back to the locally cached document.
+     * Queries the EBSI DID Registry REST API. On 404 the result is `notFound`; on an API or network
+     * error it is an `internalError`. The local cache is never served as live in either case; it only
+     * contributes the fail-safe "deactivated" verdict for a DID this instance deactivated.
      */
     override suspend fun resolveDid(did: Did): DidResolutionResult =
         withContext(Dispatchers.IO) {
@@ -239,49 +241,53 @@ class EbsiDidMethod(
                     )
                 }
 
-            when {
-                apiResult.isSuccess && apiResult.getOrNull() != null -> {
-                    val document = requireNotNull(apiResult.getOrNull())
-                    storeDocument(did, document)
-                    DidMethodUtils.createSuccessResolutionResult(
-                        document,
-                        method,
-                        getDocumentMetadata(did)?.created,
-                        getDocumentMetadata(did)?.updated,
-                        retrieved = getLastFetched(did),
-                    )
-                }
+            val document = apiResult.getOrNull()
+            if (document != null) {
+                storeDocument(did, document)
+                // storeDocument keeps any deactivation this instance recorded: it stays authoritative.
+                val metadata = getDocumentMetadata(did)
+                return@withContext DidMethodUtils.createSuccessResolutionResult(
+                    document,
+                    method,
+                    metadata?.created,
+                    metadata?.updated,
+                    deactivated = metadata?.deactivated ?: false,
+                    retrieved = getLastFetched(did),
+                )
+            }
 
-                else -> {
-                    // Check if the API returned a "not found" (null) or threw an error
-                    val stored = getStoredDocument(did)
-                    if (stored != null) {
-                        DidMethodUtils.createSuccessResolutionResult(
-                            stored,
-                            method,
-                            getDocumentMetadata(did)?.created,
-                            getDocumentMetadata(did)?.updated,
-                            retrieved = getLastFetched(did),
-                        )
-                    } else {
-                        val cause = apiResult.exceptionOrNull()
-                        if (cause is EbsiException && cause.httpStatus == 404) {
-                            DidMethodUtils.createErrorResolutionResult(
-                                "notFound",
-                                "DID document not found on EBSI: ${did.value}",
-                                method,
-                                did.value,
-                            )
-                        } else {
-                            DidMethodUtils.createErrorResolutionResult(
-                                "notFound",
-                                cause?.message ?: "DID document not found: ${did.value}",
-                                method,
-                                did.value,
-                            )
-                        }
-                    }
-                }
+            // No live answer from the registry (404 or error). The cache is NOT served in its place:
+            // that would keep a removed or rotated document verifying through an outage. The one
+            // fail-safe exception: a DID this instance itself deactivated reports Deactivated.
+            val stored = getStoredDocument(did)
+            val storedMetadata = getDocumentMetadata(did)
+            if (stored != null && storedMetadata?.deactivated == true) {
+                return@withContext DidMethodUtils.createSuccessResolutionResult(
+                    stored,
+                    method,
+                    storedMetadata.created,
+                    storedMetadata.updated,
+                    true,
+                    retrieved = getLastFetched(did),
+                )
+            }
+
+            val cause = apiResult.exceptionOrNull()
+            if (cause == null || (cause is EbsiException && cause.httpStatus == 404)) {
+                DidMethodUtils.createErrorResolutionResult(
+                    "notFound",
+                    "DID document not found on EBSI: ${did.value}",
+                    method,
+                    did.value,
+                )
+            } else {
+                // A transport failure or registry error is not a verdict on the DID.
+                DidMethodUtils.createErrorResolutionResult(
+                    "internalError",
+                    cause.message ?: "EBSI registry could not be reached",
+                    method,
+                    did.value,
+                )
             }
         }
 
@@ -310,6 +316,7 @@ class EbsiDidMethod(
                     }
 
                 val updatedDocument = updater(currentDocument)
+                requireSameDid(did, updatedDocument)
 
                 if (config.bearerToken != null) {
                     patchOnEbsi(did.value, updatedDocument)
@@ -336,16 +343,20 @@ class EbsiDidMethod(
      * Deactivates a did:ebsi DID.
      *
      * If a bearer token is configured, sends a PATCH to the EBSI registry marking the DID
-     * as deactivated (empty verification methods), then removes the local cache entry.
+     * as deactivated (empty verification methods) and records the deactivation locally. Without a
+     * bearer token it throws [EbsiException] (`EBSI_AUTH_REQUIRED`).
      */
     override suspend fun deactivateDid(did: Did): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 validateDidFormat(did)
 
-                if (config.bearerToken != null) {
-                    val currentResult = resolveDid(did)
-                    if (currentResult is DidResolutionResult.Success) {
+                // Without a token nothing can be deactivated on the registry. Evicting the local copy and
+                // reporting success would claim a deactivation that never happened.
+                requireBearerToken("deactivate")
+
+                when (val currentResult = resolveDid(did)) {
+                    is DidResolutionResult.Success -> {
                         val deactivated =
                             currentResult.document.copy(
                                 verificationMethod = emptyList(),
@@ -356,11 +367,14 @@ class EbsiDidMethod(
                                 capabilityDelegation = emptyList(),
                             )
                         patchOnEbsi(did.value, deactivated)
+                        // The registry accepted it: remember the deactivation so a later read of the
+                        // (stripped) registry document still resolves as Deactivated.
+                        recordLocalDeactivation(did.value, deactivated)
+                        true
                     }
+                    is DidResolutionResult.Failure.NotFound, is DidResolutionResult.Deactivated -> false
+                    else -> throw EbsiException("EBSI_RESOLVE_FAILED", "Could not resolve ${did.value} before deactivating it")
                 }
-
-                // Remove from local cache regardless
-                removeStoredDocument(did)
             } catch (e: EbsiException) {
                 throw e
             } catch (e: TrustWeaveException) {
@@ -401,12 +415,9 @@ class EbsiDidMethod(
         client.newCall(request).execute().use { response ->
             if (response.code == 404) return null
             if (!response.isSuccessful) {
-                val body = response.body?.string() ?: ""
-                throw EbsiException.httpError(response.code, body)
+                throw EbsiException.httpError(response.code, boundedBody(response))
             }
-            val body =
-                response.body?.string()
-                    ?: throw EbsiException("EBSI_EMPTY_BODY", "EBSI API returned empty body for $did")
+            val body = boundedBody(response)
             val jsonElement = Json.parseToJsonElement(body)
             val document = jsonElementToDocument(jsonElement)
             ResolvedDocumentId.mismatchReason(did, document.id.value)?.let { reason ->
@@ -447,9 +458,9 @@ class EbsiDidMethod(
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                val body = response.body?.string() ?: ""
-                throw EbsiException.httpError(response.code, body)
+                throw EbsiException.httpError(response.code, boundedBody(response))
             }
+            failOnRpcError(boundedBody(response), requireObject = true)
         }
     }
 
@@ -477,10 +488,48 @@ class EbsiDidMethod(
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                val body = response.body?.string() ?: ""
-                throw EbsiException.httpError(response.code, body)
+                throw EbsiException.httpError(response.code, boundedBody(response))
             }
+            failOnRpcError(boundedBody(response), requireObject = false)
         }
+    }
+
+    /**
+     * A JSON-RPC server reports failure in the body of an HTTP 200. A body with a non-null `error`
+     * member is a failure; with [requireObject] a body that is not a JSON object is one too.
+     */
+    private fun failOnRpcError(
+        body: String,
+        requireObject: Boolean,
+    ) {
+        val element =
+            if (body.isBlank()) {
+                null
+            } else {
+                runCatching { Json.parseToJsonElement(body) }.getOrNull()
+            }
+        val obj = element as? kotlinx.serialization.json.JsonObject
+        if (obj == null) {
+            if (requireObject) throw EbsiException("EBSI_RPC_ERROR", "EBSI registry returned an unreadable JSON-RPC response")
+            return
+        }
+        val error = obj["error"]
+        if (error != null && error !is kotlinx.serialization.json.JsonNull) {
+            throw EbsiException("EBSI_RPC_ERROR", "EBSI registry rejected the request: ${sanitizeUpstreamBody(error.toString())}")
+        }
+    }
+
+    /** Reads at most [MAX_RESPONSE_BYTES]; a larger body is an error rather than a truncation. */
+    private fun boundedBody(response: okhttp3.Response): String {
+        val body = response.body ?: return ""
+        if (body.contentLength() > MAX_RESPONSE_BYTES) {
+            throw EbsiException("EBSI_RESPONSE_TOO_LARGE", "EBSI API response is too large")
+        }
+        val bytes = response.peekBody(MAX_RESPONSE_BYTES + 1).bytes()
+        if (bytes.size > MAX_RESPONSE_BYTES) {
+            throw EbsiException("EBSI_RESPONSE_TOO_LARGE", "EBSI API response is too large")
+        }
+        return String(bytes, Charsets.UTF_8)
     }
 
     private fun requireBearerToken(operation: String) {
@@ -492,6 +541,7 @@ class EbsiDidMethod(
     // ──────────────────────────────────────────────────────────────────────────────
 
     companion object {
+        private const val MAX_RESPONSE_BYTES = 1024 * 1024L
         private const val DOCUMENT_ID_MISMATCH = "EBSI_DOCUMENT_ID_MISMATCH"
         private const val BASE58_ALPHABET =
             "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"

@@ -3,6 +3,7 @@ package org.trustweave.did.orb
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.booleanOrNull
 import okhttp3.OkHttpClient
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.DidCreationOptions
@@ -214,6 +215,17 @@ class OrbDidMethod(
                             did.value,
                         )
                     }
+                // A deactivated DID resolves to no document (DID Resolution 1.0 §4.4); never cache it.
+                if ((response.metadata?.get("deactivated") as? kotlinx.serialization.json.JsonPrimitive)
+                        ?.booleanOrNull == true
+                ) {
+                    removeStoredDocument(did)
+                    return@withContext DidMethodUtils.createSuccessResolutionResult(
+                        parsed,
+                        method,
+                        deactivated = true,
+                    )
+                }
                 storeDocument(did, parsed)
                 return@withContext DidMethodUtils.createSuccessResolutionResult(
                     parsed,

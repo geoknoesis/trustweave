@@ -38,8 +38,8 @@ import java.nio.file.attribute.PosixFilePermissions
  * Not recommended. Private keys (`d` component for EC keys) are written to disk
  * in plaintext. Use a secret store (HashiCorp Vault, AWS Secrets Manager, a
  * sealed-secret JCE keystore, ...) for production deployments. On POSIX
- * platforms the file mode is set to `600` (owner read+write only); on Windows
- * the underlying ACLs are unchanged.
+ * platforms the file is created atomically with mode `600` (owner read+write only); on a file
+ * system without POSIX permissions (for example Windows) the store refuses to write.
  *
  * ## File layout
  *
@@ -57,59 +57,76 @@ import java.nio.file.attribute.PosixFilePermissions
 class FileSidetreeKeyStore(
     private val directory: Path,
 ) : SidetreeKeyStore {
-
     private val mutex = Mutex()
-    private val json = Json { encodeDefaults = true; prettyPrint = false }
+    private val json =
+        Json {
+            encodeDefaults = true
+            prettyPrint = false
+        }
 
     init {
         Files.createDirectories(directory)
     }
 
-    override suspend fun put(didSuffix: String, keys: SidetreeKeyPair): Unit = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            val target = directory.resolve("${sanitize(didSuffix)}.json")
-            val tmp = directory.resolve("${sanitize(didSuffix)}.json.tmp")
-            val payload = json.encodeToString(JsonObject.serializer(), encode(keys))
-            Files.writeString(tmp, payload, StandardCharsets.UTF_8)
-            try {
-                Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-            } catch (e: java.nio.file.AtomicMoveNotSupportedException) {
-                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING)
+    override suspend fun put(
+        didSuffix: String,
+        keys: SidetreeKeyPair,
+    ): Unit =
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val target = directory.resolve("${sanitize(didSuffix)}.json")
+                val payload = json.encodeToString(JsonObject.serializer(), encode(keys))
+                // The temp file is created atomically with owner-only permissions under an unpredictable
+                // name, so the private keys are never readable by others, even briefly, and a pre-planted
+                // file or symlink cannot be written through.
+                val tmp = createOwnerOnlyTempFile(sanitize(didSuffix))
+                try {
+                    Files.writeString(tmp, payload, StandardCharsets.UTF_8)
+                    try {
+                        Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+                    } catch (e: java.nio.file.AtomicMoveNotSupportedException) {
+                        Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING)
+                    }
+                } finally {
+                    Files.deleteIfExists(tmp)
+                }
             }
-            applyOwnerOnlyPermissions(target)
         }
-    }
 
-    override suspend fun get(didSuffix: String): SidetreeKeyPair? = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            val target = directory.resolve("${sanitize(didSuffix)}.json")
-            if (!Files.exists(target)) return@withContext null
-            val text = Files.readString(target, StandardCharsets.UTF_8)
-            val obj = Json.parseToJsonElement(text).jsonObject
-            decode(obj)
+    override suspend fun get(didSuffix: String): SidetreeKeyPair? =
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val target = directory.resolve("${sanitize(didSuffix)}.json")
+                if (!Files.exists(target)) return@withContext null
+                val text = Files.readString(target, StandardCharsets.UTF_8)
+                val obj = Json.parseToJsonElement(text).jsonObject
+                decode(obj)
+            }
         }
-    }
 
-    override suspend fun remove(didSuffix: String): Unit = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            val target = directory.resolve("${sanitize(didSuffix)}.json")
-            Files.deleteIfExists(target)
+    override suspend fun remove(didSuffix: String): Unit =
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val target = directory.resolve("${sanitize(didSuffix)}.json")
+                Files.deleteIfExists(target)
+            }
         }
-    }
 
     /**
      * Empties the store (deletes every persisted keypair under [directory]).
      * Convenience helper for tests; never call from application code.
      */
-    suspend fun clear(): Unit = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            if (!Files.exists(directory)) return@withContext
-            Files.list(directory).use { stream ->
-                stream.filter { it.fileName.toString().endsWith(".json") }
-                    .forEach { Files.deleteIfExists(it) }
+    suspend fun clear(): Unit =
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                if (!Files.exists(directory)) return@withContext
+                Files.list(directory).use { stream ->
+                    stream
+                        .filter { it.fileName.toString().endsWith(".json") }
+                        .forEach { Files.deleteIfExists(it) }
+                }
             }
         }
-    }
 
     /**
      * DID suffixes are base64url-encoded SHA-256 digests so they only contain
@@ -119,40 +136,46 @@ class FileSidetreeKeyStore(
     private fun sanitize(suffix: String): String =
         suffix.map { c -> if (c.isLetterOrDigit() || c == '_' || c == '-') c else '_' }.joinToString("")
 
-    private fun encode(keys: SidetreeKeyPair): JsonObject = buildJsonObject {
-        put("version", 1)
-        put("updatePrivateJwk", SidetreeJcs.mapToJsonObject(keys.updatePrivateJwk))
-        put("updatePublicJwk", SidetreeJcs.mapToJsonObject(keys.updatePublicJwk))
-        put("recoveryPrivateJwk", SidetreeJcs.mapToJsonObject(keys.recoveryPrivateJwk))
-        put("recoveryPublicJwk", SidetreeJcs.mapToJsonObject(keys.recoveryPublicJwk))
-    }
-
-    private fun decode(obj: JsonObject): SidetreeKeyPair = SidetreeKeyPair(
-        updatePrivateJwk = jsonObjectToMap(obj.getValue("updatePrivateJwk").jsonObject),
-        updatePublicJwk = jsonObjectToMap(obj.getValue("updatePublicJwk").jsonObject),
-        recoveryPrivateJwk = jsonObjectToMap(obj.getValue("recoveryPrivateJwk").jsonObject),
-        recoveryPublicJwk = jsonObjectToMap(obj.getValue("recoveryPublicJwk").jsonObject),
-    )
-
-    private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> =
-        obj.entries.associate { (k, v) -> k to elementToValue(v) }
-
-    private fun elementToValue(element: JsonElement): Any? = when (element) {
-        is JsonNull -> null
-        is JsonPrimitive -> element.contentOrNull
-            ?: element.booleanOrNull
-            ?: element.longOrNull
-            ?: element.doubleOrNull
-        is JsonObject -> jsonObjectToMap(element)
-        is kotlinx.serialization.json.JsonArray -> element.map { elementToValue(it) }
-    }
-
-    private fun applyOwnerOnlyPermissions(target: Path) {
-        // POSIX-only; silently no-op on Windows (NTFS ACLs are handled by JNI Files.setOwner-style APIs).
-        runCatching {
-            val perms = setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
-            Files.setPosixFilePermissions(target, perms)
-            PosixFilePermissions.toString(perms) // touch helper to keep import live across platforms
+    private fun encode(keys: SidetreeKeyPair): JsonObject =
+        buildJsonObject {
+            put("version", 1)
+            put("updatePrivateJwk", SidetreeJcs.mapToJsonObject(keys.updatePrivateJwk))
+            put("updatePublicJwk", SidetreeJcs.mapToJsonObject(keys.updatePublicJwk))
+            put("recoveryPrivateJwk", SidetreeJcs.mapToJsonObject(keys.recoveryPrivateJwk))
+            put("recoveryPublicJwk", SidetreeJcs.mapToJsonObject(keys.recoveryPublicJwk))
         }
+
+    private fun decode(obj: JsonObject): SidetreeKeyPair =
+        SidetreeKeyPair(
+            updatePrivateJwk = jsonObjectToMap(obj.getValue("updatePrivateJwk").jsonObject),
+            updatePublicJwk = jsonObjectToMap(obj.getValue("updatePublicJwk").jsonObject),
+            recoveryPrivateJwk = jsonObjectToMap(obj.getValue("recoveryPrivateJwk").jsonObject),
+            recoveryPublicJwk = jsonObjectToMap(obj.getValue("recoveryPublicJwk").jsonObject),
+        )
+
+    private fun jsonObjectToMap(obj: JsonObject): Map<String, Any?> = obj.entries.associate { (k, v) -> k to elementToValue(v) }
+
+    private fun elementToValue(element: JsonElement): Any? =
+        when (element) {
+            is JsonNull -> null
+            is JsonPrimitive ->
+                element.contentOrNull
+                    ?: element.booleanOrNull
+                    ?: element.longOrNull
+                    ?: element.doubleOrNull
+            is JsonObject -> jsonObjectToMap(element)
+            is kotlinx.serialization.json.JsonArray -> element.map { elementToValue(it) }
+        }
+
+    /**
+     * Fails closed: a file system that cannot express owner-only POSIX permissions (for example NTFS)
+     * is refused rather than writing private keys with default permissions.
+     */
+    private fun createOwnerOnlyTempFile(prefix: String): Path {
+        check(directory.fileSystem.supportedFileAttributeViews().contains("posix")) {
+            "FileSidetreeKeyStore requires a POSIX file system to guarantee owner-only key files"
+        }
+        val perms = setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)
+        return Files.createTempFile(directory, "$prefix.", ".tmp", PosixFilePermissions.asFileAttribute(perms))
     }
 }

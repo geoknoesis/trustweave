@@ -19,10 +19,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.net.readBodyBounded
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.credential.exchange.exception.ExchangeException
 import org.trustweave.credential.model.vc.CredentialProof
-import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
@@ -131,6 +131,9 @@ private val vpJson =
         ignoreUnknownKeys = true
         classDiscriminator = "@type" // avoid conflict with LinkedDataProof.type
     }
+
+private const val MAX_ERROR_BODY_BYTES: Long = 8L * 1024
+private const val MAX_ERROR_BODY_CHARS: Int = 512
 
 class Oidc4VpService(
     private val kms: KeyManagementService,
@@ -471,15 +474,18 @@ class Oidc4VpService(
                     .post(formBody)
                     .build()
 
+            // Response is closed and its body bounded (readBodyBounded) on every path.
             val response = httpClient.newCall(httpRequest).execute()
-            val body = response.body?.string()
-
-            if (!response.isSuccessful) {
+            val code = response.code
+            val successful = response.isSuccessful
+            if (!successful) {
+                val body = runCatching { response.readBodyBounded(MAX_ERROR_BODY_BYTES) }.getOrNull()
                 throw Oidc4VpException.PresentationSubmissionFailed(
-                    reason = "HTTP ${response.code}: $body",
+                    reason = "HTTP $code: ${body.orEmpty().take(MAX_ERROR_BODY_CHARS)}",
                     verifierUrl = responseUri,
                 )
             }
+            response.close()
         }
 
     private fun isDidClientSignal(
@@ -495,10 +501,11 @@ class Oidc4VpService(
                     reason = "response endpoint is not a valid URI",
                     verifierUrl = responseUri,
                 )
-        val scheme = uri.scheme?.lowercase()
-        val host = uri.host?.lowercase()
-        val loopback = host == "localhost" || host == "::1" || host == "[::1]" || host?.startsWith("127.") == true
-        if (scheme == "https" || (scheme == "http" && loopback)) return
+        if (org.trustweave.core.net.HttpUrlPolicy
+                .isHttpsOrLoopbackHttp(uri.toString())
+        ) {
+            return
+        }
         throw Oidc4VpException.PresentationSubmissionFailed(
             reason = "response endpoint must use https (plain http is only allowed for loopback hosts)",
             verifierUrl = responseUri,
@@ -530,6 +537,14 @@ class Oidc4VpService(
         urlClientId: String? = null,
         urlClientIdScheme: ClientIdScheme? = null,
     ): FetchedAuthorizationRequest {
+        if (!org.trustweave.core.net.HttpUrlPolicy
+                .isHttpsOrLoopbackHttp(requestUri)
+        ) {
+            throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                requestUri = requestUri,
+                reason = "request_uri must use https (plain http is only allowed for loopback hosts)",
+            )
+        }
         val request =
             Request
                 .Builder()
@@ -538,17 +553,25 @@ class Oidc4VpService(
                 .build()
 
         val response = httpClient.newCall(request).execute()
+        val code = response.code
+        val successful = response.isSuccessful
         val body =
-            response.body?.string()
-                ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
+            try {
+                response.readBodyBounded()
+            } catch (e: java.io.IOException) {
+                throw Oidc4VpException.AuthorizationRequestFetchFailed(
                     requestUri = requestUri,
-                    reason = "Empty response body",
+                    reason = "Response body unreadable or too large: ${e.message}",
                 )
+            } ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                requestUri = requestUri,
+                reason = "Empty response body",
+            )
 
-        if (!response.isSuccessful) {
+        if (!successful) {
             throw Oidc4VpException.AuthorizationRequestFetchFailed(
                 requestUri = requestUri,
-                reason = "HTTP ${response.code}: $body",
+                reason = "HTTP $code: ${body.take(MAX_ERROR_BODY_CHARS)}",
             )
         }
 
@@ -1045,17 +1068,25 @@ class Oidc4VpService(
                     .build()
 
             val response = httpClient.newCall(request).execute()
+            val code = response.code
+            val successful = response.isSuccessful
             val body =
-                response.body?.string()
-                    ?: throw Oidc4VpException.MetadataFetchFailed(
+                try {
+                    response.readBodyBounded()
+                } catch (e: java.io.IOException) {
+                    throw Oidc4VpException.MetadataFetchFailed(
                         verifierUrl = verifierUrl,
-                        reason = "Empty response body",
+                        reason = "Response body unreadable or too large: ${e.message}",
                     )
+                } ?: throw Oidc4VpException.MetadataFetchFailed(
+                    verifierUrl = verifierUrl,
+                    reason = "Empty response body",
+                )
 
-            if (!response.isSuccessful) {
+            if (!successful) {
                 throw Oidc4VpException.MetadataFetchFailed(
                     verifierUrl = verifierUrl,
-                    reason = "HTTP ${response.code}: $body",
+                    reason = "HTTP $code: ${body.take(MAX_ERROR_BODY_CHARS)}",
                 )
             }
 
@@ -1105,91 +1136,10 @@ class Oidc4VpService(
         return signVpTokenJwt(vp, holderDid, keyId, authorizationRequest)
     }
 
-    /**
-     * Serializes a [VerifiableCredential] into plain W3C VC JSON for embedding in a vp_token.
-     *
-     * This intentionally mirrors `PresentationDefinitionMatcher.vcToDocument` so that the
-     * credentials referenced by `presentation_submission` descriptor paths actually satisfy
-     * the JSONPath field paths they were matched on:
-     * - `issuer` is a plain IRI string (or a `{"id": ..., "name": ...}` object), never a
-     *   polymorphic object with a class-discriminator field;
-     * - `credentialSubject` carries the flattened claims next to `id` — no internal
-     *   `"claims"` wrapper;
-     * - `proof` is a plain W3C proof object (see [w3cProofOf]) or omitted for envelope
-     *   proof formats.
-     */
+    /** Serializes a credential into the verifier-consumable W3C JSON used in a vp_token. */
     private fun credentialToW3cJson(credential: VerifiableCredential): JsonObject =
-        buildJsonObject {
-            put("@context", JsonArray(credential.context.map { JsonPrimitive(it) }))
-            credential.id?.let { put("id", it.value) }
-            put("type", JsonArray(credential.type.map { JsonPrimitive(it.value) }))
-            when (val issuer = credential.issuer) {
-                is Issuer.IriIssuer -> put("issuer", issuer.id.value)
-                is Issuer.ObjectIssuer ->
-                    put(
-                        "issuer",
-                        buildJsonObject {
-                            put("id", issuer.id.value)
-                            issuer.name?.let { put("name", it) }
-                            issuer.additionalProperties.forEach { (key, value) -> put(key, value) }
-                        },
-                    )
-            }
-            credential.issuanceDate?.let { put("issuanceDate", it.toString()) }
-            credential.validFrom?.let { put("validFrom", it.toString()) }
-            credential.expirationDate?.let { put("expirationDate", it.toString()) }
-            credential.validUntil?.let { put("validUntil", it.toString()) }
-            credential.name?.let { put("name", it) }
-            credential.description?.let { put("description", it) }
-            credential.credentialStatus?.let { status ->
-                put(
-                    "credentialStatus",
-                    buildJsonObject {
-                        put("id", status.id.value)
-                        put("type", status.type)
-                    },
-                )
-            }
-            credential.credentialSchema?.let { schema ->
-                put(
-                    "credentialSchema",
-                    buildJsonObject {
-                        put("id", schema.id.value)
-                        put("type", schema.type)
-                    },
-                )
-            }
-            put(
-                "credentialSubject",
-                buildJsonObject {
-                    credential.credentialSubject.id?.let { put("id", it.value) }
-                    credential.credentialSubject.claims.forEach { (key, value) -> put(key, value) }
-                },
-            )
-            w3cProofOf(credential.proof)?.let { put("proof", it) }
-        }
-
-    /**
-     * Maps an embedded data-integrity proof to a plain W3C proof object
-     * (`type`/`created`/`verificationMethod`/`proofPurpose`/`proofValue` plus any
-     * additional properties such as `jws` for JsonWebSignature2020).
-     *
-     * Envelope proof formats (VC-JWT, SD-JWT VC, mdoc, JAdES) return `null`: there the
-     * proof *is* the credential envelope and has no in-document proof object representation.
-     */
-    private fun w3cProofOf(proof: CredentialProof?): JsonObject? =
-        when (proof) {
-            is CredentialProof.LinkedDataProof ->
-                buildJsonObject {
-                    put("type", proof.type)
-                    put("created", proof.created.toString())
-                    put("verificationMethod", proof.verificationMethod)
-                    put("proofPurpose", proof.proofPurpose)
-                    if (proof.proofValue.isNotBlank()) put("proofValue", proof.proofValue)
-                    proof.additionalProperties.forEach { (key, value) -> put(key, value) }
-                }
-            else -> null
-        }
+        org.trustweave.credential.pex.W3cCredentialJson
+            .toJson(credential)
 
     /**
      * Signs a VP token JWT embedding [vp] under the `vp` claim.

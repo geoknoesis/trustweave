@@ -7,6 +7,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.trustweave.core.net.readBodyBounded
 
 /**
  * Client for the Verified ID `createIssuanceRequest` endpoint.
@@ -22,11 +23,12 @@ class EntraIssuanceClient(
     private val tokenClient: EntraTokenClient,
     private val httpClient: OkHttpClient = OkHttpClient(),
 ) {
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        explicitNulls = false
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            explicitNulls = false
+        }
 
     /**
      * Build the wire-format request body for a credential issuance request.
@@ -45,24 +47,26 @@ class EntraIssuanceClient(
         pin: EntraPin? = null,
         callbackHeaders: Map<String, String>? = null,
         includeQrCode: Boolean = true,
-    ): EntraIssuanceRequestBody = EntraIssuanceRequestBody(
-        authority = config.authorityDid,
-        callback = EntraCallback(url = callbackUrl, state = state, headers = callbackHeaders),
-        registration = EntraRegistration(clientName = clientName, purpose = purpose),
-        type = credentialType,
-        manifest = manifestUrl,
-        claims = claims,
-        pin = pin,
-        includeQRCode = includeQrCode,
-    )
+    ): EntraIssuanceRequestBody =
+        EntraIssuanceRequestBody(
+            authority = config.authorityDid,
+            callback = EntraCallback(url = callbackUrl, state = state, headers = callbackHeaders),
+            registration = EntraRegistration(clientName = clientName, purpose = purpose),
+            type = credentialType,
+            manifest = manifestUrl,
+            claims = claims,
+            pin = pin,
+            includeQRCode = includeQrCode,
+        )
 
     /**
      * Serialize [body] to JSON in the exact wire format expected by Entra Verified ID.
      */
-    fun encodeRequestBody(body: EntraIssuanceRequestBody): String = json.encodeToString(
-        EntraIssuanceRequestBody.serializer(),
-        body,
-    )
+    fun encodeRequestBody(body: EntraIssuanceRequestBody): String =
+        json.encodeToString(
+            EntraIssuanceRequestBody.serializer(),
+            body,
+        )
 
     /**
      * Submit a `createIssuanceRequest` to the Verified ID Request Service and return the
@@ -76,33 +80,36 @@ class EntraIssuanceClient(
     private suspend fun executeRequest(
         body: EntraIssuanceRequestBody,
         token: String,
-    ): EntraIssuanceRequestResponse = withContext(Dispatchers.IO) {
-        val payload = encodeRequestBody(body).toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder()
-            .url(config.issuanceRequestUrl)
-            .post(payload)
-            .header("Authorization", "Bearer $token")
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .build()
-        httpClient.newCall(request).execute().use { response ->
-            val responseBody = response.body?.string().orEmpty()
-            if (!response.isSuccessful) {
-                throw EntraException.RequestServiceError(
-                    httpStatus = response.code,
-                    responseBody = responseBody,
-                    message = "createIssuanceRequest failed: HTTP ${response.code}",
-                )
-            }
-            runCatching { json.decodeFromString(EntraIssuanceRequestResponse.serializer(), responseBody) }
-                .getOrElse {
-                    throw EntraException.MalformedResponse(
-                        message = "Could not parse createIssuanceRequest response: ${it.message}",
-                        cause = it,
+    ): EntraIssuanceRequestResponse =
+        withContext(Dispatchers.IO) {
+            val payload = encodeRequestBody(body).toRequestBody(JSON_MEDIA_TYPE)
+            val request =
+                Request
+                    .Builder()
+                    .url(config.issuanceRequestUrl)
+                    .post(payload)
+                    .header("Authorization", "Bearer $token")
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .build()
+            httpClient.newCall(request).execute().use { response ->
+                val responseBody = response.readBodyBounded().orEmpty()
+                if (!response.isSuccessful) {
+                    throw EntraException.RequestServiceError(
+                        httpStatus = response.code,
+                        responseBody = responseBody,
+                        message = "createIssuanceRequest failed: HTTP ${response.code}",
                     )
                 }
+                runCatching { json.decodeFromString(EntraIssuanceRequestResponse.serializer(), responseBody) }
+                    .getOrElse {
+                        throw EntraException.MalformedResponse(
+                            message = "Could not parse createIssuanceRequest response (${it::class.simpleName})",
+                            cause = it,
+                        )
+                    }
+            }
         }
-    }
 
     companion object {
         private val JSON_MEDIA_TYPE = "application/json".toMediaType()

@@ -814,6 +814,17 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+- **Dependencies — Jackson and Bouncy Castle are pinned to patched releases across every module.** Third-party SDKs
+  (Algorand, Azure, Google Cloud, Vert.x, web3j, bitcoinj, Cardano, walt.id) brought Jackson 2.16 to 2.18, Jackson 3.1.4
+  and Bouncy Castle 1.77 to 1.83 / LTS 2.73.8, which carry open advisories (GHSA-3pjw-73gf-8qr5, GHSA-5gvw-p9qm-jgwh,
+  GHSA-5jmj-h7xm-6q6v, GHSA-72hv-8253-57qq, GHSA-7hhh-6rmp-j9qf, GHSA-cxp5-3px4-pw24, GHSA-gx83-3vf8-gh7j,
+  GHSA-hgj6-7826-r7m5, GHSA-j3rv-43j4-c7qm, GHSA-mhm7-754m-9p8w, GHSA-p6pp-m3f8-5c89, GHSA-574f-3g2m-x479,
+  GHSA-9pwp-9qqc-pr26, GHSA-c3fc-8qff-9hwx). The root `resolutionStrategy` now resolves Jackson 2 to the catalog version
+  (2.22.3; `jackson-annotations` 2.22), Jackson 3 to 3.1.7, Bouncy Castle to 1.86 and its LTS line to 2.73.13, so
+  those SDKs run on newer Jackson and Bouncy Castle than they were built against. `config/osv/baseline.json` drops the
+  28 entries this resolves (90 to 62; none left in `needs-review`, first expiry 2026-12-10) and records
+  `package_count`. Unit tests for the affected plugins pass against the new versions; no plugin was exercised against
+  a live Algorand, Azure, Google Cloud or EVM service.
 
 - Jackson 3 (`tools.jackson`, pulled in transitively by web3j 6) is pinned to 3.1.4 in the root build and
   `gradle/libs.versions.toml`, closing GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55 and

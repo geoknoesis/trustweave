@@ -76,6 +76,28 @@ working code fail until it is adjusted.**
   provider name already registered for a different library or slot now fails with `Pkcs11Exception` instead of
   silently reusing the other token; PIN arrays are zeroed after use.
 
+- **Behaviour (security) — SSRF guard, OID4VP/SIOP, DIDComm storage, Entra, PEX.**
+  `ssrfGuardedOkHttpClient()` now also checks every TCP connect (initial request and each redirect hop), so IP-literal
+  hosts (`127.0.0.1`, `169.254.169.254`, `10.x`, `[::1]`, `[::ffff:127.0.0.1]`) are refused, and it ignores system
+  proxies. OID4VP `request_uri` now follows the same https-or-loopback policy as `response_uri`; loopback means
+  `localhost` or a loopback IP literal only (`http://127.evil.com` is not loopback), also in SIOP and OID4VCI, which
+  no longer resolve DNS to decide. Protocol response bodies are read with a 1 MiB cap and responses are closed. The
+  SIOP `vp_token` now carries the presentation's `verifiableCredential` array, and `buildAuthorizationResponse`
+  rejects a `presentation_submission` whose paths do not index a credential in the presentation. Presentation
+  Exchange: JSONPath paths using the regex operator (`=~`) are not evaluated, quoted JSON strings are strings (a claim
+  `"42"` no longer satisfies `type: number`, `minimum`, `const: 42`), and numeric keywords against a non-number fail.
+  `EntraConfig.toString()` redacts the client secret, `tokenEndpointBaseUrl`/`apiBaseUrl` must be https (plain http
+  only to loopback), `tenantId` must be a GUID or domain label, and Entra exceptions no longer embed raw response or
+  serializer text (`RequestServiceError.responseBody` is a 256-char excerpt and is no longer in `context`).
+  `PostgresDidCommMessageStorage` with encryption no longer writes body, expiry, sender, recipients, thread ids or
+  type in plaintext: indexed columns hold a keyed blind index (`MessageEncryption.blindIndex`, new default method), so
+  rows written before this change are not found by DID/thread lookups until re-stored; a different sender can no
+  longer overwrite an existing message id (`IllegalStateException`). `AesMessageEncryption` now binds row id and key
+  version as GCM associated data (iv field is `0x01||nonce`); legacy rows still decrypt, but new rows must be read
+  through `decrypt(encrypted, messageId)`; the encrypted key-store file is version 2 (purpose AAD), version 1 files
+  still load. `PostgresFullTextSearch(dataSource, enableFullTextIndex = false)` disables the plaintext tsvector index;
+  its complex queries accept only allowlisted columns and never return encrypted rows.
+  `KeyRotationManager.rotateKey` is documented as NOT a complete rotation (see follow-ups); no behaviour change.
 - **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
   that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
   wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails

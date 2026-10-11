@@ -17,6 +17,8 @@ data class FortanixKmsConfig(
 
     init {
         require(apiEndpoint.isNotBlank()) { "Fortanix DSM API endpoint must be specified" }
+        org.trustweave.core.net.TransportSecurity
+            .requireSecureForPublicHosts(apiEndpoint, "Fortanix credentials")
         require(apiKey.isNotBlank()) { "Fortanix DSM API key must be specified" }
     }
 

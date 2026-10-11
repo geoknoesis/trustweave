@@ -53,6 +53,29 @@ working code fail until it is adjusted.**
 
 ### Breaking and behaviour changes
 
+- **Behaviour — KMS plugin alignment with the `KeyManagementService` contract.** Thales, Fortanix and IBM `sign`
+  resolve the key's own algorithm first and return `UnsupportedAlgorithm` for an incompatible request instead of
+  signing (Thales and Fortanix previously ignored the key). Thales now also sends `hashAlgorithm` sized to the key
+  (sha256/384/512). Key ids placed in URL paths (Thales, Fortanix, IBM, Vault) are rejected when they contain `..`,
+  `/` (IBM accepts it only inside a `crn:`), `\`, `?`, `#`, `%` or control characters. Fortanix and IBM refuse
+  plaintext `http` to a public host, as Thales and Vault already did.
+  **Vault:** RSA signing sends `signature_algorithm=pkcs1v15` (Transit defaulted to PSS) and a hash sized to the key
+  (RSA-3072 `sha2-384`, RSA-4096 `sha2-512`), so RSA-3072/4096 signature bytes change; `generateKey` returns
+  `DuplicateKeyId` instead of silently reusing an existing Transit key; `sign` on a missing key returns `KeyNotFound`;
+  the HTTP status is read from `VaultException.getHttpStatusCode()` (the old reflection looked up a field that does
+  not exist and fell back to matching words in the message).
+  **Azure:** `deleteKey` returns a `Failure` when the 60 s wait times out (the timeout was swallowed as
+  cancellation), and `sign` builds its cryptography client from `endpointOverride` when one is configured.
+  **Google:** EC and RSA keys are now sent an `AsymmetricSignRequest.digest` of the key algorithm's hash (pure
+  Ed25519 still sends `data`); new RSA-4096 keys use `RSA_SIGN_PKCS1_4096_SHA512` (existing `..._SHA256` keys still
+  read as RSA-4096 and sign with SHA-256; Google has no 3072-bit SHA-384 algorithm, so RSA-3072 stays on SHA-256);
+  the JWK `n`/`e` no longer carry a leading `0x00` and an Ed25519 `x` is the raw 32-byte key.
+  **PKCS#11 / CloudHSM:** `sign` derives the key's algorithm from its EC curve or RSA modulus, rejects an
+  incompatible requested algorithm, and with no algorithm picks the hash by key (P-384 `SHA384withECDSA`, RSA-3072
+  `SHA384withRSA`, ...); `generateKey` returns `DuplicateKeyId` rather than overwriting an existing label; a
+  provider name already registered for a different library or slot now fails with `Pkcs11Exception` instead of
+  silently reusing the other token; PIN arrays are zeroed after use.
+
 - **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
   that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
   wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails

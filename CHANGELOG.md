@@ -760,6 +760,8 @@ working code fail until it is adjusted.**
 
 ### Fixed
 
+- `IssuanceResult.Failure.MultipleFailures.allErrors` and `getOrThrow()` no longer report each nested error twice, and an error listed only on the result is kept. `VerificationResult.getOrThrow()` in `trust` now names the failure instead of a generic message.
+
 - **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying
   `versionId`, `versionTime` or `additional` options (a versioned result could be returned as the latest, or mask a
   deactivation), takes the TTL timestamp after the delegate returns, and drops a result fetched before a concurrent

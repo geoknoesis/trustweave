@@ -92,6 +92,43 @@
     "org/trustweave/did/util": {
       "LINE": 81.0,
       "BRANCH": 71.0
+    },
+    "org/trustweave/credential/did": {
+      "LINE": 90.0,
+      "BRANCH": 85.0
+    },
+    "org/trustweave/credential/exchange/exception": {
+      "LINE": 96.0,
+      "BRANCH": 76.0
+    },
+    "org/trustweave/credential/identifiers": {
+      "LINE": 96.0,
+      "BRANCH": 82.0
+    },
+    "org/trustweave/credential/results": {
+      "LINE": 96.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/template/internal": {
+      "LINE": 96.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/exchange/registry/internal": {
+      "LINE": 96.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/spi/proof": {
+      "LINE": 70.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/status": {
+      "LINE": 96.0
+    },
+    "org/trustweave/credential/internal/util": {
+      "LINE": 96.0
+    },
+    "org/trustweave/credential/exchange": {
+      "LINE": 96.0
     }
   }
 }

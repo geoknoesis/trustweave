@@ -95,7 +95,7 @@ fun VerificationResult.getOrThrow(): VerifiableCredential =
         }
         is VerificationResult.Invalid.MultipleFailures -> {
             throw IllegalStateException(
-                "Credential verification failed with multiple errors: ${errors.joinToString("; ")}",
+                "Credential verification failed with multiple errors: ${allErrors.joinToString("; ")}",
             )
         }
         is VerificationResult.Invalid.RevocationCheckFailed -> {

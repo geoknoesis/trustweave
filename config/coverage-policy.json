@@ -92,6 +92,40 @@
     "org/trustweave/did/util": {
       "LINE": 81.0,
       "BRANCH": 71.0
+    },
+    "org/trustweave/did/negotiation": {
+      "LINE": 97.0,
+      "BRANCH": 90.0
+    },
+    "org/trustweave/did/representation": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/did/events": {
+      "LINE": 97.0
+    },
+    "org/trustweave/did/storage": {
+      "LINE": 97.0,
+      "BRANCH": 78.0
+    },
+    "org/trustweave/did/batch": {
+      "LINE": 97.0
+    },
+    "org/trustweave/did/registry": {
+      "LINE": 82.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/discovery": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/did/identifiers": {
+      "LINE": 97.0,
+      "BRANCH": 84.0
+    },
+    "org/trustweave/did/spi": {
+      "LINE": 67.0,
+      "BRANCH": 95.0
     }
   }
 }

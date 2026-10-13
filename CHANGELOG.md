@@ -760,6 +760,10 @@ working code fail until it is adjusted.**
 
 ### Fixed
 
+- **Behaviour change: trust-registry issuer/verifier lists are capped at 100 entries by default.** The body is still a JSON array (did-ordered); the total match count is in the new `X-Total-Count` header; pass `limit`/`offset` to page.
+- `decodeMultibaseDigest` in `DidDocumentVerificationService` accepts `u` and `U` through one branch (contradictory comments removed; behaviour unchanged).
+- `InMemoryKeyManagementService` constructor: a `ConcurrentHashMap` argument is shared with the caller, any other map is copied once; both are now documented.
+
 - `IssuanceResult.Failure.MultipleFailures.allErrors` and `getOrThrow()` no longer report each nested error twice, and an error listed only on the result is kept. `VerificationResult.getOrThrow()` in `trust` now names the failure instead of a generic message.
 
 - **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying
@@ -816,6 +820,11 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+
+- **did:key self-certification binds the JWK and covers every verification method.** `DefaultDidDocumentVerificationService` now rejects a did:key document whose `publicKeyJwk` and `publicKeyMultibase` decode to different keys (and `verifyVerificationMethod` no longer prefers a differing JWK), and rejects any document holding a verification method whose controller is not the document id.
+- **`InMemoryKeyManagementService` no longer registers BouncyCastle in the JVM-wide `Security` provider list**; it uses a private provider instance. Code that relied on the side effect must register `BouncyCastleProvider` itself.
+- **Trust-registry list routes are bounded.** `GET /registry/issuers` and `/registry/verifiers` paginate (`limit` default 100, max 1000; `offset`) and reject a `nameContains` over 256 characters with 400.
+- **Cloud wallets store plaintext JSON (documented, unchanged, fail-closed).** The limitation is now stated in the KDoc and the docs; `encryptionKey` is still rejected by `CloudWalletFactory`. Use bucket-level encryption (SSE / CMEK) or the `file` wallet for client-side AES-GCM.
 - **Dependencies — Jackson and Bouncy Castle are pinned to patched releases across every module.** Third-party SDKs
   (Algorand, Azure, Google Cloud, Vert.x, web3j, bitcoinj, Cardano, walt.id) brought Jackson 2.16 to 2.18, Jackson 3.1.4
   and Bouncy Castle 1.77 to 1.83 / LTS 2.73.8, which carry open advisories (GHSA-3pjw-73gf-8qr5, GHSA-5gvw-p9qm-jgwh,

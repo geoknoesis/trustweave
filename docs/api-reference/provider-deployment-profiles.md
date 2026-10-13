@@ -15,6 +15,10 @@ explicitly accepted experiment. The compatibility default is `LEGACY`. Builder
 configuration also carries this policy. Direct constructors and other domain
 providers still require their own deployment gate.
 
+**Cloud wallets (S3, Azure Blob, Google Cloud Storage) do not encrypt client-side.** They write credentials as plain
+JSON and `CloudWalletFactory` rejects `encryptionKey` (fail closed). Confidentiality depends entirely on the provider's
+at-rest encryption (SSE / CMEK) and access policy; use the file wallet for client-side AES-GCM.
+
 The file factory honors `WalletCreationOptions.encryptionKey`, rejects conflicting
 typed/legacy keys and unsafe wallet IDs. Wallet IDs are limited to 1–128 ASCII
 letters, digits, underscores and hyphens; callers using other IDs must migrate

@@ -757,6 +757,7 @@ working code fail until it is adjusted.**
   `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
+- `WalletType.Custom.toString()` now returns the wallet type id (like the built-in types) instead of the generated `Custom(customId=...)`.
 - `IssuanceResult.Failure.MultipleFailures.allErrors` and `getOrThrow()` no longer report each nested error twice, and an error listed only on the result is kept. `VerificationResult.getOrThrow()` in `trust` now names the failure instead of a generic message.
 
 - **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying

@@ -31,7 +31,9 @@ import kotlin.time.Clock
  * Stores credentials in cloud storage (AWS S3, Azure Blob Storage, or Google Cloud Storage).
  * Enables multi-device wallet synchronization.
  *
- * **No encryption:** this class does not encrypt credentials; objects are written as plain JSON.
+ * **WARNING - no client-side encryption:** this class does not encrypt credentials; objects are written as
+ * plain JSON, and `WalletCreationOptions.encryptionKey` is rejected rather than silently ignored. Use the `file`
+ * wallet if you need client-side AES-GCM.
  * Confidentiality relies entirely on the storage provider's own at-rest encryption (e.g. S3
  * SSE, Azure Storage encryption) and access control configured outside this library.
  *

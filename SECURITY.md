@@ -98,6 +98,11 @@ The following are generally considered out of scope:
 
 ## Verifying a Release
 
+Release status: 0.7.0 is the version of this source tree. Artifacts are published only when the `publish` job below
+completes for a `v*` tag, and this repository does not record that it has; until you have confirmed the coordinates
+resolve from your repository, build from source with `./gradlew publishToMavenLocal`. The steps below apply once a
+release has actually been published.
+
 Every tagged release is published by the `publish` job of `.github/workflows/release-evidence.yml`.
 That job builds and signs the artifacts once into a local staging directory, checks that every staged jar is
 byte-identical to the jar the evidence job tested, checksums and attests the directory, and only then, as its

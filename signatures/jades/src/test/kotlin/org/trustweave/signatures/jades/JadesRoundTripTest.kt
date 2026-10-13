@@ -269,7 +269,7 @@ class JadesRoundTripTest {
                                 profile = JadesProfile.B_T,
                                 keyId = keyId,
                                 signerCertificateChain = cert,
-                                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                                tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             ),
                     )
                 assertTrue(signature.unsigned.sigTst.isNotEmpty(), "B-T must embed at least one sigTst")

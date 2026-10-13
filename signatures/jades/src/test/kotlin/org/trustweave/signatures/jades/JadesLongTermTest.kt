@@ -68,7 +68,7 @@ class JadesLongTermTest {
                         profile = JadesProfile.B_LT,
                         keyId = keyId,
                         signerCertificateChain = chain,
-                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                         validationData = null, // missing
                     )
                 }
@@ -87,7 +87,7 @@ class JadesLongTermTest {
                         profile = JadesProfile.B_LT,
                         keyId = keyId,
                         signerCertificateChain = chain,
-                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                         validationData = ValidationData(completeCertificateChain = emptyList()),
                     )
                 }
@@ -108,7 +108,7 @@ class JadesLongTermTest {
                             profile = JadesProfile.B_LT,
                             keyId = keyId,
                             signerCertificateChain = chain,
-                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             validationData =
                                 ValidationData(
                                     completeCertificateChain = chain, // re-using the chain for the LT material
@@ -159,7 +159,7 @@ class JadesLongTermTest {
                             profile = JadesProfile.B_LTA,
                             keyId = keyId,
                             signerCertificateChain = chain,
-                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             validationData =
                                 ValidationData(
                                     completeCertificateChain = chain,
@@ -221,7 +221,7 @@ class JadesLongTermTest {
                             profile = JadesProfile.B_LTA,
                             keyId = keyId,
                             signerCertificateChain = chain,
-                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             validationData =
                                 ValidationData(
                                     completeCertificateChain = chain,
@@ -277,7 +277,7 @@ class JadesLongTermTest {
                         profile = JadesProfile.B_T,
                         keyId = keyId,
                         signerCertificateChain = chain,
-                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                     ),
                 )
             val result =
@@ -307,7 +307,7 @@ class JadesLongTermTest {
                         profile = JadesProfile.B_LTA,
                         keyId = keyId,
                         signerCertificateChain = chain,
-                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                        tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                         validationData = ValidationData(completeCertificateChain = chain),
                     ),
                 )

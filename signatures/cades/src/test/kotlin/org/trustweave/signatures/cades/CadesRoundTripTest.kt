@@ -157,7 +157,7 @@ class CadesRoundTripTest {
                             keyId = keyId,
                             payload = payload,
                             signerCertificateChain = chain,
-                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             detached = true,
                         ),
                     )

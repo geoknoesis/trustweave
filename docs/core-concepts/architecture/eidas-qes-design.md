@@ -221,7 +221,10 @@ data class TsaConfig(
     val username: String? = null,                  // for HTTP Basic on commercial TSAs
     val password: String? = null,
     val expectedPolicyOid: String? = null,         // require this policy OID in the response
-    val trustedSignerCertificates: List<ByteArray> = emptyList()  // pin TSA signer cert(s)
+    val trustedSignerCertificates: List<ByteArray> = emptyList(),  // pin TSA signer cert(s)
+    val includeNonce: Boolean = true,
+    val trustAnchors: List<ByteArray> = emptyList(),  // PKIX roots the signer must chain to
+    val allowUnanchored: Boolean = false              // explicit opt-in: accept any embedded signer
 )
 
 class TsaException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
@@ -230,8 +233,12 @@ class TsaException(message: String, cause: Throwable? = null) : RuntimeException
 The default implementation `BouncyCastleTsaClient` builds the request via
 `org.bouncycastle.tsp.TimeStampRequestGenerator`, posts it as
 `application/timestamp-query`, parses the response with `TimeStampResponse`, and validates the
-returned token's signature against `trustedSignerCertificates` (if any) before constructing the
-returned value object.
+returned token's CMS signature (always), checks the signer certificate's `id-kp-timeStamping`
+EKU and validity at `genTime`, and requires the signer to be pinned (`trustedSignerCertificates`)
+and/or chain to `trustAnchors`. With neither configured every token is rejected unless
+`allowUnanchored = true` is set. The endpoint must be `https` (plaintext only to loopback or
+private hosts, never with basic auth), redirects are not followed and responses are capped at
+1 MiB.
 
 ### 5.2 `signatures:trust-lists`
 

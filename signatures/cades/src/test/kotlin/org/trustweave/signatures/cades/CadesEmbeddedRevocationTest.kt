@@ -130,7 +130,7 @@ class CadesEmbeddedRevocationTest {
                     keyId = id,
                     payload = payload,
                     signerCertificateChain = chain,
-                    tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()).takeIf { profile == CadesProfile.B_T },
+                    tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile == CadesProfile.B_T },
                     detached = true,
                 ),
             )

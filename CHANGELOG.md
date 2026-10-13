@@ -816,6 +816,12 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+- **TSA client fails closed.** `BouncyCastleTsaClient` now always verifies the RFC 3161 token signature (it used to
+  verify only when `trustedSignerCertificates` was set), checks the signer's `id-kp-timeStamping` EKU and validity at
+  `genTime`, and requires the signer to be pinned or to chain to the new `TsaConfig.trustAnchors`; with neither it
+  rejects the token unless `allowUnanchored = true`. `endpointUrl` must be https (plaintext only to loopback or
+  private hosts, never with basic auth), redirects are not followed, responses are capped at 1 MiB and a malformed
+  URL is a `TsaException`. Callers relying on unpinned tokens must pass pins, anchors or `allowUnanchored`.
 - **Dependencies — Jackson and Bouncy Castle are pinned to patched releases across every module.** Third-party SDKs
   (Algorand, Azure, Google Cloud, Vert.x, web3j, bitcoinj, Cardano, walt.id) brought Jackson 2.16 to 2.18, Jackson 3.1.4
   and Bouncy Castle 1.77 to 1.83 / LTS 2.73.8, which carry open advisories (GHSA-3pjw-73gf-8qr5, GHSA-5gvw-p9qm-jgwh,

@@ -91,7 +91,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `an anchor restricted to the credential type accepts it and a different type is refused`() =
+    fun `an anchor restricted to the credential type accepts it and a different type is refused`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -106,7 +106,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `an anchor trusted for all types accepts any credential until it is removed`() =
+    fun `an anchor trusted for all types accepts any credential until it is removed`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -126,7 +126,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `an empty type restriction trusts the issuer for nothing`() =
+    fun `an empty type restriction trusts the issuer for nothing`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -140,7 +140,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `allowUntrusted after requireTrust restores plain signature verification`() =
+    fun `allowUntrusted after requireTrust restores plain signature verification`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -162,7 +162,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `a custom trust policy decides on the issuer DID`() =
+    fun `a custom trust policy decides on the issuer DID`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -223,7 +223,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `trust paths are reported through the DSL for connected and unconnected DIDs`() =
+    fun `trust paths are reported through the DSL for connected and unconnected DIDs`(): Unit =
         runBlocking {
             val tw = TrustWeave.quickStart()
             try {
@@ -260,7 +260,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `without a trust registry the trust block reports not-configured`() =
+    fun `without a trust registry the trust block reports not-configured`(): Unit =
         runBlocking {
             val tw = TrustWeave.build { keys { provider("inMemory") } }
             try {
@@ -425,7 +425,7 @@ class TrustFacadeEndToEndTest {
         }
 
     @Test
-    fun `a chain outside the domain is refused and sponsor-pays is not allowed by the default policy`() =
+    fun `a chain outside the domain is refused and sponsor-pays is not allowed by the default policy`(): Unit =
         runBlocking {
             val tw = domainFacade()
             try {

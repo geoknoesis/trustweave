@@ -173,7 +173,7 @@ class DefaultTrustRegistryTest {
         }
 
     @Test
-    fun `trust relationships are directional`() =
+    fun `trust relationships are directional`(): Unit =
         runBlocking {
             val r = registry()
             r.addTrustAnchor("did:key:a", TrustAnchorMetadata())
@@ -199,7 +199,7 @@ class DefaultTrustRegistryTest {
         }
 
     @Test
-    fun `cycles in the relationship graph do not hang the search`() =
+    fun `cycles in the relationship graph do not hang the search`(): Unit =
         runBlocking {
             val r = registry()
             listOf("a", "b", "c").forEach { r.addTrustAnchor("did:key:$it", TrustAnchorMetadata()) }
@@ -210,7 +210,7 @@ class DefaultTrustRegistryTest {
         }
 
     @Test
-    fun `removing an intermediate anchor breaks paths that used it`() =
+    fun `removing an intermediate anchor breaks paths that used it`(): Unit =
         runBlocking {
             val r = registry()
             listOf("a", "b", "c").forEach { r.addTrustAnchor("did:key:$it", TrustAnchorMetadata()) }

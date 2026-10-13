@@ -13,8 +13,6 @@ working code fail until it is adjusted.**
 
 ### Release provenance
 
-- **Provenance now covers the published files.** The release `publish` job builds into a local
-  `build/release-staging` repository (the upload to Central is separate and last, see below), writes `SHA256SUMS` over every staged file
 - **Release hardening round 2.** `upload-to-central.py` now requires an `.asc` for every non-sidecar Maven file
   (and rejects orphan or unlisted ones), can `gpg --verify` them (`--verify-signatures`; the workflow imports the
   public key from the optional `TRUSTWEAVE_SIGNING_PUBLIC_KEY` variable), reads each file once and hashes and zips
@@ -29,8 +27,8 @@ working code fail until it is adjusted.**
   finding that has a group; `osv-expiry-report.py` lists entries with an unreadable `expires` instead of
   skipping them and exits 2 on an unreadable baseline.
 
-- **Provenance now covers the published files.** The release `publish` job publishes to Maven Central and to a
-  local `build/release-staging` repository in one Gradle invocation, writes `SHA256SUMS` over every staged file
+- **Provenance now covers the published files.** The release `publish` job builds and signs into a local
+  `build/release-staging` repository (the Central upload is separate and last, see "Release ordering fixed"), writes `SHA256SUMS` over every staged file
   plus the aggregate CycloneDX SBOM, and attests all of them (and `SHA256SUMS`) with
   `actions/attest-build-provenance`. A new `release-assets` job attaches `SHA256SUMS` and the SBOM to the GitHub
   release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no
@@ -759,11 +757,10 @@ working code fail until it is adjusted.**
   `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
-
 - **Behaviour change: trust-registry issuer/verifier lists are capped at 100 entries by default.** The body is still a JSON array (did-ordered); the total match count is in the new `X-Total-Count` header; pass `limit`/`offset` to page.
 - `decodeMultibaseDigest` in `DidDocumentVerificationService` accepts `u` and `U` through one branch (contradictory comments removed; behaviour unchanged).
 - `InMemoryKeyManagementService` constructor: a `ConcurrentHashMap` argument is shared with the caller, any other map is copied once; both are now documented.
-
+- `WalletType.Custom.toString()` now returns the wallet type id (like the built-in types) instead of the generated `Custom(customId=...)`.
 - `IssuanceResult.Failure.MultipleFailures.allErrors` and `getOrThrow()` no longer report each nested error twice, and an error listed only on the result is kept. `VerificationResult.getOrThrow()` in `trust` now names the failure instead of a generic message.
 
 - **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying

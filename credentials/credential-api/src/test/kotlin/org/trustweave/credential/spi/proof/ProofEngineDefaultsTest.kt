@@ -71,4 +71,25 @@ class ProofEngineDefaultsTest {
         assertNull(ProofEngineConfig().getDidResolver())
         assertNull(ProofEngineConfig(mapOf("didResolver" to "not a resolver")).getDidResolver())
     }
+
+    private class RecordingProvider : ProofEngineProvider {
+        var lastOptions: Map<String, Any?>? = null
+        override val name = "recording"
+        override val supportedFormatIds = listOf(ProofSuiteId.VC_LD)
+
+        override fun create(options: Map<String, Any?>): ProofEngine? {
+            lastOptions = options
+            return if (options["fail"] == true) null else MinimalEngine(ProofEngineCapabilities())
+        }
+    }
+
+    @Test
+    fun `provider create defaults to empty options and may decline by returning null`() {
+        val provider = RecordingProvider()
+        assertTrue(provider.create() is ProofEngine)
+        assertEquals(emptyMap(), provider.lastOptions)
+        assertNull(provider.create(mapOf("fail" to true)))
+        assertEquals(mapOf<String, Any?>("fail" to true), provider.lastOptions)
+        assertEquals(listOf(ProofSuiteId.VC_LD), provider.supportedFormatIds)
+    }
 }

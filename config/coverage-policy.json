@@ -26,7 +26,7 @@
       "BRANCH": 75.0
     },
     "org/trustweave/wallet": {
-      "LINE": 67.0,
+      "LINE": 94.0,
       "BRANCH": 80.0
     },
     "org/trustweave/wallet/exception": {
@@ -208,8 +208,8 @@
       "BRANCH": 95.0
     },
     "org/trustweave/did/identifiers": {
-      "LINE": 55.0,
-      "BRANCH": 56.0
+      "LINE": 94.0,
+      "BRANCH": 72.0
     },
     "org/trustweave/did/spi": {
       "LINE": 67.0,
@@ -224,12 +224,12 @@
       "BRANCH": 76.0
     },
     "org/trustweave/credential/identifiers": {
-      "LINE": 72.0,
-      "BRANCH": 62.0
+      "LINE": 95.0,
+      "BRANCH": 86.0
     },
     "org/trustweave/credential/results": {
-      "LINE": 51.0,
-      "BRANCH": 50.0
+      "LINE": 99.0,
+      "BRANCH": 97.0
     },
     "org/trustweave/credential/template/internal": {
       "LINE": 96.0,
@@ -240,7 +240,7 @@
       "BRANCH": 96.0
     },
     "org/trustweave/credential/spi/proof": {
-      "LINE": 52.0,
+      "LINE": 84.0,
       "BRANCH": 96.0
     },
     "org/trustweave/credential/status": {

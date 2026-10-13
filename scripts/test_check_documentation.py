@@ -53,6 +53,26 @@ class DocumentationCheckTest(unittest.TestCase):
         self.assertEqual(1, len(self.errors()))
         self.assertIn('missing.md', self.errors()[0])
 
+    def test_badge_link_and_historical_link_are_checked(self):
+        self.write('docs/README.md', '[![License](https://img.shields.io/x.svg)](LICENSE)\n')
+        self.write('docs/reviews/old.md', '[log](validation.log)\n')
+        errors = self.errors()
+        self.assertTrue(any('LICENSE' in error for error in errors))
+        self.assertTrue(any('validation.log' in error for error in errors))
+        self.write('LICENSE', 'text\n')
+        self.write('docs/README.md', '[![License](https://img.shields.io/x.svg)](../LICENSE)\n')
+        self.write('docs/reviews/old.md', 'no links\n')
+        self.assertEqual([], self.errors())
+
+    def test_unknown_include_style_module_path_is_rejected(self):
+        self.write('settings.gradle.kts', 'include("kms:plugins:inmemory")\ninclude("did:did-core")\n')
+        self.write('README.md', 'Use `kms:plugins:in-memory` and `did:did-core:test`; a DID is `did:key:z6Mk`.\n')
+        errors = self.errors()
+        self.assertEqual(1, len(errors))
+        self.assertIn('kms:plugins:in-memory', errors[0])
+        self.write('README.md', 'Use `kms:plugins:inmemory`, `did:did-core:test` and `did:method:identifier`.\n')
+        self.assertEqual([], self.errors())
+
     def seed_sources(self):
         self.write('did/src/main/kotlin/org/trustweave/did/Did.kt',
                    'package org.trustweave.did\n\nclass Did(val value: String) {\n    class Nested\n}\n'
@@ -84,7 +104,7 @@ class DocumentationCheckTest(unittest.TestCase):
         self.assertTrue(any('unclosed' in error for error in self.errors()))
 
     def test_historical_designs_are_not_current_api_errors(self):
-        self.write('docs/reviews/old.md', '[old](missing.md)\nwallet.presentation { }\n')
+        self.write('docs/reviews/old.md', 'wallet.presentation { }\n')
         self.assertEqual([], self.errors())
 
     def test_obsolete_api_is_detected(self):

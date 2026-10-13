@@ -206,9 +206,9 @@ The following plugins have scaffolding in place but are not yet fully implemente
 | **Thales** | `org.trustweave:kms-plugins-thales` | Not implemented |
 | **Thales Luna** | `org.trustweave:kms-plugins-thales-luna` | Not implemented |
 | **Utimaco** | `org.trustweave:kms-plugins-utimaco` | Not implemented |
-| **ServiceNow** | `credentials:platforms:servicenow` | Credential issuance/verification not implemented |
-| **Salesforce** | `credentials:platforms:salesforce` | Credential issuance/verification not implemented |
-| **Entra ID** | `credentials:platforms:entra` | Credential issuance/verification not implemented |
+| **ServiceNow** | `credentials:plugins:platforms:servicenow` | Credential issuance/verification not implemented |
+| **Salesforce** | `credentials:plugins:platforms:salesforce` | Credential issuance/verification not implemented |
+| **Entra ID** | `credentials:plugins:platforms:entra` | Credential issuance/verification not implemented |
 | **Venafi** | `org.trustweave:kms-plugins-venafi` | Credential issuance not implemented |
 
 ---

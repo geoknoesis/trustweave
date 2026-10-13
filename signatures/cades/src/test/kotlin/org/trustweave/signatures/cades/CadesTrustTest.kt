@@ -100,6 +100,8 @@ class CadesTrustTest {
     private suspend fun signed(profile: CadesProfile): Signed {
         val id = keyId()
         val chain = ca.issueChainBytes(kms.publicKey(id), "CN=CAdES Trust Signer")
+        val tsaConfig =
+            TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile == CadesProfile.B_T }
         val signature =
             DefaultCadesSigner(kms).sign(
                 CadesSigningRequest(
@@ -107,7 +109,7 @@ class CadesTrustTest {
                     keyId = id,
                     payload = payload,
                     signerCertificateChain = chain,
-                    tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile == CadesProfile.B_T },
+                    tsaConfig = tsaConfig,
                     detached = true,
                 ),
             )

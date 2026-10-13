@@ -123,6 +123,8 @@ class CadesEmbeddedRevocationTest {
     private suspend fun signed(profile: CadesProfile = CadesProfile.B_T): Signed {
         val id = keyId()
         val chain = ca.issueChainBytes(kms.publicKey(id), "CN=CAdES LT Signer")
+        val tsaConfig =
+            TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile == CadesProfile.B_T }
         val signature =
             DefaultCadesSigner(kms).sign(
                 CadesSigningRequest(
@@ -130,7 +132,7 @@ class CadesEmbeddedRevocationTest {
                     keyId = id,
                     payload = payload,
                     signerCertificateChain = chain,
-                    tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile == CadesProfile.B_T },
+                    tsaConfig = tsaConfig,
                     detached = true,
                 ),
             )

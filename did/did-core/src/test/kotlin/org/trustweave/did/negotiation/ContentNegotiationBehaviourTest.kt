@@ -207,4 +207,36 @@ class ContentNegotiationBehaviourTest {
         runTest {
             assertEquals(DidMediaTypes.DID_JSON, service.negotiateContentType(", ,application/did+json"))
         }
+
+    @Test
+    fun `several unsupported types at equal q-value keep a supported one first`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID,
+                service.negotiateContentType("image/png, text/html, application/did, text/plain", DidMediaTypes.JSON),
+            )
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("image/png, text/html, text/plain", DidMediaTypes.JSON),
+            )
+        }
+
+    @Test
+    fun `an entry with only parameters or only a zero q is dropped`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType(";q=0.5, application/did+ld+json;q=0, application/did+json;q=0.1"),
+            )
+            assertEquals(DidMediaTypes.JSON, service.negotiateContentType(";q=0.5, ;q=0", DidMediaTypes.JSON))
+        }
+
+    @Test
+    fun `an empty q-value counts as one`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did+ld+json;q=0.5, application/did+json;q="),
+            )
+        }
 }

@@ -226,4 +226,15 @@ class DidDocumentJsonProducerBehaviourTest {
             Json.parseToJsonElement(legacy.toString(Charsets.UTF_8)).jsonObject.getValue("@context"),
         )
     }
+
+    @Test
+    fun `integer JWK members are emitted as integers not doubles`() {
+        val jwk = mapOf("kty" to "oct", "n" to 1000, "big" to 12345678901L, "frac" to 1.5)
+        val json = DidDocumentJsonProducer.toJsonObject(DidDocument(did, verificationMethod = listOf(vm(jwk = jwk))))
+        val text = Json.encodeToString(JsonObject.serializer(), json)
+        assertFalse(text.contains("1.0E3"), text)
+        assertTrue(text.contains("\"n\":1000"), text)
+        assertTrue(text.contains("\"big\":12345678901"), text)
+        assertTrue(text.contains("\"frac\":1.5"), text)
+    }
 }

@@ -133,7 +133,7 @@ class InMemoryDocumentStorageBehaviourTest {
         }
 
     @Test
-    fun `deactivate replaces the document and stamps updated even for a never stored DID`() =
+    fun `deactivate replaces the document and stamps updated, and is a no-op for a never stored DID`() =
         runTest {
             val storage = InMemoryDocumentStorage()
             storage.store(alice, aliceDoc)
@@ -143,7 +143,9 @@ class InMemoryDocumentStorageBehaviourTest {
             assertNotNull(storage.get(alice)!!.second.updated)
 
             storage.deactivate(bob, DidDocument(id = bob))
-            assertTrue(storage.exists(bob))
+            assertFalse(storage.exists(bob))
+            assertNull(storage.get(bob))
+            assertEquals(1, storage.size())
         }
 
     @Test

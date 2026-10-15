@@ -757,6 +757,14 @@ working code fail until it is adjusted.**
   `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
+
+- **Content negotiation, JWK numbers, storage, wallet organize and domain anchoring quirks.**
+  `DefaultContentNegotiationService` now honours Accept `q` values (higher wins, `q=0` is not acceptable, ties keep
+  server preference). Integer members of a `publicKeyJwk` map and of service-endpoint maps are emitted as integers,
+  not doubles such as `1.0E3`. `InMemoryDocumentStorage.deactivate` is a no-op for an unknown DID instead of
+  creating an entry. `Wallet.organize` reports a `false` result from the wallet as an entry in
+  `OrganizationResult.errors` instead of success. `TrustedDomainManager.anchor` releases its treasury reservation
+  when the calling coroutine is cancelled mid-write.
 - **Behaviour change: trust-registry issuer/verifier lists are capped at 100 entries by default.** The body is still a JSON array (did-ordered); the total match count is in the new `X-Total-Count` header; pass `limit`/`offset` to page.
 - `decodeMultibaseDigest` in `DidDocumentVerificationService` accepts `u` and `U` through one branch (contradictory comments removed; behaviour unchanged).
 - `InMemoryKeyManagementService` constructor: a `ConcurrentHashMap` argument is shared with the caller, any other map is copied once; both are now documented.

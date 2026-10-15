@@ -1,6 +1,8 @@
 package org.trustweave.trust.domain
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -250,5 +252,40 @@ class TrustedDomainManagerTest {
             assertIs<TreasuryException>(error)
             assertTrue(client.writes.isEmpty())
             assertTrue(treasury.ledger().all().isEmpty())
+        }
+
+    private class HangingClient : BlockchainAnchorClient {
+        val started = kotlinx.coroutines.CompletableDeferred<PaymentContext>()
+
+        override suspend fun writePayload(
+            payload: kotlinx.serialization.json.JsonElement,
+            mediaType: String,
+        ): AnchorResult = error("the payment-aware overload must be used")
+
+        override suspend fun writePayload(
+            payload: kotlinx.serialization.json.JsonElement,
+            ctx: PaymentContext,
+            mediaType: String,
+        ): AnchorResult {
+            started.complete(ctx)
+            kotlinx.coroutines.awaitCancellation()
+        }
+
+        override suspend fun estimate(op: OperationDescriptor) = fee(100)
+
+        override suspend fun readPayload(ref: AnchorRef): AnchorResult = error("not used")
+    }
+
+    @Test
+    fun `cancelling the caller releases the reservation`(): Unit =
+        runBlocking {
+            val client = HangingClient()
+            val (manager, treasury) = manager(client)
+
+            val job = launch { manager.anchor("k", CHAIN, payload) }
+            val ctx = client.started.await()
+            job.cancelAndJoin()
+
+            assertEquals(SettlementStatus.CANCELLED, treasury.ledger().get(ctx.correlationId)!!.status)
         }
 }

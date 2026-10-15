@@ -148,4 +148,35 @@ class ContentNegotiationBehaviourTest {
                 service.deserializeDocument("""{"id":"not-a-did"}""".toByteArray(), DidMediaTypes.DID)
             }
         }
+
+    @Test
+    fun `a higher q-value beats server preference`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("application/did;q=0.5, application/json;q=0.9"),
+            )
+        }
+
+    @Test
+    fun `q=0 marks a type as not acceptable`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did;q=0, application/did+json"),
+            )
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("application/did;q=0.0", DidMediaTypes.JSON),
+            )
+        }
+
+    @Test
+    fun `equal q-values keep the server preference`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/json;q=0.8, application/did+ld+json;q=0.8"),
+            )
+        }
 }

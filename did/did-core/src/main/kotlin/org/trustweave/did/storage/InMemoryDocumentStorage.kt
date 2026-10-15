@@ -94,6 +94,8 @@ class InMemoryDocumentStorage : DidDocumentStorage {
         deactivatedDocument: DidDocument,
     ) {
         mutex.withLock {
+            // Unknown DID: nothing to deactivate; do not create state for it.
+            if (!documents.containsKey(did.value)) return
             documents[did.value] = deactivatedDocument
             val currentMeta = metadata[did.value] ?: DidDocumentMetadata()
             metadata[did.value] =

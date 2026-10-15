@@ -85,7 +85,6 @@ class DefaultContentNegotiationService : ContentNegotiationService {
             return defaultType
         }
 
-        // Parse Accept header (simplified - full implementation would handle q-values)
         val acceptedTypes = parseAcceptHeader(acceptHeader)
 
         // Find best match
@@ -140,14 +139,33 @@ class DefaultContentNegotiationService : ContentNegotiationService {
             }
         }
 
+    /**
+     * Parses [accept] into the acceptable media types, best first: higher `q` wins, `q=0` means
+     * not acceptable (RFC 9110 section 12.4.2) and equal `q` keeps the server's own preference order.
+     */
     private fun parseAcceptHeader(accept: String): List<String> =
         accept
             .split(',')
-            .map { it.trim().split(';')[0].trim() }
-            .sortedByDescending { type ->
-                val index = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.indexOf(DidMediaTypes.normalize(type))
-                if (index < 0) -1 else DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.size - index
-            }
+            .mapNotNull { part ->
+                val pieces = part.split(';').map { it.trim() }
+                val type = pieces[0]
+                val q =
+                    pieces
+                        .drop(1)
+                        .firstOrNull { it.startsWith("q=", ignoreCase = true) }
+                        ?.substring(2)
+                        ?.trim()
+                        ?.toDoubleOrNull()
+                        ?.coerceIn(0.0, 1.0)
+                        ?: 1.0
+                if (type.isEmpty() || q <= 0.0) null else type to q
+            }.sortedWith(
+                compareByDescending<Pair<String, Double>> { it.second }
+                    .thenBy { (type, _) ->
+                        val index = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.indexOf(DidMediaTypes.normalize(type))
+                        if (index < 0) Int.MAX_VALUE else index
+                    },
+            ).map { it.first }
 }
 
 /**

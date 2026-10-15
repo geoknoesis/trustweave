@@ -23,7 +23,7 @@ import java.time.Instant
  */
 class EntraTokenClient(
     private val config: EntraConfig,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = defaultEntraHttpClient(),
     private val clock: Clock = Clock.systemUTC(),
     private val refreshSkew: java.time.Duration = java.time.Duration.ofSeconds(60),
 ) {
@@ -116,3 +116,8 @@ class EntraTokenClient(
         val expiresAt: Instant,
     )
 }
+
+/** The HTTP client the Entra clients use unless one is injected: SSRF-guarded (no internal/loopback hosts). */
+internal fun defaultEntraHttpClient(): OkHttpClient =
+    org.trustweave.core.net
+        .ssrfGuardedOkHttpClient()

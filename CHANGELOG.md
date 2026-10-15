@@ -614,6 +614,12 @@ working code fail until it is adjusted.**
 
 ### Added
 
+- **Opt-in `requireHolderBinding` verification option.** `VerificationOptions.requireHolderBinding` (default `false`;
+  DSL: `requireHolderBinding(true)` in `verify { }`) rejects SD-JWT VC credentials whose issuer-signed JWT carries no
+  `cnf` claim, standalone and inside presentations, after the issuer signature is verified. The default is unchanged:
+  `cnf`-less SD-JWT credentials are still accepted as bearer credentials. `VerificationOptions` gains a trailing
+  constructor parameter (`copy`/`componentN` ABI updated).
+
 - **CAdES B-LT verification.** `DefaultCadesVerifier` now reads the revocation values a CMS signature carries
   (the `id-aa-ets-revocationValues` unsigned attribute, whose `ocspVals` are re-wrapped as `OCSPResponse`, and the RFC 5652
   `SignedData.crls` field including `id-ri-ocsp-response`) and feeds them with caller evidence into

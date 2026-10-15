@@ -41,7 +41,7 @@ import org.trustweave.integrations.entra.exchange.EntraExchangeProtocol
  */
 class EntraIntegration(
     val config: EntraConfig,
-    httpClient: OkHttpClient = OkHttpClient(),
+    httpClient: OkHttpClient = defaultEntraHttpClient(),
 ) {
     /** OAuth2 client_credentials token client with in-memory cache. */
     val tokenClient: EntraTokenClient = EntraTokenClient(config = config, httpClient = httpClient)

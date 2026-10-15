@@ -825,6 +825,19 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+- **SSRF-guarded default HTTP clients for Entra and OpenID Federation.** `EntraTokenClient`, `EntraIssuanceClient`,
+  `EntraPresentationClient`, `EntraIntegration` and the Entra exchange provider now default to
+  `ssrfGuardedOkHttpClient()` instead of a plain `OkHttpClient()`, so internal/loopback/link-local destinations are
+  refused at connect time. **Behaviour change:** tests against a loopback server (WireMock) must inject a plain
+  `OkHttpClient()`; `EntraConfig`'s `HttpUrlPolicy` checks are unchanged. `EntityStatementJwtProcessor` lost its unused
+  `OkHttpClient` constructor parameter (**API**: the one-argument constructor is gone; the no-argument form is unchanged).
+- **Cloud wallets can encrypt client-side.** `CloudWalletFactory` now accepts `encryptionKey` (Base64 of exactly 32 bytes;
+  other lengths or invalid Base64 fail with `WalletCreationFailed`) and `CloudWallet`/`AwsS3Wallet`/`AzureBlobWallet`/
+  `GoogleCloudStorageWallet` take an optional `encryptionKey: ByteArray?`. Credentials and metadata are written as
+  AES-256-GCM objects with a `TWCW` header, random IV and AAD binding wallet id, record kind and credential-id hash.
+  Migration: reads fall back to legacy plaintext only for objects lacking the header; writes always encrypt when a key is
+  set; tampered, swapped or wrong-key objects fail closed with `WalletException.StorageError`. Without a key the
+  behaviour is unchanged (plaintext JSON), as documented. Previously a supplied `encryptionKey` was rejected.
 - **TSA client fails closed.** `BouncyCastleTsaClient` now always verifies the RFC 3161 token signature (it used to
   verify only when `trustedSignerCertificates` was set), checks the signer's `id-kp-timeStamping` EKU and validity at
   `genTime`, and requires the signer to be pinned or to chain to the new `TsaConfig.trustAnchors`; with neither it

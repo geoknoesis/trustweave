@@ -33,7 +33,8 @@ class GoogleCloudStorageWallet(
     bucketName: String,
     basePath: String,
     private val storage: Storage,
-) : CloudWallet(walletId, walletDid, holderDid, bucketName, basePath) {
+    encryptionKey: ByteArray? = null,
+) : CloudWallet(walletId, walletDid, holderDid, bucketName, basePath, encryptionKey) {
     override suspend fun upload(
         key: String,
         data: ByteArray,

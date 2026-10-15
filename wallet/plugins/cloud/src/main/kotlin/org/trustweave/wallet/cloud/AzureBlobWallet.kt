@@ -35,7 +35,8 @@ class AzureBlobWallet(
     private val containerName: String,
     basePath: String,
     private val blobServiceClient: BlobServiceClient,
-) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath) {
+    encryptionKey: ByteArray? = null,
+) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath, encryptionKey) {
     private val containerClient: BlobContainerClient = blobServiceClient.getBlobContainerClient(containerName)
 
     /**

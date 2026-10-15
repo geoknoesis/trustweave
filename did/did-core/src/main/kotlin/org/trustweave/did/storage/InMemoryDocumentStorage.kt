@@ -97,9 +97,9 @@ class InMemoryDocumentStorage : DidDocumentStorage {
             // Unknown DID: nothing to deactivate; do not create state for it.
             if (!documents.containsKey(did.value)) return
             documents[did.value] = deactivatedDocument
-            val currentMeta = metadata[did.value] ?: DidDocumentMetadata()
+            // store() always writes both maps, so a stored document always has metadata.
             metadata[did.value] =
-                currentMeta.copy(
+                metadata.getValue(did.value).copy(
                     updated =
                         kotlin.time.Clock.System
                             .now(),

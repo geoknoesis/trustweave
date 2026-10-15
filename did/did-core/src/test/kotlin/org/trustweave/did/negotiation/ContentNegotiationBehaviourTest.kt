@@ -179,4 +179,32 @@ class ContentNegotiationBehaviourTest {
                 service.negotiateContentType("application/json;q=0.8, application/did+ld+json;q=0.8"),
             )
         }
+
+    @Test
+    fun `a malformed q-value counts as one, an oversized one is clamped to one`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did+ld+json;q=0.5, application/did+json;q=abc"),
+            )
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/did+json;q=0.5, application/did+ld+json;q=5"),
+            )
+        }
+
+    @Test
+    fun `the q parameter is case insensitive and found among other parameters`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/did+json;Q=0.1, application/did+ld+json;profile=x;q=0.9"),
+            )
+        }
+
+    @Test
+    fun `empty list elements are ignored`(): Unit =
+        runTest {
+            assertEquals(DidMediaTypes.DID_JSON, service.negotiateContentType(", ,application/did+json"))
+        }
 }

@@ -1,5 +1,19 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
 
+buildscript {
+    // Plugins have a separate classpath, so the runtime dependency rules below do not protect it.
+    val catalog = file("gradle/libs.versions.toml").readText()
+    val jacksonVersion = Regex("(?m)^jackson = \"([^\"]+)\"").find(catalog)!!.groupValues[1]
+    configurations.named("classpath") {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-core") {
+                useVersion(jacksonVersion)
+                because("Patch Jackson core in the Gradle plugins as well as application dependencies")
+            }
+        }
+    }
+}
+
 plugins {
     // Declare Kotlin plugin here so its types (e.g., KotlinCompile) are available in this build script.
     // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.

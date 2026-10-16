@@ -2,7 +2,6 @@ public final class org/trustweave/wallet/file/FileWallet : org/trustweave/wallet
 	public static final field Companion Lorg/trustweave/wallet/file/FileWallet$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljavax/crypto/spec/SecretKeySpec;Lorg/trustweave/wallet/WalletStatusResolver;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[BLorg/trustweave/wallet/WalletStatusResolver;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[BLorg/trustweave/wallet/WalletStatusResolver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;[CLorg/trustweave/wallet/WalletStatusResolver;)V

@@ -4,7 +4,6 @@ public final class org/trustweave/registry/server/TrustRegistryRoutesKt {
 }
 
 public final class org/trustweave/registry/server/TrustRegistryServer {
-	public static final field MIN_API_TOKEN_LENGTH I
 	public fun <init> (Lorg/trustweave/registry/TrustRegistry;ILjava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Lorg/trustweave/registry/TrustRegistry;ILjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun start (Z)V

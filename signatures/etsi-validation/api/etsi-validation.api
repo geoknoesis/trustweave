@@ -1,6 +1,5 @@
 public final class org/trustweave/signatures/etsi/validation/DefaultEtsiSignatureValidator : org/trustweave/signatures/etsi/validation/EtsiSignatureValidator {
 	public static final field Companion Lorg/trustweave/signatures/etsi/validation/DefaultEtsiSignatureValidator$Companion;
-	public fun <init> ()V
 	public fun <init> (Lorg/trustweave/signatures/jades/DefaultJadesVerifier;)V
 	public synthetic fun <init> (Lorg/trustweave/signatures/jades/DefaultJadesVerifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun validate (Ljava/lang/String;Lorg/trustweave/signatures/etsi/validation/EtsiSignaturePolicy;Lorg/trustweave/signatures/trustlists/TrustAnchorResolver;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

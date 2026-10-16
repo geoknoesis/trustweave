@@ -34,7 +34,6 @@ public abstract class org/trustweave/testkit/BasePluginTest {
 
 public final class org/trustweave/testkit/TrustWeaveTestFixture : java/lang/AutoCloseable {
 	public static final field Companion Lorg/trustweave/testkit/TrustWeaveTestFixture$Companion;
-	public synthetic fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/did/DidMethod;Lorg/trustweave/did/registry/DidMethodRegistry;Lorg/trustweave/anchor/BlockchainAnchorRegistry;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun builder ()Lorg/trustweave/testkit/TrustWeaveTestFixture$Builder;
 	public fun close ()V
 	public final fun createIssuerDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -311,7 +310,6 @@ public final class org/trustweave/testkit/config/TestConfig$EnvVars {
 
 public final class org/trustweave/testkit/containers/LocalStackContainer : org/testcontainers/containers/GenericContainer {
 	public static final field Companion Lorg/trustweave/testkit/containers/LocalStackContainer$Companion;
-	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun create ()Lorg/trustweave/testkit/containers/LocalStackContainer;
 	public static final fun create (Ljava/util/List;)Lorg/trustweave/testkit/containers/LocalStackContainer;
 	public final fun getAccessKeyId ()Ljava/lang/String;
@@ -337,7 +335,6 @@ public final class org/trustweave/testkit/containers/LocalStackContainer$Service
 
 public final class org/trustweave/testkit/containers/PostgresContainer : org/testcontainers/containers/GenericContainer {
 	public static final field Companion Lorg/trustweave/testkit/containers/PostgresContainer$Companion;
-	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun create ()Lorg/trustweave/testkit/containers/PostgresContainer;
 	public static final fun create (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/trustweave/testkit/containers/PostgresContainer;
 	public final fun getDatabaseName ()Ljava/lang/String;
@@ -354,7 +351,6 @@ public final class org/trustweave/testkit/containers/PostgresContainer$Companion
 
 public final class org/trustweave/testkit/containers/VaultContainer : org/testcontainers/containers/GenericContainer {
 	public static final field Companion Lorg/trustweave/testkit/containers/VaultContainer$Companion;
-	public synthetic fun <init> (Lorg/testcontainers/utility/DockerImageName;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun create ()Lorg/trustweave/testkit/containers/VaultContainer;
 	public static final fun create (Ljava/lang/String;)Lorg/trustweave/testkit/containers/VaultContainer;
 	public final fun getRootToken ()Ljava/lang/String;

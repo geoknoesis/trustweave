@@ -1,5 +1,4 @@
 public abstract class org/trustweave/core/exception/ConfigException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
@@ -62,7 +61,6 @@ public final class org/trustweave/core/exception/ConfigException$UnsupportedValu
 }
 
 public abstract class org/trustweave/core/exception/PluginException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
@@ -132,7 +130,6 @@ public final class org/trustweave/core/exception/PluginException$NotFound : org/
 }
 
 public abstract class org/trustweave/core/exception/ProviderException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
@@ -182,7 +179,6 @@ public final class org/trustweave/core/exception/ProviderException$PartiallyFoun
 }
 
 public abstract class org/trustweave/core/exception/SerializationException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 

@@ -407,7 +407,6 @@ public final class org/trustweave/signatures/trustlists/TspServiceType$Companion
 }
 
 public final class org/trustweave/signatures/trustlists/VerifiedTrustListLoader {
-	public static final field LOTL_KEY Ljava/lang/String;
 	public fun <init> ()V
 	public fun <init> (Lorg/trustweave/signatures/trustlists/TrustListParser;)V
 	public fun <init> (Lorg/trustweave/signatures/trustlists/TrustListParser;Lkotlin/time/Clock;)V

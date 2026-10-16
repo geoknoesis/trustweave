@@ -66,7 +66,6 @@ public final class org/trustweave/observability/HostKind : java/lang/Enum {
 }
 
 public final class org/trustweave/observability/HostObservability {
-	public static final field METRICS_PATH Ljava/lang/String;
 	public fun <init> ()V
 	public fun <init> (Lorg/trustweave/observability/HostTelemetry;)V
 	public fun <init> (Lorg/trustweave/observability/HostTelemetry;Ljava/lang/String;)V

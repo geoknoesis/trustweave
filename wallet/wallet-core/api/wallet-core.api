@@ -351,7 +351,6 @@ public abstract interface class org/trustweave/wallet/WalletStatusResolver {
 }
 
 public abstract class org/trustweave/wallet/exception/WalletException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getCause ()Ljava/lang/Throwable;
 	public fun getCode ()Ljava/lang/String;

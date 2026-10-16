@@ -17,8 +17,6 @@ public final class org/trustweave/did/base/AbstractBlockchainDidMethod$Companion
 }
 
 public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave/did/DidMethod {
-	public static final field DEFAULT_MAX_CACHED_DOCUMENTS I
-	public static final field DEFAULT_MAX_DEACTIVATED_RECORDS I
 	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/KeyManagementService;)V
 	protected final fun cachedDocumentCount ()I
 	protected final fun createErrorResolutionMetadata (Ljava/lang/String;Ljava/lang/String;)Ljava/util/Map;

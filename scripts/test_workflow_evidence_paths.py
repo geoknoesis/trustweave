@@ -113,10 +113,17 @@ class ScriptTestDiscoveryTest(unittest.TestCase):
     """
 
     def test_the_ci_discovery_pattern_covers_every_script_test(self):
-        pattern = "python -m unittest discover -s scripts -p 'test_*.py'"
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        pattern = "-m unittest discover -s scripts -p 'test_*.py'"
+        shared = (ROOT / "scripts" / "run-contract-checks.sh").read_text(encoding="utf-8")
         self.assertIn(
             pattern,
-            workflow,
-            "ci.yml must discover every scripts/test_*.py, not a subset chosen by filename",
+            shared,
+            "run-contract-checks.sh must discover every scripts/test_*.py, not a subset chosen by filename",
         )
+        for name in ("ci.yml", "release-evidence.yml"):
+            workflow = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            self.assertIn(
+                "scripts/run-contract-checks.sh",
+                workflow,
+                f"{name} must run the shared contract-check list",
+            )

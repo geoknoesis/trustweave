@@ -91,9 +91,9 @@ data class JadesHeader(
  *                  itself MAY appear here too; verifiers tolerate both presence and absence.
  * @property rVals  Revocation data values: each entry is a base64-encoded CRL or OCSP response
  *                  proving the corresponding `xVals` certificate's status at signing time.
- * @property arcTst Archival time-stamps. Each token's message-imprint covers the SHA-256 of
- *                  `signatureB64u || serialized(sigTst) || serialized(xVals) || serialized(rVals)`
- *                  per TS 119 182-1 §5.3.6.
+ * @property arcTst Archival time-stamps. [DefaultJadesSigner] imprints SHA-256 of a private serialisation
+ *                  of `signatureB64u`, `sigTst`, `xVals` and `rVals`, which is NOT the EN 319 182-1 5.3.6
+ *                  construction; [DefaultJadesVerifier] therefore never credits an `arcTst` as B-LTA.
  */
 data class JadesUnsignedProperties(
     val sigTst: List<EncodedTimeStampToken> = emptyList(),
@@ -244,10 +244,10 @@ data class JadesSignature(
  *                                                 MVP defaults: `ES256`, `ES384`, `ES512`, `EdDSA`.
  *                                                 RSA-PSS (`PS256`/`384`/`512`) is intentionally
  *                                                 absent from the MVP defaults.
- * @property allowExpiredCertificateAtSigningTime  When true, certificate validity is not enforced
- *                                                 at the claimed signing time. Useful for B-LT
- *                                                 archival validation (future); the MVP default
- *                                                 is false.
+ * @property allowExpiredCertificateAtSigningTime  When true, certificate validity is not enforced.
+ *                                                 When false (default) it is checked at the time
+ *                                                 authenticated by a trusted `sigTst`, else now;
+ *                                                 never at the claimed `sigT`.
  * @property maxClockSkew                          Tolerance applied to signing-time / TSA-time
  *                                                 comparisons. Default 5 minutes.
  * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see

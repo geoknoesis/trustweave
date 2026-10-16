@@ -40,11 +40,33 @@ data class LocalFilePublisherConfig(
 class LocalFileStatusListPublisher(
     private val config: LocalFilePublisherConfig,
 ) : StatusListPublisher {
+    /**
+     * Resolves [statusListId] to a file directly inside the configured directory.
+     *
+     * The identifier becomes a file name, so it is restricted to a single plain path segment of
+     * letters, digits, `.`, `_` and `-` (not starting with `.`): no separators, no `..`, no
+     * absolute or drive-qualified paths. The result is also checked to sit directly under the
+     * directory. Anything else is an [IllegalArgumentException], for publish, delete and lookup.
+     */
+    private fun filePath(statusListId: String): Path {
+        require(SAFE_ID.matches(statusListId)) {
+            "Invalid status list identifier: must match ${SAFE_ID.pattern}"
+        }
+        val base = config.directory.toAbsolutePath().normalize()
+        val resolved = base.resolve(statusListId).normalize()
+        require(resolved.parent == base) { "Status list identifier escapes the publishing directory" }
+        return config.directory.resolve(statusListId)
+    }
 
-    private fun filePath(statusListId: String): Path =
-        config.directory.resolve(statusListId)
+    private companion object {
+        val SAFE_ID = Regex("[A-Za-z0-9_-][A-Za-z0-9._-]{0,254}")
+    }
 
-    override suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String =
+    override suspend fun publish(
+        statusListId: String,
+        content: ByteArray,
+        contentType: String,
+    ): String =
         withContext(Dispatchers.IO) {
             Files.createDirectories(config.directory)
             Files.write(filePath(statusListId), content)

@@ -30,6 +30,14 @@ fun interface KeyMetadataProvider {
 /**
  * Manages key rotation for DIDComm keys.
  *
+ * **Limitation — this is not a complete rotation.** [rotateKey] generates a fresh X25519 key
+ * (regardless of the old key's type), stores it, and keeps an archived copy of the old key. It does
+ * NOT publish the new key in the DID document (no DID-update hook exists), does NOT retire the old
+ * key after a grace period (the old key stays active under its original id), and keeps rotation
+ * state only in memory. A reported `success` therefore means "a new key was stored locally", not
+ * "peers will now use it". A correct implementation needs a DID-publication hook, type-preserving
+ * key generation and persisted retirement state.
+ *
  * Automates key rotation based on policies. A key is only evaluated against the [policy] when its
  * metadata is actually known — from [metadataProvider], or because this manager generated it.
  * Keys with unknown age are never rotated (and are logged), rather than being judged on invented

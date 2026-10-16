@@ -26,6 +26,7 @@ class Oidc4VciServerTest {
         Oidc4VciIssuerService(
             baseUrl = issuerUrl,
             issuerDid = "did:key:z6MkTestIssuer",
+            supportedConfigurations = TEST_CONFIGURATIONS,
             credentialBuilder = TestCredentialBuilder(),
         )
 
@@ -327,6 +328,7 @@ class Oidc4VciServerTest {
             Oidc4VciIssuerService(
                 baseUrl = issuerUrl,
                 issuerDid = "did:key:z6MkTestIssuer",
+                supportedConfigurations = TEST_CONFIGURATIONS,
                 tokenTtlSeconds = 0, // every token is immediately expired
                 credentialBuilder = TestCredentialBuilder(),
             )
@@ -365,7 +367,7 @@ class Oidc4VciServerTest {
         testOidc {
             // A credential type carrying JSON metacharacters must end up as a single escaped
             // string value — not as injected JSON structure overriding e.g. the issuer.
-            val maliciousType = """Degree","evil":true,"issuer":"did:evil:attacker"""
+            val maliciousType = MALICIOUS_TYPE
             val offer = service.createOffer(listOf(maliciousType))
             val tokenBody = obtainToken(offer.preAuthCode)
             val accessToken = tokenBody["access_token"]!!.jsonPrimitive.content

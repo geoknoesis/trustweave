@@ -1,0 +1,6 @@
+org.trustweave.did.registry.CovOkProvider
+org.trustweave.did.registry.CovNullProvider
+org.trustweave.did.registry.CovThrowingProvider
+org.trustweave.did.registry.CovMissingEnvProvider
+org.trustweave.did.registry.CovLowPriorityDupProvider
+org.trustweave.did.registry.CovHighPriorityDupProvider

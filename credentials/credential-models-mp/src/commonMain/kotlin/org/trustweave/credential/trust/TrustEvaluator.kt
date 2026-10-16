@@ -53,17 +53,34 @@ interface TrustEvaluator {
          *
          * @param trustedIssuers Set of trusted issuer DIDs
          */
-        fun allowlist(trustedIssuers: Set<Did>): TrustEvaluator =
-            AllowlistTrustEvaluator(trustedIssuers)
+        fun allowlist(trustedIssuers: Set<Did>): TrustEvaluator = AllowlistTrustEvaluator(trustedIssuers)
 
         /**
          * Rejects issuers in the blocklist, accepts all others.
          *
          * @param blockedIssuers Set of blocked issuer DIDs
          */
-        fun blocklist(blockedIssuers: Set<Did>): TrustEvaluator =
-            BlocklistTrustEvaluator(blockedIssuers)
+        fun blocklist(blockedIssuers: Set<Did>): TrustEvaluator = BlocklistTrustEvaluator(blockedIssuers)
     }
+}
+
+/**
+ * A [TrustEvaluator] that can also take the credential's `type` entries into account.
+ *
+ * Verification calls [isTrusted] with the types when the configured evaluator implements this
+ * interface, so a trust anchor that is only trusted for some credential types is not trusted for
+ * the others. An evaluator that only implements [TrustEvaluator] is asked the typeless question.
+ */
+interface TypeAwareTrustEvaluator : TrustEvaluator {
+    /**
+     * @param issuer The issuer DID to check
+     * @param credentialTypes The credential's `type` entries (includes `VerifiableCredential`)
+     * @return true if the issuer is trusted to issue a credential with these types
+     */
+    suspend fun isTrusted(
+        issuer: Did,
+        credentialTypes: List<String>,
+    ): Boolean
 }
 
 /**
@@ -77,18 +94,16 @@ private object AcceptAllTrustEvaluator : TrustEvaluator {
  * Only accepts issuers in the allowlist.
  */
 private data class AllowlistTrustEvaluator(
-    private val trustedIssuers: Set<Did>
+    private val trustedIssuers: Set<Did>,
 ) : TrustEvaluator {
-    override suspend fun isTrusted(issuer: Did): Boolean =
-        issuer in trustedIssuers
+    override suspend fun isTrusted(issuer: Did): Boolean = issuer in trustedIssuers
 }
 
 /**
  * Rejects issuers in the blocklist.
  */
 private data class BlocklistTrustEvaluator(
-    private val blockedIssuers: Set<Did>
+    private val blockedIssuers: Set<Did>,
 ) : TrustEvaluator {
-    override suspend fun isTrusted(issuer: Did): Boolean =
-        issuer !in blockedIssuers
+    override suspend fun isTrusted(issuer: Did): Boolean = issuer !in blockedIssuers
 }

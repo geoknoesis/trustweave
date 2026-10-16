@@ -27,6 +27,9 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermission
 
+private const val FILE_VERSION_AAD = 2
+private val KEYSTORE_AAD: ByteArray = "trustweave.didcomm.keystore.v2".toByteArray(Charsets.UTF_8)
+
 /**
  * Encrypted file-based local key store for production use.
  *
@@ -140,7 +143,9 @@ class EncryptedFileLocalKeyStore(
             }
 
             val encryptedData = parseEncryptedFile(fileContent)
-            val decryptedContent = keyEncryption.decrypt(encryptedData)
+            // File version 1 predates AAD binding and is still readable; version 2 binds the purpose label.
+            val aad = if (fileContent[0].toInt() >= FILE_VERSION_AAD) KEYSTORE_AAD else null
+            val decryptedContent = keyEncryption.decrypt(encryptedData, aad)
             val jsonString = String(decryptedContent, Charsets.UTF_8)
 
             if (jsonString.isBlank()) {
@@ -215,7 +220,7 @@ class EncryptedFileLocalKeyStore(
                 }
             val jsonString = json.encodeToString(JsonObject.serializer(), keysJson)
             val plaintext = jsonString.toByteArray(Charsets.UTF_8)
-            val encryptedData = keyEncryption.encrypt(plaintext)
+            val encryptedData = keyEncryption.encrypt(plaintext, KEYSTORE_AAD)
 
             val fileContent = serializeEncryptedFile(encryptedData)
 
@@ -289,7 +294,7 @@ class EncryptedFileLocalKeyStore(
     }
 
     private fun serializeEncryptedFile(encrypted: EncryptedData): ByteArray {
-        val version = byteArrayOf(0x01, 0x00, 0x00, 0x00) // Version 1
+        val version = byteArrayOf(FILE_VERSION_AAD.toByte(), 0x00, 0x00, 0x00) // Version 2 (AAD-bound)
         val ivLength =
             byteArrayOf(
                 ((encrypted.iv.size shr 24) and 0xFF).toByte(),

@@ -1,5 +1,6 @@
 public final class org/trustweave/signatures/cades/CadesProfile : java/lang/Enum {
 	public static final field B_B Lorg/trustweave/signatures/cades/CadesProfile;
+	public static final field B_LT Lorg/trustweave/signatures/cades/CadesProfile;
 	public static final field B_T Lorg/trustweave/signatures/cades/CadesProfile;
 	public final fun atLeast (Lorg/trustweave/signatures/cades/CadesProfile;)Z
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;

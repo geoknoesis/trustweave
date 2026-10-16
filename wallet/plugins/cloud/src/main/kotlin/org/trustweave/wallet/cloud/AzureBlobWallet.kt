@@ -35,13 +35,22 @@ class AzureBlobWallet(
     private val containerName: String,
     basePath: String,
     private val blobServiceClient: BlobServiceClient,
-) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath) {
+    encryptionKey: ByteArray? = null,
+) : CloudWallet(walletId, walletDid, holderDid, containerName, basePath, encryptionKey) {
     private val containerClient: BlobContainerClient = blobServiceClient.getBlobContainerClient(containerName)
 
-    init {
-        // Ensure container exists
+    /**
+     * Creates the container on first use, off the caller's thread (every operation runs on
+     * [Dispatchers.IO]); the constructor performs no network I/O. A failed attempt is retried.
+     */
+    private val containerReady: Unit by lazy {
         if (!containerClient.exists()) {
-            containerClient.create()
+            try {
+                containerClient.create()
+            } catch (e: BlobStorageException) {
+                // Lost a creation race with another wallet; the container exists now.
+                if (e.statusCode != 409) throw e
+            }
         }
     }
 
@@ -51,6 +60,7 @@ class AzureBlobWallet(
     ): Unit =
         withContext(Dispatchers.IO) {
             try {
+                containerReady
                 val blobClient: BlobClient = containerClient.getBlobClient(key)
                 blobClient.upload(data.inputStream(), data.size.toLong(), true)
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -63,14 +73,19 @@ class AzureBlobWallet(
     override suspend fun download(key: String): ByteArray? =
         withContext(Dispatchers.IO) {
             try {
+                containerReady
                 val blobClient: BlobClient = containerClient.getBlobClient(key)
-                if (!blobClient.exists()) {
-                    return@withContext null
-                }
-
                 val outputStream = java.io.ByteArrayOutputStream()
                 blobClient.downloadStream(outputStream)
                 outputStream.toByteArray()
+            } catch (e: BlobStorageException) {
+                // A missing blob (never written, or deleted since it was listed) is "absent", not a
+                // failure; any other status propagates.
+                if (e.statusCode == 404) {
+                    null
+                } else {
+                    throw RuntimeException("Failed to download from Azure Blob Storage: ${e.message}", e)
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -83,6 +98,7 @@ class AzureBlobWallet(
             try {
                 // Delete directly and rely on the service's 404 instead of a racy
                 // exists() pre-check (TOCTOU between exists() and delete()).
+                containerReady
                 val blobClient: BlobClient = containerClient.getBlobClient(key)
                 blobClient.delete()
                 true
@@ -105,6 +121,7 @@ class AzureBlobWallet(
     override suspend fun listKeys(prefix: String): List<String> =
         withContext(Dispatchers.IO) {
             try {
+                containerReady
                 containerClient
                     .listBlobs(
                         com.azure.storage.blob.models

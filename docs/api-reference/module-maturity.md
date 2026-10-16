@@ -53,11 +53,11 @@ defect claim, but it is a reason to run your own integration tests before depend
 
 | Module | Tests | Maturity |
 |--------|-------|----------|
-| `did:registrar` | 32 | Experimental |
-| `did:registrar-server-ktor` | 17 | Experimental |
-| `did:registrar-server-spring` | 15 | Experimental |
-| `credentials:vc-api-server` | 21 | Experimental |
-| `credentials:oidc4vci-server` | 51 | Experimental |
+| `did:registrar` | 38 | Experimental |
+| `did:registrar-server-ktor` | 18 | Experimental |
+| `did:registrar-server-spring` | 22 | Experimental |
+| `credentials:vc-api-server` | 29 | Experimental |
+| `credentials:oidc4vci-server` | 71 | Experimental |
 | `trust-registry:trust-registry-core` | 16 | Experimental |
 | `trust-registry:trust-registry-server` | 28 | Experimental |
 | `wallet:wallet-services` | 16 | Experimental |
@@ -73,10 +73,10 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 | Module | Tests | Notes |
 |--------|-------|-------|
 | `signatures:jades` | 34 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
-| `signatures:trust-lists` | 25 | EU trusted-list handling |
-| `signatures:cades` | 15 | ETSI EN 319 122 (CMS) |
+| `signatures:trust-lists` | 49 | EU trusted-list handling |
+| `signatures:cades` | 28 | ETSI EN 319 122 (CMS) |
 | `signatures:tsa-core` | 40 | RFC 3161 timestamping |
-| `signatures:etsi-validation` | 16 | Validation helpers |
+| `signatures:etsi-validation` | 23 | Validation helpers |
 | `signatures:xades` | 82 | ETSI EN 319 132 (XML) |
 | `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |
 
@@ -87,6 +87,11 @@ Individual plugins under `did/plugins/*`, `kms/plugins/*`, `anchors/plugins/*`, 
 Newer plugin families that ship in `settings.gradle.kts` but are evolving:
 
 - DID methods: `did:plugins:ebsi`
+- **`did:plugins:ethr` and `did:plugins:polygon` are in-memory only.** They do not read the ERC-1056 registry
+  contract and keep no persistent index from a DID to its anchored document. A DID is resolvable only by the
+  instance that created or updated it, and only until that process restarts: after a restart, or on any other
+  instance, it resolves as not found. DIDs they create are not resolvable by standard ethr resolvers. Use them
+  for experiments, not for DIDs that must outlive the process.
 - Credentials formats / proofs: `credentials:plugins:mdl`, `credentials:plugins:eudiw`
 - Exchange / discovery: `credentials:plugins:siop`, `credentials:plugins:presentation-exchange`, `credentials:plugins:openid-federation`
 - Status lists: `credentials:plugins:status-list:bitstring`, `credentials:plugins:status-list:token`, `credentials:plugins:status-list:publishing`, `credentials:plugins:status-list:server`

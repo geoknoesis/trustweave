@@ -12,7 +12,6 @@ import kotlin.time.Instant
 /**
  * XAdES baseline profile (ETSI EN 319 132-1 §6). Each level includes the one before it.
  *
- * B-LTA (archival time-stamps) is not implemented.
  */
 enum class XadesProfile {
     /** Basic XAdES — XML-DSig signature with the XAdES `SignedProperties` reference. */
@@ -28,6 +27,14 @@ enum class XadesProfile {
      * CA below the trust anchor not revoked; otherwise the signature is reported as B-T.
      */
     B_LT,
+
+    /**
+     * XAdES-B-LTA: B-LT plus an `ArchiveTimeStamp` (XAdES 1.4.1) over the signature, its signed data and all
+     * the unsigned properties before it. A verifier reports B-LTA only when B-LT is proved and every archive
+     * time-stamp verified against [XadesVerificationOptions.timestampTrustAnchors] and matches the
+     * canonical form of what it covers.
+     */
+    B_LTA,
     ;
 
     fun atLeast(other: XadesProfile): Boolean = ordinal >= other.ordinal
@@ -62,9 +69,9 @@ class XadesValidationData
  *                                  XML-DSig `<KeyInfo>/<X509Data>`.
  * @property signingTime            Optional claimed signing time placed in the XAdES `SigningTime`
  *                                  qualifying property. Defaults to `Clock.System.now()`.
- * @property tsaConfig              RFC 3161 time-stamp authority; required for B-T and B-LT.
- * @property validationData         Certificates and CRL / OCSP evidence embedded for B-LT; required
- *                                  (with at least one CRL or OCSP response) for B-LT.
+ * @property tsaConfig              RFC 3161 time-stamp authority; required for B-T, B-LT and B-LTA.
+ * @property validationData         Certificates and CRL / OCSP evidence embedded for B-LT and B-LTA; required
+ *                                  (with at least one CRL or OCSP response) for both.
  */
 data class XadesSigningRequest
     @JvmOverloads
@@ -111,17 +118,15 @@ data class XadesSignature(
  * @property trustAnchorResolver                   Resolves the signer-cert chain against the
  *                                                 caller-supplied trust graph.
  * @property allowExpiredCertificateAtSigningTime  When `true`, certificate validity is not
- *                                                 enforced at the claimed signing time. When
- *                                                 `false` (default) the validity window is checked
- *                                                 against the signed `SigningTime`, or against the
- *                                                 current time when the producer omitted it.
+ *                                                 enforced. When `false` (default) the validity
+ *                                                 window is checked at the time authenticated by a
+ *                                                 trusted `SignatureTimeStamp`, else at the current
+ *                                                 time; the claimed `SigningTime` is never used.
  * @property requireSigningTime                    When `true`, a signature whose signed properties
  *                                                 carry no `SigningTime` is rejected as
  *                                                 [XadesValidationResult.Invalid.Malformed]. When
- *                                                 `false` (default) it is accepted and certificate
- *                                                 validity is judged at verification time, which
- *                                                 cannot show the certificate was valid when the
- *                                                 document was actually signed.
+ *                                                 `false` (default) it is accepted; the claimed time
+ *                                                 plays no part in certificate validity either way.
  * @property requireSignatureTimestamp             When `true`, the signature must carry a valid RFC 3161
  *                                                 `SignatureTimeStamp` (B-T) issued by one of
  *                                                 [timestampTrustAnchors]; otherwise it is rejected
@@ -186,6 +191,8 @@ sealed class XadesValidationResult {
      *                        [signingTime] is merely what the signer claimed and proves nothing
      *                        about when the document was signed.
      * @property signatureTimeStamp The time-stamp's `genTime` when one was validated, else null.
+     * @property archiveTimeStamp The earliest `ArchiveTimeStamp` `genTime` when every archive time-stamp
+     *                        was validated against the trusted TSA anchors, else null.
      * @property revocationChecked `true` only when a [RevocationPolicy] other than `NOT_CHECKED`
      *                        was requested AND the signer and every CA certificate below the trust
      *                        anchor were shown not revoked by verified, fresh CRL / OCSP evidence.
@@ -201,6 +208,7 @@ sealed class XadesValidationResult {
             val signingTimeAuthenticated: Boolean = false,
             val signatureTimeStamp: Instant? = null,
             val revocationChecked: Boolean = false,
+            val archiveTimeStamp: Instant? = null,
         ) : XadesValidationResult()
 
     sealed class Invalid : XadesValidationResult() {
@@ -226,8 +234,8 @@ sealed class XadesValidationResult {
         ) : Invalid()
 
         /**
-         * Signer certificate was not yet valid (`notBefore` in the future) at the asserted
-         * signing time — or, when the producer omitted `SigningTime`, at verification time.
+         * Signer certificate was not yet valid (`notBefore` in the future) at the
+         * authenticated time (trusted time-stamp), or at verification time without one.
          */
         data class CertificateNotYetValid(
             val notBefore: Instant,
@@ -254,7 +262,10 @@ sealed class XadesValidationResult {
 
         /**
          * A time-stamp was required ([XadesVerificationOptions.requireSignatureTimestamp] or
-         * [XadesProfile.B_T]) but is absent, untrusted, malformed or does not match the signature.
+         * [XadesProfile.B_T]) but is absent, untrusted, malformed or does not match the signature; or an
+         * `ArchiveTimeStamp` is present but untrusted, malformed or does not match what it covers.
+         * One subtype covers all of these; CAdES and JAdES report an imprint mismatch separately as
+         * `TimeStampMismatch` and an absent stamp as `MissingTimeStamp`.
          */
         data class TimeStampInvalid(
             val reason: String,

@@ -36,7 +36,7 @@ class EntraExchangeProtocolProvider : CredentialExchangeProtocolProvider {
     ): CredentialExchangeProtocol? {
         if (protocolName != "entra") return null
 
-        val httpClient = (options["httpClient"] as? OkHttpClient) ?: OkHttpClient()
+        val httpClient = (options["httpClient"] as? OkHttpClient) ?: sharedDefaultClient()
         val config = resolveConfig(options)
 
         val tokenClient = (options["tokenClient"] as? EntraTokenClient)
@@ -76,3 +76,8 @@ class EntraExchangeProtocolProvider : CredentialExchangeProtocolProvider {
                 "Entra exchange protocol provider requires option '$key' (String) or a 'config' EntraConfig instance",
             )
 }
+
+/** SSRF-guarded fallback used when no `httpClient` option is supplied. */
+private fun sharedDefaultClient(): OkHttpClient =
+    org.trustweave.integrations.entra
+        .defaultEntraHttpClient()

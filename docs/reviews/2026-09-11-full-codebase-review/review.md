@@ -200,7 +200,7 @@ Five new gates keep the closed findings closed — `check-workflow-pinning`, `ch
 
 - [`evidence/tests.json`](evidence/tests.json) — 3,897 tests, 0 failures, 0 errors, 15 skips, 489 suite XMLs
 - [`evidence/coverage.json`](evidence/coverage.json) — merged and per-module Kover figures for 83 modules
-- [`evidence/build-tail.log`](evidence/build-tail.log) — the failing build result
+- `evidence/build-tail.log` — the failing build result (raw log, not committed)
 - [`evidence/ktlintMainSourceSetCheck.txt`](evidence/ktlintMainSourceSetCheck.txt), [`evidence/ktlintTestSourceSetCheck.txt`](evidence/ktlintTestSourceSetCheck.txt) — the 232 violations
 - [`scores.json`](scores.json), [`tasks.json`](tasks.json)
 

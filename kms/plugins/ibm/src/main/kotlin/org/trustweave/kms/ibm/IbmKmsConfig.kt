@@ -33,6 +33,11 @@ data class IbmKmsConfig(
         require(apiKey.isNotBlank()) { "IBM API key must be specified" }
         require(instanceId.isNotBlank()) { "IBM service instance ID must be specified" }
         require(region.isNotBlank()) { "IBM region must be specified" }
+        // The IAM API key travels as a bearer token to whichever endpoint is configured.
+        listOfNotNull(serviceUrl, endpointOverride).forEach {
+            org.trustweave.core.net.TransportSecurity
+                .requireSecureForPublicHosts(it, "IBM credentials")
+        }
     }
 
     companion object {

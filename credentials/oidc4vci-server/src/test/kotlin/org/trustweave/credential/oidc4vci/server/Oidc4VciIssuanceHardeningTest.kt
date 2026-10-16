@@ -56,7 +56,7 @@ class Oidc4VciIssuanceHardeningTest {
     }
 
     private fun service(builder: Oidc4VciCredentialBuilder?) =
-        Oidc4VciIssuerService(issuerUrl, "did:key:z6MkTestIssuer", credentialBuilder = builder)
+        Oidc4VciIssuerService(issuerUrl, "did:key:z6MkTestIssuer", TEST_CONFIGURATIONS, credentialBuilder = builder)
 
     private fun session(
         svc: Oidc4VciIssuerService,
@@ -238,6 +238,7 @@ class Oidc4VciIssuanceHardeningTest {
             Oidc4VciIssuerService(
                 issuerUrl,
                 issuerDid,
+                TEST_CONFIGURATIONS,
                 credentialBuilder = CredentialServiceCredentialBuilder(credentialService, issuerDocument.verificationMethod.first().id),
             )
         host(svc) {

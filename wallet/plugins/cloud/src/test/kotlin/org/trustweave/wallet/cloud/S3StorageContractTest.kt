@@ -18,9 +18,9 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3Configuration
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import java.net.URI
+import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -48,7 +48,13 @@ class S3StorageContractTest {
             val storage =
                 GenericContainer<Nothing>(S3_IMAGE).apply {
                     withExposedPorts(S3_PORT)
-                    waitingFor(Wait.forListeningPort())
+                    waitingFor(
+                        Wait
+                            .forHttp("/")
+                            .forPort(S3_PORT)
+                            .forStatusCodeMatching { it < 500 }
+                            .withStartupTimeout(Duration.ofMinutes(2)),
+                    )
                 }
             storage.start()
             try {
@@ -104,7 +110,7 @@ class S3StorageContractTest {
                         val other = AwsS3Wallet("other", "did:key:o", "did:key:o", bucket, "other", client)
                         assertTrue(other.listRecords().isEmpty())
                         client.putObject({ it.bucket(bucket).key("contract/credentials/broken.json") }, RequestBody.fromString("not-json"))
-                        assertFailsWith<Exception> { wallet.listRecords() }
+                        assertEquals(6, wallet.listRecords().size) // a corrupt object is skipped, recovery reports it
                         val recovered = wallet.recoverRecords()
                         assertFalse(recovered.complete)
                         assertEquals(6, recovered.records.size)

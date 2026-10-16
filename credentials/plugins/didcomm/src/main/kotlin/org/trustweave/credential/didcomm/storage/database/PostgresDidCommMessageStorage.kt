@@ -7,7 +7,6 @@ import org.trustweave.credential.didcomm.models.DidCommMessage
 import org.trustweave.credential.didcomm.storage.*
 import org.trustweave.credential.didcomm.storage.encryption.MessageEncryption
 import java.sql.*
-import java.util.Base64
 import javax.sql.DataSource
 
 /**
@@ -101,65 +100,77 @@ class PostgresDidCommMessageStorage(
             }
         }
 
-    override suspend fun store(message: DidCommMessage): String =
-        withContext(Dispatchers.IO) {
+    /**
+     * The value stored in an indexed text column (sender, recipients, thread, type) for [value].
+     *
+     * Without encryption this is the value itself. With encryption it is a keyed blind index
+     * ([MessageEncryption.blindIndex]) so equality lookups still work while the database never sees
+     * the identifier; `null` when the configured encryption offers no blind index, in which case the
+     * column is left empty rather than leaking plaintext.
+     */
+    private suspend fun indexKey(
+        purpose: String,
+        value: String?,
+    ): String? {
+        if (value == null) return null
+        val enc = encryption ?: return value
+        return enc.blindIndex(purpose, value)
+    }
+
+    override suspend fun store(message: DidCommMessage): String {
+        val json =
+            Json {
+                prettyPrint = false
+                encodeDefaults = false
+            }
+        val enc = encryption
+        // Everything derived from the message is computed up front (these are suspend calls).
+        val encrypted = enc?.encrypt(message)
+        val fromKey = indexKey(PURPOSE_DID, message.from)
+        val toKeys = message.to.mapNotNull { indexKey(PURPOSE_DID, it) }
+        val thidKey = indexKey(PURPOSE_THREAD, message.thid)
+        val pthidKey = indexKey(PURPOSE_THREAD, message.pthid)
+        val typeKey = if (enc == null) message.type else (indexKey(PURPOSE_TYPE, message.type) ?: ENCRYPTED_TYPE_PLACEHOLDER)
+
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
-                val json =
-                    Json {
-                        prettyPrint = false
-                        encodeDefaults = false
-                    }
-
-                if (encryption != null) {
-                    // Encrypt message
-                    val encrypted = encryption.encrypt(message)
-                    val encryptedDataBase64 = Base64.getEncoder().encodeToString(encrypted.encryptedData)
-                    val ivBase64 = Base64.getEncoder().encodeToString(encrypted.iv)
-
-                    conn
-                        .prepareStatement(
-                            """
+                val updated =
+                    if (encrypted != null) {
+                        // Encrypted rows carry opaque ciphertext plus the minimum indexed columns: blind
+                        // indexes instead of DIDs/thread ids, and NO body / expiry / plaintext JSON.
+                        conn
+                            .prepareStatement(
+                                """
                     INSERT INTO didcomm_messages (
                         id, type, from_did, to_dids, body, created_time,
                         expires_time, thid, pthid, message_json,
                         encrypted_data, key_version, iv, is_encrypted
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, NULL, ?, NULL, ?, ?, '{}'::jsonb, ?, ?, ?, TRUE)
                     ON CONFLICT (id) DO UPDATE SET
-                        message_json = EXCLUDED.message_json,
-                        body = EXCLUDED.body,
                         encrypted_data = EXCLUDED.encrypted_data,
                         key_version = EXCLUDED.key_version,
                         iv = EXCLUDED.iv,
                         is_encrypted = EXCLUDED.is_encrypted
+                    WHERE didcomm_messages.from_did IS NOT DISTINCT FROM EXCLUDED.from_did
                 """,
-                        ).use { stmt ->
-                            stmt.setString(1, message.id)
-                            stmt.setString(2, message.type)
-                            stmt.setString(3, message.from)
-                            stmt.setArray(4, conn.createArrayOf("VARCHAR", message.to.toTypedArray()))
-                            stmt.setString(5, json.encodeToString(JsonObject.serializer(), message.body))
-                            stmt.setString(6, message.created)
-                            stmt.setString(7, message.expiresTime)
-                            stmt.setString(8, message.thid)
-                            stmt.setString(9, message.pthid)
-                            stmt.setString(10, "{}") // Empty JSON for encrypted messages
-                            stmt.setBytes(11, encrypted.encryptedData)
-                            stmt.setInt(12, encrypted.keyVersion)
-                            stmt.setBytes(13, encrypted.iv)
-                            stmt.setBoolean(14, true)
-                            stmt.executeUpdate()
-                        }
-                } else {
-                    // Store unencrypted
-                    val messageJson =
-                        json.encodeToString(
-                            DidCommMessage.serializer(),
-                            message,
-                        )
-
-                    conn
-                        .prepareStatement(
-                            """
+                            ).use { stmt ->
+                                stmt.setString(1, message.id)
+                                stmt.setString(2, typeKey)
+                                stmt.setString(3, fromKey)
+                                stmt.setArray(4, conn.createArrayOf("VARCHAR", toKeys.toTypedArray()))
+                                stmt.setString(5, message.created)
+                                stmt.setString(6, thidKey)
+                                stmt.setString(7, pthidKey)
+                                stmt.setBytes(8, encrypted.encryptedData)
+                                stmt.setInt(9, encrypted.keyVersion)
+                                stmt.setBytes(10, encrypted.iv)
+                                stmt.executeUpdate()
+                            }
+                    } else {
+                        val messageJson = json.encodeToString(DidCommMessage.serializer(), message)
+                        conn
+                            .prepareStatement(
+                                """
                     INSERT INTO didcomm_messages (
                         id, type, from_did, to_dids, body, created_time,
                         expires_time, thid, pthid, message_json, is_encrypted
@@ -168,39 +179,62 @@ class PostgresDidCommMessageStorage(
                         message_json = EXCLUDED.message_json,
                         body = EXCLUDED.body,
                         is_encrypted = EXCLUDED.is_encrypted
+                    WHERE didcomm_messages.from_did IS NOT DISTINCT FROM EXCLUDED.from_did
                 """,
-                        ).use { stmt ->
-                            stmt.setString(1, message.id)
-                            stmt.setString(2, message.type)
-                            stmt.setString(3, message.from)
-                            stmt.setArray(4, conn.createArrayOf("VARCHAR", message.to.toTypedArray()))
-                            stmt.setString(5, json.encodeToString(JsonObject.serializer(), message.body))
-                            stmt.setString(6, message.created)
-                            stmt.setString(7, message.expiresTime)
-                            stmt.setString(8, message.thid)
-                            stmt.setString(9, message.pthid)
-                            stmt.setString(10, messageJson)
-                            stmt.setBoolean(11, false)
-                            stmt.executeUpdate()
-                        }
+                            ).use { stmt ->
+                                stmt.setString(1, message.id)
+                                stmt.setString(2, message.type)
+                                stmt.setString(3, message.from)
+                                stmt.setArray(4, conn.createArrayOf("VARCHAR", message.to.toTypedArray()))
+                                stmt.setString(5, json.encodeToString(JsonObject.serializer(), message.body))
+                                stmt.setString(6, message.created)
+                                stmt.setString(7, message.expiresTime)
+                                stmt.setString(8, message.thid)
+                                stmt.setString(9, message.pthid)
+                                stmt.setString(10, messageJson)
+                                stmt.setBoolean(11, false)
+                                stmt.executeUpdate()
+                            }
+                    }
+
+                // The id is the primary key, so a different sender must not be able to overwrite (or
+                // attach index rows to) an existing message: the conditional upsert touched no row.
+                if (updated == 0) {
+                    throw IllegalStateException("Message id '${message.id}' is already stored for a different sender")
                 }
 
                 // Index by DID
-                message.from?.let { from ->
-                    indexMessageForDid(conn, message.id, from, "from")
-                }
-                message.to.forEach { to ->
-                    indexMessageForDid(conn, message.id, to, "to")
-                }
+                fromKey?.let { indexMessageForDid(conn, message.id, it, "from") }
+                toKeys.forEach { indexMessageForDid(conn, message.id, it, "to") }
 
                 // Index by thread
-                message.thid?.let { thid ->
-                    indexMessageForThread(conn, message.id, thid)
-                }
+                thidKey?.let { indexMessageForThread(conn, message.id, it) }
             }
 
             message.id
         }
+    }
+
+    /** Reads the current row of [rs] (columns: id, message_json, encrypted_data, key_version, iv, is_encrypted). */
+    private suspend fun readMessage(rs: ResultSet): DidCommMessage {
+        val isEncrypted = rs.getBoolean("is_encrypted")
+        if (!isEncrypted) {
+            return readJson.decodeFromString(DidCommMessage.serializer(), rs.getString("message_json"))
+        }
+        val enc =
+            encryption
+                ?: throw IllegalStateException("Row ${rs.getString("id")} is encrypted but this storage has no MessageEncryption")
+        val id = rs.getString("id")
+        val encrypted =
+            org.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
+                keyVersion = rs.getInt("key_version"),
+                encryptedData = rs.getBytes("encrypted_data"),
+                iv = rs.getBytes("iv"),
+            )
+        return enc.decrypt(encrypted, id)
+    }
+
+    private val readJson = Json { ignoreUnknownKeys = true }
 
     override suspend fun get(messageId: String): DidCommMessage? =
         withContext(Dispatchers.IO) {
@@ -208,39 +242,12 @@ class PostgresDidCommMessageStorage(
                 conn
                     .prepareStatement(
                         """
-                SELECT message_json, encrypted_data, key_version, iv, is_encrypted
+                SELECT id, message_json, encrypted_data, key_version, iv, is_encrypted
                 FROM didcomm_messages WHERE id = ?
             """,
                     ).use { stmt ->
                         stmt.setString(1, messageId)
-                        stmt.executeQuery().use { rs ->
-                            if (rs.next()) {
-                                val isEncrypted = rs.getBoolean("is_encrypted")
-                                val json = Json { ignoreUnknownKeys = true }
-
-                                if (isEncrypted && encryption != null) {
-                                    // Decrypt message
-                                    val encryptedData = rs.getBytes("encrypted_data")
-                                    val keyVersion = rs.getInt("key_version")
-                                    val iv = rs.getBytes("iv")
-
-                                    val encrypted =
-                                        org.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
-                                            keyVersion = keyVersion,
-                                            encryptedData = encryptedData,
-                                            iv = iv,
-                                        )
-
-                                    encryption.decrypt(encrypted)
-                                } else {
-                                    // Read unencrypted
-                                    val messageJson = rs.getString("message_json")
-                                    json.decodeFromString(DidCommMessage.serializer(), messageJson)
-                                }
-                            } else {
-                                null
-                            }
-                        }
+                        stmt.executeQuery().use { rs -> if (rs.next()) readMessage(rs) else null }
                     }
             }
         }
@@ -249,13 +256,14 @@ class PostgresDidCommMessageStorage(
         did: String,
         limit: Int,
         offset: Int,
-    ): List<DidCommMessage> =
-        withContext(Dispatchers.IO) {
+    ): List<DidCommMessage> {
+        val key = indexKey(PURPOSE_DID, did) ?: return emptyList()
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 conn
                     .prepareStatement(
                         """
-                SELECT m.message_json, m.encrypted_data, m.key_version, m.iv, m.is_encrypted
+                SELECT m.id, m.message_json, m.encrypted_data, m.key_version, m.iv, m.is_encrypted
                 FROM didcomm_messages m
                 JOIN didcomm_message_dids d ON m.id = d.message_id
                 WHERE d.did = ? AND d.role IN ('from', 'to')
@@ -263,87 +271,34 @@ class PostgresDidCommMessageStorage(
                 LIMIT ? OFFSET ?
             """,
                     ).use { stmt ->
-                        stmt.setString(1, did)
+                        stmt.setString(1, key)
                         stmt.setInt(2, limit)
                         stmt.setInt(3, offset)
-                        stmt.executeQuery().use { rs ->
-                            val json = Json { ignoreUnknownKeys = true }
-                            buildList {
-                                while (rs.next()) {
-                                    val isEncrypted = rs.getBoolean("is_encrypted")
-
-                                    val message =
-                                        if (isEncrypted && encryption != null) {
-                                            val encryptedData = rs.getBytes("encrypted_data")
-                                            val keyVersion = rs.getInt("key_version")
-                                            val iv = rs.getBytes("iv")
-
-                                            val encrypted =
-                                                org.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
-                                                    keyVersion = keyVersion,
-                                                    encryptedData = encryptedData,
-                                                    iv = iv,
-                                                )
-
-                                            encryption.decrypt(encrypted)
-                                        } else {
-                                            val messageJson = rs.getString("message_json")
-                                            json.decodeFromString(DidCommMessage.serializer(), messageJson)
-                                        }
-
-                                    add(message)
-                                }
-                            }
-                        }
+                        stmt.executeQuery().use { rs -> buildList { while (rs.next()) add(readMessage(rs)) } }
                     }
             }
         }
+    }
 
-    override suspend fun getThreadMessages(thid: String): List<DidCommMessage> =
-        withContext(Dispatchers.IO) {
+    override suspend fun getThreadMessages(thid: String): List<DidCommMessage> {
+        val key = indexKey(PURPOSE_THREAD, thid) ?: return emptyList()
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 conn
                     .prepareStatement(
                         """
-                SELECT message_json, encrypted_data, key_version, iv, is_encrypted
+                SELECT id, message_json, encrypted_data, key_version, iv, is_encrypted
                 FROM didcomm_messages
                 WHERE thid = ?
                 ORDER BY created_time ASC NULLS LAST
             """,
                     ).use { stmt ->
-                        stmt.setString(1, thid)
-                        stmt.executeQuery().use { rs ->
-                            val json = Json { ignoreUnknownKeys = true }
-                            buildList {
-                                while (rs.next()) {
-                                    val isEncrypted = rs.getBoolean("is_encrypted")
-
-                                    val message =
-                                        if (isEncrypted && encryption != null) {
-                                            val encryptedData = rs.getBytes("encrypted_data")
-                                            val keyVersion = rs.getInt("key_version")
-                                            val iv = rs.getBytes("iv")
-
-                                            val encrypted =
-                                                org.trustweave.credential.didcomm.storage.encryption.EncryptedMessage(
-                                                    keyVersion = keyVersion,
-                                                    encryptedData = encryptedData,
-                                                    iv = iv,
-                                                )
-
-                                            encryption.decrypt(encrypted)
-                                        } else {
-                                            val messageJson = rs.getString("message_json")
-                                            json.decodeFromString(DidCommMessage.serializer(), messageJson)
-                                        }
-
-                                    add(message)
-                                }
-                            }
-                        }
+                        stmt.setString(1, key)
+                        stmt.executeQuery().use { rs -> buildList { while (rs.next()) add(readMessage(rs)) } }
                     }
             }
         }
+    }
 
     override suspend fun delete(messageId: String): Boolean =
         withContext(Dispatchers.IO) {
@@ -355,8 +310,9 @@ class PostgresDidCommMessageStorage(
             }
         }
 
-    override suspend fun deleteMessagesForDid(did: String): Int =
-        withContext(Dispatchers.IO) {
+    override suspend fun deleteMessagesForDid(did: String): Int {
+        val key = indexKey(PURPOSE_DID, did) ?: return 0
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 conn
                     .prepareStatement(
@@ -367,85 +323,84 @@ class PostgresDidCommMessageStorage(
                 )
             """,
                     ).use { stmt ->
-                        stmt.setString(1, did)
+                        stmt.setString(1, key)
                         stmt.executeUpdate()
                     }
             }
         }
+    }
 
-    override suspend fun deleteThreadMessages(thid: String): Int =
-        withContext(Dispatchers.IO) {
+    override suspend fun deleteThreadMessages(thid: String): Int {
+        val key = indexKey(PURPOSE_THREAD, thid) ?: return 0
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 conn.prepareStatement("DELETE FROM didcomm_messages WHERE thid = ?").use { stmt ->
-                    stmt.setString(1, thid)
+                    stmt.setString(1, key)
                     stmt.executeUpdate()
                 }
             }
         }
+    }
 
-    override suspend fun countMessagesForDid(did: String): Int =
-        withContext(Dispatchers.IO) {
+    override suspend fun countMessagesForDid(did: String): Int {
+        val key = indexKey(PURPOSE_DID, did) ?: return 0
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 conn
-                    .prepareStatement(
-                        """
-                SELECT COUNT(*) FROM didcomm_message_dids WHERE did = ?
-            """,
-                    ).use { stmt ->
-                        stmt.setString(1, did)
-                        stmt.executeQuery().use { rs ->
-                            if (rs.next()) rs.getInt(1) else 0
-                        }
+                    .prepareStatement("SELECT COUNT(*) FROM didcomm_message_dids WHERE did = ?")
+                    .use { stmt ->
+                        stmt.setString(1, key)
+                        stmt.executeQuery().use { rs -> if (rs.next()) rs.getInt(1) else 0 }
                     }
             }
         }
+    }
 
     override suspend fun search(
         filter: MessageFilter,
         limit: Int,
         offset: Int,
-    ): List<DidCommMessage> =
-        withContext(Dispatchers.IO) {
-            // Build dynamic query based on filters
-            val conditions = mutableListOf<String>()
-            val params = mutableListOf<Any>()
-            var paramIndex = 1
+    ): List<DidCommMessage> {
+        // Build dynamic query based on filters (indexed text values go through the blind index)
+        val conditions = mutableListOf<String>()
+        val params = mutableListOf<Any>()
 
-            filter.fromDid?.let {
-                conditions.add("from_did = ?")
-                params.add(it)
-            }
-            filter.toDid?.let {
-                conditions.add("? = ANY(to_dids)")
-                params.add(it)
-            }
-            filter.type?.let {
-                conditions.add("type = ?")
-                params.add(it)
-            }
-            filter.thid?.let {
-                conditions.add("thid = ?")
-                params.add(it)
-            }
-            filter.createdAfter?.let {
-                conditions.add("created_time >= ?")
-                params.add(it)
-            }
-            filter.createdBefore?.let {
-                conditions.add("created_time <= ?")
-                params.add(it)
+        filter.fromDid?.let {
+            conditions.add("from_did = ?")
+            params.add(indexKey(PURPOSE_DID, it) ?: return emptyList())
+        }
+        filter.toDid?.let {
+            conditions.add("? = ANY(to_dids)")
+            params.add(indexKey(PURPOSE_DID, it) ?: return emptyList())
+        }
+        filter.type?.let {
+            conditions.add("type = ?")
+            params.add(indexKey(PURPOSE_TYPE, it) ?: return emptyList())
+        }
+        filter.thid?.let {
+            conditions.add("thid = ?")
+            params.add(indexKey(PURPOSE_THREAD, it) ?: return emptyList())
+        }
+        filter.createdAfter?.let {
+            conditions.add("created_time >= ?")
+            params.add(it)
+        }
+        filter.createdBefore?.let {
+            conditions.add("created_time <= ?")
+            params.add(it)
+        }
+
+        val whereClause =
+            if (conditions.isNotEmpty()) {
+                "WHERE ${conditions.joinToString(" AND ")}"
+            } else {
+                ""
             }
 
-            val whereClause =
-                if (conditions.isNotEmpty()) {
-                    "WHERE ${conditions.joinToString(" AND ")}"
-                } else {
-                    ""
-                }
-
+        return withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
                 val sql = """
-                SELECT message_json, encrypted_data, key_version, iv, is_encrypted
+                SELECT id, message_json, encrypted_data, key_version, iv, is_encrypted
                 FROM didcomm_messages
                 $whereClause
                 ORDER BY created_time DESC NULLS LAST
@@ -459,18 +414,11 @@ class PostgresDidCommMessageStorage(
                     stmt.setInt(params.size + 1, limit)
                     stmt.setInt(params.size + 2, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val json = Json { ignoreUnknownKeys = true }
-                        buildList {
-                            while (rs.next()) {
-                                val messageJson = rs.getString("message_json")
-                                add(json.decodeFromString(DidCommMessage.serializer(), messageJson))
-                            }
-                        }
-                    }
+                    stmt.executeQuery().use { rs -> buildList { while (rs.next()) add(readMessage(rs)) } }
                 }
             }
         }
+    }
 
     private fun createTables() {
         dataSource.connection.use { conn ->
@@ -603,5 +551,12 @@ class PostgresDidCommMessageStorage(
                 stmt.setString(2, thid)
                 stmt.executeUpdate()
             }
+    }
+
+    private companion object {
+        const val PURPOSE_DID = "did"
+        const val PURPOSE_THREAD = "thread"
+        const val PURPOSE_TYPE = "type"
+        const val ENCRYPTED_TYPE_PLACEHOLDER = "encrypted"
     }
 }

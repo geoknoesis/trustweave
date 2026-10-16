@@ -255,13 +255,21 @@ class DatabaseStatusListManager(
                                 conn.rollback()
                                 return@withContext false // no such status list: genuinely not applied
                             }
-                    val statusListJson = getStatusListFromDb(statusListId, conn) ?: return@withContext false
+                    val statusListJson =
+                        getStatusListFromDb(statusListId, conn) ?: run {
+                            conn.rollback()
+                            return@withContext false
+                        }
                     val purpose = extractPurpose(statusListJson)
                     val encodedList = extractEncodedList(statusListJson)
 
-                    // Validate purpose matches operation
-                    if (revoked != null && purpose != StatusPurpose.REVOCATION) return@withContext false
-                    if (suspended != null && purpose != StatusPurpose.SUSPENSION) return@withContext false
+                    // Validate purpose matches operation. Release the row lock taken above.
+                    if ((revoked != null && purpose != StatusPurpose.REVOCATION) ||
+                        (suspended != null && purpose != StatusPurpose.SUSPENSION)
+                    ) {
+                        conn.rollback()
+                        return@withContext false
+                    }
 
                     // Get or assign index
                     val index = getOrAssignIndex(credentialId, statusListId, conn)

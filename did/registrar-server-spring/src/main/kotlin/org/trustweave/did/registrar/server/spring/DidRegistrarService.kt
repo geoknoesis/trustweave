@@ -9,7 +9,7 @@ import org.trustweave.did.registrar.model.DeactivateDidOptions
 import org.trustweave.did.registrar.model.DidRegistrationResponse
 import org.trustweave.did.registrar.model.UpdateDidOptions
 import org.trustweave.did.registrar.storage.JobStorage
-import java.util.UUID
+import org.trustweave.did.registrar.storage.track
 
 /**
  * Service class that handles DID Registrar operations.
@@ -81,9 +81,7 @@ class DidRegistrarService(
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response
@@ -101,9 +99,7 @@ class DidRegistrarService(
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response
@@ -120,9 +116,7 @@ class DidRegistrarService(
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            withContext(Dispatchers.IO) { jobStorage.store(jobId, response.copy(jobId = jobId)) }
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response

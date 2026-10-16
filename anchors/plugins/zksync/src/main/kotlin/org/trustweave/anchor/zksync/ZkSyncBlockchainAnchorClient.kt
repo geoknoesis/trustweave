@@ -75,7 +75,7 @@ class ZkSyncBlockchainAnchorClient(
             }
             return maxOf(
                 EvmGas.withMargin(estimatedGas, ESTIMATE_GAS_MARGIN_PERCENT),
-                EvmGas.intrinsicGas(data),
+                EvmGas.requiredGas(data),
             )
         }
 

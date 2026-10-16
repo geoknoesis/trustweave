@@ -183,7 +183,7 @@ sealed class IssuanceResult {
             is Failure.AdapterNotReady -> errors
             is Failure.InvalidRequest -> errors
             is Failure.AdapterError -> errors
-            is Failure.MultipleFailures -> failures.flatMap { it.allErrors } + errors
+            is Failure.MultipleFailures -> multipleFailureErrors(failures, errors)
         }
     
     /**
@@ -245,7 +245,7 @@ fun IssuanceResult.getOrThrow(): VerifiableCredential {
         }
         is IssuanceResult.Failure.MultipleFailures -> {
             throw IllegalStateException(
-                "Credential issuance failed with multiple errors: ${errors.joinToString("; ")}"
+                "Credential issuance failed with multiple errors: ${allErrors.joinToString("; ")}",
             )
         }
     }
@@ -279,3 +279,18 @@ inline fun <R> IssuanceResult.fold(
     }
 }
 
+
+/**
+ * Errors of a [IssuanceResult.Failure.MultipleFailures]: those of every nested failure, then any error listed on the
+ * result itself that the nested failures do not already carry. The convenience constructor copies the nested errors
+ * into `errors`, so counting both would report each one twice.
+ */
+internal fun multipleFailureErrors(
+    failures: List<IssuanceResult.Failure>,
+    errors: List<String>,
+): List<String> {
+    val nested = failures.flatMap { it.allErrors }
+    val extra = errors.toMutableList()
+    nested.forEach { extra.remove(it) }
+    return nested + extra
+}

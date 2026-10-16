@@ -5,7 +5,7 @@ import { decryptDisclosedClaims } from '@/lib/claim-jwe'
 import 'server-only'
 import { verifyJws, didKeyToPublicKey, b64uDecodeString } from '@/lib/crypto'
 import { decodeSdJwtVc } from '@/lib/sdjwt'
-import { sha256 } from '@noble/hashes/sha256'
+import { sha256 } from '@noble/hashes/sha2.js'
 import { getVerifier } from '@/lib/server-keys'
 
 export interface VerificationCheck {

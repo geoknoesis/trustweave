@@ -11,7 +11,7 @@ import 'server-only'
 import fs from 'fs'
 import path from 'path'
 import * as ed25519 from '@noble/ed25519'
-import { sha512 } from '@noble/hashes/sha512'
+import { sha512 } from '@noble/hashes/sha2.js'
 import {
   b64uDecode,
   b64uEncode,
@@ -20,7 +20,7 @@ import {
   type Ed25519KeyPair,
 } from './crypto'
 
-ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m))
+ed25519.hashes.sha512 = sha512
 
 export interface ServerIdentity {
   did: string

@@ -40,7 +40,7 @@ class EntraExchangeProtocolTest {
     fun setUp() {
         server = WireMockServer(wireMockConfig().dynamicPort())
         server.start()
-        integration = EntraIntegration(
+        integration = loopbackEntraIntegration(
             EntraConfig(
                 tenantId = "tenant-abc",
                 clientId = "c",

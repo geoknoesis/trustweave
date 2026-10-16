@@ -173,12 +173,21 @@ internal class DefaultCredentialService(
         // Schema validation (format-agnostic)
         CredentialValidation.validateSchema(credential, options, schemaRegistry)?.let { return it }
 
+        // Format-specific verification (the proof) comes first. Revocation checking can fetch a status
+        // list over HTTP and trust evaluation can query a registry, both at the direction of the
+        // credential, so neither may run for a credential whose proof has not been established.
+        val engineResult = engine.verify(credential, options)
+        (engineResult as? VerificationResult.Invalid ?: requireSdJwtHolderBinding(credential, options))?.let { return it }
+
         // Revocation check (format-agnostic) with proper warning collection
         val revocationWarnings = mutableListOf<String>()
         if (options.checkRevocation) {
+            // Check the credential the engine verified: for SD-JWT-VC its credentialStatus is the
+            // issuer-signed one, not the (strippable) unsigned envelope copy.
+            val verified = (engineResult as? VerificationResult.Valid)?.credential ?: credential
             val (revocationFailure, warnings) =
                 RevocationChecker.checkRevocationStatus(
-                    credential = credential,
+                    credential = verified,
                     revocationManager = revocationManager,
                     policy = options.revocationFailurePolicy,
                 )
@@ -188,9 +197,6 @@ internal class DefaultCredentialService(
 
         // Trust policy check (format-agnostic)
         CredentialValidation.validateTrust(credential, trustEvaluator)?.let { return it }
-
-        // Delegate to proof engine for format-specific verification
-        val engineResult = engine.verify(credential, options)
 
         // Add revocation warnings to the result if verification succeeded
         return when (engineResult) {

@@ -15,7 +15,6 @@ import kotlin.time.toKotlinInstant
  * eIDAS-qualified.
  */
 interface TrustAnchorResolver {
-
     /**
      * Resolve [signerCert] against the configured trust graph.
      *
@@ -29,7 +28,25 @@ interface TrustAnchorResolver {
      *         status is currently `GRANTED`; [TrustAnchorMatch.QualifiedWithdrawn] when the matched
      *         service has been withdrawn; [TrustAnchorMatch.NotTrusted] otherwise.
      */
-    fun resolve(signerCert: X509Certificate, chain: List<X509Certificate>): TrustAnchorMatch
+    fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+    ): TrustAnchorMatch
+
+    /**
+     * Resolve [signerCert] with the path validated as of [validationTime] instead of now. Verifiers pass the
+     * time of a *trusted* time-stamp so that a signature made while its certificate was valid can still be
+     * validated after the certificate expired. A time that is merely claimed by the signer must never be passed
+     * here: it would let anyone back-date a signature made with an expired or compromised certificate.
+     *
+     * The default implementation ignores [validationTime] and validates as of now, which is the safe choice for
+     * resolvers that cannot honour it.
+     */
+    fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+        validationTime: Instant?,
+    ): TrustAnchorMatch = resolve(signerCert, chain)
 }
 
 /**
@@ -50,7 +67,6 @@ interface TrustAnchorResolver {
 class DefaultTrustAnchorResolver(
     private val trustList: TrustList,
 ) : TrustAnchorResolver {
-
     /**
      * Flattened view: every CA/QC service across every Member State, paired with the territory
      * code so we can attribute matches accurately.
@@ -74,6 +90,12 @@ class DefaultTrustAnchorResolver(
     override fun resolve(
         signerCert: X509Certificate,
         chain: List<X509Certificate>,
+    ): TrustAnchorMatch = resolve(signerCert, chain, null)
+
+    override fun resolve(
+        signerCert: X509Certificate,
+        chain: List<X509Certificate>,
+        validationTime: Instant?,
     ): TrustAnchorMatch {
         val candidates = qualifiedCaServices
         if (candidates.isEmpty()) return TrustAnchorMatch.NotTrusted
@@ -83,28 +105,49 @@ class DefaultTrustAnchorResolver(
         val pathCerts = listOf(signerCert) + intermediates
         val certPath: CertPath = CERT_FACTORY.generateCertPath(pathCerts)
 
+        // Every matching service is considered, not the first in list order: when the same CA is listed both
+        // granted and withdrawn the signature is qualified if any granted service covers it, and a granted
+        // service only vouches for signatures made after it was granted.
+        var withdrawn: TrustAnchorMatch? = null
         for (candidate in candidates) {
-            val match = tryValidate(certPath, candidate)
-            if (match != null) return match
+            val match = tryValidate(certPath, candidate, validationTime)
+            when (match) {
+                is TrustAnchorMatch.QualifiedActive -> return match
+                is TrustAnchorMatch.QualifiedWithdrawn -> if (withdrawn == null) withdrawn = match
+                else -> Unit
+            }
         }
-        return TrustAnchorMatch.NotTrusted
+        return withdrawn ?: TrustAnchorMatch.NotTrusted
     }
 
-    private fun tryValidate(certPath: CertPath, candidate: MatchedService): TrustAnchorMatch? {
-        val anchors = candidate.service.serviceCertificates
-            .map { TrustAnchor(it, null) }
-            .toSet()
+    private fun tryValidate(
+        certPath: CertPath,
+        candidate: MatchedService,
+        validationTime: Instant?,
+    ): TrustAnchorMatch? {
+        val anchors =
+            candidate.service.serviceCertificates
+                .map { TrustAnchor(it, null) }
+                .toSet()
         if (anchors.isEmpty()) return null
-
-        val params = try {
-            PKIXParameters(anchors)
-        } catch (t: Throwable) {
-            // E.g. anchor certs flagged as non-CA. Don't let one malformed candidate fail the rest.
+        // A service granted after the signature's trusted time did not qualify it then.
+        if (validationTime != null &&
+            candidate.service.status == TspServiceStatus.GRANTED &&
+            validationTime < candidate.service.statusStartingTime
+        ) {
             return null
         }
+
+        val params =
+            try {
+                PKIXParameters(anchors)
+            } catch (t: Throwable) {
+                // E.g. anchor certs flagged as non-CA. Don't let one malformed candidate fail the rest.
+                return null
+            }
         params.isRevocationEnabled = false
-        // Validity-period check happens automatically inside CertPathValidator; we don't need to
-        // override the validation Date — verifiers that need a historical time pass it in.
+        // Validity periods are checked as of now unless the caller supplied the time of a trusted time-stamp.
+        validationTime?.let { params.date = java.util.Date(it.toEpochMilliseconds()) }
 
         val validator = CertPathValidator.getInstance("PKIX")
         try {
@@ -119,21 +162,24 @@ class DefaultTrustAnchorResolver(
     private fun buildMatch(matched: MatchedService): TrustAnchorMatch {
         val service = matched.service
         return when (service.status) {
-            TspServiceStatus.GRANTED -> TrustAnchorMatch.QualifiedActive(
-                tspName = matched.tspName,
-                territory = matched.territory,
-                service = service,
-                qcWithSscd = service.qualifierUris.any {
-                    it == QualifierUris.QC_WITH_SSCD ||
-                        it == QualifierUris.QC_SSCD_STATUS_AS_IN_CERT
-                },
-                qcForESig = service.qualifierUris.any { it == QualifierUris.QC_FOR_ESIG },
-            )
+            TspServiceStatus.GRANTED ->
+                TrustAnchorMatch.QualifiedActive(
+                    tspName = matched.tspName,
+                    territory = matched.territory,
+                    service = service,
+                    qcWithSscd =
+                        service.qualifierUris.any {
+                            it == QualifierUris.QC_WITH_SSCD ||
+                                it == QualifierUris.QC_SSCD_STATUS_AS_IN_CERT
+                        },
+                    qcForESig = service.qualifierUris.any { it == QualifierUris.QC_FOR_ESIG },
+                )
 
-            TspServiceStatus.WITHDRAWN -> TrustAnchorMatch.QualifiedWithdrawn(
-                tspName = matched.tspName,
-                withdrawnAt = service.statusStartingTime,
-            )
+            TspServiceStatus.WITHDRAWN ->
+                TrustAnchorMatch.QualifiedWithdrawn(
+                    tspName = matched.tspName,
+                    withdrawnAt = service.statusStartingTime,
+                )
 
             else -> null ?: TrustAnchorMatch.NotTrusted
         }

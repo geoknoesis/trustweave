@@ -177,7 +177,7 @@ class EbsiDidMethodTest {
     // ──────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `resolveDid falls back to in-memory document when API returns 404`() =
+    fun `resolveDid does not serve the cached document when API returns 404`() =
         runBlocking<Unit> {
             // Given: create a DID and cache it locally (stub the POST for registration)
             server.enqueue(MockResponse().setResponseCode(200).setBody("""{"result": "ok"}"""))
@@ -192,10 +192,10 @@ class EbsiDidMethodTest {
             // When
             val result = method.resolveDid(document.id)
 
-            // Then: should fall back to the in-memory cached document
-            assertIs<DidResolutionResult.Success>(result)
-            val successResult = result as DidResolutionResult.Success
-            assertEquals(document.id.value, successResult.document.id.value)
+            // Then: the registry is authoritative, so the cached document is not served as live
+            assertIs<DidResolutionResult.Failure.NotFound>(result)
+            val failure = result as DidResolutionResult.Failure.NotFound
+            assertEquals(document.id, failure.did)
         }
 
     @Test

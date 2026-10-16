@@ -6,16 +6,18 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.trustweave.core.exception.TrustWeaveException
 
@@ -53,6 +55,7 @@ class SolanaClient(
                                 add(
                                     buildJsonObject {
                                         put("encoding", "base64")
+                                        put("commitment", config.commitment)
                                     },
                                 )
                             },
@@ -78,7 +81,7 @@ class SolanaClient(
                                 message = "Solana RPC getAccountInfo failed: HTTP ${response.code}",
                             )
                         }
-                        response.body?.string()
+                        boundedBody(response)
                     } ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty Solana RPC response")
                 val responseJson = Json.parseToJsonElement(responseBody).jsonObject
                 responseJson["error"]?.let { error ->
@@ -93,6 +96,19 @@ class SolanaClient(
                     return@withContext null
                 }
 
+                // A DID document lives in an account owned by the configured DID registry program. When a
+                // program is configured, an account owned by anyone else is not a DID account.
+                val expectedOwner = config.programId
+                if (expectedOwner != null) {
+                    val owner = (value["owner"] as? JsonPrimitive)?.contentOrNull
+                    if (owner != expectedOwner) {
+                        throw TrustWeaveException.Unknown(
+                            code = "ACCOUNT_OWNER_MISMATCH",
+                            message = "Solana account $address is not owned by the configured DID program",
+                        )
+                    }
+                }
+
                 // Decode base64 account data
                 val data =
                     value["data"]
@@ -104,9 +120,24 @@ class SolanaClient(
 
                 // The RPC returns the account data base64-encoded (we asked for "encoding": "base64");
                 // this decodes it to the raw account bytes.
-                java.util.Base64
-                    .getDecoder()
-                    .decode(data)
+                // base64 inflates by 4/3: refuse before decoding rather than after.
+                if (data.length > MAX_ACCOUNT_DATA_BYTES / 3 * 4 + 4) {
+                    throw TrustWeaveException.Unknown(
+                        code = "ACCOUNT_DATA_TOO_LARGE",
+                        message = "Solana account $address holds more than $MAX_ACCOUNT_DATA_BYTES bytes",
+                    )
+                }
+                val decoded =
+                    java.util.Base64
+                        .getDecoder()
+                        .decode(data)
+                if (decoded.size > MAX_ACCOUNT_DATA_BYTES) {
+                    throw TrustWeaveException.Unknown(
+                        code = "ACCOUNT_DATA_TOO_LARGE",
+                        message = "Solana account $address holds more than $MAX_ACCOUNT_DATA_BYTES bytes",
+                    )
+                }
+                decoded
             } catch (e: TrustWeaveException) {
                 throw e
             } catch (cancelled: CancellationException) {
@@ -159,21 +190,16 @@ class SolanaClient(
                         ).addHeader("Content-Type", "application/json")
                         .build()
 
-                val response = httpClient.newCall(request).execute()
-
-                if (!response.isSuccessful) {
-                    val errorBody = response.body?.string() ?: "Unknown error"
-                    throw TrustWeaveException.Unknown(
-                        code = "RPC_ERROR",
-                        message = "Solana RPC error: HTTP ${response.code}: $errorBody",
-                    )
-                }
-
                 val responseBody =
-                    response.body?.string() ?: throw TrustWeaveException.Unknown(
-                        code = "EMPTY_RESPONSE",
-                        message = "Empty response",
-                    )
+                    httpClient.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) {
+                            throw TrustWeaveException.Unknown(
+                                code = "RPC_ERROR",
+                                message = "Solana RPC error: HTTP ${response.code}: ${boundedBody(response)}",
+                            )
+                        }
+                        boundedBody(response)
+                    }
                 val responseJson = Json.parseToJsonElement(responseBody).jsonObject
 
                 val result =
@@ -235,13 +261,13 @@ class SolanaClient(
                         ).addHeader("Content-Type", "application/json")
                         .build()
 
-                val response = httpClient.newCall(request).execute()
-
-                if (!response.isSuccessful) {
-                    return@withContext null
-                }
-
-                val responseBody = response.body?.string() ?: return@withContext null
+                val responseBody =
+                    httpClient.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) {
+                            return@withContext null
+                        }
+                        boundedBody(response)
+                    }
                 val responseJson = Json.parseToJsonElement(responseBody).jsonObject
 
                 responseJson["result"]?.jsonObject
@@ -251,4 +277,21 @@ class SolanaClient(
                 null
             }
         }
+
+    /** Reads at most [MAX_RESPONSE_BYTES] of the body; a larger answer is an error, not a truncation. */
+    private fun boundedBody(response: okhttp3.Response): String {
+        val body = response.body ?: throw TrustWeaveException.Unknown(code = "EMPTY_RESPONSE", message = "Empty Solana RPC response")
+        if (body.contentLength() > MAX_RESPONSE_BYTES) {
+            throw TrustWeaveException.Unknown(code = "RESPONSE_TOO_LARGE", message = "Solana RPC response is too large")
+        }
+        val bytes = response.peekBody(MAX_RESPONSE_BYTES + 1).bytes()
+        if (bytes.size > MAX_RESPONSE_BYTES) {
+            throw TrustWeaveException.Unknown(code = "RESPONSE_TOO_LARGE", message = "Solana RPC response is too large")
+        }
+        return String(bytes, Charsets.UTF_8)
+    }
 }
+
+/** A DID document is a few KiB; this bounds what a hostile RPC can make us hold in memory. */
+private const val MAX_ACCOUNT_DATA_BYTES = 256 * 1024
+private const val MAX_RESPONSE_BYTES = 1024 * 1024L

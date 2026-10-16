@@ -37,6 +37,12 @@ val dokkaJavadoc =
 
 // Read here, not inside subprojects {}: there `libs` would resolve against each subproject.
 val kotlinVersion = libs.versions.kotlin.get()
+val jackson2Version = libs.versions.jackson.get()
+val jacksonAnnotationsVersion = libs.versions.jacksonAnnotations.get()
+val jackson3Version = libs.versions.jackson3.get()
+val bouncyCastleVersion = libs.versions.bouncycastle.get()
+val bouncyCastleLtsVersion = libs.versions.bclts.get()
+val netty42Version = libs.versions.netty42.get()
 
 subprojects {
 
@@ -88,9 +94,11 @@ subprojects {
                 require(signingKey.isPresent) {
                     "Remote publication requires TRUSTWEAVE_SIGNING_KEY; use publishToMavenLocal for development."
                 }
-                require(providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").isPresent) {
-                    "Remote publication requires TRUSTWEAVE_PUBLISH_USERNAME and TRUSTWEAVE_PUBLISH_PASSWORD; " +
-                        "use publishToMavenLocal for development."
+                if (repository.name == "central") {
+                    require(providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").isPresent) {
+                        "Remote publication requires TRUSTWEAVE_PUBLISH_USERNAME and TRUSTWEAVE_PUBLISH_PASSWORD; " +
+                            "use publishToMavenLocal for development."
+                    }
                 }
             }
         }
@@ -144,6 +152,14 @@ subprojects {
         },
     )
 
+    // Reproducible archives: the same sources must yield byte-identical jars, sources jars and zips, so the
+    // published artifacts can be compared with (and attested against) an independent rebuild. Without these a
+    // jar embeds file modification times and the order the filesystem lists entries in.
+    tasks.withType<org.gradle.api.tasks.bundling.AbstractArchiveTask>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+
     // Windows: IDE/antivirus often lock JARs under build/; Gradle fails on "Unable to delete file".
     // 1) Try delete, 2) rename aside in libs/, 3) move to TEMP — then the jar task can write a fresh file.
     tasks.withType<Jar>().configureEach {
@@ -193,6 +209,43 @@ subprojects {
         resolutionStrategy {
             force("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
             force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+            // web3j 6 brings Jackson 3 (tools.jackson) transitively at 3.1.0, which carries known advisories.
+            // Keep every Jackson 3 artifact (and its BOM) on one patched version.
+            eachDependency {
+                if (requested.group == "tools.jackson.core" ||
+                    (requested.group == "tools.jackson" && requested.name == "jackson-bom")
+                ) {
+                    useVersion(jackson3Version)
+                    because("Jackson 3.1.0 advisories GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55, GHSA-rcqc-6cw3-h962")
+                }
+                // Third-party SDKs (Algorand, Azure, Google Cloud, Vert.x, web3j, bitcoinj, Cardano, walt.id) bring their own
+                // Jackson 2 and Bouncy Castle releases, several with open advisories. One patched version per line.
+                if (requested.group == "com.fasterxml.jackson" && requested.name == "jackson-bom") {
+                    useVersion(jackson2Version)
+                    because("Jackson 2 advisories GHSA-3pjw-73gf-8qr5, GHSA-72hv-8253-57qq, GHSA-7hhh-6rmp-j9qf and others")
+                } else if (requested.group.startsWith("com.fasterxml.jackson.") &&
+                    requested.group != "com.fasterxml.jackson.jaxrs"
+                ) {
+                    useVersion(
+                        if (requested.name == "jackson-annotations") jacksonAnnotationsVersion else jackson2Version,
+                    )
+                    because("Jackson 2 advisories GHSA-3pjw-73gf-8qr5, GHSA-72hv-8253-57qq, GHSA-7hhh-6rmp-j9qf and others")
+                }
+                if (requested.group == "org.bouncycastle") {
+                    when {
+                        requested.name.endsWith("-lts8on") -> useVersion(bouncyCastleLtsVersion)
+                        requested.name.endsWith("-jdk18on") ||
+                            requested.name.endsWith("-jdk15to18") ||
+                            requested.name == "bc-jdk18on-bom" -> useVersion(bouncyCastleVersion)
+                    }
+                    because("Bouncy Castle advisories GHSA-574f-3g2m-x479, GHSA-9pwp-9qqc-pr26, GHSA-c3fc-8qff-9hwx")
+                }
+                // Ktor 3 brings Netty 4.2.x; 4.2.12 carries known advisories. Netty 4.1 consumers are left alone.
+                if (requested.group == "io.netty" && requested.version?.startsWith("4.2.") == true) {
+                    useVersion(netty42Version)
+                    because("Netty 4.2.12 advisories GHSA-558v-64gr-wgg4, GHSA-mj4r-2hfc-f8p6, GHSA-rwm7-x88c-3g2p")
+                }
+            }
         }
     }
 
@@ -311,6 +364,13 @@ subprojects {
                 // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
                 // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
                 repositories {
+                    // The release workflow publishes ONLY here (no Central credentials), checksums and attests this
+                    // directory, then uploads it to Central with scripts/upload-to-central.py as its last step, so
+                    // the attested bytes are the uploaded bytes. `central` below serves snapshots and manual runs.
+                    maven {
+                        name = "releaseStaging"
+                        url = uri(rootProject.layout.buildDirectory.dir("release-staging"))
+                    }
                     maven {
                         name = "central"
                         val release =

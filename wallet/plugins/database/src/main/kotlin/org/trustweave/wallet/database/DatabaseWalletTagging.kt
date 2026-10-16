@@ -33,23 +33,24 @@ internal class DatabaseWalletTagging(
                         val sql =
                             if (isPostgreSql(conn)) {
                                 """
-                        INSERT INTO credential_tags (credential_id, tag)
-                        VALUES (?, ?)
+                        INSERT INTO credential_tags (wallet_id, credential_id, tag)
+                        VALUES (?, ?, ?)
                         ON CONFLICT DO NOTHING
                         """
                             } else {
                                 """
                         MERGE INTO credential_tags t
-                        USING (VALUES (?, ?)) AS src(credential_id, tag)
-                        ON t.credential_id = src.credential_id AND t.tag = src.tag
+                        USING (VALUES (?, ?, ?)) AS src(wallet_id, credential_id, tag)
+                        ON t.wallet_id = src.wallet_id AND t.credential_id = src.credential_id AND t.tag = src.tag
                         WHEN NOT MATCHED THEN
-                            INSERT (credential_id, tag) VALUES (src.credential_id, src.tag)
+                            INSERT (wallet_id, credential_id, tag) VALUES (src.wallet_id, src.credential_id, src.tag)
                         """
                             }
                         conn.prepareStatement(sql).use { stmt ->
                             tags.forEach { tag ->
-                                stmt.setString(1, credentialId)
-                                stmt.setString(2, tag)
+                                stmt.setString(1, walletId)
+                                stmt.setString(2, credentialId)
+                                stmt.setString(3, tag)
                                 stmt.executeUpdate()
                             }
                         }
@@ -83,9 +84,10 @@ internal class DatabaseWalletTagging(
                     val placeholders = tags.joinToString(", ") { "?" }
                     conn
                         .prepareStatement(
-                            "DELETE FROM credential_tags WHERE credential_id = ? AND tag IN ($placeholders)",
+                            "DELETE FROM credential_tags WHERE wallet_id = ? AND credential_id = ? AND tag IN ($placeholders)",
                         ).use { stmt ->
                             var index = 1
+                            stmt.setString(index++, walletId)
                             stmt.setString(index++, credentialId)
                             tags.forEach { stmt.setString(index++, it) }
                             stmt.executeUpdate()
@@ -112,8 +114,8 @@ internal class DatabaseWalletTagging(
             .prepareStatement(
                 """
             SELECT ct.tag FROM credential_tags ct
-            JOIN credentials c ON c.id = ct.credential_id
-            WHERE ct.credential_id = ? AND c.wallet_id = ?
+            JOIN credentials c ON c.id = ct.credential_id AND c.wallet_id = ct.wallet_id
+            WHERE ct.credential_id = ? AND ct.wallet_id = ?
             """,
             ).use { stmt ->
                 stmt.setString(1, credentialId)
@@ -135,7 +137,7 @@ internal class DatabaseWalletTagging(
                         .prepareStatement(
                             """
                     SELECT DISTINCT ct.tag FROM credential_tags ct
-                    JOIN credentials c ON c.id = ct.credential_id
+                    JOIN credentials c ON c.id = ct.credential_id AND c.wallet_id = ct.wallet_id
                     WHERE c.wallet_id = ?
                     """,
                         ).use { stmt ->
@@ -160,7 +162,7 @@ internal class DatabaseWalletTagging(
                         .prepareStatement(
                             """
                     SELECT c.credential_data FROM credentials c
-                    JOIN credential_tags ct ON ct.credential_id = c.id
+                    JOIN credential_tags ct ON ct.credential_id = c.id AND ct.wallet_id = c.wallet_id
                     WHERE ct.tag = ? AND c.wallet_id = ?
                     """,
                         ).use { stmt ->
@@ -200,18 +202,21 @@ internal class DatabaseWalletTagging(
                         val existing =
                             conn
                                 .prepareStatement(
-                                    "SELECT metadata_json FROM credential_metadata WHERE credential_id = ? FOR UPDATE",
+                                    "SELECT metadata_json FROM credential_metadata WHERE wallet_id = ? AND credential_id = ? FOR UPDATE",
                                 ).use { stmt ->
-                                    stmt.setString(1, credentialId)
+                                    stmt.setString(1, walletId)
+                                    stmt.setString(2, credentialId)
                                     stmt.executeQuery().use { rs -> if (rs.next()) rs.getString("metadata_json") else null }
                                 }
                         val merged = metadataCodec.toMap(existing) + metadata
                         conn
                             .prepareStatement(
-                                "UPDATE credential_metadata SET metadata_json = ?, updated_at = CURRENT_TIMESTAMP WHERE credential_id = ?",
+                                "UPDATE credential_metadata SET metadata_json = ?, updated_at = CURRENT_TIMESTAMP " +
+                                    "WHERE wallet_id = ? AND credential_id = ?",
                             ).use { stmt ->
                                 stmt.setString(1, metadataCodec.toJson(merged))
-                                stmt.setString(2, credentialId)
+                                stmt.setString(2, walletId)
+                                stmt.setString(3, credentialId)
                                 stmt.executeUpdate()
                             }
                         conn.commit()
@@ -237,8 +242,8 @@ internal class DatabaseWalletTagging(
                             """
                     SELECT m.notes, m.metadata_json, m.created_at, m.updated_at
                     FROM credential_metadata m
-                    JOIN credentials c ON c.id = m.credential_id
-                    WHERE m.credential_id = ? AND c.wallet_id = ?
+                    JOIN credentials c ON c.id = m.credential_id AND c.wallet_id = m.wallet_id
+                    WHERE m.credential_id = ? AND m.wallet_id = ?
                     """,
                         ).use { stmt ->
                             stmt.setString(1, credentialId)
@@ -275,10 +280,11 @@ internal class DatabaseWalletTagging(
                     upsertMetadataRow(conn, credentialId)
                     conn
                         .prepareStatement(
-                            "UPDATE credential_metadata SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE credential_id = ?",
+                            "UPDATE credential_metadata SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE wallet_id = ? AND credential_id = ?",
                         ).use { stmt ->
                             stmt.setString(1, notes)
-                            stmt.setString(2, credentialId)
+                            stmt.setString(2, walletId)
+                            stmt.setString(3, credentialId)
                             stmt.executeUpdate()
                         }
                     true

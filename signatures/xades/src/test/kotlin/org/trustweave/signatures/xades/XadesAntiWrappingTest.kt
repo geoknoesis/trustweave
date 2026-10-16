@@ -185,7 +185,7 @@ class XadesAntiWrappingTest {
         }
 
     @Test
-    fun `signing time before notBefore is CertificateNotYetValid`() =
+    fun `a claimed signing time before notBefore is not used for certificate validity`() =
         runTest {
             val doc =
                 XadesForge.sign(
@@ -195,7 +195,8 @@ class XadesAntiWrappingTest {
                     signerCert,
                     signingTimeText = "2001-01-01T00:00:00Z",
                 )
-            verify(doc).shouldBeInstanceOf<Invalid.CertificateNotYetValid>()
+            // Validity is judged at the authenticated (here: current) time, never the signer's claim.
+            verify(doc).shouldBeInstanceOf<XadesValidationResult.Valid>()
         }
 
     @Test
@@ -225,7 +226,7 @@ class XadesAntiWrappingTest {
                 serviceName = "Test CA",
                 serviceType = TspServiceType.CA_FOR_QUALIFIED_CERTIFICATES,
                 status = TspServiceStatus.GRANTED,
-                statusStartingTime = Clock.System.now(),
+                statusStartingTime = Clock.System.now() - kotlin.time.Duration.parse("PT8760H"),
                 serviceCertificates = listOf(trustedCa),
                 qualifierUris = listOf(QualifierUris.QC_WITH_SSCD, QualifierUris.QC_FOR_ESIG),
             )

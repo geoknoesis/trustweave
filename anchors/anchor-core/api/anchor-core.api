@@ -333,12 +333,17 @@ public final class org/trustweave/anchor/DefaultBlockchainAnchorRegistry : org/t
 
 public final class org/trustweave/anchor/evm/EvmGas {
 	public static final field DEFAULT_MARGIN_PERCENT I
+	public static final field FLOOR_TOKEN_GAS J
 	public static final field INSTANCE Lorg/trustweave/anchor/evm/EvmGas;
 	public static final field NONZERO_BYTE_GAS J
+	public static final field TOKENS_PER_NONZERO_BYTE J
 	public static final field TX_BASE_GAS J
 	public static final field ZERO_BYTE_GAS J
+	public static final fun calldataFloorGas ([B)Ljava/math/BigInteger;
 	public static final fun intrinsicGas ([B)Ljava/math/BigInteger;
 	public static final fun intrinsicGasForSize (J)Ljava/math/BigInteger;
+	public static final fun requiredGas ([B)Ljava/math/BigInteger;
+	public static final fun requiredGasForSize (J)Ljava/math/BigInteger;
 	public static final fun txGasLimit ([B)Ljava/math/BigInteger;
 	public static final fun txGasLimit ([BI)Ljava/math/BigInteger;
 	public static synthetic fun txGasLimit$default ([BIILjava/lang/Object;)Ljava/math/BigInteger;

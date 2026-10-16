@@ -13,7 +13,6 @@ import kotlin.time.Instant
  * pattern-matching on the leaves lets callers surface specific user-facing errors.
  */
 sealed class JadesValidationResult {
-
     /**
      * Signature was structurally well-formed, mathematically valid, trust-anchored, and
      * (for B-T) carried a matching signature time-stamp.
@@ -31,7 +30,12 @@ sealed class JadesValidationResult {
         val trust: TrustAnchorMatch,
         val signingTime: Instant,
         val signatureTimeStamp: Instant?,
-        /** Profile actually present in the verified envelope (B-B, B-T, B-LT, or B-LTA). */
+        /**
+         * Profile the verification actually established (B-B, B-T, B-LT or B-LTA): B-T needs a time-stamp that
+         * verified against `timestampTrustAnchors`, B-LT also needs embedded revocation evidence that verified
+         * and covers the chain. B-LTA is never reported: the EN 319 182-1 5.3.6 archive imprint is not implemented, so
+         * an `arcTst` fails closed (see [DefaultJadesVerifier]).
+         */
         val foundProfile: JadesProfile = JadesProfile.B_B,
         /**
          * Number of embedded `xVals` certificates (long-term validation data). 0 for B-B/B-T.
@@ -42,45 +46,93 @@ sealed class JadesValidationResult {
          */
         val rValsCount: Int = 0,
         /**
-         * Time recorded by the latest `arcTst` archival time-stamp; null unless the envelope was
-         * B-LTA AND the archival time-stamp validated.
+         * Always null for now: an `arcTst` is never credited (see [foundProfile]).
          */
         val archivalTimeStamp: Instant? = null,
+        /**
+         * `true` only when a [org.trustweave.signatures.revocation.RevocationPolicy] other than
+         * `NOT_CHECKED` was requested AND the signer and every CA below the trust anchor were shown not
+         * revoked by verified, current CRL / OCSP evidence. `false` means status is unknown.
+         */
+        val revocationChecked: Boolean = false,
     ) : JadesValidationResult()
 
     sealed class Invalid : JadesValidationResult() {
         /** Cryptographic verification of the signature value failed. */
-        data class BadSignature(val reason: String) : Invalid()
+        data class BadSignature(
+            val reason: String,
+        ) : Invalid()
 
         /**
          * Signature was mathematically valid but the signer's certificate did not chain to a
          * CA/QC service in the supplied trust list.
          */
-        data class UntrustedSigner(val cert: X509Certificate) : Invalid()
+        data class UntrustedSigner(
+            val cert: X509Certificate,
+        ) : Invalid()
 
         /**
          * Found-profile differs from required-profile. E.g. caller required B-T but the
          * signature carries no `sigTst`.
          */
-        data class WrongProfile(val found: JadesProfile, val required: JadesProfile) : Invalid()
+        data class WrongProfile(
+            val found: JadesProfile,
+            val required: JadesProfile,
+        ) : Invalid()
 
         /** B-T was required but no `sigTst` could be parsed. */
-        data class MissingTimeStamp(val reason: String) : Invalid()
+        data class MissingTimeStamp(
+            val reason: String,
+        ) : Invalid()
 
         /**
          * `sigTst` was structurally valid but its `messageImprint` did not match the SHA-256 of
          * the signature value, or its `genTime` was outside [JadesVerificationOptions.maxClockSkew]
          * of the asserted signing time.
          */
-        data class TimeStampMismatch(val reason: String) : Invalid()
+        data class TimeStampMismatch(
+            val reason: String,
+        ) : Invalid()
 
         /**
          * Signer certificate had already expired at the asserted signing time, and
          * [JadesVerificationOptions.allowExpiredCertificateAtSigningTime] is false.
          */
-        data class CertificateExpired(val notAfter: Instant) : Invalid()
+        data class CertificateExpired(
+            val notAfter: Instant,
+        ) : Invalid()
+
+        /**
+         * The signer certificate may not be used to sign (it is a CA, or its keyUsage forbids signing).
+         * A key-usage/role failure, unlike the validity-window failures [CertificateExpired] and the
+         * trust-lists `LotlSignatureValidationResult.Invalid.SignerCertificateNotValid`.
+         */
+        data class SignerCertificateInvalid(
+            val reason: String,
+        ) : Invalid()
+
+        /** The signer's trust-list service was withdrawn at (or the signature cannot be shown to predate) [withdrawnAt]. */
+        data class TrustWithdrawn(
+            val cert: X509Certificate,
+            val withdrawnAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /** A certificate in the chain was revoked at or before the verification time. */
+        data class CertificateRevoked(
+            val cert: X509Certificate,
+            val revokedAt: Instant,
+            val reason: String,
+        ) : Invalid()
+
+        /** Revocation checking was required but a certificate has no usable evidence. */
+        data class RevocationUnavailable(
+            val reason: String,
+        ) : Invalid()
 
         /** Input was not well-formed JWS JSON Flattened or JWS Compact serialization. */
-        data class Malformed(val reason: String) : Invalid()
+        data class Malformed(
+            val reason: String,
+        ) : Invalid()
     }
 }

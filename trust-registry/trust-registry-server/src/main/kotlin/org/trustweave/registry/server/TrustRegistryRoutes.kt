@@ -40,6 +40,62 @@ private suspend fun ApplicationCall.respondInvalidStatus(value: String) {
     )
 }
 
+private const val DEFAULT_PAGE_LIMIT = 100
+private const val MAX_PAGE_LIMIT = 1000
+private const val MAX_NAME_CONTAINS_LENGTH = 256
+
+private suspend fun ApplicationCall.respondBadParam(
+    error: String,
+    message: String,
+) {
+    respond(
+        HttpStatusCode.BadRequest,
+        buildJsonObject {
+            put("error", error)
+            put("message", message)
+        },
+    )
+}
+
+/** Query parameters shared by the list routes, or null after a 400 has been sent. */
+private class ListParams(
+    val limit: Int,
+    val offset: Int,
+    val nameContains: String?,
+)
+
+private suspend fun ApplicationCall.parseListParams(): ListParams? {
+    val limitParam = request.queryParameters["limit"]
+    val limit = limitParam?.toIntOrNull() ?: DEFAULT_PAGE_LIMIT.takeIf { limitParam == null }
+    if (limit == null || limit < 1 || limit > MAX_PAGE_LIMIT) {
+        respondBadParam("invalid_limit", "limit must be an integer between 1 and $MAX_PAGE_LIMIT")
+        return null
+    }
+    val offsetParam = request.queryParameters["offset"]
+    val offset = offsetParam?.toIntOrNull() ?: 0.takeIf { offsetParam == null }
+    if (offset == null || offset < 0) {
+        respondBadParam("invalid_offset", "offset must be a non-negative integer")
+        return null
+    }
+    val nameContains = request.queryParameters["nameContains"]
+    if (nameContains != null && nameContains.length > MAX_NAME_CONTAINS_LENGTH) {
+        respondBadParam("invalid_name_contains", "nameContains must be at most $MAX_NAME_CONTAINS_LENGTH characters")
+        return null
+    }
+    return ListParams(limit, offset, nameContains)
+}
+
+/** Stable (did-ordered) page of [records]; the unpaged size is reported in `X-Total-Count`. */
+private fun <T> ApplicationCall.page(
+    records: List<T>,
+    params: ListParams,
+    didOf: (T) -> String,
+): List<T> {
+    val sorted = records.sortedBy(didOf)
+    response.headers.append("X-Total-Count", sorted.size.toString())
+    return sorted.drop(params.offset).take(params.limit)
+}
+
 /**
  * Configures the trust registry HTTP routes.
  *
@@ -51,6 +107,10 @@ private suspend fun ApplicationCall.respondInvalidStatus(value: String) {
  * Registering an already-registered DID answers 409; revoke accepts an optional `reason` query
  * parameter that is stored on the record. An unrecognised `status` filter is a 400, never a
  * silently unfiltered list.
+ *
+ * The issuer and verifier list routes are paginated: `limit` (default 100, max 1000) and `offset`
+ * (default 0) over a did-ordered list; the body stays a JSON array and the total match count is in
+ * the `X-Total-Count` header. A bad `limit`/`offset`, or a `nameContains` over 256 characters, is a 400.
  *
  * @param hostAuthenticated true when a `HostAuthentication` gate has already admitted the call.
  *   The two mechanisms compose rather than stack: a call the gate admitted is authorized, and
@@ -136,8 +196,10 @@ fun Routing.configureTrustRegistryRoutes(
                     return@get
                 }
                 val credentialType = call.request.queryParameters["credentialType"]
-                val nameContains = call.request.queryParameters["nameContains"]
-                call.respond(registry.listIssuers(RegistryFilter(status, credentialType, nameContains)))
+                val params = call.parseListParams() ?: return@get
+                call.respond(
+                    call.page(registry.listIssuers(RegistryFilter(status, credentialType, params.nameContains)), params) { it.did },
+                )
             }
             post {
                 if (!call.authorizeMutation()) return@post
@@ -180,8 +242,13 @@ fun Routing.configureTrustRegistryRoutes(
                     call.respondInvalidStatus(statusParam)
                     return@get
                 }
-                val nameContains = call.request.queryParameters["nameContains"]
-                call.respond(registry.listVerifiers(RegistryFilter(status = status, nameContains = nameContains)))
+                val params = call.parseListParams() ?: return@get
+                call.respond(
+                    call.page(
+                        registry.listVerifiers(RegistryFilter(status = status, nameContains = params.nameContains)),
+                        params,
+                    ) { it.did },
+                )
             }
             post {
                 if (!call.authorizeMutation()) return@post

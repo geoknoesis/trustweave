@@ -2,6 +2,7 @@ package org.trustweave.did.verification
 
 import kotlinx.coroutines.runBlocking
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
@@ -317,6 +318,61 @@ class DidDocumentVerificationServiceTest {
             val failed = service().checkDocumentSelfCertification(document(id = Did("did:unknown:x")), "unknown")
             assertFalse(failed.valid)
             assertTrue(failed.errors.any { "no signature was verified" in it }, failed.errors.toString())
+        }
+
+    // ------------------------------------------------- did:key JWK binding
+
+    private val keyBytes = ByteArray(32) { (it + 1).toByte() }
+    private val otherKeyBytes = ByteArray(32) { (it + 101).toByte() }
+
+    private fun mb(bytes: ByteArray) = "z" + (byteArrayOf(0xed.toByte(), 0x01) + bytes).encodeBase58()
+
+    private fun jwk(bytes: ByteArray): Map<String, Any?> =
+        mapOf("kty" to "OKP", "crv" to "Ed25519", "x" to Base64.getUrlEncoder().withoutPadding().encodeToString(bytes))
+
+    private val keyDid = Did("did:key:${mb(keyBytes)}")
+
+    private fun keyVm(
+        jwk: Map<String, Any?>?,
+        controller: Did = keyDid,
+        fragment: String = "k1",
+        multibase: String? = mb(keyBytes),
+    ) = VerificationMethod(
+        id = VerificationMethodId(did = keyDid, keyId = KeyId(fragment)),
+        type = "Ed25519VerificationKey2020",
+        controller = controller,
+        publicKeyMultibase = multibase,
+        publicKeyJwk = jwk,
+    )
+
+    @Test
+    fun `did key with a matching JWK still self-certifies`() =
+        runBlocking<Unit> {
+            assertTrue(service().verifyDocumentSignature(document(keyDid, listOf(keyVm(jwk(keyBytes)))), "key"))
+            assertTrue(service().verifyDocumentSignature(document(keyDid, listOf(keyVm(null))), "key"))
+        }
+
+    @Test
+    fun `did key whose JWK differs from the multibase key is rejected`() =
+        runBlocking<Unit> {
+            val doc = document(keyDid, listOf(keyVm(jwk(otherKeyBytes))))
+            assertFalse(service().verifyDocumentSignature(doc, "key"))
+            assertFalse(service().checkDocumentSelfCertification(doc, "key").valid)
+        }
+
+    @Test
+    fun `a verification method with disagreeing JWK and multibase yields no public key`() {
+        assertTrue(Ed25519Verifier.publicKeyOf(keyVm(jwk(keyBytes)))!!.contentEquals(keyBytes))
+        assertTrue(Ed25519Verifier.publicKeyOf(keyVm(jwk(otherKeyBytes))) == null)
+    }
+
+    @Test
+    fun `did key with an extra foreign-controlled verification method is rejected`() =
+        runBlocking<Unit> {
+            val foreign =
+                keyVm(jwk(otherKeyBytes), controller = Did("did:key:z6MkAttacker"), fragment = "evil", multibase = mb(otherKeyBytes))
+            assertFalse(service().verifyDocumentSignature(document(keyDid, listOf(keyVm(null), foreign)), "key"))
+            assertFalse(service().verifyDocumentSignature(document(keyDid, listOf(keyVm(null), keyVm(null, fragment = "k2"))), "key"))
         }
 
     private fun multibase(bytes: ByteArray) = "u" + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)

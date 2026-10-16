@@ -2,6 +2,7 @@ public class org/trustweave/did/registrar/server/spring/DidRegistrarConfiguratio
 	public fun <init> ()V
 	public fun didRegistrarService (Lorg/trustweave/did/registrar/DidRegistrar;Lorg/trustweave/did/registrar/storage/JobStorage;)Lorg/trustweave/did/registrar/server/spring/DidRegistrarService;
 	public fun registrarAuthentication (Ljava/lang/String;Ljava/lang/String;Z)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+	public fun registrarRequestBodyLimit (J)Lorg/trustweave/did/registrar/server/spring/RegistrarRequestBodyLimit;
 }
 
 public class org/trustweave/did/registrar/server/spring/DidRegistrarController {
@@ -42,6 +43,18 @@ public final class org/trustweave/did/registrar/server/spring/RegistrarAuthentic
 	public static synthetic fun fromProperties$default (Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication$Companion;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
 	public final fun frontedByProxy (Ljava/lang/String;)Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
 	public final fun unconfigured ()Lorg/trustweave/did/registrar/server/spring/RegistrarAuthentication;
+}
+
+public final class org/trustweave/did/registrar/server/spring/RegistrarRequestBodyLimit : org/springframework/web/server/WebFilter {
+	public static final field Companion Lorg/trustweave/did/registrar/server/spring/RegistrarRequestBodyLimit$Companion;
+	public static final field DEFAULT_MAX_BYTES J
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun filter (Lorg/springframework/web/server/ServerWebExchange;Lorg/springframework/web/server/WebFilterChain;)Lreactor/core/publisher/Mono;
+}
+
+public final class org/trustweave/did/registrar/server/spring/RegistrarRequestBodyLimit$Companion {
 }
 
 public final class org/trustweave/did/registrar/server/spring/dto/CreateDidRequest {

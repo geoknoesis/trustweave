@@ -1,6 +1,7 @@
 package org.trustweave.credential.statuslist.server
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -17,6 +18,8 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.observability.HostRequestId
 import org.trustweave.revocation.bitstring.BitstringStatusListManager
 import org.trustweave.revocation.token.TokenStatusListManager
+import java.security.MessageDigest
+import java.util.Base64
 
 private val logger = org.slf4j.LoggerFactory.getLogger("org.trustweave.credential.statuslist.server")
 
@@ -51,10 +54,18 @@ private val json =
  *
  * `GET /status-lists/{id}` — Bitstring Status List credential (JSON-LD).
  * `GET /token-status-lists/{id}` — Token Status List JWT.
+ *
+ * Both answer with `Cache-Control: public, max-age=<cacheMaxAge>` and an `ETag`, and honour
+ * `If-None-Match` with 304, so verifiers and intermediaries do not hit the signing path on every
+ * check. [cacheMaxAge] is also the longest a revocation can stay unseen by a caching client; set
+ * it to [kotlin.time.Duration.ZERO] for `no-cache` (revalidate every time). The signed Bitstring
+ * credential itself is cached by the manager until the list changes.
  */
+@JvmOverloads
 fun Routing.configureStatusListRoutes(
     bitstringManager: BitstringStatusListManager?,
     tokenManager: TokenStatusListManager?,
+    cacheMaxAge: kotlin.time.Duration = DEFAULT_CACHE_MAX_AGE,
 ) {
     /**
      * GET /status-lists/{id}
@@ -82,7 +93,7 @@ fun Routing.configureStatusListRoutes(
         try {
             val vc: VerifiableCredential = bitstringManager.buildStatusListVc(StatusListId(id))
             val vcJson = json.encodeToString(VerifiableCredential.serializer(), vc)
-            call.respondText(vcJson, ContentType.parse("application/vc+ld+json"), HttpStatusCode.OK)
+            call.respondCacheable(vcJson, ContentType.parse("application/vc+ld+json"), cacheMaxAge)
         } catch (e: IllegalArgumentException) {
             call.respond(
                 HttpStatusCode.NotFound,
@@ -124,7 +135,7 @@ fun Routing.configureStatusListRoutes(
 
         try {
             val token = tokenManager.buildStatusListToken(StatusListId(id))
-            call.respondText(token.jwt, ContentType.parse("application/statuslist+jwt"), HttpStatusCode.OK)
+            call.respondCacheable(token.jwt, ContentType.parse("application/statuslist+jwt"), cacheMaxAge)
         } catch (e: IllegalArgumentException) {
             call.respond(
                 HttpStatusCode.NotFound,
@@ -139,6 +150,29 @@ fun Routing.configureStatusListRoutes(
                 ErrorResponse("INTERNAL_ERROR", "Unable to retrieve status list", requestId),
             )
         }
+    }
+}
+
+/** Default `max-age` of status-list responses. */
+val DEFAULT_CACHE_MAX_AGE: kotlin.time.Duration = kotlin.time.Duration.parse("1m")
+
+private suspend fun ApplicationCall.respondCacheable(
+    body: String,
+    contentType: ContentType,
+    maxAge: kotlin.time.Duration,
+) {
+    val digest = MessageDigest.getInstance("SHA-256").digest(body.toByteArray(Charsets.UTF_8))
+    val etag = "\"" + Base64.getUrlEncoder().withoutPadding().encodeToString(digest) + "\""
+    response.headers.append(
+        HttpHeaders.CacheControl,
+        if (maxAge.isPositive()) "public, max-age=${maxAge.inWholeSeconds}" else "no-cache",
+    )
+    response.headers.append(HttpHeaders.ETag, etag)
+    val presented = request.headers[HttpHeaders.IfNoneMatch]
+    if (presented != null && presented.split(',').any { it.trim().removePrefix("W/") == etag }) {
+        respond(HttpStatusCode.NotModified)
+    } else {
+        respondText(body, contentType, HttpStatusCode.OK)
     }
 }
 

@@ -129,6 +129,15 @@ public class HostAuthentication private constructor(
     }
 
     /**
+     * Whether this gate decides every mutating request (POST, PUT, PATCH, DELETE): it authenticates
+     * all of them, or it is [frontedByProxy], which records that something in front does.
+     *
+     * A gate built with `protect = setOf(HttpMethod.Get)` leaves writes anonymous, so a server that
+     * has its own check for writes must not stand that check down on the strength of such a gate.
+     */
+    public fun coversMutations(): Boolean = delegatedTo != null || protectedMethods.containsAll(MUTATING)
+
+    /**
      * Returns a copy that also requires the credential for every request, whatever its method,
      * whose path starts with one of [prefixes]. Use it when a few read routes are privileged but
      * the rest of the server's reads are not, e.g. job-status records in the DID registrar.

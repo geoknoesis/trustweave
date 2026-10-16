@@ -2,8 +2,8 @@ package org.trustweave.wallet.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.trustweave.wallet.Wallet
 import kotlinx.coroutines.CancellationException
+import org.trustweave.wallet.Wallet
 import org.trustweave.wallet.services.WalletCreationOptions
 import org.trustweave.wallet.services.WalletFactory
 import org.trustweave.wallet.services.validateDeployment
@@ -14,6 +14,9 @@ import java.util.UUID
  *
  * Supports PostgreSQL and H2. MySQL is NOT supported — see [DatabaseWallet]
  * for details.
+ *
+ * `WalletCreationOptions.encryptionKey` is rejected rather than ignored; this wallet does not encrypt
+ * credential data itself.
  *
  * Each [create] call builds a dedicated HikariCP connection pool that is owned
  * by the returned wallet. Call [DatabaseWallet.close] (or use Kotlin's `use {}`)
@@ -53,6 +56,11 @@ class DatabaseWalletFactory(
         options.validateDeployment("wallet:plugins:database")
         if (providerName.lowercase() != "database") {
             throw IllegalArgumentException("Provider name must be 'database'")
+        }
+
+        require(options.encryptionKey == null && options.additionalProperties["encryptionKey"] == null) {
+            "DatabaseWalletFactory cannot honour encryptionKey: credentials are stored as plain JSON text, so " +
+                "protect them with database-level encryption (e.g. TDE, encrypted volumes) or use the 'file' wallet provider."
         }
 
         val finalWalletId = walletId ?: UUID.randomUUID().toString()

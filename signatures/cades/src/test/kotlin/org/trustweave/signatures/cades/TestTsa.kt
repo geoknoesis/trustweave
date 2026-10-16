@@ -29,19 +29,32 @@ internal class TestTsa private constructor(
     private val privateKey: PrivateKey,
     val defaultPolicyOid: String = "1.2.3.4.5",
 ) {
+    /** The TSA certificate, for use as a `timestampTrustAnchors` entry. */
+    val cert: java.security.cert.X509Certificate
+        get() =
+            org.bouncycastle.cert.jcajce
+                .JcaX509CertificateConverter()
+                .getCertificate(certHolder)
+
     fun stamp(requestBytes: ByteArray): ByteArray {
         val request = TimeStampRequest(requestBytes)
         val digestCalcProvider = JcaDigestCalculatorProviderBuilder().setProvider("BC").build()
-        val sha256 = digestCalcProvider.get(
-            org.bouncycastle.asn1.x509.AlgorithmIdentifier(TSPAlgorithms.SHA256),
-        )
-        val signerInfoGen = JcaSignerInfoGeneratorBuilder(digestCalcProvider).build(
-            JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(privateKey),
-            certHolder,
-        )
-        val tokenGen = TimeStampTokenGenerator(
-            signerInfoGen, sha256, ASN1ObjectIdentifier(request.reqPolicy?.id ?: defaultPolicyOid),
-        )
+        val sha256 =
+            digestCalcProvider.get(
+                org.bouncycastle.asn1.x509
+                    .AlgorithmIdentifier(TSPAlgorithms.SHA256),
+            )
+        val signerInfoGen =
+            JcaSignerInfoGeneratorBuilder(digestCalcProvider).build(
+                JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(privateKey),
+                certHolder,
+            )
+        val tokenGen =
+            TimeStampTokenGenerator(
+                signerInfoGen,
+                sha256,
+                ASN1ObjectIdentifier(request.reqPolicy?.id ?: defaultPolicyOid),
+            )
         tokenGen.addCertificates(JcaCertStore(listOf(certHolder)))
         val responseGen = TimeStampResponseGenerator(tokenGen, TSPAlgorithms.ALLOWED)
         return responseGen.generate(request, BigInteger.valueOf(System.nanoTime()), Date()).encoded
@@ -55,9 +68,11 @@ internal class TestTsa private constructor(
         }
 
         fun generate(): TestTsa {
-            val keyPair = KeyPairGenerator.getInstance("RSA", "BC").run {
-                initialize(2048); generateKeyPair()
-            }
+            val keyPair =
+                KeyPairGenerator.getInstance("RSA", "BC").run {
+                    initialize(2048)
+                    generateKeyPair()
+                }
             val cert = selfSign(keyPair)
             return TestTsa(cert, keyPair.private)
         }
@@ -66,11 +81,18 @@ internal class TestTsa private constructor(
             val now = Date()
             val notAfter = Date(now.time + 365L * 24 * 3600 * 1000)
             val dn = X500Name("CN=CAdES Test TSA, O=TrustWeave, C=EU")
-            val builder = JcaX509v3CertificateBuilder(
-                dn, BigInteger.valueOf(System.nanoTime()), now, notAfter, dn, keyPair.public,
-            )
+            val builder =
+                JcaX509v3CertificateBuilder(
+                    dn,
+                    BigInteger.valueOf(System.nanoTime()),
+                    now,
+                    notAfter,
+                    dn,
+                    keyPair.public,
+                )
             builder.addExtension(
-                Extension.extendedKeyUsage, true,
+                Extension.extendedKeyUsage,
+                true,
                 ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping),
             )
             val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyPair.private)

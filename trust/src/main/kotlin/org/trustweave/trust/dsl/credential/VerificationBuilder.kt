@@ -45,6 +45,7 @@ class VerificationBuilder(
     private var trustPolicy: CredentialTrustPolicy? = null
     private var verifyPresentationProof: Boolean = true
     private var enforceHolderBinding: Boolean = false
+    private var requireHolderBinding: Boolean = false
     private var verifyChallenge: Boolean = false
     private var expectedChallenge: String? = null
     private var verifyDomain: Boolean = false
@@ -219,19 +220,19 @@ class VerificationBuilder(
     }
 
     /**
-     * Require a trust path from verifier to issuer.
-     *
-     * **Example:**
-     * ```kotlin
-     * trustWeave.verify {
-     *     credential(credential)
-     *     requireTrustPath(trustRegistry, maxLength = 3)
-     * }
-     * ```
+     * Despite its name this does **not** search for a trust path and ignores [maxPathLength]: it is
+     * exactly [requireTrust], i.e. the issuer must be a trust anchor of [registry] (for the
+     * credential's types). A path search needs a verifier identity, which this builder does not
+     * have, so the depth limit cannot be honoured; use [requireTrust], or call
+     * `TrustRegistry.findTrustPath` yourself and enforce your own limit.
      *
      * @param registry The trust registry to check against
-     * @param maxPathLength Reserved for future trust-path depth limits (currently ignored)
+     * @param maxPathLength Ignored.
      */
+    @Deprecated(
+        "Does not search for a trust path and ignores maxPathLength; it only checks the issuer is a trust anchor.",
+        ReplaceWith("requireTrust(registry)"),
+    )
     @Suppress("UNUSED_PARAMETER")
     fun requireTrustPath(
         registry: TrustRegistry,
@@ -282,6 +283,14 @@ class VerificationBuilder(
     }
 
     /**
+     * Reject SD-JWT VC credentials that carry no issuer-signed `cnf` holder binding (opt-in, default off).
+     * Without this, a `cnf`-less SD-JWT credential is accepted as a bearer credential.
+     */
+    fun requireHolderBinding(value: Boolean) {
+        this.requireHolderBinding = value
+    }
+
+    /**
      * Require the presentation to include the given challenge value.
      * Sets verifyChallenge=true and stores the expected value.
      */
@@ -322,6 +331,7 @@ class VerificationBuilder(
                     schemaId = schemaId?.let { SchemaId(it) },
                     verifyPresentationProof = verifyPresentationProof,
                     enforceHolderBinding = enforceHolderBinding,
+                    requireHolderBinding = requireHolderBinding,
                     verifyChallenge = verifyChallenge,
                     expectedChallenge = expectedChallenge,
                     verifyDomain = verifyDomain,

@@ -26,7 +26,6 @@ import java.util.Date
  *   service-type / status / qualifier URIs ([renderLotlXml], [renderTslXml]).
  */
 object TrustListFixtures {
-
     private const val PROVIDER = "BC"
 
     init {
@@ -63,14 +62,15 @@ object TrustListFixtures {
         val notAfter = Date(System.currentTimeMillis() + 365L * 24 * 3600 * 1000)
 
         val caHolder = buildCaCertificate(caKey, caSubject, notBefore, notAfter)
-        val signerHolder = buildEndEntityCertificate(
-            issuerKey = caKey,
-            issuerHolder = caHolder,
-            subjectKey = signerKey,
-            subjectDn = signerSubject,
-            notBefore = notBefore,
-            notAfter = notAfter,
-        )
+        val signerHolder =
+            buildEndEntityCertificate(
+                issuerKey = caKey,
+                issuerHolder = caHolder,
+                subjectKey = signerKey,
+                subjectDn = signerSubject,
+                notBefore = notBefore,
+                notAfter = notAfter,
+            )
 
         return CaAndSigner(
             caCert = CONVERTER.getCertificate(caHolder),
@@ -80,10 +80,76 @@ object TrustListFixtures {
         )
     }
 
-    private fun rsa2048(): KeyPair = KeyPairGenerator.getInstance("RSA", PROVIDER).run {
-        initialize(2048)
-        generateKeyPair()
+    data class Chain(
+        val root: X509Certificate,
+        val intermediate: X509Certificate,
+        val signerCert: X509Certificate,
+        val signerKey: KeyPair,
+    )
+
+    /** Root CA -> intermediate CA -> end-entity signer, all valid for a year. */
+    fun generateChain(): Chain {
+        val rootKey = rsa2048()
+        val interKey = rsa2048()
+        val signerKey = rsa2048()
+        val nb = Date(System.currentTimeMillis() - 60_000)
+        val na = Date(System.currentTimeMillis() + 365L * 24 * 3600 * 1000)
+        val rootH = buildCaCertificate(rootKey, "CN=Chain Root, O=TrustWeave, C=EU", nb, na)
+        val interDn = X500Name("CN=Chain Intermediate, O=TrustWeave, C=EU")
+        val interBuilder =
+            JcaX509v3CertificateBuilder(
+                rootH.subject,
+                BigInteger.valueOf(System.nanoTime()),
+                nb,
+                na,
+                interDn,
+                interKey.public,
+            )
+        interBuilder.addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+        interBuilder.addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.keyCertSign))
+        val interH =
+            interBuilder.build(
+                JcaContentSignerBuilder("SHA256withRSA").setProvider(PROVIDER).build(rootKey.private),
+            )
+        val signerH =
+            buildEndEntityCertificate(
+                interKey,
+                interH,
+                signerKey,
+                "CN=Chain Signer, O=TrustWeave, C=EU",
+                nb,
+                na,
+            )
+        return Chain(
+            CONVERTER.getCertificate(rootH),
+            CONVERTER.getCertificate(interH),
+            CONVERTER.getCertificate(signerH),
+            signerKey,
+        )
     }
+
+    /** `OtherTSLPointer` blocks for [renderLotlXml]'s [pointers] parameter. */
+    fun pointer(
+        territory: String,
+        vararg certs: X509Certificate,
+    ): String {
+        val ids =
+            certs.joinToString("") {
+                "<ServiceDigitalIdentity><DigitalId><X509Certificate>" +
+                    Base64.getEncoder().encodeToString(it.encoded) +
+                    "</X509Certificate></DigitalId></ServiceDigitalIdentity>"
+            }
+        return "<OtherTSLPointer><ServiceDigitalIdentities>$ids</ServiceDigitalIdentities>" +
+            "<TSLLocation>https://example.org/$territory.xml</TSLLocation>" +
+            "<AdditionalInformation><OtherInformation><SchemeTerritory>$territory</SchemeTerritory>" +
+            "</OtherInformation></AdditionalInformation></OtherTSLPointer>"
+    }
+
+    private fun rsa2048(): KeyPair =
+        KeyPairGenerator.getInstance("RSA", PROVIDER).run {
+            initialize(2048)
+            generateKeyPair()
+        }
 
     private fun buildCaCertificate(
         keyPair: KeyPair,
@@ -92,23 +158,25 @@ object TrustListFixtures {
         notAfter: Date,
     ): X509CertificateHolder {
         val dn = X500Name(subject)
-        val builder = JcaX509v3CertificateBuilder(
-            dn,
-            BigInteger.valueOf(System.currentTimeMillis()),
-            notBefore,
-            notAfter,
-            dn,
-            keyPair.public,
-        )
+        val builder =
+            JcaX509v3CertificateBuilder(
+                dn,
+                BigInteger.valueOf(System.currentTimeMillis()),
+                notBefore,
+                notAfter,
+                dn,
+                keyPair.public,
+            )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(true))
         builder.addExtension(
             Extension.keyUsage,
             true,
             KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign),
         )
-        val signer = JcaContentSignerBuilder("SHA256withRSA")
-            .setProvider(PROVIDER)
-            .build(keyPair.private)
+        val signer =
+            JcaContentSignerBuilder("SHA256withRSA")
+                .setProvider(PROVIDER)
+                .build(keyPair.private)
         return builder.build(signer)
     }
 
@@ -120,19 +188,21 @@ object TrustListFixtures {
         notBefore: Date,
         notAfter: Date,
     ): X509CertificateHolder {
-        val builder = JcaX509v3CertificateBuilder(
-            issuerHolder.subject,
-            BigInteger.valueOf(System.nanoTime()),
-            notBefore,
-            notAfter,
-            X500Name(subjectDn),
-            subjectKey.public,
-        )
+        val builder =
+            JcaX509v3CertificateBuilder(
+                issuerHolder.subject,
+                BigInteger.valueOf(System.nanoTime()),
+                notBefore,
+                notAfter,
+                X500Name(subjectDn),
+                subjectKey.public,
+            )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(false))
         builder.addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
-        val signer = JcaContentSignerBuilder("SHA256withRSA")
-            .setProvider(PROVIDER)
-            .build(issuerKey.private)
+        val signer =
+            JcaContentSignerBuilder("SHA256withRSA")
+                .setProvider(PROVIDER)
+                .build(issuerKey.private)
         return builder.build(signer)
     }
 
@@ -147,11 +217,14 @@ object TrustListFixtures {
         sequenceNumber: Int = 456,
         issuedAt: String = "2026-01-01T00:00:00Z",
         nextUpdateAt: String? = "2026-07-01T00:00:00Z",
+        pointers: List<String> = emptyList(),
     ): ByteArray {
-        val nextUpdate = nextUpdateAt
-            ?.let { "<NextUpdate><dateTime>$it</dateTime></NextUpdate>" }
-            ?: "<NextUpdate/>"
-        val xml = """
+        val nextUpdate =
+            nextUpdateAt
+                ?.let { "<NextUpdate><dateTime>$it</dateTime></NextUpdate>" }
+                ?: "<NextUpdate/>"
+        val xml =
+            """
             <?xml version="1.0" encoding="UTF-8"?>
             <TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#">
               <SchemeInformation>
@@ -162,9 +235,10 @@ object TrustListFixtures {
                 </SchemeOperatorName>
                 <ListIssueDateTime>$issuedAt</ListIssueDateTime>
                 $nextUpdate
+                ${if (pointers.isEmpty()) "" else "<PointersToOtherTSL>${pointers.joinToString("")}</PointersToOtherTSL>"}
               </SchemeInformation>
             </TrustServiceStatusList>
-        """.trimIndent().trim()
+            """.trimIndent().trim()
         return xml.toByteArray(Charsets.UTF_8)
     }
 
@@ -187,9 +261,13 @@ object TrustListFixtures {
         services: List<TslServiceSpec>,
         sequenceNumber: Int = 1,
         issuedAt: String = "2026-01-01T00:00:00Z",
+        nextUpdateAt: String? = null,
+        declaredTerritory: String = territory,
     ): ByteArray {
+        val nextUpdate = nextUpdateAt?.let { "<NextUpdate><dateTime>$it</dateTime></NextUpdate>" } ?: ""
         val servicesXml = services.joinToString(separator = "\n") { svc -> renderService(svc) }
-        val xml = """
+        val xml =
+            """
             <?xml version="1.0" encoding="UTF-8"?>
             <TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#">
               <SchemeInformation>
@@ -198,8 +276,9 @@ object TrustListFixtures {
                 <SchemeOperatorName>
                   <Name xml:lang="en">$schemeOperator</Name>
                 </SchemeOperatorName>
-                <SchemeTerritory>$territory</SchemeTerritory>
+                <SchemeTerritory>$declaredTerritory</SchemeTerritory>
                 <ListIssueDateTime>$issuedAt</ListIssueDateTime>
+                $nextUpdate
               </SchemeInformation>
               <TrustServiceProviderList>
                 <TrustServiceProvider>
@@ -212,24 +291,29 @@ object TrustListFixtures {
                 </TrustServiceProvider>
               </TrustServiceProviderList>
             </TrustServiceStatusList>
-        """.trimIndent().trim()
+            """.trimIndent().trim()
         return xml.toByteArray(Charsets.UTF_8)
     }
 
     private fun renderService(svc: TslServiceSpec): String {
-        val qualifiers = if (svc.qualifierUris.isEmpty()) "" else """
-            <ServiceInformationExtensions>
-              <Extension Critical="false">
-                <Qualifications>
-                  <QualificationElement>
-                    <Qualifiers>
-                      ${svc.qualifierUris.joinToString("\n") { "<Qualifier uri=\"$it\"/>" }}
-                    </Qualifiers>
-                  </QualificationElement>
-                </Qualifications>
-              </Extension>
-            </ServiceInformationExtensions>
-        """.trimIndent()
+        val qualifiers =
+            if (svc.qualifierUris.isEmpty()) {
+                ""
+            } else {
+                """
+                <ServiceInformationExtensions>
+                  <Extension Critical="false">
+                    <Qualifications>
+                      <QualificationElement>
+                        <Qualifiers>
+                          ${svc.qualifierUris.joinToString("\n") { "<Qualifier uri=\"$it\"/>" }}
+                        </Qualifiers>
+                      </QualificationElement>
+                    </Qualifications>
+                  </Extension>
+                </ServiceInformationExtensions>
+                """.trimIndent()
+            }
 
         return """
             <TSPService>
@@ -246,7 +330,7 @@ object TrustListFixtures {
                 $qualifiers
               </ServiceInformation>
             </TSPService>
-        """.trimIndent()
+            """.trimIndent()
     }
 
     private val CONVERTER = JcaX509CertificateConverter().setProvider(PROVIDER)

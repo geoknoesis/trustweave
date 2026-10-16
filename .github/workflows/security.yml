@@ -14,6 +14,7 @@ name: Dependency security
 #   advisory/package pair that is not in that file (scripts/check-osv-baseline.py), so a new dependency, a
 #   version change or a newly published advisory is visible instead of lost in the backlog. See
 #   SECURITY.md "Dependency Scanning" and "Known Dependency Risks".
+# - The weekly run also opens/updates one issue for baseline entries expiring within 30 days.
 
 on:
   push:
@@ -49,12 +50,10 @@ jobs:
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # NON-BLOCKING: the dependency-graph API answers "The Dependency graph is disabled for this
-    # repository" until a maintainer enables Settings > Code security > Dependency graph. Until
-    # then this job must not fail the push to main, but dependency review below has no snapshot to
-    # compare and is therefore NOT an effective gate; the warning step at the end says so in the log.
-    # See SECURITY.md "Dependency Scanning". Remove continue-on-error once the graph is enabled.
-    continue-on-error: true
+    # BLOCKING: the repository's Dependency graph is enabled (Settings > Code security), so a failed
+    # submission means dependency review below has no snapshot to compare, which must not pass silently.
+    # If the API ever answers "The Dependency graph is disabled for this repository" again, re-enable the
+    # setting rather than making this job non-blocking.
     # The only job with write access: the dependency-graph API requires contents: write. The
     # workflow default is contents: read, and checkout does not persist credentials.
     permissions:
@@ -87,7 +86,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           # The Gradle snapshot for the head commit is submitted by the job above; give it time to land.
@@ -175,14 +174,14 @@ jobs:
 
       - name: Upload SARIF to code scanning
         if: always() && github.event_name != 'pull_request' && hashFiles('build/reports/osv/osv.sarif') != ''
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           sarif_file: build/reports/osv/osv.sarif
           category: osv-scanner
 
       - name: Retain reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: osv-scan
           path: |
@@ -192,9 +191,45 @@ jobs:
             build/reports/cyclonedx/
           if-no-files-found: warn
 
-      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory/package pair
-      # and (exit 2) when the JSON report is missing or empty or the SBOM has fewer than the expected
-      # components, so a broken scan cannot pass silently. Stale baseline entries are only listed;
-      # add --strict-stale to fail on them too.
+      # Last, so the reports above are always uploaded. Fails (exit 1) on a new advisory/package/version
+      # and on a baseline triage whose `expires` date has passed, and (exit 2) when the JSON report is
+      # missing or empty, the SBOM has fewer than the expected components, or a triage is malformed, so a
+      # broken scan cannot pass silently. --strict-stale also fails on stale baseline entries.
       - name: Fail on advisories outside the baseline
-        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json
+        run: python scripts/check-osv-baseline.py --report build/reports/osv/osv.json --sbom build/reports/cyclonedx/bom.json --strict-stale
+
+  # Notice before the gate goes red: one open issue, created or refreshed weekly, lists baseline entries
+  # that expired or expire within 30 days (scripts/osv-expiry-report.py). It runs only on the schedule and
+  # is the only job in this workflow with `issues: write`.
+  osv-expiry-issue:
+    name: Open or update the OSV expiry issue
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the expiry report
+        run: python3 -I scripts/osv-expiry-report.py --output build/reports/osv/expiry.md
+      - name: Create or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: 'OSV baseline: triage entries expired or expiring within 30 days'
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+            --json number,title --jq "map(select(.title == env.TITLE)) | .[0].number // empty")"
+          if [ -f build/reports/osv/expiry.md ]; then
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --body-file build/reports/osv/expiry.md
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file build/reports/osv/expiry.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --reason completed \
+              --comment "No baseline entry expires within 30 days any more."
+          fi

@@ -7,6 +7,8 @@ import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.GeneralName
 import org.bouncycastle.asn1.x509.IssuerSerial
+import org.trustweave.signatures.revocation.CertificateRevocationEvaluator
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.xades.XadesValidationResult.Invalid
 import org.w3c.dom.Document
@@ -74,12 +76,18 @@ interface XadesVerifier {
  *   trust result is accepted only for a time-stamped signature that predates the withdrawal
  *   (or when `allowWithdrawnTrustWithoutAuthenticatedTime` is set).
  * - The chain built from `<ds:KeyInfo>` is checked structurally (validity window, `basicConstraints`,
- *   `pathLenConstraint`, `keyUsage`); revocation is NOT checked (`revocationChecked` is false).
+ *   `pathLenConstraint`, `keyUsage`). Revocation is evaluated only when
+ *   [XadesVerificationOptions.revocationPolicy] asks for it: CRLs and OCSP responses (embedded
+ *   `RevocationValues` plus caller-supplied evidence) are verified against the issuing CA, must be fresh
+ *   for the signature, and the signer and each CA below the trust anchor must be shown not revoked.
  * - `SigningTime` is read only from the signed `SignedSignatureProperties`. A malformed value is
- *   [Invalid.Malformed]. When it is missing, the certificate validity window is checked against
- *   the CURRENT time (so a signature by a since-expired certificate is rejected, and the result's
- *   `signingTime` is `null`); set [XadesVerificationOptions.requireSigningTime] to reject such
- *   signatures outright instead.
+ *   [Invalid.Malformed]. The certificate validity window (signer and CAs) is checked at the
+ *   AUTHENTICATED time (a trusted `SignatureTimeStamp`) and otherwise at the CURRENT time, never at the
+ *   claimed `SigningTime`, which a signer could back-date. A signature by a since-expired certificate
+ *   therefore needs a trusted time-stamp (or `allowExpiredCertificateAtSigningTime`); set
+ *   [XadesVerificationOptions.requireSigningTime] to reject signatures without a claimed time.
+ * - B-LT / B-LTA credit for embedded `RevocationValues` is given only to values covered by a verified
+ *   `ArchiveTimeStamp` (those before it); values appended after the last archive stamp earn none.
  * - Only `<ds:KeyInfo>` certificates that chain to the signer (issuer DN == subject DN and a valid
  *   signature) are passed to the [org.trustweave.signatures.trustlists.TrustAnchorResolver]; unrelated
  *   certificates are ignored. The trust result is handled by an exhaustive `when`, so a new
@@ -188,6 +196,8 @@ class DefaultXadesVerifier : XadesVerifier {
             val context = DOMValidateContext(FixedKeySelector(signerCert), signatureElement)
             context.setProperty("org.jcp.xml.dsig.secureValidation", true)
             context.setIdAttributeNS(signedProperties, null, "Id")
+            // Keep the dereferenced reference octets: an ArchiveTimeStamp covers them.
+            context.setProperty("javax.xml.crypto.dsig.cacheReference", true)
             val factory = XMLSignatureFactory.getInstance("DOM")
             val xmlSig: XMLSignature =
                 try {
@@ -211,10 +221,11 @@ class DefaultXadesVerifier : XadesVerifier {
             if (!signatureValid) {
                 return@withContext Invalid.BadSignature("XML-DSig validation failed")
             }
+            val referenceOctets = XadesArchiveTimestamps.referenceOctets(xmlSig)
 
             // 8. Signature time-stamp (B-T). Without one, SigningTime is the signer's own claim.
             val timestampRequired =
-                options.requireSignatureTimestamp || options.requiredProfile == XadesProfile.B_T
+                options.requireSignatureTimestamp || options.requiredProfile.atLeast(XadesProfile.B_T)
             val authenticatedTime: Instant? =
                 when (
                     val ts =
@@ -245,9 +256,25 @@ class DefaultXadesVerifier : XadesVerifier {
                             null
                         }
                 }
-            val effectiveTime: Instant = authenticatedTime ?: signingTime ?: Clock.System.now()
 
-            // 9. Cert validity at the (authenticated, else claimed, else current) time.
+            // 8b. Archive time-stamps (B-LTA). A present but bad or untrusted token fails, whatever the profile
+            //     required; one is only credited toward B-LTA (below) once B-LT is also proved.
+            val archiveOutcome =
+                XadesArchiveTimestamps.evaluate(
+                    qp,
+                    signatureElement,
+                    referenceOctets,
+                    options.timestampTrustAnchors,
+                    C14N_ALGORITHMS,
+                    authenticatedTime,
+                )
+            if (archiveOutcome is XadesArchiveTimestamps.Outcome.Invalid) {
+                return@withContext Invalid.TimeStampInvalid(archiveOutcome.reason)
+            }
+            // The claimed SigningTime is never used for validity windows: a signer could back-date it.
+            val effectiveTime: Instant = authenticatedTime ?: Clock.System.now()
+
+            // 9. Cert validity at the authenticated time, else the current time.
             if (!options.allowExpiredCertificateAtSigningTime) {
                 val notAfter = signerCert.notAfter.toInstant().toKotlinInstant()
                 val notBefore = signerCert.notBefore.toInstant().toKotlinInstant()
@@ -263,7 +290,7 @@ class DefaultXadesVerifier : XadesVerifier {
                 ?.let { return@withContext it }
 
             // 11. Trust anchor resolution.
-            val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts)
+            val trust = options.trustAnchorResolver.resolve(signerCert, chainCerts, authenticatedTime)
             // Exhaustive on purpose: a future TrustAnchorMatch subtype must be classified here
             // (accepted or refused) before this compiles, so it can never pass by default.
             when (trust) {
@@ -299,14 +326,86 @@ class DefaultXadesVerifier : XadesVerifier {
                 }
             }
 
+            // 12. Revocation (CRL / OCSP). Requesting B-LT implies REQUIRED: a long-term signature is only
+            //     as good as the validation data it proves.
+            val revocationPolicy =
+                if (options.requiredProfile.atLeast(XadesProfile.B_LT) && options.revocationPolicy == RevocationPolicy.NOT_CHECKED) {
+                    RevocationPolicy.REQUIRED
+                } else {
+                    options.revocationPolicy
+                }
+            val embeddedEvidence = XadesRevocationValues.embedded(qp)
+            val skewMillis = options.maxClockSkewSeconds * 1000
+            var revocationChecked = false
+            var embeddedCoversChain = false
+            if (revocationPolicy != RevocationPolicy.NOT_CHECKED) {
+                val now = Clock.System.now()
+                val statuses =
+                    CertificateRevocationEvaluator.evaluate(
+                        signer = signerCert,
+                        candidates = keyInfoCerts,
+                        issuerCertificates = options.revocationIssuerCertificates,
+                        evidence = options.revocationEvidence + embeddedEvidence,
+                        authenticatedTime = authenticatedTime,
+                        now = now,
+                        skewMillis = skewMillis,
+                    )
+                statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Revoked>().firstOrNull()?.let {
+                    return@withContext Invalid.CertificateRevoked(it.cert, it.at, it.reason)
+                }
+                val unavailable = statuses.filterIsInstance<CertificateRevocationEvaluator.Status.Unavailable>()
+                if (statuses.isEmpty() && revocationPolicy == RevocationPolicy.REQUIRED) {
+                    return@withContext Invalid.RevocationUnavailable(
+                        "no certificate below a trust anchor was available to check for revocation",
+                    )
+                }
+                if (unavailable.isNotEmpty() && revocationPolicy == RevocationPolicy.REQUIRED) {
+                    return@withContext Invalid.RevocationUnavailable(unavailable.joinToString("; ") { it.reason })
+                }
+                revocationChecked = unavailable.isEmpty() && statuses.isNotEmpty()
+                // B-LT: the evidence carried inside the signature must, on its own, cover the chain.
+                if (revocationChecked && authenticatedTime != null && !embeddedEvidence.isEmpty) {
+                    // With a verified archive time-stamp, only the values it covers (those before it) prove B-LT/B-LTA;
+                    // a RevocationValues appended after the last stamp is unauthenticated and earns no credit.
+                    val coveredEvidence =
+                        (archiveOutcome as? XadesArchiveTimestamps.Outcome.Valid)
+                            ?.let { XadesRevocationValues.embedded(qp, it.lastStamp) }
+                            ?: embeddedEvidence
+                    val own =
+                        CertificateRevocationEvaluator.evaluate(
+                            signer = signerCert,
+                            candidates = keyInfoCerts,
+                            issuerCertificates = options.revocationIssuerCertificates,
+                            evidence = coveredEvidence,
+                            authenticatedTime = authenticatedTime,
+                            now = now,
+                            skewMillis = skewMillis,
+                        )
+                    embeddedCoversChain = own.isNotEmpty() && own.all { it is CertificateRevocationEvaluator.Status.Good }
+                }
+            }
+
+            val archiveTime = (archiveOutcome as? XadesArchiveTimestamps.Outcome.Valid)?.genTime
+            val foundProfile =
+                when {
+                    authenticatedTime != null && embeddedCoversChain && archiveTime != null -> XadesProfile.B_LTA
+                    authenticatedTime != null && embeddedCoversChain -> XadesProfile.B_LT
+                    authenticatedTime != null -> XadesProfile.B_T
+                    else -> XadesProfile.B_B
+                }
+            if (!foundProfile.atLeast(options.requiredProfile)) {
+                return@withContext Invalid.WrongProfile(found = foundProfile, required = options.requiredProfile)
+            }
+
             XadesValidationResult.Valid(
                 signerCert = signerCert,
                 trust = trust,
                 signingTime = signingTime,
-                profile = if (authenticatedTime != null) XadesProfile.B_T else XadesProfile.B_B,
+                profile = foundProfile,
                 signingTimeAuthenticated = authenticatedTime != null,
                 signatureTimeStamp = authenticatedTime,
-                revocationChecked = false,
+                revocationChecked = revocationChecked,
+                archiveTimeStamp = archiveTime.takeIf { foundProfile == XadesProfile.B_LTA },
             )
         }
 
@@ -632,6 +731,5 @@ class DefaultXadesVerifier : XadesVerifier {
     }
 }
 
-// TODO(B-LT): revocation (CRL/OCSP) data is not evaluated; Valid.revocationChecked is always false.
 // TODO(detached): support detached XAdES — verify that external URIs resolve.
 // TODO(enveloping): support enveloping XAdES — verify the wrapped <ds:Object> reference.

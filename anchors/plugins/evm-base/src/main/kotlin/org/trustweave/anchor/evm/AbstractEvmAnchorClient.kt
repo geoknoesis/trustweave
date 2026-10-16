@@ -11,7 +11,9 @@ import kotlinx.serialization.json.Json
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.anchor.exceptions.TreasuryException
 import org.trustweave.anchor.payment.AssetRef
+import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.core.exception.TrustWeaveException
 import org.web3j.protocol.Web3j
@@ -21,6 +23,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Static, per-instance configuration of an EVM chain, resolved by the concrete
@@ -90,6 +93,12 @@ data class EvmChainConfig(
  * (default: accepted, with a once-per-client warning). Prefer `requireCanonicalEnvelope=true` for
  * deployments that never wrote legacy anchors.
  *
+ * **Chain identity.** The first RPC use (a submission or a read) calls `eth_chainId` once and requires it to
+ * equal [EvmChainConfig.numericChainId]; a mismatch or an unanswered call fails closed with
+ * [BlockchainException.ConfigurationFailed], so a misconfigured or hostile endpoint serving another network is
+ * never signed against or read from. **Gas.** The limit always covers the EIP-7623 calldata floor
+ * ([EvmGas.requiredGas]); see [deriveGasLimit].
+ *
  * Subclasses provide only chain identity (validation + [EvmChainConfig]) and any
  * chain-specific behavior (e.g. the Ethereum plugin's payment plane).
  *
@@ -103,6 +112,8 @@ data class EvmChainConfig(
  *   A client without credentials (verify-only) must set it, or explicitly opt in to
  *   `acceptAnySelfSend=true` ([OPTION_ACCEPT_ANY_SELF_SEND]); otherwise reads fail with a clear
  *   error, because any third party can self-send arbitrary calldata
+ * - `maxGasPrice` (wei, Number or String): ceiling for the node-quoted `eth_gasPrice`
+ *   ([OPTION_MAX_GAS_PRICE]); a higher quote fails the submission before anything is signed
  * - `expectedRecipient` (String): address every anchor this client reads must be sent to
  *   ([OPTION_EXPECTED_RECIPIENT]); unset means the anchor must be a self-send, the only
  *   shape [submitTransaction] produces
@@ -205,6 +216,7 @@ abstract class AbstractEvmAnchorClient(
 
     override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
         withContext(Dispatchers.IO) {
+            verifyChainIdOnce()
             val ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txHash).send()
             if (!ethGetTransactionReceipt.transactionReceipt.isPresent) {
                 throw TrustWeaveException.NotFound(resource = "Transaction receipt not found: $txHash")
@@ -351,16 +363,67 @@ abstract class AbstractEvmAnchorClient(
     /**
      * Gas limit for an anchor transaction carrying [data] as calldata, sent by [from].
      *
-     * Default strategy: an anchor is a data-carrying value transfer, so its cost is
-     * exactly the intrinsic calldata gas (+10% margin) — never a blanket multi-million
-     * default limit. Chains whose gas model charges more than the Ethereum intrinsic
-     * cost (Arbitrum Nitro, zkSync Era, …) override this with an
-     * `eth_estimateGas`-primary strategy built on [tryEstimateGas].
+     * Default strategy: `eth_estimateGas` (+10% margin) when the node answers, floored at
+     * [EvmGas.requiredGas] - the larger of the intrinsic calldata gas and the EIP-7623 calldata floor, below
+     * which a transaction is invalid whatever the node estimated. When estimation fails the limit is
+     * [EvmGas.txGasLimit] (required gas + 10%), never a blanket multi-million default. Chains whose gas
+     * model differs (Arbitrum Nitro, zkSync Era, ...) override this with their own strategy built on
+     * [tryEstimateGas].
      */
     protected open fun deriveGasLimit(
         data: ByteArray,
         from: String,
-    ): BigInteger = EvmGas.txGasLimit(data)
+    ): BigInteger {
+        val estimated = tryEstimateGas(data, from) ?: return EvmGas.txGasLimit(data)
+        return EvmGas.withMargin(estimated).max(EvmGas.requiredGas(data))
+    }
+
+    /**
+     * Calls `eth_chainId` once per client and requires the answer to equal [EvmChainConfig.numericChainId].
+     * A mismatch, or a node that does not answer, fails closed with [BlockchainException.ConfigurationFailed];
+     * only a successful check is remembered, so an unreachable node is asked again next time.
+     */
+    private fun verifyChainIdOnce() {
+        if (chainIdVerified.get()) return
+        val reported =
+            try {
+                val response = web3j.ethChainId().send()
+                if (response.hasError() || response.result == null) null else response.chainId
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+        if (reported == null) {
+            throw BlockchainException.ConfigurationFailed(
+                chainId = chainId,
+                configKey = "rpcUrl",
+                reason = "Could not verify eth_chainId on the configured ${chain.blockchainName} endpoint; refusing to use it unverified",
+            )
+        }
+        if (reported != BigInteger.valueOf(chain.numericChainId)) {
+            throw BlockchainException.ConfigurationFailed(
+                chainId = chainId,
+                configKey = "rpcUrl",
+                reason =
+                    "RPC endpoint reports chain id $reported but ${chain.blockchainName} ${chain.networkName} " +
+                        "is ${chain.numericChainId}; refusing to sign or read against another network",
+            )
+        }
+        chainIdVerified.set(true)
+    }
+
+    private val chainIdVerified = AtomicBoolean(false)
+
+    /** The `maxGasPrice` option in wei, or null when unset. */
+    private val maxGasPrice: BigInteger?
+        get() =
+            when (val v = options[OPTION_MAX_GAS_PRICE]) {
+                is BigInteger -> v
+                is Number -> BigInteger.valueOf(v.toLong())
+                is String -> v.trim().toBigIntegerOrNull()
+                else -> null
+            }?.also { require(it.signum() >= 0) { "$OPTION_MAX_GAS_PRICE must not be negative" } }
 
     /**
      * Asks the node how much gas the anchor transaction (a data-carrying self-send
@@ -400,7 +463,17 @@ abstract class AbstractEvmAnchorClient(
      *
      * @return the confirmed transaction receipt
      */
-    protected suspend fun submitTransaction(data: ByteArray): TransactionReceipt =
+    protected suspend fun submitTransaction(data: ByteArray): TransactionReceipt = submitTransaction(data, null)
+
+    /**
+     * As [submitTransaction], additionally enforcing [PaymentContext.maxFee] against the fee the signed
+     * transaction can actually cost (`gasLimit * gasPrice`, in wei): a transaction that could exceed the
+     * cap is never signed, and the failure is [TreasuryException.CallerCapExceeded].
+     */
+    protected suspend fun submitTransaction(
+        data: ByteArray,
+        paymentContext: PaymentContext?,
+    ): TransactionReceipt =
         withContext(Dispatchers.IO) {
             val creds =
                 credentials
@@ -410,7 +483,7 @@ abstract class AbstractEvmAnchorClient(
             // must not interleave with another submission from this client, or both would use the same
             // nonce and one anchor would replace (or be rejected as a duplicate of) the other. The lock
             // is released before the receipt wait, so successive anchors still overlap their confirmations.
-            val txHash = nonceMutex.withLock { sendWithFreshNonce(data, creds) }
+            val txHash = nonceMutex.withLock { sendWithFreshNonce(data, creds, paymentContext) }
             waitForReceipt(txHash, data.size.toLong())
         }
 
@@ -424,10 +497,23 @@ abstract class AbstractEvmAnchorClient(
     private fun sendWithFreshNonce(
         data: ByteArray,
         creds: org.web3j.crypto.Credentials,
+        paymentContext: PaymentContext?,
     ): String {
+        verifyChainIdOnce()
         var attempt = 0
         while (true) {
             val gasPrice = web3j.ethGasPrice().send().gasPrice
+            maxGasPrice?.let { cap ->
+                if (gasPrice > cap) {
+                    throw BlockchainException.TransactionFailed(
+                        chainId = chainId,
+                        txHash = null,
+                        operation = "submitTransaction",
+                        payloadSize = data.size.toLong(),
+                        reason = "Node gas price $gasPrice wei exceeds the configured '$OPTION_MAX_GAS_PRICE' of $cap wei",
+                    )
+                }
+            }
             // PENDING (not LATEST) so rapid successive anchors don't reuse a nonce.
             val nonce =
                 web3j
@@ -436,6 +522,7 @@ abstract class AbstractEvmAnchorClient(
                     .transactionCount
 
             val gasLimit = deriveGasLimit(data, creds.address)
+            requireWithinMaxFee(paymentContext, gasLimit.multiply(gasPrice))
             val rawTransaction =
                 org.web3j.crypto.RawTransaction.createTransaction(
                     nonce,
@@ -467,6 +554,28 @@ abstract class AbstractEvmAnchorClient(
                 payloadSize = data.size.toLong(),
                 gasUsed = gasLimit.toLong(),
                 reason = "Transaction failed: ${error?.message ?: "Unknown error"}",
+            )
+        }
+    }
+
+    /**
+     * Rejects a transaction whose maximum cost ([signedFee]: gas limit times gas price, in wei) exceeds the
+     * caller's [PaymentContext.maxFee]. Checked on the values about to be signed, not on an earlier estimate.
+     */
+    private fun requireWithinMaxFee(
+        paymentContext: PaymentContext?,
+        signedFee: BigInteger,
+    ) {
+        val cap = paymentContext?.maxFee ?: return
+        if (cap.asset != AssetRef.Native) {
+            throw IllegalArgumentException("maxFee must be denominated in the native asset for ${chain.blockchainName}, got ${cap.asset}")
+        }
+        if (signedFee > cap.amount) {
+            throw TreasuryException.CallerCapExceeded(
+                correlationId = paymentContext.correlationId,
+                chainId = chainId,
+                estimated = TokenAmount(chainId, AssetRef.Native, signedFee),
+                callerMax = cap,
             )
         }
     }
@@ -736,6 +845,12 @@ abstract class AbstractEvmAnchorClient(
          * will read it. 0 disables the check.
          */
         public const val OPTION_MIN_CONFIRMATIONS: String = "minConfirmations"
+
+        /**
+         * Ceiling, in wei, for the gas price quoted by `eth_gasPrice`. A higher quote fails the
+         * submission before anything is signed. Unset means no ceiling.
+         */
+        public const val OPTION_MAX_GAS_PRICE: String = "maxGasPrice"
 
         /**
          * Address (0x-hex) that must be the sender of every anchor read by this client. Set it to

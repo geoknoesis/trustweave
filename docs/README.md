@@ -13,7 +13,7 @@ title: TrustWeave
 **A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
 [![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
-[![License](https://img.shields.io/badge/license-Dual-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Dual-green.svg)](../LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-orange.svg)](https://kotlinlang.org)
 
 [Quick Start](#zap-quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)

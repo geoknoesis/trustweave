@@ -18,6 +18,7 @@ class Oidc4VciOfferExpiryTest {
         Oidc4VciIssuerService(
             baseUrl = "https://issuer.example",
             issuerDid = "did:key:z6MkTestIssuer",
+            supportedConfigurations = TEST_CONFIGURATIONS,
             offerTtlSeconds = offerTtlSeconds,
         )
 
@@ -85,6 +86,7 @@ class Oidc4VciOfferExpiryTest {
             Oidc4VciIssuerService(
                 baseUrl = "https://issuer.example",
                 issuerDid = "did:key:z6MkTestIssuer",
+                supportedConfigurations = TEST_CONFIGURATIONS,
                 tokenTtlSeconds = 0,
             )
         val offer = service.createOffer(listOf("UniversityDegree"))

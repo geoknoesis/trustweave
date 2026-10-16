@@ -96,7 +96,7 @@ class AwsS3WalletTest {
     }
 
     @Test
-    fun `store initializes metadata exactly once`() {
+    fun `re-store keeps the metadata record and its createdAt`() {
         runBlocking {
             val fake = FakeS3Client()
             val wallet = wallet(fake)
@@ -108,7 +108,9 @@ class AwsS3WalletTest {
             val firstMetadata = fake.objects[metadataKey]!!
 
             wallet.store(credential(id = credentialId))
-            assertTrue(firstMetadata.contentEquals(fake.objects[metadataKey]!!))
+            // updatedAt is refreshed on re-store; the record's identity and createdAt are preserved.
+            val created = { b: ByteArray -> Regex("\"createdAt\":\"[^\"]+\"").find(String(b))!!.value }
+            assertEquals(created(firstMetadata), created(fake.objects[metadataKey]!!))
         }
     }
 

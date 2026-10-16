@@ -184,7 +184,7 @@ object DidDocumentJsonProducer {
         when (value) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
-            is Number -> JsonPrimitive(value.toDouble())
+            is Number -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)
             is Map<*, *> -> mapToJsonObject(value as Map<String, Any?>)
             is List<*> -> JsonArray(value.map { anyToJsonElement(it) })

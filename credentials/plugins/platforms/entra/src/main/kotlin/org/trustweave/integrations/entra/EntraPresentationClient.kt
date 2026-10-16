@@ -18,7 +18,7 @@ import org.trustweave.core.net.readBodyBounded
 class EntraPresentationClient(
     private val config: EntraConfig,
     private val tokenClient: EntraTokenClient,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = defaultEntraHttpClient(),
 ) {
     private val json =
         Json {

@@ -177,7 +177,7 @@ internal class DefaultCredentialService(
         // list over HTTP and trust evaluation can query a registry, both at the direction of the
         // credential, so neither may run for a credential whose proof has not been established.
         val engineResult = engine.verify(credential, options)
-        if (engineResult is VerificationResult.Invalid) return engineResult
+        (engineResult as? VerificationResult.Invalid ?: requireSdJwtHolderBinding(credential, options))?.let { return it }
 
         // Revocation check (format-agnostic) with proper warning collection
         val revocationWarnings = mutableListOf<String>()

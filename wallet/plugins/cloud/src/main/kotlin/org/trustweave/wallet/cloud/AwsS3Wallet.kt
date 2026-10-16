@@ -40,7 +40,8 @@ class AwsS3Wallet(
     bucketName: String,
     basePath: String,
     private val s3Client: S3Client,
-) : CloudWallet(walletId, walletDid, holderDid, bucketName, basePath) {
+    encryptionKey: ByteArray? = null,
+) : CloudWallet(walletId, walletDid, holderDid, bucketName, basePath, encryptionKey) {
     override suspend fun upload(
         key: String,
         data: ByteArray,

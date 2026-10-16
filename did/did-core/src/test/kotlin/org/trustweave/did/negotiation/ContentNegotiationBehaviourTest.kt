@@ -148,4 +148,95 @@ class ContentNegotiationBehaviourTest {
                 service.deserializeDocument("""{"id":"not-a-did"}""".toByteArray(), DidMediaTypes.DID)
             }
         }
+
+    @Test
+    fun `a higher q-value beats server preference`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("application/did;q=0.5, application/json;q=0.9"),
+            )
+        }
+
+    @Test
+    fun `q=0 marks a type as not acceptable`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did;q=0, application/did+json"),
+            )
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("application/did;q=0.0", DidMediaTypes.JSON),
+            )
+        }
+
+    @Test
+    fun `equal q-values keep the server preference`() =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/json;q=0.8, application/did+ld+json;q=0.8"),
+            )
+        }
+
+    @Test
+    fun `a malformed q-value counts as one, an oversized one is clamped to one`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did+ld+json;q=0.5, application/did+json;q=abc"),
+            )
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/did+json;q=0.5, application/did+ld+json;q=5"),
+            )
+        }
+
+    @Test
+    fun `the q parameter is case insensitive and found among other parameters`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_LD_JSON,
+                service.negotiateContentType("application/did+json;Q=0.1, application/did+ld+json;profile=x;q=0.9"),
+            )
+        }
+
+    @Test
+    fun `empty list elements are ignored`(): Unit =
+        runTest {
+            assertEquals(DidMediaTypes.DID_JSON, service.negotiateContentType(", ,application/did+json"))
+        }
+
+    @Test
+    fun `several unsupported types at equal q-value keep a supported one first`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID,
+                service.negotiateContentType("image/png, text/html, application/did, text/plain", DidMediaTypes.JSON),
+            )
+            assertEquals(
+                DidMediaTypes.JSON,
+                service.negotiateContentType("image/png, text/html, text/plain", DidMediaTypes.JSON),
+            )
+        }
+
+    @Test
+    fun `an entry with only parameters or only a zero q is dropped`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType(";q=0.5, application/did+ld+json;q=0, application/did+json;q=0.1"),
+            )
+            assertEquals(DidMediaTypes.JSON, service.negotiateContentType(";q=0.5, ;q=0", DidMediaTypes.JSON))
+        }
+
+    @Test
+    fun `an empty q-value counts as one`(): Unit =
+        runTest {
+            assertEquals(
+                DidMediaTypes.DID_JSON,
+                service.negotiateContentType("application/did+ld+json;q=0.5, application/did+json;q="),
+            )
+        }
 }

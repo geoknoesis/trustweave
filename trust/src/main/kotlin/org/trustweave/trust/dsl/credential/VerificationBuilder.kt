@@ -45,6 +45,7 @@ class VerificationBuilder(
     private var trustPolicy: CredentialTrustPolicy? = null
     private var verifyPresentationProof: Boolean = true
     private var enforceHolderBinding: Boolean = false
+    private var requireHolderBinding: Boolean = false
     private var verifyChallenge: Boolean = false
     private var expectedChallenge: String? = null
     private var verifyDomain: Boolean = false
@@ -282,6 +283,14 @@ class VerificationBuilder(
     }
 
     /**
+     * Reject SD-JWT VC credentials that carry no issuer-signed `cnf` holder binding (opt-in, default off).
+     * Without this, a `cnf`-less SD-JWT credential is accepted as a bearer credential.
+     */
+    fun requireHolderBinding(value: Boolean) {
+        this.requireHolderBinding = value
+    }
+
+    /**
      * Require the presentation to include the given challenge value.
      * Sets verifyChallenge=true and stores the expected value.
      */
@@ -322,6 +331,7 @@ class VerificationBuilder(
                     schemaId = schemaId?.let { SchemaId(it) },
                     verifyPresentationProof = verifyPresentationProof,
                     enforceHolderBinding = enforceHolderBinding,
+                    requireHolderBinding = requireHolderBinding,
                     verifyChallenge = verifyChallenge,
                     expectedChallenge = expectedChallenge,
                     verifyDomain = verifyDomain,

@@ -199,4 +199,26 @@ class WalletOrganizeDslTest {
             }
         }
     }
+
+    @Test
+    fun `boolean failures from the wallet are reported as errors`(): Unit =
+        runBlocking {
+            val wallet = walletWith("a")
+
+            val result =
+                wallet.organize {
+                    collection("Mixed") {
+                        add("a", "missing")
+                        tag("missing", "x")
+                    }
+                    tag("missing", "y")
+                    untag("missing", "y")
+                    notes("missing", "n")
+                    metadata("missing") { "k" to "v" }
+                }
+
+            assertFalse(result.success)
+            assertEquals(1, result.collectionsCreated)
+            assertEquals(6, result.errors.size, result.errors.toString())
+        }
 }

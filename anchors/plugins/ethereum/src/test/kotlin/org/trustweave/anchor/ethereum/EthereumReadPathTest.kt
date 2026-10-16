@@ -33,7 +33,7 @@ class EthereumReadPathTest {
 
     @Test
     fun `mainnet reads a well-formed self-send anchor`() =
-        FakeEvmJsonRpcServer(txHash).use { rpc ->
+        FakeEvmJsonRpcServer(txHash, chainId = 1L).use { rpc ->
             EthereumBlockchainAnchorClient(
                 EthereumBlockchainAnchorClient.MAINNET,
                 mapOf(
@@ -48,7 +48,7 @@ class EthereumReadPathTest {
 
     @Test
     fun `mainnet rejects a reverted transaction`() {
-        FakeEvmJsonRpcServer(txHash, status = "0x0").use { rpc ->
+        FakeEvmJsonRpcServer(txHash, status = "0x0", chainId = 1L).use { rpc ->
             EthereumBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET, mapOf("rpcUrl" to rpc.url)).use { client ->
                 assertFails { runBlocking { client.readPayload(AnchorRef(EthereumBlockchainAnchorClient.MAINNET, txHash)) } }
             }
@@ -57,7 +57,7 @@ class EthereumReadPathTest {
 
     @Test
     fun `mainnet rejects an anchor not sent by the expected account`() {
-        FakeEvmJsonRpcServer(txHash).use { rpc ->
+        FakeEvmJsonRpcServer(txHash, chainId = 1L).use { rpc ->
             val options = mapOf("rpcUrl" to rpc.url, AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER to stranger)
             EthereumBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET, options).use { client ->
                 assertFails { runBlocking { client.readPayload(AnchorRef(EthereumBlockchainAnchorClient.MAINNET, txHash)) } }
@@ -67,7 +67,7 @@ class EthereumReadPathTest {
 
     @Test
     fun `mainnet rejects an anchor sent to another address`() =
-        FakeEvmJsonRpcServer(txHash, to = stranger).use { rpc ->
+        FakeEvmJsonRpcServer(txHash, to = stranger, chainId = 1L).use { rpc ->
             EthereumBlockchainAnchorClient(EthereumBlockchainAnchorClient.MAINNET, mapOf("rpcUrl" to rpc.url)).use { client ->
                 assertFails { runBlocking { client.readPayload(AnchorRef(EthereumBlockchainAnchorClient.MAINNET, txHash)) } }
                 assertTrue(

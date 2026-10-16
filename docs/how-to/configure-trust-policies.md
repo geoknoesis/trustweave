@@ -164,7 +164,8 @@ val result = trustWeave.verify {
 
 ### Pattern 4: Trust Registry Based
 
-Use trust registry to check for direct trust anchors or trust paths:
+Use a trust registry to check that the issuer is a trust anchor (for the credential's types; an anchor with a
+type restriction is not trusted for other types):
 
 ```kotlin
 import org.trustweave.trust.dsl.credential.DidMethods.KEY
@@ -183,17 +184,14 @@ trustWeave.verify {
     requireTrust(trustWeave.configuration.trustRegistry!!)
 }
 
-// Require trust path (max length 3)
-trustWeave.verify {
-    credential(credential)
-    requireTrustPath(trustWeave.configuration.trustRegistry!!, maxPathLength = 3)
-}
+// requireTrustPath(registry, maxPathLength) is deprecated: it never searched for a path and
+// ignored maxPathLength, so it was exactly requireTrust. Call registry.findTrustPath(...) yourself
+// if you need a path and enforce your own depth limit.
 ```
 
 **When to use:**
 - Web-of-trust systems
 - Decentralized trust relationships
-- Trust established through intermediary anchors
 
 ### Pattern 5: Custom Trust Policy
 
@@ -231,9 +229,6 @@ trustWeave.verify {
     
     // Option 1: Use trust registry
     requireTrust(trustRegistry)
-    
-    // Option 2: Require trust path
-    requireTrustPath(trustRegistry, maxPathLength = 3)
     
     // Option 3: Custom policy
     val policy = TrustEvaluator.allowlist(trustedIssuers)

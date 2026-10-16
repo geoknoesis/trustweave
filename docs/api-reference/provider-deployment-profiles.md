@@ -15,6 +15,15 @@ explicitly accepted experiment. The compatibility default is `LEGACY`. Builder
 configuration also carries this policy. Direct constructors and other domain
 providers still require their own deployment gate.
 
+**Cloud wallets (S3, Azure Blob, Google Cloud Storage) encrypt client-side only when you give them a key.** Without
+an `encryptionKey` they write credentials as plain JSON and depend on the provider's at-rest encryption (SSE / CMEK)
+and access policy. `CloudWalletFactory` accepts `WalletCreationOptions.encryptionKey` (or
+`additionalProperties["encryptionKey"]`) as the Base64 of exactly 32 bytes and then encrypts credentials and their
+metadata with AES-256-GCM (random IV, AAD binding wallet id, record kind and credential-id hash); any other length or
+invalid Base64 is rejected, never ignored. Existing plaintext objects stay readable (a read falls back to plaintext
+only for an object without the `TWCW` encryption header) and are encrypted when re-stored; an object with the header
+that fails authentication (tampered, wrong key, swapped) fails closed.
+
 The file factory honors `WalletCreationOptions.encryptionKey`, rejects conflicting
 typed/legacy keys and unsafe wallet IDs. Wallet IDs are limited to 1–128 ASCII
 letters, digits, underscores and hyphens; callers using other IDs must migrate

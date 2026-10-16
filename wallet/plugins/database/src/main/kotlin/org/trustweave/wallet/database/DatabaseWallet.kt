@@ -168,23 +168,21 @@ class DatabaseWallet(
                     // Dialect note: PostgreSQL uses ON CONFLICT … DO UPDATE (its MERGE support only
                     // arrived in PG 15 and has weaker concurrency guarantees); H2 does not parse
                     // ON CONFLICT at all (not even in MODE=PostgreSQL), so it gets a standard SQL
-                    // MERGE with identical semantics. Both variants update 0 rows when the id is
-                    // already owned by a different wallet, which the conflict check below relies on.
+                    // MERGE with identical semantics. Both variants key on (wallet_id, id).
                     val upsertSql =
                         if (isPostgreSql(conn)) {
                             """
                     INSERT INTO credentials (id, wallet_id, credential_data, archived)
                     VALUES (?, ?, ?, FALSE)
-                    ON CONFLICT (id) DO UPDATE
+                    ON CONFLICT (wallet_id, id) DO UPDATE
                         SET credential_data = EXCLUDED.credential_data
-                        WHERE credentials.wallet_id = EXCLUDED.wallet_id
                     """
                         } else {
                             """
                     MERGE INTO credentials c
                     USING (VALUES (?, ?, ?)) AS src(id, wallet_id, credential_data)
-                    ON c.id = src.id
-                    WHEN MATCHED AND c.wallet_id = src.wallet_id THEN
+                    ON c.id = src.id AND c.wallet_id = src.wallet_id
+                    WHEN MATCHED THEN
                         UPDATE SET credential_data = src.credential_data
                     WHEN NOT MATCHED THEN
                         INSERT (id, wallet_id, credential_data, archived)
@@ -199,15 +197,14 @@ class DatabaseWallet(
                             upsertStmt.executeUpdate()
                         }
 
-                    // If 0 rows were affected, the conditional update was skipped because the
-                    // existing row's wallet_id differs from ours — meaning the credential ID already
-                    // belongs to a different wallet. Fail immediately; a subsequent SELECT would
-                    // introduce a TOCTOU race and still produce an ambiguous result.
+                    // Rows are keyed by (wallet_id, id), so another wallet's credential with the same id
+                    // is a different row and never conflicts. The message deliberately says nothing
+                    // about other wallets' data.
                     if (upsertCount == 0) {
                         conn.rollback()
                         throw WalletException.StorageError(
                             operation = "store",
-                            reason = "Credential '$safeId' could not be stored: the credential ID may conflict with another wallet",
+                            reason = "Credential '$safeId' could not be stored",
                         )
                     }
 

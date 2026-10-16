@@ -2,6 +2,7 @@ public final class org/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient
 	public static final field BETANET Ljava/lang/String;
 	public static final field Companion Lorg/trustweave/anchor/algorand/AlgorandBlockchainAnchorClient$Companion;
 	public static final field MAINNET Ljava/lang/String;
+	public static final field OPTION_EXPECTED_SENDER Ljava/lang/String;
 	public static final field TESTNET Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/algorand/SponsorRegistry;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/algorand/SponsorRegistry;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

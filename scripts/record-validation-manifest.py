@@ -55,6 +55,9 @@ def collect(root, build_root, allow_dirty=False, coverage_report=None, skip_poli
     if not coverage.is_file():
         raise ValueError('Merged coverage is required')
     artifacts[coverage.relative_to(build_root).as_posix()]=hashlib.sha256(coverage.read_bytes()).hexdigest()
+    jars={}
+    for path in sorted(Path(build_root).glob('**/libs/*.jar')):
+        jars[path.relative_to(build_root).as_posix()]=hashlib.sha256(path.read_bytes()).hexdigest()
     sources={}
     names=subprocess.check_output(['git','-C',str(root),'ls-files','-z']).decode().split('\0')
     for name in names:
@@ -63,7 +66,7 @@ def collect(root, build_root, allow_dirty=False, coverage_report=None, skip_poli
             sources[name]=hashlib.sha256(path.read_bytes()).hexdigest()
     return dict(head=head,tree=git('rev-parse','HEAD^{tree}'),dirty=dirty,release_candidate=not dirty,
         github_run_id=os.environ.get('GITHUB_RUN_ID'),tests=totals,skipped=skipped,
-        source_sha256=sources,artifact_sha256=artifacts,
+        source_sha256=sources,artifact_sha256=artifacts,jar_sha256=jars,
         limits='Record after successful gates; hashes and XML do not independently prove execution freshness or provider qualification.')
 
 

@@ -36,6 +36,13 @@ class ManifestTest(unittest.TestCase):
         self.assertIn('source.kt',result['source_sha256'])
         self.assertEqual(1,result['tests']['tests'])
 
+    def test_released_jars_are_hashed_by_build_relative_path(self):
+        jar=self.build/'core/libs/core-1.0.jar'
+        jar.parent.mkdir(parents=True)
+        jar.write_bytes(b'jar')
+        result=manifest.collect(self.root,self.build)
+        self.assertEqual({'core/libs/core-1.0.jar':__import__('hashlib').sha256(b'jar').hexdigest()},result['jar_sha256'])
+
     def test_dirty_tree_cannot_be_claimed_as_release_candidate(self):
         (self.root/'source.kt').write_text('changed')
         with self.assertRaisesRegex(ValueError,'clean committed'):

@@ -178,4 +178,66 @@ class DidRegistrarRoutesTest {
             now = 61_000L
             assertEquals(HttpStatusCode.NotFound, client.get("/1.0/jobs/job-1") { header("Authorization", "Bearer $token") }.status)
         }
+
+    /** Records the thread each storage call runs on and can be told to fail. */
+    private class ProbeStorage(
+        private val delegate: InMemoryJobStorage = InMemoryJobStorage(),
+        private val failGet: Throwable? = null,
+    ) : org.trustweave.did.registrar.storage.JobStorage {
+        val threads = java.util.concurrent.CopyOnWriteArrayList<String>()
+
+        override fun store(
+            jobId: String,
+            response: org.trustweave.did.registrar.model.DidRegistrationResponse,
+        ) {
+            threads += Thread.currentThread().name
+            delegate.store(jobId, response)
+        }
+
+        override fun get(jobId: String): org.trustweave.did.registrar.model.DidRegistrationResponse? {
+            threads += Thread.currentThread().name
+            failGet?.let { throw it }
+            return delegate.get(jobId)
+        }
+
+        override fun remove(jobId: String) = delegate.remove(jobId)
+
+        override fun exists(jobId: String) = delegate.exists(jobId)
+    }
+
+    private fun ApplicationTestBuilder.probeApp(storage: ProbeStorage) {
+        application {
+            HostAuthentication.bearerToken(token).forRegistrar().install(this)
+            install(ContentNegotiation) { json(registrarJson()) }
+            val registrar = KmsBasedRegistrar(InMemoryKeyManagementService(), InMemoryJobStorage()) { _, kms -> DidKeyMockMethod(kms) }
+            routing { configureDidRegistrarRoutes(registrar, storage) }
+        }
+    }
+
+    @Test
+    fun `job lookups run off the request thread`() =
+        testApplication {
+            val storage = ProbeStorage()
+            probeApp(storage)
+            client.get("/1.0/jobs/x") { header("Authorization", "Bearer $token") }
+            assertTrue(storage.threads.isNotEmpty())
+            assertTrue(storage.threads.all { it.startsWith("DefaultDispatcher-worker") }, storage.threads.toString())
+        }
+
+    @Test
+    fun `an unknown job is 404`() =
+        testApplication {
+            probeApp(ProbeStorage())
+            assertEquals(HttpStatusCode.NotFound, client.get("/1.0/jobs/nope") { header("Authorization", "Bearer $token") }.status)
+        }
+
+    @Test
+    fun `a rejected job request is a 400 not a 404`() =
+        testApplication {
+            val bad =
+                org.trustweave.core.exception.TrustWeaveException
+                    .InvalidOperation(message = "bad jobId")
+            probeApp(ProbeStorage(failGet = bad))
+            assertEquals(HttpStatusCode.BadRequest, client.get("/1.0/jobs/x") { header("Authorization", "Bearer $token") }.status)
+        }
 }

@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @param txBlockHash block hash the TRANSACTION reports (the receipt always reports `0x11…11`); default is the receipt's
  * @param txBlockNumberHex block number the TRANSACTION reports; default is [blockNumberHex]
  * @param nonceReadDelayMs artificial server-side delay of `eth_getTransactionCount`
+ * @param chainId value answered to `eth_chainId` (default 1337); clients verify it against their configured chain
  */
 class FakeEvmJsonRpcServer
     @JvmOverloads
@@ -55,7 +56,20 @@ class FakeEvmJsonRpcServer
         private val txBlockHash: String? = null,
         private val txBlockNumberHex: String? = null,
         private val nonceReadDelayMs: Long = 0L,
+        private val chainId: Long = 1337L,
     ) : AutoCloseable {
+        /** Answer of `eth_gasPrice` (hex wei); settable per test. */
+        @Volatile
+        var gasPriceHex: String = "0x3b9aca00"
+
+        /** Answer of `eth_estimateGas` (hex gas); settable per test. */
+        @Volatile
+        var estimateGasHex: String = "0x5208"
+
+        /** When true `eth_estimateGas` answers a JSON-RPC error. */
+        @Volatile
+        var failEstimateGas: Boolean = false
+
         /** Every raw transaction (0x-hex) accepted by `eth_sendRawTransaction`, in arrival order. */
         val rawTransactions: MutableList<String> = CopyOnWriteArrayList()
 
@@ -109,8 +123,14 @@ class FakeEvmJsonRpcServer
         private fun respond(request: String): String {
             methods += method(request)
             when (method(request)) {
-                "eth_gasPrice" -> return """{"jsonrpc":"2.0","id":${requestId(request)},"result":"0x3b9aca00"}"""
-                "eth_estimateGas" -> return """{"jsonrpc":"2.0","id":${requestId(request)},"result":"0x5208"}"""
+                "eth_chainId" -> return """{"jsonrpc":"2.0","id":${requestId(request)},"result":"0x${chainId.toString(16)}"}"""
+                "eth_gasPrice" -> return """{"jsonrpc":"2.0","id":${requestId(request)},"result":"$gasPriceHex"}"""
+                "eth_estimateGas" ->
+                    return if (failEstimateGas) {
+                        """{"jsonrpc":"2.0","id":${requestId(request)},"error":{"code":-32000,"message":"execution reverted"}}"""
+                    } else {
+                        """{"jsonrpc":"2.0","id":${requestId(request)},"result":"$estimateGasHex"}"""
+                    }
                 "eth_getTransactionCount" -> {
                     val nonce = pendingNonce.get()
                     if (nonceReadDelayMs > 0) Thread.sleep(nonceReadDelayMs)

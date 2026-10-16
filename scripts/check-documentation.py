@@ -1,8 +1,8 @@
 """Check maintained Markdown links and source-backed examples; inventory all Kotlin blocks.
 
 This is not a Kotlin compiler or a hosted-provider validation. CI separately runs
-implemented local examples. Historical design/review material is inventoried but
-excluded from current-link failures. Generated documentation is not source input.
+implemented local examples. Historical design/review material is inventoried and its relative links are checked, but its
+imports and module paths are not. Generated documentation is not source input.
 """
 import argparse
 import json
@@ -66,6 +66,68 @@ def unresolved_import(target, packages):
     return True
 
 
+LINK = re.compile(r'\]\(<?([^\s)>]+)>?(?:\s+"[^"]*")?\)')
+REFERENCE = re.compile(r'^\[[^\]\n]+\]:\s*(\S+)', re.M)
+
+
+def prose_of(content):
+    """Markdown outside fenced blocks and inline code, so examples are not treated as live links."""
+    fence, lines = None, []
+    for line in content.splitlines():
+        match = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
+        if match:
+            marker, suffix = match.groups()
+            if fence is None:
+                fence = (marker[0], len(marker))
+            elif marker[0] == fence[0] and len(marker) >= fence[1] and not suffix.strip():
+                fence = None
+        elif fence is None:
+            lines.append(line)
+    return re.sub(r'`[^`\n]+`', '', '\n'.join(lines))
+
+
+def missing_links(path, relative, content, available):
+    """Relative Markdown links (including badge and image links) that do not resolve to a shipped file."""
+    problems = []
+    prose = prose_of(content)
+    for target in LINK.findall(prose) + REFERENCE.findall(prose):
+        target = target.strip('<>').split('#')[0].split('?')[0]
+        if not target or re.match(r'\w+:|//|/|\{', target):
+            continue
+        resolved = (path.parent / unquote(target)).resolve()
+        shipped = resolved in available or (resolved.is_dir() and any(resolved in item.parents for item in available))
+        if not resolved.exists() or not shipped:
+            problems.append(f'{relative}: missing relative link: {target}')
+    return problems
+
+
+def unknown_module_paths(relative, content, modules):
+    """Gradle project paths in include(...) lines, gradlew commands or inline code that settings.gradle.kts lacks.
+
+    A path is accepted when it is an included module or a parent of one (for example kms:plugins).
+    A trailing Gradle task name after a real module (did:did-core:test) is ignored. Only tokens whose
+    first two segments are a known path, or whose second segment is plugins/platforms, are checked, so
+    DID strings and placeholders such as did:key or did:method:identifier are not mistaken for modules.
+    """
+    if not modules:
+        return []
+    groups = {module.split(':')[0] for module in modules}
+    known = set(modules) | {':'.join(module.split(':')[:cut]) for module in modules for cut in range(1, len(module.split(':')))}
+    candidates = set(re.findall(r'^\s*include\(\s*"([^"]+)"', content, re.M))
+    candidates |= set(re.findall(r'gradlew\s+(?:--?\S+\s+)*:?([a-z][\w-]*(?::[a-z][\w-]*)*)', content))
+    candidates |= set(re.findall(r'`:?([a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)+)`', content))
+    problems = []
+    for token in sorted(candidates):
+        parts = token.lstrip(':').split(':')
+        if parts[0] not in groups or ':'.join(parts) in known:
+            continue
+        if ':'.join(parts[:-1]) in modules:  # <module>:<task>
+            continue
+        if parts[1] in {'plugins', 'platforms'} or (len(parts) >= 3 and ':'.join(parts[:2]) in known):
+            problems.append(f'{relative}: module path not in settings.gradle.kts: {token}')
+    return problems
+
+
 def inspect(root, require_contract=False):
     names = subprocess.check_output(
         ['git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']
@@ -99,8 +161,11 @@ def inspect(root, require_contract=False):
                 errors.append(f'{relative}: example source must be a shipped Kotlin file inside the repository: {match[1]}')
             elif not source.is_file() or source.read_text(encoding='utf-8-sig').strip() != match[2].strip():
                 errors.append(f'{relative}: source-backed example drift: {match[1]}')
+        errors.extend(missing_links(path, relative, content, available))
         if historical:
             continue
+        if relative.name != 'CHANGELOG.md':  # the changelog legitimately names removed modules
+            errors.extend(unknown_module_paths(relative, content, modules))
         if packages:
             for match in re.finditer(r'^```(?:kotlin|kts|java)[^\n]*\n(.*?)^```', content, re.M | re.S):
                 for target in documented_imports(match[1]):
@@ -111,12 +176,9 @@ def inspect(root, require_contract=False):
                 if module.lstrip(':') not in modules:
                     errors.append(f'{relative}: unknown Gradle module: {module}')
         fence = None
-        prose_lines = []
         for line_number, line in enumerate(content.splitlines(), 1):
             match = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
             if not match:
-                if fence is None:
-                    prose_lines.append(line)
                 continue
             marker, suffix = match.groups()
             if fence is None:
@@ -130,19 +192,6 @@ def inspect(root, require_contract=False):
                             r'IssuerIdentity\.from\(', r'All `?TrustWeave`? methods throw']:
                 if re.search(pattern, content):
                     errors.append(f'{relative}: obsolete API pattern {pattern}')
-        # Do not treat explanatory Markdown examples or inline code as actual links.
-        prose = '\n'.join(prose_lines)
-        prose = re.sub(r'`[^`\n]+`', '', prose)
-        targets = re.findall(r'\[[^\]\n]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)', prose)
-        targets += re.findall(r'^\[[^\]\n]+\]:\s*(\S+)', prose, re.M)
-        for target in targets:
-            target = target.strip('<>').split('#')[0].split('?')[0]
-            if not target or re.match(r'\w+:|//|/|\{', target):
-                continue
-            resolved = (path.parent / unquote(target)).resolve()
-            shipped = resolved in available or (resolved.is_dir() and any(resolved in item.parents for item in available))
-            if not resolved.exists() or not shipped:
-                errors.append(f'{relative}: missing relative link: {target}')
     contract_file = root / 'config/documentation-contract.json'
     if require_contract and not contract_file.is_file():
         errors.append('Missing required config/documentation-contract.json')

@@ -323,32 +323,32 @@ class MdocProofEngine(
             // Device authentication (ISO 18013-5 §9.1.3).
             verifyDeviceAuthentication(credential, doc, mso, options)?.let { return it }
 
-            // Revocation / suspension check
-            val effectiveChecker = statusChecker
-                ?: (config.properties["statusChecker"] as? CredentialStatusChecker)
-            if (effectiveChecker != null && credential.credentialStatus != null) {
-                when (val status = effectiveChecker.checkStatus(credential)) {
-                    is CredentialStatusCheckResult.Revoked -> return VerificationResult.Invalid.Revoked(
-                        credential = credential,
-                        revokedAt = null,
-                        errors = listOf("Credential has been revoked: ${status.reason ?: "no reason provided"}"),
-                    )
-                    is CredentialStatusCheckResult.Suspended -> return VerificationResult.Invalid.InvalidProof(
-                        credential = credential,
-                        reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
-                        errors = listOf("Credential suspended"),
-                    )
-                    is CredentialStatusCheckResult.CheckFailed -> { /* warn but don't fail */ }
-                    else -> {}
-                }
-            }
+            // Revocation / suspension check.
+            //
+            // A status that cannot be determined (a CheckFailed result, or a checker that throws) is
+            // not "probably fine": an attacker who can make the status endpoint unreachable would
+            // otherwise keep a revoked credential alive. It is therefore routed through the
+            // verifier's RevocationFailurePolicy, exactly as the SD-JWT and VC-LD engines do:
+            //  - FAIL_CLOSED (the default) rejects the credential,
+            //  - FAIL_WITH_WARNING accepts it and records a warning on the result,
+            //  - FAIL_OPEN accepts it, and only because the verifier chose that explicitly.
+            // Conclusive outcomes (valid, revoked, suspended) keep their typed results.
+            //
+            // The checker is the one passed to the constructor, else the "statusChecker" entry of the
+            // engine config; with neither (or a credential that carries no status entry) there is
+            // nothing to consult and this step is skipped, as before. Warnings produced by the
+            // policy are returned on the Valid result below, so a caller can see that the status
+            // was not actually confirmed. See checkRevocationStatus.
+            val statusWarnings = mutableListOf<String>()
+            checkRevocationStatus(credential, options, statusWarnings)?.let { return it }
 
             VerificationResult.Valid(
                 credential = credential,
                 issuerIri = credential.issuer.id,
                 subjectIri = credential.credentialSubject.id,
                 issuedAt = mso.validityInfo.signed,
-                expiresAt = mso.validityInfo.validUntil
+                expiresAt = mso.validityInfo.validUntil,
+                warnings = statusWarnings,
             )
         } catch (e: MdocException) {
             VerificationResult.Invalid.InvalidProof(
@@ -807,4 +807,39 @@ class MdocProofEngine(
             }
             else -> element.toString()
         }
+
+    /**
+     * Runs the status checker (the constructor one, else the `statusChecker` config property) and
+     * applies [VerificationOptions.revocationFailurePolicy] to an undeterminable status. Returns the
+     * result to reject with, or `null` to continue; policy warnings are appended to [warnings].
+     */
+    private suspend fun checkRevocationStatus(
+        credential: VerifiableCredential,
+        options: VerificationOptions,
+        warnings: MutableList<String>,
+    ): VerificationResult.Invalid? {
+        val checker = statusChecker ?: (config.properties["statusChecker"] as? CredentialStatusChecker)
+        if (checker == null || credential.credentialStatus == null) return null
+        val verdict =
+            org.trustweave.credential.status.StatusCheckPolicy
+                .evaluate(credential, checker, options.revocationFailurePolicy)
+        verdict.failure?.let { return it }
+        warnings += verdict.warnings
+        val status = verdict.status
+        if (status is CredentialStatusCheckResult.Revoked) {
+            return VerificationResult.Invalid.Revoked(
+                credential = credential,
+                revokedAt = null,
+                errors = listOf("Credential has been revoked: ${status.reason ?: "no reason provided"}"),
+            )
+        }
+        if (status is CredentialStatusCheckResult.Suspended) {
+            return VerificationResult.Invalid.InvalidProof(
+                credential = credential,
+                reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
+                errors = listOf("Credential suspended"),
+            )
+        }
+        return null
+    }
 }

@@ -14,6 +14,7 @@ import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.observability.HostAuthentication
 import org.trustweave.observability.HostKind
 import org.trustweave.observability.HostObservability
+import org.trustweave.observability.RequestBodyLimit
 
 /**
  * Standalone OID4VCI issuer server.
@@ -50,6 +51,8 @@ class Oidc4VciServer(
     private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
+    private var protocolRateLimit: Oidc4VciProtocolRateLimit? = Oidc4VciProtocolRateLimit()
+    private var maxRequestBytes: Long = RequestBodyLimit.DEFAULT_MAX_BYTES
 
     /** Configure tracing, protected metrics and optional admission limits before starting. */
     fun withObservability(configuration: HostObservability): Oidc4VciServer {
@@ -67,6 +70,29 @@ class Oidc4VciServer(
     fun withAuthentication(configuration: HostAuthentication): Oidc4VciServer {
         check(server == null) { "Configure authentication before starting the server" }
         authentication = configuration
+        return this
+    }
+
+    /**
+     * Replaces the per-caller budget on the protocol endpoints (`/token`, `/credential`,
+     * `/deferred_credential`, `/notification`), which the host authentication gate and its rate limit
+     * do not cover. On by default (120 requests per minute per caller per endpoint); pass `null` only
+     * when a fronting layer already limits them.
+     */
+    fun withProtocolRateLimit(limit: Oidc4VciProtocolRateLimit?): Oidc4VciServer {
+        check(server == null) { "Configure the protocol rate limit before starting the server" }
+        protocolRateLimit = limit
+        return this
+    }
+
+    /**
+     * Sets the largest request body, in bytes, this server accepts; anything larger is answered
+     * with 413 before it is parsed. Defaults to [RequestBodyLimit.DEFAULT_MAX_BYTES] (1 MiB).
+     */
+    fun withMaxRequestBytes(bytes: Long): Oidc4VciServer {
+        check(server == null) { "Configure the request limit before starting the server" }
+        require(bytes > 0) { "maxRequestBytes must be positive" }
+        maxRequestBytes = bytes
         return this
     }
 
@@ -88,6 +114,10 @@ class Oidc4VciServer(
         // refuse the administrative routes until the host states which of the two it means.
         authentication?.install(this, PROTOCOL_AUTHENTICATED_PATHS)
             ?: HostAuthentication.Unconfigured("The OID4VCI issuer server", PROTOCOL_AUTHENTICATED_PATHS).install(this)
+        // The protocol endpoints skip the host gate, so they carry their own budget.
+        protocolRateLimit?.install(this, PROTOCOL_AUTHENTICATED_PATHS)
+        // Bound the body before ContentNegotiation (or any handler) reads it.
+        RequestBodyLimit.install(this, maxRequestBytes)
         install(ContentNegotiation) {
             json(
                 Json {

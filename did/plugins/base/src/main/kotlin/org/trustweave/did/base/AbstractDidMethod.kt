@@ -211,6 +211,7 @@ abstract class AbstractDidMethod(
                             availableMethods = listOf(method),
                         )
                 val updatedDocument = updater(current)
+                requireSameDid(did, updatedDocument)
                 documents[didString] = updatedDocument
                 val now = Clock.System.now()
                 // A genuine Update operation, so §4.3 `updated` moves. Contrast storeDocument,
@@ -270,6 +271,72 @@ abstract class AbstractDidMethod(
             documentMetadata.remove(didString)
             lastFetched.remove(didString)
             removed
+        }
+    }
+
+    /**
+     * An update must leave the document about the same subject: `updater(doc).id` must equal [did].
+     * Otherwise a caller could file another subject's document under this DID (or this DID's under
+     * another).
+     *
+     * @throws TrustWeaveException.ValidationFailed if the ids differ
+     */
+    protected fun requireSameDid(
+        did: Did,
+        updated: DidDocument,
+    ) {
+        if (updated.id.value != did.value) {
+            throw TrustWeaveException.ValidationFailed(
+                field = "id",
+                reason = "An update may not change the document id: expected ${did.value}, got ${updated.id.value}",
+                value = updated.id.value,
+            )
+        }
+    }
+
+    /**
+     * For a self-certifying DID (the key material is part of the identifier) an update may change
+     * services and the like but never substitute keys: the verification methods and every
+     * verification relationship of [updated] must equal those of [current].
+     *
+     * @throws TrustWeaveException.ValidationFailed on any difference
+     */
+    protected fun requireKeysUnchanged(
+        current: DidDocument,
+        updated: DidDocument,
+    ) {
+        val unchanged =
+            current.verificationMethod == updated.verificationMethod &&
+                current.authentication == updated.authentication &&
+                current.assertionMethod == updated.assertionMethod &&
+                current.keyAgreement == updated.keyAgreement &&
+                current.capabilityInvocation == updated.capabilityInvocation &&
+                current.capabilityDelegation == updated.capabilityDelegation
+        if (!unchanged) {
+            throw TrustWeaveException.ValidationFailed(
+                field = "verificationMethod",
+                reason = "The keys of a self-certifying ${current.id.value} are fixed by its identifier and cannot be changed",
+                value = null,
+            )
+        }
+    }
+
+    /**
+     * Records [did] as deactivated (W3C DID Core §7.3) after the authoritative registry accepted the
+     * deactivation: keeps [document] and flags the §4.3 metadata, atomically under [updateMutex].
+     * From then on this instance resolves the DID as deactivated whatever a registry read returns.
+     */
+    protected suspend fun recordLocalDeactivation(
+        did: String,
+        document: DidDocument,
+    ) {
+        updateMutex.withLock {
+            val now = Clock.System.now()
+            documents[did] = document
+            documentMetadata[did] =
+                (documentMetadata[did] ?: DidDocumentMetadata(created = now))
+                    .copy(updated = now, deactivated = true)
+            lastFetched[did] = now
         }
     }
 

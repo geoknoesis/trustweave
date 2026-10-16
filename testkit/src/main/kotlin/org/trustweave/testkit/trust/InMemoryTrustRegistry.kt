@@ -11,7 +11,6 @@ import org.trustweave.trust.types.TrustPath
 import org.trustweave.trust.types.VerifierIdentity
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 /**
  * In-memory implementation of TrustRegistry for testing.
@@ -37,7 +36,10 @@ class InMemoryTrustRegistry : TrustRegistry {
     private val trustAnchors = ConcurrentHashMap<String, TrustAnchorMetadata>()
     private val trustGraph = ConcurrentHashMap<String, MutableSet<String>>() // DID -> Set of trusted DIDs
 
-    override suspend fun isTrustedIssuer(issuerDid: String, credentialType: String?): Boolean =
+    override suspend fun isTrustedIssuer(
+        issuerDid: String,
+        credentialType: String?,
+    ): Boolean =
         withContext(Dispatchers.Default) {
             val anchor = trustAnchors[issuerDid] ?: return@withContext false
 
@@ -52,7 +54,13 @@ class InMemoryTrustRegistry : TrustRegistry {
             true
         }
 
-    override suspend fun addTrustAnchor(anchorDid: String, metadata: TrustAnchorMetadata): Boolean =
+    override suspend fun isTrustedForAllTypes(issuerDid: String): Boolean =
+        trustAnchors[issuerDid]?.let { it.credentialTypes == null } ?: false
+
+    override suspend fun addTrustAnchor(
+        anchorDid: String,
+        metadata: TrustAnchorMetadata,
+    ): Boolean =
         withContext(Dispatchers.Default) {
             if (trustAnchors.containsKey(anchorDid)) {
                 return@withContext false
@@ -79,13 +87,13 @@ class InMemoryTrustRegistry : TrustRegistry {
 
     override suspend fun findTrustPath(
         from: VerifierIdentity,
-        to: IssuerIdentity
+        to: IssuerIdentity,
     ): TrustPath {
         val fromDid = from.did
         val toDid = to.did
         val fromDidStr = fromDid.value
         val toDidStr = toDid.value
-        
+
         // Direct trust check
         if (fromDidStr == toDidStr) {
             return TrustPath.Verified(
@@ -94,7 +102,7 @@ class InMemoryTrustRegistry : TrustRegistry {
                 anchors = emptyList(),
                 verified = true,
                 verifiedAt = Clock.System.now(),
-                trustScore = 1.0
+                trustScore = 1.0,
             )
         }
 
@@ -106,7 +114,7 @@ class InMemoryTrustRegistry : TrustRegistry {
             return TrustPath.NotFound(
                 from = from,
                 to = to,
-                reason = "Neither ${fromDidStr} nor ${toDidStr} are trust anchors"
+                reason = "Neither $fromDidStr nor $toDidStr are trust anchors",
             )
         }
 
@@ -117,7 +125,7 @@ class InMemoryTrustRegistry : TrustRegistry {
             return TrustPath.NotFound(
                 from = from,
                 to = to,
-                reason = "No trust path found between ${fromDidStr} and ${toDidStr}"
+                reason = "No trust path found between $fromDidStr and $toDidStr",
             )
         }
 
@@ -125,13 +133,14 @@ class InMemoryTrustRegistry : TrustRegistry {
         val trustScore = calculateTrustScore(path.size)
 
         // Convert path to TrustAnchor list (excluding endpoints)
-        val anchors = path.drop(1).dropLast(1).map { didString ->
-            val metadata = trustAnchors[didString] ?: TrustAnchorMetadata()
-            TrustAnchor(
-                did = Did(didString),
-                metadata = metadata
-            )
-        }
+        val anchors =
+            path.drop(1).dropLast(1).map { didString ->
+                val metadata = trustAnchors[didString] ?: TrustAnchorMetadata()
+                TrustAnchor(
+                    did = Did(didString),
+                    metadata = metadata,
+                )
+            }
 
         return TrustPath.Verified(
             from = from,
@@ -139,10 +148,9 @@ class InMemoryTrustRegistry : TrustRegistry {
             anchors = anchors,
             verified = true,
             verifiedAt = Clock.System.now(),
-            trustScore = trustScore
+            trustScore = trustScore,
         )
     }
-
 
     override suspend fun getTrustedIssuers(credentialType: String?): List<String> =
         withContext(Dispatchers.Default) {
@@ -153,14 +161,16 @@ class InMemoryTrustRegistry : TrustRegistry {
                     } else {
                         true
                     }
-                }
-                .map { it.key }
+                }.map { it.key }
         }
 
     /**
      * Finds a path between two DIDs using BFS.
      */
-    private fun findPathBFS(start: String, end: String): List<String> {
+    private fun findPathBFS(
+        start: String,
+        end: String,
+    ): List<String> {
         if (start == end) return listOf(start)
 
         val queue = ArrayDeque<List<String>>()
@@ -214,7 +224,10 @@ class InMemoryTrustRegistry : TrustRegistry {
      * Adds a trust relationship between two DIDs.
      * This allows building a trust graph beyond just self-trust.
      */
-    fun addTrustRelationship(fromDid: String, toDid: String) {
+    fun addTrustRelationship(
+        fromDid: String,
+        toDid: String,
+    ) {
         trustGraph.getOrPut(fromDid) { ConcurrentHashMap.newKeySet() }.add(toDid)
     }
 
@@ -227,4 +240,3 @@ class InMemoryTrustRegistry : TrustRegistry {
         trustGraph.clear()
     }
 }
-

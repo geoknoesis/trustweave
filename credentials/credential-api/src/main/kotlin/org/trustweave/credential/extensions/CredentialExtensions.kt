@@ -1,5 +1,6 @@
 package org.trustweave.credential.extensions
 
+import org.trustweave.credential.model.vc.TemporalValidity
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import kotlin.time.Clock
@@ -13,8 +14,9 @@ import kotlin.time.Instant
  *
  * Check if a credential is expired at the current time.
  *
- * A credential is considered expired if it has an expiration date and the current time
- * is after that expiration date.
+ * A credential is considered expired once the current time is after the earliest of its
+ * `expirationDate` (VC 1.1) and `validUntil` (VC 2.0). Temporal only: revocation and the proof
+ * are not considered.
  *
  * **Example:**
  * ```kotlin
@@ -23,9 +25,9 @@ import kotlin.time.Instant
  * }
  * ```
  *
- * @return True if the credential has an expiration date and it has passed, false otherwise
+ * @return True if the earliest of expirationDate/validUntil has passed, false otherwise
  */
-fun VerifiableCredential.isExpired(): Boolean = expirationDate?.let { Clock.System.now() > it } ?: false
+fun VerifiableCredential.isExpired(): Boolean = isExpiredAt(Clock.System.now())
 
 /**
  * Check if a credential is expired at a specific time.
@@ -39,15 +41,15 @@ fun VerifiableCredential.isExpired(): Boolean = expirationDate?.let { Clock.Syst
  * ```
  *
  * @param instant The instant to check expiration against
- * @return True if the credential has an expiration date and it is before the given instant
+ * @return True if the earliest of expirationDate/validUntil is before the given instant
  */
-fun VerifiableCredential.isExpiredAt(instant: Instant): Boolean = expirationDate?.let { instant > it } ?: false
+fun VerifiableCredential.isExpiredAt(instant: Instant): Boolean = temporalValidity(instant) == TemporalValidity.EXPIRED
 
 /**
- * Check if a credential is valid (not expired) at the current time.
+ * Check if a credential is within its validity period at the current time.
  *
- * A credential is valid if it has no expiration date or if the current time is before
- * the expiration date.
+ * Temporal only: honours expirationDate/validUntil (earliest wins) and validFrom/issuanceDate.
+ * It does not check revocation or the proof.
  *
  * **Example:**
  * ```kotlin
@@ -56,17 +58,18 @@ fun VerifiableCredential.isExpiredAt(instant: Instant): Boolean = expirationDate
  * }
  * ```
  *
- * @return True if the credential is not expired, false otherwise
+ * @return True if the credential is neither expired nor not yet valid
  */
-fun VerifiableCredential.isValid(): Boolean = !isExpired()
+fun VerifiableCredential.isValid(): Boolean = temporalValidity() == TemporalValidity.VALID
 
 /**
- * Check if a credential is valid (not expired) at a specific time.
+ * Check if a credential is within its validity period at a specific time (temporal only,
+ * see [isValid]).
  *
  * @param instant The instant to check validity against
- * @return True if the credential is not expired at the given instant
+ * @return True if the credential is neither expired nor not yet valid at the given instant
  */
-fun VerifiableCredential.isValidAt(instant: Instant): Boolean = !isExpiredAt(instant)
+fun VerifiableCredential.isValidAt(instant: Instant): Boolean = temporalValidity(instant) == TemporalValidity.VALID
 
 /**
  * Get all credential types as strings.

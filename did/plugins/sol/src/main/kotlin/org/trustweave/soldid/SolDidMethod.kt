@@ -41,6 +41,13 @@ import org.trustweave.kms.KeyManagementService
  * // Resolve DID
  * val result = method.resolveDid("did:sol:7xK...")
  * ```
+ *
+ * **Known limitation (read/write path):** [createDid], [updateDid] and [deactivateDid] write through
+ * the injected [BlockchainAnchorClient] (an anchored payload), whereas [resolveDid] reads the DID's own
+ * Solana account through [SolanaClient.getAccountData]. Nothing in this module copies an anchored
+ * document into that account, so a DID created here resolves only if a DID registry program has put
+ * its document into the account. Configure [SolDidConfig.programId] so that only accounts owned by that
+ * program are accepted.
  */
 class SolDidMethod(
     kms: KeyManagementService,
@@ -192,8 +199,19 @@ class SolDidMethod(
                     )
                 }
 
+                // storeDocument is a cache store: it keeps any deactivation this instance recorded.
+                // Local deactivation is authoritative (see AbstractBlockchainDidMethod), so a live
+                // on-chain read must not resurrect a DID this instance deactivated.
                 storeDocument(document.id.value, document)
-                DidMethodUtils.createSuccessResolutionResult(document, method)
+                val metadata = getDocumentMetadata(did)
+                DidMethodUtils.createSuccessResolutionResult(
+                    document,
+                    method,
+                    created = metadata?.created,
+                    updated = metadata?.updated,
+                    deactivated = metadata?.deactivated ?: false,
+                    retrieved = getLastFetched(did),
+                )
             } catch (e: org.trustweave.did.exception.DidException.InvalidDidFormat) {
                 DidMethodUtils.createErrorResolutionResult("invalidDid", e.message, method, did.value)
             } catch (e: IllegalArgumentException) {
@@ -230,6 +248,7 @@ class SolDidMethod(
                 // Apply updater (use explicit variable to avoid smart cast issue)
                 val doc = currentDocument
                 val updatedDocument = updater(doc)
+                requireSameDid(did, updatedDocument)
 
                 // Update on Solana
                 updateDocumentOnBlockchain(didString, updatedDocument)

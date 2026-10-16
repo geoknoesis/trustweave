@@ -53,6 +53,8 @@ fun main() =
 
 ## Installation
 
+> **Release status.** 0.7.0 is the version of this source tree. Artifacts reach Maven Central only when the `publish` job of `.github/workflows/release-evidence.yml` completes for a `v*` tag, and this repository does not record that it has; until you have confirmed the coordinates resolve from your repository, build from source with `./gradlew publishToMavenLocal` and add `mavenLocal()`.
+
 ```kotlin
 dependencies {
     implementation("org.trustweave:distribution-all:0.7.0")

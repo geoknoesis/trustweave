@@ -112,6 +112,7 @@ class PeerDidMethod(
                         method,
                         getDocumentMetadata(did)?.created,
                         getDocumentMetadata(did)?.updated,
+                        deactivated = getDocumentMetadata(did)?.deactivated ?: false,
                         retrieved = getLastFetched(did),
                     )
                 }
@@ -157,14 +158,34 @@ class PeerDidMethod(
                     else -> throw DidException.DidNotFound(did = did)
                 }
             val updatedDocument = updater(currentDocument)
+            requireSameDid(did, updatedDocument)
+            // Numalgo 0 and 2 are self-certifying: the keys (and, for numalgo 2, the services) are the
+            // identifier. An update cannot substitute them. Numalgo 1 commits only to its genesis
+            // document, so its later state is legitimately changeable.
+            if (extractNumalgo(did.value) != PeerDidConfig.NUMALGO_1) {
+                requireKeysUnchanged(currentDocument, updatedDocument)
+            }
             storeDocument(updatedDocument.id.value, updatedDocument)
             updatedDocument
         }
 
+    /**
+     * Deactivates a peer DID by recording the deactivation. Evicting the cache entry would not do: a
+     * numalgo 0 or 2 DID derives its document from its own identifier and would resolve live again.
+     *
+     * @return `true` if the DID was live and is now deactivated, `false` if it is unknown or already
+     *   deactivated
+     */
     override suspend fun deactivateDid(did: Did): Boolean =
         withContext(Dispatchers.IO) {
             validateDidFormat(did)
-            removeStoredDocument(did)
+            val current =
+                when (val result = resolveDid(did)) {
+                    is DidResolutionResult.Success -> result.document
+                    else -> return@withContext false
+                }
+            recordLocalDeactivation(did.value, current)
+            true
         }
 
     // ─── Numalgo implementations ────────────────────────────────────────────────

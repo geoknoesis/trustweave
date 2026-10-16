@@ -29,7 +29,7 @@ cases passed in Kotlin; eight reverse checks passed against the pinned reference
 No broader conformance claim is made.
 
 See the [HTML report](index.html), [validation evidence](validation.json),
-[baseline failures](before.xml) and [final build log](validation.log).
+[baseline failures](before.xml) and final build log (`validation.log`, not committed; `validation.json` records the result).
 The six-category score remains **8.7 / 10**. Current full-repository coverage,
 hosted CI/release, live custody, complete interoperability and production
 PITR/journal/pager qualification remain outside this run.

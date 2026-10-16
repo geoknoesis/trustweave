@@ -165,7 +165,7 @@ class EthereumBlockchainAnchorClient(
                 val creds =
                     credentials
                         ?: throw IllegalStateException("Credentials not configured. Provide 'privateKey' in options.")
-                val receipt = submitTransaction(submittedBytes)
+                val receipt = submitTransaction(submittedBytes, ctx)
                 val feePaid = computeActualFee(receipt)
 
                 AnchorResult(

@@ -90,6 +90,9 @@ class InMemoryAuthorizationStore
                 .toEpochMilli()
 
         override suspend fun admit(request: AdmissionRequest): Admission {
+            if (request.amount.signum() <= 0) {
+                return Admission.Refused(StatefulRejection.INVALID_AMOUNT, "amount must be greater than zero")
+            }
             if (request.retainUntil.isAfter(request.at.plus(retentionCeiling))) {
                 return Admission.Refused(
                     StatefulRejection.UNBOUNDED_LIFETIME,

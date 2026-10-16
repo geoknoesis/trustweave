@@ -28,7 +28,7 @@ Full detail in [`findings.json`](findings.json). Ten findings; one is high.
 
 ### T1 (high) — the AVP authorization server keeps security state in unbounded process memory
 
-`AuthorizationEngine` enforces replay prevention, single-use and daily spend caps through three plain `ConcurrentHashMap`s in [`Stores.kt`](../../../credentials/avp-authorization-server/src/main/kotlin/org/trustweave/credential/avpauth/state/Stores.kt) — 33 lines, no eviction, no persistence.
+`AuthorizationEngine` enforces replay prevention, single-use and daily spend caps through three plain `ConcurrentHashMap`s in `Stores.kt` (since replaced by the `AuthorizationStore` implementations under `credentials/avp-authorization-server/.../state/`) — 33 lines, no eviction, no persistence.
 
 Two separate failures follow:
 

@@ -26,7 +26,6 @@ import java.security.KeyPairGenerator
 import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
-import java.security.Security
 import java.security.Signature
 import java.security.SignatureException
 import java.security.interfaces.ECPublicKey
@@ -38,6 +37,11 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Native TrustWeave in-memory Key Management Service.
+ *
+ * **Constructor maps:** passing a `ConcurrentHashMap` shares it with the service (the caller sees
+ * later changes). Any other `MutableMap` is copied once at construction; the caller's original is
+ * then a stale snapshot. **BouncyCastle** is used through a private provider instance and is not
+ * registered globally with `java.security.Security`.
  *
  * This is a built-in, native TrustWeave implementation that uses Java's built-in cryptographic
  * providers for key generation, storage, and signing. It's designed for development, testing,
@@ -110,21 +114,20 @@ class InMemoryKeyManagementService(
     keyStore: MutableMap<KeyId, KeyPair> = ConcurrentHashMap(),
     keyMetadata: MutableMap<KeyId, Algorithm> = ConcurrentHashMap(),
 ) : KeyManagementService {
+    // A ConcurrentHashMap argument is used as-is (shared with the caller, so the caller's view stays
+    // live and consistent); any other map type is copied once, and later changes to the caller's
+    // original are NOT reflected. Pass a ConcurrentHashMap to share state.
     private val keyStore: ConcurrentHashMap<KeyId, KeyPair> =
         if (keyStore is ConcurrentHashMap<KeyId, KeyPair>) keyStore else ConcurrentHashMap(keyStore)
     private val keyMetadata: ConcurrentHashMap<KeyId, Algorithm> =
         if (keyMetadata is ConcurrentHashMap<KeyId, Algorithm>) keyMetadata else ConcurrentHashMap(keyMetadata)
 
     companion object {
-        init {
-            // Register BouncyCastle once per classloader. Security.addProvider is idempotent
-            // (returns -1 on duplicate) but we skip it here to avoid the duplicate-registration
-            // log warning. Cross-classloader races on the JVM Security provider list are
-            // outside our control.
-            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-                Security.addProvider(BouncyCastleProvider())
-            }
-        }
+        /**
+         * BouncyCastle provider used explicitly by this service. It is deliberately NOT registered
+         * with `java.security.Security`: loading this class must not change the JVM-wide provider list.
+         */
+        private val BC_PROVIDER = BouncyCastleProvider()
 
         /**
          * Algorithms supported by InMemoryKeyManagementService.
@@ -494,7 +497,7 @@ class InMemoryKeyManagementService(
                     } catch (e: InvalidAlgorithmParameterException) {
                         // Fall back to BouncyCastle provider for secp256k1
                         try {
-                            val bcGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
+                            val bcGenerator = KeyPairGenerator.getInstance("EC", BC_PROVIDER)
                             val bcSpec =
                                 ECNamedCurveTable.getParameterSpec("secp256k1")
                                     ?: throw InvalidAlgorithmParameterException("secp256k1 curve not found in BouncyCastle")
@@ -675,7 +678,7 @@ class InMemoryKeyManagementService(
                     // secp256k1: Try BouncyCastle first (most reliable), fall back to standard provider
                     val hashAlgorithm = "SHA256withECDSA"
                     try {
-                        val signer = Signature.getInstance(hashAlgorithm, BouncyCastleProvider.PROVIDER_NAME)
+                        val signer = Signature.getInstance(hashAlgorithm, BC_PROVIDER)
                         signer.initSign(privateKey)
                         signer.update(data)
                         signer.sign()

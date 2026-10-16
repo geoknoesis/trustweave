@@ -11,7 +11,417 @@ documentation review.
 **Read "Breaking and behaviour changes" before upgrading — it lists changes that make previously
 working code fail until it is adjusted.**
 
+### Release provenance
+
+- **Release hardening round 2.** `upload-to-central.py` now requires an `.asc` for every non-sidecar Maven file
+  (and rejects orphan or unlisted ones), can `gpg --verify` them (`--verify-signatures`; the workflow imports the
+  public key from the optional `TRUSTWEAVE_SIGNING_PUBLIC_KEY` variable), reads each file once and hashes and zips
+  the same bytes, refuses symlinks and absolute or `..` paths in `SHA256SUMS`, refuses checksum sidecars of
+  unlisted files, validates the returned deployment id, never follows redirects (the request carries the
+  credentials) and refuses plain http to a non-loopback host. `verify-staged-jars.py` now requires the staged
+  jar names to equal the evidence jar names minus `config/release-unpublished-jars.json`, the manifest head to
+  equal `GITHUB_SHA` and a clean tree, and derives its jar-count floor from the manifest (the `--min-jars 10`
+  guess is gone). The workflow re-verifies the `SHA256SUMS` attestation with `gh attestation verify` right before
+  the upload, runs `check-osv-baseline.py` as a new `osv-gate` job that `publish` needs, and `release-assets` now
+  creates a draft GitHub release. `check-osv-baseline.py` no longer lets a bare (group-less) baseline label cover a
+  finding that has a group; `osv-expiry-report.py` lists entries with an unreadable `expires` instead of
+  skipping them and exits 2 on an unreadable baseline.
+
+- **Provenance now covers the published files.** The release `publish` job builds and signs into a local
+  `build/release-staging` repository (the Central upload is separate and last, see "Release ordering fixed"), writes `SHA256SUMS` over every staged file
+  plus the aggregate CycloneDX SBOM, and attests all of them (and `SHA256SUMS`) with
+  `actions/attest-build-provenance`. A new `release-assets` job attaches `SHA256SUMS` and the SBOM to the GitHub
+  release. The earlier attestation of separately rebuilt JARs in the `evidence` job is removed, and that job no
+  longer holds `id-token`/`attestations` write. `SECURITY.md` ("Verifying a Release") shows `gh attestation verify`.
+
+- **Release ordering fixed.** The `publish` job now builds and signs once into `build/release-staging` (no Central
+  credentials), verifies every staged jar is byte-identical to the jar the evidence job validated
+  (`scripts/verify-staged-jars.py`, using the new `jar_sha256` section of `validation-manifest.json`), writes
+  `SHA256SUMS`, attests, and only as its last step uploads that directory to the Central Portal
+  (`scripts/upload-to-central.py`, `USER_MANAGED`, with `--dry-run`). Nothing reaches Central before the checksums
+  and attestations succeed, and the attested bytes are the uploaded bytes. The BOM now publishes to `releaseStaging`
+  too (it was missing). The Central HTTP exchange is unit-tested only up to request construction; a real tag run is
+  the proof.
+- **Tag must be on main.** The evidence job fails a `v*` tag whose commit is not an ancestor of `origin/main`.
+- **One contract-check list.** `scripts/run-contract-checks.sh` is run by both `ci.yml` and `release-evidence.yml`;
+  the release gate now also runs `check-telemetry-operations.py` and `check-workflow-evidence-paths.py`.
+- **OSV baseline.** Triage expiries are staggered (needs-review 1/8/15 Nov 2026, affected 10/17/24/31 Dec 2026,
+  none later than before); package matching uses `group:name` instead of the artifact name alone; the weekly run
+  opens or updates one issue for entries expiring within 30 days (`issues: write` on that job only).
+
 ### Breaking and behaviour changes
+
+- **Behaviour — KMS plugin alignment with the `KeyManagementService` contract.** Thales, Fortanix and IBM `sign`
+  resolve the key's own algorithm first and return `UnsupportedAlgorithm` for an incompatible request instead of
+  signing (Thales and Fortanix previously ignored the key). Thales now also sends `hashAlgorithm` sized to the key
+  (sha256/384/512). Key ids placed in URL paths (Thales, Fortanix, IBM, Vault) are rejected when they contain `..`,
+  `/` (IBM accepts it only inside a `crn:`), `\`, `?`, `#`, `%` or control characters. Fortanix and IBM refuse
+  plaintext `http` to a public host, as Thales and Vault already did.
+  **Vault:** RSA signing sends `signature_algorithm=pkcs1v15` (Transit defaulted to PSS) and a hash sized to the key
+  (RSA-3072 `sha2-384`, RSA-4096 `sha2-512`), so RSA-3072/4096 signature bytes change; `generateKey` returns
+  `DuplicateKeyId` instead of silently reusing an existing Transit key; `sign` on a missing key returns `KeyNotFound`;
+  the HTTP status is read from `VaultException.getHttpStatusCode()` (the old reflection looked up a field that does
+  not exist and fell back to matching words in the message).
+  **Azure:** `deleteKey` returns a `Failure` when the 60 s wait times out (the timeout was swallowed as
+  cancellation), and `sign` builds its cryptography client from `endpointOverride` when one is configured.
+  **Google:** EC and RSA keys are now sent an `AsymmetricSignRequest.digest` of the key algorithm's hash (pure
+  Ed25519 still sends `data`); new RSA-4096 keys use `RSA_SIGN_PKCS1_4096_SHA512` (existing `..._SHA256` keys still
+  read as RSA-4096 and sign with SHA-256; Google has no 3072-bit SHA-384 algorithm, so RSA-3072 stays on SHA-256);
+  the JWK `n`/`e` no longer carry a leading `0x00` and an Ed25519 `x` is the raw 32-byte key.
+  **PKCS#11 / CloudHSM:** `sign` derives the key's algorithm from its EC curve or RSA modulus, rejects an
+  incompatible requested algorithm, and with no algorithm picks the hash by key (P-384 `SHA384withECDSA`, RSA-3072
+  `SHA384withRSA`, ...); `generateKey` returns `DuplicateKeyId` rather than overwriting an existing label; a
+  provider name already registered for a different library or slot now fails with `Pkcs11Exception` instead of
+  silently reusing the other token; PIN arrays are zeroed after use.
+
+- **Behaviour (security) — SSRF guard, OID4VP/SIOP, DIDComm storage, Entra, PEX.**
+  `ssrfGuardedOkHttpClient()` now also checks every TCP connect (initial request and each redirect hop), so IP-literal
+  hosts (`127.0.0.1`, `169.254.169.254`, `10.x`, `[::1]`, `[::ffff:127.0.0.1]`) are refused, and it ignores system
+  proxies. OID4VP `request_uri` now follows the same https-or-loopback policy as `response_uri`; loopback means
+  `localhost` or a loopback IP literal only (`http://127.evil.com` is not loopback), also in SIOP and OID4VCI, which
+  no longer resolve DNS to decide. Protocol response bodies are read with a 1 MiB cap and responses are closed. The
+  SIOP `vp_token` now carries the presentation's `verifiableCredential` array, and `buildAuthorizationResponse`
+  rejects a `presentation_submission` whose paths do not index a credential in the presentation. Presentation
+  Exchange: JSONPath paths using the regex operator (`=~`) are not evaluated, quoted JSON strings are strings (a claim
+  `"42"` no longer satisfies `type: number`, `minimum`, `const: 42`), and numeric keywords against a non-number fail.
+  `EntraConfig.toString()` redacts the client secret, `tokenEndpointBaseUrl`/`apiBaseUrl` must be https (plain http
+  only to loopback), `tenantId` must be a GUID or domain label, and Entra exceptions no longer embed raw response or
+  serializer text (`RequestServiceError.responseBody` is a 256-char excerpt and is no longer in `context`).
+  `PostgresDidCommMessageStorage` with encryption no longer writes body, expiry, sender, recipients, thread ids or
+  type in plaintext: indexed columns hold a keyed blind index (`MessageEncryption.blindIndex`, new default method), so
+  rows written before this change are not found by DID/thread lookups until re-stored; a different sender can no
+  longer overwrite an existing message id (`IllegalStateException`). `AesMessageEncryption` now binds row id and key
+  version as GCM associated data (iv field is `0x01||nonce`); legacy rows still decrypt, but new rows must be read
+  through `decrypt(encrypted, messageId)`; the encrypted key-store file is version 2 (purpose AAD), version 1 files
+  still load. `PostgresFullTextSearch(dataSource, enableFullTextIndex = false)` disables the plaintext tsvector index;
+  its complex queries accept only allowlisted columns and never return encrypted rows.
+  `KeyRotationManager.rotateKey` is documented as NOT a complete rotation (see follow-ups); no behaviour change.
+- **Behaviour (security) — wallet storage isolation.** `CloudWalletFactory` now gives every wallet its own key
+  prefix, `<storagePath>/wallet-<percent-encoded walletId>/`, so two wallets with the same `storagePath` no
+  longer share credentials; slashes in `storagePath` are normalised, an empty bucket or container, empty path or
+  `.`/`..` segment is rejected. **Migration:** objects written by earlier versions sit under
+  `<storagePath>/{credentials,collections,metadata,tags}/` and are not visible to the new layout (the factory cannot
+  know which wallet owned them). Copy them under `<storagePath>/wallet-<walletId>/`, or pass
+  `additionalProperties["legacyLayout"] = true` for the single wallet that owns the path to keep the old prefix.
+  `WalletCreationOptions.encryptionKey` (typed, or `additionalProperties["encryptionKey"]`) now makes
+  `CloudWalletFactory` and `DatabaseWalletFactory` throw `IllegalArgumentException` instead of being silently
+  ignored (neither encrypts; use storage-side encryption or the `file` provider). `AzureBlobWallet` no longer
+  contacts Azure in its constructor (the container is created on first use), and a blob deleted between listing and
+  download is skipped in Azure and GCS like in S3.
+- **Behaviour (schema) — `DatabaseWallet` tables are keyed by `(wallet_id, id)`.** `credentials` and `collections`
+  now have the composite primary key, and `credential_collections`, `credential_tags` and `credential_metadata`
+  carry `wallet_id` with composite foreign keys. A `schema_version` table records version 2; existing databases are
+  migrated automatically and idempotently on first `DatabaseWallet.create` (copy into `*_v2` tables, drop the old,
+  rename; one transaction on PostgreSQL under an advisory lock, resumable on H2 whose DDL auto-commits; tag,
+  membership and metadata rows linking different wallets, only possible by hand-editing, are not carried over). Back up
+  before upgrading, and do not run old and new versions against one database. Two wallets can now store the same
+  credential id; the "may conflict with another wallet" `StorageError` (an existence oracle) is gone.
+- **Behaviour — EVM anchors.** Gas limits cover the EIP-7623 calldata floor (`21000 + 10 * (zeroBytes + 4 *
+  nonZeroBytes)`, i.e. 40 gas per non-zero byte): `EvmGas.txGasLimit`, `txGasLimitForSize` and the Arbitrum and
+  zkSync floors use the new `EvmGas.requiredGas` (max of intrinsic and floor), so limits and fee estimates for
+  payloads rise. The default `deriveGasLimit` now prefers `eth_estimateGas` (+10%) floored at that value, falling back to
+  `requiredGas` + 10%. New `maxGasPrice` option (wei) fails a submission when `eth_gasPrice` is higher.
+  `PaymentContext.maxFee` is enforced at send time against `gasLimit * gasPrice` of the transaction about to be
+  signed (`submitTransaction(data, paymentContext)`), and Algorand checks the fee of the transaction(s) actually
+  built. The first read or submission calls `eth_chainId` and fails closed with `ConfigurationFailed` when it differs
+  from the configured chain or is unanswered (`FakeEvmJsonRpcServer` gained a `chainId` parameter, default 1337).
+- **Behaviour — anchor reads.** Bitcoin reads require a block hash, a best-chain block listing the transaction and
+  `minConfirmations` (default 1); RPC errors while resolving the block are errors, not "unconfirmed"; optional
+  `expectedSender` requires every input to be funded by that address. Bitcoin writes list only confirmed outputs
+  (`minconf` 1), price at `estimatesmartfee` (`confirmationTarget`, `fallbackFeeRateSatPerVb`, `maxFeeRateSatPerVb`)
+  with a script-type-aware vsize, select inputs largest-first instead of spending all, and drop dust change; the flat
+  1000-sat fee is gone and a write fails when no rate is available. Algorand reads require `confirmed-round > 0`, no
+  pool error and a matching transaction id (a missing id is rejected; on the pending path the id is recomputed), and
+  honour an optional `expectedSender`. Cardano reads require the transaction to be in a block buried under
+  `minConfirmations` (default 1) and report that block's time (or `null`) instead of `System.currentTimeMillis()`.
+- **Behaviour (security) — AVP-Micro payments, token status lists and trust (`avp-micro`, `avp-authorization-server`,
+  `status-list:token`, `status-list:database`, `status-list:publishing`, `trust`, `credential-models-mp`).**
+  - `AvpMicro.verifyPayment` / `PaymentVerifier.verify` / `AuthorizationEngine` **fail closed without trust
+    configuration**: a valid signature only proved possession of the key named in the proof. They now require an
+    `IssuerTrustPolicy` (new parameter `issuerTrust`; engine constructor parameters `issuerTrust` and
+    `statusResolver`, appended so existing calls still compile). With none, every authorization is refused as
+    `ISSUER_NOT_TRUSTED`, so an engine built as `AuthorizationEngine()` (and so `AvpAuthorizationServer()` by default)
+    refuses all payments until a policy is supplied. The credential `issuer` must equal the DID that signed its proof
+    (`ISSUER_MISMATCH`), the authorization must be signed by the payer, who must be the credential subject
+    (`AUTHORIZATION_SIGNER_MISMATCH`), and credential, authorization and quote proofs must have
+    `proofPurpose: assertionMethod` (`PROOF_PURPOSE_INVALID`). The engine now also passes its `clockSkewSeconds`
+    to the stateless gate instead of the verifier default.
+  - A credential carrying `credentialStatus` is refused (`STATUS_UNVERIFIABLE`) when no `StatusResolver` is configured
+    or the resolver throws; before, the check was skipped. Amounts of zero or less are refused everywhere
+    (`INVALID_AMOUNT` in the verifier, `StatefulRejection.INVALID_AMOUNT` in `InMemoryAuthorizationStore` and
+    `PostgresAuthorizationStore`; `AuthorizationView` throws `NonPositiveAmountException`). New enum entries were added
+    to `VerificationFailure` and `StatefulRejection`; exhaustive `when` expressions over them need a branch.
+    `PostgresAuthorizationStore` now restores the pooled connection's autoCommit and isolation level.
+  - `TokenStatusListManager`: every write to a list's bit array or index counter now happens in one transaction under
+    `SELECT ... FOR UPDATE` on the list row (lost updates and duplicate index allocation are gone); batch updates and
+    `expandStatusList` are transactional; a unique index on `(status_list_id, entry_index)` is created (an existing
+    database that already holds duplicates logs an error and starts without it); an explicit index outside
+    `[0, size)` is an `IllegalArgumentException`, a full list refuses automatic allocation (`STATUS_LIST_FULL`), and
+    automatic allocation skips explicitly taken indices. The row's stored `bits_per_entry` is used instead of the
+    instance's. `DatabaseStatusListManager.updateCredentialStatus` rolls back when it declines an update.
+  - `LocalFileStatusListPublisher` accepts only identifiers of letters, digits, `.`, `_` and `-` (not starting with
+    `.`); anything else is an `IllegalArgumentException` for `publish`, `delete` and `getUrl`.
+  - `TrustRegistry` now extends the new `TypeAwareTrustEvaluator`, and credential verification passes the credential's
+    `type` entries to such an evaluator. `TrustRegistry.isTrusted(Did)` (the typeless `CredentialTrustPolicy` call) is
+    now true only for an anchor with no type restriction, via the new `isTrustedForAllTypes` (default `false`:
+    third-party registries must override it); with types, every non-base type must be permitted by the anchor.
+    `isTrustedIssuer(did, null)` keeps meaning "the anchor exists". `VerificationBuilder.requireTrustPath` is
+    deprecated: it never searched for a path and ignored `maxPathLength`; use `requireTrust`.
+- **Behaviour (security) — DID method plugins and registrar hardening (round 3).**
+  - `did:ion` `updateDid`/`recoverDid`/`deactivateDid` now check the Sidetree node's answer before touching
+    the key store and throw (`ION_UPDATE_REJECTED`, `ION_RECOVER_REJECTED`, `ION_DEACTIVATE_REJECTED`) when the
+    node rejects the operation; previously the update/recovery key was rotated (and the deactivated DID's keys
+    were dropped) even though the node had refused. `did:ion` and `did:orb` resolve a DID whose
+    `didDocumentMetadata.deactivated` is true as `Deactivated`.
+  - `did:sol` honours a locally recorded deactivation when the account still holds a live document, sends the
+    configured commitment with `getAccountInfo`, requires the account to be owned by `SolDidConfig.programId`
+    when one is set, bounds the RPC response (1 MiB) and account data (256 KiB), and closes every OkHttp
+    response. Its create/update path (anchor client) and resolve path (the DID's own account) remain different:
+    see the `SolDidMethod` KDoc.
+  - `did:ebsi` no longer serves its cache in place of a registry 404 or error (404 is `notFound`, an error is
+    `internalError`; only a locally recorded deactivation is still reported). `deactivateDid` without a bearer
+    token throws `EBSI_AUTH_REQUIRED` instead of evicting the cache and returning `true`; a successful
+    deactivation is recorded, so later reads resolve as `Deactivated`. A JSON-RPC `error` on HTTP 200 fails
+    create/update/deactivate, and response bodies are capped at 1 MiB. A `did:ebsi` created without a token is
+    not registered and so no longer resolves.
+  - `did:cheqd` revalidates a document that was only ever read from the Cheqd API on every resolve instead of
+    serving the cached copy indefinitely.
+  - `AbstractDidMethod.updateDid` (and the `did:ebsi`, `did:cheqd`, `did:sol`, `did:peer` and `did:jwk` updates)
+    reject an updater that changes the document `id` (`ValidationFailed`). `did:peer` numalgo 0/2 and `did:jwk`
+    reject an update that changes verification methods or relationships. `did:peer` `deactivateDid` records a
+    deactivation (it returns `true` only for a live DID) so the DID no longer re-derives a live document;
+    `did:jwk` does the same. `did:jwk` now follows `use`/`key_ops` (`enc` or key-agreement operations give
+    `keyAgreement` only, `sig` gives no `keyAgreement`; contradictory members are an invalid DID) and refuses a
+    key that is not a valid public key point.
+  - `GodiddyResolver.resolveDid` returns `InvalidFormat` for a string that is not a valid DID instead of placing
+    it in the request path. Ktor already drops `Authorization` on a cross-host redirect (covered by a test).
+  - `FileSidetreeKeyStore` creates its temp file atomically with owner-only permissions under a random name and
+    throws on a file system without POSIX permissions (for example Windows) instead of writing keys with
+    default permissions.
+  - `DidUrl.parameters` drops a parameter whose percent-escape is malformed (including a signed escape such as
+    `%+3`) or whose octets are not valid UTF-8, instead of keeping a literal or U+FFFD.
+  - Registrar servers (Ktor and Spring) and `KmsBasedRegistrar` strip `didState.secret` before a job is stored
+    (`JobStorage.track`, `DidRegistrationResponse.withoutSecrets`); the original caller still receives it. Job
+    ids are always generated by the server: a `jobId` returned by the registrar is no longer the storage key
+    and is replaced in the response. `KmsBasedRegistrar` failure reasons no longer include exception text.
+    Registrar jobs are not bound to a caller because authentication is a single shared credential; every
+    caller that can read jobs can read every job (ids are random UUIDs).
+  - `DatabaseJobStorage.cleanupCompletedJobs` works on PostgreSQL, MySQL and H2 and no longer deletes
+    unfinished jobs on H2; jobs now expire (1 h finished, 24 h unfinished, constructor parameters) and `store`
+    purges expired rows at most every 10 minutes. `tableName` must be a plain identifier.
+  - The Spring registrar bounds request bodies (`RegistrarRequestBodyLimit`, property
+    `trustweave.registrar.max-request-bytes`, default 1 MiB, answers 413).
+- **Behaviour (security) — DID, KMS and cloud-wallet hardening.** `did:web` now rejects any identifier segment
+  that is still percent-encoded after one decode (`%252e%252e`, `%252F`). A `did:key` with an off-curve or
+  wrong-length EC key (and `DidMethodUtils.parseMulticodecKey` for such input, which now returns `null`) fails
+  resolution as `invalidDid`, and resolved `did:key` documents are no longer retained in the in-memory cache.
+  Vault `sign` fails closed with `UnsupportedAlgorithm` for any key type it cannot map, reading key info once.
+  CyberArk `generateKey` fails (and removes the stored private key) when the metadata write is refused, and
+  `AlgorithmMapping.resolveKeyId` rejects `..`, `.`, empty segments and URL-significant characters. Azure signing now
+  passes the full key URL to `CryptographyClientBuilder.keyIdentifier` (a bare name is rejected by the SDK).
+  `ConfigCacheKey` uses an unambiguous typed, length-prefixed encoding, so cache keys change and list order is now
+  significant (sets and maps stay order-insensitive). `CloudWallet` reads, deletes and lists objects stored under
+  the pre-encoding raw keys, and `listRecords`/`list`/`getStatistics` skip objects that cannot be parsed
+  (`recoverRecords` still reports them). `CachingDidResolver` tracks invalidation per key stripe, so invalidating or
+  `noCache`-resolving one DID no longer suppresses cache writes for unrelated DIDs. `getSupportedMethods` on the
+  universal resolver ignores non-string entries instead of throwing or reporting `null` as a method.
+- **Behaviour (security) — signature-module follow-ups (`signatures:cades`, `etsi-validation`, `trust-lists`, `xades`).**
+  - CAdES: for an *encapsulated* CMS, a non-null `CadesVerificationOptions.detachedPayload` was silently ignored.
+    It must now be byte-identical to the embedded content, otherwise the result is
+    `Invalid.MissingDetachedPayload`. Pass `null` to verify the embedded content as before.
+  - CAdES: embedded revocation data (`revocationValues`, `SignedData.crls`) is now read only when revocation is
+    evaluated (policy other than `NOT_CHECKED`, or `B_LT` requested). Junk in those unsigned fields no longer fails
+    a valid B-B signature that does not use them; with a revocation policy malformed data is still `Malformed`.
+  - `EtsiSignaturePolicy`: listing WITHDRAWN in `allowedTrustStatusUris` used to also accept an unauthenticated,
+    back-datable signing time for a withdrawn service. That now needs the new, separate
+    `allowWithdrawnTrustWithoutAuthenticatedTime = true` (default `false`); otherwise a trusted time-stamp
+    (`timestampTrustAnchors`) before the withdrawal is required. The constructor stays source- and
+    binary-compatible (`@JvmOverloads`); the data class gained a trailing property, so `copy`/`componentN` change.
+  - Trust lists: new optional `TrustListStateStore` (+ `InMemoryTrustListStateStore`) as the last parameter of
+    `VerifiedTrustListLoader`. With a store the loader records `(sequence, SHA-256)` per list, and rejects a lower
+    sequence and a *different* document at an equal sequence (`TrustListRejection.ROLLBACK`); the `previous*`
+    options keep working and are combined with the store. Without a store nothing changes.
+  - Trust-list and XAdES-archive XML handling is bounded: trust-list documents over 32 MiB or nested deeper than
+    200 elements are `Malformed` / `TrustListParseException` (previously a hostile deep document could end in a
+    `StackOverflowError`); the DOM walks are iterative. An archived XAdES unsigned property nested deeper than 200
+    elements is an invalid archive time-stamp.
+  - XAdES `SignatureTimeStamp` verification now reuses `TimeStampTokenVerifier` (same decision, reworded reasons).
+  - JAdES: the payload must still be JSON (documented limitation on `DefaultJadesVerifier`; not changed because the
+    result type carries a `JsonElement`).
+- **Behaviour (security) — SD-JWT-VC revocation is evaluated on the signed `credentialStatus`.**
+  `SdJwtProofEngine.verify` reads `vc.credentialStatus` from the issuer-signed JWT, rejects an envelope
+  `credentialStatus` that differs from it (an absent envelope value is allowed), and runs the status check on the signed
+  value; `VerificationResult.Valid.credential` now carries that signed status, and `DefaultCredentialService` runs its
+  revocation check on `Valid.credential`. Stripping or repointing the unsigned envelope no longer hides a revoked
+  credential.
+- **Behaviour (security) — DID client_ids need a signed request object (`oidc4vp`, `siop`).** An unsigned request
+  (plain JSON from `request_uri`, or bare URL parameters) whose `client_id` is a DID or whose scheme is `did` is
+  refused (`Oidc4VpException.AuthorizationRequestFetchFailed` / `UrlParseFailed`, `SiopV2Exception` code
+  `UNSIGNED_REQUEST_OBJECT`; SIOP's model also defaults an absent scheme to `did`). `submitPermissionResponse` and
+  `SiopV2Service.submitResponse` refuse a `response_uri` that is not https (plain http only for loopback)
+  (`INSECURE_RESPONSE_URI` for SIOP).
+- **Behaviour — OID4VCI issuer (`oidc4vci-server`).** A credential is now issued for one configuration of the offer
+  (named by `credential_configuration_id`, else the first of the request's types still open, else the next in offer
+  order) instead of every configuration in each credential; `Oidc4VciIssuerService.issueCredential` has an overload taking
+  `credentialConfigurationId`, and `TokenEntry` gained `remainingConfigurations` (constructor/`copy` signature changed;
+  the 4- and 5-argument constructors remain). A failed credential build gives the consumed `c_nonce` back so the wallet
+  can retry with the nonce it holds; malformed proof JWT members (array `aud`, object `alg`, ...) are `invalid_proof`
+  rather than a 500. `Oidc4VciProtocolRateLimit` sweeps expired windows at most once per tenth of a window and spreads
+  overflow callers over 64 hashed buckets per endpoint instead of one shared window.
+- **Behaviour (security) — DIDComm replay ids are scoped by the authenticated sender.** `DidCommService` and
+  `DatabaseDidCommService` key replay state on the sender the unpacking step authenticated (authcrypt sender or verified
+  signer), not the attacker-controlled `from` header; messages with no authenticated sender share one bounded bucket and
+  are remembered for ten minutes at most. Custom `DidCommReplayStore`s now see the scope `unauthenticated` for such
+  messages.
+- **Behaviour (security) — SD-JWT key binding.** The default maximum KB-JWT age is now 2 minutes (was 10; the
+  verifier's clock-skew tolerance is still added; override with `kbJwtMaxAge`). Presentations whose KB-JWT `sd_hash`
+  does not cover the credential's `disclosures` are rejected, as are additional SD-JWT credentials without an
+  issuer-signed `cnf` (the KB-JWT only covers the first credential).
+- **Behaviour — remote status lists.** `RemoteStatusListResolver` stops serving a cached list at the credential's
+  `validUntil`/`expirationDate`, and one host may hold at most an eighth of the cache (and of the failure cache).
+
+- **Behaviour (security) — trust-list signature verification is stricter (`signatures:trust-lists`).**
+  `DefaultLotlSignatureVerifier` now requires exactly one `ds:Signature` (a direct child of the document
+  element), exactly one whole-document `URI=""` reference with the enveloped-signature transform plus at most one
+  `xades:SignedProperties` reference, and no duplicate `Id`/`ID`/`id`; a signature covering only a fragment is
+  rejected as `Malformed`. The signer certificate must be valid at validation time (new
+  `Invalid.SignerCertificateNotValid`, which also reports a `SigningTime` in the future; add a branch if you
+  `when` over `LotlSignatureValidationResult` exhaustively), and the PKIX fallback uses the intermediates carried in
+  `ds:KeyInfo`. `DefaultLotlSignatureVerifier(clock)` is optional (`@JvmOverloads`). `EtsiTrustListParser` now
+  matches the ETSI namespace and the `TrustServiceStatusList` root instead of local names only. `TrustList` and
+  `MemberStateTsl` gained trailing defaulted properties (`tslPointers`, `nextUpdateAt`, `schemeTerritory`), so the
+  old `copy(...)` signatures are gone. New: `DefaultTslSignatureVerifier` and `VerifiedTrustListLoader`, which
+  verifies the LoTL and every TSL against the certificates of its LoTL pointer, enforces `NextUpdate` and
+  sequence-number rollback protection, and accepts stale lists only with `TrustListLoadOptions(allowStale = true)`.
+- **Behaviour — `CyberArkKeyManagementService.sign` hashes RSA-3072/4096 with SHA-384/SHA-512** like the
+  in-memory KMS; these keys previously signed with SHA-256. Signatures are still valid RSA signatures but differ
+  from earlier output, so a verifier that pinned SHA-256 for these keys must accept the new digest, and any
+  stored expectation of the old signature bytes or JWS `alg` must be regenerated.
+- **Behaviour — `CloudWallet` percent-encodes credential ids into one object-key segment.** Ids made of letters,
+  digits and `-_.~:` keep their keys; ids containing `/`, `%`, spaces and similar characters move to encoded
+  keys. Objects already stored under the old raw key remain readable and deletable: `get` and `delete` fall back to
+  the raw key on a miss (refused for ids with `.`/`..` segments, backslashes or control characters), but new writes use
+  the encoded key, so re-store such objects to migrate them.
+- **BREAKING (security) — ETSI verifier hardening (XAdES, CAdES, JAdES, `etsi-validation`).**
+  - XAdES: embedded `RevocationValues` earn B-LT/B-LTA credit only when a verified `ArchiveTimeStamp` covers them
+    (they precede it); values appended after the last archive stamp no longer grant B-LTA.
+  - CAdES: the signed `signing-certificate-v2` / `signing-certificate` attribute is now required and must match the
+    chosen signer certificate (digest and issuer/serial, EN 319 122-1 5.2.2); an absent attribute is `Malformed`, a
+    mismatch is `BadSignature`. Signatures made without it are no longer accepted.
+  - XAdES, CAdES and JAdES judge the signer certificate's validity window at the authenticated time (trusted
+    time-stamp) else now, never at the claimed `SigningTime` / `signing-time` / `sigT`; CAdES no longer skips the
+    check when `signing-time` is absent. A since-expired certificate therefore needs a trusted time-stamp (or
+    `allowExpiredCertificateAtSigningTime`). A not-yet-valid CAdES/JAdES signer certificate is reported as
+    `SignerCertificateInvalid`.
+  - JAdES: an `arcTst` is never credited as B-LTA (the EN 319 182-1 5.3.6 imprint is not implemented and the
+    signer's private imprint is not the standard one), so `DefaultJadesVerifier` reports at most B-LT and
+    `archivalTimeStamp` is always null; every `arcTst` token is checked, not only the first.
+  - `etsi-validation`: the step outcomes over JAdES results are exhaustive `when`s with no fail-open `else`.
+
+- **BREAKING (security) — VC API `POST /presentations/verify` enforces holder binding and one-time challenges.**
+  The route now sets `enforceHolderBinding` (credential subjects must be the presentation holder and the proof key
+  must belong to the holder) and requires `options.challenge` to be a challenge this server issued with the new
+  `POST /presentations/challenge`; the challenge is consumed by the verification, so a signed presentation cannot be
+  replayed. A missing, unknown, expired or already-used challenge answers `200 {"verified": false}` without
+  verifying. `VcApiVerificationPolicy` (`VcApiServer.withVerificationPolicy`, or the new third parameter of
+  `configureVcApiRoutes`) relaxes it: `enforceHolderBinding = false`, `requireChallenge = false`, or
+  `challengeStore = null` to restore caller-chosen challenges. `InMemoryVcApiChallengeStore` is bounded (10,000
+  challenges, 5 minute TTL by default) and per process; implement `VcApiChallengeStore` to share it across instances.
+- **BREAKING (security) — OID4VCI access tokens are limited and offers are validated.** An access token obtains at
+  most as many credentials as its offer has `credentialTypes` (`TokenEntry.remainingCredentials`; the next request
+  is `400 invalid_request`). `createOffer` / `POST /api/offer` now reject an empty `credentialTypes`, a type that
+  is not a key of `supportedConfigurations` (an issuer that advertises no configurations can no longer mint
+  offers), and a `txCode` without `txCodeValue` or the reverse; the route answers `400 invalid_request`. `/token`,
+  `/credential`, `/deferred_credential` and `/notification` get their own per-caller, per-endpoint rate limit
+  (`Oidc4VciProtocolRateLimit`, 120 requests per minute by default; `Oidc4VciServer.withProtocolRateLimit(null)` to
+  disable it behind a proxy that limits already). `TokenEntry` gained a field, so its 4-argument `copy` is gone.
+- Wrong-typed fields on `/credential`, `/deferred_credential`, `/notification` and `/token` now answer
+  `400 invalid_request` instead of 500. `/token` answers `invalid_grant` with no description for an unknown, expired
+  or used code and for a wrong `tx_code`, and an unknown and an expired access token share one message.
+- **`DefaultCredentialService.verify` verifies the proof before anything is fetched.** Revocation (status-list
+  fetches) and trust evaluation now run after the proof engine accepts the credential, so an unverified credential
+  cannot make the service call out. A credential that is both revoked and badly signed now reports the proof failure.
+- **Status lists.** `RemoteStatusListResolver.DEFAULT_MAX_DECODED_BYTES` drops from 16 MiB to 2 MiB (16,777,216
+  entries) and a new `maxCacheBytes` (default 32 MiB) bounds the decoded bytes cached across lists. The status-list
+  server answers with `Cache-Control: public, max-age=60` and an `ETag` (`If-None-Match` gives 304;
+  `cacheMaxAge` on `configureStatusListRoutes`), and `BitstringStatusListManager.buildStatusListVc` reuses the
+  signed credential until the list changes or `signedStatusListCacheTtl` (5 minutes) passes instead of re-signing
+  and rewriting it on every request.
+- **BREAKING (security) — the OID4VCI issuer no longer emits unsigned credentials.**
+  `Oidc4VciIssuerService` takes an `Oidc4VciCredentialBuilder` (`credentialBuilder`); without one every
+  credential request is refused with `unsupported_credential_format`, and so is any format the builder does not
+  list in `supportedFormats` (the requested `format` is no longer echoed back). `CredentialServiceCredentialBuilder`
+  signs through a `CredentialService`/KMS (`ldp_vc` by default; map further formats with `formats`).
+  `issueCredential` is now `suspend`, `createOffer` / `POST /api/offer` accept `claims`, which are carried into
+  `credentialSubject`, and the proof JWT's `typ` header must be `openid4vci-proof+jwt` (previously only checked when
+  present). `registerDeferredCredential` takes an optional `ownerAccessToken`; a credential registered with one can
+  only be collected with that access token (`Oidc4VciIssuerStateStore.consumeDeferredOwnedBy`).
+  `credential-api` and `did-core` are now `api` dependencies of the module.
+- **BREAKING (security) — embedded servers refuse oversized request bodies.** `vc-api-server`, `oidc4vci-server`,
+  `trust-registry-server` and `registrar-server-ktor` answer `413` for a body over 1 MiB (declared `Content-Length`
+  or, for chunked requests, the bounded read), before `ContentNegotiation` parses it. Raise or lower it with
+  `withMaxRequestBytes(...)`; the shared guard is `org.trustweave.observability.RequestBodyLimit`.
+- **VC API `verified: true` is explicit about trust.** The verify endpoints accept an optional `TrustEvaluator`
+  (`VcApiServer.withTrustEvaluator`); every response carries a `trust:evaluated` or `trust:not-evaluated` check and,
+  in the latter case, a warning, because without an evaluator `verified` covers the proof and enabled checks only.
+  Error responses carry a fixed message instead of the exception text (details are logged), and
+  `/presentations/prove` answers `400` when any listed credential cannot be parsed instead of dropping it.
+- **BREAKING (security) — trust registry host gates must cover writes.** `TrustRegistryServer` only stands its
+  `apiToken` check down when the `HostAuthentication` gate covers every mutating method
+  (`HostAuthentication.coversMutations()`); a gate that protects only `GET` no longer authorizes `POST`/`PUT`.
+  `apiToken` must be at least 32 characters, as for `HostAuthentication.bearerToken`.
+- **BREAKING (security) — mDoc status checks follow `RevocationFailurePolicy`.** `MdocProofEngine` treated
+  `CheckFailed` as success; it now fails closed by default like the SD-JWT and VC-LD engines (new public
+  `org.trustweave.credential.status.StatusCheckPolicy` for engines outside `credential-api`).
+- **DIDComm replay ids are scoped to the sender and bounded per sender.** `DidCommReplayStore` gains a
+  `recordIfAbsent(sender, ...)` overload (default: key on sender and id); `InMemoryDidCommReplayStore` takes
+  `maxPerSender` (default 10,000) and refuses a sender's new messages past it, so one sender can neither fill the
+  store nor make another sender's reused id look like a replay.
+- **BREAKING (security) — JAdES time-stamps are only trusted against configured TSA anchors.**
+  `JadesVerificationOptions` gains `timestampTrustAnchors` (empty by default). A `sigTst` / `arcTst` is
+  authenticated only when its TSA signature and certificate verify against those anchors
+  (`org.trustweave.signatures.revocation.TimeStampTokenVerifier`); a token from another TSA is rejected as
+  `TimeStampMismatch`, and without anchors the token is only structurally checked, its time is the signer's
+  claim, and the signature is reported as B-B. Callers that required `B_T` or higher must now pass their TSA
+  certificates. `JadesValidationResult.Valid.foundProfile` now means the profile that was *proved*: B-LT also
+  needs embedded revocation evidence that verified and covers the chain, B-LTA also a trusted `arcTst`, and
+  requiring B-LT or above implies `RevocationPolicy.REQUIRED`. Garbage in `rVals` no longer yields B-LT.
+- **BREAKING (security) — JAdES refuses `QualifiedWithdrawn` trust unless a trusted time-stamp predates the
+  withdrawal** (new `Invalid.TrustWithdrawn`, option `allowWithdrawnTrustWithoutAuthenticatedTime`), as XAdES
+  already did. `EtsiSignaturePolicy` gains `timestampTrustAnchors`; the TIME_STAMP_TOKEN step reports a `sigTst`
+  as validated only when an anchor accepted it, and a policy that lists the WITHDRAWN status URI is what permits
+  a withdrawn service.
+- **BREAKING (security) — CAdES gets the same trust rules as XAdES and JAdES.** `CadesVerificationOptions`
+  gains `timestampTrustAnchors`, `allowWithdrawnTrustWithoutAuthenticatedTime` and the revocation options.
+  A signature time-stamp is trusted only when its TSA signature and certificate verify against the anchors
+  (a forged token no longer yields B-T; without anchors the result is B-B, so callers requiring `B_T` must pass
+  their TSA certificates); `QualifiedWithdrawn` trust is refused unless a trusted time-stamp predates the
+  withdrawal (`Invalid.TrustWithdrawn`); the path is validated as of the trusted time over an ordered chain;
+  a CA or non-signing certificate is refused (`Invalid.SignerCertificateInvalid`, also new in JAdES); caller
+  supplied CRL / OCSP evidence is enforced (`Invalid.CertificateRevoked`, `Invalid.RevocationUnavailable`,
+  `Valid.revocationChecked`). Embedded CMS revocation values are read (see the entry below).
+- Time-stamp handling is aligned across formats: every token is checked (not only the first), SHA-256, SHA-384
+  and SHA-512 imprints are accepted, and a time-stamp later than the claimed signing time is accepted while one
+  that predates it is rejected (JAdES previously rejected a late stamp). A malformed or empty JAdES `x5c`
+  is `Invalid.Malformed` instead of an exception, and the chain handed to PKIX is ordered and filtered.
+- Trust lists: a service granted after the validation time does not qualify that signature, and a CA listed both
+  withdrawn and granted resolves to granted whatever the list order. The ETSI validator no longer reports
+  "cert path validated" for results that never reached path validation (time-stamp, profile, expiry) and fails
+  the time-stamp step on a bad archival token.
+- Revocation evaluation: an OCSP / CRL response without `nextUpdate` vouches for the present only for 24 hours;
+  a signature-verified "revoked" entry in a CRL with critical extensions (delta, partitioned) is honoured though
+  such a CRL cannot vouch that a certificate is good; and `revocationIssuerCertificates` are trust anchors:
+  evaluation stops at a carried certificate that is one, so an intermediate must be carried in the signature.
+  The evaluator, time-stamp verifier and path helper now have direct tests in `tsa-core`.
+- **Trust path validation uses the trusted time.** `TrustAnchorResolver` gains
+  `resolve(signerCert, chain, validationTime)` (default: ignore the time); `DefaultTrustAnchorResolver`
+  validates the PKIX path as of that time, and the XAdES and JAdES verifiers pass the authenticated time-stamp
+  time (never the signer's claimed time). A certificate that has since expired therefore validates for a
+  signature it time-stamped while valid.
+- Revocation evaluation fixes: a genuine CRL / OCSP entry saying "revoked" now counts however old the
+  response is (freshness only decides whether a response may vouch that a certificate is good); an OCSP
+  response with conflicting entries for one certificate is revoked whatever the order; a certificate is
+  self-signed only when its own key verifies its signature.
 
 - **BREAKING — timestamps are now `kotlin.time.Instant` and `kotlin.time.Clock` (kotlinx-datetime
   0.8.0).** kotlinx-datetime 0.7 moved `Instant`/`Clock` into the Kotlin standard library and 0.8
@@ -133,7 +543,7 @@ working code fail until it is adjusted.**
   - XAdES refuses a `QualifiedWithdrawn` trust result unless a time-stamp predates the withdrawal
     (`allowWithdrawnTrustWithoutAuthenticatedTime` opts out), validates CA validity, `basicConstraints`,
     `pathLen` and key usage, and can verify an RFC 3161 signature time-stamp (`requireSignatureTimestamp`,
-    `timestampTrustAnchors`; verify-only `XadesProfile.B_T`). Revocation is still not evaluated.
+    `timestampTrustAnchors`; verify-only `XadesProfile.B_T`). Revocation is opt-in; see the XAdES revocation entry under "Added".
   - Token Status List: `lst` data with a valid ZLIB header must decode as ZLIB (corrupt or trailing bytes
     throw); ES256 (P-256) is supported; `defaultTtlSeconds` / `requireTtl` are new options.
   - The OID4VCI server maps errors per RFC (`invalid_proof` 400 with a fresh `c_nonce`, `invalid_token` 401
@@ -204,6 +614,53 @@ working code fail until it is adjusted.**
 
 ### Added
 
+- **Opt-in `requireHolderBinding` verification option.** `VerificationOptions.requireHolderBinding` (default `false`;
+  DSL: `requireHolderBinding(true)` in `verify { }`) rejects SD-JWT VC credentials whose issuer-signed JWT carries no
+  `cnf` claim, standalone and inside presentations, after the issuer signature is verified. The default is unchanged:
+  `cnf`-less SD-JWT credentials are still accepted as bearer credentials. `VerificationOptions` gains a trailing
+  constructor parameter (`copy`/`componentN` ABI updated).
+
+- **CAdES B-LT verification.** `DefaultCadesVerifier` now reads the revocation values a CMS signature carries
+  (the `id-aa-ets-revocationValues` unsigned attribute, whose `ocspVals` are re-wrapped as `OCSPResponse`, and the RFC 5652
+  `SignedData.crls` field including `id-ri-ocsp-response`) and feeds them with caller evidence into
+  `CertificateRevocationEvaluator`, as XAdES and JAdES do. New `CadesProfile.B_LT`: reported only when a trusted
+  time-stamp authenticates the time and the embedded evidence alone shows the signer and every CA below the trust
+  anchor not revoked; requiring `B_LT` implies `RevocationPolicy.REQUIRED`. Embedded data that does not parse is
+  refused (`Invalid.Malformed`); at most 64 items of each kind are kept and items over 4 MiB are dropped.
+  `CadesSigningRequest` rejects `B_LT` (the signer produces B-B and B-T only). Adding an enum entry changes
+  the `CadesProfile` ABI, so exhaustive `when` expressions over it need a branch.
+
+- Build and test hygiene: `distributionSha256Sum` is pinned in both Gradle wrapper properties; jars, sources
+  jars and zips are reproducible (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`);
+  `scripts/check-module-maturity-counts.py` fails when the test counts in `docs/api-reference/module-maturity.md`
+  drift from the sources (several rows were out by up to 25x and three modules marked untested had tests);
+  the dependency-graph job is blocking and the OSV gate runs with `--strict-stale`. The assertion-free
+  `ScratchUriEquivalenceTest` was removed and the network-dependent, tautological godiddy resolver tests and two
+  other always-true assertions were replaced by deterministic ones.
+- Certificate revocation checking (CRL and OCSP) for XAdES, JAdES and the ETSI validation pipeline, and XAdES
+  B-T / B-LT output. The shared evaluator is `org.trustweave.signatures.revocation.CertificateRevocationEvaluator`
+  in `tsa-core`, with `RevocationPolicy` (`NOT_CHECKED` by default, so existing callers are unaffected;
+  `CHECK_IF_AVAILABLE`; `REQUIRED`, which fails closed) and `RevocationEvidence`. Each CRL / OCSP response is
+  verified against the issuing CA (an OCSP responder certificate needs the OCSP-signing purpose), CRLs with
+  critical extensions are ignored, and evidence must be fresh for the signature: issued at or after an
+  authenticated time-stamp, or current when the time is only claimed. A revocation dated after an
+  authenticated signing time does not invalidate the signature.
+  - XAdES: `XadesVerificationOptions` gains `revocationPolicy`, `revocationEvidence` and
+    `revocationIssuerCertificates`; evidence also comes from `<xades:RevocationValues>`. New results
+    `Invalid.CertificateRevoked` and `Invalid.RevocationUnavailable`; `Valid.revocationChecked` is `true` only
+    when every certificate below the trust anchor was shown good. `XadesProfile.B_LT` is new: it is reported
+    only when the time-stamp is trusted and the evidence embedded in the signature itself covers the chain
+    (otherwise B-T), and requiring it implies `REQUIRED`. `DefaultXadesSigner` now produces B-T and B-LT
+    (`XadesSigningRequest.tsaConfig` / `validationData`, new optional `tsaClientFactory`); it throws for no
+    other profile. `XadesVerificationOptions.copy()` and `XadesSigningRequest.copy()` gain parameters (ABI dumps
+    updated); the constructors keep their overloads.
+  - JAdES: `JadesVerificationOptions` gains the same three options and evaluates `rVals`; `Valid.revocationChecked`
+    and `Invalid.CertificateRevoked` / `Invalid.RevocationUnavailable` are new (`JAdESProofEngine` maps them to an
+    invalid proof). The `sigTst` is not trust-validated by this verifier, so its time is never treated as
+    authenticated: evidence must be current and any revocation counts.
+  - `etsi-validation`: `EtsiSignaturePolicy` gains the same options. The REVOCATION step passes, fails or is
+    inconclusive from the evidence, and LONG_TERM_VALIDATION reports on B-LT / B-LTA data; both stay
+    not-applicable under the default `NOT_CHECKED`.
 - `Oidc4VciIssuerStateStore` (with the default `InMemoryOidc4VciIssuerStateStore`) makes the OID4VCI
   issuer's offers, access tokens and deferred credentials pluggable through the new trailing
   `stateStore` constructor parameter of `Oidc4VciIssuerService`; existing constructors and behaviour
@@ -235,6 +692,14 @@ working code fail until it is adjusted.**
   dependency review plus OSV-Scanner over the SBOM and resolved JARs. The OSV job fails for advisories
   outside `config/osv/baseline.json` (`scripts/check-osv-baseline.py`). The documentation check now
   verifies that `org.trustweave.*` imports in docs resolve to main sources.
+- **XAdES B-LTA.** `XadesProfile.B_LTA` is new and `DefaultXadesSigner` produces it: on top of B-LT it appends an
+  XAdES 1.4.1 `ArchiveTimeStamp` (`xades141:ArchiveTimeStamp`, SHA-256 imprint) over the dereferenced reference
+  octets, `SignedInfo`, `SignatureValue`, `KeyInfo` and every unsigned signature property before it
+  (ETSI EN 319 132-1). `DefaultXadesVerifier` verifies each archive token with `TimeStampTokenVerifier` against
+  `timestampTrustAnchors` and recomputes the imprint; a present but untrusted, malformed or non-matching archive
+  token fails as `Invalid.TimeStampInvalid` whatever profile was required. B-LTA is reported only when B-LT is
+  proved too (otherwise B-LT, B-T or B-B, or `WrongProfile` when required), and requiring B-LTA implies
+  `RevocationPolicy.REQUIRED`. `Valid` gains `archiveTimeStamp` (constructor and `copy()` change; ABI dump updated).
 
 ### Changed
 
@@ -294,9 +759,43 @@ working code fail until it is adjusted.**
   coverage output); it is a CI artifact. Git history still holds the blobs. Stale one-off
   migration scripts and superseded root reports moved to `docs/archive` or were deleted.
 
-- CI is split into parallel jobs; `TRUSTWEAVE_INDY_INTEGRATION` applies to the build job only.
+- CI is split into parallel jobs. The Indy ledger suite now has its own workflow (`indy-integration.yml`,
+  `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
+
+- **Content negotiation, JWK numbers, storage, wallet organize and domain anchoring quirks.**
+  `DefaultContentNegotiationService` now honours Accept `q` values (higher wins, `q=0` is not acceptable, ties keep
+  server preference). Integer members of a `publicKeyJwk` map and of service-endpoint maps are emitted as integers,
+  not doubles such as `1.0E3`. `InMemoryDocumentStorage.deactivate` is a no-op for an unknown DID instead of
+  creating an entry. `Wallet.organize` reports a `false` result from the wallet as an entry in
+  `OrganizationResult.errors` instead of success. `TrustedDomainManager.anchor` releases its treasury reservation
+  when the calling coroutine is cancelled mid-write.
+- **Behaviour change: trust-registry issuer/verifier lists are capped at 100 entries by default.** The body is still a JSON array (did-ordered); the total match count is in the new `X-Total-Count` header; pass `limit`/`offset` to page.
+- `decodeMultibaseDigest` in `DidDocumentVerificationService` accepts `u` and `U` through one branch (contradictory comments removed; behaviour unchanged).
+- `InMemoryKeyManagementService` constructor: a `ConcurrentHashMap` argument is shared with the caller, any other map is copied once; both are now documented.
+- `WalletType.Custom.toString()` now returns the wallet type id (like the built-in types) instead of the generated `Custom(customId=...)`.
+- `IssuanceResult.Failure.MultipleFailures.allErrors` and `getOrThrow()` no longer report each nested error twice, and an error listed only on the result is kept. `VerificationResult.getOrThrow()` in `trust` now names the failure instead of a generic message.
+
+- **DID, KMS and wallet hardening.** `CachingDidResolver` no longer caches or serves requests carrying
+  `versionId`, `versionTime` or `additional` options (a versioned result could be returned as the latest, or mask a
+  deactivation), takes the TTL timestamp after the delegate returns, and drops a result fetched before a concurrent
+  `invalidate`/`clear`. `CyberArkKeyManagementService.sign` rejects an algorithm incompatible with the stored key
+  (`UnsupportedAlgorithm`) and zeroes decoded private-key bytes. `FileWallet` list/query/get/recover skip a record deleted
+  concurrently. `CloudWallet` refreshes `updatedAt` on re-store, and its KDoc no longer claims encryption (none exists). `DefaultUniversalResolver` bounds the
+  response-body read by `timeout` and refuses redirects, including ones followed by an injected `HttpClient`.
+  `AbstractWebDidMethod` gives its clients a 30 s whole-call deadline when none is set and cancels the HTTP call when the
+  coroutine is cancelled. `KeyManagementServices` and `AlgorithmDiscovery` skip a provider that throws
+  `ServiceConfigurationError` instead of failing for every provider. No public API signature changed.
+- `DefaultXadesSigner` declares `xmlns:xades` and `xmlns:ds` on `QualifyingProperties`. Without them the
+  signature was computed over a canonical form that differs from the serialised document's, so a B-B / B-T / B-LT
+  signature failed validation after being written out and parsed again (it verified only as the in-memory DOM).
+- The Fortanix, Thales, CyberArk and IBM KMS plugins now close every vendor HTTP response on all paths (previously failed deletes and some error paths leaked the connection) and report an empty response body as an error instead of parsing it as `{}`.
+
+- `VerifiableCredential.isValid`, `isExpired`, `isExpiredAt` and `isValidAt` now share one temporal check, `VerifiableCredential.temporalValidity` (new `TemporalValidity` enum): the earliest of `expirationDate`/`validUntil` expires a credential, and it is not valid before the latest of `validFrom`/`issuanceDate`. The extension functions previously ignored VC 2.0 `validUntil`, and `isValidAt` ignored not-yet-valid credentials. These are temporal only, not revocation or proof checks.
+- `EncryptedFileLocalKeyStore` serializes load/modify/save, replaces the key file atomically (fsync plus atomic move, never delete-then-rename), and fails loudly on an unparsable stored secret instead of silently dropping it on the next save.
+- DID registrar job storage calls (`JobStorage`) run on `Dispatchers.IO` in `KmsBasedRegistrar` and the Ktor and Spring servers; `GET /1.0/jobs/{jobId}` answers 404 only for an unknown job and 400 for other invalid requests.
+- `SafeRegex` in presentation-exchange uses a bounded worker pool and queue (saturation fails closed) and a bounded cache of compiled patterns.
 
 - Four `suspend` functions swallowed `CancellationException` through a broad catch with an empty
   body (`TrustedDomainManager.emitSafely`, `InMemoryDomainTreasury.emitSafely`, and two testkit
@@ -332,7 +831,48 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+- **SSRF-guarded default HTTP clients for Entra and OpenID Federation.** `EntraTokenClient`, `EntraIssuanceClient`,
+  `EntraPresentationClient`, `EntraIntegration` and the Entra exchange provider now default to
+  `ssrfGuardedOkHttpClient()` instead of a plain `OkHttpClient()`, so internal/loopback/link-local destinations are
+  refused at connect time. **Behaviour change:** tests against a loopback server (WireMock) must inject a plain
+  `OkHttpClient()`; `EntraConfig`'s `HttpUrlPolicy` checks are unchanged. `EntityStatementJwtProcessor` lost its unused
+  `OkHttpClient` constructor parameter (**API**: the one-argument constructor is gone; the no-argument form is unchanged).
+- **Cloud wallets can encrypt client-side.** `CloudWalletFactory` now accepts `encryptionKey` (Base64 of exactly 32 bytes;
+  other lengths or invalid Base64 fail with `WalletCreationFailed`) and `CloudWallet`/`AwsS3Wallet`/`AzureBlobWallet`/
+  `GoogleCloudStorageWallet` take an optional `encryptionKey: ByteArray?`. Credentials and metadata are written as
+  AES-256-GCM objects with a `TWCW` header, random IV and AAD binding wallet id, record kind and credential-id hash.
+  Migration: reads fall back to legacy plaintext only for objects lacking the header; writes always encrypt when a key is
+  set; tampered, swapped or wrong-key objects fail closed with `WalletException.StorageError`. Without a key the
+  behaviour is unchanged (plaintext JSON), as documented. Previously a supplied `encryptionKey` was rejected.
+- **TSA client fails closed.** `BouncyCastleTsaClient` now always verifies the RFC 3161 token signature (it used to
+  verify only when `trustedSignerCertificates` was set), checks the signer's `id-kp-timeStamping` EKU and validity at
+  `genTime`, and requires the signer to be pinned or to chain to the new `TsaConfig.trustAnchors`; with neither it
+  rejects the token unless `allowUnanchored = true`. `endpointUrl` must be https (plaintext only to loopback or
+  private hosts, never with basic auth), redirects are not followed, responses are capped at 1 MiB and a malformed
+  URL is a `TsaException`. Callers relying on unpinned tokens must pass pins, anchors or `allowUnanchored`.
 
+- **did:key self-certification binds the JWK and covers every verification method.** `DefaultDidDocumentVerificationService` now rejects a did:key document whose `publicKeyJwk` and `publicKeyMultibase` decode to different keys (and `verifyVerificationMethod` no longer prefers a differing JWK), and rejects any document holding a verification method whose controller is not the document id.
+- **`InMemoryKeyManagementService` no longer registers BouncyCastle in the JVM-wide `Security` provider list**; it uses a private provider instance. Code that relied on the side effect must register `BouncyCastleProvider` itself.
+- **Trust-registry list routes are bounded.** `GET /registry/issuers` and `/registry/verifiers` paginate (`limit` default 100, max 1000; `offset`) and reject a `nameContains` over 256 characters with 400.
+- **Cloud wallets store plaintext JSON (documented, unchanged, fail-closed).** The limitation is now stated in the KDoc and the docs; `encryptionKey` is still rejected by `CloudWalletFactory`. Use bucket-level encryption (SSE / CMEK) or the `file` wallet for client-side AES-GCM.
+- **Dependencies — Jackson and Bouncy Castle are pinned to patched releases across every module.** Third-party SDKs
+  (Algorand, Azure, Google Cloud, Vert.x, web3j, bitcoinj, Cardano, walt.id) brought Jackson 2.16 to 2.18, Jackson 3.1.4
+  and Bouncy Castle 1.77 to 1.83 / LTS 2.73.8, which carry open advisories (GHSA-3pjw-73gf-8qr5, GHSA-5gvw-p9qm-jgwh,
+  GHSA-5jmj-h7xm-6q6v, GHSA-72hv-8253-57qq, GHSA-7hhh-6rmp-j9qf, GHSA-cxp5-3px4-pw24, GHSA-gx83-3vf8-gh7j,
+  GHSA-hgj6-7826-r7m5, GHSA-j3rv-43j4-c7qm, GHSA-mhm7-754m-9p8w, GHSA-p6pp-m3f8-5c89, GHSA-574f-3g2m-x479,
+  GHSA-9pwp-9qqc-pr26, GHSA-c3fc-8qff-9hwx). The root `resolutionStrategy` now resolves Jackson 2 to the catalog version
+  (2.22.3; `jackson-annotations` 2.22), Jackson 3 to 3.1.7, Bouncy Castle to 1.86 and its LTS line to 2.73.13, so
+  those SDKs run on newer Jackson and Bouncy Castle than they were built against. `config/osv/baseline.json` drops the
+  28 entries this resolves (90 to 62; none left in `needs-review`, first expiry 2026-12-10) and records
+  `package_count`. Unit tests for the affected plugins pass against the new versions; no plugin was exercised against
+  a live Algorand, Azure, Google Cloud or EVM service.
+
+- Jackson 3 (`tools.jackson`, pulled in transitively by web3j 6) is pinned to 3.1.4 in the root build and
+  `gradle/libs.versions.toml`, closing GHSA-2m67-wjpj-xhg9, GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55 and
+  GHSA-rcqc-6cw3-h962 that the OSV gate reported against 3.1.0.
+- Netty 4.2 (pulled in transitively by Ktor 3) is pinned to 4.2.18.Final, closing GHSA-558v-64gr-wgg4,
+  GHSA-mj4r-2hfc-f8p6 and GHSA-rwm7-x88c-3g2p that the OSV gate reported against 4.2.12. Only the 4.2 line is
+  pinned; libraries that use Netty 4.1 keep their own version.
 - The fixes above in the "Breaking and behaviour changes" and "Fixed" sections that close
   authentication, SSRF, signature-validation and fail-open paths (registrar servers, Spring
   registrar, did:web, JSON-LD contexts, JWT, SD-JWT, XAdES, wallet storage, offer acceptance).
@@ -342,6 +882,13 @@ working code fail until it is adjusted.**
 
 - Dependency scanning: OSV-Scanner and dependency review run on every push and pull request; the
   `org.didcommx:didcomm` 0.3.2 embedded-Nimbus risk is documented in `SECURITY.md`.
+- The OSV gate (`scripts/check-osv-baseline.py`, `config/osv/baseline.json` schema 3) now records a triage
+  for every grandfathered advisory (`status`: affected / not-reachable / false-positive / accepted-risk /
+  needs-review, plus `reason`, `reviewed`, `expires`) and **fails on an expired triage entry**. Matching is
+  version-aware: a new version of a baselined package that the scanner still reports re-surfaces the
+  advisory. Initial triage of the 90 entries: 65 affected, 5 not-reachable, 3 accepted-risk (didcomm) and
+  17 needs-review (versions found in no resolved classpath); `--strict-stale` is unchanged. A baseline
+  entry with a malformed or `TODO` triage is an error (exit 2).
 
 
 ## [0.7.0] - 2026-08-29

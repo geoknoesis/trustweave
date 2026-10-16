@@ -1,10 +1,15 @@
 package org.trustweave.did.registrar.server.spring
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registrar.DidRegistrar
-import org.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.model.CreateDidOptions
+import org.trustweave.did.registrar.model.DeactivateDidOptions
+import org.trustweave.did.registrar.model.DidRegistrationResponse
+import org.trustweave.did.registrar.model.UpdateDidOptions
 import org.trustweave.did.registrar.storage.JobStorage
-import java.util.UUID
+import org.trustweave.did.registrar.storage.track
 
 /**
  * Service class that handles DID Registrar operations.
@@ -14,7 +19,7 @@ import java.util.UUID
  */
 class DidRegistrarService(
     private val registrar: DidRegistrar,
-    private val jobStorage: JobStorage
+    private val jobStorage: JobStorage,
 ) {
     /**
      * Creates a new DID.
@@ -27,10 +32,8 @@ class DidRegistrarService(
      */
     suspend fun createDid(
         method: String,
-        options: CreateDidOptions
-    ): DidRegistrationResponse {
-        return handleCreateOperation(method, options)
-    }
+        options: CreateDidOptions,
+    ): DidRegistrationResponse = handleCreateOperation(method, options)
 
     /**
      * Updates an existing DID.
@@ -45,10 +48,8 @@ class DidRegistrarService(
     suspend fun updateDid(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions
-    ): DidRegistrationResponse {
-        return handleUpdateOperation(did, document, options)
-    }
+        options: UpdateDidOptions,
+    ): DidRegistrationResponse = handleUpdateOperation(did, document, options)
 
     /**
      * Deactivates a DID.
@@ -61,32 +62,26 @@ class DidRegistrarService(
      */
     suspend fun deactivateDid(
         did: String,
-        options: DeactivateDidOptions
-    ): DidRegistrationResponse {
-        return handleDeactivateOperation(did, options)
-    }
+        options: DeactivateDidOptions,
+    ): DidRegistrationResponse = handleDeactivateOperation(did, options)
 
     /**
      * Gets the status of a job.
      */
-    fun getJobStatus(jobId: String): DidRegistrationResponse? {
-        return jobStorage.get(jobId)
-    }
+    fun getJobStatus(jobId: String): DidRegistrationResponse? = jobStorage.get(jobId)
 
     /**
      * Handles DID creation operation.
      */
     private suspend fun handleCreateOperation(
         method: String,
-        options: CreateDidOptions
+        options: CreateDidOptions,
     ): DidRegistrationResponse {
         val response = registrar.createDid(method, options)
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            jobStorage.store(jobId, response.copy(jobId = jobId))
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response
@@ -98,15 +93,13 @@ class DidRegistrarService(
     private suspend fun handleUpdateOperation(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions
+        options: UpdateDidOptions,
     ): DidRegistrationResponse {
         val response = registrar.updateDid(did, document, options)
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            jobStorage.store(jobId, response.copy(jobId = jobId))
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response
@@ -117,18 +110,15 @@ class DidRegistrarService(
      */
     private suspend fun handleDeactivateOperation(
         did: String,
-        options: DeactivateDidOptions
+        options: DeactivateDidOptions,
     ): DidRegistrationResponse {
         val response = registrar.deactivateDid(did, options)
 
         // If operation is long-running, store it and return jobId
         if (response.jobId != null || !response.isComplete()) {
-            val jobId = response.jobId ?: UUID.randomUUID().toString()
-            jobStorage.store(jobId, response.copy(jobId = jobId))
-            return response.copy(jobId = jobId)
+            return withContext(Dispatchers.IO) { jobStorage.track(response) }
         }
 
         return response
     }
 }
-

@@ -24,6 +24,32 @@ interface DidCommReplayStore {
         retainUntilEpochSeconds: Long,
         nowEpochSeconds: Long,
     ): Boolean
+
+    /**
+     * Like [recordIfAbsent], for a message from [sender] (the unpacked `from` header; `null` when
+     * the message names none). Message ids are chosen by the sender, so identical ids from two
+     * senders are two different messages: one sender must not be able to make another's message
+     * look like a replay by reusing its id.
+     *
+     * The default keys the 3-argument method on the pair (sender, id), unchanged for a `null`
+     * sender, so an existing implementation keeps working and is already sender-scoped. Override
+     * it to add per-sender bounds, as [InMemoryDidCommReplayStore] does.
+     */
+    suspend fun recordIfAbsent(
+        sender: String?,
+        messageId: String,
+        retainUntilEpochSeconds: Long,
+        nowEpochSeconds: Long,
+    ): Boolean = recordIfAbsent(scopedKey(sender, messageId), retainUntilEpochSeconds, nowEpochSeconds)
+
+    companion object {
+        /** `messageId` itself for a `null` sender, else an unambiguous `length:sender:id` composite. */
+        @JvmStatic
+        fun scopedKey(
+            sender: String?,
+            messageId: String,
+        ): String = if (sender == null) messageId else "${sender.length}:$sender:$messageId"
+    }
 }
 
 /** The replay store is at capacity with ids that have not expired yet. */
@@ -38,54 +64,90 @@ class DidCommReplayStoreFullException(
  * held, new messages are refused with [DidCommReplayStoreFullException] instead of evicting a
  * still-relevant id — a flood can delay legitimate traffic, but it cannot re-enable a replay.
  *
+ * Ids are scoped by sender: the same id from two senders is two messages, and each sender may hold
+ * at most [maxPerSender] unexpired ids, so one sender cannot fill the store and lock out the rest.
+ * Messages naming no sender share one bucket of their own.
+ *
  * @param capacity Maximum number of unexpired ids held at once.
+ * @param maxPerSender Maximum number of unexpired ids held for any one sender (at most [capacity]).
  */
-class InMemoryDidCommReplayStore(
-    private val capacity: Int = DEFAULT_CAPACITY,
-) : DidCommReplayStore {
-    init {
-        require(capacity > 0) { "capacity must be positive" }
-    }
+class InMemoryDidCommReplayStore
+    @JvmOverloads
+    constructor(
+        private val capacity: Int = DEFAULT_CAPACITY,
+        private val maxPerSender: Int = minOf(capacity, DEFAULT_MAX_PER_SENDER),
+    ) : DidCommReplayStore {
+        init {
+            require(capacity > 0) { "capacity must be positive" }
+            require(maxPerSender in 1..capacity) { "maxPerSender must be between 1 and capacity" }
+        }
 
-    private data class Entry(
-        val messageId: String,
-        val retainUntil: Long,
-    )
+        private data class Key(
+            val sender: String?,
+            val messageId: String,
+        )
 
-    private val retainUntilById = HashMap<String, Long>()
-    private val byExpiry = PriorityQueue<Entry>(compareBy { it.retainUntil })
+        private data class Entry(
+            val key: Key,
+            val retainUntil: Long,
+        )
 
-    override suspend fun recordIfAbsent(
-        messageId: String,
-        retainUntilEpochSeconds: Long,
-        nowEpochSeconds: Long,
-    ): Boolean =
-        synchronized(this) {
-            evictExpired(nowEpochSeconds)
-            if (retainUntilById.containsKey(messageId)) return false
-            if (retainUntilById.size >= capacity) {
-                throw DidCommReplayStoreFullException(
-                    "DIDComm replay store holds $capacity unexpired message ids; refusing new messages until some expire",
-                )
+        private val retainUntilByKey = HashMap<Key, Long>()
+        private val countBySender = HashMap<String?, Int>()
+        private val byExpiry = PriorityQueue<Entry>(compareBy { it.retainUntil })
+
+        override suspend fun recordIfAbsent(
+            messageId: String,
+            retainUntilEpochSeconds: Long,
+            nowEpochSeconds: Long,
+        ): Boolean = recordIfAbsent(null, messageId, retainUntilEpochSeconds, nowEpochSeconds)
+
+        override suspend fun recordIfAbsent(
+            sender: String?,
+            messageId: String,
+            retainUntilEpochSeconds: Long,
+            nowEpochSeconds: Long,
+        ): Boolean =
+            synchronized(this) {
+                evictExpired(nowEpochSeconds)
+                val key = Key(sender, messageId)
+                if (retainUntilByKey.containsKey(key)) return false
+                if (retainUntilByKey.size >= capacity) {
+                    throw DidCommReplayStoreFullException(
+                        "DIDComm replay store holds $capacity unexpired message ids; refusing new messages until some expire",
+                    )
+                }
+                if ((countBySender[sender] ?: 0) >= maxPerSender) {
+                    throw DidCommReplayStoreFullException(
+                        "DIDComm replay store holds $maxPerSender unexpired message ids for this sender; " +
+                            "refusing its new messages until some expire",
+                    )
+                }
+                retainUntilByKey[key] = retainUntilEpochSeconds
+                countBySender.merge(sender, 1, Int::plus)
+                byExpiry.add(Entry(key, retainUntilEpochSeconds))
+                true
             }
-            retainUntilById[messageId] = retainUntilEpochSeconds
-            byExpiry.add(Entry(messageId, retainUntilEpochSeconds))
-            true
+
+        /** Number of ids currently remembered (expired ones may linger until the next insert). */
+        fun size(): Int = synchronized(this) { retainUntilByKey.size }
+
+        private fun evictExpired(now: Long) {
+            while (true) {
+                val head = byExpiry.peek() ?: return
+                if (head.retainUntil > now) return
+                byExpiry.poll()
+                if (retainUntilByKey[head.key] == head.retainUntil) {
+                    retainUntilByKey.remove(head.key)
+                    if (countBySender.merge(head.key.sender, -1, Int::plus) == 0) countBySender.remove(head.key.sender)
+                }
+            }
         }
 
-    /** Number of ids currently remembered (expired ones may linger until the next insert). */
-    fun size(): Int = synchronized(this) { retainUntilById.size }
+        companion object {
+            const val DEFAULT_CAPACITY = 100_000
 
-    private fun evictExpired(now: Long) {
-        while (true) {
-            val head = byExpiry.peek() ?: return
-            if (head.retainUntil > now) return
-            byExpiry.poll()
-            if (retainUntilById[head.messageId] == head.retainUntil) retainUntilById.remove(head.messageId)
+            /** One sender may hold at most a tenth of the default capacity. */
+            const val DEFAULT_MAX_PER_SENDER = 10_000
         }
     }
-
-    companion object {
-        const val DEFAULT_CAPACITY = 100_000
-    }
-}

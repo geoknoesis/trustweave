@@ -116,7 +116,7 @@ Wallet factories enable creation of different wallet storage backends for creden
 |--------|-----------|---------------|-------------|
 | **Database Wallet** | `org.trustweave.wallet:wallet-plugins-database` | Documentation coming soon | Database-backed wallet with full CredentialStorage implementation. Supports PostgreSQL, MySQL, H2, and other JDBC-compatible databases |
 | **File Wallet** | `org.trustweave.wallet:wallet-plugins-file` | Documentation coming soon | File-based wallet with local filesystem storage. Optional AES encryption support |
-| **Cloud Wallet** | `org.trustweave.wallet:wallet-plugins-cloud` | Documentation coming soon | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage |
+| **Cloud Wallet** | `org.trustweave.wallet:wallet-plugins-cloud` | Documentation coming soon | Abstract base for cloud storage wallets. Supports AWS S3, Azure Blob Storage, and Google Cloud Storage. **Plaintext JSON by default; pass a Base64 32-byte `encryptionKey` for client-side AES-256-GCM (legacy plaintext objects stay readable, tampering fails closed); without a key rely on provider at-rest encryption** |
 
 ## Other Integrations
 

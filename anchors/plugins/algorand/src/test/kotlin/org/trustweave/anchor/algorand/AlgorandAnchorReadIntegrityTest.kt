@@ -36,7 +36,7 @@ class AlgorandAnchorReadIntegrityTest {
             val body =
                 """
                 {"current-round":1000,
-                 "transaction":{"id":"$reportedTxId","tx-type":"pay","round-time":1700000000,
+                 "transaction":{"id":"$reportedTxId","confirmed-round":999,"tx-type":"pay","round-time":1700000000,
                    "note":"$note","fee":1000,"first-valid":1,"last-valid":1000,
                    "sender":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}}
                 """.trimIndent()

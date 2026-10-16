@@ -137,10 +137,26 @@ class CheqdDidMethod(
                 val didString = did.value
                 validateCheqdIdentifier(didString)
 
-                // Anchored (or previously resolved) by this instance: read it from the chain via the
-                // anchor client; resolveFromBlockchain fails loudly if that read fails.
+                // A DID this instance deactivated stays deactivated, whatever a later read returns.
+                val stored = getStoredDocument(did)
+                val storedMetadata = getDocumentMetadata(did)
+                if (stored != null && storedMetadata?.deactivated == true) {
+                    return@withContext DidMethodUtils.createSuccessResolutionResult(
+                        stored,
+                        method,
+                        storedMetadata.created,
+                        storedMetadata.updated,
+                        true,
+                        retrieved = getLastFetched(did),
+                    )
+                }
+
+                // Anchored by this instance: read it from the chain via the anchor client;
+                // resolveFromBlockchain fails loudly if that read fails. A document that was only ever
+                // read from the Cheqd API is NOT answered from the cache: the cache would otherwise be
+                // served forever, so every such resolve revalidates against the API.
                 val txHash = findDocumentTxHash(didString)
-                if (txHash != null || getStoredDocument(did) != null) {
+                if (txHash != null) {
                     return@withContext resolveFromBlockchain(didString, txHash)
                 }
 
@@ -206,6 +222,7 @@ class CheqdDidMethod(
                 // Apply updater (use explicit variable to avoid smart cast issue)
                 val doc = currentDocument
                 val updatedDocument = updater(doc)
+                requireSameDid(did, updatedDocument)
 
                 // Update on Cheqd blockchain
                 didToTxHash[didString] = updateDocumentOnBlockchain(didString, updatedDocument)

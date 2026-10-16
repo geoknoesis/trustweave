@@ -1,6 +1,9 @@
 package org.trustweave.signatures.etsi.validation
 
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TspServiceStatus
+import java.security.cert.X509Certificate
 import kotlin.time.Duration
 
 /**
@@ -26,14 +29,37 @@ import kotlin.time.Duration
  * @property allowedTrustStatusUris      ETSI service-status URIs the caller considers
  *                                        acceptable for §5.5.3 signature-policy compliance.
  *                                        Defaults to GRANTED only.
+ * @property revocationPolicy            Whether the REVOCATION step evaluates CRL / OCSP evidence
+ *                                        (embedded `rVals` plus [revocationEvidence]). Default
+ *                                        [RevocationPolicy.NOT_CHECKED]: the step is not applicable.
+ * @property revocationEvidence          Caller-supplied CRLs / OCSP responses.
+ * @property revocationIssuerCertificates CA certificates used to verify evidence for a certificate
+ *                                        whose issuer is not in the signature's `x5c`.
+ * @property timestampTrustAnchors       TSA certificates (or their issuers) trusted to time-stamp. A `sigTst` is
+ *                                        reported as validated only when it verifies against these; with none
+ *                                        configured it is not trusted and [requireTimeStamp] cannot be met.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                        Only relevant when [allowedTrustStatusUris] contains WITHDRAWN. A signer
+ *                                        under a withdrawn service is then accepted only if a trusted time-stamp
+ *                                        ([timestampTrustAnchors]) proves the signature predates the withdrawal.
+ *                                        Setting this to `true` additionally accepts a merely claimed signing time
+ *                                        before the withdrawal, which a signer can back-date. Default `false`.
  */
-data class EtsiSignaturePolicy(
-    val acceptedSignatureAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
-    val acceptedDigestAlgorithms: Set<String> = setOf("SHA-256", "SHA-384", "SHA-512"),
-    val requireSigningTime: Boolean = true,
-    val maxClockSkew: Duration = Duration.parse("PT5M"),
-    val requireTimeStamp: Boolean = false,
-    val allowedTrustStatusUris: Set<String> = setOf(
-        TspServiceStatus.GRANTED.uri,
-    ),
-)
+data class EtsiSignaturePolicy
+    @JvmOverloads
+    constructor(
+        val acceptedSignatureAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
+        val acceptedDigestAlgorithms: Set<String> = setOf("SHA-256", "SHA-384", "SHA-512"),
+        val requireSigningTime: Boolean = true,
+        val maxClockSkew: Duration = Duration.parse("PT5M"),
+        val requireTimeStamp: Boolean = false,
+        val allowedTrustStatusUris: Set<String> =
+            setOf(
+                TspServiceStatus.GRANTED.uri,
+            ),
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
+    )

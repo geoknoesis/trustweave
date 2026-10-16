@@ -130,7 +130,7 @@ class InMemorySignatureFormatTest {
                 "secp256k1 signature must be low-s (EIP-2 / Bitcoin), got s > n/2"
             )
 
-            val bcName = org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME
+            val bcName = bcRegistered()
             val verifier = Signature.getInstance("SHA256withECDSA", bcName)
             verifier.initVerify(ecPublicKeyFromJwk(jwk, "secp256k1", providerName = bcName))
             verifier.update(data)

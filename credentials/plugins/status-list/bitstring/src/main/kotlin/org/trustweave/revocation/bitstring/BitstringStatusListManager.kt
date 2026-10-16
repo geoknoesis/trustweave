@@ -119,7 +119,26 @@ class BitstringStatusListManager(
     private val issuerKeyId: VerificationMethodId? = null,
     private val baseUrl: String? = null,
     private val remoteStatusLists: RemoteStatusListResolver? = null,
+    /**
+     * How long [buildStatusListVc] reuses the signed credential it built for a list whose bits have
+     * not changed. Signing is the expensive step and the endpoint is public, so without this every
+     * request re-signs (and rewrites the stored credential). A change to the list always yields a
+     * fresh credential regardless of this value; [kotlin.time.Duration.ZERO] disables the reuse.
+     */
+    private val signedStatusListCacheTtl: kotlin.time.Duration = DEFAULT_SIGNED_CACHE_TTL,
 ) : CredentialRevocationManager {
+    /** Binary-compatible constructor from before [signedStatusListCacheTtl] existed. */
+    constructor(
+        dataSource: DataSource,
+        kms: KeyManagementService,
+        issuerDid: String,
+        bitsPerEntry: Int,
+        proofEngine: ProofEngine?,
+        issuerKeyId: VerificationMethodId?,
+        baseUrl: String?,
+        remoteStatusLists: RemoteStatusListResolver?,
+    ) : this(dataSource, kms, issuerDid, bitsPerEntry, proofEngine, issuerKeyId, baseUrl, remoteStatusLists, DEFAULT_SIGNED_CACHE_TTL)
+
     /** Binary-compatible constructor from before [remoteStatusLists] existed. */
     constructor(
         dataSource: DataSource,
@@ -132,6 +151,11 @@ class BitstringStatusListManager(
     ) : this(dataSource, kms, issuerDid, bitsPerEntry, proofEngine, issuerKeyId, baseUrl, null)
 
     companion object {
+        /** Default for `signedStatusListCacheTtl`. */
+        val DEFAULT_SIGNED_CACHE_TTL: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
+
+        private const val SIGNED_CACHE_MAX_ENTRIES = 256
+
         /**
          * Spec minimum: the uncompressed bitstring MUST be at least 16KB (131,072 bits).
          */
@@ -967,6 +991,19 @@ class BitstringStatusListManager(
      *   configured key does not belong to the status list's issuer DID
      * @throws IllegalArgumentException if the status list does not exist
      */
+    private class SignedCacheEntry(
+        val encodedList: String,
+        val issuerDid: String,
+        val credential: VerifiableCredential,
+        val signedAt: Instant,
+    )
+
+    private val signedCache =
+        object : LinkedHashMap<String, SignedCacheEntry>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SignedCacheEntry>?): Boolean =
+                size > SIGNED_CACHE_MAX_ENTRIES
+        }
+
     suspend fun buildStatusListVc(statusListId: StatusListId): VerifiableCredential =
         withContext(Dispatchers.IO) {
             val engine =
@@ -998,6 +1035,18 @@ class BitstringStatusListManager(
                             "but the status list is issued by '${row.issuerDid}'; refusing to sign.",
                     field = "issuerKeyId",
                 )
+            }
+
+            // The same bits under the same issuer, signed recently enough: serve what was signed.
+            if (signedStatusListCacheTtl.isPositive()) {
+                val cached = synchronized(signedCache) { signedCache[statusListId.toString()] }
+                if (cached != null &&
+                    cached.encodedList == row.encodedList &&
+                    cached.issuerDid == row.issuerDid &&
+                    Clock.System.now() - cached.signedAt < signedStatusListCacheTtl
+                ) {
+                    return@withContext cached.credential
+                }
             }
 
             val purpose = parsePurpose(row.purpose)
@@ -1081,6 +1130,13 @@ class BitstringStatusListManager(
                         setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
                         setString(3, statusListId.toString())
                     }.executeUpdate()
+            }
+
+            if (signedStatusListCacheTtl.isPositive()) {
+                synchronized(signedCache) {
+                    signedCache[statusListId.toString()] =
+                        SignedCacheEntry(row.encodedList, row.issuerDid, signedVc, Clock.System.now())
+                }
             }
 
             signedVc

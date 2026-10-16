@@ -18,7 +18,7 @@ import java.util.Date
 internal class TestCa(
     val caSubject: String = "CN=TrustWeave XAdES Test CA, O=TrustWeave, C=EU",
 ) {
-    private val caKey: KeyPair = KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
+    internal val caKey: KeyPair = KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
     val caCert: X509Certificate
 
     init {

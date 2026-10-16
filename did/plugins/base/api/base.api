@@ -44,7 +44,10 @@ public abstract class org/trustweave/did/base/AbstractDidMethod : org/trustweave
 	protected final fun getStoredDocument (Ljava/lang/Object;)Lorg/trustweave/did/model/DidDocument;
 	protected final fun getUpdateMutex ()Lkotlinx/coroutines/sync/Mutex;
 	protected final fun jsonElementToDocument (Lkotlinx/serialization/json/JsonElement;)Lorg/trustweave/did/model/DidDocument;
+	protected final fun recordLocalDeactivation (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun removeStoredDocument (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun requireKeysUnchanged (Lorg/trustweave/did/model/DidDocument;Lorg/trustweave/did/model/DidDocument;)V
+	protected final fun requireSameDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/model/DidDocument;)V
 	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun storeDocument (Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun storeDocument$default (Lorg/trustweave/did/base/AbstractDidMethod;Ljava/lang/Object;Lorg/trustweave/did/model/DidDocument;Lkotlin/time/Instant;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;

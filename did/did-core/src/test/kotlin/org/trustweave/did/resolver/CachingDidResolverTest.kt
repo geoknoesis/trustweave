@@ -398,4 +398,92 @@ class CachingDidResolverTest {
             assertEquals(0, delegate.oneArgCalls)
             assertEquals(0, delegate.optionCalls.size)
         }
+
+    // ─── Versioned requests, TTL timing, invalidate races ───
+
+    @Test
+    fun `versioned and latest requests do not share a cache entry`() =
+        runBlocking<Unit> {
+            val did = Did("did:example:v")
+            val delegate =
+                RecordingOptionsResolver { d -> success(d) }
+            val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+
+            resolver.resolve(did, ResolutionOptions(versionId = "1"))
+            resolver.resolve(did) // latest: must not be served from the versioned result
+            resolver.resolve(did, ResolutionOptions(versionTime = Instant.parse("2020-01-01T00:00:00Z")))
+            resolver.resolve(did, ResolutionOptions(additional = mapOf("x" to "y")))
+
+            assertEquals(1, delegate.oneArgCalls)
+            assertEquals(3, delegate.optionCalls.size)
+            assertEquals(1, resolver.size, "only the latest result may be cached")
+        }
+
+    @Test
+    fun `a cached latest result is not served for a versioned request`() =
+        runBlocking<Unit> {
+            val did = Did("did:example:v2")
+            val delegate = RecordingOptionsResolver { d -> success(d) }
+            val resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+
+            resolver.resolve(did)
+            resolver.resolve(did, ResolutionOptions(versionId = "1"))
+
+            assertEquals(1, delegate.optionCalls.size)
+        }
+
+    @Test
+    fun `a versioned success does not mask a later deactivation of the latest`() =
+        runBlocking<Unit> {
+            val did = Did("did:example:v3")
+            var deactivatedNow = false
+            val delegate =
+                RecordingOptionsResolver { d ->
+                    if (deactivatedNow) deactivated(d) else success(d)
+                }
+            val resolver = CachingDidResolver(delegate, ttl = 10.minutes, clock = MutableClock(epoch))
+
+            resolver.resolve(did, ResolutionOptions(versionId = "1"))
+            deactivatedNow = true
+            val latest = resolver.resolve(did)
+
+            assertTrue(latest is DidResolutionResult.Deactivated)
+        }
+
+    @Test
+    fun `ttl is measured from when the delegate returns`() =
+        runBlocking<Unit> {
+            val did = Did("did:example:slow")
+            val clock = MutableClock(epoch)
+            val delegate =
+                CountingResolver { d ->
+                    clock.advance(4.minutes) // slow resolution
+                    success(d)
+                }
+            val resolver = CachingDidResolver(delegate, ttl = 5.minutes, clock = clock)
+
+            resolver.resolve(did)
+            clock.advance(2.minutes) // 2 min after the result arrived: still fresh
+            resolver.resolve(did)
+
+            assertEquals(1, delegate.totalCalls)
+        }
+
+    @Test
+    fun `an invalidate during an in-flight resolve prevents the stale write`() =
+        runBlocking<Unit> {
+            val did = Did("did:example:race")
+            lateinit var resolver: CachingDidResolver
+            val delegate =
+                CountingResolver { d ->
+                    resolver.invalidate(d) // concurrent invalidate while resolving
+                    success(d)
+                }
+            resolver = CachingDidResolver(delegate, clock = MutableClock(epoch))
+
+            resolver.resolve(did)
+            resolver.resolve(did)
+
+            assertEquals(2, delegate.totalCalls, "result fetched before the invalidate must not be cached")
+        }
 }

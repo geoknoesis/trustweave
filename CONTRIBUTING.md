@@ -296,7 +296,22 @@ Added SPI provider for auto-discovery.
 Fixes #123
 ```
 
+### Gradle dependency verification (planned)
+
+`gradle/verification-metadata.xml` is deliberately not committed yet. A complete file has to cover the resolved
+artifacts of all 107 modules across every configuration (compile, runtime, test, Dokka, Kover, ktlint), which
+needs an online run of `./gradlew --write-verification-metadata sha256 build` (plus the test and report tasks);
+`./gradlew --offline --write-verification-metadata sha256 help` records only the build-script plugins and would
+leave a partial file that fails every real build with "dependency verification" errors. Plan: generate the
+file online in one change, review it for unexpected `trusted-artifacts` or `ignored-keys`, keep SHA-256 entries
+only (no PGP key rings), and regenerate it with the same command whenever `gradle/libs.versions.toml` changes.
+Until then the supply-chain controls are the OSV baseline gate, dependency review and release provenance
+described in SECURITY.md.
+
 ### Recommended branch protection (maintainers)
+
+Branch protection and rulesets are manual repository settings: nothing committed to the repository (including
+`.github/CODEOWNERS`) turns them on, and CODEOWNERS is advisory until "Require review from Code Owners" is enabled.
 
 Configure these on `main` (Settings, Branches, or a ruleset) so the CI gates and `.github/CODEOWNERS`
 are enforced rather than advisory:
@@ -501,3 +516,8 @@ For detailed information on specific topics, see:
 
 
 See [SDK release validation](docs/contributing/release-validation.md) for ABI reference updates, merged coverage, signing, and dependency inventories.
+
+Releases: a `v*` tag must point at a commit that is an ancestor of `main` (the release workflow checks this first).
+`scripts/run-contract-checks.sh` is the single list of contract checks that both `ci.yml` and
+`release-evidence.yml` run; add a new check there. See [Publishing](docs/operations/publishing.md) for the
+publish ordering (stage, checksum, attest, then upload to Central last).

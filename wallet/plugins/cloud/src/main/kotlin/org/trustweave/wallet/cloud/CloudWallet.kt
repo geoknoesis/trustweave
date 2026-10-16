@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -30,6 +31,22 @@ import kotlin.time.Clock
  * Stores credentials in cloud storage (AWS S3, Azure Blob Storage, or Google Cloud Storage).
  * Enables multi-device wallet synchronization.
  *
+ * **Client-side encryption (optional):** pass a 32-byte `encryptionKey` and credentials and their metadata
+ * sidecars are encrypted with AES-256-GCM before upload (random 12-byte IV per write; AAD binds the wallet id,
+ * the record kind and the SHA-256 of the credential id, as in the `file` wallet). Encrypted objects start with a
+ * `TWCW` header. **Without a key, objects are written as plain JSON** and confidentiality relies entirely on the
+ * storage provider's own at-rest encryption (e.g. S3 SSE, Azure Storage encryption) and access control
+ * configured outside this library.
+ *
+ * **Migration:** with a key set, writes always encrypt, and a read falls back to legacy plaintext JSON only
+ * when the object lacks the `TWCW` header. An object that has the header but fails authentication (tampered,
+ * wrong key, swapped with another record) is never read as plaintext: it fails closed with a
+ * `WalletException.StorageError`. A storage-level writer can still replace an encrypted object with plaintext
+ * JSON that this wallet will accept during migration; re-store credentials to encrypt them.
+ *
+ * Credential ids are percent-encoded into a single object-key segment, so an id can never
+ * traverse or alias another key.
+ *
  * **Example:**
  * ```kotlin
  * val wallet = CloudWallet(
@@ -48,6 +65,7 @@ abstract class CloudWallet(
     val holderDid: String,
     protected val bucketName: String,
     protected val basePath: String,
+    encryptionKey: ByteArray? = null,
 ) : Wallet,
     CredentialStorage,
     CredentialRecordStorage,
@@ -58,6 +76,24 @@ abstract class CloudWallet(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
+
+    private val recordCipher: CloudRecordCipher? =
+        encryptionKey?.let { CloudRecordCipher(it.copyOf(), walletId) }
+
+    /** `true` when objects are encrypted client-side with the configured AES-256-GCM key. */
+    val isEncrypted: Boolean get() = recordCipher != null
+
+    private fun seal(
+        plaintext: ByteArray,
+        kind: String,
+        credentialId: String,
+    ): ByteArray = recordCipher?.encrypt(plaintext, kind, credentialId) ?: plaintext
+
+    private fun open(
+        stored: ByteArray,
+        kind: String,
+        credentialId: String,
+    ): ByteArray = recordCipher?.decrypt(stored, kind, credentialId) ?: stored
 
     protected val credentialsPath: String = "$basePath/credentials"
     protected val collectionsPath: String = "$basePath/collections"
@@ -87,38 +123,99 @@ abstract class CloudWallet(
      */
     protected abstract suspend fun listKeys(prefix: String): List<String>
 
+    private fun credentialKey(credentialId: String): String = "$credentialsPath/${encodeKeySegment(credentialId)}.json"
+
+    /**
+     * The key objects were stored under before ids were percent-encoded (`{credentials}/{id}.json`),
+     * or `null` when that raw key could address anything outside the credentials prefix (empty, `.`
+     * or `..` segments, backslashes, control characters) or is identical to [credentialKey]. Such
+     * objects stay reachable; an id that could traverse never gets a fallback.
+     */
+    private fun legacyCredentialKey(credentialId: String): String? {
+        if (credentialId.isEmpty() || credentialId.any { it == '\\' || it.isISOControl() }) return null
+        if (credentialId.split('/').any { it == "." || it == ".." }) return null
+        val key = "$credentialsPath/$credentialId.json"
+        return key.takeIf { it != credentialKey(credentialId) }
+    }
+
+    private suspend fun downloadWithLegacyFallback(credentialId: String): ByteArray? =
+        (
+            download(credentialKey(credentialId))
+                ?: legacyCredentialKey(credentialId)?.let { download(it) }
+        )?.let { open(it, CloudRecordCipher.KIND_CREDENTIAL, credentialId) }
+
+    /**
+     * Percent-encodes a credential id for use as exactly one object-key segment, so an id can
+     * never add path separators, climb out of the wallet prefix (`../`), or collide with another
+     * id. Letters, digits and `-_.~:` are kept as-is (so ordinary ids such as `urn:uuid:...` keep
+     * their historical keys); everything else, and a dots-only id, is encoded. Reversible via
+     * [decodeKeySegment].
+     */
+    private fun encodeKeySegment(id: String): String = encodeCloudKeySegment(id)
+
+    private fun decodeKeySegment(segment: String): String {
+        val bytes = java.io.ByteArrayOutputStream()
+        var i = 0
+        while (i < segment.length) {
+            val c = segment[i]
+            val hex = if (c == '%' && i + 2 < segment.length) segment.substring(i + 1, i + 3).toIntOrNull(16) else null
+            if (hex != null) {
+                bytes.write(hex)
+                i += 3
+            } else {
+                bytes.write(c.toString().toByteArray(Charsets.UTF_8))
+                i++
+            }
+        }
+        return String(bytes.toByteArray(), Charsets.UTF_8)
+    }
+
     // CredentialStorage implementation
     override suspend fun store(credential: VerifiableCredential): String =
         withContext(Dispatchers.IO) {
             val id = credential.id?.value ?: UUID.randomUUID().toString()
             val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
-            val key = "$credentialsPath/$id.json"
-            upload(key, credentialJson.toByteArray(Charsets.UTF_8))
+            val key = credentialKey(id)
+            upload(key, seal(credentialJson.toByteArray(Charsets.UTF_8), CloudRecordCipher.KIND_CREDENTIAL, id))
 
-            // Initialize metadata if not exists
-            val metadataKey = "$metadataPath/$id.json"
-            val existingMetadata = download(metadataKey)
-            if (existingMetadata == null) {
-                val metadata =
+            // Create metadata on first store; on a re-store keep it but refresh `updatedAt`.
+            val metadataKey = "$metadataPath/${encodeKeySegment(id)}.json"
+            val now = Clock.System.now().toString()
+            val existing =
+                download(metadataKey)?.let {
+                    // Decrypt outside runCatching: a tampered/wrong-key sidecar must fail closed.
+                    val plain = open(it, CloudRecordCipher.KIND_METADATA, id)
+                    runCatching { json.parseToJsonElement(String(plain, Charsets.UTF_8)) as? JsonObject }.getOrNull()
+                }
+            val metadata =
+                if (existing != null) {
+                    JsonObject(existing + ("updatedAt" to JsonPrimitive(now)))
+                } else {
                     buildJsonObject {
                         put("credentialId", id)
-                        put("createdAt", Clock.System.now().toString())
-                        put("updatedAt", Clock.System.now().toString())
+                        put("createdAt", now)
+                        put("updatedAt", now)
                         put("notes", JsonNull)
                         putJsonArray("tags") { }
                         putJsonObject("metadata") { }
                     }
-                upload(metadataKey, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8))
-            }
+                }
+            upload(
+                metadataKey,
+                seal(
+                    json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8),
+                    CloudRecordCipher.KIND_METADATA,
+                    id,
+                ),
+            )
 
             id
         }
 
     override suspend fun get(credentialId: String): VerifiableCredential? =
         withContext(Dispatchers.IO) {
-            val key = "$credentialsPath/$credentialId.json"
-            val content = download(key) ?: return@withContext null
+            val content = downloadWithLegacyFallback(credentialId) ?: return@withContext null
 
             val credentialJson = String(content, Charsets.UTF_8)
             json.decodeFromString(VerifiableCredential.serializer(), credentialJson)
@@ -131,17 +228,43 @@ abstract class CloudWallet(
             listKeys("$credentialsPath/")
                 .filter { it.endsWith(".json") }
                 .sorted()
-                .mapNotNull { key ->
-                    readRecord(key)
-                }.filter { filter == null || matchesFilter(it.credential, filter) }
+                .mapNotNull { key -> readRecordOrSkip(key) }
+                .distinctBy { it.storageId }
+                .filter { filter == null || matchesFilter(it.credential, filter) }
         }
 
     private suspend fun readRecord(key: String): StoredCredentialRecord? {
         require(key.startsWith("$credentialsPath/") && key.endsWith(".json")) { "Unexpected credential key" }
         val content = download(key) ?: return null // Concurrent deletion is a normal object-store race.
-        val credential = json.decodeFromString(VerifiableCredential.serializer(), String(content, Charsets.UTF_8))
-        return StoredCredentialRecord(key.removePrefix("$credentialsPath/").removeSuffix(".json"), credential)
+        val handle = handleFor(key)
+        val plain = open(content, CloudRecordCipher.KIND_CREDENTIAL, handle)
+        val credential = json.decodeFromString(VerifiableCredential.serializer(), String(plain, Charsets.UTF_8))
+        return StoredCredentialRecord(handle, credential)
     }
+
+    /**
+     * The handle for an object key: the decoded id when that id maps back to exactly this key,
+     * otherwise (an object written before ids were encoded) the raw id, which [get] and [delete]
+     * reach through the legacy-key fallback. Either way the handle round-trips to the same key.
+     */
+    private fun handleFor(key: String): String {
+        val segment = key.removePrefix("$credentialsPath/").removeSuffix(".json")
+        val decoded = decodeKeySegment(segment)
+        return if (credentialKey(decoded) == key) decoded else segment
+    }
+
+    /**
+     * Like [readRecord] but an object that cannot be parsed is skipped rather than failing the
+     * whole scan ([recoverRecords] is the call that reports it). Storage failures still propagate.
+     */
+    private suspend fun readRecordOrSkip(key: String): StoredCredentialRecord? =
+        try {
+            readRecord(key)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (corrupt: IllegalArgumentException) {
+            null // includes kotlinx.serialization.SerializationException
+        }
 
     override suspend fun recoverRecords(): CredentialRecoveryResult =
         withContext(Dispatchers.IO) {
@@ -165,13 +288,15 @@ abstract class CloudWallet(
 
     override suspend fun delete(credentialId: String): Boolean =
         withContext(Dispatchers.IO) {
-            val credentialKey = "$credentialsPath/$credentialId.json"
-            val deleted = deleteFromStorage(credentialKey)
+            val segment = encodeKeySegment(credentialId)
+            val deleted =
+                deleteFromStorage(credentialKey(credentialId)) ||
+                    (legacyCredentialKey(credentialId)?.let { deleteFromStorage(it) } ?: false)
 
             if (deleted) {
                 // Clean up related files
-                deleteFromStorage("$metadataPath/$credentialId.json")
-                deleteFromStorage("$tagsPath/$credentialId.json")
+                deleteFromStorage("$metadataPath/$segment.json")
+                deleteFromStorage("$tagsPath/$segment.json")
             }
 
             deleted
@@ -238,7 +363,7 @@ abstract class CloudWallet(
             var expired = 0
             var unknown = 0
             for (key in listKeys("$credentialsPath/").filter { it.endsWith(".json") }) {
-                val credential = readRecord(key)?.credential ?: continue
+                val credential = readRecordOrSkip(key)?.credential ?: continue
                 total++
                 val expiry =
                     if (credential.isVc2 &&
@@ -261,4 +386,18 @@ abstract class CloudWallet(
                 unknownStatusCredentials = unknown,
             )
         }
+}
+
+/** Percent-encodes [id] into exactly one object-key segment; see [CloudWallet]. */
+internal fun encodeCloudKeySegment(id: String): String {
+    val out = StringBuilder()
+    for (byte in id.toByteArray(Charsets.UTF_8)) {
+        val c = (byte.toInt() and 0xFF).toChar()
+        if (c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c in "-_~:" || (c == '.' && id.any { it != '.' })) {
+            out.append(c)
+        } else {
+            out.append('%').append("%02X".format(byte.toInt() and 0xFF))
+        }
+    }
+    return out.toString()
 }

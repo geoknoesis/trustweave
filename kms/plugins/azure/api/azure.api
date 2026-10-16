@@ -5,6 +5,7 @@ public final class org/trustweave/azurekms/AlgorithmMapping {
 	public final fun resolveKeyId (Ljava/lang/String;)Ljava/lang/String;
 	public final fun toAzureKeyType (Lorg/trustweave/kms/Algorithm;)Lkotlin/Pair;
 	public final fun toAzureSignatureAlgorithm (Lorg/trustweave/kms/Algorithm;)Lcom/azure/security/keyvault/keys/cryptography/models/SignatureAlgorithm;
+	public final fun toKeyIdentifierUrl (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class org/trustweave/azurekms/AzureKeyManagementService : java/lang/AutoCloseable, org/trustweave/kms/KeyManagementService {

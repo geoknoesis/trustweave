@@ -1,6 +1,7 @@
 package org.trustweave.wallet.cloud
 
 import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.services.WalletCreationOptions
 import org.trustweave.wallet.services.WalletFactory
 import org.trustweave.wallet.services.validateDeployment
@@ -68,7 +69,12 @@ import java.util.UUID
  * `<storagePath>/wallet-<walletId>/`, or, for the single wallet that owns the path, pass
  * `additionalProperties = mapOf("legacyLayout" to true)` to keep using the old prefix.
  *
- * **Encryption:** `WalletCreationOptions.encryptionKey` is rejected; objects are written as plain JSON.
+ * **Encryption:** `WalletCreationOptions.encryptionKey` (or `additionalProperties["encryptionKey"]`) is optional.
+ * When present it must be the Base64 encoding of exactly 32 bytes (AES-256); any other length or invalid Base64
+ * is rejected with `WalletException.WalletCreationFailed` (fail closed, never ignored). A valid key enables
+ * client-side AES-256-GCM (see [CloudWallet]); existing plaintext objects stay readable and are replaced by
+ * encrypted ones as they are re-stored. **Without a key, objects are written as plain JSON** and rely on the
+ * storage provider's at-rest encryption.
  */
 class CloudWalletFactory : WalletFactory {
     override suspend fun create(
@@ -83,17 +89,20 @@ class CloudWalletFactory : WalletFactory {
             throw IllegalArgumentException("Provider name must be 'cloud'")
         }
 
-        require(options.encryptionKey == null && options.additionalProperties["encryptionKey"] == null) {
-            "CloudWalletFactory cannot honour encryptionKey: cloud wallets store credentials as plain JSON and rely on " +
-                "the storage provider's own at-rest encryption (SSE / Azure Storage encryption / CMEK). " +
-                "Remove encryptionKey or use the 'file' wallet provider."
+        val legacyKey = options.additionalProperties["encryptionKey"]
+        require(legacyKey == null || legacyKey is String) { "encryptionKey must be a string" }
+        require(options.encryptionKey == null || legacyKey == null || options.encryptionKey == legacyKey) {
+            "Conflicting typed and legacy encryption keys"
         }
+        val encryptionKeyBase64 = options.encryptionKey ?: legacyKey as? String
 
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
         val finalHolderDid =
             holderDid
                 ?: throw IllegalArgumentException("holderDid is required for CloudWallet")
+
+        val encryptionKey = encryptionKeyBase64?.let { decodeCloudEncryptionKey(it, finalWalletId) }
 
         val storagePath =
             options.storagePath
@@ -148,6 +157,7 @@ class CloudWalletFactory : WalletFactory {
                     bucketName = bucketName,
                     basePath = basePath,
                     s3Client = s3Client,
+                    encryptionKey = encryptionKey,
                 )
             }
             "azure" -> {
@@ -187,6 +197,7 @@ class CloudWalletFactory : WalletFactory {
                     containerName = bucketName,
                     basePath = basePath,
                     blobServiceClient = blobServiceClient,
+                    encryptionKey = encryptionKey,
                 )
             }
             "gcs" -> {
@@ -228,6 +239,7 @@ class CloudWalletFactory : WalletFactory {
                     bucketName = bucketName,
                     basePath = basePath,
                     storage = storage,
+                    encryptionKey = encryptionKey,
                 )
             }
             else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
@@ -279,4 +291,33 @@ internal fun resolveCloudLocation(
     val base = segments.drop(1)
     val own = if (legacyLayout) base else base + "wallet-${encodeCloudKeySegment(walletId)}"
     return CloudLocation(bucket, own.joinToString("/"))
+}
+
+/** Decodes a Base64 AES-256 key; rejects invalid Base64 and any length other than 32 bytes. */
+internal fun decodeCloudEncryptionKey(
+    base64: String,
+    walletId: String,
+): ByteArray {
+    val bytes =
+        try {
+            java.util.Base64
+                .getDecoder()
+                .decode(base64)
+        } catch (e: IllegalArgumentException) {
+            throw WalletException.WalletCreationFailed(
+                reason = "encryptionKey must be valid Base64-encoded AES key material",
+                provider = "cloud",
+                walletId = walletId,
+            )
+        }
+    if (bytes.size != CloudRecordCipher.KEY_LENGTH_BYTES) {
+        val size = bytes.size
+        bytes.fill(0)
+        throw WalletException.WalletCreationFailed(
+            reason = "encryptionKey must decode to exactly 32 bytes (AES-256), but decoded to $size bytes",
+            provider = "cloud",
+            walletId = walletId,
+        )
+    }
+    return bytes
 }

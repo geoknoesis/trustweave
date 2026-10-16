@@ -614,6 +614,12 @@ working code fail until it is adjusted.**
 
 ### Added
 
+- **Opt-in `requireHolderBinding` verification option.** `VerificationOptions.requireHolderBinding` (default `false`;
+  DSL: `requireHolderBinding(true)` in `verify { }`) rejects SD-JWT VC credentials whose issuer-signed JWT carries no
+  `cnf` claim, standalone and inside presentations, after the issuer signature is verified. The default is unchanged:
+  `cnf`-less SD-JWT credentials are still accepted as bearer credentials. `VerificationOptions` gains a trailing
+  constructor parameter (`copy`/`componentN` ABI updated).
+
 - **CAdES B-LT verification.** `DefaultCadesVerifier` now reads the revocation values a CMS signature carries
   (the `id-aa-ets-revocationValues` unsigned attribute, whose `ocspVals` are re-wrapped as `OCSPResponse`, and the RFC 5652
   `SignedData.crls` field including `id-ri-ocsp-response`) and feeds them with caller evidence into
@@ -757,6 +763,14 @@ working code fail until it is adjusted.**
   `TRUSTWEAVE_INDY_INTEGRATION=required`); the inert flag was removed from `ci.yml` and `release-evidence.yml`.
 
 ### Fixed
+
+- **Content negotiation, JWK numbers, storage, wallet organize and domain anchoring quirks.**
+  `DefaultContentNegotiationService` now honours Accept `q` values (higher wins, `q=0` is not acceptable, ties keep
+  server preference). Integer members of a `publicKeyJwk` map and of service-endpoint maps are emitted as integers,
+  not doubles such as `1.0E3`. `InMemoryDocumentStorage.deactivate` is a no-op for an unknown DID instead of
+  creating an entry. `Wallet.organize` reports a `false` result from the wallet as an entry in
+  `OrganizationResult.errors` instead of success. `TrustedDomainManager.anchor` releases its treasury reservation
+  when the calling coroutine is cancelled mid-write.
 - **Behaviour change: trust-registry issuer/verifier lists are capped at 100 entries by default.** The body is still a JSON array (did-ordered); the total match count is in the new `X-Total-Count` header; pass `limit`/`offset` to page.
 - `decodeMultibaseDigest` in `DidDocumentVerificationService` accepts `u` and `U` through one branch (contradictory comments removed; behaviour unchanged).
 - `InMemoryKeyManagementService` constructor: a `ConcurrentHashMap` argument is shared with the caller, any other map is copied once; both are now documented.
@@ -817,6 +831,19 @@ working code fail until it is adjusted.**
 - Verifiable Intent states plainly that multi-pair L2 is unsupported.
 
 ### Security
+- **SSRF-guarded default HTTP clients for Entra and OpenID Federation.** `EntraTokenClient`, `EntraIssuanceClient`,
+  `EntraPresentationClient`, `EntraIntegration` and the Entra exchange provider now default to
+  `ssrfGuardedOkHttpClient()` instead of a plain `OkHttpClient()`, so internal/loopback/link-local destinations are
+  refused at connect time. **Behaviour change:** tests against a loopback server (WireMock) must inject a plain
+  `OkHttpClient()`; `EntraConfig`'s `HttpUrlPolicy` checks are unchanged. `EntityStatementJwtProcessor` lost its unused
+  `OkHttpClient` constructor parameter (**API**: the one-argument constructor is gone; the no-argument form is unchanged).
+- **Cloud wallets can encrypt client-side.** `CloudWalletFactory` now accepts `encryptionKey` (Base64 of exactly 32 bytes;
+  other lengths or invalid Base64 fail with `WalletCreationFailed`) and `CloudWallet`/`AwsS3Wallet`/`AzureBlobWallet`/
+  `GoogleCloudStorageWallet` take an optional `encryptionKey: ByteArray?`. Credentials and metadata are written as
+  AES-256-GCM objects with a `TWCW` header, random IV and AAD binding wallet id, record kind and credential-id hash.
+  Migration: reads fall back to legacy plaintext only for objects lacking the header; writes always encrypt when a key is
+  set; tampered, swapped or wrong-key objects fail closed with `WalletException.StorageError`. Without a key the
+  behaviour is unchanged (plaintext JSON), as documented. Previously a supplied `encryptionKey` was rejected.
 - **TSA client fails closed.** `BouncyCastleTsaClient` now always verifies the RFC 3161 token signature (it used to
   verify only when `trustedSignerCertificates` was set), checks the signer's `id-kp-timeStamping` EKU and validity at
   `genTime`, and requires the signer to be pinned or to chain to the new `TsaConfig.trustAnchors`; with neither it

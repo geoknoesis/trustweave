@@ -56,7 +56,7 @@ class TrustChainResolver(
         require(maxResponseBytes in 1..(16 * 1024 * 1024))
     }
 
-    private val jwtProcessor = EntityStatementJwtProcessor(httpClient)
+    private val jwtProcessor = EntityStatementJwtProcessor()
     private val json = Json { ignoreUnknownKeys = true }
 
     /**

@@ -1182,6 +1182,7 @@ public final class org/trustweave/trust/dsl/credential/VerificationBuilder {
 	public final fun credential (Lorg/trustweave/credential/model/vc/VerifiableCredential;)V
 	public final fun domain (Ljava/lang/String;)V
 	public final fun enforceHolderBinding (Z)V
+	public final fun requireHolderBinding (Z)V
 	public final fun requireTrust (Lorg/trustweave/trust/TrustRegistry;)V
 	public final fun requireTrustPath (Lorg/trustweave/trust/TrustRegistry;I)V
 	public static synthetic fun requireTrustPath$default (Lorg/trustweave/trust/dsl/credential/VerificationBuilder;Lorg/trustweave/trust/TrustRegistry;IILjava/lang/Object;)V

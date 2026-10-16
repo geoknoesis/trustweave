@@ -255,7 +255,7 @@ private fun anyToServiceEndpointJsonElement(value: Any?): JsonElement =
     when (value) {
         null -> JsonNull
         is String -> JsonPrimitive(value)
-        is Number -> JsonPrimitive(value.toDouble())
+        is Number -> JsonPrimitive(value)
         is Boolean -> JsonPrimitive(value)
         is Map<*, *> ->
             buildJsonObject {

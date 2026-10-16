@@ -31,11 +31,18 @@ import kotlin.time.Clock
  * Stores credentials in cloud storage (AWS S3, Azure Blob Storage, or Google Cloud Storage).
  * Enables multi-device wallet synchronization.
  *
- * **WARNING - no client-side encryption:** this class does not encrypt credentials; objects are written as
- * plain JSON, and `WalletCreationOptions.encryptionKey` is rejected rather than silently ignored. Use the `file`
- * wallet if you need client-side AES-GCM.
- * Confidentiality relies entirely on the storage provider's own at-rest encryption (e.g. S3
- * SSE, Azure Storage encryption) and access control configured outside this library.
+ * **Client-side encryption (optional):** pass a 32-byte `encryptionKey` and credentials and their metadata
+ * sidecars are encrypted with AES-256-GCM before upload (random 12-byte IV per write; AAD binds the wallet id,
+ * the record kind and the SHA-256 of the credential id, as in the `file` wallet). Encrypted objects start with a
+ * `TWCW` header. **Without a key, objects are written as plain JSON** and confidentiality relies entirely on the
+ * storage provider's own at-rest encryption (e.g. S3 SSE, Azure Storage encryption) and access control
+ * configured outside this library.
+ *
+ * **Migration:** with a key set, writes always encrypt, and a read falls back to legacy plaintext JSON only
+ * when the object lacks the `TWCW` header. An object that has the header but fails authentication (tampered,
+ * wrong key, swapped with another record) is never read as plaintext: it fails closed with a
+ * `WalletException.StorageError`. A storage-level writer can still replace an encrypted object with plaintext
+ * JSON that this wallet will accept during migration; re-store credentials to encrypt them.
  *
  * Credential ids are percent-encoded into a single object-key segment, so an id can never
  * traverse or alias another key.
@@ -58,6 +65,7 @@ abstract class CloudWallet(
     val holderDid: String,
     protected val bucketName: String,
     protected val basePath: String,
+    encryptionKey: ByteArray? = null,
 ) : Wallet,
     CredentialStorage,
     CredentialRecordStorage,
@@ -68,6 +76,24 @@ abstract class CloudWallet(
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
+
+    private val recordCipher: CloudRecordCipher? =
+        encryptionKey?.let { CloudRecordCipher(it.copyOf(), walletId) }
+
+    /** `true` when objects are encrypted client-side with the configured AES-256-GCM key. */
+    val isEncrypted: Boolean get() = recordCipher != null
+
+    private fun seal(
+        plaintext: ByteArray,
+        kind: String,
+        credentialId: String,
+    ): ByteArray = recordCipher?.encrypt(plaintext, kind, credentialId) ?: plaintext
+
+    private fun open(
+        stored: ByteArray,
+        kind: String,
+        credentialId: String,
+    ): ByteArray = recordCipher?.decrypt(stored, kind, credentialId) ?: stored
 
     protected val credentialsPath: String = "$basePath/credentials"
     protected val collectionsPath: String = "$basePath/collections"
@@ -113,8 +139,10 @@ abstract class CloudWallet(
     }
 
     private suspend fun downloadWithLegacyFallback(credentialId: String): ByteArray? =
-        download(credentialKey(credentialId))
-            ?: legacyCredentialKey(credentialId)?.let { download(it) }
+        (
+            download(credentialKey(credentialId))
+                ?: legacyCredentialKey(credentialId)?.let { download(it) }
+        )?.let { open(it, CloudRecordCipher.KIND_CREDENTIAL, credentialId) }
 
     /**
      * Percent-encodes a credential id for use as exactly one object-key segment, so an id can
@@ -149,14 +177,16 @@ abstract class CloudWallet(
             val credentialJson = json.encodeToString(VerifiableCredential.serializer(), credential)
 
             val key = credentialKey(id)
-            upload(key, credentialJson.toByteArray(Charsets.UTF_8))
+            upload(key, seal(credentialJson.toByteArray(Charsets.UTF_8), CloudRecordCipher.KIND_CREDENTIAL, id))
 
             // Create metadata on first store; on a re-store keep it but refresh `updatedAt`.
             val metadataKey = "$metadataPath/${encodeKeySegment(id)}.json"
             val now = Clock.System.now().toString()
             val existing =
                 download(metadataKey)?.let {
-                    runCatching { json.parseToJsonElement(String(it, Charsets.UTF_8)) as? JsonObject }.getOrNull()
+                    // Decrypt outside runCatching: a tampered/wrong-key sidecar must fail closed.
+                    val plain = open(it, CloudRecordCipher.KIND_METADATA, id)
+                    runCatching { json.parseToJsonElement(String(plain, Charsets.UTF_8)) as? JsonObject }.getOrNull()
                 }
             val metadata =
                 if (existing != null) {
@@ -171,7 +201,14 @@ abstract class CloudWallet(
                         putJsonObject("metadata") { }
                     }
                 }
-            upload(metadataKey, json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8))
+            upload(
+                metadataKey,
+                seal(
+                    json.encodeToString(JsonObject.serializer(), metadata).toByteArray(Charsets.UTF_8),
+                    CloudRecordCipher.KIND_METADATA,
+                    id,
+                ),
+            )
 
             id
         }
@@ -199,8 +236,10 @@ abstract class CloudWallet(
     private suspend fun readRecord(key: String): StoredCredentialRecord? {
         require(key.startsWith("$credentialsPath/") && key.endsWith(".json")) { "Unexpected credential key" }
         val content = download(key) ?: return null // Concurrent deletion is a normal object-store race.
-        val credential = json.decodeFromString(VerifiableCredential.serializer(), String(content, Charsets.UTF_8))
-        return StoredCredentialRecord(handleFor(key), credential)
+        val handle = handleFor(key)
+        val plain = open(content, CloudRecordCipher.KIND_CREDENTIAL, handle)
+        val credential = json.decodeFromString(VerifiableCredential.serializer(), String(plain, Charsets.UTF_8))
+        return StoredCredentialRecord(handle, credential)
     }
 
     /**

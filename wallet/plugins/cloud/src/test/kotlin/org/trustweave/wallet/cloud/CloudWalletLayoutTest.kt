@@ -8,6 +8,7 @@ import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.did.identifiers.Did
 import org.trustweave.wallet.services.WalletCreationOptions
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -129,18 +130,69 @@ class CloudWalletLayoutTest {
         }
 
     @Test
-    fun `factory refuses an encryptionKey it cannot honour`() =
+    fun `factory rejects encryption keys that are not Base64 of exactly 32 bytes`() =
         runBlocking<Unit> {
-            for (options in listOf(
-                WalletCreationOptions(storagePath = "s3://b/p", encryptionKey = "secret"),
-                WalletCreationOptions(storagePath = "s3://b/p", additionalProperties = mapOf("encryptionKey" to "secret")),
-            )) {
-                val error =
-                    assertFailsWith<IllegalArgumentException> {
-                        CloudWalletFactory().create("cloud", walletId = "w", holderDid = "did:key:h", options = options)
-                    }
-                assertTrue(error.message!!.contains("encryptionKey"))
-                assertTrue(!error.message!!.contains("secret"))
+            val b64 = Base64.getEncoder()
+            val bad =
+                listOf(
+                    "secret!!not-base64",
+                    b64.encodeToString(ByteArray(16)),
+                    b64.encodeToString(ByteArray(24)),
+                    b64.encodeToString(ByteArray(33)),
+                )
+            for (key in bad) {
+                for (options in listOf(
+                    WalletCreationOptions(storagePath = "s3://b/p", encryptionKey = key),
+                    WalletCreationOptions(storagePath = "s3://b/p", additionalProperties = mapOf("encryptionKey" to key)),
+                )) {
+                    val error =
+                        assertFailsWith<org.trustweave.wallet.exception.WalletException.WalletCreationFailed> {
+                            CloudWalletFactory().create("cloud", walletId = "w", holderDid = "did:key:h", options = options)
+                        }
+                    assertTrue(error.message!!.contains("encryptionKey"))
+                    assertTrue(!error.message!!.contains(key))
+                }
+            }
+        }
+
+    @Test
+    fun `factory enables encryption for a valid 32-byte key`() =
+        runBlocking<Unit> {
+            val key = Base64.getEncoder().encodeToString(ByteArray(32) { it.toByte() })
+            val props = mapOf("provider" to "aws", "accessKeyId" to "a", "secretAccessKey" to "b")
+            val encrypted =
+                CloudWalletFactory().create(
+                    "cloud",
+                    walletId = "w",
+                    holderDid = "did:key:h",
+                    options = WalletCreationOptions(storagePath = "s3://b/p", encryptionKey = key, additionalProperties = props),
+                ) as CloudWallet
+            assertTrue(encrypted.isEncrypted)
+            val plain =
+                CloudWalletFactory().create(
+                    "cloud",
+                    walletId = "w",
+                    holderDid = "did:key:h",
+                    options = WalletCreationOptions(storagePath = "s3://b/p", additionalProperties = props),
+                ) as CloudWallet
+            assertTrue(!plain.isEncrypted)
+        }
+
+    @Test
+    fun `factory rejects conflicting typed and legacy encryption keys`() =
+        runBlocking<Unit> {
+            assertFailsWith<IllegalArgumentException> {
+                CloudWalletFactory().create(
+                    "cloud",
+                    walletId = "w",
+                    holderDid = "did:key:h",
+                    options =
+                        WalletCreationOptions(
+                            storagePath = "s3://b/p",
+                            encryptionKey = "a",
+                            additionalProperties = mapOf("encryptionKey" to "b"),
+                        ),
+                )
             }
         }
 }

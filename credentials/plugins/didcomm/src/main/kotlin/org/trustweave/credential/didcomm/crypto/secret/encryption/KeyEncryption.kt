@@ -15,7 +15,7 @@ import javax.crypto.spec.SecretKeySpec
  * Uses AES-256-GCM for authenticated encryption.
  */
 class KeyEncryption(
-    private val masterKey: ByteArray // Derived from user password/master key
+    private val masterKey: ByteArray, // Derived from user password/master key
 ) {
     private val algorithm = "AES/GCM/NoPadding"
     private val keyLength = 256
@@ -28,23 +28,35 @@ class KeyEncryption(
      * @param plaintext Data to encrypt
      * @return Encrypted data with IV
      */
-    fun encrypt(plaintext: ByteArray): EncryptedData {
-        val iv = ByteArray(ivLength).apply {
-            SecureRandom().nextBytes(this)
-        }
+    fun encrypt(plaintext: ByteArray): EncryptedData = encrypt(plaintext, null)
+
+    /**
+     * Encrypts [plaintext], binding [aad] (e.g. a purpose label) as GCM associated data when given,
+     * so the ciphertext cannot be replayed in a different context. [decrypt] must be given the same
+     * [aad].
+     */
+    fun encrypt(
+        plaintext: ByteArray,
+        aad: ByteArray?,
+    ): EncryptedData {
+        val iv =
+            ByteArray(ivLength).apply {
+                SecureRandom().nextBytes(this)
+            }
 
         val secretKey = SecretKeySpec(masterKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, iv)
 
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec)
+        if (aad != null) cipher.updateAAD(aad)
 
         val ciphertext = cipher.doFinal(plaintext)
 
         return EncryptedData(
             iv = iv,
             ciphertext = ciphertext,
-            algorithm = algorithm
+            algorithm = algorithm,
         )
     }
 
@@ -54,12 +66,19 @@ class KeyEncryption(
      * @param encrypted Encrypted data with IV
      * @return Decrypted plaintext
      */
-    fun decrypt(encrypted: EncryptedData): ByteArray {
+    fun decrypt(encrypted: EncryptedData): ByteArray = decrypt(encrypted, null)
+
+    /** Decrypts data produced by [encrypt] with the same [aad] (`null` for legacy data without AAD). */
+    fun decrypt(
+        encrypted: EncryptedData,
+        aad: ByteArray?,
+    ): ByteArray {
         val secretKey = SecretKeySpec(masterKey, "AES")
         val parameterSpec = GCMParameterSpec(tagLength, encrypted.iv)
 
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec)
+        if (aad != null) cipher.updateAAD(aad)
 
         return cipher.doFinal(encrypted.ciphertext)
     }
@@ -71,7 +90,7 @@ class KeyEncryption(
 data class EncryptedData(
     val iv: ByteArray,
     val ciphertext: ByteArray,
-    val algorithm: String
+    val algorithm: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -112,14 +131,15 @@ object MasterKeyDerivation {
     fun deriveKey(
         password: CharArray,
         salt: ByteArray,
-        iterations: Int = 210_000
+        iterations: Int = 210_000,
     ): ByteArray {
-        val keySpec: KeySpec = PBEKeySpec(
-            password,
-            salt,
-            iterations,
-            256 // Key length in bits
-        )
+        val keySpec: KeySpec =
+            PBEKeySpec(
+                password,
+                salt,
+                iterations,
+                256, // Key length in bits
+            )
         val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
         val secretKey = keyFactory.generateSecret(keySpec)
         return secretKey.encoded
@@ -137,4 +157,3 @@ object MasterKeyDerivation {
         return salt
     }
 }
-

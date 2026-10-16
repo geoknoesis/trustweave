@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TrustRegistryServerTest {
-    private val testToken = "test-api-token"
+    private val testToken = "test-api-token".padEnd(40, 'x')
 
     private fun testServer(
         apiToken: String? = testToken,
@@ -189,5 +189,63 @@ class TrustRegistryServerTest {
             assertEquals(HttpStatusCode.OK, statusResp.status)
             val body = Json.parseToJsonElement(statusResp.bodyAsText()).jsonObject
             assertEquals("UNKNOWN", body["status"]?.jsonPrimitive?.content)
+        }
+}
+
+class TrustRegistryPaginationTest {
+    private val token = "test-api-token".padEnd(40, 'x')
+
+    private fun server(block: suspend ApplicationTestBuilder.() -> Unit) =
+        testApplication {
+            application {
+                with(TrustRegistryServer(InMemoryTrustRegistry(), apiToken = token)) { configureApplication() }
+            }
+            block()
+        }
+
+    private suspend fun ApplicationTestBuilder.seed(
+        kind: String,
+        count: Int,
+    ) {
+        repeat(count) { i ->
+            client.post("/registry/$kind") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody("""{"did":"did:key:p${i.toString().padStart(3, '0')}","name":"Name $i"}""")
+            }
+        }
+    }
+
+    @Test
+    fun `issuers are paged with limit and offset in did order`() =
+        server {
+            seed("issuers", 5)
+            val page = client.get("/registry/issuers?limit=2&offset=1")
+            assertEquals(HttpStatusCode.OK, page.status)
+            assertEquals("5", page.headers["X-Total-Count"])
+            val dids = Json.parseToJsonElement(page.bodyAsText()).jsonArray.map { it.jsonObject["did"]!!.jsonPrimitive.content }
+            assertEquals(listOf("did:key:p001", "did:key:p002"), dids)
+        }
+
+    @Test
+    fun `verifiers are paged and default limit keeps the array shape`() =
+        server {
+            seed("verifiers", 3)
+            val all = Json.parseToJsonElement(client.get("/registry/verifiers").bodyAsText()).jsonArray
+            assertEquals(3, all.size)
+            val tail = Json.parseToJsonElement(client.get("/registry/verifiers?limit=10&offset=2").bodyAsText()).jsonArray
+            assertEquals(1, tail.size)
+        }
+
+    @Test
+    fun `invalid limit offset and oversized nameContains are 400`() =
+        server {
+            for (kind in listOf("issuers", "verifiers")) {
+                for (q in listOf("limit=0", "limit=1001", "limit=abc", "offset=-1", "offset=x")) {
+                    assertEquals(HttpStatusCode.BadRequest, client.get("/registry/$kind?$q").status, "$kind $q")
+                }
+                assertEquals(HttpStatusCode.BadRequest, client.get("/registry/$kind?nameContains=${"a".repeat(257)}").status)
+                assertEquals(HttpStatusCode.OK, client.get("/registry/$kind?nameContains=${"a".repeat(256)}&limit=1000").status)
+            }
         }
 }

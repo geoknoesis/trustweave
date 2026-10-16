@@ -6,9 +6,9 @@ package org.trustweave.signatures.etsi.validation
  * Each step in the standard maps to one entry below. The pipeline records an [StepOutcome]
  * per step so callers can inspect exactly which check passed, failed, or was skipped.
  *
- * The MVP implementation does not yet wire [REVOCATION] (§5.4.4) and [LONG_TERM_VALIDATION]
- * (§5.6) — those steps return [StepOutcome.NotApplicable] as placeholders for B-LT/B-LTA
- * support landing later.
+ * [REVOCATION] (§5.4.4) and [LONG_TERM_VALIDATION] (§5.6) are evaluated only when
+ * [EtsiSignaturePolicy.revocationPolicy] asks for it (CRL / OCSP evidence from the envelope's `rVals`
+ * and the policy); otherwise they are [StepOutcome.NotApplicable].
  */
 enum class EtsiValidationStep {
     /** §5.1: signature is well-formed (parseable JAdES). */

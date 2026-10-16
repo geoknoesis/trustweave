@@ -28,6 +28,11 @@ import org.trustweave.kms.KeyManagementService
  *
  * This implementation reuses the Ethereum DID pattern since Polygon is EVM-compatible.
  *
+ * **In-memory only:** like [EthrDidMethod], it keeps the DID-to-anchor index in memory. A DID is
+ * resolvable only by the instance that created or updated it, and only until that process restarts;
+ * afterwards it resolves as notFound even though the anchor is on chain. It does not read an on-chain
+ * registry. Use it for experiments, not for DIDs that must outlive the process.
+ *
  * **Example Usage:**
  * ```kotlin
  * val kms = InMemoryKeyManagementService()

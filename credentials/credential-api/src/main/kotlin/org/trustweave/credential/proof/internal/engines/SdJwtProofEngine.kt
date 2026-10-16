@@ -20,9 +20,12 @@ import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
+import org.trustweave.credential.identifiers.StatusListId
 import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.internal.RevocationChecker
 import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.StatusPurpose
+import org.trustweave.credential.model.vc.CredentialStatus
 import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -301,23 +304,49 @@ internal class SdJwtProofEngine(
                     ?.let { Instant.fromEpochSeconds(it.epochSecond, it.nano) }
                     ?: credential.expirationDate
 
+            // The signed vc.credentialStatus is authoritative: the unsigned envelope copy can be
+            // stripped (hiding a revoked credential) or repointed at a clean list entry. The
+            // envelope must equal the signed value or be absent, and revocation is evaluated on
+            // the signed value (carried on the Valid result so callers gate on it too).
+            val signedStatus =
+                try {
+                    signedCredentialStatus(claimsSet)
+                } catch (e: IllegalArgumentException) {
+                    return VerificationResult.Invalid.InvalidProof(
+                        credential = credential,
+                        reason = "Signed credentialStatus is malformed: ${e.message}",
+                        errors = listOf("Malformed signed credentialStatus: ${e.message}"),
+                        warnings = emptyList(),
+                    )
+                }
+            val envelopeStatus = credential.credentialStatus
+            if (envelopeStatus != null && (signedStatus == null || !sameStatusEntry(envelopeStatus, signedStatus))) {
+                return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Envelope credentialStatus does not match the signed credentialStatus (possible envelope tampering)",
+                    errors = listOf("Envelope credentialStatus differs from the issuer-signed vc.credentialStatus"),
+                    warnings = emptyList(),
+                )
+            }
+            val verifiedCredential = if (signedStatus != null) credential.copy(credentialStatus = signedStatus) else credential
+
             // Revocation / suspension check. An undeterminable status is routed through the
             // configured RevocationFailurePolicy (fail closed by default).
             val statusWarnings = mutableListOf<String>()
             val checker = config.properties["statusChecker"] as? CredentialStatusChecker
-            if (checker != null && credential.credentialStatus != null) {
+            if (checker != null && verifiedCredential.credentialStatus != null) {
                 val outcome =
-                    RevocationChecker.checkWithStatusChecker(credential, checker, options.revocationFailurePolicy)
+                    RevocationChecker.checkWithStatusChecker(verifiedCredential, checker, options.revocationFailurePolicy)
                 outcome.failure?.let { return it }
                 statusWarnings += outcome.warnings
                 when (val status = outcome.status) {
                     is CredentialStatusCheckResult.Revoked -> return VerificationResult.Invalid.Revoked(
-                        credential = credential,
+                        credential = verifiedCredential,
                         revokedAt = null,
                         errors = listOf("Credential has been revoked: ${status.reason ?: "no reason provided"}"),
                     )
                     is CredentialStatusCheckResult.Suspended -> return VerificationResult.Invalid.InvalidProof(
-                        credential = credential,
+                        credential = verifiedCredential,
                         reason = "Credential is suspended: ${status.reason ?: "no reason provided"}",
                         errors = listOf("Credential suspended"),
                     )
@@ -326,7 +355,7 @@ internal class SdJwtProofEngine(
             }
 
             VerificationResult.Valid(
-                credential = credential,
+                credential = verifiedCredential,
                 issuerIri = issuerIri,
                 subjectIri = subjectIri,
                 issuedAt = issuedAt,
@@ -602,6 +631,43 @@ internal class SdJwtProofEngine(
         val subject = (processed["vc"] as? JsonObject)?.get("credentialSubject") as? JsonObject
         return subject?.filterKeys { it != "id" } ?: emptyMap()
     }
+
+    /** Reads the issuer-signed `vc.credentialStatus` entry; null when the signed payload has none. */
+    private fun signedCredentialStatus(claimsSet: JWTClaimsSet): CredentialStatus? {
+        val vc = claimsSet.getClaim("vc") as? Map<*, *> ?: return null
+        val raw = vc["credentialStatus"] ?: return null
+        val map = raw as? Map<*, *> ?: throw IllegalArgumentException("credentialStatus is not an object")
+
+        fun text(key: String): String? =
+            when (val v = map[key]) {
+                null -> null
+                is String -> v
+                is Number -> v.toString()
+                else -> throw IllegalArgumentException("credentialStatus.$key is not a string")
+            }
+        val purpose =
+            text("statusPurpose")?.let { name ->
+                StatusPurpose.entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    ?: throw IllegalArgumentException("unknown statusPurpose '$name'")
+            } ?: StatusPurpose.REVOCATION
+        return CredentialStatus(
+            id = StatusListId(text("id") ?: throw IllegalArgumentException("credentialStatus.id is missing")),
+            type = text("type") ?: throw IllegalArgumentException("credentialStatus.type is missing"),
+            statusPurpose = purpose,
+            statusListIndex = text("statusListIndex"),
+            statusListCredential = text("statusListCredential")?.let { StatusListId(it) },
+        )
+    }
+
+    private fun sameStatusEntry(
+        a: CredentialStatus,
+        b: CredentialStatus,
+    ): Boolean =
+        a.id == b.id &&
+            a.type == b.type &&
+            a.statusPurpose == b.statusPurpose &&
+            a.statusListIndex == b.statusListIndex &&
+            a.statusListCredential == b.statusListCredential
 
     /** Strict disclosure decoding: exactly `[salt, name, value]` or `[salt, value]`. */
     private fun parseDisclosureStrict(discB64: String): ParsedDisclosure? =

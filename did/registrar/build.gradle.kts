@@ -24,4 +24,5 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.platform.launcher)
     testImplementation(libs.mockwebserver)
+    testImplementation(libs.h2)
 }

@@ -69,6 +69,25 @@ interface Oidc4VciIssuerStateStore {
     fun consumeDeferred(transactionId: String): DeferredEntry?
 
     /**
+     * Atomically removes and returns the deferred credential, but only when it is unbound
+     * ([DeferredEntry.ownerTokenHash] is `null`) or bound to [ownerTokenHash]. A credential bound to
+     * another token is left untouched and `null` is returned, so a caller who merely knows the
+     * transaction id cannot destroy or collect it.
+     *
+     * The default is correct but not atomic against a concurrent collector; stores shared between
+     * instances should override it with a single conditional delete.
+     */
+    fun consumeDeferredOwnedBy(
+        transactionId: String,
+        ownerTokenHash: String,
+    ): DeferredEntry? {
+        val entry = consumeDeferred(transactionId) ?: return null
+        if (entry.ownerTokenHash == null || entry.ownerTokenHash == ownerTokenHash) return entry
+        putDeferred(transactionId, entry, Int.MAX_VALUE)
+        return null
+    }
+
+    /**
      * Drops every offer, token and deferred credential whose `issuedAt` is at or before the matching
      * cutoff (epoch milliseconds) and returns how many entries were dropped.
      */
@@ -145,6 +164,22 @@ class InMemoryOidc4VciIssuerStateStore : Oidc4VciIssuerStateStore {
     ): Boolean = deferred.putBounded(transactionId, entry, maxEntries)
 
     override fun consumeDeferred(transactionId: String): DeferredEntry? = deferred.remove(transactionId)
+
+    override fun consumeDeferredOwnedBy(
+        transactionId: String,
+        ownerTokenHash: String,
+    ): DeferredEntry? {
+        var taken: DeferredEntry? = null
+        deferred.computeIfPresent(transactionId) { _, entry ->
+            if (entry.ownerTokenHash == null || entry.ownerTokenHash == ownerTokenHash) {
+                taken = entry
+                null
+            } else {
+                entry
+            }
+        }
+        return taken
+    }
 
     override fun purgeExpired(
         offersIssuedAtOrBefore: Long,

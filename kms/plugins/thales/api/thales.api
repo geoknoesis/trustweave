@@ -3,6 +3,7 @@ public final class org/trustweave/kms/thales/AlgorithmMapping {
 	public final fun fromThalesKeyAlgorithm (Ljava/lang/String;)Lorg/trustweave/kms/Algorithm;
 	public final fun publicKeyToJwk ([BLorg/trustweave/kms/Algorithm;)Ljava/util/Map;
 	public final fun resolveKeyId (Ljava/lang/String;)Ljava/lang/String;
+	public final fun toThalesHashAlgorithm (Lorg/trustweave/kms/Algorithm;)Ljava/lang/String;
 	public final fun toThalesKeyAlgorithm (Lorg/trustweave/kms/Algorithm;)Ljava/lang/String;
 	public final fun toThalesSigningAlgorithm (Lorg/trustweave/kms/Algorithm;)Ljava/lang/String;
 }

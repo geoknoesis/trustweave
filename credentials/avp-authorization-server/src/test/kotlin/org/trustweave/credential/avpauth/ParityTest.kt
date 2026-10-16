@@ -17,17 +17,24 @@ import kotlin.test.assertTrue
  */
 class ParityTest {
     private val now = Instant.parse("2026-03-25T21:30:30Z")
-    private fun vector() =
-        Json.parseToJsonElement(
-            requireNotNull(
-                this::class.java.getResource("/vectors/02-payment-authorization.json")
-            ) { "Test vector /vectors/02-payment-authorization.json missing from test resources" }.readText()
-        ).jsonObject
 
-    @Test fun `genuine vector allowed once then single-use rejected`() = runTest {
-        val e = AuthorizationEngine(clock = { now })
-        assertTrue(e.decide(vector()) is AuthorizationVerdict.Allow)
-        val again = e.decide(vector())
-        assertEquals("NONCE_REUSE", (again as AuthorizationVerdict.Reject).reason)
-    }
+    private fun vector() =
+        Json
+            .parseToJsonElement(
+                requireNotNull(
+                    this::class.java.getResource("/vectors/02-payment-authorization.json"),
+                ) { "Test vector /vectors/02-payment-authorization.json missing from test resources" }.readText(),
+            ).jsonObject
+
+    @Test fun `genuine vector allowed once then single-use rejected`() =
+        runTest {
+            val e =
+                AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                    d ==
+                        "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                }, statusResolver = { false })
+            assertTrue(e.decide(vector()) is AuthorizationVerdict.Allow)
+            val again = e.decide(vector())
+            assertEquals("NONCE_REUSE", (again as AuthorizationVerdict.Reject).reason)
+        }
 }

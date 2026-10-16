@@ -2,8 +2,11 @@ package org.trustweave.signatures.jades
 
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.signatures.revocation.RevocationEvidence
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.tsa.TsaConfig
+import java.security.cert.X509Certificate
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -14,7 +17,9 @@ import kotlin.time.Instant
  * lower level required and adds new `etsiU` entries on top. Verifiers compare the requested
  * minimum against what is actually present in the unsigned-properties block.
  */
-enum class JadesProfile(val ordinalLevel: Int) {
+enum class JadesProfile(
+    val ordinalLevel: Int,
+) {
     /** Basic signature — JWS + JAdES protected-header parameters only. No time-stamp. */
     B_B(0),
 
@@ -86,9 +91,9 @@ data class JadesHeader(
  *                  itself MAY appear here too; verifiers tolerate both presence and absence.
  * @property rVals  Revocation data values: each entry is a base64-encoded CRL or OCSP response
  *                  proving the corresponding `xVals` certificate's status at signing time.
- * @property arcTst Archival time-stamps. Each token's message-imprint covers the SHA-256 of
- *                  `signatureB64u || serialized(sigTst) || serialized(xVals) || serialized(rVals)`
- *                  per TS 119 182-1 §5.3.6.
+ * @property arcTst Archival time-stamps. [DefaultJadesSigner] imprints SHA-256 of a private serialisation
+ *                  of `signatureB64u`, `sigTst`, `xVals` and `rVals`, which is NOT the EN 319 182-1 5.3.6
+ *                  construction; [DefaultJadesVerifier] therefore never credits an `arcTst` as B-LTA.
  */
 data class JadesUnsignedProperties(
     val sigTst: List<EncodedTimeStampToken> = emptyList(),
@@ -103,7 +108,9 @@ data class JadesUnsignedProperties(
  *
  * @property certB64 Base64 (standard, NOT base64URL) of the DER certificate bytes.
  */
-data class EncodedCertificate(val certB64: String)
+data class EncodedCertificate(
+    val certB64: String,
+)
 
 /**
  * A single `rVals` entry — base64-encoded revocation data with a type tag so verifiers know
@@ -130,7 +137,10 @@ data class EncodedRevocationData(
  *                       data is the base64URL signature value itself, no canonicalisation needed),
  *                       so this is typically null.
  */
-data class EncodedTimeStampToken(val tstTokensB64: List<String>, val canonAlg: String? = null)
+data class EncodedTimeStampToken(
+    val tstTokensB64: List<String>,
+    val canonAlg: String? = null,
+)
 
 /**
  * Input to [JadesSigner.sign].
@@ -221,8 +231,7 @@ data class JadesSignature(
      * properties (i.e. strict B-B). Returns null for B-T and beyond, where the unsigned `etsiU`
      * block can only ride along the JSON Flattened form.
      */
-    fun compact(): String? =
-        if (unsigned.sigTst.isEmpty()) "$protectedHeaderB64u.$payloadB64u.$signatureB64u" else null
+    fun compact(): String? = if (unsigned.sigTst.isEmpty()) "$protectedHeaderB64u.$payloadB64u.$signatureB64u" else null
 }
 
 /**
@@ -235,17 +244,44 @@ data class JadesSignature(
  *                                                 MVP defaults: `ES256`, `ES384`, `ES512`, `EdDSA`.
  *                                                 RSA-PSS (`PS256`/`384`/`512`) is intentionally
  *                                                 absent from the MVP defaults.
- * @property allowExpiredCertificateAtSigningTime  When true, certificate validity is not enforced
- *                                                 at the claimed signing time. Useful for B-LT
- *                                                 archival validation (future); the MVP default
- *                                                 is false.
+ * @property allowExpiredCertificateAtSigningTime  When true, certificate validity is not enforced.
+ *                                                 When false (default) it is checked at the time
+ *                                                 authenticated by a trusted `sigTst`, else now;
+ *                                                 never at the claimed `sigT`.
  * @property maxClockSkew                          Tolerance applied to signing-time / TSA-time
  *                                                 comparisons. Default 5 minutes.
+ * @property revocationPolicy                      Whether CRL / OCSP evidence is evaluated; see
+ *                                                 [RevocationPolicy]. Default `NOT_CHECKED`. The embedded
+ *                                                 `rVals` and [revocationEvidence] are both used. Requiring
+ *                                                 B-LT or above implies `REQUIRED`.
+ * @property revocationEvidence                    Caller-supplied CRLs / OCSP responses.
+ * @property revocationIssuerCertificates          CA certificates used to verify evidence for a certificate
+ *                                                 whose issuer is not in `x5c`.
+ * @property timestampTrustAnchors                 TSA certificates (or the CAs that issued them) trusted to
+ *                                                 time-stamp. A `sigTst` / `arcTst` token is trusted only when its
+ *                                                 TSA signature and certificate verify against these; otherwise it
+ *                                                 is only structurally checked, its time is the signer's own
+ *                                                 claim, and the signature is reported as B-B. A token from an
+ *                                                 untrusted TSA is rejected when anchors are configured. Empty
+ *                                                 (default) trusts no time-stamp.
+ * @property allowWithdrawnTrustWithoutAuthenticatedTime
+ *                                                 A signer whose trust-list service is `QualifiedWithdrawn` is
+ *                                                 accepted only when a trusted time-stamp predates the
+ *                                                 withdrawal. Set `true` to also accept it when the signing time is
+ *                                                 merely claimed (a claimed time at or after the withdrawal is
+ *                                                 still refused). Default `false`.
  */
-data class JadesVerificationOptions(
-    val requiredProfile: JadesProfile,
-    val trustAnchorResolver: TrustAnchorResolver,
-    val acceptedAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
-    val allowExpiredCertificateAtSigningTime: Boolean = false,
-    val maxClockSkew: Duration = Duration.parse("PT5M"),
-)
+data class JadesVerificationOptions
+    @JvmOverloads
+    constructor(
+        val requiredProfile: JadesProfile,
+        val trustAnchorResolver: TrustAnchorResolver,
+        val acceptedAlgorithms: Set<String> = setOf("ES256", "ES384", "ES512", "EdDSA"),
+        val allowExpiredCertificateAtSigningTime: Boolean = false,
+        val maxClockSkew: Duration = Duration.parse("PT5M"),
+        val revocationPolicy: RevocationPolicy = RevocationPolicy.NOT_CHECKED,
+        val revocationEvidence: RevocationEvidence = RevocationEvidence.NONE,
+        val revocationIssuerCertificates: List<X509Certificate> = emptyList(),
+        val timestampTrustAnchors: List<X509Certificate> = emptyList(),
+        val allowWithdrawnTrustWithoutAuthenticatedTime: Boolean = false,
+    )

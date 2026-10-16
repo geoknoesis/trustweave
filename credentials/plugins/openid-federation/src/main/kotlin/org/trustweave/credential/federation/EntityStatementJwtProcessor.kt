@@ -12,7 +12,6 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.serialization.json.Json
-import okhttp3.OkHttpClient
 
 /**
  * Handles signing and verification of OpenID Federation Entity Statement JWTs
@@ -21,9 +20,7 @@ import okhttp3.OkHttpClient
  * Supports EC (ES256, ES384, ES512) and RSA (RS256, RS384, RS512, PS256, PS384, PS512)
  * signing algorithms. EdDSA is not yet covered by this implementation.
  */
-class EntityStatementJwtProcessor(
-    @Suppress("unused") private val httpClient: OkHttpClient = OkHttpClient(),
-) {
+class EntityStatementJwtProcessor {
     private val json =
         Json {
             ignoreUnknownKeys = true

@@ -48,6 +48,16 @@ class GodiddyResolver(
 
     override suspend fun resolveDid(did: String): DidResolutionResult =
         withContext(Dispatchers.IO) {
+            // The DID becomes a path segment of the upstream URL: only a well-formed DID (DID 1.1 ABNF,
+            // no `/`, `?`, `#`, `..`, whitespace or control characters) may be placed there.
+            try {
+                Did(did)
+            } catch (e: IllegalArgumentException) {
+                return@withContext DidResolutionResult.Failure.InvalidFormat(
+                    did = did.take(MAX_ECHOED_DID),
+                    reason = "Invalid DID: ${e.message?.take(MAX_ECHOED_DID)}",
+                )
+            }
             try {
                 // Universal Resolver endpoint: GET /1.0.0/universal-resolver/identifiers/{did}
                 val path = "/1.0.0/universal-resolver/identifiers/$did"
@@ -363,3 +373,5 @@ class GodiddyResolver(
         return null
     }
 }
+
+private const val MAX_ECHOED_DID = 128

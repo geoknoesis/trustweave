@@ -76,7 +76,7 @@ Type-safe builders are the primary configuration API: `DidBuilder`, `DidDocument
 
 ## Module Map
 
-107 modules (`include(...)` lines in `settings.gradle.kts`). Key modules:
+107 included modules (`include(...)` lines in `settings.gradle.kts`; `reference-wallet/android` and its two subprojects have a `build.gradle.kts` but are a separate build and are not part of this one). Key modules:
 
 - **`common`** — shared utilities, exceptions, plugin infrastructure
 - **`trust`** — main facade (`TrustWeave.kt`), integration tests
@@ -87,7 +87,7 @@ Type-safe builders are the primary configuration API: `DidBuilder`, `DidDocument
 
 DID method plugins follow naming: `did:plugins:<method>` (e.g., `did:plugins:key`, `did:plugins:web`, `did:plugins:ethr`).
 
-KMS provider plugins: `kms:plugins:<provider>` (e.g., `kms:plugins:aws`, `kms:plugins:azure`, `kms:plugins:in-memory`).
+KMS provider plugins: `kms:plugins:<provider>` (e.g., `kms:plugins:aws`, `kms:plugins:azure`, `kms:plugins:inmemory`).
 
 Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`, `anchors:plugins:algorand`).
 
@@ -95,7 +95,7 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 | File | Purpose |
 |---|---|
-| `settings.gradle.kts` | Module definitions (all 107 includes) |
+| `settings.gradle.kts` | Module definitions (the 107 included modules) |
 | `build.gradle.kts` | Central config, publishing, Windows JAR handling |
 | `gradle/libs.versions.toml` | Centralized dependency versions and bundles |
 | `gradle.properties` | JVM args, parallel builds, Kotlin daemon settings |

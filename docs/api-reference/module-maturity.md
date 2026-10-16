@@ -53,14 +53,14 @@ defect claim, but it is a reason to run your own integration tests before depend
 
 | Module | Tests | Maturity |
 |--------|-------|----------|
-| `did:registrar` | 8 | Experimental |
-| `did:registrar-server-ktor` | 0 | **Experimental — untested**; verify in your environment |
-| `did:registrar-server-spring` | 0 | **Experimental — untested**; verify in your environment |
-| `credentials:vc-api-server` | 7 | Experimental |
-| `credentials:oidc4vci-server` | 14 | Experimental |
-| `trust-registry:trust-registry-core` | 4 | Experimental |
-| `trust-registry:trust-registry-server` | 12 | Experimental |
-| `wallet:wallet-services` | 0 | **Experimental — untested**; verify in your environment |
+| `did:registrar` | 38 | Experimental |
+| `did:registrar-server-ktor` | 18 | Experimental |
+| `did:registrar-server-spring` | 22 | Experimental |
+| `credentials:vc-api-server` | 29 | Experimental |
+| `credentials:oidc4vci-server` | 71 | Experimental |
+| `trust-registry:trust-registry-core` | 16 | Experimental |
+| `trust-registry:trust-registry-server` | 28 | Experimental |
+| `wallet:wallet-services` | 16 | Experimental |
 | `distribution:all` | n/a | Dependency aggregate only — carries no logic of its own |
 
 ### ETSI / eIDAS signature formats
@@ -72,12 +72,12 @@ rely on these for a regulated eIDAS deployment without your own conformance asse
 
 | Module | Tests | Notes |
 |--------|-------|-------|
-| `signatures:jades` | 17 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
-| `signatures:trust-lists` | 23 | EU trusted-list handling |
-| `signatures:cades` | 8 | ETSI EN 319 122 (CMS) |
-| `signatures:tsa-core` | 8 | RFC 3161 timestamping |
-| `signatures:etsi-validation` | 7 | Validation helpers |
-| `signatures:xades` | 3 | ETSI EN 319 132 (XML) |
+| `signatures:jades` | 34 | ETSI TS 119 182-1 (JSON) — also registered as a `ProofEngine` |
+| `signatures:trust-lists` | 49 | EU trusted-list handling |
+| `signatures:cades` | 28 | ETSI EN 319 122 (CMS) |
+| `signatures:tsa-core` | 40 | RFC 3161 timestamping |
+| `signatures:etsi-validation` | 23 | Validation helpers |
+| `signatures:xades` | 82 | ETSI EN 319 132 (XML) |
 | `signatures:pades` | 2 | ETSI EN 319 142 (PDF) |
 
 ## Plugins and integrations
@@ -87,6 +87,11 @@ Individual plugins under `did/plugins/*`, `kms/plugins/*`, `anchors/plugins/*`, 
 Newer plugin families that ship in `settings.gradle.kts` but are evolving:
 
 - DID methods: `did:plugins:ebsi`
+- **`did:plugins:ethr` and `did:plugins:polygon` are in-memory only.** They do not read the ERC-1056 registry
+  contract and keep no persistent index from a DID to its anchored document. A DID is resolvable only by the
+  instance that created or updated it, and only until that process restarts: after a restart, or on any other
+  instance, it resolves as not found. DIDs they create are not resolvable by standard ethr resolvers. Use them
+  for experiments, not for DIDs that must outlive the process.
 - Credentials formats / proofs: `credentials:plugins:mdl`, `credentials:plugins:eudiw`
 - Exchange / discovery: `credentials:plugins:siop`, `credentials:plugins:presentation-exchange`, `credentials:plugins:openid-federation`
 - Status lists: `credentials:plugins:status-list:bitstring`, `credentials:plugins:status-list:token`, `credentials:plugins:status-list:publishing`, `credentials:plugins:status-list:server`

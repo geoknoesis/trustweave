@@ -128,6 +128,7 @@ class TokenStatusListManager(
             "defaultTtlSeconds must be positive, got $defaultTtlSeconds"
         }
         initializeSchema()
+        ensureUniqueEntryIndex()
     }
 
     private val json =
@@ -191,6 +192,33 @@ class TokenStatusListManager(
                 throw TrustWeaveException.InvalidState(
                     message = "Failed to initialise token status list schema: ${e.message}",
                     cause = e,
+                )
+            }
+        }
+    }
+
+    /**
+     * Two credentials must never share one status bit: revoking either would revoke both.
+     *
+     * Kept out of the table DDL so an existing database that already holds duplicates (written by
+     * a version without this constraint) still starts; the problem is logged loudly instead, and
+     * the row-locked allocation below stops new duplicates either way.
+     */
+    private fun ensureUniqueEntryIndex() {
+        dataSource.connection.use { conn ->
+            try {
+                conn.createStatement().use {
+                    it.execute(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS token_credential_indices_entry " +
+                            "ON token_credential_indices (status_list_id, entry_index)",
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error(
+                    "Could not create the unique (status_list_id, entry_index) index on token_credential_indices; " +
+                        "existing duplicate index assignments must be repaired by hand: {}",
+                    e.message,
+                    e,
                 )
             }
         }
@@ -330,7 +358,7 @@ class TokenStatusListManager(
             }
 
             val purpose = parsePurpose(row.purpose)
-            val (revoked, suspended) = readBits(row.statusArray, index, purpose)
+            val (revoked, suspended) = readBits(row.statusArray, index, purpose, row.bitsPerEntry)
 
             RevocationStatus(
                 revoked = revoked,
@@ -393,40 +421,30 @@ class TokenStatusListManager(
                 conn.autoCommit = false
                 try {
                     val sid = statusListId.toString()
+                    // Serialise every allocation (and every array write) on this list.
+                    val row =
+                        lockRow(sid, conn)
+                            ?: throw IllegalArgumentException("Status list not found: $statusListId")
                     // Idempotent: return existing index if already assigned
-                    val existing =
-                        conn
-                            .prepareStatement(
-                                "SELECT entry_index FROM token_credential_indices WHERE credential_id = ? AND status_list_id = ?",
-                            ).apply {
-                                setString(1, credentialId)
-                                setString(2, sid)
-                            }.executeQuery()
-                    if (existing.next()) {
+                    val existing = findIndex(credentialId, sid, conn)
+                    if (existing != null) {
                         conn.rollback()
-                        return@withContext existing.getInt("entry_index")
+                        return@withContext existing
                     }
 
                     val assignedIndex =
                         if (index != null) {
-                            val count =
-                                conn
-                                    .prepareStatement(
-                                        "SELECT COUNT(*) AS cnt FROM token_credential_indices WHERE status_list_id = ? AND entry_index = ?",
-                                    ).apply {
-                                        setString(1, sid)
-                                        setInt(2, index)
-                                    }.executeQuery()
-                                    .let { rs ->
-                                        rs.next()
-                                        rs.getInt("cnt")
-                                    }
-                            if (count > 0) {
+                            if (index < 0 || index >= row.size) {
+                                throw IllegalArgumentException(
+                                    "Index $index is outside status list $statusListId (valid range 0..${row.size - 1})",
+                                )
+                            }
+                            if (isIndexTaken(sid, index, conn)) {
                                 throw IllegalArgumentException("Index $index already assigned in status list $statusListId")
                             }
                             index
                         } else {
-                            getNextAvailableIndex(sid, conn)
+                            getNextAvailableIndex(sid, row.size, conn)
                         }
 
                     conn
@@ -441,6 +459,7 @@ class TokenStatusListManager(
                     conn.commit()
                     assignedIndex
                 } catch (cancelled: CancellationException) {
+                    conn.rollback()
                     throw cancelled
                 } catch (e: Exception) {
                     conn.rollback()
@@ -454,23 +473,21 @@ class TokenStatusListManager(
         statusListId: StatusListId,
     ): Map<String, Boolean> =
         withContext(Dispatchers.IO) {
-            val row =
-                loadRow(statusListId.toString())
-                    ?: return@withContext credentialIds.associateWith { false }
-
-            if (parsePurpose(row.purpose) != StatusPurpose.REVOCATION) {
-                return@withContext credentialIds.associateWith { false }
-            }
-
             dataSource.connection.use { conn ->
                 conn.autoCommit = false
                 try {
+                    // Read the array under the row lock, so a concurrent writer cannot be overwritten.
+                    val row = lockRow(statusListId.toString(), conn)
+                    if (row == null || parsePurpose(row.purpose) != StatusPurpose.REVOCATION) {
+                        conn.rollback()
+                        return@withContext credentialIds.associateWith { false }
+                    }
                     val arr = row.statusArray.copyOf()
                     val results = mutableMapOf<String, Boolean>()
 
                     for (credentialId in credentialIds) {
-                        val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), conn)
-                        setBit(arr, entryIndex, bitOffset = 0, value = true)
+                        val entryIndex = getOrAssignIndex(credentialId, statusListId.toString(), row.size, conn)
+                        setBit(arr, entryIndex, row.bitsPerEntry, bitOffset = 0, value = true)
                         results[credentialId] = true
                     }
 
@@ -500,30 +517,45 @@ class TokenStatusListManager(
         statusListId: StatusListId,
         updates: List<StatusUpdate>,
     ) = withContext(Dispatchers.IO) {
-        val row =
-            loadRow(statusListId.toString())
-                ?: throw IllegalArgumentException("Status list not found: $statusListId")
+        dataSource.connection.use { conn ->
+            conn.autoCommit = false
+            try {
+                val row =
+                    lockRow(statusListId.toString(), conn)
+                        ?: throw IllegalArgumentException("Status list not found: $statusListId")
 
-        val purpose = parsePurpose(row.purpose)
-        val arr = row.statusArray.copyOf()
+                val purpose = parsePurpose(row.purpose)
+                val bits = row.bitsPerEntry
+                val arr = row.statusArray.copyOf()
 
-        for (update in updates) {
-            if (bitsPerEntry == 2) {
-                update.revoked?.let { setBit(arr, update.index, bitOffset = 0, value = it) }
-                update.suspended?.let { setBit(arr, update.index, bitOffset = 1, value = it) }
-            } else {
-                when {
-                    update.revoked != null && purpose == StatusPurpose.REVOCATION ->
-                        setBit(arr, update.index, bitOffset = 0, value = update.revoked!!)
-                    update.suspended != null && purpose == StatusPurpose.SUSPENSION ->
-                        setBit(arr, update.index, bitOffset = 0, value = update.suspended!!)
+                for (update in updates) {
+                    require(update.index >= 0 && update.index < row.size) {
+                        "Status list index ${update.index} is out of range [0, ${row.size - 1}] for status list $statusListId"
+                    }
+                    if (bits == 2) {
+                        update.revoked?.let { setBit(arr, update.index, bits, bitOffset = 0, value = it) }
+                        update.suspended?.let { setBit(arr, update.index, bits, bitOffset = 1, value = it) }
+                    } else {
+                        when {
+                            update.revoked != null && purpose == StatusPurpose.REVOCATION ->
+                                setBit(arr, update.index, bits, bitOffset = 0, value = update.revoked!!)
+                            update.suspended != null && purpose == StatusPurpose.SUSPENSION ->
+                                setBit(arr, update.index, bits, bitOffset = 0, value = update.suspended!!)
+                        }
+                    }
                 }
+
+                persistStatusArray(statusListId.toString(), arr, conn)
+                conn.commit()
+            } catch (cancelled: CancellationException) {
+                conn.rollback()
+                throw cancelled
+            } catch (e: Exception) {
+                conn.rollback()
+                throw e
             }
         }
-
-        dataSource.connection.use { conn ->
-            persistStatusArray(statusListId.toString(), arr, conn)
-        }
+        Unit
     }
 
     override suspend fun getStatusListStatistics(statusListId: StatusListId): StatusListStatistics? =
@@ -546,13 +578,13 @@ class TokenStatusListManager(
 
             val purpose = parsePurpose(row.purpose)
             val arr = row.statusArray
-            val entriesPerByte = 8 / bitsPerEntry
+            val entriesPerByte = 8 / row.bitsPerEntry
             val totalCapacity = arr.size * entriesPerByte
 
             var revokedCount = 0
             var suspendedCount = 0
             for (idx in 0 until totalCapacity) {
-                val (rev, sus) = readBits(arr, idx, purpose)
+                val (rev, sus) = readBits(arr, idx, purpose, row.bitsPerEntry)
                 if (rev) revokedCount++
                 if (sus) suspendedCount++
             }
@@ -654,17 +686,16 @@ class TokenStatusListManager(
         statusListId: StatusListId,
         additionalSize: Int,
     ) = withContext(Dispatchers.IO) {
-        val row =
-            loadRow(statusListId.toString())
-                ?: throw IllegalArgumentException("Status list not found: $statusListId")
-
-        val additionalBytes = bytesRequired(additionalSize)
-        val newArray = row.statusArray + ByteArray(additionalBytes)
-        val newSize = row.size + additionalSize
-
+        require(additionalSize > 0) { "additionalSize must be positive, got $additionalSize" }
         dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
+                // Read, extend and write under one row lock: a concurrent bit update is not discarded.
+                val row =
+                    lockRow(statusListId.toString(), conn)
+                        ?: throw IllegalArgumentException("Status list not found: $statusListId")
+                val newArray = row.statusArray + ByteArray(bytesRequired(additionalSize, row.bitsPerEntry))
+                val newSize = row.size + additionalSize
                 conn
                     .prepareStatement(
                         "UPDATE token_status_lists SET status_array = ?, size = ?, updated_at = ? WHERE id = ?",
@@ -676,6 +707,7 @@ class TokenStatusListManager(
                     }.executeUpdate()
                 conn.commit()
             } catch (cancelled: CancellationException) {
+                conn.rollback()
                 throw cancelled
             } catch (e: Exception) {
                 conn.rollback()
@@ -738,7 +770,7 @@ class TokenStatusListManager(
                     put(
                         "status_list",
                         buildJsonObject {
-                            put("bits", bitsPerEntry)
+                            put("bits", row.bitsPerEntry)
                             put("lst", lstEncoded)
                         },
                     )
@@ -830,27 +862,38 @@ class TokenStatusListManager(
         statusListId: String,
         revoked: Boolean?,
         suspended: Boolean?,
-    ): Boolean {
-        val row = loadRow(statusListId) ?: return false
-        val purpose = parsePurpose(row.purpose)
-
-        if (bitsPerEntry == 1) {
-            if (revoked != null && purpose != StatusPurpose.REVOCATION) return false
-            if (suspended != null && purpose != StatusPurpose.SUSPENSION) return false
-        }
-
-        return dataSource.connection.use { conn ->
+    ): Boolean =
+        dataSource.connection.use { conn ->
             conn.autoCommit = false
             try {
-                val entryIndex = getOrAssignIndex(credentialId, statusListId, conn)
+                // The array is read under the row lock and written before it is released, so two
+                // concurrent updates to one list cannot overwrite each other's bit.
+                val row =
+                    lockRow(statusListId, conn) ?: run {
+                        conn.rollback()
+                        return@use false
+                    }
+                val purpose = parsePurpose(row.purpose)
+                val bits = row.bitsPerEntry
+
+                if (bits == 1) {
+                    if ((revoked != null && purpose != StatusPurpose.REVOCATION) ||
+                        (suspended != null && purpose != StatusPurpose.SUSPENSION)
+                    ) {
+                        conn.rollback()
+                        return@use false
+                    }
+                }
+
+                val entryIndex = getOrAssignIndex(credentialId, statusListId, row.size, conn)
                 val arr = row.statusArray.copyOf()
 
-                if (bitsPerEntry == 2) {
-                    revoked?.let { setBit(arr, entryIndex, bitOffset = 0, value = it) }
-                    suspended?.let { setBit(arr, entryIndex, bitOffset = 1, value = it) }
+                if (bits == 2) {
+                    revoked?.let { setBit(arr, entryIndex, bits, bitOffset = 0, value = it) }
+                    suspended?.let { setBit(arr, entryIndex, bits, bitOffset = 1, value = it) }
                 } else {
-                    revoked?.let { setBit(arr, entryIndex, bitOffset = 0, value = it) }
-                    suspended?.let { setBit(arr, entryIndex, bitOffset = 0, value = it) }
+                    revoked?.let { setBit(arr, entryIndex, bits, bitOffset = 0, value = it) }
+                    suspended?.let { setBit(arr, entryIndex, bits, bitOffset = 0, value = it) }
                 }
 
                 persistStatusArray(statusListId, arr, conn)
@@ -876,25 +919,45 @@ class TokenStatusListManager(
                 )
             }
         }
-    }
 
-    private fun getOrAssignIndex(
+    private fun findIndex(
         credentialId: String,
         statusListId: String,
         conn: Connection,
+    ): Int? =
+        conn
+            .prepareStatement(
+                "SELECT entry_index FROM token_credential_indices WHERE credential_id = ? AND status_list_id = ?",
+            ).use { statement ->
+                statement.setString(1, credentialId)
+                statement.setString(2, statusListId)
+                statement.executeQuery().use { rs -> if (rs.next()) rs.getInt("entry_index") else null }
+            }
+
+    private fun isIndexTaken(
+        statusListId: String,
+        index: Int,
+        conn: Connection,
+    ): Boolean =
+        conn
+            .prepareStatement(
+                "SELECT 1 FROM token_credential_indices WHERE status_list_id = ? AND entry_index = ?",
+            ).use { statement ->
+                statement.setString(1, statusListId)
+                statement.setInt(2, index)
+                statement.executeQuery().use { rs -> rs.next() }
+            }
+
+    /** Caller must hold the list's row lock ([lockRow]). */
+    private fun getOrAssignIndex(
+        credentialId: String,
+        statusListId: String,
+        capacity: Int,
+        conn: Connection,
     ): Int {
-        val existing =
-            conn
-                .prepareStatement(
-                    "SELECT entry_index FROM token_credential_indices WHERE credential_id = ? AND status_list_id = ?",
-                ).apply {
-                    setString(1, credentialId)
-                    setString(2, statusListId)
-                }.executeQuery()
+        findIndex(credentialId, statusListId, conn)?.let { return it }
 
-        if (existing.next()) return existing.getInt("entry_index")
-
-        val next = getNextAvailableIndex(statusListId, conn)
+        val next = getNextAvailableIndex(statusListId, capacity, conn)
         conn
             .prepareStatement(
                 "INSERT INTO token_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)",
@@ -906,8 +969,14 @@ class TokenStatusListManager(
         return next
     }
 
+    /**
+     * Hands out the next free index and advances the counter. The caller must hold the list's row
+     * lock ([lockRow]); without it two callers read the same counter and share an index.
+     * Indices already taken explicitly are skipped, and a full list is refused.
+     */
     private fun getNextAvailableIndex(
         statusListId: String,
+        capacity: Int,
         conn: Connection,
     ): Int {
         val rs =
@@ -918,7 +987,15 @@ class TokenStatusListManager(
                     setString(1, statusListId)
                 }.executeQuery()
 
-        val next = if (rs.next()) rs.getInt("next_index") else 0
+        var next = if (rs.next()) rs.getInt("next_index") else 0
+        while (next < capacity && isIndexTaken(statusListId, next, conn)) next++
+        if (next >= capacity) {
+            throw TrustWeaveException.InvalidOperation(
+                code = "STATUS_LIST_FULL",
+                message = "Status list $statusListId has no free index (capacity $capacity)",
+                context = mapOf("statusListId" to statusListId, "capacity" to capacity),
+            )
+        }
 
         // Portable upsert: `MERGE ... KEY (...)` is H2-only and is a syntax error on PostgreSQL.
         // See BitstringStatusListManager.getNextAvailableIndex for the same fix.
@@ -966,7 +1043,10 @@ class TokenStatusListManager(
     /**
      * Number of bytes required to hold [entries] entries at [bitsPerEntry] bits each.
      */
-    private fun bytesRequired(entries: Int): Int {
+    private fun bytesRequired(
+        entries: Int,
+        bitsPerEntry: Int = this.bitsPerEntry,
+    ): Int {
         val totalBits = entries * bitsPerEntry
         return (totalBits + 7) / 8
     }
@@ -980,6 +1060,7 @@ class TokenStatusListManager(
     private fun setBit(
         arr: ByteArray,
         entryIndex: Int,
+        bitsPerEntry: Int,
         bitOffset: Int,
         value: Boolean,
     ) {
@@ -1002,6 +1083,7 @@ class TokenStatusListManager(
         arr: ByteArray,
         entryIndex: Int,
         purpose: StatusPurpose,
+        bitsPerEntry: Int,
     ): Pair<Boolean, Boolean> {
         fun getBit(bitPos: Int): Boolean {
             val byteIdx = bitPos / 8
@@ -1037,34 +1119,49 @@ class TokenStatusListManager(
         val updatedAt: Instant,
     )
 
-    private fun loadRow(statusListId: String): StatusListRow? {
-        return dataSource.connection.use { conn ->
-            val rs =
-                conn
-                    .prepareStatement(
-                        """
-                        SELECT id, issuer_did, purpose, size, bits_per_entry, status_array, status_list_uri,
-                               created_at, updated_at
-                        FROM token_status_lists WHERE id = ?
-                        """.trimIndent(),
-                    ).apply {
-                        setString(1, statusListId)
-                    }.executeQuery()
+    private fun loadRow(statusListId: String): StatusListRow? =
+        dataSource.connection.use { conn -> readRow(statusListId, conn, forUpdate = false) }
 
-            if (!rs.next()) return@use null
+    /**
+     * Reads the row and locks it until the surrounding transaction ends (`SELECT ... FOR UPDATE`),
+     * as `DatabaseStatusListManager.lockStatusList` does. Every writer of a list's array or counter
+     * goes through here, which is what serialises them.
+     */
+    private fun lockRow(
+        statusListId: String,
+        conn: Connection,
+    ): StatusListRow? = readRow(statusListId, conn, forUpdate = true)
 
-            StatusListRow(
-                id = rs.getString("id"),
-                issuerDid = rs.getString("issuer_did"),
-                purpose = rs.getString("purpose"),
-                size = rs.getInt("size"),
-                bitsPerEntry = rs.getInt("bits_per_entry"),
-                statusArray = rs.getBytes("status_array") ?: ByteArray(0),
-                statusListUri = rs.getString("status_list_uri"),
-                createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now(),
-                updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now(),
-            )
-        }
+    private fun readRow(
+        statusListId: String,
+        conn: Connection,
+        forUpdate: Boolean,
+    ): StatusListRow? {
+        val rs =
+            conn
+                .prepareStatement(
+                    """
+                    SELECT id, issuer_did, purpose, size, bits_per_entry, status_array, status_list_uri,
+                           created_at, updated_at
+                    FROM token_status_lists WHERE id = ?
+                    """.trimIndent() + if (forUpdate) " FOR UPDATE" else "",
+                ).apply {
+                    setString(1, statusListId)
+                }.executeQuery()
+
+        if (!rs.next()) return null
+
+        return StatusListRow(
+            id = rs.getString("id"),
+            issuerDid = rs.getString("issuer_did"),
+            purpose = rs.getString("purpose"),
+            size = rs.getInt("size"),
+            bitsPerEntry = rs.getInt("bits_per_entry"),
+            statusArray = rs.getBytes("status_array") ?: ByteArray(0),
+            statusListUri = rs.getString("status_list_uri"),
+            createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now(),
+            updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now(),
+        )
     }
 
     // -------------------------------------------------------------------------

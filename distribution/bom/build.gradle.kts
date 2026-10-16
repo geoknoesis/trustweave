@@ -140,6 +140,12 @@ publishing {
     // java-platform projects are skipped by the root script's publishing block, so the BOM
     // declares its own repository and full POM. Maven Central rejects a POM without scm.
     repositories {
+        // The release workflow publishes only here, then checksums, attests and uploads the directory to Central
+        // (see the root build script and .github/workflows/release-evidence.yml).
+        maven {
+            name = "releaseStaging"
+            url = uri(rootProject.layout.buildDirectory.dir("release-staging"))
+        }
         maven {
             name = "central"
             val release =

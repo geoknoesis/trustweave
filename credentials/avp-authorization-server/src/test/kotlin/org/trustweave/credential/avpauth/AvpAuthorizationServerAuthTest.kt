@@ -26,7 +26,13 @@ class AvpAuthorizationServerAuthTest {
 
     private val payload = """{"authorization":${res("02-payment-authorization.json")},"quote":${res("01-payment-quote.json")}}"""
 
-    private fun server() = AvpAuthorizationServer(AuthorizationEngine(clock = { now }))
+    private fun server() =
+        AvpAuthorizationServer(
+            AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                d ==
+                    "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+            }, statusResolver = { false }),
+        )
 
     @Test
     fun `an unconfigured server refuses to authorize and says how to fix it`() =
@@ -91,7 +97,14 @@ class AvpAuthorizationServerAuthTest {
     @Test
     fun `configuring authentication after the server has started is refused`() {
         // Port 0 so the test never contends with whatever else is listening on this machine.
-        val subject = AvpAuthorizationServer(AuthorizationEngine(clock = { now }), port = 0)
+        val subject =
+            AvpAuthorizationServer(
+                AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                    d ==
+                        "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                }, statusResolver = { false }),
+                port = 0,
+            )
         subject.start()
         try {
             val failure =

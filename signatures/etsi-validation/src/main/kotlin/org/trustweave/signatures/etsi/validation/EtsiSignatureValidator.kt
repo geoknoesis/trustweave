@@ -13,6 +13,8 @@ import org.trustweave.signatures.jades.DefaultJadesVerifier
 import org.trustweave.signatures.jades.JadesProfile
 import org.trustweave.signatures.jades.JadesValidationResult
 import org.trustweave.signatures.jades.JadesVerificationOptions
+import org.trustweave.signatures.jades.JadesVerifier
+import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.signatures.trustlists.TspServiceStatus
@@ -59,157 +61,258 @@ interface EtsiSignatureValidator {
  *     X509_CERT_PATH and TIME_STAMP_TOKEN.
  *  3. Layer policy checks on top: signature algorithm in allow-list, trust-status URI in
  *     allow-list, time-stamp required-by-policy.
- *  4. REVOCATION and LONG_TERM_VALIDATION return [StepOutcome.NotApplicable] until the
- *     B-LT/B-LTA verifier lands.
+ *  4. REVOCATION and LONG_TERM_VALIDATION evaluate CRL / OCSP evidence (embedded `rVals` plus
+ *     caller-supplied) when [EtsiSignaturePolicy.revocationPolicy] asks for it, and are
+ *     [StepOutcome.NotApplicable] otherwise.
  *  5. Aggregate the per-step outcomes into the final verdict.
  */
-class DefaultEtsiSignatureValidator(
-    private val jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier(),
+class DefaultEtsiSignatureValidator internal constructor(
+    private val jadesVerifier: JadesVerifier,
 ) : EtsiSignatureValidator {
+    @JvmOverloads
+    @Suppress("USELESS_CAST")
+    constructor(jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier()) : this(jadesVerifier as JadesVerifier)
 
     override suspend fun validate(
         jadesSerialized: String,
         policy: EtsiSignaturePolicy,
         trustAnchorResolver: TrustAnchorResolver,
-    ): EtsiValidationReport = withContext(Dispatchers.IO) {
-        val outcomes = linkedMapOf<EtsiValidationStep, StepOutcome>()
+    ): EtsiValidationReport =
+        withContext(Dispatchers.IO) {
+            val outcomes = linkedMapOf<EtsiValidationStep, StepOutcome>()
 
-        // ------------------------------------------------------------ Step 1: FORMAT_CHECK
-        val parsed = try {
-            parseEnvelope(jadesSerialized)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (t: Throwable) {
-            outcomes[EtsiValidationStep.FORMAT_CHECK] = StepOutcome.Failed(
-                reason = t.message ?: "input is not well-formed JWS/JAdES",
-                cause = t,
-            )
-            return@withContext finalize(outcomes, signerSubject = null, signingTime = null)
-        }
-        outcomes[EtsiValidationStep.FORMAT_CHECK] = StepOutcome.Passed("JWS envelope parsed")
+            // ------------------------------------------------------------ Step 1: FORMAT_CHECK
+            val parsed =
+                try {
+                    parseEnvelope(jadesSerialized)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (t: Throwable) {
+                    outcomes[EtsiValidationStep.FORMAT_CHECK] =
+                        StepOutcome.Failed(
+                            reason = t.message ?: "input is not well-formed JWS/JAdES",
+                            cause = t,
+                        )
+                    return@withContext finalize(outcomes, signerSubject = null, signingTime = null)
+                }
+            outcomes[EtsiValidationStep.FORMAT_CHECK] = StepOutcome.Passed("JWS envelope parsed")
 
-        // ------------------------------------------------------------ Step 2: IDENTIFIER_CHECK
-        val signerCert: X509Certificate
-        val signerSubject: String
-        try {
-            signerCert = decodeSignerCertificate(parsed)
-            signerSubject = signerCert.subjectX500Principal.name
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (t: Throwable) {
-            outcomes[EtsiValidationStep.IDENTIFIER_CHECK] = StepOutcome.Failed(
-                reason = t.message ?: "signer certificate could not be decoded",
-                cause = t,
-            )
-            outcomes.markInconclusiveRest(after = EtsiValidationStep.IDENTIFIER_CHECK)
-            return@withContext finalize(outcomes, signerSubject = null, signingTime = null)
-        }
-        outcomes[EtsiValidationStep.IDENTIFIER_CHECK] = StepOutcome.Passed(
-            "signer cert decoded: $signerSubject",
-        )
-
-        // Pre-compute signing-time presence for policy.requireSigningTime.
-        val signingTime: Instant? = parsed.sigT?.let {
+            // ------------------------------------------------------------ Step 2: IDENTIFIER_CHECK
+            val signerCert: X509Certificate
+            val signerSubject: String
             try {
-                Instant.parse(it)
+                signerCert = decodeSignerCertificate(parsed)
+                signerSubject = signerCert.subjectX500Principal.name
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (_: Throwable) {
-                null
+            } catch (t: Throwable) {
+                outcomes[EtsiValidationStep.IDENTIFIER_CHECK] =
+                    StepOutcome.Failed(
+                        reason = t.message ?: "signer certificate could not be decoded",
+                        cause = t,
+                    )
+                outcomes.markInconclusiveRest(after = EtsiValidationStep.IDENTIFIER_CHECK)
+                return@withContext finalize(outcomes, signerSubject = null, signingTime = null)
             }
+            outcomes[EtsiValidationStep.IDENTIFIER_CHECK] =
+                StepOutcome.Passed(
+                    "signer cert decoded: $signerSubject",
+                )
+
+            // Pre-compute signing-time presence for policy.requireSigningTime.
+            val signingTime: Instant? =
+                parsed.sigT?.let {
+                    try {
+                        Instant.parse(it)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+
+            // ------------------------------------------------------------ Hand off to JAdES verifier
+            val jadesProfile = JadesProfile.B_B
+            val jadesResult =
+                jadesVerifier.verify(
+                    jadesSerialized,
+                    JadesVerificationOptions(
+                        requiredProfile = jadesProfile,
+                        trustAnchorResolver = trustAnchorResolver,
+                        acceptedAlgorithms =
+                            policy.acceptedSignatureAlgorithms +
+                                // pass the asserted alg through too so the JAdES verifier doesn't pre-reject
+                                // it on an alg-mismatch and mask the policy-level CRYPTO_CONSTRAINTS step.
+                                setOfNotNull(parsed.alg),
+                        allowExpiredCertificateAtSigningTime = false,
+                        maxClockSkew = policy.maxClockSkew,
+                        revocationPolicy = policy.revocationPolicy,
+                        revocationEvidence = policy.revocationEvidence,
+                        revocationIssuerCertificates = policy.revocationIssuerCertificates,
+                        timestampTrustAnchors = policy.timestampTrustAnchors,
+                        // Accepting a withdrawn service (allowedTrustStatusUris) never by itself accepts an
+                        // unauthenticated, back-datable signing time; that needs its own explicit opt-in.
+                        allowWithdrawnTrustWithoutAuthenticatedTime =
+                            policy.allowWithdrawnTrustWithoutAuthenticatedTime &&
+                                TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
+                    ),
+                )
+
+            // ------------------------------------------------------------ Step 3: SIGNATURE_ACCEPTANCE
+            outcomes[EtsiValidationStep.SIGNATURE_ACCEPTANCE] =
+                when (jadesResult) {
+                    is JadesValidationResult.Valid -> StepOutcome.Passed("crypto verification ok")
+                    is JadesValidationResult.Invalid.BadSignature ->
+                        StepOutcome.Failed(
+                            "cryptographic verification failed: ${jadesResult.reason}",
+                        )
+                    is JadesValidationResult.Invalid.Malformed ->
+                        StepOutcome.Failed(
+                            "envelope rejected during crypto check: ${jadesResult.reason}",
+                        )
+                    // The JAdES verifier checks the signature before any of these, so the crypto itself held.
+                    is JadesValidationResult.Invalid.UntrustedSigner,
+                    is JadesValidationResult.Invalid.TrustWithdrawn,
+                    is JadesValidationResult.Invalid.SignerCertificateInvalid,
+                    is JadesValidationResult.Invalid.TimeStampMismatch,
+                    is JadesValidationResult.Invalid.MissingTimeStamp,
+                    is JadesValidationResult.Invalid.CertificateExpired,
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("crypto verification ok (further step failed)")
+                    // Rejected on structure/profile grounds, possibly before the signature was examined.
+                    is JadesValidationResult.Invalid.WrongProfile ->
+                        StepOutcome.Inconclusive(
+                            "crypto verification not evaluated: ${jadesResult.found} found, ${jadesResult.required} required",
+                        )
+                }
+
+            // ------------------------------------------------------------ Step 4: X509_CERT_PATH
+            outcomes[EtsiValidationStep.X509_CERT_PATH] =
+                when (jadesResult) {
+                    is JadesValidationResult.Valid ->
+                        when (val trust = jadesResult.trust) {
+                            is TrustAnchorMatch.QualifiedActive ->
+                                StepOutcome.Passed("anchored at ${trust.tspName}")
+                            is TrustAnchorMatch.QualifiedWithdrawn ->
+                                StepOutcome.Passed("anchored at withdrawn ${trust.tspName}")
+                            is TrustAnchorMatch.NotTrusted ->
+                                StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
+                        }
+                    is JadesValidationResult.Invalid.UntrustedSigner ->
+                        StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
+                    is JadesValidationResult.Invalid.TrustWithdrawn ->
+                        StepOutcome.Failed("trust-list service withdrawn: ${jadesResult.reason}")
+                    is JadesValidationResult.Invalid.SignerCertificateInvalid ->
+                        StepOutcome.Failed("signer certificate unusable: ${jadesResult.reason}")
+                    // The verifier rejects these before it resolves the certificate path, so the path was not evaluated.
+                    is JadesValidationResult.Invalid.TimeStampMismatch,
+                    is JadesValidationResult.Invalid.MissingTimeStamp,
+                    is JadesValidationResult.Invalid.WrongProfile,
+                    is JadesValidationResult.Invalid.CertificateExpired,
+                    is JadesValidationResult.Invalid.BadSignature,
+                    is JadesValidationResult.Invalid.Malformed,
+                    -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
+                    // Reached only after the path was resolved; the revocation outcome is reported by its own step.
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("cert path validated")
+                }
+
+            // ------------------------------------------------------------ Step 5: REVOCATION
+            outcomes[EtsiValidationStep.REVOCATION] = revocationOutcome(jadesResult, policy)
+
+            // ------------------------------------------------------------ Step 6: CRYPTO_CONSTRAINTS
+            outcomes[EtsiValidationStep.CRYPTO_CONSTRAINTS] =
+                when (val alg = parsed.alg) {
+                    null -> StepOutcome.Failed("protected header missing 'alg'")
+                    !in policy.acceptedSignatureAlgorithms ->
+                        StepOutcome.Failed(
+                            "signature alg '$alg' not in policy.acceptedSignatureAlgorithms " +
+                                "(${policy.acceptedSignatureAlgorithms.joinToString()})",
+                        )
+                    else -> StepOutcome.Passed("alg=$alg accepted by policy")
+                }
+
+            // ------------------------------------------------------------ Step 7: SIGNATURE_POLICY
+            outcomes[EtsiValidationStep.SIGNATURE_POLICY] = signaturePolicyOutcome(jadesResult, policy)
+
+            // ------------------------------------------------------------ Step 8: SIGNING_TIME_VALIDITY
+            outcomes[EtsiValidationStep.SIGNING_TIME_VALIDITY] =
+                signingTimeOutcome(
+                    jadesResult = jadesResult,
+                    signingTime = signingTime,
+                    policy = policy,
+                )
+
+            // ------------------------------------------------------------ Step 9: TIME_STAMP_TOKEN
+            outcomes[EtsiValidationStep.TIME_STAMP_TOKEN] = timeStampOutcome(jadesResult, policy, parsed)
+
+            // ------------------------------------------------------------ Step 10: LONG_TERM_VALIDATION
+            outcomes[EtsiValidationStep.LONG_TERM_VALIDATION] = longTermOutcome(jadesResult, policy)
+
+            // ------------------------------------------------------------ Step 11: FINAL_VERDICT
+            return@withContext finalize(outcomes, signerSubject = signerSubject, signingTime = signingTime)
         }
-
-        // ------------------------------------------------------------ Hand off to JAdES verifier
-        val jadesProfile = if (parsed.hasSigTst) JadesProfile.B_T else JadesProfile.B_B
-        val jadesResult = jadesVerifier.verify(
-            jadesSerialized,
-            JadesVerificationOptions(
-                requiredProfile = jadesProfile,
-                trustAnchorResolver = trustAnchorResolver,
-                acceptedAlgorithms = policy.acceptedSignatureAlgorithms +
-                    // pass the asserted alg through too so the JAdES verifier doesn't pre-reject
-                    // it on an alg-mismatch and mask the policy-level CRYPTO_CONSTRAINTS step.
-                    setOfNotNull(parsed.alg),
-                allowExpiredCertificateAtSigningTime = false,
-                maxClockSkew = policy.maxClockSkew,
-            ),
-        )
-
-        // ------------------------------------------------------------ Step 3: SIGNATURE_ACCEPTANCE
-        outcomes[EtsiValidationStep.SIGNATURE_ACCEPTANCE] = when (jadesResult) {
-            is JadesValidationResult.Valid -> StepOutcome.Passed("crypto verification ok")
-            is JadesValidationResult.Invalid.BadSignature -> StepOutcome.Failed(
-                "cryptographic verification failed: ${jadesResult.reason}",
-            )
-            is JadesValidationResult.Invalid.Malformed -> StepOutcome.Failed(
-                "envelope rejected during crypto check: ${jadesResult.reason}",
-            )
-            else -> StepOutcome.Passed("crypto verification ok (further step failed)")
-        }
-
-        // ------------------------------------------------------------ Step 4: X509_CERT_PATH
-        outcomes[EtsiValidationStep.X509_CERT_PATH] = when (jadesResult) {
-            is JadesValidationResult.Valid -> when (val trust = jadesResult.trust) {
-                is TrustAnchorMatch.QualifiedActive ->
-                    StepOutcome.Passed("anchored at ${trust.tspName}")
-                is TrustAnchorMatch.QualifiedWithdrawn ->
-                    StepOutcome.Passed("anchored at withdrawn ${trust.tspName}")
-                is TrustAnchorMatch.NotTrusted ->
-                    StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
-            }
-            is JadesValidationResult.Invalid.UntrustedSigner ->
-                StepOutcome.Failed("signer chain does not anchor at any trust-list CA")
-            is JadesValidationResult.Invalid.BadSignature,
-            is JadesValidationResult.Invalid.Malformed,
-            -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
-            else -> StepOutcome.Passed("cert path validated")
-        }
-
-        // ------------------------------------------------------------ Step 5: REVOCATION (MVP placeholder)
-        outcomes[EtsiValidationStep.REVOCATION] = StepOutcome.NotApplicable
-
-        // ------------------------------------------------------------ Step 6: CRYPTO_CONSTRAINTS
-        outcomes[EtsiValidationStep.CRYPTO_CONSTRAINTS] = when (val alg = parsed.alg) {
-            null -> StepOutcome.Failed("protected header missing 'alg'")
-            !in policy.acceptedSignatureAlgorithms -> StepOutcome.Failed(
-                "signature alg '$alg' not in policy.acceptedSignatureAlgorithms " +
-                    "(${policy.acceptedSignatureAlgorithms.joinToString()})",
-            )
-            else -> StepOutcome.Passed("alg=$alg accepted by policy")
-        }
-
-        // ------------------------------------------------------------ Step 7: SIGNATURE_POLICY
-        outcomes[EtsiValidationStep.SIGNATURE_POLICY] = signaturePolicyOutcome(jadesResult, policy)
-
-        // ------------------------------------------------------------ Step 8: SIGNING_TIME_VALIDITY
-        outcomes[EtsiValidationStep.SIGNING_TIME_VALIDITY] = signingTimeOutcome(
-            jadesResult = jadesResult,
-            signingTime = signingTime,
-            policy = policy,
-        )
-
-        // ------------------------------------------------------------ Step 9: TIME_STAMP_TOKEN
-        outcomes[EtsiValidationStep.TIME_STAMP_TOKEN] = timeStampOutcome(jadesResult, policy, parsed)
-
-        // ------------------------------------------------------------ Step 10: LONG_TERM_VALIDATION (MVP placeholder)
-        outcomes[EtsiValidationStep.LONG_TERM_VALIDATION] = StepOutcome.NotApplicable
-
-        // ------------------------------------------------------------ Step 11: FINAL_VERDICT
-        return@withContext finalize(outcomes, signerSubject = signerSubject, signingTime = signingTime)
-    }
 
     // ---------------------------------------------------------------- per-step helpers
+
+    private fun revocationOutcome(
+        jadesResult: JadesValidationResult,
+        policy: EtsiSignaturePolicy,
+    ): StepOutcome {
+        if (policy.revocationPolicy == RevocationPolicy.NOT_CHECKED) return StepOutcome.NotApplicable
+        return when (jadesResult) {
+            is JadesValidationResult.Valid ->
+                if (jadesResult.revocationChecked) {
+                    StepOutcome.Passed("signer and CA certificates shown not revoked by verified CRL/OCSP evidence")
+                } else {
+                    StepOutcome.Inconclusive("no usable revocation evidence for every certificate in the chain")
+                }
+            is JadesValidationResult.Invalid.CertificateRevoked ->
+                StepOutcome.Failed("certificate revoked: ${jadesResult.reason}")
+            is JadesValidationResult.Invalid.RevocationUnavailable ->
+                StepOutcome.Failed("revocation evidence required but unavailable: ${jadesResult.reason}")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("revocation not evaluated — earlier step failed")
+        }
+    }
+
+    /** B-LT / B-LTA: the embedded validation data only counts once it has been verified. */
+    private fun longTermOutcome(
+        jadesResult: JadesValidationResult,
+        policy: EtsiSignaturePolicy,
+    ): StepOutcome {
+        if (jadesResult !is JadesValidationResult.Valid || !jadesResult.foundProfile.atLeast(JadesProfile.B_LT)) {
+            return StepOutcome.NotApplicable
+        }
+        if (policy.revocationPolicy == RevocationPolicy.NOT_CHECKED) return StepOutcome.NotApplicable
+        return if (jadesResult.revocationChecked) {
+            StepOutcome.Passed("${jadesResult.foundProfile} validation data verified (${jadesResult.rValsCount} rVals)")
+        } else {
+            StepOutcome.Inconclusive("${jadesResult.foundProfile} validation data could not be fully verified")
+        }
+    }
 
     private fun signaturePolicyOutcome(
         jadesResult: JadesValidationResult,
         policy: EtsiSignaturePolicy,
     ): StepOutcome {
         if (jadesResult is JadesValidationResult.Valid) {
-            val statusUri = when (val trust = jadesResult.trust) {
-                is TrustAnchorMatch.QualifiedActive -> trust.service.status.uri
-                is TrustAnchorMatch.QualifiedWithdrawn -> TspServiceStatus.WITHDRAWN.uri
-                is TrustAnchorMatch.NotTrusted -> null
-            }
+            val statusUri =
+                when (val trust = jadesResult.trust) {
+                    is TrustAnchorMatch.QualifiedActive -> trust.service.status.uri
+                    is TrustAnchorMatch.QualifiedWithdrawn -> TspServiceStatus.WITHDRAWN.uri
+                    is TrustAnchorMatch.NotTrusted -> null
+                }
             return when {
                 statusUri == null ->
                     StepOutcome.Failed("no trust-list service status available")
@@ -223,6 +326,9 @@ class DefaultEtsiSignatureValidator(
         if (jadesResult is JadesValidationResult.Invalid.UntrustedSigner) {
             return StepOutcome.Failed("signer is untrusted — no trust-list service status")
         }
+        if (jadesResult is JadesValidationResult.Invalid.TrustWithdrawn) {
+            return StepOutcome.Failed("trust-list service withdrawn: ${jadesResult.reason}")
+        }
         return StepOutcome.Inconclusive("signature-policy not evaluated — earlier step failed")
     }
 
@@ -235,12 +341,23 @@ class DefaultEtsiSignatureValidator(
             return StepOutcome.Failed("policy requires sigT but it was missing or unparseable")
         }
         return when (jadesResult) {
-            is JadesValidationResult.Valid -> StepOutcome.Passed(
-                "signer cert valid at sigT=${jadesResult.signingTime}",
-            )
+            is JadesValidationResult.Valid ->
+                StepOutcome.Passed(
+                    "signer cert valid at the authenticated time (else now); claimed sigT=${jadesResult.signingTime}",
+                )
             is JadesValidationResult.Invalid.CertificateExpired ->
-                StepOutcome.Failed("signer cert expired at sigT (notAfter=${jadesResult.notAfter})")
-            else -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
+                StepOutcome.Failed("signer cert expired (notAfter=${jadesResult.notAfter})")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
         }
     }
 
@@ -249,6 +366,13 @@ class DefaultEtsiSignatureValidator(
         policy: EtsiSignaturePolicy,
         parsed: ParsedEnvelope,
     ): StepOutcome {
+        // An archival-only envelope has no sigTst, but a bad archival token must still fail the step.
+        if (jadesResult is JadesValidationResult.Invalid.TimeStampMismatch) {
+            return StepOutcome.Failed("time-stamp mismatch: ${jadesResult.reason}")
+        }
+        if (jadesResult is JadesValidationResult.Invalid.MissingTimeStamp) {
+            return StepOutcome.Failed("time-stamp missing: ${jadesResult.reason}")
+        }
         if (policy.requireTimeStamp && !parsed.hasSigTst) {
             return StepOutcome.Failed("policy requires sigTst but the envelope has none")
         }
@@ -258,17 +382,27 @@ class DefaultEtsiSignatureValidator(
         return when (jadesResult) {
             is JadesValidationResult.Valid -> {
                 val ts = jadesResult.signatureTimeStamp
-                if (ts != null) {
-                    StepOutcome.Passed("sigTst validated at $ts")
-                } else {
-                    StepOutcome.Inconclusive("sigTst present but no TSA gen-time recovered")
+                when {
+                    ts != null -> StepOutcome.Passed("sigTst verified against the configured TSA trust anchors, genTime $ts")
+                    policy.requireTimeStamp ->
+                        StepOutcome.Failed("policy requires a trusted sigTst but it is not verified against any TSA trust anchor")
+                    else -> StepOutcome.Inconclusive("sigTst present but not verified: no TSA trust anchor accepted it")
                 }
             }
             is JadesValidationResult.Invalid.MissingTimeStamp ->
                 StepOutcome.Failed("sigTst missing: ${jadesResult.reason}")
             is JadesValidationResult.Invalid.TimeStampMismatch ->
                 StepOutcome.Failed("sigTst mismatch: ${jadesResult.reason}")
-            else -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
         }
     }
 
@@ -285,21 +419,24 @@ class DefaultEtsiSignatureValidator(
         }
 
         // Compute aggregate verdict from the non-FINAL_VERDICT entries.
-        val applicableOutcomes = outcomes
-            .filterKeys { it != EtsiValidationStep.FINAL_VERDICT }
-            .values
+        val applicableOutcomes =
+            outcomes
+                .filterKeys { it != EtsiValidationStep.FINAL_VERDICT }
+                .values
 
-        val verdict = when {
-            applicableOutcomes.any { it is StepOutcome.Failed } -> FinalVerdict.TOTAL_FAILED
-            applicableOutcomes.any { it is StepOutcome.Inconclusive } -> FinalVerdict.INDETERMINATE
-            else -> FinalVerdict.TOTAL_PASSED
-        }
+        val verdict =
+            when {
+                applicableOutcomes.any { it is StepOutcome.Failed } -> FinalVerdict.TOTAL_FAILED
+                applicableOutcomes.any { it is StepOutcome.Inconclusive } -> FinalVerdict.INDETERMINATE
+                else -> FinalVerdict.TOTAL_PASSED
+            }
 
-        outcomes[EtsiValidationStep.FINAL_VERDICT] = when (verdict) {
-            FinalVerdict.TOTAL_PASSED -> StepOutcome.Passed("all applicable steps passed")
-            FinalVerdict.TOTAL_FAILED -> StepOutcome.Failed("at least one step failed")
-            FinalVerdict.INDETERMINATE -> StepOutcome.Inconclusive("at least one step is inconclusive")
-        }
+        outcomes[EtsiValidationStep.FINAL_VERDICT] =
+            when (verdict) {
+                FinalVerdict.TOTAL_PASSED -> StepOutcome.Passed("all applicable steps passed")
+                FinalVerdict.TOTAL_FAILED -> StepOutcome.Failed("at least one step failed")
+                FinalVerdict.INDETERMINATE -> StepOutcome.Inconclusive("at least one step is inconclusive")
+            }
 
         return EtsiValidationReport(
             finalVerdict = verdict,
@@ -309,11 +446,10 @@ class DefaultEtsiSignatureValidator(
         )
     }
 
-    private fun MutableMap<EtsiValidationStep, StepOutcome>.markInconclusiveRest(
-        after: EtsiValidationStep,
-    ) {
+    private fun MutableMap<EtsiValidationStep, StepOutcome>.markInconclusiveRest(after: EtsiValidationStep) {
         val afterOrdinal = after.ordinal
-        EtsiValidationStep.values()
+        EtsiValidationStep
+            .values()
             .filter { it.ordinal > afterOrdinal && it != EtsiValidationStep.FINAL_VERDICT }
             .forEach { step ->
                 putIfAbsent(step, StepOutcome.Inconclusive("not evaluated — earlier step failed"))
@@ -336,9 +472,11 @@ class DefaultEtsiSignatureValidator(
         val trimmed = serialized.trim()
         val (protectedB64u, payloadB64u, signatureB64u, hasSigTst) =
             if (trimmed.startsWith("{")) parseFlattened(trimmed) else parseCompact(trimmed)
-        val headerJson = Json.parseToJsonElement(
-            String(Base64.getUrlDecoder().decode(protectedB64u), Charsets.UTF_8),
-        ).jsonObject
+        val headerJson =
+            Json
+                .parseToJsonElement(
+                    String(Base64.getUrlDecoder().decode(protectedB64u), Charsets.UTF_8),
+                ).jsonObject
         val alg = headerJson["alg"]?.jsonPrimitive?.content
         val sigT = headerJson["sigT"]?.jsonPrimitive?.content
         val x5c = (headerJson["x5c"] as? JsonArray)?.map { it.jsonPrimitive.content }
@@ -356,12 +494,15 @@ class DefaultEtsiSignatureValidator(
     /** Returns (protected, payload, signature, hasSigTst). */
     private fun parseFlattened(serialized: String): Quad {
         val obj = Json.parseToJsonElement(serialized).jsonObject
-        val protectedB64u = obj["protected"]?.jsonPrimitive?.content
-            ?: error("JAdES JSON Flattened: missing 'protected'")
-        val payloadB64u = obj["payload"]?.jsonPrimitive?.content
-            ?: error("JAdES JSON Flattened: missing 'payload'")
-        val signatureB64u = obj["signature"]?.jsonPrimitive?.content
-            ?: error("JAdES JSON Flattened: missing 'signature'")
+        val protectedB64u =
+            obj["protected"]?.jsonPrimitive?.content
+                ?: error("JAdES JSON Flattened: missing 'protected'")
+        val payloadB64u =
+            obj["payload"]?.jsonPrimitive?.content
+                ?: error("JAdES JSON Flattened: missing 'payload'")
+        val signatureB64u =
+            obj["signature"]?.jsonPrimitive?.content
+                ?: error("JAdES JSON Flattened: missing 'signature'")
         val unsignedHeader = obj["header"] as? JsonObject
         val etsiU = unsignedHeader?.get("etsiU") as? JsonArray
         val hasSigTst = etsiU?.any { (it as? JsonObject)?.get("sigTst") != null } == true
@@ -382,10 +523,12 @@ class DefaultEtsiSignatureValidator(
     )
 
     private fun decodeSignerCertificate(parsed: ParsedEnvelope): X509Certificate {
-        val x5c = parsed.x5c
-            ?: error("protected header lacks 'x5c' — signer identity unknown")
-        val signerDer = x5c.firstOrNull()
-            ?: error("'x5c' was empty")
+        val x5c =
+            parsed.x5c
+                ?: error("protected header lacks 'x5c' — signer identity unknown")
+        val signerDer =
+            x5c.firstOrNull()
+                ?: error("'x5c' was empty")
         val der = Base64.getDecoder().decode(signerDer)
         return CERT_FACTORY.generateCertificate(ByteArrayInputStream(der)) as X509Certificate
     }

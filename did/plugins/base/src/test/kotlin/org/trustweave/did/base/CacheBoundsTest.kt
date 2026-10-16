@@ -10,7 +10,6 @@ import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration
@@ -77,14 +76,13 @@ class CacheBoundsTest {
 
     @Test
     fun `deactivation records survive lru and ttl eviction`() =
-        runBlocking {
+        runBlocking<Unit> {
             val m = M(InMemoryKeyManagementService(), max = 5, ttl = 20.milliseconds)
             m.cache("did:test:dead")
             m.markDeactivated("did:test:dead")
             Thread.sleep(60)
             repeat(50) { m.cache("did:test:$it") }
             assertTrue(m.has("did:test:dead"), "deactivated record must never be silently evicted")
-            assertNotNull(m.has("did:test:dead"))
         }
 
     @Test

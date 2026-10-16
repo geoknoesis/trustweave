@@ -19,13 +19,34 @@ import kotlin.time.Instant
  *                               parser. Entries are ordered as the LoTL pointers appear; missing
  *                               TSLs (LoTL references a territory whose XML was not provided) are
  *                               silently omitted.
+ * @property tslPointers         The LoTL's `OtherTSLPointer` entries: the territories it vouches for
+ *                               and the certificates that may sign each territory's TSL. Empty when
+ *                               the LoTL carries none.
  */
-data class TrustList(
-    val schemeOperator: String,
-    val sequenceNumber: Int,
-    val issuedAt: Instant,
-    val nextUpdateAt: Instant?,
-    val memberStateLists: List<MemberStateTsl>,
+data class TrustList
+    @JvmOverloads
+    constructor(
+        val schemeOperator: String,
+        val sequenceNumber: Int,
+        val issuedAt: Instant,
+        val nextUpdateAt: Instant?,
+        val memberStateLists: List<MemberStateTsl>,
+        val tslPointers: List<TslPointer> = emptyList(),
+    )
+
+/**
+ * One `OtherTSLPointer` of the LoTL.
+ *
+ * @property territory             ISO 3166-1 alpha-2 code from the pointer's `SchemeTerritory`
+ *                                 (upper-cased).
+ * @property location              `TSLLocation` URL, informational; the parser never fetches it.
+ * @property signingCertificates   Certificates from the pointer's `ServiceDigitalIdentities`: the
+ *                                 only certificates that may sign that territory's TSL.
+ */
+data class TslPointer(
+    val territory: String,
+    val location: String?,
+    val signingCertificates: List<X509Certificate>,
 )
 
 /**
@@ -36,16 +57,24 @@ data class TrustList(
  * @property schemeOperator  National scheme operator name.
  * @property sequenceNumber  TSL sequence number.
  * @property issuedAt        TSL issue date.
+ * @property nextUpdateAt    `NextUpdate` of the TSL; null when absent or empty.
+ * @property schemeTerritory `SchemeTerritory` the document declares about itself (upper-cased);
+ *                           null when absent. It can differ from [territory], which is the key the
+ *                           caller supplied.
  * @property trustedTsps     The Trust Service Providers listed as currently or historically
  *                           recognised under this Member State's regulatory regime.
  */
-data class MemberStateTsl(
-    val territory: String,
-    val schemeOperator: String,
-    val sequenceNumber: Int,
-    val issuedAt: Instant,
-    val trustedTsps: List<TrustedTSP>,
-)
+data class MemberStateTsl
+    @JvmOverloads
+    constructor(
+        val territory: String,
+        val schemeOperator: String,
+        val sequenceNumber: Int,
+        val issuedAt: Instant,
+        val trustedTsps: List<TrustedTSP>,
+        val nextUpdateAt: Instant? = null,
+        val schemeTerritory: String? = null,
+    )
 
 /**
  * A Trust Service Provider listed inside a [MemberStateTsl].
@@ -96,7 +125,9 @@ data class TspService(
  * collapses to [OTHER] — the MVP JAdES verifier does not consume the long tail of niche service
  * categories (national-eID providers, registered-mail, archival services, etc.).
  */
-enum class TspServiceType(val uri: String) {
+enum class TspServiceType(
+    val uri: String,
+) {
     /** `http://uri.etsi.org/TrstSvc/Svctype/CA/QC` — CA for qualified certificates. */
     CA_FOR_QUALIFIED_CERTIFICATES("http://uri.etsi.org/TrstSvc/Svctype/CA/QC"),
 
@@ -112,8 +143,7 @@ enum class TspServiceType(val uri: String) {
 
     companion object {
         /** Map a service-type URI to the enum; falls back to [OTHER] when unknown. */
-        fun fromUri(uri: String): TspServiceType =
-            entries.firstOrNull { it.uri == uri } ?: OTHER
+        fun fromUri(uri: String): TspServiceType = entries.firstOrNull { it.uri == uri } ?: OTHER
     }
 }
 
@@ -124,7 +154,9 @@ enum class TspServiceType(val uri: String) {
  * Less common values (`recognisedatnationallevel`, deprecated `inaccord` etc.) collapse to
  * [RECOGNISEDATNATIONALLEVEL] or [OTHER] as appropriate.
  */
-enum class TspServiceStatus(val uri: String) {
+enum class TspServiceStatus(
+    val uri: String,
+) {
     /** `…/svcstatus/granted` — service is in force. */
     GRANTED("http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted"),
 
@@ -141,8 +173,7 @@ enum class TspServiceStatus(val uri: String) {
     ;
 
     companion object {
-        fun fromUri(uri: String): TspServiceStatus =
-            entries.firstOrNull { it.uri == uri } ?: OTHER
+        fun fromUri(uri: String): TspServiceStatus = entries.firstOrNull { it.uri == uri } ?: OTHER
     }
 }
 

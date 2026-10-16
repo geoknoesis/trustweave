@@ -57,58 +57,62 @@ import java.io.Closeable
 class CloudHsmKeyManagementService(
     private val config: CloudHsmKmsConfig,
     cloudHsmV2ClientFactory: (CloudHsmKmsConfig) -> CloudHsmV2Client = ::defaultCloudHsmV2Client,
-) : KeyManagementService, Closeable {
-
+) : KeyManagementService,
+    Closeable {
     private val logger = LoggerFactory.getLogger(CloudHsmKeyManagementService::class.java)
 
     /**
      * The underlying PKCS#11 KMS instance, configured against the CloudHSM PKCS#11
      * library and the composite CloudHSM PIN.
      */
-    private val delegate: Pkcs11KeyManagementService = run {
-        val pin = try {
-            config.composeLoginPin()
-        } catch (e: IllegalStateException) {
-            throw CloudHsmException(
-                "Failed to compose CloudHSM login PIN: ${e.message ?: e.javaClass.simpleName}",
-                e,
-            )
+    private val delegate: Pkcs11KeyManagementService =
+        run {
+            val pin =
+                try {
+                    config.composeLoginPin()
+                } catch (e: IllegalStateException) {
+                    throw CloudHsmException(
+                        "Failed to compose CloudHSM login PIN: ${e.message ?: e.javaClass.simpleName}",
+                        e,
+                    )
+                }
+            val pkcs11Config =
+                Pkcs11Config(
+                    libraryPath = config.pkcs11LibraryPath,
+                    slot = config.slot,
+                    providerName = providerNameFor(config),
+                    pin = pin,
+                    enableSoftDelete = config.enableSoftDelete,
+                )
+            try {
+                Pkcs11KeyManagementService(pkcs11Config)
+            } catch (e: Exception) {
+                // Re-wrap as a CloudHsmException so callers see the CloudHSM context, but
+                // keep the underlying Pkcs11Exception as the cause for diagnostics.
+                throw CloudHsmException(
+                    "Failed to initialize CloudHSM PKCS#11 layer (clusterId=${config.clusterId}, " +
+                        "libraryPath='${config.pkcs11LibraryPath}'): ${e.message ?: e.javaClass.simpleName}",
+                    e,
+                )
+            } finally {
+                // The composed "user:password" PIN is no longer needed once the token is logged in.
+                pin.fill('\u0000')
+            }
         }
-        val pkcs11Config = Pkcs11Config(
-            libraryPath = config.pkcs11LibraryPath,
-            slot = config.slot,
-            providerName = providerNameFor(config),
-            pin = pin,
-            enableSoftDelete = config.enableSoftDelete,
-        )
-        try {
-            Pkcs11KeyManagementService(pkcs11Config)
-        } catch (e: Exception) {
-            // Re-wrap as a CloudHsmException so callers see the CloudHSM context, but
-            // keep the underlying Pkcs11Exception as the cause for diagnostics.
-            throw CloudHsmException(
-                "Failed to initialize CloudHSM PKCS#11 layer (clusterId=${config.clusterId}, " +
-                    "libraryPath='${config.pkcs11LibraryPath}'): ${e.message ?: e.javaClass.simpleName}",
-                e,
-            )
-        }
-    }
 
     /**
      * Cluster-management client. Built lazily; closed by [close].
      */
     private val cloudHsmClient: CloudHsmV2Client by lazy { cloudHsmV2ClientFactory(config) }
 
-    override suspend fun getSupportedAlgorithms(): Set<Algorithm> =
-        delegate.getSupportedAlgorithms()
+    override suspend fun getSupportedAlgorithms(): Set<Algorithm> = delegate.getSupportedAlgorithms()
 
     override suspend fun generateKey(
         algorithm: Algorithm,
         options: Map<String, Any?>,
     ): GenerateKeyResult = delegate.generateKey(algorithm, options)
 
-    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
-        delegate.getPublicKey(keyId)
+    override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult = delegate.getPublicKey(keyId)
 
     override suspend fun sign(
         keyId: KeyId,
@@ -116,8 +120,7 @@ class CloudHsmKeyManagementService(
         algorithm: Algorithm?,
     ): SignResult = delegate.sign(keyId, data, algorithm)
 
-    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
-        delegate.deleteKey(keyId)
+    override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult = delegate.deleteKey(keyId)
 
     /**
      * Describes the configured cluster via the CloudHsmV2 API.
@@ -126,25 +129,28 @@ class CloudHsmKeyManagementService(
      *         in the configured region.
      * @throws CloudHsmException if the AWS call fails.
      */
-    suspend fun describeCluster(): Cluster? = withContext(Dispatchers.IO) {
-        try {
-            val response = cloudHsmClient.describeClusters(
-                DescribeClustersRequest.builder()
-                    .filters(mapOf("clusterIds" to listOf(config.clusterId)))
-                    .build(),
-            )
-            response.clusters().firstOrNull()
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.error("DescribeClusters failed for clusterId=${config.clusterId}", e)
-            throw CloudHsmException(
-                "DescribeClusters failed for clusterId=${config.clusterId}: " +
-                    "${e.message ?: e.javaClass.simpleName}",
-                e,
-            )
+    suspend fun describeCluster(): Cluster? =
+        withContext(Dispatchers.IO) {
+            try {
+                val response =
+                    cloudHsmClient.describeClusters(
+                        DescribeClustersRequest
+                            .builder()
+                            .filters(mapOf("clusterIds" to listOf(config.clusterId)))
+                            .build(),
+                    )
+                response.clusters().firstOrNull()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("DescribeClusters failed for clusterId=${config.clusterId}", e)
+                throw CloudHsmException(
+                    "DescribeClusters failed for clusterId=${config.clusterId}: " +
+                        "${e.message ?: e.javaClass.simpleName}",
+                    e,
+                )
+            }
         }
-    }
 
     /**
      * Returns the current [ClusterState] of the configured cluster, or `null` if
@@ -157,10 +163,11 @@ class CloudHsmKeyManagementService(
      * during application startup to fail fast on misconfiguration.
      */
     suspend fun requireClusterActive() {
-        val state = getClusterState()
-            ?: throw CloudHsmException(
-                "Cluster '${config.clusterId}' not found in region '${config.region}'.",
-            )
+        val state =
+            getClusterState()
+                ?: throw CloudHsmException(
+                    "Cluster '${config.clusterId}' not found in region '${config.region}'.",
+                )
         if (state != ClusterState.ACTIVE) {
             throw CloudHsmException(
                 "Cluster '${config.clusterId}' is in state $state; expected ACTIVE.",
@@ -172,8 +179,7 @@ class CloudHsmKeyManagementService(
      * Returns the CA certificate the cluster issues for HSM identity verification,
      * as a PEM-encoded string, or `null` if the cluster has not been initialized yet.
      */
-    suspend fun getClusterCertificateAuthorityPem(): String? =
-        describeCluster()?.certificates()?.clusterCertificate()
+    suspend fun getClusterCertificateAuthorityPem(): String? = describeCluster()?.certificates()?.clusterCertificate()
 
     override fun close() {
         runCatching { cloudHsmClient.close() }
@@ -192,15 +198,15 @@ class CloudHsmKeyManagementService(
          * we embed it in the provider name so multiple cluster-scoped services can
          * coexist in the same JVM without colliding.
          */
-        internal fun providerNameFor(config: CloudHsmKmsConfig): String =
-            "TrustWeave-CloudHSM-${config.clusterId}"
+        internal fun providerNameFor(config: CloudHsmKmsConfig): String = "TrustWeave-CloudHSM-${config.clusterId}"
 
         /**
          * Default factory for the CloudHsmV2 management client. Uses AWS SDK v2's
          * default credentials provider chain and the region from the config.
          */
         internal fun defaultCloudHsmV2Client(config: CloudHsmKmsConfig): CloudHsmV2Client =
-            CloudHsmV2Client.builder()
+            CloudHsmV2Client
+                .builder()
                 .region(Region.of(config.region))
                 .build()
     }

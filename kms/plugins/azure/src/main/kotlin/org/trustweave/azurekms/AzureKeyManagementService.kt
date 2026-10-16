@@ -12,7 +12,6 @@ import com.azure.security.keyvault.keys.models.KeyType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
@@ -79,6 +78,9 @@ class AzureKeyManagementService(
     }
 
     private val logger = LoggerFactory.getLogger(AzureKeyManagementService::class.java)
+
+    /** How long [deleteKey] waits for Azure to finish the soft delete. */
+    private val deleteTimeoutMillis: Long = 60_000L
     private val cryptoClientCache = java.util.concurrent.ConcurrentHashMap<String, CryptographyClient>()
 
     // Cache for resolved key algorithms to avoid re-fetching key metadata on every sign() call.
@@ -410,9 +412,12 @@ class AzureKeyManagementService(
                         val client =
                             runInterruptible {
                                 CryptographyClientBuilder()
-                                    .keyIdentifier(resolvedKeyId)
+                                    .keyIdentifier(cryptoKeyIdentifier(resolvedKeyId))
                                     .credential(azureCredential)
-                                    .buildClient()
+                                    .apply {
+                                        // Same as the KeyClient: an emulator endpoint is not a *.vault.azure.net host.
+                                        if (config.endpointOverride != null) disableChallengeResourceVerification()
+                                    }.buildClient()
                             }
                         cryptoClientCache.putIfAbsent(cacheKey, client) ?: client
                     }
@@ -495,12 +500,18 @@ class AzureKeyManagementService(
                 // Azure Key Vault supports soft delete and purge
                 // We'll use beginDeleteKey which schedules deletion (soft delete)
                 val deleteKeyOperation = runInterruptible { keyClient.beginDeleteKey(resolvedKeyId) }
-                // withTimeout bounds the maximum blocking time so coroutine cancellation
+                // The wait is bounded so coroutine cancellation
                 // can always propagate even if the Azure poller ignores thread interrupts.
-                withTimeout(60_000L) {
-                    runInterruptible {
-                        deleteKeyOperation.waitForCompletion()
-                    }
+                // A timeout is reported as a failure; real cancellation of the caller still propagates.
+                val completed = awaitCompletion(deleteTimeoutMillis) { deleteKeyOperation.waitForCompletion() }
+                if (!completed) {
+                    return@withContext DeleteKeyResult.Failure.Error(
+                        keyId = keyId,
+                        reason =
+                            "Timed out after ${deleteTimeoutMillis}ms waiting for Azure Key Vault to finish deleting " +
+                                "the key; the deletion may still complete",
+                        cause = null,
+                    )
                 }
 
                 // Evict crypto-client and algorithm caches so stale entries cannot be used
@@ -739,6 +750,10 @@ class AzureKeyManagementService(
         }
         logger.debug("Evicted crypto client cache entries for key: {}", resolvedId)
     }
+
+    /** Key identifier URL for signing: the endpoint override when configured, like the [KeyClient]. */
+    internal fun cryptoKeyIdentifier(resolvedKeyId: String): String =
+        AlgorithmMapping.toKeyIdentifierUrl(AzureKmsClientFactory.effectiveVaultUrl(config), resolvedKeyId)
 
     override fun close() {
         // Azure KeyClient implements Closeable, but we don't need to explicitly close it

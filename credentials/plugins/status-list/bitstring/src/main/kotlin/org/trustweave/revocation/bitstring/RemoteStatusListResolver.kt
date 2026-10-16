@@ -270,7 +270,8 @@ data class RemoteStatusList(
  * so the status check fails closed.
  *
  * **Caching and revocation latency.** Verified lists are cached for [cacheTtl] (default 5 minutes,
- * or the credential's own `ttl` if shorter) in a bounded in-memory cache. A credential revoked at
+ * or the credential's own `ttl` / `validUntil` if sooner) in a bounded in-memory cache in which one host may hold
+ * at most an eighth of the entries. A credential revoked at
  * its issuer therefore keeps verifying as "not revoked" here for up to that long; lower [cacheTtl]
  * where that latency is unacceptable. Failures are negative-cached for [failureCacheTtl] (default
  * 30 seconds, `0` disables) so an unavailable or hostile endpoint is not hammered; during that
@@ -284,7 +285,11 @@ data class RemoteStatusList(
  * constructor (from any [StatusListCredentialVerifier]) and hand it to
  * [BitstringStatusListManagerFactory.create] / `BitstringStatusListManagerProvider.remoteStatusLists`.
  *
- * @param maxDecodedBytes Cap on the decompressed bitstring (GZIP-bomb guard).
+ * @param maxDecodedBytes Cap on the decompressed bitstring (GZIP-bomb guard). Defaults to 2 MiB
+ *   (16,777,216 entries); raise it only for a list that genuinely needs more.
+ * @param maxCacheBytes Cap on the decoded bytes held across all cached lists. The least recently used
+ *   lists are dropped to stay under it, and a single list larger than the cap is returned uncached, so
+ *   many distinct large lists cannot pin memory until the entry-count bound is reached.
  */
 class RemoteStatusListResolver(
     private val verifier: StatusListCredentialVerifier,
@@ -294,7 +299,12 @@ class RemoteStatusListResolver(
     private val maxCacheEntries: Int = 256,
     private val clock: Clock = Clock.System,
     private val failureCacheTtl: kotlin.time.Duration = 30.seconds,
+    private val maxCacheBytes: Long = DEFAULT_MAX_CACHE_BYTES,
 ) {
+    init {
+        require(maxCacheBytes > 0) { "maxCacheBytes must be positive" }
+    }
+
     private data class CacheEntry(
         val list: RemoteStatusList,
         val expiresAt: Instant,
@@ -310,10 +320,44 @@ class RemoteStatusListResolver(
         var refs = 0
     }
 
+    /** Guarded by `synchronized(cache)`. Decoded bytes currently held by [cache]. */
+    private var cacheBytes = 0L
+
     private val cache =
         object : LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CacheEntry>?): Boolean = size > maxCacheEntries
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CacheEntry>?): Boolean {
+                val evict = size > maxCacheEntries
+                if (evict && eldest != null) cacheBytes -= eldest.value.list.sizeBits / 8L
+                return evict
+            }
         }
+
+    private fun cachePut(
+        url: String,
+        entry: CacheEntry,
+    ) {
+        val bytes = entry.list.sizeBits / 8L
+        synchronized(cache) {
+            cache.remove(url)?.let { cacheBytes -= it.list.sizeBits / 8L }
+            if (bytes > maxCacheBytes) return
+            // One host may hold only a fraction of the cache, so a publisher (or a credential
+            // pointing at many URLs of one host) cannot churn out everyone else's lists.
+            val host = hostOf(url)
+            val sameHost = cache.keys.filter { hostOf(it) == host }
+            sameHost.take((sameHost.size - perHostLimit() + 1).coerceAtLeast(0)).forEach { key ->
+                cache.remove(key)?.let { cacheBytes -= it.list.sizeBits / 8L }
+            }
+            cache[url] = entry
+            cacheBytes += bytes
+            val iterator = cache.entries.iterator()
+            while (cacheBytes > maxCacheBytes && iterator.hasNext()) {
+                val eldest = iterator.next()
+                if (eldest.key == url) continue
+                cacheBytes -= eldest.value.list.sizeBits / 8L
+                iterator.remove()
+            }
+        }
+    }
 
     private val failures =
         object : LinkedHashMap<String, FailureEntry>(16, 0.75f, true) {
@@ -321,6 +365,23 @@ class RemoteStatusListResolver(
         }
 
     private val flights = HashMap<String, Flight>()
+
+    private fun perHostLimit(): Int = maxOf(1, maxCacheEntries / PER_HOST_DIVISOR)
+
+    private fun hostOf(url: String): String? = runCatching { URI(url).host?.lowercase() }.getOrNull()
+
+    private fun failurePut(
+        url: String,
+        entry: FailureEntry,
+    ) {
+        synchronized(failures) {
+            failures.remove(url)
+            val host = hostOf(url)
+            val sameHost = failures.keys.filter { hostOf(it) == host }
+            sameHost.take((sameHost.size - perHostLimit() + 1).coerceAtLeast(0)).forEach { failures.remove(it) }
+            failures[url] = entry
+        }
+    }
 
     /**
      * Fetches, verifies and decodes the status list credential at [url].
@@ -375,7 +436,7 @@ class RemoteStatusListResolver(
             fetchAndVerify(url, clock.now())
         } catch (e: TrustWeaveException.InvalidState) {
             if (failureCacheTtl.isPositive()) {
-                synchronized(failures) { failures[url] = FailureEntry(e, clock.now() + failureCacheTtl) }
+                failurePut(url, FailureEntry(e, clock.now() + failureCacheTtl))
             }
             throw e
         }
@@ -459,7 +520,11 @@ class RemoteStatusListResolver(
 
         val ttlMs = (claims["ttl"] as? JsonPrimitive)?.longOrNull?.takeIf { it > 0 }
         val ttl = ttlMs?.let { minOf(cacheTtl, kotlin.time.Duration.parse("${it}ms")) } ?: cacheTtl
-        synchronized(cache) { cache[url] = CacheEntry(list, now + ttl) }
+        // Never serve a list past its own validity: the proof verification above accepted it as
+        // valid now, but a later lookup must go through verification again once it has lapsed.
+        val validity = listOfNotNull(credential.validUntil, credential.expirationDate).minOrNull()
+        val expiresAt = if (validity != null) minOf(now + ttl, validity) else now + ttl
+        cachePut(url, CacheEntry(list, expiresAt))
         return list
     }
 
@@ -497,8 +562,14 @@ class RemoteStatusListResolver(
                 cacheTtl = cacheTtl,
             )
 
-        /** 16 MiB of decoded bitstring = 134,217,728 entries. */
-        const val DEFAULT_MAX_DECODED_BYTES: Int = 16 * 1024 * 1024
+        /** One host may hold at most `maxCacheEntries / PER_HOST_DIVISOR` cached lists (and cached failures). */
+        private const val PER_HOST_DIVISOR = 8
+
+        /** 2 MiB of decoded bitstring = 16,777,216 entries, far above any list in practice. */
+        const val DEFAULT_MAX_DECODED_BYTES: Int = 2 * 1024 * 1024
+
+        /** 32 MiB of decoded bitstring across all cached lists. */
+        const val DEFAULT_MAX_CACHE_BYTES: Long = 32L * 1024 * 1024
 
         private val json =
             Json {

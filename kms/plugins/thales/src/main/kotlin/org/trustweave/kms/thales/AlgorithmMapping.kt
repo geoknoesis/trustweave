@@ -1,8 +1,8 @@
 package org.trustweave.kms.thales
 
 import org.trustweave.kms.Algorithm
-import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.interfaces.ECPublicKey
@@ -21,8 +21,8 @@ object AlgorithmMapping {
      * @return Thales CipherTrust key algorithm string
      * @throws IllegalArgumentException if algorithm is not supported by Thales CipherTrust
      */
-    fun toThalesKeyAlgorithm(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toThalesKeyAlgorithm(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "Ed25519"
             is Algorithm.Secp256k1 -> "secp256k1"
             is Algorithm.P256 -> "EC:secp256r1"
@@ -38,7 +38,6 @@ object AlgorithmMapping {
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by Thales CipherTrust")
         }
-    }
 
     /**
      * Parses Thales CipherTrust key algorithm to TrustWeave Algorithm.
@@ -46,8 +45,8 @@ object AlgorithmMapping {
      * @param keyAlgorithm Thales CipherTrust key algorithm string
      * @return TrustWeave Algorithm, or null if not recognized
      */
-    fun fromThalesKeyAlgorithm(keyAlgorithm: String): Algorithm? {
-        return when (keyAlgorithm.uppercase()) {
+    fun fromThalesKeyAlgorithm(keyAlgorithm: String): Algorithm? =
+        when (keyAlgorithm.uppercase()) {
             "ED25519" -> Algorithm.Ed25519
             "SECP256K1" -> Algorithm.Secp256k1
             "EC:SECP256R1", "EC-P256" -> Algorithm.P256
@@ -58,7 +57,6 @@ object AlgorithmMapping {
             "RSA:4096", "RSA-4096" -> Algorithm.RSA.RSA_4096
             else -> null
         }
-    }
 
     /**
      * Maps TrustWeave Algorithm to Thales CipherTrust signing algorithm.
@@ -66,8 +64,8 @@ object AlgorithmMapping {
      * @param algorithm TrustWeave algorithm
      * @return Thales CipherTrust signing algorithm string
      */
-    fun toThalesSigningAlgorithm(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toThalesSigningAlgorithm(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "EdDSA"
             is Algorithm.Secp256k1 -> "ECDSA"
             is Algorithm.P256 -> "ECDSA"
@@ -76,7 +74,24 @@ object AlgorithmMapping {
             is Algorithm.RSA -> "RSA_PKCS1_V1_5"
             else -> "ECDSA"
         }
-    }
+
+    /**
+     * Digest used with [toThalesSigningAlgorithm]: strength follows the key (P-384 and RSA-3072
+     * use SHA-384, P-521 and RSA-4096 use SHA-512, everything else SHA-256), matching the
+     * in-memory KMS.
+     */
+    fun toThalesHashAlgorithm(algorithm: Algorithm): String =
+        when (algorithm) {
+            is Algorithm.P384 -> "sha384"
+            is Algorithm.P521 -> "sha512"
+            is Algorithm.RSA ->
+                when (algorithm.keySize) {
+                    3072 -> "sha384"
+                    4096 -> "sha512"
+                    else -> "sha256"
+                }
+            else -> "sha256"
+        }
 
     /**
      * Converts Thales CipherTrust public key to JWK format.
@@ -85,39 +100,48 @@ object AlgorithmMapping {
      * @param algorithm The algorithm type
      * @return JWK map representation
      */
-    fun publicKeyToJwk(publicKeyBytes: ByteArray, algorithm: Algorithm): Map<String, Any?> {
+    fun publicKeyToJwk(
+        publicKeyBytes: ByteArray,
+        algorithm: Algorithm,
+    ): Map<String, Any?> {
         return try {
             when (algorithm) {
                 is Algorithm.Ed25519 -> {
-                    val rawKey = if (publicKeyBytes.size == 32) {
-                        publicKeyBytes
-                    } else {
-                        publicKeyBytes.takeLast(32).toByteArray()
-                    }
+                    val rawKey =
+                        if (publicKeyBytes.size == 32) {
+                            publicKeyBytes
+                        } else {
+                            publicKeyBytes.takeLast(32).toByteArray()
+                        }
 
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.OKP,
                         JwkKeys.CRV to Algorithm.Ed25519.curveName,
-                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey),
                     )
                 }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    val curveName = algorithm.curveName
-                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
+                    val curveName =
+                        algorithm.curveName
+                            ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
                     val affineX = point.affineX
                     val affineY = point.affineY
-                    val coordinateLength = when (algorithm) {
-                        is Algorithm.Secp256k1, is Algorithm.P256 -> 32
-                        is Algorithm.P384 -> 48
-                        is Algorithm.P521 -> 66
-                        else -> 32
-                    }
+                    val coordinateLength =
+                        when (algorithm) {
+                            is Algorithm.Secp256k1, is Algorithm.P256 -> 32
+                            is Algorithm.P384 -> 48
+                            is Algorithm.P521 -> 66
+                            else -> 32
+                        }
 
-                    fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
+                    fun toUnsignedByteArray(
+                        bigInt: BigInteger,
+                        length: Int,
+                    ): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
                         val offset = length - bytes.size
@@ -136,7 +160,7 @@ object AlgorithmMapping {
                         JwkKeys.KTY to JwkKeyTypes.EC,
                         JwkKeys.CRV to curveName,
                         JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y),
                     )
                 }
                 is Algorithm.RSA -> {
@@ -156,7 +180,7 @@ object AlgorithmMapping {
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.RSA,
                         JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
-                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent)),
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
@@ -173,7 +197,15 @@ object AlgorithmMapping {
      * @return Resolved key identifier for Thales API
      */
     fun resolveKeyId(keyId: String): String {
+        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
+        // The id is placed into a URL path segment: refuse anything that could change the path.
+        require(
+            !keyId.contains("..") &&
+                keyId != "." &&
+                keyId.none { it == '/' || it == '\\' || it == '?' || it == '#' || it == '%' || it.isISOControl() },
+        ) {
+            "Key ID contains characters that are not allowed in a path segment"
+        }
         return keyId
     }
 }
-

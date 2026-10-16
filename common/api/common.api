@@ -403,6 +403,18 @@ public final class org/trustweave/core/json/JsonDataKt {
 	public static final fun jsonData (Lkotlin/jvm/functions/Function1;)Lkotlinx/serialization/json/JsonObject;
 }
 
+public final class org/trustweave/core/net/HttpUrlPolicy {
+	public static final field INSTANCE Lorg/trustweave/core/net/HttpUrlPolicy;
+	public final fun isHttpsOrLoopbackHttp (Ljava/lang/String;)Z
+	public final fun isLoopbackHost (Ljava/lang/String;)Z
+}
+
+public final class org/trustweave/core/net/HttpUrlPolicyKt {
+	public static final field DEFAULT_MAX_RESPONSE_BODY_BYTES J
+	public static final fun readBodyBounded (Lokhttp3/Response;J)Ljava/lang/String;
+	public static synthetic fun readBodyBounded$default (Lokhttp3/Response;JILjava/lang/Object;)Ljava/lang/String;
+}
+
 public final class org/trustweave/core/net/PrivateNetworkGuard {
 	public static final field INSTANCE Lorg/trustweave/core/net/PrivateNetworkGuard;
 	public final fun isDisallowed (Ljava/net/InetAddress;)Z

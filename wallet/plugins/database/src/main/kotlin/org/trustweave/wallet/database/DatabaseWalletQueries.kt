@@ -29,14 +29,15 @@ internal fun buildTagCollectionQuerySql(
         if (requestedTags.isNotEmpty()) {
             val placeholders = requestedTags.joinToString(", ") { "?" }
             append(
-                " AND id IN (SELECT credential_id FROM credential_tags WHERE tag IN ($placeholders)" +
+                " AND id IN (SELECT credential_id FROM credential_tags WHERE wallet_id = credentials.wallet_id AND tag IN ($placeholders)" +
                     " GROUP BY credential_id HAVING COUNT(DISTINCT tag) = ?)",
             )
         }
         if (requestedCollections.isNotEmpty()) {
             val placeholders = requestedCollections.joinToString(", ") { "?" }
             append(
-                " AND id IN (SELECT credential_id FROM credential_collections WHERE collection_id IN ($placeholders)" +
+                " AND id IN (SELECT credential_id FROM credential_collections" +
+                    " WHERE wallet_id = credentials.wallet_id AND collection_id IN ($placeholders)" +
                     " GROUP BY credential_id HAVING COUNT(DISTINCT collection_id) = ?)",
             )
         }

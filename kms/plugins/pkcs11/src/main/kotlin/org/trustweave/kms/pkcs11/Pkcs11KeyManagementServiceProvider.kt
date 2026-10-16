@@ -41,55 +41,69 @@ class Pkcs11KeyManagementServiceProvider : KeyManagementServiceProvider {
     override val requiredEnvironmentVariables: List<String> = emptyList()
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
-        val libraryPath = (options[KEY_LIBRARY_PATH] as? String)?.takeIf { it.isNotBlank() }
-            ?: throw IllegalArgumentException(
-                "PKCS#11 KMS requires '$KEY_LIBRARY_PATH' in options (absolute path to the vendor " +
-                    "PKCS#11 shared library, e.g. /usr/lib/softhsm/libsofthsm2.so).",
-            )
-
-        val slot = when (val raw = options[KEY_SLOT]) {
-            null -> 0
-            is Int -> raw
-            is Number -> raw.toInt()
-            is String -> raw.toIntOrNull()
-                ?: throw IllegalArgumentException("PKCS#11 option '$KEY_SLOT' must be an integer; got '$raw'")
-            else -> throw IllegalArgumentException(
-                "PKCS#11 option '$KEY_SLOT' must be an integer; got ${raw::class.simpleName}",
-            )
-        }
-
-        val providerName = (options[KEY_PROVIDER_NAME] as? String)?.takeIf { it.isNotBlank() }
-            ?: "TrustWeave-PKCS11"
-
-        val pin: CharArray? = when (val raw = options[KEY_PIN]) {
-            null -> null
-            is CharArray -> raw
-            is String -> raw.toCharArray()
-            else -> throw IllegalArgumentException(
-                "PKCS#11 option '$KEY_PIN' must be a String or CharArray; got ${raw::class.simpleName}",
-            )
-        }
-
-        val enableSoftDelete = when (val raw = options[KEY_ENABLE_SOFT_DELETE]) {
-            null -> false
-            is Boolean -> raw
-            is String -> raw.toBooleanStrictOrNull()
+        val libraryPath =
+            (options[KEY_LIBRARY_PATH] as? String)?.takeIf { it.isNotBlank() }
                 ?: throw IllegalArgumentException(
-                    "PKCS#11 option '$KEY_ENABLE_SOFT_DELETE' must be a boolean; got '$raw'",
+                    "PKCS#11 KMS requires '$KEY_LIBRARY_PATH' in options (absolute path to the vendor " +
+                        "PKCS#11 shared library, e.g. /usr/lib/softhsm/libsofthsm2.so).",
                 )
-            else -> throw IllegalArgumentException(
-                "PKCS#11 option '$KEY_ENABLE_SOFT_DELETE' must be a boolean; got ${raw::class.simpleName}",
-            )
-        }
 
-        val config = Pkcs11Config(
-            libraryPath = libraryPath,
-            slot = slot,
-            providerName = providerName,
-            pin = pin,
-            enableSoftDelete = enableSoftDelete,
-        )
-        return Pkcs11KeyManagementService(config)
+        val slot =
+            when (val raw = options[KEY_SLOT]) {
+                null -> 0
+                is Int -> raw
+                is Number -> raw.toInt()
+                is String ->
+                    raw.toIntOrNull()
+                        ?: throw IllegalArgumentException("PKCS#11 option '$KEY_SLOT' must be an integer; got '$raw'")
+                else -> throw IllegalArgumentException(
+                    "PKCS#11 option '$KEY_SLOT' must be an integer; got ${raw::class.simpleName}",
+                )
+            }
+
+        val providerName =
+            (options[KEY_PROVIDER_NAME] as? String)?.takeIf { it.isNotBlank() }
+                ?: "TrustWeave-PKCS11"
+
+        val pin: CharArray? =
+            when (val raw = options[KEY_PIN]) {
+                null -> null
+                is CharArray -> raw
+                is String -> raw.toCharArray()
+                else -> throw IllegalArgumentException(
+                    "PKCS#11 option '$KEY_PIN' must be a String or CharArray; got ${raw::class.simpleName}",
+                )
+            }
+
+        val enableSoftDelete =
+            when (val raw = options[KEY_ENABLE_SOFT_DELETE]) {
+                null -> false
+                is Boolean -> raw
+                is String ->
+                    raw.toBooleanStrictOrNull()
+                        ?: throw IllegalArgumentException(
+                            "PKCS#11 option '$KEY_ENABLE_SOFT_DELETE' must be a boolean; got '$raw'",
+                        )
+                else -> throw IllegalArgumentException(
+                    "PKCS#11 option '$KEY_ENABLE_SOFT_DELETE' must be a boolean; got ${raw::class.simpleName}",
+                )
+            }
+
+        val config =
+            Pkcs11Config(
+                libraryPath = libraryPath,
+                slot = slot,
+                providerName = providerName,
+                pin = pin,
+                enableSoftDelete = enableSoftDelete,
+            )
+        try {
+            return Pkcs11KeyManagementService(config)
+        } finally {
+            // Zero the PIN only when this method created the array (from a String); a caller-supplied
+            // CharArray stays the caller's to clear.
+            if (options[KEY_PIN] is String) pin?.fill('\u0000')
+        }
     }
 
     companion object {

@@ -47,11 +47,7 @@ val netty42Version = libs.versions.netty42.get()
 subprojects {
 
     plugins.withId("org.jetbrains.kotlin.jvm") {
-        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>() as ExtensionAware)
-            .extensions
-            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationExtension> {
-                enabled.set(true)
-            }
+        extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>().abiValidation()
         apply(plugin = "org.jetbrains.kotlinx.kover")
         rootProject.dependencies.add("kover", project)
         if (dokkaJavadoc) {
@@ -59,11 +55,7 @@ subprojects {
         }
     }
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
-        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>() as ExtensionAware)
-            .extensions
-            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationMultiplatformExtension> {
-                enabled.set(true)
-            }
+        extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().abiValidation()
         apply(plugin = "org.jetbrains.kotlinx.kover")
         rootProject.dependencies.add("kover", project)
     }

@@ -4,7 +4,7 @@
 import 'server-only'
 import fs from 'fs'
 import path from 'path'
-import { sha256 } from '@noble/hashes/sha256'
+import { sha256 } from '@noble/hashes/sha2.js'
 import { b64uEncode } from '../crypto'
 
 const DOMAIN_DIR = path.join(process.cwd(), 'data/trust-domains/demo-cac')

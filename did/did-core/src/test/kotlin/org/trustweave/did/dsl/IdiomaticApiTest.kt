@@ -11,6 +11,9 @@ import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.registry.didMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
+import org.trustweave.did.resolver.documentOrNull
+import org.trustweave.did.resolver.hasError
+import org.trustweave.did.resolver.isSuccess
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -122,17 +125,13 @@ class IdiomaticApiTest {
                 )
 
             // Test basic result properties
-            assertTrue(success is DidResolutionResult.Success)
-            assertFalse(success is DidResolutionResult.Failure)
+            assertTrue(success.isSuccess)
+            assertFalse(success.hasError)
             assertEquals("did:test:123", success.document.id.value)
 
             // Test that extensions are available (they should be auto-imported)
             // Using direct access to verify functionality
-            val doc =
-                when (success) {
-                    is DidResolutionResult.Success -> success.document
-                    else -> null
-                }
+            val doc = success.documentOrNull
             assertNotNull(doc)
             assertEquals("did:test:123", doc.id.value)
         }
@@ -147,17 +146,13 @@ class IdiomaticApiTest {
                 )
 
             // Test basic failure properties
-            assertTrue(failure is DidResolutionResult.Failure)
-            assertFalse(failure is DidResolutionResult.Success)
+            assertTrue(failure.hasError)
+            assertFalse(failure.isSuccess)
             assertEquals("did:test:123", failure.did.value)
             assertEquals("Not found", failure.reason)
 
             // Test that failure doesn't have a document
-            val doc =
-                when (failure) {
-                    is DidResolutionResult.Success -> failure.document
-                    else -> null
-                }
+            val doc = failure.documentOrNull
             assertNull(doc)
         }
 

@@ -6,6 +6,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 
 class ConfigCacheKeyCanonicalTest {
+    private enum class Mode {
+        PRIMARY,
+        SECONDARY,
+    }
+
     private fun key(options: Map<String, Any?>) = ConfigCacheKey.create("p", options)
 
     @Test
@@ -18,6 +23,28 @@ class ConfigCacheKeyCanonicalTest {
     @Test
     fun `null and the string null differ`() {
         assertNotEquals(key(mapOf("a" to null)), key(mapOf("a" to "null")))
+    }
+
+    @Test
+    fun `mutable character sequences normalize to their text without exposing it`() {
+        val cacheKey = key(mapOf("token" to StringBuilder("secret-token")))
+        assertEquals(key(mapOf("token" to "secret-token")), cacheKey)
+        assertNotEquals(key(mapOf("token" to StringBuilder("other-token"))), cacheKey)
+        assertFalse("secret-token" in cacheKey)
+    }
+
+    @Test
+    fun `enum values keep their identity distinct from plain strings`() {
+        assertEquals(key(mapOf("mode" to Mode.PRIMARY)), key(mapOf("mode" to Mode.PRIMARY)))
+        assertNotEquals(key(mapOf("mode" to Mode.PRIMARY)), key(mapOf("mode" to Mode.SECONDARY)))
+        assertNotEquals(key(mapOf("mode" to Mode.PRIMARY)), key(mapOf("mode" to "PRIMARY")))
+    }
+
+    @Test
+    fun `arrays preserve element order and normalize like ordered lists`() {
+        assertEquals(key(mapOf("a" to arrayOf("x", "y"))), key(mapOf("a" to listOf("x", "y"))))
+        assertNotEquals(key(mapOf("a" to arrayOf("x", "y"))), key(mapOf("a" to arrayOf("y", "x"))))
+        assertEquals(key(mapOf("a" to emptyArray<String>())), key(mapOf("a" to emptyList<String>())))
     }
 
     @Test

@@ -356,7 +356,6 @@ public final class org/trustweave/anchor/evm/EvmGas {
 }
 
 public abstract class org/trustweave/anchor/exceptions/BlockchainException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getCause ()Ljava/lang/Throwable;
 	public fun getCode ()Ljava/lang/String;
@@ -455,7 +454,6 @@ public final class org/trustweave/anchor/exceptions/BlockchainException$Unsuppor
 }
 
 public abstract class org/trustweave/anchor/exceptions/TreasuryException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getCause ()Ljava/lang/Throwable;
 	public fun getCode ()Ljava/lang/String;

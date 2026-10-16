@@ -16,7 +16,7 @@
  * We use SHA-256 for `_sd_alg` (the spec default) and EdDSA (Ed25519) for both
  * the issuer JWT and the KB-JWT.
  */
-import { sha256 } from '@noble/hashes/sha256'
+import { sha256 } from '@noble/hashes/sha2.js'
 import {
   b64uEncode,
   b64uEncodeString,

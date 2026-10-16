@@ -319,7 +319,6 @@ public abstract interface class org/trustweave/did/events/DidEventBus {
 }
 
 public abstract class org/trustweave/did/exception/DidException : org/trustweave/core/exception/TrustWeaveException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getCause ()Ljava/lang/Throwable;
 	public fun getCode ()Ljava/lang/String;

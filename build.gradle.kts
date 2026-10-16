@@ -1,5 +1,19 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
 
+buildscript {
+    // Plugins have a separate classpath, so the runtime dependency rules below do not protect it.
+    val catalog = file("gradle/libs.versions.toml").readText()
+    val jacksonVersion = Regex("(?m)^jackson = \"([^\"]+)\"").find(catalog)!!.groupValues[1]
+    configurations.named("classpath") {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-core") {
+                useVersion(jacksonVersion)
+                because("Patch Jackson core in the Gradle plugins as well as application dependencies")
+            }
+        }
+    }
+}
+
 plugins {
     // Declare Kotlin plugin here so its types (e.g., KotlinCompile) are available in this build script.
     // We use 'apply false' because we're configuring Kotlin tasks in subprojects, not applying the plugin to the root.
@@ -42,16 +56,13 @@ val jacksonAnnotationsVersion = libs.versions.jacksonAnnotations.get()
 val jackson3Version = libs.versions.jackson3.get()
 val bouncyCastleVersion = libs.versions.bouncycastle.get()
 val bouncyCastleLtsVersion = libs.versions.bclts.get()
+val netty41Version = libs.versions.netty41.get()
 val netty42Version = libs.versions.netty42.get()
 
 subprojects {
 
     plugins.withId("org.jetbrains.kotlin.jvm") {
-        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>() as ExtensionAware)
-            .extensions
-            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationExtension> {
-                enabled.set(true)
-            }
+        extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>().abiValidation()
         apply(plugin = "org.jetbrains.kotlinx.kover")
         rootProject.dependencies.add("kover", project)
         if (dokkaJavadoc) {
@@ -59,11 +70,7 @@ subprojects {
         }
     }
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
-        (extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>() as ExtensionAware)
-            .extensions
-            .configure<org.jetbrains.kotlin.gradle.dsl.abi.AbiValidationMultiplatformExtension> {
-                enabled.set(true)
-            }
+        extensions.getByType<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension>().abiValidation()
         apply(plugin = "org.jetbrains.kotlinx.kover")
         rootProject.dependencies.add("kover", project)
     }
@@ -240,7 +247,11 @@ subprojects {
                     }
                     because("Bouncy Castle advisories GHSA-574f-3g2m-x479, GHSA-9pwp-9qqc-pr26, GHSA-c3fc-8qff-9hwx")
                 }
-                // Ktor 3 brings Netty 4.2.x; 4.2.12 carries known advisories. Netty 4.1 consumers are left alone.
+                // Preserve each Netty release line while applying its security fixes.
+                if (requested.group == "io.netty" && requested.version?.startsWith("4.1.") == true) {
+                    useVersion(netty41Version)
+                    because("Netty 4.1 security fixes through 4.1.139.Final, including GHSA-c4c3-7fpv-j4q5")
+                }
                 if (requested.group == "io.netty" && requested.version?.startsWith("4.2.") == true) {
                     useVersion(netty42Version)
                     because("Netty 4.2.12 advisories GHSA-558v-64gr-wgg4, GHSA-mj4r-2hfc-f8p6, GHSA-rwm7-x88c-3g2p")

@@ -48,7 +48,6 @@ public final class org/trustweave/ethrdid/EthrDidConfig$Companion {
 }
 
 public final class org/trustweave/ethrdid/EthrDidMethod : org/trustweave/did/base/AbstractBlockchainDidMethod {
-	public static final field MAINNET_NETWORK Ljava/lang/String;
 	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/ethrdid/EthrDidConfig;)V
 	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -3,7 +3,7 @@
  * No RN-specific changes; the only runtime dep is the @noble/hashes sha256 which
  * works in Hermes/JavaScriptCore identically to V8.
  */
-import { sha256 } from '@noble/hashes/sha2.js'
+import { sha256 } from '@noble/hashes/sha256'
 import {
   b64uEncode,
   b64uEncodeString,

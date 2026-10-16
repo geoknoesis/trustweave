@@ -24,7 +24,9 @@ jackson3 = "3.1.7"
 # jackson-annotations has had minor versions only since 2.20, so it cannot take the 2.x patch version above.
 jacksonAnnotations = "2.22"
 # Netty 4.2 arrives transitively through Ktor 3; pinned to a patched release for GHSA-558v-64gr-wgg4, GHSA-mj4r-2hfc-f8p6
-# and GHSA-rwm7-x88c-3g2p (fixed in 4.2.13 to 4.2.16). Only the 4.2 line is pinned: other libraries use Netty 4.1.
+# and GHSA-rwm7-x88c-3g2p (fixed in 4.2.13 to 4.2.16). Each Netty line is pinned separately.
+# Patch the Netty 4.1 line used by cloud SDKs, including GHSA-c4c3-7fpv-j4q5.
+netty41 = "4.1.139.Final"
 netty42 = "4.2.18.Final"
 gson = "2.14.0"
 jayway-jsonpath = "3.0.0"

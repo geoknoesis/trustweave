@@ -1,6 +1,7 @@
 package org.trustweave.wallet.cloud
 
 import org.trustweave.wallet.Wallet
+import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.services.WalletCreationOptions
 import org.trustweave.wallet.services.WalletFactory
 import org.trustweave.wallet.services.validateDeployment
@@ -56,6 +57,24 @@ import java.util.UUID
  *     )
  * )
  * ```
+ *
+ * **Object layout:** every wallet gets its own key prefix, `<storagePath>/wallet-<percent-encoded walletId>/`,
+ * so wallets configured with the same `storagePath` never see each other's credentials. Slashes in
+ * `storagePath` are normalised (empty and `.`/`..` segments are rejected) and an empty bucket or container is
+ * refused.
+ *
+ * **Migration:** wallets created by earlier versions stored objects directly under `<storagePath>/credentials/`,
+ * `/collections/`, `/metadata/` and `/tags/`, shared by every wallet using that path. Those objects are not
+ * visible to the new layout, because the factory cannot tell which wallet owned them. Either copy them under
+ * `<storagePath>/wallet-<walletId>/`, or, for the single wallet that owns the path, pass
+ * `additionalProperties = mapOf("legacyLayout" to true)` to keep using the old prefix.
+ *
+ * **Encryption:** `WalletCreationOptions.encryptionKey` (or `additionalProperties["encryptionKey"]`) is optional.
+ * When present it must be the Base64 encoding of exactly 32 bytes (AES-256); any other length or invalid Base64
+ * is rejected with `WalletException.WalletCreationFailed` (fail closed, never ignored). A valid key enables
+ * client-side AES-256-GCM (see [CloudWallet]); existing plaintext objects stay readable and are replaced by
+ * encrypted ones as they are re-stored. **Without a key, objects are written as plain JSON** and rely on the
+ * storage provider's at-rest encryption.
  */
 class CloudWalletFactory : WalletFactory {
     override suspend fun create(
@@ -70,45 +89,37 @@ class CloudWalletFactory : WalletFactory {
             throw IllegalArgumentException("Provider name must be 'cloud'")
         }
 
+        val legacyKey = options.additionalProperties["encryptionKey"]
+        require(legacyKey == null || legacyKey is String) { "encryptionKey must be a string" }
+        require(options.encryptionKey == null || legacyKey == null || options.encryptionKey == legacyKey) {
+            "Conflicting typed and legacy encryption keys"
+        }
+        val encryptionKeyBase64 = options.encryptionKey ?: legacyKey as? String
+
         val finalWalletId = walletId ?: UUID.randomUUID().toString()
         val finalWalletDid = walletDid ?: "did:key:wallet-$finalWalletId"
         val finalHolderDid =
             holderDid
                 ?: throw IllegalArgumentException("holderDid is required for CloudWallet")
 
+        val encryptionKey = encryptionKeyBase64?.let { decodeCloudEncryptionKey(it, finalWalletId) }
+
         val storagePath =
             options.storagePath
                 ?: throw IllegalArgumentException("storagePath is required for CloudWallet")
 
+        require(storagePath.isNotBlank()) { "storagePath must not be empty" }
+
         val provider =
-            options.additionalProperties["provider"] as? String
+            (options.additionalProperties["provider"] as? String)?.lowercase()
                 ?: detectProviderFromPath(storagePath)
                 ?: throw IllegalArgumentException("Cloud storage provider must be specified (aws, azure, or gcs)")
 
-        // Extract bucket/container name and path from storagePath
-        val (bucketName, basePath) =
-            when (provider) {
-                "aws" -> {
-                    val s3Path = storagePath.removePrefix("s3://")
-                    val parts = s3Path.split("/", limit = 2)
-                    parts[0] to (parts.getOrNull(1) ?: "")
-                }
-                "azure" -> {
-                    // Format: https://account.blob.core.windows.net/container/path
-                    val uri = java.net.URI(storagePath)
-                    val pathParts = uri.path.removePrefix("/").split("/", limit = 2)
-                    pathParts[0] to (pathParts.getOrNull(1) ?: "")
-                }
-                "gcs" -> {
-                    val gsPath = storagePath.removePrefix("gs://")
-                    val parts = gsPath.split("/", limit = 2)
-                    parts[0] to (parts.getOrNull(1) ?: "")
-                }
-                else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
-            }
+        val legacyLayout = options.additionalProperties["legacyLayout"].let { it == true || it == "true" }
+        val (bucketName, basePath) = resolveCloudLocation(provider.lowercase(), storagePath, finalWalletId, legacyLayout)
 
         // Create provider-specific wallet implementation
-        return when (provider.lowercase()) {
+        return when (provider) {
             "aws" -> {
                 val region = options.additionalProperties["region"] as? String ?: "us-east-1"
                 val accessKeyId = options.additionalProperties["accessKeyId"] as? String
@@ -146,6 +157,7 @@ class CloudWalletFactory : WalletFactory {
                     bucketName = bucketName,
                     basePath = basePath,
                     s3Client = s3Client,
+                    encryptionKey = encryptionKey,
                 )
             }
             "azure" -> {
@@ -185,6 +197,7 @@ class CloudWalletFactory : WalletFactory {
                     containerName = bucketName,
                     basePath = basePath,
                     blobServiceClient = blobServiceClient,
+                    encryptionKey = encryptionKey,
                 )
             }
             "gcs" -> {
@@ -226,6 +239,7 @@ class CloudWalletFactory : WalletFactory {
                     bucketName = bucketName,
                     basePath = basePath,
                     storage = storage,
+                    encryptionKey = encryptionKey,
                 )
             }
             else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
@@ -239,4 +253,71 @@ class CloudWalletFactory : WalletFactory {
             path.startsWith("gs://") -> "gcs"
             else -> null
         }
+}
+
+internal data class CloudLocation(
+    val bucket: String,
+    val basePath: String,
+)
+
+/**
+ * Splits [storagePath] into bucket/container and a normalised base path and appends the per-wallet
+ * segment (unless [legacyLayout]). Throws [IllegalArgumentException] for an empty bucket or `.`/`..` segments.
+ */
+internal fun resolveCloudLocation(
+    provider: String,
+    storagePath: String,
+    walletId: String,
+    legacyLayout: Boolean,
+): CloudLocation {
+    require(storagePath.isNotBlank()) { "storagePath must not be empty" }
+    val rawPath =
+        when (provider) {
+            "aws" -> storagePath.removePrefix("s3://")
+            "gcs" -> storagePath.removePrefix("gs://")
+            // Format: https://account.blob.core.windows.net/container/path
+            "azure" ->
+                java.net
+                    .URI(storagePath)
+                    .path
+                    .orEmpty()
+            else -> throw IllegalArgumentException("Unsupported cloud provider: $provider")
+        }
+    require(provider == "azure" || !rawPath.startsWith("/")) { "storagePath must name a bucket or container" }
+    val segments = rawPath.split('/').filter { it.isNotEmpty() }
+    require(segments.none { it == "." || it == ".." }) { "storagePath must not contain '.' or '..' segments" }
+    require(segments.isNotEmpty()) { "storagePath must name a bucket or container" }
+    val bucket = segments.first()
+    val base = segments.drop(1)
+    val own = if (legacyLayout) base else base + "wallet-${encodeCloudKeySegment(walletId)}"
+    return CloudLocation(bucket, own.joinToString("/"))
+}
+
+/** Decodes a Base64 AES-256 key; rejects invalid Base64 and any length other than 32 bytes. */
+internal fun decodeCloudEncryptionKey(
+    base64: String,
+    walletId: String,
+): ByteArray {
+    val bytes =
+        try {
+            java.util.Base64
+                .getDecoder()
+                .decode(base64)
+        } catch (e: IllegalArgumentException) {
+            throw WalletException.WalletCreationFailed(
+                reason = "encryptionKey must be valid Base64-encoded AES key material",
+                provider = "cloud",
+                walletId = walletId,
+            )
+        }
+    if (bytes.size != CloudRecordCipher.KEY_LENGTH_BYTES) {
+        val size = bytes.size
+        bytes.fill(0)
+        throw WalletException.WalletCreationFailed(
+            reason = "encryptionKey must decode to exactly 32 bytes (AES-256), but decoded to $size bytes",
+            provider = "cloud",
+            walletId = walletId,
+        )
+    }
+    return bytes
 }

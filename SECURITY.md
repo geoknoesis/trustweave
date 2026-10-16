@@ -96,6 +96,53 @@ The following are generally considered out of scope:
 
 *If you're unsure whether a vulnerability is in scope, please report it and we'll assess it.*
 
+## Verifying a Release
+
+Release status: 0.7.0 is the version of this source tree. Artifacts are published only when the `publish` job below
+completes for a `v*` tag, and this repository does not record that it has; until you have confirmed the coordinates
+resolve from your repository, build from source with `./gradlew publishToMavenLocal`. The steps below apply once a
+release has actually been published.
+
+Every tagged release is published by the `publish` job of `.github/workflows/release-evidence.yml`.
+That job builds and signs the artifacts once into a local staging directory, checks that every staged jar is
+byte-identical to the jar the evidence job tested, checksums and attests the directory, and only then, as its
+last step, uploads that same directory to Maven Central. The attested files are therefore the uploaded
+files, and nothing reaches Central if the checksums or attestations fail. The tagged commit must also be an
+ancestor of `main`, the staged jar names must equal the evidence jar names (minus a documented allowlist) and the
+evidence must come from the tagged commit, every non-sidecar file must carry an `.asc` signature (checked with
+`gpg --verify` when the release public key is configured as a repository variable), the OSV baseline gate must
+pass at the tag, and the attestation is re-verified immediately before the upload. The GitHub release is created
+as a draft and published by a person after the Central deployment is released.
+It produces:
+
+- `SHA256SUMS`: SHA-256 of every published file (JARs, POMs, Gradle module metadata, per-module
+  CycloneDX SBOMs, `.asc` signatures) and of the aggregate SBOM `trustweave-<version>-sbom.cdx.json`.
+  Both are attached to the GitHub release for the tag.
+- A SLSA build provenance attestation (`actions/attest-build-provenance`) for every file listed in
+  `SHA256SUMS`, and one for `SHA256SUMS` itself, stored in GitHub's attestation store.
+
+To verify an artifact you downloaded (`<version>` is the release without the `v`; requires the
+[GitHub CLI](https://cli.github.com/)):
+
+```bash
+# 1. Fetch the checksum file from the release and check your download against it
+gh release download "v<version>" --repo geoknoesis/trustweave --pattern SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+
+# 2. Verify the provenance of the artifact itself (signer workflow, tag and commit)
+gh attestation verify trustweave-core-<version>.jar --repo geoknoesis/trustweave \
+  --signer-workflow geoknoesis/trustweave/.github/workflows/release-evidence.yml \
+  --source-ref "refs/tags/v<version>"
+
+# 3. Optionally verify the checksum file the same way (and the PGP .asc signature as usual)
+gh attestation verify SHA256SUMS --repo geoknoesis/trustweave
+```
+
+Paths in `SHA256SUMS` follow the Maven repository layout (`org/trustweave/<artifact>/<version>/...`);
+run the check from a directory that mirrors it, or verify single files with `gh attestation verify`.
+A passing attestation proves the file was produced by that workflow at that tag; it does not replace
+reviewing the SBOM for dependency risk.
+
 ## Dependency Scanning
 
 Every pull request and every push to `main` runs [`.github/workflows/security.yml`](.github/workflows/security.yml):
@@ -110,8 +157,10 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
   every resolved JAR, so libraries shaded inside a fat JAR are found too. Results are published to
   code scanning and to the workflow summary. The job **fails for any advisory that is not listed in
   [`config/osv/baseline.json`](config/osv/baseline.json)** (checked by `scripts/check-osv-baseline.py`).
-  A baseline entry covers an advisory id (or alias) *in the listed packages only*: a baselined GHSA that
-  shows up in a new package still fails. The gate also fails (exit 2) when the report is missing,
+  A baseline entry covers an advisory id (or alias) *in the listed packages at the listed versions only*: a
+  baselined GHSA that shows up in a new package, or in a new version of a listed package that the scanner
+  still reports as affected, fails again so it gets a fresh look (a bump to a fixed version just drops out
+  of the report). The gate also fails (exit 2) when the report is missing,
   unparseable or empty while the baseline is not, and when the SBOM has fewer components than the floor
   (`--min-packages`, default 200, or half the baseline's recorded `package_count`), so a broken scan cannot
   pass silently. Baseline entries that no longer match anything fail the job (`--strict-stale`): remove them
@@ -122,9 +171,29 @@ Every pull request and every push to `main` runs [`.github/workflows/security.ym
   `osv-scanner scan source --no-ignore --experimental-plugins=java/archive --format=json
   --output-file=build/reports/osv/osv.json -L=build/reports/cyclonedx/bom.json -r build/reports/osv/jars`
   and `python scripts/check-osv-baseline.py --report build/reports/osv/osv.json
-  --sbom build/reports/cyclonedx/bom.json --update-baseline`. The update keeps existing reasons, rewrites
-  every entry with its packages and ecosystems (migrating legacy id-only entries, which match any package
-  until then) and records `package_count` from the SBOM.
+  --sbom build/reports/cyclonedx/bom.json --update-baseline`. The update rewrites every entry with its
+  packages and ecosystems (migrating legacy id-only entries, which match any package until then), records
+  `package_count` from the SBOM and keeps an entry's triage only while the report adds no package version
+  it did not record; new advisories and new versions come back as `needs-review` with a `TODO` reason, which
+  the check rejects until a person triages them.
+
+  **Triage.** Every baseline entry records `status`, `reason`, `reviewed` (a date) and, where required,
+  `expires`. `status` is one of `affected` (a vulnerable version ships; waiting for a fix),
+  `not-reachable` (present, but not on a production path, for example test-only), `false-positive`,
+  `accepted-risk` (a person accepted it, with mitigations) or `needs-review` (honestly not yet analysed).
+  `affected`, `accepted-risk` and `needs-review` must carry an `expires` date; every `expires` is at most
+  366 days after `reviewed`. **An entry whose `expires` date has passed fails the job** (exit 1) until it
+  is re-triaged with a new `reviewed`/`expires`, or the dependency is fixed and the entry deleted. An
+  unknown status, a missing reason or date, or a `TODO` reason is a hard error (exit 2). The initial
+  triage (2026-10-08) was derived from Gradle's resolved runtime and test classpaths, the OSV records and
+  a source search; where the source of a version could not be found the entry says `needs-review`.
+  Expiry dates are deliberately staggered (`needs-review` in November, `affected` across December) so one
+  date cannot fail every entry at once; keep re-triaged dates spread out the same way. Packages are matched on
+  `group:name` (a label with no group, as the JAR scan can report, matches on the artifact name alone).
+  The scheduled run also opens or updates one GitHub issue ("OSV baseline: triage entries expired or expiring
+  within 30 days", `scripts/osv-expiry-report.py`) while any entry expires within 30 days; that job alone holds
+  `issues: write`. The baseline does not yet record `package_count` or `ecosystems`; the next
+  `--update-baseline` from a real scan writes both.
 
 Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `gradle/libs.versions.toml`.
 

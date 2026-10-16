@@ -18,6 +18,7 @@ internal class DidCommReceiveGuards(
     private val replayStore: DidCommReplayStore = InMemoryDidCommReplayStore(),
     private val defaultRetentionSeconds: Long = DEFAULT_RETENTION_SECONDS,
     private val maxRetentionSeconds: Long = MAX_RETENTION_SECONDS,
+    private val unauthenticatedRetentionSeconds: Long = UNAUTHENTICATED_RETENTION_SECONDS,
     private val nowEpochSeconds: () -> Long = { System.currentTimeMillis() / 1000 },
 ) {
     init {
@@ -26,10 +27,22 @@ internal class DidCommReceiveGuards(
         }
     }
 
-    /** Throws if [message] has expired or has already been accepted. */
-    suspend fun check(message: DidCommMessage) {
+    /**
+     * Throws if [message] has expired or has already been accepted.
+     *
+     * [authenticatedSender] is the sender DID the unpacking step actually authenticated (authcrypt
+     * sender or verified signer), NOT the message's own `from` header, which is attacker-controlled
+     * for anoncrypt / unsigned messages. Replay ids are scoped by it. A message with no authenticated
+     * sender shares one bounded bucket ([UNAUTHENTICATED_SENDER]) and is remembered only for
+     * [unauthenticatedRetentionSeconds], so an anonymous party can neither pre-register another
+     * sender's message ids nor fill that sender's quota by claiming its DID in `from`.
+     */
+    suspend fun check(
+        message: DidCommMessage,
+        authenticatedSender: String? = null,
+    ) {
         val expiresAt = rejectIfExpired(message)
-        rejectIfAlreadySeen(message, expiresAt)
+        rejectIfAlreadySeen(message, expiresAt, authenticatedSender)
     }
 
     /**
@@ -66,12 +79,16 @@ internal class DidCommReceiveGuards(
     private suspend fun rejectIfAlreadySeen(
         message: DidCommMessage,
         expiresAt: Long?,
+        authenticatedSender: String?,
     ) {
         val now = nowEpochSeconds()
-        val retainUntil = minOf(expiresAt ?: (now + defaultRetentionSeconds), now + maxRetentionSeconds)
+        val retainUntil =
+            minOf(expiresAt ?: (now + defaultRetentionSeconds), now + maxRetentionSeconds).let {
+                if (authenticatedSender == null) minOf(it, now + unauthenticatedRetentionSeconds) else it
+            }
         val recorded =
             try {
-                replayStore.recordIfAbsent(message.from, message.id, retainUntil, now)
+                replayStore.recordIfAbsent(authenticatedSender ?: UNAUTHENTICATED_SENDER, message.id, retainUntil, now)
             } catch (e: DidCommReplayStoreFullException) {
                 throw DidCommException.UnpackingFailed(
                     reason = "cannot record message ${message.id} for replay protection: ${e.message}",
@@ -90,6 +107,12 @@ internal class DidCommReceiveGuards(
     internal companion object {
         /** Retention for ids of messages without `expires_time`. */
         const val DEFAULT_RETENTION_SECONDS = 24L * 60 * 60
+
+        /** Retention for ids of messages with no authenticated sender (anonymous bucket). */
+        const val UNAUTHENTICATED_RETENTION_SECONDS = 10L * 60
+
+        /** Replay-store scope shared by all messages without an authenticated sender; not a DID, so it cannot collide with one. */
+        const val UNAUTHENTICATED_SENDER = "unauthenticated"
 
         /** Upper bound on how long any id is remembered. */
         const val MAX_RETENTION_SECONDS = 30L * 24 * 60 * 60

@@ -1,8 +1,8 @@
 package org.trustweave.kms.ibm
 
 import org.trustweave.kms.Algorithm
-import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.interfaces.ECPublicKey
@@ -21,8 +21,8 @@ object AlgorithmMapping {
      * @return IBM Key Protect key type string
      * @throws IllegalArgumentException if algorithm is not supported by IBM Key Protect
      */
-    fun toIbmKeyType(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toIbmKeyType(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "Ed25519"
             is Algorithm.Secp256k1 -> "secp256k1"
             is Algorithm.P256 -> "EC:secp256r1"
@@ -38,7 +38,6 @@ object AlgorithmMapping {
             }
             else -> throw IllegalArgumentException("Algorithm ${algorithm.name} is not supported by IBM Key Protect")
         }
-    }
 
     /**
      * Parses IBM Key Protect key type to TrustWeave Algorithm.
@@ -46,8 +45,8 @@ object AlgorithmMapping {
      * @param keyType IBM Key Protect key type string
      * @return TrustWeave Algorithm, or null if not recognized
      */
-    fun fromIbmKeyType(keyType: String): Algorithm? {
-        return when (keyType.uppercase()) {
+    fun fromIbmKeyType(keyType: String): Algorithm? =
+        when (keyType.uppercase()) {
             "ED25519" -> Algorithm.Ed25519
             "SECP256K1" -> Algorithm.Secp256k1
             "EC:SECP256R1", "EC-P256" -> Algorithm.P256
@@ -58,7 +57,6 @@ object AlgorithmMapping {
             "RSA:4096", "RSA-4096" -> Algorithm.RSA.RSA_4096
             else -> null
         }
-    }
 
     /**
      * Maps TrustWeave Algorithm to IBM Key Protect signing algorithm.
@@ -66,8 +64,8 @@ object AlgorithmMapping {
      * @param algorithm TrustWeave algorithm
      * @return IBM Key Protect signing algorithm string
      */
-    fun toIbmSigningAlgorithm(algorithm: Algorithm): String {
-        return when (algorithm) {
+    fun toIbmSigningAlgorithm(algorithm: Algorithm): String =
+        when (algorithm) {
             is Algorithm.Ed25519 -> "EdDSA"
             is Algorithm.Secp256k1 -> "ECDSA"
             is Algorithm.P256 -> "ECDSA"
@@ -76,7 +74,6 @@ object AlgorithmMapping {
             is Algorithm.RSA -> "RSA_PKCS1_V1_5"
             else -> "ECDSA"
         }
-    }
 
     /**
      * Converts IBM Key Protect public key to JWK format.
@@ -85,41 +82,50 @@ object AlgorithmMapping {
      * @param algorithm The algorithm type
      * @return JWK map representation
      */
-    fun publicKeyToJwk(publicKeyBytes: ByteArray, algorithm: Algorithm): Map<String, Any?> {
+    fun publicKeyToJwk(
+        publicKeyBytes: ByteArray,
+        algorithm: Algorithm,
+    ): Map<String, Any?> {
         return try {
             when (algorithm) {
                 is Algorithm.Ed25519 -> {
                     // Ed25519 keys are typically 32 bytes raw
-                    val rawKey = if (publicKeyBytes.size == 32) {
-                        publicKeyBytes
-                    } else {
-                        // Extract from DER if needed
-                        publicKeyBytes.takeLast(32).toByteArray()
-                    }
+                    val rawKey =
+                        if (publicKeyBytes.size == 32) {
+                            publicKeyBytes
+                        } else {
+                            // Extract from DER if needed
+                            publicKeyBytes.takeLast(32).toByteArray()
+                        }
 
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.OKP,
                         JwkKeys.CRV to Algorithm.Ed25519.curveName,
-                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey)
+                        JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(rawKey),
                     )
                 }
                 is Algorithm.Secp256k1, is Algorithm.P256, is Algorithm.P384, is Algorithm.P521 -> {
                     val keyFactory = KeyFactory.getInstance("EC")
                     val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes)) as ECPublicKey
                     val point = publicKey.w
-                    val curveName = algorithm.curveName
-                        ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
+                    val curveName =
+                        algorithm.curveName
+                            ?: throw IllegalArgumentException("Unsupported EC algorithm: ${algorithm.name}")
 
                     val affineX = point.affineX
                     val affineY = point.affineY
-                    val coordinateLength = when (algorithm) {
-                        is Algorithm.Secp256k1, is Algorithm.P256 -> 32
-                        is Algorithm.P384 -> 48
-                        is Algorithm.P521 -> 66
-                        else -> 32
-                    }
+                    val coordinateLength =
+                        when (algorithm) {
+                            is Algorithm.Secp256k1, is Algorithm.P256 -> 32
+                            is Algorithm.P384 -> 48
+                            is Algorithm.P521 -> 66
+                            else -> 32
+                        }
 
-                    fun toUnsignedByteArray(bigInt: BigInteger, length: Int): ByteArray {
+                    fun toUnsignedByteArray(
+                        bigInt: BigInteger,
+                        length: Int,
+                    ): ByteArray {
                         val bytes = bigInt.toByteArray()
                         val result = ByteArray(length)
                         val offset = length - bytes.size
@@ -138,7 +144,7 @@ object AlgorithmMapping {
                         JwkKeys.KTY to JwkKeyTypes.EC,
                         JwkKeys.CRV to curveName,
                         JwkKeys.X to Base64.getUrlEncoder().withoutPadding().encodeToString(x),
-                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y)
+                        JwkKeys.Y to Base64.getUrlEncoder().withoutPadding().encodeToString(y),
                     )
                 }
                 is Algorithm.RSA -> {
@@ -158,7 +164,7 @@ object AlgorithmMapping {
                     mapOf(
                         JwkKeys.KTY to JwkKeyTypes.RSA,
                         JwkKeys.N to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(modulus)),
-                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent))
+                        JwkKeys.E to Base64.getUrlEncoder().withoutPadding().encodeToString(toUnsignedByteArray(exponent)),
                     )
                 }
                 else -> throw IllegalArgumentException("Unsupported algorithm for JWK conversion: ${algorithm.name}")
@@ -175,13 +181,17 @@ object AlgorithmMapping {
      * @return Resolved key identifier for IBM API
      */
     fun resolveKeyId(keyId: String): String {
+        require(keyId.isNotBlank()) { "Key ID cannot be blank" }
         // IBM Key Protect uses CRNs (Cloud Resource Names) or key IDs
         // Format: crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx
-        return if (keyId.startsWith("crn:")) {
-            keyId
-        } else {
-            keyId
-        }
+        // The id is placed into a URL path: refuse anything that could change the path. A CRN's
+        // account segment legitimately contains one '/', so '/' is accepted only in a CRN.
+        val isCrn = keyId.startsWith("crn:")
+        require(
+            !keyId.contains("..") &&
+                keyId != "." &&
+                keyId.none { it == '\\' || it == '?' || it == '#' || it == '%' || it.isISOControl() || (it == '/' && !isCrn) },
+        ) { "Key ID contains characters that are not allowed in a path segment" }
+        return keyId
     }
 }
-

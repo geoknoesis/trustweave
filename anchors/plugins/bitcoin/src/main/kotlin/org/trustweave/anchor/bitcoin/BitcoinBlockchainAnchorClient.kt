@@ -42,6 +42,17 @@ import java.util.HexFormat
  * - "bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" (Bitcoin mainnet)
  * - "bip122:000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943" (Bitcoin testnet)
  *
+ * **Reads** only succeed for a transaction that is in a block with at least `minConfirmations` blocks on
+ * top of it (default 1; the block must also be on the best chain and list the transaction). An RPC error while
+ * resolving the block is an error, never "unconfirmed". The optional `expectedSender` option (an address) requires
+ * every input of the anchor transaction to spend an output of that address.
+ *
+ * **Writes** spend only confirmed outputs (`listunspent` minconf 1), pick inputs largest-first until the fee is
+ * covered rather than spending everything, price the transaction at the `estimatesmartfee` rate
+ * (`confirmationTarget`, default 6 blocks; `fallbackFeeRateSatPerVb` is used only when the node cannot estimate;
+ * `maxFeeRateSatPerVb` rejects a higher rate) times a script-type-aware virtual size, and drop a change output
+ * below the dust threshold into the fee.
+ *
  * **Note:** Bitcoin OP_RETURN has a 80-byte limit. For larger payloads, consider using
  * a hash-based approach or external storage with hash anchoring.
  *
@@ -70,12 +81,23 @@ class BitcoinBlockchainAnchorClient(
         // OP_RETURN data limit (80 bytes)
         private const val OP_RETURN_MAX_SIZE = 80
 
-        /**
-         * Flat transaction fee in satoshis. Hardcoded for now; making this
-         * configurable (or rate-based via `estimatesmartfee`) is a follow-up.
-         * All fee/change arithmetic is integer satoshis — never floating point.
-         */
-        private const val FEE_SATS = 1_000L
+        /** Option: blocks (including the anchor's own) required on the best chain before a read (default 1). */
+        const val OPTION_MIN_CONFIRMATIONS = "minConfirmations"
+
+        /** Option: address that must fund every input of an anchor transaction being read. */
+        const val OPTION_EXPECTED_SENDER = "expectedSender"
+
+        /** Option: `estimatesmartfee` confirmation target in blocks (default 6). */
+        const val OPTION_CONFIRMATION_TARGET = "confirmationTarget"
+
+        /** Option: fee rate in sat/vB used only when the node cannot estimate one. */
+        const val OPTION_FALLBACK_FEE_RATE = "fallbackFeeRateSatPerVb"
+
+        /** Option: a quoted fee rate above this (sat/vB) fails the write instead of being paid. */
+        const val OPTION_MAX_FEE_RATE = "maxFeeRateSatPerVb"
+
+        private const val DEFAULT_MIN_CONFIRMATIONS = 1L
+        private const val DEFAULT_CONFIRMATION_TARGET = 6
     }
 
     private val networkName: String
@@ -169,11 +191,11 @@ class BitcoinBlockchainAnchorClient(
                 options["address"] as? String
                     ?: throw IllegalStateException("Bitcoin address required for transaction creation")
 
-            // Get unspent outputs
+            // Get confirmed unspent outputs
             val utxos = getUnspentOutputs()
             if (utxos.isEmpty()) {
                 throw BlockchainException.TransactionFailed(
-                    reason = "No unspent outputs available for transaction",
+                    reason = "No confirmed unspent outputs available for transaction",
                     chainId = chainId,
                     txHash = null,
                     operation = "submitTransaction",
@@ -181,9 +203,26 @@ class BitcoinBlockchainAnchorClient(
                 )
             }
 
-            // Build transaction inputs
+            val feeRate = resolveFeeRate()
+            val plan =
+                BitcoinTxPlanner.plan(
+                    utxos = utxos.map { BitcoinTxPlanner.Utxo(it.txid, it.vout, it.amountSats, it.scriptPubKey.hex) },
+                    payloadSize = payloadBytes.size,
+                    feeRateSatPerVb = feeRate,
+                )
+                    ?: throw BlockchainException.TransactionFailed(
+                        reason =
+                            "Insufficient funds: ${utxos.sumOf { it.amountSats }} sats in confirmed outputs " +
+                                "cannot cover the fee at $feeRate sat/vB",
+                        chainId = chainId,
+                        txHash = null,
+                        operation = "submitTransaction",
+                        payloadSize = payloadBytes.size.toLong(),
+                    )
+
+            // Build transaction inputs (only the selected ones)
             val inputs =
-                utxos.map { utxo ->
+                plan.inputs.map { utxo ->
                     buildJsonObject {
                         put("txid", utxo.txid)
                         put("vout", utxo.vout)
@@ -195,17 +234,7 @@ class BitcoinBlockchainAnchorClient(
             val opReturnHex = HexFormat.of().formatHex(payloadBytes)
             // All amount math is integer satoshis; BTC decimals only appear (exactly)
             // at the JSON-RPC boundary.
-            val totalInputSats = utxos.sumOf { it.amountSats }
-            if (totalInputSats < FEE_SATS) {
-                throw BlockchainException.TransactionFailed(
-                    reason = "Insufficient funds: inputs total $totalInputSats sats, flat fee is $FEE_SATS sats",
-                    chainId = chainId,
-                    txHash = null,
-                    operation = "submitTransaction",
-                    payloadSize = payloadBytes.size.toLong(),
-                )
-            }
-            val changeSats = totalInputSats - FEE_SATS
+            val changeSats = plan.changeSats
             val outputs =
                 buildJsonObject {
                     put("data", opReturnHex)
@@ -291,10 +320,10 @@ class BitcoinBlockchainAnchorClient(
             val payloadJson = String(opReturnData, StandardCharsets.UTF_8)
             val payload = Json.parseToJsonElement(payloadJson)
 
-            // Use the actual block timestamp; unconfirmed (mempool) transactions have
-            // none, so leave it unset rather than fabricating one.
-            val blockHash = getTransactionBlockHash(txHash)
-            val blockTime = blockHash?.let { getBlockTime(it) }
+            // The anchor only counts once it is in a block on the best chain, buried to the configured
+            // depth; the timestamp is that block's time. RPC failures here propagate: they are not evidence
+            // that the transaction is unconfirmed, and must not be read as such.
+            val blockTime = requireSettled(txHash)
 
             AnchorResult(
                 ref =
@@ -448,7 +477,7 @@ class BitcoinBlockchainAnchorClient(
             options["address"] as? String
                 ?: throw IllegalStateException("Bitcoin address required for transaction creation")
 
-        val utxosJson = rpcCallJson("listunspent", listOf(0, 9999999, listOf(address))).jsonArray
+        val utxosJson = rpcCallJson("listunspent", listOf(1, 9999999, listOf(address))).jsonArray
 
         return utxosJson.map { utxoJson ->
             val utxo = utxoJson.jsonObject
@@ -479,30 +508,152 @@ class BitcoinBlockchainAnchorClient(
     private suspend fun getRawTransaction(txHash: String): String = rpcCall("getrawtransaction", listOf(txHash))
 
     /**
-     * Get transaction block hash (null while the transaction is unconfirmed).
+     * Asserts [txHash] is in a block on the best chain with at least [minConfirmations] blocks (itself
+     * included) and returns the block time (epoch seconds).
      */
-    private suspend fun getTransactionBlockHash(txHash: String): String? =
-        try {
-            val txJson = rpcCallJson("getrawtransaction", listOf(txHash, 1)).jsonObject
-            txJson["blockhash"]?.jsonPrimitive?.content
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            null
+    private suspend fun requireSettled(txHash: String): Long {
+        fun reject(reason: String): Nothing =
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = reason,
+            )
+
+        val txJson = rpcCallJson("getrawtransaction", listOf(txHash, 1)).jsonObject
+        val blockHash =
+            txJson["blockhash"]
+                ?.takeIf { it !is JsonNull }
+                ?.jsonPrimitive
+                ?.content
+                ?.takeIf { it.isNotBlank() }
+                ?: reject("Transaction is not in a block (unconfirmed); refusing to read it as an anchor")
+        requireExpectedSender(txHash, txJson)
+
+        val block = rpcCallJson("getblock", listOf(blockHash)).jsonObject
+        val confirmations =
+            block["confirmations"]?.jsonPrimitive?.long
+                ?: reject("Node did not report confirmations for block $blockHash")
+        if (confirmations < 1) {
+            reject("Block $blockHash is not on the best chain (confirmations=$confirmations); refusing to read an anchor from it")
         }
+        val listed = block["tx"]?.jsonArray?.map { it.jsonPrimitive.content }
+        if (listed != null && listed.none { it.equals(txHash, ignoreCase = true) }) {
+            reject("Block $blockHash does not list transaction $txHash; refusing to read an anchor from it")
+        }
+        if (confirmations < minConfirmations) {
+            reject(
+                "Transaction has $confirmations confirmation(s); $minConfirmations required. " +
+                    "Configure via '$OPTION_MIN_CONFIRMATIONS'",
+            )
+        }
+        return block["time"]?.jsonPrimitive?.long ?: reject("Node did not report a time for block $blockHash")
+    }
+
+    private val minConfirmations: Long
+        get() =
+            when (val v = options[OPTION_MIN_CONFIRMATIONS]) {
+                is Number -> v.toLong()
+                is String -> v.toLongOrNull() ?: DEFAULT_MIN_CONFIRMATIONS
+                else -> DEFAULT_MIN_CONFIRMATIONS
+            }.coerceAtLeast(1L)
 
     /**
-     * Get the block timestamp (epoch seconds) from a block hash.
+     * When [OPTION_EXPECTED_SENDER] is set, every input of the transaction must spend an output paying that
+     * address (looked up from the funding transactions); coinbase inputs never qualify.
      */
-    private suspend fun getBlockTime(blockHash: String): Long? =
-        try {
-            val blockJson = rpcCallJson("getblock", listOf(blockHash)).jsonObject
-            blockJson["time"]?.jsonPrimitive?.long
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            null
+    private suspend fun requireExpectedSender(
+        txHash: String,
+        txJson: kotlinx.serialization.json.JsonObject,
+    ) {
+        val expected = (options[OPTION_EXPECTED_SENDER] as? String)?.takeIf { it.isNotBlank() } ?: return
+
+        fun reject(reason: String): Nothing =
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = reason,
+            )
+
+        val vin = txJson["vin"]?.jsonArray ?: reject("Node did not report the inputs of the transaction; cannot check the sender")
+        if (vin.isEmpty()) reject("Transaction has no inputs; cannot check the sender")
+        for (input in vin) {
+            val spent = input.jsonObject
+            val prevTxId =
+                spent["txid"]?.jsonPrimitive?.content
+                    ?: reject("Transaction input does not spend an output (coinbase); not an anchor from $expected")
+            val prevVout = spent["vout"]?.jsonPrimitive?.int ?: reject("Transaction input has no output index")
+            val prev = rpcCallJson("getrawtransaction", listOf(prevTxId, 1)).jsonObject
+            val output =
+                prev["vout"]?.jsonArray?.firstOrNull { it.jsonObject["n"]?.jsonPrimitive?.int == prevVout }?.jsonObject
+                    ?: reject("Funding output $prevTxId:$prevVout not reported by the node")
+            val script = output["scriptPubKey"]?.jsonObject
+            val address =
+                script?.get("address")?.jsonPrimitive?.content
+                    ?: script
+                        ?.get("addresses")
+                        ?.jsonArray
+                        ?.singleOrNull()
+                        ?.jsonPrimitive
+                        ?.content
+            if (address != expected) {
+                reject(
+                    "Transaction input $prevTxId:$prevVout is funded by ${address ?: "a non-address script"}, not the expected anchoring address $expected",
+                )
+            }
         }
+    }
+
+    /**
+     * The fee rate to pay, in sat/vB: the node's `estimatesmartfee` for the configured confirmation target
+     * (never below the 1 sat/vB relay floor), or [OPTION_FALLBACK_FEE_RATE] when the node cannot estimate.
+     * Fails closed when neither is available or the rate exceeds [OPTION_MAX_FEE_RATE].
+     */
+    private suspend fun resolveFeeRate(): java.math.BigDecimal {
+        val target = (options[OPTION_CONFIRMATION_TARGET] as? Number)?.toInt() ?: DEFAULT_CONFIRMATION_TARGET
+        val estimated: java.math.BigDecimal? =
+            try {
+                rpcCallJson("estimatesmartfee", listOf(target))
+                    .jsonObject["feerate"]
+                    ?.jsonPrimitive
+                    ?.content
+                    // BTC per kvB -> sat per vB
+                    ?.let {
+                        java.math
+                            .BigDecimal(it)
+                            .movePointRight(8)
+                            .divide(java.math.BigDecimal(1000))
+                    }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: TrustWeaveException) {
+                null // The node answered with an RPC error or no result: fall back, or fail below.
+            }
+        val fallback =
+            (options[OPTION_FALLBACK_FEE_RATE] as? Number)?.let { java.math.BigDecimal(it.toString()) }
+        val rate =
+            (estimated ?: fallback)?.max(java.math.BigDecimal.ONE)
+                ?: throw BlockchainException.TransactionFailed(
+                    reason =
+                        "The node could not estimate a fee rate and no '$OPTION_FALLBACK_FEE_RATE' option is set; " +
+                            "refusing to guess a fee",
+                    chainId = chainId,
+                    txHash = null,
+                    operation = "submitTransaction",
+                )
+        (options[OPTION_MAX_FEE_RATE] as? Number)?.let { cap ->
+            if (rate > java.math.BigDecimal(cap.toString())) {
+                throw BlockchainException.TransactionFailed(
+                    reason = "Fee rate $rate sat/vB exceeds the configured '$OPTION_MAX_FEE_RATE' of $cap",
+                    chainId = chainId,
+                    txHash = null,
+                    operation = "submitTransaction",
+                )
+            }
+        }
+        return rate
+    }
 
     /**
      * UTXO information. [amountSats] is the output value in integer satoshis.

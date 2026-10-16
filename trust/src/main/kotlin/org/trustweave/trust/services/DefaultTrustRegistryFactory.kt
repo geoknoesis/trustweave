@@ -60,6 +60,9 @@ internal class InMemoryTrustRegistry : TrustRegistry {
         return true
     }
 
+    override suspend fun isTrustedForAllTypes(issuerDid: String): Boolean =
+        trustAnchors[issuerDid]?.let { it.credentialTypes == null } ?: false
+
     override suspend fun addTrustAnchor(
         anchorDid: String,
         metadata: TrustAnchorMetadata,

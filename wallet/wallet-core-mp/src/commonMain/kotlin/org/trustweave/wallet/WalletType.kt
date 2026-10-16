@@ -39,7 +39,7 @@ sealed class WalletType(val id: String) {
      */
     data class Custom(val customId: String) : WalletType(customId)
 
-    override fun toString(): String = id
+    final override fun toString(): String = id
 }
 
 object WalletTypes {

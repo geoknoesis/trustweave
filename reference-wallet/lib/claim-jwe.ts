@@ -3,8 +3,8 @@
  * Mirrors trustweave-saas/frontend/src/utils/claimJwe.ts.
  */
 import { holderSharedSecret } from './key-store'
-import { sha256 } from '@noble/hashes/sha256'
-import { hkdf } from '@noble/hashes/hkdf'
+import { sha256 } from '@noble/hashes/sha2.js'
+import { hkdf } from '@noble/hashes/hkdf.js'
 import { b64uDecode, b64uEncodeString } from './crypto'
 
 export type ClaimJwePayload = {

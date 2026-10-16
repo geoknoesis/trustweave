@@ -59,12 +59,13 @@ class BitcoinAnchorReadIntegrityTest {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/") { exchange ->
             val request = String(exchange.requestBody.readBytes(), StandardCharsets.UTF_8)
-            // getrawtransaction with verbosity returns an object; without it, the raw hex string.
+            // getrawtransaction with verbosity returns an object (a mined transaction); without it, the raw hex.
+            val blockHash = "bb".repeat(32)
             val result =
-                if (request.contains("\"getrawtransaction\"") && request.contains(", 1")) {
-                    """{"blockhash":null}"""
-                } else {
-                    "\"$rawTxHex\""
+                when {
+                    request.contains("\"getrawtransaction\"") && request.contains(",1]") -> """{"blockhash":"$blockHash"}"""
+                    request.contains("\"getblock\"") -> """{"hash":"$blockHash","confirmations":10,"time":1700000000}"""
+                    else -> "\"$rawTxHex\""
                 }
             val body = """{"result":$result,"error":null,"id":"1"}"""
             val bytes = body.toByteArray()

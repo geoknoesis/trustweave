@@ -34,7 +34,14 @@ class HttpTest {
 
     @Test fun `valid authorization with quote returns 200 allow`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             val r =
                 client.post("/v1/authorizations/verify") {
                     contentType(ContentType.Application.Json)
@@ -46,7 +53,14 @@ class HttpTest {
 
     @Test fun `replayed authorization returns 200 reject NONCE_REUSE`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             client.post("/v1/authorizations/verify") {
                 contentType(ContentType.Application.Json)
                 setBody(wrapper())
@@ -64,7 +78,14 @@ class HttpTest {
 
     @Test fun `missing quote returns 400`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             val r =
                 client.post("/v1/authorizations/verify") {
                     contentType(ContentType.Application.Json)
@@ -75,7 +96,14 @@ class HttpTest {
 
     @Test fun `malformed body returns 400`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             val r =
                 client.post("/v1/authorizations/verify") {
                     contentType(ContentType.Application.Json)
@@ -86,7 +114,14 @@ class HttpTest {
 
     @Test fun `structurally incomplete authorization returns 400`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             val r =
                 client.post("/v1/authorizations/verify") {
                     contentType(ContentType.Application.Json)
@@ -97,7 +132,14 @@ class HttpTest {
 
     @Test fun `non-object authorization field returns 400`() =
         testApplication {
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
             val r =
                 client.post("/v1/authorizations/verify") {
                     contentType(ContentType.Application.Json)
@@ -116,7 +158,13 @@ class HttpTest {
     fun `an oversized body is refused rather than buffered`() =
         testApplication {
             application {
-                configureAuthorization(AuthorizationEngine(clock = { now }), maxRequestBytes = 4096)
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                    maxRequestBytes = 4096,
+                )
             }
             val padding = "x".repeat(64 * 1024)
             val oversized = """{"authorization":{"padding":"$padding"},"quote":{}}"""
@@ -134,7 +182,14 @@ class HttpTest {
     fun `a normal body still passes under the limit`() =
         testApplication {
             // The cap must not break real traffic: the standard vector has to keep working.
-            application { configureAuthorization(AuthorizationEngine(clock = { now })) }
+            application {
+                configureAuthorization(
+                    AuthorizationEngine(clock = { now }, issuerTrust = { d, _ ->
+                        d ==
+                            "did:key:zDnaekFd1ybjRXtmEJKwuDV4GQhHgQovoGbdVVDSwUwDuy8tv"
+                    }, statusResolver = { false }),
+                )
+            }
 
             val r =
                 client.post("/v1/authorizations/verify") {

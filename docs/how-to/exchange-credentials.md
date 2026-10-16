@@ -153,7 +153,7 @@ println("Supported protocols: ${service.supportedProtocols().map { it.value }}")
 ```
 
 **Expected Result:** A single `ExchangeService` wired to every protocol plugin
-(`anchors:plugins:didcomm`, `credentials:plugins:oidc4vci`, `credentials:plugins:chapi`, …)
+(`credentials:plugins:didcomm`, `credentials:plugins:oidc4vci`, `credentials:plugins:chapi`, …)
 present on the classpath.
 
 ---

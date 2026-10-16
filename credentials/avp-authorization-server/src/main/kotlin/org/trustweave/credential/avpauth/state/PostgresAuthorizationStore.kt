@@ -62,6 +62,8 @@ class PostgresAuthorizationStore
         /** Creates the three tables if they are absent. Requires migration privileges. */
         fun initializeSchema() {
             source.connection.use { connection ->
+                val priorAutoCommit = connection.autoCommit
+                val priorIsolation = connection.transactionIsolation
                 connection.autoCommit = false
                 try {
                     requireDurableCommit(connection)
@@ -106,11 +108,16 @@ class PostgresAuthorizationStore
                 } catch (failure: Throwable) {
                     rollbackQuietly(connection, failure)
                     throw failure
+                } finally {
+                    restoreQuietly(connection, priorAutoCommit, priorIsolation)
                 }
             }
         }
 
         override suspend fun admit(request: AdmissionRequest): Admission {
+            if (request.amount.signum() <= 0) {
+                return Admission.Refused(StatefulRejection.INVALID_AMOUNT, "amount must be greater than zero")
+            }
             if (request.retainUntil.isAfter(request.at.plus(retentionCeiling))) {
                 return Admission.Refused(
                     StatefulRejection.UNBOUNDED_LIFETIME,
@@ -133,6 +140,8 @@ class PostgresAuthorizationStore
 
         private fun admitInTransaction(request: AdmissionRequest): Admission =
             source.connection.use { connection ->
+                val priorAutoCommit = connection.autoCommit
+                val priorIsolation = connection.transactionIsolation
                 connection.autoCommit = false
                 connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
                 try {
@@ -216,6 +225,9 @@ class PostgresAuthorizationStore
                 } catch (failure: Throwable) {
                     rollbackQuietly(connection, failure)
                     throw failure
+                } finally {
+                    // A pooled connection goes back to the pool: hand it back as it was found.
+                    restoreQuietly(connection, priorAutoCommit, priorIsolation)
                 }
             }
 
@@ -228,26 +240,39 @@ class PostgresAuthorizationStore
         override suspend fun purgeExpired(now: Instant): Int =
             withContext(Dispatchers.IO) {
                 source.connection.use { connection ->
+                    val priorAutoCommit = connection.autoCommit
+                    val priorIsolation = connection.transactionIsolation
                     connection.autoCommit = true
-                    var removed = 0
-                    connection.prepareStatement("DELETE FROM avp_nonces WHERE retain_until <= ?").use { statement ->
-                        statement.queryTimeout = TIMEOUT_SECONDS
-                        statement.setTimestamp(1, Timestamp.from(now))
-                        removed += statement.executeUpdate()
+                    try {
+                        sweep(connection, now)
+                    } finally {
+                        restoreQuietly(connection, priorAutoCommit, priorIsolation)
                     }
-                    connection.prepareStatement("DELETE FROM avp_consumptions WHERE retain_until <= ?").use { statement ->
-                        statement.queryTimeout = TIMEOUT_SECONDS
-                        statement.setTimestamp(1, Timestamp.from(now))
-                        removed += statement.executeUpdate()
-                    }
-                    connection.prepareStatement("DELETE FROM avp_daily_spend WHERE spend_date < ?").use { statement ->
-                        statement.queryTimeout = TIMEOUT_SECONDS
-                        statement.setDate(1, java.sql.Date.valueOf(now.atZone(ZoneOffset.UTC).toLocalDate()))
-                        removed += statement.executeUpdate()
-                    }
-                    removed
                 }
             }
+
+        private fun sweep(
+            connection: Connection,
+            now: Instant,
+        ): Int {
+            var removed = 0
+            connection.prepareStatement("DELETE FROM avp_nonces WHERE retain_until <= ?").use { statement ->
+                statement.queryTimeout = TIMEOUT_SECONDS
+                statement.setTimestamp(1, Timestamp.from(now))
+                removed += statement.executeUpdate()
+            }
+            connection.prepareStatement("DELETE FROM avp_consumptions WHERE retain_until <= ?").use { statement ->
+                statement.queryTimeout = TIMEOUT_SECONDS
+                statement.setTimestamp(1, Timestamp.from(now))
+                removed += statement.executeUpdate()
+            }
+            connection.prepareStatement("DELETE FROM avp_daily_spend WHERE spend_date < ?").use { statement ->
+                statement.queryTimeout = TIMEOUT_SECONDS
+                statement.setDate(1, java.sql.Date.valueOf(now.atZone(ZoneOffset.UTC).toLocalDate()))
+                removed += statement.executeUpdate()
+            }
+            return removed
+        }
 
         private fun requireDurableCommit(connection: Connection) {
             connection.createStatement().use { statement ->
@@ -256,6 +281,19 @@ class PostgresAuthorizationStore
                     "SELECT set_config('synchronous_commit', " +
                         "CASE WHEN current_setting('synchronous_commit')='remote_apply' THEN 'remote_apply' ELSE 'on' END, true)",
                 )
+            }
+        }
+
+        private fun restoreQuietly(
+            connection: Connection,
+            autoCommit: Boolean,
+            isolation: Int,
+        ) {
+            try {
+                connection.transactionIsolation = isolation
+                connection.autoCommit = autoCommit
+            } catch (ignored: SQLException) {
+                // The connection is being closed anyway; a broken one is evicted by the pool.
             }
         }
 

@@ -376,6 +376,25 @@ val verification = trustWeave.verify {
 }
 ```
 
+### Reject Bearer SD-JWT Credentials
+
+An SD-JWT VC without an issuer-signed `cnf` (confirmation, RFC 7800) claim is not bound to any holder key. By
+design it is still accepted as a bearer credential, so existing flows keep working. A verifier that must not
+accept bearer SD-JWT credentials opts in with `requireHolderBinding`:
+
+```kotlin
+val verification = trustWeave.verify {
+    credential(credential)
+    requireHolderBinding(true) // default: false
+}
+```
+
+With the option set, a `cnf`-less SD-JWT credential fails with `VerificationResult.Invalid.InvalidProof`, both when
+verified on its own and when it is part of a presentation (`VerificationOptions(requireHolderBinding = true)`).
+It is checked after the issuer signature, so a forged credential is still reported for its own reason. Credentials in
+other formats are unaffected, and a `cnf` that cannot be enforced (JWK-only, non-DID `kid`) is always rejected.
+`enforceHolderBinding` is a different, envelope-level check (credential subject must equal the presentation holder).
+
 ### Trust Registry Verification
 
 Verify that the issuer is in the trust registry:

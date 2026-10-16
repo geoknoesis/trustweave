@@ -29,10 +29,14 @@ import java.util.UUID
  * `exclusiveMinimum`, `exclusiveMaximum`, `minLength`, `maxLength`, `pattern`.
  */
 object PresentationDefinitionMatcher {
+    private const val MAX_PATH_LENGTH = 1024
+    private val REGEX_OPERATOR = Regex("=\\s*~")
 
-    private val jsonPathConfig: Configuration = Configuration.builder()
-        .options(Option.SUPPRESS_EXCEPTIONS, Option.DEFAULT_PATH_LEAF_TO_NULL)
-        .build()
+    private val jsonPathConfig: Configuration =
+        Configuration
+            .builder()
+            .options(Option.SUPPRESS_EXCEPTIONS, Option.DEFAULT_PATH_LEAF_TO_NULL)
+            .build()
 
     /**
      * Match credentials against a [PresentationDefinition].
@@ -59,32 +63,34 @@ object PresentationDefinitionMatcher {
         matches: Map<String, List<VerifiableCredential>>,
     ): PresentationSubmission {
         val descriptorById = definition.inputDescriptors.associateBy { it.id }
-        val descriptorMap = matches
-            .filter { (_, creds) -> creds.isNotEmpty() }
-            .entries
-            .mapIndexed { index, (descriptorId, creds) ->
-                val descriptor = descriptorById[descriptorId]
-                val limitDisclosure = descriptor?.constraints?.limitDisclosure
-                val format = when {
-                    limitDisclosure != null -> {
-                        // Prefer the format declared on the descriptor, then fall back to the
-                        // first matched credential's proof type, finally "vc+sd-jwt".
-                        val credFormat = descriptor.format
+        val descriptorMap =
+            matches
+                .filter { (_, creds) -> creds.isNotEmpty() }
+                .entries
+                .mapIndexed { index, (descriptorId, creds) ->
+                    val descriptor = descriptorById[descriptorId]
+                    val limitDisclosure = descriptor?.constraints?.limitDisclosure
+                    val format =
                         when {
-                            credFormat?.sdJwtVc != null -> "vc+sd-jwt"
-                            credFormat?.msoMdoc != null -> "mso_mdoc"
-                            creds.first().proof is CredentialProof.MdocProof -> "mso_mdoc"
-                            else -> "vc+sd-jwt"
+                            limitDisclosure != null -> {
+                                // Prefer the format declared on the descriptor, then fall back to the
+                                // first matched credential's proof type, finally "vc+sd-jwt".
+                                val credFormat = descriptor.format
+                                when {
+                                    credFormat?.sdJwtVc != null -> "vc+sd-jwt"
+                                    credFormat?.msoMdoc != null -> "mso_mdoc"
+                                    creds.first().proof is CredentialProof.MdocProof -> "mso_mdoc"
+                                    else -> "vc+sd-jwt"
+                                }
+                            }
+                            else -> credentialFormatOf(creds.first())
                         }
-                    }
-                    else -> credentialFormatOf(creds.first())
+                    DescriptorMap(
+                        id = descriptorId,
+                        format = format,
+                        path = "$.verifiableCredential[$index]",
+                    )
                 }
-                DescriptorMap(
-                    id = descriptorId,
-                    format = format,
-                    path = "$.verifiableCredential[$index]",
-                )
-            }
 
         return PresentationSubmission(
             id = UUID.randomUUID().toString(),
@@ -101,12 +107,13 @@ object PresentationDefinitionMatcher {
      * Maps a credential's proof type to its registered OID4VP format identifier
      * (OID4VP v1.0 Appendix B): `jwt_vc_json`, `ldp_vc`, `vc+sd-jwt`, `mso_mdoc`.
      */
-    private fun credentialFormatOf(credential: VerifiableCredential): String = when (credential.proof) {
-        is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
-        is CredentialProof.MdocProof -> "mso_mdoc"
-        is CredentialProof.JwtProof -> "jwt_vc_json"
-        else -> "ldp_vc"
-    }
+    private fun credentialFormatOf(credential: VerifiableCredential): String =
+        when (credential.proof) {
+            is CredentialProof.SdJwtVcProof -> "vc+sd-jwt"
+            is CredentialProof.MdocProof -> "mso_mdoc"
+            is CredentialProof.JwtProof -> "jwt_vc_json"
+            else -> "ldp_vc"
+        }
 
     private fun matchDescriptor(
         descriptor: InputDescriptor,
@@ -117,13 +124,14 @@ object PresentationDefinitionMatcher {
         val limitDisclosure = constraints?.limitDisclosure
 
         // limit_disclosure: "required" → only credentials that natively support selective disclosure
-        val filtered = if (limitDisclosure == LimitDisclosure.REQUIRED) {
-            credentials.filter { vc ->
-                vc.proof is CredentialProof.SdJwtVcProof || vc.proof is CredentialProof.MdocProof
+        val filtered =
+            if (limitDisclosure == LimitDisclosure.REQUIRED) {
+                credentials.filter { vc ->
+                    vc.proof is CredentialProof.SdJwtVcProof || vc.proof is CredentialProof.MdocProof
+                }
+            } else {
+                credentials
             }
-        } else {
-            credentials
-        }
 
         if (fields.isNullOrEmpty()) return filtered
 
@@ -146,7 +154,10 @@ object PresentationDefinitionMatcher {
      * Per DIF PEX v2.0 spec: if the path expression returns an array, the filter is applied
      * to each element and succeeds if any element satisfies the filter.
      */
-    private fun evaluateField(field: Field, document: Any): Boolean {
+    private fun evaluateField(
+        field: Field,
+        document: Any,
+    ): Boolean {
         val resolvedValue = resolveFirstPath(field.path, document) ?: return false
         val filter = field.filter ?: return true
         return if (resolvedValue is List<*>) {
@@ -160,8 +171,15 @@ object PresentationDefinitionMatcher {
      * Evaluate each JSONPath expression in [paths] against [document], returning the first
      * non-null result. Returns `null` if all paths fail to resolve or return null.
      */
-    private fun resolveFirstPath(paths: List<String>, document: Any): Any? =
+    private fun resolveFirstPath(
+        paths: List<String>,
+        document: Any,
+    ): Any? =
         paths.firstNotNullOfOrNull { path ->
+            // Paths come from the (untrusted) verifier. Jayway filter expressions can embed a raw
+            // backtracking regex (`?(@.x =~ /.../)`) that would bypass [SafeRegex], so any path using
+            // the regex operator (or an absurdly long one) is not evaluated: it fails closed.
+            if (path.length > MAX_PATH_LENGTH || REGEX_OPERATOR.containsMatchIn(path)) return@firstNotNullOfOrNull null
             runCatching {
                 JsonPath.using(jsonPathConfig).parse(document).read<Any?>(path)
             }.getOrNull()
@@ -174,7 +192,10 @@ object PresentationDefinitionMatcher {
      * `exclusiveMinimum`, `exclusiveMaximum`, `minLength`, `maxLength`, `pattern`.
      */
     @Suppress("ReturnCount")
-    private fun evaluateFilter(filter: JsonObject, value: Any): Boolean {
+    private fun evaluateFilter(
+        filter: JsonObject,
+        value: Any,
+    ): Boolean {
         // type check
         filter["type"]?.let { typeEl ->
             val requiredType = (typeEl as? JsonPrimitive)?.content ?: return@let
@@ -194,8 +215,11 @@ object PresentationDefinitionMatcher {
             if (allowed.none { looseEquals(value, it) }) return false
         }
 
-        // Numeric range constraints
+        // Numeric range constraints. Only genuine numbers qualify: a string claim such as "42" must
+        // not satisfy `minimum`/`maximum`, so a numeric keyword against a non-number fails closed.
         val num = toDouble(value)
+        val numericKeywords = listOf("minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum")
+        if (num == null && numericKeywords.any { it in filter }) return false
         if (num != null) {
             filter["minimum"]?.let { minEl ->
                 val min = (minEl as? JsonPrimitive)?.doubleOrNull ?: return@let
@@ -237,33 +261,41 @@ object PresentationDefinitionMatcher {
         return true
     }
 
-    private fun matchesJsonSchemaType(type: String, value: Any): Boolean = when (type) {
-        "string" -> value is String
-        "number" -> value is Number
-        "integer" -> value is Number && (value as Number).toDouble() % 1.0 == 0.0
-        "boolean" -> value is Boolean
-        "array" -> value is List<*>
-        "object" -> value is Map<*, *>
-        "null" -> value == null
-        else -> true
-    }
+    private fun matchesJsonSchemaType(
+        type: String,
+        value: Any,
+    ): Boolean =
+        when (type) {
+            "string" -> value is String
+            "number" -> value is Number
+            "integer" -> value is Number && (value as Number).toDouble() % 1.0 == 0.0
+            "boolean" -> value is Boolean
+            "array" -> value is List<*>
+            "object" -> value is Map<*, *>
+            "null" -> value == null
+            else -> true
+        }
 
-    private fun looseEquals(a: Any?, b: Any?): Boolean {
+    private fun looseEquals(
+        a: Any?,
+        b: Any?,
+    ): Boolean {
         if (a == b) return true
         // String vs list: check if the string is contained in the list
         if (a is List<*>) return a.any { looseEquals(it, b) }
         if (b is List<*>) return b.any { looseEquals(a, it) }
-        // Number comparison across types (e.g. Int vs Long)
-        val da = toDouble(a); val db = toDouble(b)
+        // Number comparison across types (e.g. Int vs Long); strings/booleans are never coerced.
+        val da = toDouble(a)
+        val db = toDouble(b)
         if (da != null && db != null) return da == db
-        return a?.toString() == b?.toString()
+        return false
     }
 
-    private fun toDouble(value: Any?): Double? = when (value) {
-        is Number -> value.toDouble()
-        is String -> value.toDoubleOrNull()
-        else -> null
-    }
+    private fun toDouble(value: Any?): Double? =
+        when (value) {
+            is Number -> value.toDouble()
+            else -> null
+        }
 
     // -------------------------------------------------------------------------
     // VC → document (Map/List/primitive) conversion for Jayway JSONPath
@@ -300,15 +332,19 @@ object PresentationDefinitionMatcher {
     }
 
     /** Recursively convert a [JsonElement] to plain Java types for Jayway. */
-    private fun jsonElementToJava(element: JsonElement): Any? = when (element) {
-        is JsonNull -> null
-        is JsonPrimitive -> when {
-            element.booleanOrNull != null -> element.booleanOrNull!!
-            element.longOrNull != null -> element.longOrNull!!
-            element.doubleOrNull != null -> element.doubleOrNull!!
-            else -> element.content
+    private fun jsonElementToJava(element: JsonElement): Any? =
+        when (element) {
+            is JsonNull -> null
+            is JsonPrimitive ->
+                when {
+                    // A quoted JSON string is a string, even if its text looks like a number or boolean.
+                    element.isString -> element.content
+                    element.booleanOrNull != null -> element.booleanOrNull!!
+                    element.longOrNull != null -> element.longOrNull!!
+                    element.doubleOrNull != null -> element.doubleOrNull!!
+                    else -> element.content
+                }
+            is JsonArray -> element.map { jsonElementToJava(it) }
+            is JsonObject -> element.entries.associate { (k, v) -> k to jsonElementToJava(v) }
         }
-        is JsonArray -> element.map { jsonElementToJava(it) }
-        is JsonObject -> element.entries.associate { (k, v) -> k to jsonElementToJava(v) }
-    }
 }

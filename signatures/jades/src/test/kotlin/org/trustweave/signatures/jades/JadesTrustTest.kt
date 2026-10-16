@@ -102,6 +102,8 @@ class JadesTrustTest {
     ): String {
         val id = keyId()
         val chain = ca.issueChainBytes(kms.publicKey(id), "CN=Trust Signer")
+        val tsaConfig =
+            TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true).takeIf { profile != JadesProfile.B_B }
         return DefaultJadesSigner(kms)
             .sign(
                 buildJsonObject { put("k", JsonPrimitive("v")) },
@@ -109,7 +111,7 @@ class JadesTrustTest {
                     profile = profile,
                     keyId = id,
                     signerCertificateChain = chain,
-                    tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()).takeIf { profile != JadesProfile.B_B },
+                    tsaConfig = tsaConfig,
                     validationData =
                         validationData ?: ValidationData(completeCertificateChain = chain).takeIf { profile.atLeast(JadesProfile.B_LT) },
                 ),
@@ -206,7 +208,7 @@ class JadesTrustTest {
                             profile = JadesProfile.B_LT,
                             keyId = id,
                             signerCertificateChain = chain,
-                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString()),
+                            tsaConfig = TsaConfig(endpointUrl = server.url("/tsa").toString(), allowUnanchored = true),
                             validationData =
                                 ValidationData(
                                     completeCertificateChain = chain,

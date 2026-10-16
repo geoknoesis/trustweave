@@ -197,6 +197,43 @@ class RemoteStatusListTest {
     }
 
     @Test
+    fun `the default decoded-size cap is well below 16 MiB`() {
+        assertTrue(RemoteStatusListResolver.DEFAULT_MAX_DECODED_BYTES <= 4 * 1024 * 1024)
+        // 3 MiB of zeros compresses to a few KiB, so only the decoded cap can stop it.
+        val m = manager(RemoteStatusListResolver(acceptAll, CountingFetcher { statusListVc(encodedList(3 * 1024 * 1024)) }))
+        assertFailsClosed("STATUS_LIST_TOO_LARGE") { m.checkRevocationStatus(credential(1)) }
+    }
+
+    @Test
+    fun `total cached bytes are capped`() =
+        runBlocking<Unit> {
+            val calls = mutableMapOf<String, Int>()
+            val fetcher =
+                StatusListCredentialFetcher { url ->
+                    calls.merge(url.toString(), 1, Int::plus)
+                    statusListVc(encodedList(16_384), id = url.toString())
+                }
+            // Room for two 16 KiB lists, not three.
+            val resolver = RemoteStatusListResolver(acceptAll, fetcher, maxCacheBytes = 40_000)
+            val urls = (1..3).map { "https://status.example.org/list/$it" }
+            urls.forEach { resolver.resolve(it) }
+            resolver.resolve(urls[2])
+            assertEquals(1, calls.getValue(urls[2]), "the newest list is still cached")
+            resolver.resolve(urls[0])
+            assertEquals(2, calls.getValue(urls[0]), "the least recently used list was evicted to stay under the byte cap")
+        }
+
+    @Test
+    fun `a single list larger than the byte cap is served but not cached`() =
+        runBlocking<Unit> {
+            val fetcher = CountingFetcher { statusListVc(encodedList(16_384)) }
+            val resolver = RemoteStatusListResolver(acceptAll, fetcher, maxCacheBytes = 1_000)
+            resolver.resolve(listUrl)
+            resolver.resolve(listUrl)
+            assertEquals(2, fetcher.calls)
+        }
+
+    @Test
     fun `a fetch error fails closed`() {
         val m = manager(RemoteStatusListResolver(acceptAll, { throw java.io.IOException("connection reset") }))
         assertFailsClosed("STATUS_LIST_UNAVAILABLE") { m.checkRevocationStatus(credential(1)) }

@@ -13,6 +13,7 @@ import org.trustweave.signatures.jades.DefaultJadesVerifier
 import org.trustweave.signatures.jades.JadesProfile
 import org.trustweave.signatures.jades.JadesValidationResult
 import org.trustweave.signatures.jades.JadesVerificationOptions
+import org.trustweave.signatures.jades.JadesVerifier
 import org.trustweave.signatures.revocation.RevocationPolicy
 import org.trustweave.signatures.trustlists.TrustAnchorMatch
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
@@ -65,9 +66,13 @@ interface EtsiSignatureValidator {
  *     [StepOutcome.NotApplicable] otherwise.
  *  5. Aggregate the per-step outcomes into the final verdict.
  */
-class DefaultEtsiSignatureValidator(
-    private val jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier(),
+class DefaultEtsiSignatureValidator internal constructor(
+    private val jadesVerifier: JadesVerifier,
 ) : EtsiSignatureValidator {
+    @JvmOverloads
+    @Suppress("USELESS_CAST")
+    constructor(jadesVerifier: DefaultJadesVerifier = DefaultJadesVerifier()) : this(jadesVerifier as JadesVerifier)
+
     override suspend fun validate(
         jadesSerialized: String,
         policy: EtsiSignaturePolicy,
@@ -145,8 +150,11 @@ class DefaultEtsiSignatureValidator(
                         revocationEvidence = policy.revocationEvidence,
                         revocationIssuerCertificates = policy.revocationIssuerCertificates,
                         timestampTrustAnchors = policy.timestampTrustAnchors,
-                        // The policy decides whether a withdrawn service is acceptable (see allowedTrustStatusUris).
-                        allowWithdrawnTrustWithoutAuthenticatedTime = TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
+                        // Accepting a withdrawn service (allowedTrustStatusUris) never by itself accepts an
+                        // unauthenticated, back-datable signing time; that needs its own explicit opt-in.
+                        allowWithdrawnTrustWithoutAuthenticatedTime =
+                            policy.allowWithdrawnTrustWithoutAuthenticatedTime &&
+                                TspServiceStatus.WITHDRAWN.uri in policy.allowedTrustStatusUris,
                     ),
                 )
 
@@ -162,7 +170,21 @@ class DefaultEtsiSignatureValidator(
                         StepOutcome.Failed(
                             "envelope rejected during crypto check: ${jadesResult.reason}",
                         )
-                    else -> StepOutcome.Passed("crypto verification ok (further step failed)")
+                    // The JAdES verifier checks the signature before any of these, so the crypto itself held.
+                    is JadesValidationResult.Invalid.UntrustedSigner,
+                    is JadesValidationResult.Invalid.TrustWithdrawn,
+                    is JadesValidationResult.Invalid.SignerCertificateInvalid,
+                    is JadesValidationResult.Invalid.TimeStampMismatch,
+                    is JadesValidationResult.Invalid.MissingTimeStamp,
+                    is JadesValidationResult.Invalid.CertificateExpired,
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("crypto verification ok (further step failed)")
+                    // Rejected on structure/profile grounds, possibly before the signature was examined.
+                    is JadesValidationResult.Invalid.WrongProfile ->
+                        StepOutcome.Inconclusive(
+                            "crypto verification not evaluated: ${jadesResult.found} found, ${jadesResult.required} required",
+                        )
                 }
 
             // ------------------------------------------------------------ Step 4: X509_CERT_PATH
@@ -191,7 +213,10 @@ class DefaultEtsiSignatureValidator(
                     is JadesValidationResult.Invalid.BadSignature,
                     is JadesValidationResult.Invalid.Malformed,
                     -> StepOutcome.Inconclusive("cert path not evaluated — earlier step failed")
-                    else -> StepOutcome.Passed("cert path validated")
+                    // Reached only after the path was resolved; the revocation outcome is reported by its own step.
+                    is JadesValidationResult.Invalid.CertificateRevoked,
+                    is JadesValidationResult.Invalid.RevocationUnavailable,
+                    -> StepOutcome.Passed("cert path validated")
                 }
 
             // ------------------------------------------------------------ Step 5: REVOCATION
@@ -248,7 +273,16 @@ class DefaultEtsiSignatureValidator(
                 StepOutcome.Failed("certificate revoked: ${jadesResult.reason}")
             is JadesValidationResult.Invalid.RevocationUnavailable ->
                 StepOutcome.Failed("revocation evidence required but unavailable: ${jadesResult.reason}")
-            else -> StepOutcome.Inconclusive("revocation not evaluated — earlier step failed")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("revocation not evaluated — earlier step failed")
         }
     }
 
@@ -309,11 +343,21 @@ class DefaultEtsiSignatureValidator(
         return when (jadesResult) {
             is JadesValidationResult.Valid ->
                 StepOutcome.Passed(
-                    "signer cert valid at sigT=${jadesResult.signingTime}",
+                    "signer cert valid at the authenticated time (else now); claimed sigT=${jadesResult.signingTime}",
                 )
             is JadesValidationResult.Invalid.CertificateExpired ->
-                StepOutcome.Failed("signer cert expired at sigT (notAfter=${jadesResult.notAfter})")
-            else -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
+                StepOutcome.Failed("signer cert expired (notAfter=${jadesResult.notAfter})")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.MissingTimeStamp,
+            is JadesValidationResult.Invalid.TimeStampMismatch,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("signing-time not evaluated — earlier step failed")
         }
     }
 
@@ -349,7 +393,16 @@ class DefaultEtsiSignatureValidator(
                 StepOutcome.Failed("sigTst missing: ${jadesResult.reason}")
             is JadesValidationResult.Invalid.TimeStampMismatch ->
                 StepOutcome.Failed("sigTst mismatch: ${jadesResult.reason}")
-            else -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
+            is JadesValidationResult.Invalid.BadSignature,
+            is JadesValidationResult.Invalid.UntrustedSigner,
+            is JadesValidationResult.Invalid.WrongProfile,
+            is JadesValidationResult.Invalid.CertificateExpired,
+            is JadesValidationResult.Invalid.SignerCertificateInvalid,
+            is JadesValidationResult.Invalid.TrustWithdrawn,
+            is JadesValidationResult.Invalid.CertificateRevoked,
+            is JadesValidationResult.Invalid.RevocationUnavailable,
+            is JadesValidationResult.Invalid.Malformed,
+            -> StepOutcome.Inconclusive("sigTst not evaluated — earlier step failed")
         }
     }
 

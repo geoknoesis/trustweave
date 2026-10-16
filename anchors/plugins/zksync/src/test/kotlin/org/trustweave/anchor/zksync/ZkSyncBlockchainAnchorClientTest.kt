@@ -37,7 +37,7 @@ class ZkSyncBlockchainAnchorClientTest {
 
         val gasLimit = ZkSyncBlockchainAnchorClient.gasLimitFrom(bogusEstimate, data)
 
-        assertEquals(EvmGas.intrinsicGas(data), gasLimit)
+        assertEquals(EvmGas.requiredGas(data), gasLimit)
     }
 
     @Test

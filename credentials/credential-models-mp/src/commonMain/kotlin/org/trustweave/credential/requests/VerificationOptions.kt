@@ -93,6 +93,13 @@ data class VerificationOptions(
      * credentials should opt in here.
      */
     val enforceHolderBinding: Boolean = false,
+    /**
+     * Reject SD-JWT VC credentials whose issuer-signed JWT carries no `cnf` holder binding (opt-in; defaults to
+     * false). By design a `cnf`-less SD-JWT credential is otherwise accepted as a bearer credential. With this
+     * set it fails verification with `InvalidProof`, standalone and when presented. Other formats are
+     * unaffected; an unenforceable `cnf` (JWK-only, non-DID kid) is rejected regardless.
+     */
+    val requireHolderBinding: Boolean = false,
 ) {
     /** Effective challenge check: requested explicitly or implied by [expectedChallenge]. */
     val shouldVerifyChallenge: Boolean

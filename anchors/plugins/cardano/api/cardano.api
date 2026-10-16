@@ -41,7 +41,9 @@ public final class org/trustweave/anchor/cardano/CardanoAnchorConfig$Companion {
 
 public final class org/trustweave/anchor/cardano/CardanoBlockchainAnchorClient : org/trustweave/anchor/AbstractBlockchainAnchorClient, java/io/Closeable {
 	public static final field Companion Lorg/trustweave/anchor/cardano/CardanoBlockchainAnchorClient$Companion;
+	public static final field DEFAULT_MIN_CONFIRMATIONS J
 	public static final field MAINNET Ljava/lang/String;
+	public static final field OPTION_MIN_CONFIRMATIONS Ljava/lang/String;
 	public static final field PREPROD Ljava/lang/String;
 	public static final field PREVIEW Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V

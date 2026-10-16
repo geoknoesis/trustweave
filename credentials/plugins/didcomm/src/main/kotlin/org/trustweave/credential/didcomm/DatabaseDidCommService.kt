@@ -77,8 +77,8 @@ class DatabaseDidCommService
         ): DidCommMessage =
             withContext(Dispatchers.IO) {
                 // Unpack the message
-                val message =
-                    packer.unpack(
+                val unpacked =
+                    packer.unpackToResult(
                         packedMessage = packedMessage,
                         recipientDid = recipientDid,
                         recipientKeyId = recipientKeyId,
@@ -86,7 +86,8 @@ class DatabaseDidCommService
                         requireSigned = requireSigned,
                     )
 
-                receiveGuards.check(message)
+                val message = unpacked.message
+                receiveGuards.check(message, unpacked.authenticatedSenderDid ?: unpacked.verifiedSignerDid)
 
                 // Store the received message
                 storage.store(message)

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.trustweave.core.net.readBodyBounded
 import java.time.Clock
 import java.time.Instant
 
@@ -22,7 +23,7 @@ import java.time.Instant
  */
 class EntraTokenClient(
     private val config: EntraConfig,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = defaultEntraHttpClient(),
     private val clock: Clock = Clock.systemUTC(),
     private val refreshSkew: java.time.Duration = java.time.Duration.ofSeconds(60),
 ) {
@@ -59,51 +60,64 @@ class EntraTokenClient(
      */
     internal fun snapshot(): CachedToken? = cached
 
-    private suspend fun fetchToken(): CachedToken = withContext(Dispatchers.IO) {
-        val form = FormBody.Builder()
-            .add("grant_type", "client_credentials")
-            .add("client_id", config.clientId)
-            .add("client_secret", config.clientSecret)
-            .add("scope", config.scope)
-            .build()
+    private suspend fun fetchToken(): CachedToken =
+        withContext(Dispatchers.IO) {
+            val form =
+                FormBody
+                    .Builder()
+                    .add("grant_type", "client_credentials")
+                    .add("client_id", config.clientId)
+                    .add("client_secret", config.clientSecret)
+                    .add("scope", config.scope)
+                    .build()
 
-        val request = Request.Builder()
-            .url(config.tokenEndpointUrl)
-            .post(form)
-            .header("Accept", "application/json")
-            .build()
+            val request =
+                Request
+                    .Builder()
+                    .url(config.tokenEndpointUrl)
+                    .post(form)
+                    .header("Accept", "application/json")
+                    .build()
 
-        httpClient.newCall(request).execute().use { response ->
-            val body = response.body?.string().orEmpty()
-            if (!response.isSuccessful) {
-                val parsed = runCatching { json.decodeFromString<EntraTokenError>(body) }.getOrNull()
-                throw EntraException.AuthenticationFailed(
-                    message = "AAD token endpoint returned ${response.code}: ${parsed?.error ?: "unknown"}" +
-                        (parsed?.errorDescription?.let { " — $it" } ?: ""),
-                    context = buildMap {
-                        put("httpStatus", response.code)
-                        parsed?.error?.let { put("error", it) }
-                        parsed?.errorDescription?.let { put("error_description", it) }
-                        parsed?.correlationId?.let { put("correlation_id", it) }
-                    },
-                )
-            }
-            val parsed = runCatching { json.decodeFromString<EntraTokenResponse>(body) }
-                .getOrElse {
+            httpClient.newCall(request).execute().use { response ->
+                val body = response.readBodyBounded().orEmpty()
+                if (!response.isSuccessful) {
+                    val parsed = runCatching { json.decodeFromString<EntraTokenError>(body) }.getOrNull()
                     throw EntraException.AuthenticationFailed(
-                        message = "Failed to parse AAD token response: ${it.message}",
-                        cause = it,
+                        message =
+                            "AAD token endpoint returned ${response.code}: ${EntraException.excerpt(parsed?.error ?: "unknown")}" +
+                                (parsed?.errorDescription?.let { " — ${EntraException.excerpt(it)}" } ?: ""),
+                        context =
+                            buildMap {
+                                put("httpStatus", response.code)
+                                parsed?.error?.let { put("error", it) }
+                                parsed?.errorDescription?.let { put("error_description", it) }
+                                parsed?.correlationId?.let { put("correlation_id", it) }
+                            },
                     )
                 }
-            CachedToken(
-                accessToken = parsed.accessToken,
-                expiresAt = clock.instant().plusSeconds(parsed.expiresInSeconds),
-            )
+                val parsed =
+                    runCatching { json.decodeFromString<EntraTokenResponse>(body) }
+                        .getOrElse {
+                            throw EntraException.AuthenticationFailed(
+                                // The serializer message quotes the input, which holds the access token.
+                                message = "Failed to parse AAD token response (${it::class.simpleName})",
+                            )
+                        }
+                CachedToken(
+                    accessToken = parsed.accessToken,
+                    expiresAt = clock.instant().plusSeconds(parsed.expiresInSeconds),
+                )
+            }
         }
-    }
 
     internal data class CachedToken(
         val accessToken: String,
         val expiresAt: Instant,
     )
 }
+
+/** The HTTP client the Entra clients use unless one is injected: SSRF-guarded (no internal/loopback hosts). */
+internal fun defaultEntraHttpClient(): OkHttpClient =
+    org.trustweave.core.net
+        .ssrfGuardedOkHttpClient()

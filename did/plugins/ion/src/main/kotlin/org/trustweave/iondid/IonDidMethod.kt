@@ -193,6 +193,18 @@ class IonDidMethod(
                     )
                 }
 
+                // A deactivated DID resolves to no document (DID Resolution 1.0 §4.4). Never cache it.
+                val deactivated =
+                    (resolutionResult.metadata?.get("deactivated") as? JsonPrimitive)?.booleanOrNull == true
+                if (deactivated) {
+                    removeStoredDocument(convertedDocument.id.value)
+                    return@withContext DidMethodUtils.createSuccessResolutionResult(
+                        convertedDocument,
+                        method,
+                        deactivated = true,
+                    )
+                }
+
                 // Store locally for caching (under the verified id, which is the requested DID or
                 // its canonical form)
                 storeDocument(convertedDocument.id.value, convertedDocument)
@@ -261,8 +273,8 @@ class IonDidMethod(
                         nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
                     )
 
-                // Submit update operation
-                sidetreeClient.submitOperation(updateOperation)
+                // Submit update operation; the key store is only advanced once the node accepted it.
+                requireAccepted(sidetreeClient.submitOperation(updateOperation), "update", didString)
 
                 keyStore.put(
                     suffix,
@@ -344,7 +356,7 @@ class IonDidMethod(
                         nextUpdatePublicJwk = nextUpdateKeyPair.publicJwk,
                         nextRecoveryPublicJwk = nextRecoveryKeyPair.publicJwk,
                     )
-                sidetreeClient.submitOperation(recoverOp)
+                requireAccepted(sidetreeClient.submitOperation(recoverOp), "recover", didString)
 
                 keyStore.put(
                     suffix,
@@ -399,8 +411,8 @@ class IonDidMethod(
                         previousRecoveryKeyPair = previousRecoveryKeyPair,
                     )
 
-                // Submit deactivate operation
-                sidetreeClient.submitOperation(deactivateOperation)
+                // Submit deactivate operation; keys and cache are only dropped once the node accepted it.
+                requireAccepted(sidetreeClient.submitOperation(deactivateOperation), "deactivate", didString)
 
                 keyStore.remove(suffix)
                 // Remove from local storage
@@ -502,6 +514,22 @@ class IonDidMethod(
             assertionMethod = assertionMethod,
             service = service,
         )
+    }
+
+    /** A node that did not accept an operation must leave the key store and cache untouched. */
+    private fun requireAccepted(
+        response: org.trustweave.did.sidetree.SidetreeHttpClient.OperationResponse,
+        operation: String,
+        did: String,
+    ) {
+        if (!response.success) {
+            throw TrustWeaveException.Unknown(
+                code = "ION_${operation.uppercase()}_REJECTED",
+                message =
+                    "The ION node did not accept the $operation operation for $did: " +
+                        (response.error ?: "HTTP ${response.httpStatus}"),
+            )
+        }
     }
 
     private fun extractDidSuffix(did: String): String = parseIonDid(did).suffix

@@ -46,7 +46,7 @@ internal class DatabaseWalletCollections(
                         .prepareStatement(
                             """
                     SELECT c.id, c.name, c.description, c.created_at,
-                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id) AS credential_count
+                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id AND cc.wallet_id = c.wallet_id) AS credential_count
                     FROM collections c
                     WHERE c.id = ? AND c.wallet_id = ?
                     """,
@@ -79,7 +79,7 @@ internal class DatabaseWalletCollections(
                         .prepareStatement(
                             """
                     SELECT c.id, c.name, c.description, c.created_at,
-                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id) AS credential_count
+                           (SELECT COUNT(*) FROM credential_collections cc WHERE cc.collection_id = c.id AND cc.wallet_id = c.wallet_id) AS credential_count
                     FROM collections c
                     WHERE c.wallet_id = ?
                     """,
@@ -133,22 +133,24 @@ internal class DatabaseWalletCollections(
                     val sql =
                         if (isPostgreSql(conn)) {
                             """
-                    INSERT INTO credential_collections (credential_id, collection_id)
-                    VALUES (?, ?)
+                    INSERT INTO credential_collections (wallet_id, credential_id, collection_id)
+                    VALUES (?, ?, ?)
                     ON CONFLICT DO NOTHING
                     """
                         } else {
                             """
                     MERGE INTO credential_collections cc
-                    USING (VALUES (?, ?)) AS src(credential_id, collection_id)
-                    ON cc.credential_id = src.credential_id AND cc.collection_id = src.collection_id
+                    USING (VALUES (?, ?, ?)) AS src(wallet_id, credential_id, collection_id)
+                    ON cc.wallet_id = src.wallet_id AND cc.credential_id = src.credential_id AND cc.collection_id = src.collection_id
                     WHEN NOT MATCHED THEN
-                        INSERT (credential_id, collection_id) VALUES (src.credential_id, src.collection_id)
+                        INSERT (wallet_id, credential_id, collection_id)
+                        VALUES (src.wallet_id, src.credential_id, src.collection_id)
                     """
                         }
                     conn.prepareStatement(sql).use { stmt ->
-                        stmt.setString(1, credentialId)
-                        stmt.setString(2, collectionId)
+                        stmt.setString(1, walletId)
+                        stmt.setString(2, credentialId)
+                        stmt.setString(3, collectionId)
                         stmt.executeUpdate()
                     }
                     true
@@ -163,18 +165,17 @@ internal class DatabaseWalletCollections(
         withContext(Dispatchers.IO) {
             withStorageErrorHandling("removeFromCollection") {
                 acquireConnection("removeFromCollection").use { conn ->
-                    // Scoped to this wallet's collections so another wallet cannot detach memberships.
+                    // Scoped by wallet_id so another wallet cannot detach memberships.
                     conn
                         .prepareStatement(
                             """
                     DELETE FROM credential_collections
-                    WHERE credential_id = ? AND collection_id = ?
-                      AND collection_id IN (SELECT id FROM collections WHERE wallet_id = ?)
+                    WHERE wallet_id = ? AND credential_id = ? AND collection_id = ?
                     """,
                         ).use { stmt ->
-                            stmt.setString(1, credentialId)
-                            stmt.setString(2, collectionId)
-                            stmt.setString(3, walletId)
+                            stmt.setString(1, walletId)
+                            stmt.setString(2, credentialId)
+                            stmt.setString(3, collectionId)
                             stmt.executeUpdate() > 0
                         }
                 }
@@ -189,7 +190,7 @@ internal class DatabaseWalletCollections(
                         .prepareStatement(
                             """
                     SELECT cr.credential_data FROM credentials cr
-                    JOIN credential_collections cc ON cc.credential_id = cr.id
+                    JOIN credential_collections cc ON cc.credential_id = cr.id AND cc.wallet_id = cr.wallet_id
                     WHERE cc.collection_id = ? AND cr.wallet_id = ?
                     """,
                         ).use { stmt ->

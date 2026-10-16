@@ -6,7 +6,7 @@
  * Ed25519 multicodec prefix: 0xED 0x01 (varint), then 32-byte raw pubkey, then base58btc.
  */
 import * as ed25519 from '@noble/ed25519'
-import { sha512 } from '@noble/hashes/sha512'
+import { sha512 } from '@noble/hashes/sha2.js'
 import bs58 from 'bs58'
 
 // @noble/ed25519 v2.x requires a SHA-512 implementation to be wired up explicitly.

@@ -70,7 +70,13 @@ object AlgorithmMapping {
             is Algorithm.P256 -> "sha2-256"
             is Algorithm.P384 -> "sha2-384"
             is Algorithm.P521 -> "sha2-512"
-            is Algorithm.RSA -> "sha2-256"
+            // Hash strength follows the RSA key size, like the in-memory KMS and the other plugins.
+            is Algorithm.RSA ->
+                when (algorithm.keySize) {
+                    3072 -> "sha2-384"
+                    4096 -> "sha2-512"
+                    else -> "sha2-256"
+                }
             else -> "sha2-256"
         }
 
@@ -92,12 +98,21 @@ object AlgorithmMapping {
         val transitPrefix = "${config.transitPath}/keys/"
         val transitPrefixWithSlash = "/${config.transitPath}/keys/"
 
-        return when {
-            keyId.startsWith(transitPrefix) -> keyId.substringAfter(transitPrefix)
-            keyId.startsWith(transitPrefixWithSlash) -> keyId.substringAfter(transitPrefixWithSlash)
-            keyId.startsWith("/") -> keyId.substring(1)
-            else -> keyId
-        }
+        val name =
+            when {
+                keyId.startsWith(transitPrefix) -> keyId.substringAfter(transitPrefix)
+                keyId.startsWith(transitPrefixWithSlash) -> keyId.substringAfter(transitPrefixWithSlash)
+                keyId.startsWith("/") -> keyId.substring(1)
+                else -> keyId
+            }
+        // The name is placed into a request path: refuse anything that could change the path.
+        require(name.isNotBlank()) { "Key name cannot be blank" }
+        require(
+            !name.contains("..") &&
+                name != "." &&
+                name.none { it == '/' || it == '\\' || it == '?' || it == '#' || it == '%' || it.isISOControl() },
+        ) { "Key name contains characters that are not allowed in a path segment" }
+        return name
     }
 
     /**

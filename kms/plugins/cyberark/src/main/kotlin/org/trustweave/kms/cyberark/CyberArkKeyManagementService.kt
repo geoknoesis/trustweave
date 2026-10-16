@@ -129,7 +129,26 @@ class CyberArkKeyManagementService(
                         .post(metadataBody.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
-                httpClient.newCall(metadataRequest).execute().use { /* Store metadata */ }
+                val metadataResponse =
+                    try {
+                        httpClient.callAndClose(metadataRequest)
+                    } catch (cancelled: CancellationException) {
+                        removeOrphanedSecret(secretPath)
+                        throw cancelled
+                    } catch (e: Exception) {
+                        removeOrphanedSecret(secretPath)
+                        throw e
+                    }
+                if (!metadataResponse.isSuccessful) {
+                    // The private key is already stored; without its metadata the key is unusable,
+                    // so remove it rather than leave an orphan secret behind a "success".
+                    removeOrphanedSecret(secretPath)
+                    return@withContext GenerateKeyResult.Failure.Error(
+                        algorithm = algorithm,
+                        reason = "CyberArk Conjur API error storing key metadata: ${metadataResponse.code} - ${metadataResponse.message}",
+                        cause = null,
+                    )
+                }
 
                 GenerateKeyResult.Success(
                     KeyHandle(
@@ -148,6 +167,23 @@ class CyberArkKeyManagementService(
                 )
             }
         }
+
+    /** Best-effort removal of the secrets written by a [generateKey] that did not complete. */
+    private fun removeOrphanedSecret(secretPath: String) {
+        for (suffix in listOf("private", "metadata")) {
+            try {
+                val request =
+                    Request
+                        .Builder()
+                        .url("${config.conjurUrl}/secrets$secretPath/$suffix")
+                        .delete()
+                        .build()
+                httpClient.callAndClose(request)
+            } catch (ignored: Exception) {
+                // Cleanup is best effort; the original failure is what the caller must see.
+            }
+        }
+    }
 
     /**
      * Generates a key pair locally for the given algorithm.
@@ -281,6 +317,36 @@ class CyberArkKeyManagementService(
             try {
                 val secretPath = AlgorithmMapping.resolveKeyId(keyId.value, config.account)
 
+                // The stored key's algorithm is authoritative: resolve it first so an incompatible
+                // request is rejected before the private key is ever pulled into memory.
+                val keyAlgorithm =
+                    when (val keyHandleResult = getPublicKey(keyId)) {
+                        is GetPublicKeyResult.Success ->
+                            Algorithm.parse(keyHandleResult.keyHandle.algorithm)
+                                ?: return@withContext SignResult.Failure.Error(
+                                    keyId = keyId,
+                                    reason = "Cannot determine signing algorithm",
+                                    cause = null,
+                                )
+                        is GetPublicKeyResult.Failure.KeyNotFound -> return@withContext SignResult.Failure.KeyNotFound(keyId)
+                        is GetPublicKeyResult.Failure.Error ->
+                            return@withContext SignResult.Failure.Error(
+                                keyId = keyId,
+                                reason = "Failed to get key metadata: ${keyHandleResult.reason}",
+                                cause = keyHandleResult.cause,
+                            )
+                    }
+
+                if (algorithm != null && !algorithm.isCompatibleWith(keyAlgorithm)) {
+                    return@withContext SignResult.Failure.UnsupportedAlgorithm(
+                        keyId = keyId,
+                        requestedAlgorithm = algorithm,
+                        keyAlgorithm = keyAlgorithm,
+                        reason = "Algorithm '${algorithm.name}' is not compatible with key algorithm '${keyAlgorithm.name}'",
+                    )
+                }
+                val signingAlgorithm = algorithm ?: keyAlgorithm
+
                 // Get private key from Conjur
                 // Conjur API: GET /secrets/{account}/{kind}/{identifier}/private
                 val privateKeyRequest =
@@ -319,40 +385,19 @@ class CyberArkKeyManagementService(
                         )
                 val privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64)
 
-                // Get algorithm from metadata if not provided
-                val signingAlgorithm =
-                    algorithm ?: run {
-                        val keyHandleResult = getPublicKey(keyId)
-                        when (keyHandleResult) {
-                            is GetPublicKeyResult.Success -> {
-                                Algorithm.parse(keyHandleResult.keyHandle.algorithm)
-                                    ?: return@withContext SignResult.Failure.Error(
-                                        keyId = keyId,
-                                        reason = "Cannot determine signing algorithm",
-                                        cause = null,
-                                    )
-                            }
-                            is GetPublicKeyResult.Failure.KeyNotFound -> {
-                                return@withContext SignResult.Failure.KeyNotFound(keyId)
-                            }
-                            is GetPublicKeyResult.Failure.Error -> {
-                                return@withContext SignResult.Failure.Error(
-                                    keyId = keyId,
-                                    reason = "Failed to get key metadata: ${keyHandleResult.reason}",
-                                    cause = keyHandleResult.cause,
-                                )
-                            }
-                        }
-                    }
-
                 // Sign data locally using the private key.
                 // JCA ECDSA emits ASN.1 DER; the KeyManagementService contract requires P1363
                 // (raw r||s) with low-s for secp256k1, so normalize before returning.
                 val signature =
-                    EcdsaSignatureCodec.normalize(
-                        signWithPrivateKey(privateKeyBytes, data, signingAlgorithm),
-                        signingAlgorithm,
-                    )
+                    try {
+                        EcdsaSignatureCodec.normalize(
+                            signWithPrivateKey(privateKeyBytes, data, signingAlgorithm),
+                            signingAlgorithm,
+                        )
+                    } finally {
+                        // Do not leave decoded private key material on the heap longer than needed.
+                        privateKeyBytes.fill(0)
+                    }
                 SignResult.Success(signature)
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -395,7 +440,13 @@ class CyberArkKeyManagementService(
                     is Algorithm.Secp256k1, is Algorithm.P256 -> "SHA256withECDSA"
                     is Algorithm.P384 -> "SHA384withECDSA"
                     is Algorithm.P521 -> "SHA512withECDSA"
-                    is Algorithm.RSA -> "SHA256withRSA"
+                    // Same RSA hash mapping as the in-memory KMS: strength follows the key size.
+                    is Algorithm.RSA ->
+                        when (algorithm.keySize) {
+                            3072 -> "SHA384withRSA"
+                            4096 -> "SHA512withRSA"
+                            else -> "SHA256withRSA"
+                        }
                     else -> throw IllegalArgumentException("Unsupported algorithm: ${algorithm.name}")
                 },
             )

@@ -19,7 +19,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.trustweave.anchor.AbstractBlockchainAnchorClient
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.exceptions.BlockchainException
@@ -41,6 +40,9 @@ import java.util.concurrent.TimeUnit
  * Payloads are JSON-serialised then split into 64-byte UTF-8 chunks to fit Cardano's
  * per-string metadata limit. Total metadata is also bounded (≤ 16 KiB serialised CBOR).
  *
+ * A read also requires the transaction to be in a block buried under [OPTION_MIN_CONFIRMATIONS] blocks
+ * (default 1); the anchor timestamp is that block's time, or null when Blockfrost reports none.
+ *
  * The **read path** queries Blockfrost (`GET /txs/{hash}/metadata`) via the
  * [com.bloxbean.cardano.client.backend.api.MetadataService] and reassembles chunks.
  *
@@ -53,8 +55,8 @@ class CardanoBlockchainAnchorClient internal constructor(
     private val config: CardanoAnchorConfig,
     backendOverride: BackendService? = null,
     httpClientOverride: OkHttpClient? = null,
-) : AbstractBlockchainAnchorClient(chainId, options), java.io.Closeable {
-
+) : AbstractBlockchainAnchorClient(chainId, options),
+    java.io.Closeable {
     constructor(chainId: String, config: CardanoAnchorConfig) :
         this(chainId, config.toMap(), config, null, null)
 
@@ -66,7 +68,8 @@ class CardanoBlockchainAnchorClient internal constructor(
     }
 
     private val httpClient: OkHttpClient by lazy {
-        httpClientOverride ?: OkHttpClient.Builder()
+        httpClientOverride ?: OkHttpClient
+            .Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
@@ -76,8 +79,9 @@ class CardanoBlockchainAnchorClient internal constructor(
 
     init {
         require(chainId.startsWith("cardano:")) { "Invalid chain ID for Cardano: $chainId" }
-        val network = CardanoNetwork.fromChainId(chainId)
-            ?: throw IllegalArgumentException("Unsupported Cardano network: $chainId")
+        val network =
+            CardanoNetwork.fromChainId(chainId)
+                ?: throw IllegalArgumentException("Unsupported Cardano network: $chainId")
         require(network == config.network) {
             "chainId=$chainId does not match config.network=${config.network}"
         }
@@ -87,37 +91,46 @@ class CardanoBlockchainAnchorClient internal constructor(
 
     override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String =
         withContext(Dispatchers.IO) {
-            val acct = account
-                ?: throw BlockchainException.ConfigurationFailed(
-                    chainId = chainId,
-                    configKey = CardanoAnchorConfig.KEY_MNEMONIC,
-                    reason = "No submitter mnemonic or secret key configured",
-                )
+            val acct =
+                account
+                    ?: throw BlockchainException.ConfigurationFailed(
+                        chainId = chainId,
+                        configKey = CardanoAnchorConfig.KEY_MNEMONIC,
+                        reason = "No submitter mnemonic or secret key configured",
+                    )
             if (payloadBytes.size > MAX_PAYLOAD_BYTES) {
                 throw BlockchainException.TransactionFailed(
                     chainId = chainId,
                     operation = "submitTransaction",
                     payloadSize = payloadBytes.size.toLong(),
-                    reason = "Payload ${payloadBytes.size}B exceeds Cardano metadata budget ($MAX_PAYLOAD_BYTES B). " +
-                        "Anchor a digest instead.",
+                    reason =
+                        "Payload ${payloadBytes.size}B exceeds Cardano metadata budget ($MAX_PAYLOAD_BYTES B). " +
+                            "Anchor a digest instead.",
                 )
             }
 
             val metadata = buildCip20Metadata(payloadBytes, config.metadataLabel)
             val sender = acct.baseAddress()
-            val tx = Tx()
-                .from(sender)
-                .payToAddress(sender, com.bloxbean.cardano.client.api.model.Amount.lovelace(BigInteger.valueOf(MIN_SELF_PAY)))
-                .attachMetadata(metadata)
+            val tx =
+                Tx()
+                    .from(sender)
+                    .payToAddress(
+                        sender,
+                        com.bloxbean.cardano.client.api.model.Amount
+                            .lovelace(BigInteger.valueOf(MIN_SELF_PAY)),
+                    ).attachMetadata(metadata)
 
             val txBuilder = QuickTxBuilder(backend)
-            val txContext = txBuilder.compose(tx)
-                .withSigner(SignerProviders.signerFrom(acct))
-                .feePayer(sender)
+            val txContext =
+                txBuilder
+                    .compose(tx)
+                    .withSigner(SignerProviders.signerFrom(acct))
+                    .feePayer(sender)
 
-            val result = txContext.completeAndWait(
-                java.time.Duration.ofSeconds(config.confirmationTimeoutSeconds),
-            )
+            val result =
+                txContext.completeAndWait(
+                    java.time.Duration.ofSeconds(config.confirmationTimeoutSeconds),
+                )
 
             if (!result.isSuccessful) {
                 throw BlockchainException.TransactionFailed(
@@ -138,18 +151,19 @@ class CardanoBlockchainAnchorClient internal constructor(
 
     override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
         withContext(Dispatchers.IO) {
-            val result = try {
-                backend.metadataService.getJSONMetadataByTxnHash(txHash)
-            } catch (e: com.bloxbean.cardano.client.api.exception.ApiException) {
-                if (isNotFound(e)) {
-                    throw TrustWeaveException.NotFound(resource = "Cardano transaction $txHash")
+            val result =
+                try {
+                    backend.metadataService.getJSONMetadataByTxnHash(txHash)
+                } catch (e: com.bloxbean.cardano.client.api.exception.ApiException) {
+                    if (isNotFound(e)) {
+                        throw TrustWeaveException.NotFound(resource = "Cardano transaction $txHash")
+                    }
+                    throw BlockchainException.ConnectionFailed(
+                        chainId = chainId,
+                        endpoint = config.blockfrostBaseUrl(),
+                        reason = "Blockfrost metadata fetch failed: ${e.message}",
+                    )
                 }
-                throw BlockchainException.ConnectionFailed(
-                    chainId = chainId,
-                    endpoint = config.blockfrostBaseUrl(),
-                    reason = "Blockfrost metadata fetch failed: ${e.message}",
-                )
-            }
 
             if (!result.isSuccessful) {
                 if (result.code() == 404) {
@@ -168,31 +182,111 @@ class CardanoBlockchainAnchorClient internal constructor(
                 throw TrustWeaveException.NotFound(resource = "Metadata on Cardano transaction $txHash")
             }
 
-            val payload = decodeCip20Payload(contents, config.metadataLabel)
-                ?: throw TrustWeaveException.NotFound(
-                    resource = "Cardano metadata label ${config.metadataLabel} on tx $txHash",
-                )
+            val payload =
+                decodeCip20Payload(contents, config.metadataLabel)
+                    ?: throw TrustWeaveException.NotFound(
+                        resource = "Cardano metadata label ${config.metadataLabel} on tx $txHash",
+                    )
+
+            // Metadata alone says nothing about inclusion: the transaction must be in a block that is
+            // buried under the configured depth, and the timestamp is that block's time (null if the
+            // backend does not report one), never the time of this read.
+            val blockTime = requireSettled(txHash)
 
             AnchorResult(
-                ref = buildAnchorRef(
-                    txHash = txHash,
-                    contract = null,
-                    extra = buildExtraMetadata("application/json"),
-                ),
+                ref =
+                    buildAnchorRef(
+                        txHash = txHash,
+                        contract = null,
+                        extra = buildExtraMetadata("application/json"),
+                    ),
                 payload = payload,
                 mediaType = "application/json",
-                timestamp = System.currentTimeMillis() / 1000,
+                timestamp = blockTime,
             )
         }
 
+    /**
+     * Asserts [txHash] is in a block with at least [minConfirmations] blocks on top of it and returns
+     * that block's time (epoch seconds) or null when unreported.
+     */
+    private fun requireSettled(txHash: String): Long? {
+        fun reject(reason: String): Nothing =
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readTransaction",
+                reason = reason,
+            )
+
+        val txResult =
+            try {
+                backend.transactionService.getTransaction(txHash)
+            } catch (e: com.bloxbean.cardano.client.api.exception.ApiException) {
+                if (isNotFound(e)) throw TrustWeaveException.NotFound(resource = "Cardano transaction $txHash")
+                throw BlockchainException.ConnectionFailed(
+                    chainId = chainId,
+                    endpoint = config.blockfrostBaseUrl(),
+                    reason = "Blockfrost transaction fetch failed: ${e.message}",
+                )
+            }
+        if (!txResult.isSuccessful) {
+            if (txResult.code() == 404) throw TrustWeaveException.NotFound(resource = "Cardano transaction $txHash")
+            reject("Blockfrost returned ${txResult.code()} for the transaction: ${txResult.response}")
+        }
+        val content = txResult.value ?: reject("Blockfrost returned no transaction details")
+        if (content.hash != null && !content.hash.equals(txHash, ignoreCase = true)) {
+            reject("Blockfrost returned transaction ${content.hash} for requested $txHash; refusing to read an anchor from it")
+        }
+        val blockHeight = content.blockHeight
+        if (content.block.isNullOrBlank() || blockHeight == null) {
+            reject("Transaction is not in a block yet; refusing to read it as an anchor")
+        }
+
+        val required = minConfirmations
+        if (required > 0) {
+            val latest =
+                try {
+                    backend.blockService.latestBlock
+                } catch (e: com.bloxbean.cardano.client.api.exception.ApiException) {
+                    throw BlockchainException.ConnectionFailed(
+                        chainId = chainId,
+                        endpoint = config.blockfrostBaseUrl(),
+                        reason = "Blockfrost latest-block fetch failed: ${e.message}",
+                    )
+                }
+            val head =
+                latest.takeIf { it.isSuccessful }?.value?.height
+                    ?: reject("Cannot determine the chain head to count confirmations")
+            val confirmations = head.toLong() - blockHeight.toLong()
+            if (confirmations < required) {
+                reject(
+                    "Transaction has $confirmations confirmation(s) at block $blockHeight (head $head); " +
+                        "$required required. Configure via '$OPTION_MIN_CONFIRMATIONS'",
+                )
+            }
+        }
+        return content.blockTime?.toLong()
+    }
+
+    /** Blocks required on top of the anchor's block before it is read (see [OPTION_MIN_CONFIRMATIONS]). */
+    private val minConfirmations: Long
+        get() =
+            when (val value = options[OPTION_MIN_CONFIRMATIONS]) {
+                is Number -> value.toLong()
+                is String -> value.toLongOrNull() ?: DEFAULT_MIN_CONFIRMATIONS
+                else -> DEFAULT_MIN_CONFIRMATIONS
+            }.coerceAtLeast(0L)
+
     override fun getContractAddress(): String? = null
 
-    override fun buildExtraMetadata(mediaType: String): Map<String, String> = mapOf(
-        "network" to chainId.substringAfter(":"),
-        "mediaType" to mediaType,
-        "protocol" to "cip-20",
-        "label" to config.metadataLabel.toString(),
-    )
+    override fun buildExtraMetadata(mediaType: String): Map<String, String> =
+        mapOf(
+            "network" to chainId.substringAfter(":"),
+            "mediaType" to mediaType,
+            "protocol" to "cip-20",
+            "label" to config.metadataLabel.toString(),
+        )
 
     override fun generateTestTxHash(): String = "cardano_test_${uniqueTestHashSuffix()}"
 
@@ -230,6 +324,12 @@ class CardanoBlockchainAnchorClient internal constructor(
         const val PREVIEW: String = "cardano:preview"
         const val PREPROD: String = "cardano:preprod"
 
+        /** Option: blocks that must sit on top of an anchor's block before it is read (0 disables the check). */
+        const val OPTION_MIN_CONFIRMATIONS: String = "minConfirmations"
+
+        /** Excludes only the tip block, where a one-block rollback still removes the transaction. */
+        const val DEFAULT_MIN_CONFIRMATIONS: Long = 1L
+
         // Cardano protocol caps transaction metadata at ~16 KiB; reserve some headroom for CBOR framing.
         internal const val MAX_PAYLOAD_BYTES: Int = 14 * 1024
 
@@ -241,7 +341,10 @@ class CardanoBlockchainAnchorClient internal constructor(
         /**
          * Split [bytes] (UTF-8 of a JSON payload) into CIP-20 chunks and build a [Metadata].
          */
-        internal fun buildCip20Metadata(bytes: ByteArray, label: Long): Metadata {
+        internal fun buildCip20Metadata(
+            bytes: ByteArray,
+            label: Long,
+        ): Metadata {
             val text = String(bytes, StandardCharsets.UTF_8)
             val chunks = chunkUtf8(text, CHUNK_BYTES)
             val list: MetadataList = MetadataBuilder.createList()
@@ -253,7 +356,10 @@ class CardanoBlockchainAnchorClient internal constructor(
         /**
          * Split a string into ≤[maxBytes]-UTF-8-byte chunks without splitting code points.
          */
-        internal fun chunkUtf8(text: String, maxBytes: Int): List<String> {
+        internal fun chunkUtf8(
+            text: String,
+            maxBytes: Int,
+        ): List<String> {
             require(maxBytes > 0) { "maxBytes must be positive" }
             if (text.isEmpty()) return listOf("")
             val result = mutableListOf<String>()
@@ -291,11 +397,12 @@ class CardanoBlockchainAnchorClient internal constructor(
             val match = contents.firstOrNull { it.label == labelStr } ?: return null
             val jsonNode = match.jsonMetadata ?: return null
             val msgNode = jsonNode.get("msg") ?: return null
-            val joined = when {
-                msgNode.isArray -> msgNode.joinToString("") { it.asText() }
-                msgNode.isTextual -> msgNode.asText()
-                else -> msgNode.toString()
-            }
+            val joined =
+                when {
+                    msgNode.isArray -> msgNode.joinToString("") { it.asText() }
+                    msgNode.isTextual -> msgNode.asText()
+                    else -> msgNode.toString()
+                }
             return runCatching { Json.parseToJsonElement(joined) }
                 .getOrElse { JsonPrimitive(joined) }
         }
@@ -311,16 +418,18 @@ class CardanoBlockchainAnchorClient internal constructor(
             }
         }
 
-        private fun CardanoNetwork.toBloxbeanNetwork(): Network = when (this) {
-            CardanoNetwork.Mainnet -> Networks.mainnet()
-            CardanoNetwork.Preview -> Networks.preview()
-            CardanoNetwork.Preprod -> Networks.preprod()
-        }
+        private fun CardanoNetwork.toBloxbeanNetwork(): Network =
+            when (this) {
+                CardanoNetwork.Mainnet -> Networks.mainnet()
+                CardanoNetwork.Preview -> Networks.preview()
+                CardanoNetwork.Preprod -> Networks.preprod()
+            }
     }
 
     // Reserved for richer fallback metadata embedding; kept off the public path to avoid dead-code warnings.
     @Suppress("unused")
-    private fun fallbackJsonPayload(text: String): JsonElement = buildJsonObject {
-        put("raw", JsonPrimitive(text))
-    }
+    private fun fallbackJsonPayload(text: String): JsonElement =
+        buildJsonObject {
+            put("raw", JsonPrimitive(text))
+        }
 }

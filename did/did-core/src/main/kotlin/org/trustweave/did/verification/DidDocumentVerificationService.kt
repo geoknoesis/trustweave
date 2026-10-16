@@ -341,21 +341,39 @@ class DefaultDidDocumentVerificationService(
         // did:key is self-certifying: exactly one VM controlled by the DID itself must exist,
         // and its public key must match the key encoded in the DID. Allowing any() would
         // permit an attacker to inject additional VMs that pass the check.
-        val matchingVms =
-            document.verificationMethod.filter { vm ->
-                vm.controller.value == document.id.value
-            }
-        if (matchingVms.isEmpty()) return false
-        // All matching VMs have null publicKeyMultibase — JWK-only key, cannot verify via multibase
-        if (matchingVms.all { it.publicKeyMultibase == null }) {
+        val allVms = document.verificationMethod
+        if (allVms.isEmpty()) return false
+        // The "exactly one VM" guarantee covers ALL verification methods: a VM controlled by anyone
+        // else must not ride along in a document that is reported as self-certified.
+        if (allVms.any { it.controller.value != document.id.value }) {
             logger.warn(
-                "verifyKeyDocumentSignature: all VMs for ${document.id.value} use JWK-only encoding; " +
+                "verifyKeyDocumentSignature: ${document.id.value} contains a verification method whose " +
+                    "controller is not the document id — returning false",
+            )
+            return false
+        }
+        if (allVms.size != 1) return false
+        val vm = allVms.first()
+        // JWK-only key, cannot verify via multibase
+        if (vm.publicKeyMultibase == null) {
+            logger.warn(
+                "verifyKeyDocumentSignature: VM for ${document.id.value} uses JWK-only encoding; " +
                     "multibase self-certification check cannot be performed — returning false",
             )
             return false
         }
+        if (vm.publicKeyMultibase != multibaseFromDid) return false
+        // A JWK next to the multibase key must encode the very same key; otherwise a consumer that
+        // prefers the JWK would use a key the DID does not certify.
+        if (vm.publicKeyJwk != null && !Ed25519Verifier.jwkMatchesMultibase(vm)) {
+            logger.warn(
+                "verifyKeyDocumentSignature: publicKeyJwk of ${vm.id.value} does not match the key " +
+                    "encoded in the DID — returning false",
+            )
+            return false
+        }
         // Self-certification only: the identifier matches the key. No signature is checked.
-        return matchingVms.size == 1 && matchingVms.first().publicKeyMultibase == multibaseFromDid
+        return true
     }
 
     /**
@@ -372,8 +390,7 @@ class DefaultDidDocumentVerificationService(
      * Decodes a multibase-encoded digest string to raw bytes.
      *
      * Supports:
-     * - 'u' prefix: base64url without padding (RFC 4648 §5)
-     * - 'U' prefix: base64url with padding
+     * - 'u' / 'U' prefix: base64url (RFC 4648 §5), with or without trailing '=' padding
      * - 'f' prefix: lowercase hex
      * - 'F' prefix: uppercase hex
      *
@@ -382,19 +399,10 @@ class DefaultDidDocumentVerificationService(
     private fun decodeMultibaseDigest(encoded: String): ByteArray {
         require(encoded.isNotEmpty()) { "Digest string is empty" }
         return when (encoded[0]) {
-            'u' -> {
-                // base64url without padding: JDK's getUrlDecoder() requires canonical padding,
-                // so strip any accidental trailing '=' then add the correct amount.
-                val s = encoded.substring(1).trimEnd('=')
-                val padded = s + "=".repeat((4 - s.length % 4) % 4)
-                java.util.Base64
-                    .getUrlDecoder()
-                    .decode(padded)
-            }
-            'U' -> {
-                // base64url with padding: JDK's getUrlDecoder() does NOT accept '=' padding
-                // per the JDK Javadoc, so normalise by stripping existing padding and re-adding
-                // the canonical amount.
+            'u', 'U' -> {
+                // Both prefixes are accepted as base64url, padded or not. Normalise by stripping any
+                // trailing '=' and re-adding the canonical amount, as the JDK decoder is strict
+                // about padding.
                 val s = encoded.substring(1).trimEnd('=')
                 val padded = s + "=".repeat((4 - s.length % 4) % 4)
                 java.util.Base64
@@ -422,12 +430,30 @@ internal object Ed25519Verifier {
 
     /** The raw 32-byte Ed25519 public key of [method], or null if it has none. */
     fun publicKeyOf(method: org.trustweave.did.model.VerificationMethod): ByteArray? {
-        method.publicKeyJwk?.let { jwk ->
-            if (jwk["kty"] == "OKP" && jwk["crv"] == "Ed25519") {
-                val x = jwk["x"] as? String ?: return null
-                return decodeBase64Url(x)?.takeIf { it.size == KEY_SIZE }
+        val jwk = method.publicKeyJwk
+        if (jwk != null && jwk["kty"] == "OKP" && jwk["crv"] == "Ed25519") {
+            val x = jwk["x"] as? String ?: return null
+            val jwkKey = decodeBase64Url(x)?.takeIf { it.size == KEY_SIZE } ?: return null
+            // Both encodings present: they must be the same key, else the method is ambiguous and rejected.
+            if (method.publicKeyMultibase != null) {
+                val multibaseKey = multibaseKeyOf(method) ?: return null
+                if (!java.security.MessageDigest.isEqual(jwkKey, multibaseKey)) return null
             }
+            return jwkKey
         }
+        return multibaseKeyOf(method)
+    }
+
+    /** True when [method]'s Ed25519 JWK decodes to exactly the same bytes as its publicKeyMultibase. */
+    fun jwkMatchesMultibase(method: org.trustweave.did.model.VerificationMethod): Boolean {
+        val jwk = method.publicKeyJwk ?: return false
+        if (jwk["kty"] != "OKP" || jwk["crv"] != "Ed25519") return false
+        val jwkKey = decodeBase64Url(jwk["x"] as? String ?: return false)?.takeIf { it.size == KEY_SIZE } ?: return false
+        val multibaseKey = multibaseKeyOf(method) ?: return false
+        return java.security.MessageDigest.isEqual(jwkKey, multibaseKey)
+    }
+
+    private fun multibaseKeyOf(method: org.trustweave.did.model.VerificationMethod): ByteArray? {
         if (method.type !in ED25519_TYPES) return null
         val multibase = method.publicKeyMultibase ?: return null
         if (!multibase.startsWith("z")) return null

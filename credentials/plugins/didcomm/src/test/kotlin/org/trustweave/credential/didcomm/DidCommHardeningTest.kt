@@ -85,9 +85,9 @@ class DidCommHardeningTest {
             var now = 1_000L
             val store = InMemoryDidCommReplayStore(capacity = 10)
             val guards = DidCommReceiveGuards(store, defaultRetentionSeconds = 10, maxRetentionSeconds = 10_000) { now }
-            guards.check(message("long", expires = 5_000))
+            guards.check(message("long", expires = 5_000), "did:example:alice")
             now = 2_000 // past the default retention, still before expires_time
-            shouldThrow<DidCommException.UnpackingFailed> { guards.check(message("long", expires = 5_000)) }
+            shouldThrow<DidCommException.UnpackingFailed> { guards.check(message("long", expires = 5_000), "did:example:alice") }
         }
 
     @Test
@@ -102,13 +102,13 @@ class DidCommHardeningTest {
                         nowEpochSeconds: Long,
                     ): Boolean {
                         calls += messageId
-                        return messageId != "seen-elsewhere"
+                        return !messageId.endsWith(":seen-elsewhere")
                     }
                 }
             val guards = DidCommReceiveGuards(store)
             guards.check(message("fresh"))
             shouldThrow<DidCommException.UnpackingFailed> { guards.check(message("seen-elsewhere")) }
-            calls shouldBe listOf("fresh", "seen-elsewhere")
+            calls.map { it.substringAfterLast(":") } shouldBe listOf("fresh", "seen-elsewhere")
         }
 
     // ---------------------------------------------------------------- secret resolvers

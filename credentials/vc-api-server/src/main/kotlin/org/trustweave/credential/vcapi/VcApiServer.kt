@@ -26,7 +26,9 @@ import org.trustweave.observability.RequestBodyLimit
  * - `POST /credentials/issue`    — Issue a new Verifiable Credential
  * - `POST /credentials/verify`   — Verify a Verifiable Credential
  * - `POST /presentations/prove`  — Assemble and sign a Verifiable Presentation
- * - `POST /presentations/verify` — Verify a Verifiable Presentation
+ * - `POST /presentations/verify` — Verify a Verifiable Presentation (holder binding and a one-time
+ *   challenge are enforced by default, see [VcApiVerificationPolicy])
+ * - `POST /presentations/challenge` — Issue a one-time challenge for `/presentations/verify`
  *
  * Example:
  * ```kotlin
@@ -71,6 +73,7 @@ class VcApiServer(
     private var observability: HostObservability? = null
     private var authentication: HostAuthentication? = null
     private var trustEvaluator: TrustEvaluator? = null
+    private var verificationPolicy: VcApiVerificationPolicy = VcApiVerificationPolicy()
     private var maxRequestBytes: Long = RequestBodyLimit.DEFAULT_MAX_BYTES
 
     /** Configure tracing, protected metrics and optional admission limits before starting. */
@@ -102,6 +105,16 @@ class VcApiServer(
     fun withTrustEvaluator(evaluator: TrustEvaluator): VcApiServer {
         check(server == null) { "Configure the trust evaluator before starting the server" }
         trustEvaluator = evaluator
+        return this
+    }
+
+    /**
+     * Sets how `POST /presentations/verify` treats holder binding and challenges. The default
+     * enforces holder binding and requires a one-time challenge from `POST /presentations/challenge`.
+     */
+    fun withVerificationPolicy(policy: VcApiVerificationPolicy): VcApiServer {
+        check(server == null) { "Configure the verification policy before starting the server" }
+        verificationPolicy = policy
         return this
     }
 
@@ -146,7 +159,7 @@ class VcApiServer(
             )
         }
         routing {
-            configureVcApiRoutes(credentialService, trustEvaluator)
+            configureVcApiRoutes(credentialService, trustEvaluator, verificationPolicy)
         }
     }
 }

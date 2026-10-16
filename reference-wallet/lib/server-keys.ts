@@ -11,7 +11,7 @@ import 'server-only'
 import fs from 'fs'
 import path from 'path'
 import * as ed25519 from '@noble/ed25519'
-import { sha512 } from '@noble/hashes/sha512'
+import { sha512 } from '@noble/hashes/sha2.js'
 import {
   b64uDecode,
   b64uEncode,

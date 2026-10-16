@@ -101,7 +101,7 @@ class AlgorithmMappingTest {
     fun `test RSA 4096 algorithm mapping`() {
         val trustWeaveAlg = Algorithm.RSA.RSA_4096
         val googleKmsAlg = AlgorithmMapping.toGoogleKmsAlgorithm(trustWeaveAlg)
-        assertEquals(CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA256, googleKmsAlg)
+        assertEquals(CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA512, googleKmsAlg)
 
         val backToTrustWeave = AlgorithmMapping.fromGoogleKmsAlgorithm(googleKmsAlg)
         assertEquals(trustWeaveAlg, backToTrustWeave)

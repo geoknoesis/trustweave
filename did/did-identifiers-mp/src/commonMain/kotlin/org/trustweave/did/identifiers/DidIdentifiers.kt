@@ -1,8 +1,5 @@
 package org.trustweave.did.identifiers
 
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.identifiers.KeyId
-import org.trustweave.did.validation.DidValidator
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -10,6 +7,9 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.identifiers.KeyId
+import org.trustweave.did.validation.DidValidator
 
 /**
  * Decentralized Identifier (DID).
@@ -26,9 +26,9 @@ import kotlinx.serialization.encoding.Encoder
  */
 @Serializable(with = DidSerializer::class)
 class Did(
-    value: String
-) : Iri(value.substringBefore("#")), Comparable<Did> {
-
+    value: String,
+) : Iri(value.substringBefore("#")),
+    Comparable<Did> {
     init {
         // Use DidValidator for consistent validation logic
         val validation = DidValidator.validateFormat(value)
@@ -149,7 +149,10 @@ object DidSerializer : KSerializer<Did> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("Did", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: Did) {
+    override fun serialize(
+        encoder: Encoder,
+        value: Did,
+    ) {
         encoder.encodeString(value.value)
     }
 
@@ -160,7 +163,7 @@ object DidSerializer : KSerializer<Did> {
         } catch (e: IllegalArgumentException) {
             throw kotlinx.serialization.SerializationException(
                 "Failed to deserialize Did: ${e.message}",
-                e
+                e,
             )
         }
     }
@@ -184,7 +187,7 @@ object DidSerializer : KSerializer<Did> {
 @Serializable(with = VerificationMethodIdSerializer::class)
 data class VerificationMethodId(
     val did: Did,
-    val keyId: KeyId
+    val keyId: KeyId,
 ) {
     /**
      * The full verification method ID string.
@@ -213,18 +216,21 @@ data class VerificationMethodId(
          * @return VerificationMethodId instance
          * @throws IllegalArgumentException if the string cannot be parsed
          */
-        fun parse(vmIdString: String, baseDid: Did? = null): VerificationMethodId {
-            return when {
+        fun parse(
+            vmIdString: String,
+            baseDid: Did? = null,
+        ): VerificationMethodId =
+            when {
                 vmIdString.startsWith("did:") -> {
                     val parts = vmIdString.split("#", limit = 2)
                     if (parts.size != 2) {
                         throw IllegalArgumentException(
-                            "VerificationMethodId must contain '#' fragment: '$vmIdString'"
+                            "VerificationMethodId must contain '#' fragment: '$vmIdString'",
                         )
                     }
                     VerificationMethodId(
                         did = Did(parts[0]),
-                        keyId = KeyId("#${parts[1]}")
+                        keyId = KeyId("#${parts[1]}"),
                     )
                 }
                 vmIdString.startsWith("#") && baseDid != null -> {
@@ -232,10 +238,9 @@ data class VerificationMethodId(
                 }
                 else -> throw IllegalArgumentException(
                     "Cannot parse VerificationMethodId: '$vmIdString'. " +
-                    "Must be full DID URL (did:...:#...) or fragment (#...) with baseDid"
+                        "Must be full DID URL (did:...:#...) or fragment (#...) with baseDid",
                 )
             }
-        }
     }
 }
 
@@ -246,7 +251,10 @@ object VerificationMethodIdSerializer : KSerializer<VerificationMethodId> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("VerificationMethodId", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: VerificationMethodId) {
+    override fun serialize(
+        encoder: Encoder,
+        value: VerificationMethodId,
+    ) {
         encoder.encodeString(value.value)
     }
 
@@ -257,7 +265,7 @@ object VerificationMethodIdSerializer : KSerializer<VerificationMethodId> {
         } catch (e: IllegalArgumentException) {
             throw kotlinx.serialization.SerializationException(
                 "Failed to deserialize VerificationMethodId: ${e.message}",
-                e
+                e,
             )
         }
     }
@@ -271,8 +279,9 @@ object VerificationMethodIdSerializer : KSerializer<VerificationMethodId> {
  */
 @Serializable(with = DidUrlSerializer::class)
 @JvmInline
-value class DidUrl(val value: String) {
-
+value class DidUrl(
+    val value: String,
+) {
     /** The DID portion, with path, query and fragment removed. */
     val did: Did
         get() = Did(value.substringBefore("#").substringBefore("?").substringBefore("/"))
@@ -307,23 +316,32 @@ value class DidUrl(val value: String) {
      * [hasDuplicateParameters], which §3.2.2 identifies as ambiguous input.
      */
     val parameters: Map<String, String>
-        get() = query?.split('&')
-            ?.filter { it.isNotEmpty() }
-            ?.mapNotNull { pair ->
-                val eq = pair.indexOf('=')
-                if (eq <= 0) null else percentDecode(pair.substring(0, eq)) to percentDecode(pair.substring(eq + 1))
-            }
-            ?.reversed()
-            ?.toMap()
-            ?: emptyMap()
+        get() =
+            query
+                ?.split('&')
+                ?.filter { it.isNotEmpty() }
+                ?.mapNotNull { pair ->
+                    val eq = pair.indexOf('=')
+                    if (eq <= 0) {
+                        null
+                    } else {
+                        val name = percentDecode(pair.substring(0, eq))
+                        val value = percentDecode(pair.substring(eq + 1))
+                        if (name == null || value == null) null else name to value
+                    }
+                }?.reversed()
+                ?.toMap()
+                ?: emptyMap()
 
     /** True when a parameter name occurs more than once (§3.2.2: ambiguous input). */
     val hasDuplicateParameters: Boolean
         get() {
-            val names = query?.split('&')
-                ?.filter { it.isNotEmpty() }
-                ?.map { it.substringBefore('=') }
-                ?: return false
+            val names =
+                query
+                    ?.split('&')
+                    ?.filter { it.isNotEmpty() }
+                    ?.map { it.substringBefore('=') }
+                    ?: return false
             return names.size != names.toSet().size
         }
 
@@ -344,39 +362,59 @@ value class DidUrl(val value: String) {
 }
 
 /**
- * Decodes percent-encoded octets in a DID URL query component.
+ * Strictly decodes percent-encoded octets in a DID URL query component (RFC 3986 section 2.1).
  *
- * Percent-escapes are accumulated as a byte sequence and decoded as UTF-8, so multi-byte
- * characters (`%C3%A9` -> `e-acute`) survive. Decoding each escape independently as a char would
- * corrupt them. An escape that is not valid hex is left literal.
+ * Escapes are accumulated as a byte sequence and decoded as UTF-8, so multi-byte characters
+ * (`%C3%A9` -> `e-acute`) survive. Decoding is strict: an escape must be `%` followed by exactly
+ * two hex digits (a sign, as `toIntOrNull(16)` would accept in `%+3`, is not a hex digit), and the
+ * octets must form valid UTF-8 (they are never silently replaced by U+FFFD).
+ *
+ * @return the decoded text, or `null` when [raw] holds a malformed escape or invalid UTF-8
  */
-private fun percentDecode(raw: String): String {
+private fun percentDecode(raw: String): String? {
     if (!raw.contains('%')) return raw
+
+    fun hexDigit(c: Char): Int =
+        when (c) {
+            in '0'..'9' -> c - '0'
+            in 'a'..'f' -> c - 'a' + 10
+            in 'A'..'F' -> c - 'A' + 10
+            else -> -1
+        }
+
     val out = StringBuilder(raw.length)
     val pending = ArrayList<Byte>()
 
-    fun flush() {
-        if (pending.isEmpty()) return
-        out.append(pending.toByteArray().decodeToString())
+    fun flush(): Boolean {
+        if (pending.isEmpty()) return true
+        val text =
+            try {
+                pending.toByteArray().decodeToString(throwOnInvalidSequence = true)
+            } catch (e: CharacterCodingException) {
+                return false
+            }
+        out.append(text)
         pending.clear()
+        return true
     }
 
     var i = 0
     while (i < raw.length) {
         val c = raw[i]
-        if (c == '%' && i + 2 < raw.length) {
-            val code = raw.substring(i + 1, i + 3).toIntOrNull(16)
-            if (code != null) {
-                pending.add(code.toByte())
-                i += 3
-                continue
-            }
+        if (c == '%') {
+            if (i + 2 >= raw.length) return null
+            val high = hexDigit(raw[i + 1])
+            val low = hexDigit(raw[i + 2])
+            if (high < 0 || low < 0) return null
+            pending.add(((high shl 4) or low).toByte())
+            i += 3
+            continue
         }
-        flush()
+        if (!flush()) return null
         out.append(c)
         i++
     }
-    flush()
+    if (!flush()) return null
     return out.toString()
 }
 
@@ -384,11 +422,12 @@ object DidUrlSerializer : KSerializer<DidUrl> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("DidUrl", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: DidUrl) {
+    override fun serialize(
+        encoder: Encoder,
+        value: DidUrl,
+    ) {
         encoder.encodeString(value.value)
     }
 
-    override fun deserialize(decoder: Decoder): DidUrl {
-        return DidUrl(decoder.decodeString())
-    }
+    override fun deserialize(decoder: Decoder): DidUrl = DidUrl(decoder.decodeString())
 }

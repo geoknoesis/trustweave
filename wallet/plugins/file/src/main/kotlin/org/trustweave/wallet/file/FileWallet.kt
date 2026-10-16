@@ -28,6 +28,7 @@ import org.trustweave.wallet.WalletStatusResolver
 import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.resolveStoredStatus
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.security.GeneralSecurityException
@@ -395,7 +396,13 @@ class FileWallet private constructor(
                 return@withContext null
             }
 
-            val content = readBytes(credentialFile)
+            // A concurrent delete can remove the file between the exists check and the read.
+            val content =
+                try {
+                    readBytes(credentialFile)
+                } catch (_: NoSuchFileException) {
+                    return@withContext null
+                }
             val credentialJson =
                 if (secretKey != null) {
                     decrypt(content, aad(KIND_CREDENTIAL, sha256Hex(credentialId)))
@@ -561,9 +568,17 @@ class FileWallet private constructor(
             StoredCredentialRecord(handle, credential)
         }
 
+    /** Like [readRecord], but a record deleted concurrently (after listing) reads as absent. */
+    private fun readRecordOrNull(path: Path): StoredCredentialRecord? =
+        try {
+            readRecord(path)
+        } catch (_: NoSuchFileException) {
+            null
+        }
+
     override suspend fun listRecords(filter: CredentialFilter?): List<StoredCredentialRecord> =
         withContext(Dispatchers.IO) {
-            recordPaths().map { readRecord(it) }.filter { filter == null || matchesFilter(it.credential, filter) }
+            recordPaths().mapNotNull { readRecordOrNull(it) }.filter { filter == null || matchesFilter(it.credential, filter) }
         }
 
     override suspend fun recoverRecords(): CredentialRecoveryResult =
@@ -572,7 +587,7 @@ class FileWallet private constructor(
             val failures = mutableListOf<CredentialReadFailure>()
             for (path in recordPaths()) {
                 try {
-                    records.add(readRecord(path))
+                    readRecordOrNull(path)?.let { records.add(it) }
                 } catch (
                     error: CancellationException,
                 ) {

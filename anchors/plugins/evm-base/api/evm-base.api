@@ -4,6 +4,7 @@ public abstract class org/trustweave/anchor/evm/AbstractEvmAnchorClient : org/tr
 	public static final field OPTION_ACCEPT_ANY_SELF_SEND Ljava/lang/String;
 	public static final field OPTION_EXPECTED_RECIPIENT Ljava/lang/String;
 	public static final field OPTION_EXPECTED_SENDER Ljava/lang/String;
+	public static final field OPTION_MAX_GAS_PRICE Ljava/lang/String;
 	public static final field OPTION_MIN_CONFIRMATIONS Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/Map;Lorg/trustweave/anchor/evm/EvmChainConfig;)V
 	protected fun buildExtraMetadata (Ljava/lang/String;)Ljava/util/Map;
@@ -22,6 +23,7 @@ public abstract class org/trustweave/anchor/evm/AbstractEvmAnchorClient : org/tr
 	protected final fun readBlockTimestamp (Lorg/web3j/protocol/core/methods/response/TransactionReceipt;)Ljava/lang/Long;
 	protected fun readTransactionFromBlockchain (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun submitTransaction ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun submitTransaction ([BLorg/trustweave/anchor/payment/PaymentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected fun submitTransactionToBlockchain ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun tryEstimateGas ([BLjava/lang/String;)Ljava/math/BigInteger;
 	protected final fun waitForReceipt (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;

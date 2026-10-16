@@ -6,7 +6,9 @@ import org.trustweave.credential.avpauth.state.AdmissionRequest
 import org.trustweave.credential.avpauth.state.AuthorizationStore
 import org.trustweave.credential.avpauth.state.InMemoryAuthorizationStore
 import org.trustweave.credential.avpmicro.AvpMicro
+import org.trustweave.credential.avpmicro.verification.IssuerTrustPolicy
 import org.trustweave.credential.avpmicro.verification.PaymentVerificationResult
+import org.trustweave.credential.avpmicro.verification.StatusResolver
 import java.time.Instant
 
 sealed class AuthorizationVerdict {
@@ -35,6 +37,13 @@ sealed class AuthorizationVerdict {
  * of limits. Pass a `PostgresAuthorizationStore` for any deployment that is not exactly one
  * process. That is a correctness decision, not a scaling one.
  *
+ * **Fails closed without trust configuration.** A signature only proves the holder of the key named
+ * in the proof signed; [issuerTrust] decides whether that issuer may grant spending authority. With
+ * no policy every authorization is refused (`ISSUER_NOT_TRUSTED`). Likewise a credential carrying
+ * `credentialStatus` is refused (`STATUS_UNVERIFIABLE`) unless a [statusResolver] is supplied.
+ *
+ * @param issuerTrust which credential issuers are trusted; `null` refuses everything.
+ * @param statusResolver revocation lookup for credentials with `credentialStatus`.
  * @param clockSkewSeconds tolerance the stateless gate allows on expiry, mirrored here so a record
  *   is retained for as long as the authorization it describes is still presentable.
  */
@@ -44,6 +53,8 @@ class AuthorizationEngine
         private val clock: () -> Instant = Instant::now,
         private val store: AuthorizationStore = InMemoryAuthorizationStore(),
         private val clockSkewSeconds: Long = DEFAULT_CLOCK_SKEW_SECONDS,
+        private val issuerTrust: IssuerTrustPolicy? = null,
+        private val statusResolver: StatusResolver? = null,
     ) {
         suspend fun decide(
             authorization: JsonObject,
@@ -52,7 +63,15 @@ class AuthorizationEngine
             val now = clock()
 
             // 1. stateless gate (proofs + spending constraints + quote binding); reuse the parsed view
-            val result = AvpMicro.verifyPayment(authorization, now, quote = quote)
+            val result =
+                AvpMicro.verifyPayment(
+                    authorization,
+                    now,
+                    clockSkewSeconds = clockSkewSeconds,
+                    statusResolver = statusResolver,
+                    quote = quote,
+                    issuerTrust = issuerTrust,
+                )
             if (result is PaymentVerificationResult.Invalid) {
                 return AuthorizationVerdict.Reject(result.reason.name, result.detail)
             }

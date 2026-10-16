@@ -87,7 +87,7 @@ class EncryptedFileLocalKeyStoreTest {
                 salt = saltBytes(keyFile),
                 iterations = EncryptedFileLocalKeyStoreFactory.DEFAULT_PBKDF2_ITERATIONS,
             )
-        val plaintext = KeyEncryption(masterKey).decrypt(parseStoreFile(keyFile))
+        val plaintext = KeyEncryption(masterKey).decrypt(parseStoreFile(keyFile), "trustweave.didcomm.keystore.v2".toByteArray())
         assertEquals("{}", String(plaintext, Charsets.UTF_8), "Fresh store holds an encrypted empty key map")
     }
 

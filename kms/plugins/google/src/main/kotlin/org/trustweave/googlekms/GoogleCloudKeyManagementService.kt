@@ -444,13 +444,34 @@ class GoogleCloudKeyManagementService(
                     )
                 }
 
-                // Google Cloud KMS determines the algorithm from the key version, so no need to specify it
-                val signRequest =
+                // Google Cloud KMS determines the algorithm from the key version, so no need to specify it.
+                // ECDSA and RSA key versions sign a digest "produced with the same digest algorithm as
+                // specified by the key version's algorithm"; only pure Ed25519 takes the data itself.
+                val digestAlgorithm = AlgorithmMapping.digestAlgorithmFor(publicKeyResponse.algorithm)
+                val signRequestBuilder =
                     com.google.cloud.kms.v1.AsymmetricSignRequest
                         .newBuilder()
                         .setName(primaryVersionName)
-                        .setData(ByteString.copyFrom(data))
-                        .build()
+                if (digestAlgorithm == null) {
+                    signRequestBuilder.setData(ByteString.copyFrom(data))
+                } else {
+                    val digestBytes =
+                        ByteString.copyFrom(
+                            java.security.MessageDigest
+                                .getInstance(digestAlgorithm)
+                                .digest(data),
+                        )
+                    val digest =
+                        com.google.cloud.kms.v1.Digest
+                            .newBuilder()
+                    when (digestAlgorithm) {
+                        "SHA-256" -> digest.setSha256(digestBytes)
+                        "SHA-384" -> digest.setSha384(digestBytes)
+                        else -> digest.setSha512(digestBytes)
+                    }
+                    signRequestBuilder.setDigest(digest)
+                }
+                val signRequest = signRequestBuilder.build()
 
                 val signResponse = kmsClient.asymmetricSign(signRequest)
                 // Google Cloud KMS returns ECDSA signatures in ASN.1 DER; the KeyManagementService
@@ -459,7 +480,7 @@ class GoogleCloudKeyManagementService(
                 SignResult.Success(
                     EcdsaSignatureCodec.normalize(
                         signResponse.signature.toByteArray(),
-                        algorithm ?: keyAlgorithm,
+                        keyAlgorithm,
                     ),
                 )
             } catch (e: NotFoundException) {

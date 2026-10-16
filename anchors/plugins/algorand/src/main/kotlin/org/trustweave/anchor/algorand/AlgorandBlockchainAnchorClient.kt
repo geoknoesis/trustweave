@@ -55,6 +55,14 @@ import java.nio.charset.StandardCharsets
  * round time as the anchor timestamp. Without an indexer, reads of older
  * transactions fail with `NotFound` and the timestamp is left unset.
  *
+ * **Read checks**: a read only succeeds for a transaction that is confirmed (confirmed round above 0, and no
+ * pool error on the pending path), whose reported id equals the requested one (mandatory: a missing id is
+ * rejected, and on the pending path the id is recomputed from the signed transaction), and, when the
+ * `expectedSender` option (an Algorand address) is set, whose sender matches it.
+ *
+ * **Fee cap**: [PaymentContext.maxFee] is checked against the fee of the transaction(s) actually built for
+ * signing, not only against the earlier estimate.
+ *
  * **Confirmation**: writes wait for the transaction to be confirmed
  * (confirmed-round > 0), bounded by the `confirmationTimeoutMs` option
  * (default 30s).
@@ -78,6 +86,9 @@ class AlgorandBlockchainAnchorClient(
         private const val MAINNET_ALGOD_URL = "https://mainnet-api.algonode.cloud"
         private const val TESTNET_ALGOD_URL = "https://testnet-api.algonode.cloud"
         private const val BETANET_ALGOD_URL = "https://betanet-api.algonode.cloud"
+
+        /** Algorand address that must be the sender of every anchor this client reads (optional). */
+        const val OPTION_EXPECTED_SENDER = "expectedSender"
     }
 
     private val algodClient: AlgodClient
@@ -247,6 +258,7 @@ class AlgorandBlockchainAnchorClient(
                             anchoredBytes = submittedBytes,
                             mediaType = mediaType,
                             senderAccount = acct,
+                            paymentContext = ctx,
                             sponsor =
                                 sponsor ?: throw TreasuryException.SponsorNotAllowed(
                                     domainId = ctx.domainId,
@@ -254,7 +266,7 @@ class AlgorandBlockchainAnchorClient(
                                 ),
                         )
                     else -> {
-                        val (txHash, feeMicroAlgos) = submitTransaction(submittedBytes)
+                        val (txHash, feeMicroAlgos) = submitTransaction(submittedBytes, ctx)
                         AnchorResult(
                             ref =
                                 buildAnchorRef(
@@ -308,6 +320,7 @@ class AlgorandBlockchainAnchorClient(
         mediaType: String,
         senderAccount: Account,
         sponsor: SponsorEntry,
+        paymentContext: PaymentContext? = null,
     ): AnchorResult {
         val params =
             algodClient.TransactionParams().execute().body()
@@ -343,6 +356,8 @@ class AlgorandBlockchainAnchorClient(
                 .suggestedParams(params)
                 .flatFee(sponsorFlatFee)
                 .build()
+
+        requireWithinMaxFee(paymentContext, (dataTxn.fee ?: BigInteger.ZERO) + (sponsorTxn.fee ?: BigInteger.ZERO))
 
         TxGroup.assignGroupID(dataTxn, sponsorTxn)
 
@@ -414,7 +429,29 @@ class AlgorandBlockchainAnchorClient(
 
     protected override fun getBlockchainName(): String = "Algorand"
 
-    private suspend fun submitTransaction(noteData: ByteArray): Pair<String, BigInteger> {
+    /**
+     * Rejects a transaction whose fee, as built for signing, exceeds the caller's [PaymentContext.maxFee]
+     * (microAlgos). The earlier estimate in [writePayload] is only a guess; this checks the real number.
+     */
+    private fun requireWithinMaxFee(
+        paymentContext: PaymentContext?,
+        signedFeeMicroAlgos: BigInteger,
+    ) {
+        val cap = paymentContext?.maxFee ?: return
+        if (signedFeeMicroAlgos > cap.amount) {
+            throw TreasuryException.CallerCapExceeded(
+                correlationId = paymentContext.correlationId,
+                chainId = chainId,
+                estimated = TokenAmount(chainId, AssetRef.Native, signedFeeMicroAlgos),
+                callerMax = cap,
+            )
+        }
+    }
+
+    private suspend fun submitTransaction(
+        noteData: ByteArray,
+        paymentContext: PaymentContext? = null,
+    ): Pair<String, BigInteger> {
         if (account == null) {
             throw IllegalStateException("Account not configured. Provide 'privateKey' in options.")
         }
@@ -430,9 +467,11 @@ class AlgorandBlockchainAnchorClient(
                 .suggestedParams(params)
                 .build()
 
+        val feeMicroAlgos: BigInteger = tx.fee ?: BigInteger.ZERO
+        requireWithinMaxFee(paymentContext, feeMicroAlgos)
+
         val signedTx = account.signTransaction(tx)
         val txBytes = Encoder.encodeToMsgPack(signedTx)
-        val feeMicroAlgos: BigInteger = tx.fee ?: BigInteger.ZERO
 
         // Submit transaction to network and get response
         val response =
@@ -544,16 +583,18 @@ class AlgorandBlockchainAnchorClient(
         // so the id it reports is checked rather than assumed. A wrong answer would otherwise have
         // its note compared against the caller's payload, describing an anchor never read.
         val returnedId = transaction.id
-        if (returnedId != null && returnedId != txHash) {
+        if (returnedId != txHash) {
             throw BlockchainException.TransactionFailed(
                 chainId = chainId,
                 txHash = txHash,
                 operation = "readPayload",
                 reason =
-                    "Indexer returned transaction $returnedId for requested $txHash; " +
+                    "Indexer returned transaction ${returnedId ?: "without an id"} for requested $txHash; " +
                         "refusing to read an anchor from it",
             )
         }
+        requireConfirmed(txHash, transaction.confirmedRound)
+        requireExpectedSender(txHash, transaction.sender)
 
         val note =
             transaction.note
@@ -595,6 +636,42 @@ class AlgorandBlockchainAnchorClient(
                         "historical lookups.",
             )
 
+        val poolError = txInfo.poolError
+        if (!poolError.isNullOrBlank()) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = "Algorand node reports a pool error for the transaction: $poolError",
+            )
+        }
+        requireConfirmed(txHash, txInfo.confirmedRound)
+        val signedTx =
+            txInfo.txn?.tx
+                ?: throw TrustWeaveException.NotFound(resource = "Transaction body not found: $txHash")
+        // The id is recomputed from the returned transaction rather than trusted from the node's wrapper.
+        val computedId =
+            try {
+                signedTx.txID()
+            } catch (e: Exception) {
+                throw BlockchainException.TransactionFailed(
+                    chainId = chainId,
+                    txHash = txHash,
+                    operation = "readPayload",
+                    reason = "Cannot compute the id of the transaction the node returned: ${e.message}",
+                    cause = e,
+                )
+            }
+        if (computedId != txHash) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = "Node returned transaction $computedId for requested $txHash; refusing to read an anchor from it",
+            )
+        }
+        requireExpectedSender(txHash, signedTx.sender?.toString())
+
         val note =
             txInfo.txn?.tx?.note
                 ?: throw TrustWeaveException.NotFound(
@@ -616,5 +693,36 @@ class AlgorandBlockchainAnchorClient(
             // to get the actual round time.
             timestamp = null,
         )
+    }
+
+    /** A read is only meaningful for a transaction in a block: confirmed round above zero. */
+    private fun requireConfirmed(
+        txHash: String,
+        confirmedRound: Long?,
+    ) {
+        if ((confirmedRound ?: 0L) <= 0L) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = "Transaction is not confirmed (no confirmed round); refusing to read an anchor from it",
+            )
+        }
+    }
+
+    /** When the `expectedSender` option is set, the transaction must have been sent by that address. */
+    private fun requireExpectedSender(
+        txHash: String,
+        sender: String?,
+    ) {
+        val expected = (options[OPTION_EXPECTED_SENDER] as? String)?.takeIf { it.isNotBlank() } ?: return
+        if (sender != expected) {
+            throw BlockchainException.TransactionFailed(
+                chainId = chainId,
+                txHash = txHash,
+                operation = "readPayload",
+                reason = "Transaction was sent by ${sender ?: "an unknown sender"}, not the expected anchoring account $expected",
+            )
+        }
     }
 }

@@ -32,22 +32,22 @@ class BaseReadPathTest {
 
     @Test
     fun `reads a well-formed self-send anchor`() {
-        val read = FakeEvmJsonRpcServer(txHash).use { rpc -> client(rpc).use { runBlocking { it.readPayload(ref) } } }
+        val read = FakeEvmJsonRpcServer(txHash, chainId = 84532L).use { rpc -> client(rpc).use { runBlocking { it.readPayload(ref) } } }
         assertEquals(Json.parseToJsonElement("""{"anchored":"payload"}"""), read.payload)
     }
 
     @Test
     fun `rejects a reverted transaction`() {
-        assertRejected(FakeEvmJsonRpcServer(txHash, status = "0x0"))
+        assertRejected(FakeEvmJsonRpcServer(txHash, status = "0x0", chainId = 84532L))
     }
 
     @Test
     fun `rejects an unexpected sender`() {
-        assertRejected(FakeEvmJsonRpcServer(txHash), mapOf(AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER to stranger))
+        assertRejected(FakeEvmJsonRpcServer(txHash, chainId = 84532L), mapOf(AbstractEvmAnchorClient.OPTION_EXPECTED_SENDER to stranger))
     }
 
     @Test
     fun `rejects a transaction to another recipient`() {
-        assertRejected(FakeEvmJsonRpcServer(txHash, to = stranger))
+        assertRejected(FakeEvmJsonRpcServer(txHash, to = stranger, chainId = 84532L))
     }
 }

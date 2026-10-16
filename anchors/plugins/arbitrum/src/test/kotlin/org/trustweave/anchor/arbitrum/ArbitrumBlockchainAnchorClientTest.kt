@@ -67,7 +67,7 @@ class ArbitrumBlockchainAnchorClientTest {
 
         val gasLimit = ArbitrumBlockchainAnchorClient.gasLimitFrom(bogusEstimate, data)
 
-        assertEquals(EvmGas.intrinsicGas(data), gasLimit)
+        assertEquals(EvmGas.requiredGas(data), gasLimit)
     }
 
     @Test

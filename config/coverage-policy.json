@@ -24,6 +24,233 @@
     "org/trustweave/core/telemetry": {
       "LINE": 95.0,
       "BRANCH": 75.0
+    },
+    "org/trustweave/wallet": {
+      "LINE": 94.0,
+      "BRANCH": 80.0
+    },
+    "org/trustweave/wallet/exception": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/wallet/services": {
+      "LINE": 70.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/kms": {
+      "LINE": 84.0,
+      "BRANCH": 72.0
+    },
+    "org/trustweave/kms/exception": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/kms/internal": {
+      "LINE": 97.0,
+      "BRANCH": 82.0
+    },
+    "org/trustweave/kms/results": {
+      "LINE": 97.0,
+      "BRANCH": 85.0
+    },
+    "org/trustweave/kms/spi": {
+      "LINE": 56.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/kms/util": {
+      "LINE": 93.0,
+      "BRANCH": 80.0
+    },
+    "org/trustweave/trust": {
+      "LINE": 74.0,
+      "BRANCH": 52.0
+    },
+    "org/trustweave/trust/domain": {
+      "LINE": 94.0,
+      "BRANCH": 83.0
+    },
+    "org/trustweave/trust/domain/events": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/trust/domain/treasury": {
+      "LINE": 86.0,
+      "BRANCH": 58.0
+    },
+    "org/trustweave/trust/dsl": {
+      "LINE": 75.0,
+      "BRANCH": 54.0
+    },
+    "org/trustweave/trust/dsl/builders": {
+      "LINE": 88.0,
+      "BRANCH": 75.0
+    },
+    "org/trustweave/trust/dsl/credential": {
+      "LINE": 82.0,
+      "BRANCH": 65.0
+    },
+    "org/trustweave/trust/dsl/credential/jades": {
+      "LINE": 85.0,
+      "BRANCH": 79.0
+    },
+    "org/trustweave/trust/dsl/did": {
+      "LINE": 82.0,
+      "BRANCH": 56.0
+    },
+    "org/trustweave/trust/dsl/wallet": {
+      "LINE": 83.0,
+      "BRANCH": 72.0
+    },
+    "org/trustweave/trust/internal": {
+      "LINE": 95.0,
+      "BRANCH": 92.0
+    },
+    "org/trustweave/trust/services": {
+      "LINE": 85.0,
+      "BRANCH": 70.0
+    },
+    "org/trustweave/trust/types": {
+      "LINE": 88.0,
+      "BRANCH": 90.0
+    },
+    "org/trustweave/signatures/cades": {
+      "LINE": 79.0,
+      "BRANCH": 55.0
+    },
+    "org/trustweave/signatures/xades": {
+      "LINE": 84.0,
+      "BRANCH": 65.0
+    },
+    "org/trustweave/signatures/jades": {
+      "LINE": 87.0,
+      "BRANCH": 64.0
+    },
+    "org/trustweave/signatures/tsa": {
+      "LINE": 81.0,
+      "BRANCH": 58.0
+    },
+    "org/trustweave/signatures/revocation": {
+      "LINE": 80.0,
+      "BRANCH": 62.0
+    },
+    "org/trustweave/signatures/trustlists": {
+      "LINE": 86.0,
+      "BRANCH": 59.0
+    },
+    "org/trustweave/signatures/etsi/validation": {
+      "LINE": 80.0,
+      "BRANCH": 57.0
+    },
+    "org/trustweave/credential/proof/internal/engines": {
+      "LINE": 77.0,
+      "BRANCH": 60.0
+    },
+    "org/trustweave/credential/internal": {
+      "LINE": 70.0,
+      "BRANCH": 62.0
+    },
+    "org/trustweave/credential/revocation/internal": {
+      "LINE": 93.0,
+      "BRANCH": 72.0
+    },
+    "org/trustweave/credential/schema/internal": {
+      "LINE": 91.0,
+      "BRANCH": 76.0
+    },
+    "org/trustweave/credential/exchange/internal": {
+      "LINE": 75.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/resolver": {
+      "LINE": 76.0,
+      "BRANCH": 52.0
+    },
+    "org/trustweave/did/verification": {
+      "LINE": 72.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/rotation": {
+      "LINE": 96.0,
+      "BRANCH": 85.0
+    },
+    "org/trustweave/did/resolution": {
+      "LINE": 96.0,
+      "BRANCH": 47.0
+    },
+    "org/trustweave/did/util": {
+      "LINE": 81.0,
+      "BRANCH": 71.0
+    },
+    "org/trustweave/did/negotiation": {
+      "LINE": 97.0,
+      "BRANCH": 90.0
+    },
+    "org/trustweave/did/representation": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/did/events": {
+      "LINE": 97.0
+    },
+    "org/trustweave/did/storage": {
+      "LINE": 97.0,
+      "BRANCH": 78.0
+    },
+    "org/trustweave/did/batch": {
+      "LINE": 97.0
+    },
+    "org/trustweave/did/registry": {
+      "LINE": 82.0,
+      "BRANCH": 67.0
+    },
+    "org/trustweave/did/discovery": {
+      "LINE": 97.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/did/identifiers": {
+      "LINE": 94.0,
+      "BRANCH": 72.0
+    },
+    "org/trustweave/did/spi": {
+      "LINE": 67.0,
+      "BRANCH": 95.0
+    },
+    "org/trustweave/credential/did": {
+      "LINE": 90.0,
+      "BRANCH": 85.0
+    },
+    "org/trustweave/credential/exchange/exception": {
+      "LINE": 96.0,
+      "BRANCH": 76.0
+    },
+    "org/trustweave/credential/identifiers": {
+      "LINE": 95.0,
+      "BRANCH": 86.0
+    },
+    "org/trustweave/credential/results": {
+      "LINE": 99.0,
+      "BRANCH": 97.0
+    },
+    "org/trustweave/credential/template/internal": {
+      "LINE": 96.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/exchange/registry/internal": {
+      "LINE": 96.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/spi/proof": {
+      "LINE": 84.0,
+      "BRANCH": 96.0
+    },
+    "org/trustweave/credential/status": {
+      "LINE": 96.0
+    },
+    "org/trustweave/credential/internal/util": {
+      "LINE": 96.0
+    },
+    "org/trustweave/credential/exchange": {
+      "LINE": 54.0
     }
   }
 }

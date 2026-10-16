@@ -1,5 +1,6 @@
 public final class org/trustweave/googlekms/AlgorithmMapping {
 	public static final field INSTANCE Lorg/trustweave/googlekms/AlgorithmMapping;
+	public final fun digestAlgorithmFor (Lcom/google/cloud/kms/v1/CryptoKeyVersion$CryptoKeyVersionAlgorithm;)Ljava/lang/String;
 	public final fun extractKeyName (Ljava/lang/String;)Ljava/lang/String;
 	public final fun fromGoogleKmsAlgorithm (Lcom/google/cloud/kms/v1/CryptoKeyVersion$CryptoKeyVersionAlgorithm;)Lorg/trustweave/kms/Algorithm;
 	public final fun publicKeyToJwk ([BLorg/trustweave/kms/Algorithm;)Ljava/util/Map;

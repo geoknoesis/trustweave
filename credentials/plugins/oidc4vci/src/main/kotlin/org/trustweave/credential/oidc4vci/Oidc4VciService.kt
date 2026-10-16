@@ -1417,19 +1417,10 @@ class Oidc4VciService(
             "plain http is only allowed for localhost/127.0.0.1"
     }
 
-    /**
-     * `true` when [host] is loopback (localhost / 127.0.0.1 / ::1). Falls back to address
-     * resolution for other loopback-mapped names; IP literals resolve without a DNS lookup.
-     */
-    private fun isLoopbackHost(host: String?): Boolean {
-        if (host == null) return false
-        if (host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]") return true
-        return runCatching {
-            java.net.InetAddress
-                .getByName(host)
-                .isLoopbackAddress
-        }.getOrDefault(false)
-    }
+    /** `true` only for `localhost` or a loopback IP *literal*; never resolves DNS. */
+    private fun isLoopbackHost(host: String?): Boolean =
+        org.trustweave.core.net.HttpUrlPolicy
+            .isLoopbackHost(host)
 
     /**
      * Parses query parameters from a URL query string.

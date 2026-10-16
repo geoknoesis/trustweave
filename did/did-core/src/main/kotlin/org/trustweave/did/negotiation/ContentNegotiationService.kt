@@ -85,14 +85,11 @@ class DefaultContentNegotiationService : ContentNegotiationService {
             return defaultType
         }
 
-        // Parse Accept header (simplified - full implementation would handle q-values)
         val acceptedTypes = parseAcceptHeader(acceptHeader)
 
         // Find best match
-        return acceptedTypes
-            .firstOrNull { DidMediaTypes.isSupportedDocumentType(it) }
-            ?.let { DidMediaTypes.normalize(it) }
-            ?: defaultType
+        val best = acceptedTypes.firstOrNull { DidMediaTypes.isSupportedDocumentType(it) }
+        return if (best == null) defaultType else DidMediaTypes.normalize(best)
     }
 
     override suspend fun serializeDocument(
@@ -140,14 +137,29 @@ class DefaultContentNegotiationService : ContentNegotiationService {
             }
         }
 
+    /** A malformed or empty quality value counts as 1 (RFC 9110 leaves it undefined); others are clamped to 0..1. */
+    private fun parseQuality(raw: String): Double = (raw.trim().toDoubleOrNull() ?: 1.0).coerceIn(0.0, 1.0)
+
+    /**
+     * Parses [accept] into the acceptable media types, best first: higher `q` wins, `q=0` means
+     * not acceptable (RFC 9110 section 12.4.2) and equal `q` keeps the server's own preference order.
+     */
     private fun parseAcceptHeader(accept: String): List<String> =
         accept
             .split(',')
-            .map { it.trim().split(';')[0].trim() }
-            .sortedByDescending { type ->
-                val index = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.indexOf(DidMediaTypes.normalize(type))
-                if (index < 0) -1 else DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.size - index
-            }
+            .mapNotNull { part ->
+                val pieces = part.split(';').map { it.trim() }
+                val type = pieces[0]
+                val qParameter = pieces.drop(1).firstOrNull { it.startsWith("q=", ignoreCase = true) }
+                val q = if (qParameter == null) 1.0 else parseQuality(qParameter.substring(2))
+                if (type.isEmpty() || q <= 0.0) null else type to q
+            }.sortedWith(
+                compareByDescending<Pair<String, Double>> { it.second }
+                    .thenBy { (type, _) ->
+                        val index = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES.indexOf(DidMediaTypes.normalize(type))
+                        if (index < 0) Int.MAX_VALUE else index
+                    },
+            ).map { it.first }
 }
 
 /**

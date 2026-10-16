@@ -142,7 +142,7 @@ class DatabaseWalletTest {
     }
 
     @Test
-    fun `store rejects a credential id already owned by another wallet`() {
+    fun `store accepts a credential id that another wallet also holds`() {
         runBlocking {
             newDataSource().use { dataSource ->
                 val walletA = newWallet(dataSource)
@@ -155,9 +155,8 @@ class DatabaseWalletTest {
                     )
                 walletA.store(credential("cred-shared-id"))
 
-                assertFailsWith<WalletException.StorageError> {
-                    walletB.store(credential("cred-shared-id"))
-                }
+                assertEquals("cred-shared-id", walletB.store(credential("cred-shared-id")))
+                assertNotNull(walletA.get("cred-shared-id"))
             }
         }
     }

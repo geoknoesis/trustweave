@@ -1,6 +1,8 @@
 package org.trustweave.trust.domain
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.anchor.AnchorResult
 import org.trustweave.anchor.BlockchainAnchorClient
@@ -87,6 +89,9 @@ class TrustedDomainManager(
             try {
                 client.writePayload(payload, ctx, mediaType)
             } catch (cancelled: CancellationException) {
+                // The caller was cancelled mid-write: release the reservation even though this
+                // coroutine is no longer active, otherwise the funds stay held forever.
+                withContext(NonCancellable) { treasury.cancel(reservation) }
                 throw cancelled
             } catch (e: Throwable) {
                 emitSafely(

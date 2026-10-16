@@ -12,8 +12,7 @@ import javax.sql.DataSource
  *
  * All operations are wallet-scoped: tags and collection memberships are only
  * visible/mutable through the wallet that owns the underlying credential row
- * (credential ids are globally unique primary keys, so junction rows are
- * scoped via joins against credentials.wallet_id).
+ * (every table is keyed by wallet_id, and junction rows carry their own wallet_id).
  */
 internal open class DatabaseWalletSupport(
     protected val walletId: String,
@@ -96,24 +95,25 @@ internal open class DatabaseWalletSupport(
         val metadataSql =
             if (isPostgreSql(conn)) {
                 """
-            INSERT INTO credential_metadata (credential_id, created_at, updated_at)
-            VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT (credential_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
+            INSERT INTO credential_metadata (wallet_id, credential_id, created_at, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT (wallet_id, credential_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
             """
             } else {
                 """
             MERGE INTO credential_metadata m
-            USING (VALUES (?)) AS src(credential_id)
-            ON m.credential_id = src.credential_id
+            USING (VALUES (?, ?)) AS src(wallet_id, credential_id)
+            ON m.wallet_id = src.wallet_id AND m.credential_id = src.credential_id
             WHEN MATCHED THEN
                 UPDATE SET updated_at = CURRENT_TIMESTAMP
             WHEN NOT MATCHED THEN
-                INSERT (credential_id, created_at, updated_at)
-                VALUES (src.credential_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                INSERT (wallet_id, credential_id, created_at, updated_at)
+                VALUES (src.wallet_id, src.credential_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             """
             }
         conn.prepareStatement(metadataSql).use { metadataStmt ->
-            metadataStmt.setString(1, credentialId)
+            metadataStmt.setString(1, walletId)
+            metadataStmt.setString(2, credentialId)
             metadataStmt.executeUpdate()
         }
     }

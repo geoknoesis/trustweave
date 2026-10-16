@@ -1,5 +1,7 @@
 package org.trustweave.integrations.entra
 
+import org.trustweave.core.net.HttpUrlPolicy
+
 /**
  * Configuration for the Microsoft Entra Verified ID integration.
  *
@@ -31,14 +33,28 @@ data class EntraConfig(
         require(clientId.isNotBlank()) { "Microsoft Entra client ID must be specified" }
         require(clientSecret.isNotBlank()) { "Microsoft Entra client secret must be specified" }
         require(authorityDid.isNotBlank()) { "Entra Verified ID authority DID must be specified" }
+        require(TENANT_ID_PATTERN.matches(tenantId)) {
+            "Microsoft Entra tenant ID must be a tenant GUID or domain name (letters, digits, '.' and '-' only)"
+        }
         require(apiBaseUrl.startsWith("http")) {
             "apiBaseUrl must be an http(s) URL, got: $apiBaseUrl"
         }
-        require(tokenEndpointBaseUrl.startsWith("http")) {
-            "tokenEndpointBaseUrl must be an http(s) URL, got: $tokenEndpointBaseUrl"
+        // The token endpoint receives the client secret and the API receives bearer tokens: plaintext
+        // is only acceptable to a loopback host (local tests / sidecars).
+        require(HttpUrlPolicy.isHttpsOrLoopbackHttp(tokenEndpointBaseUrl)) {
+            "tokenEndpointBaseUrl must use https (plain http is only allowed for loopback hosts), got: $tokenEndpointBaseUrl"
+        }
+        require(HttpUrlPolicy.isHttpsOrLoopbackHttp(apiBaseUrl)) {
+            "apiBaseUrl must use https (plain http is only allowed for loopback hosts), got: $apiBaseUrl"
         }
         require(scope.isNotBlank()) { "scope must not be blank" }
     }
+
+    /** Redacts [clientSecret] so the config can be logged safely. */
+    override fun toString(): String =
+        "EntraConfig(tenantId=$tenantId, clientId=$clientId, clientSecret=***, authorityDid=$authorityDid, " +
+            "authorityVerificationKeyId=$authorityVerificationKeyId, apiBaseUrl=$apiBaseUrl, " +
+            "tokenEndpointBaseUrl=$tokenEndpointBaseUrl, scope=$scope)"
 
     /**
      * Full token endpoint URL for this tenant.
@@ -59,6 +75,8 @@ data class EntraConfig(
         get() = "${apiBaseUrl.trimEnd('/')}/v1.0/verifiableCredentials/createPresentationRequest"
 
     companion object {
+        private val TENANT_ID_PATTERN = Regex("^[A-Za-z0-9][A-Za-z0-9.-]{0,253}$")
+
         /** Public Verified ID Request Service endpoint. */
         const val DEFAULT_API_BASE_URL: String = "https://verifiedid.did.msidentity.com"
 

@@ -37,6 +37,9 @@ enum class StatefulRejection {
      * to make room would silently re-open replay, so the store refuses instead.
      */
     STORE_UNAVAILABLE,
+
+    /** The amount is zero or negative; a non-positive spend would lower the day's total. */
+    INVALID_AMOUNT,
 }
 
 /** The outcome of a single atomic check-and-record. */

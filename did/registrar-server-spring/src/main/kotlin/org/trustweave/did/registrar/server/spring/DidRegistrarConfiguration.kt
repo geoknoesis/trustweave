@@ -44,6 +44,15 @@ class DidRegistrarConfiguration {
     ): DidRegistrarService = DidRegistrarService(registrar, jobStorage)
 
     /**
+     * Bounds registrar request bodies (`/1.0/...`) to `trustweave.registrar.max-request-bytes`
+     * (default 1 MiB); larger bodies are answered with 413.
+     */
+    @Bean
+    fun registrarRequestBodyLimit(
+        @Value("\${trustweave.registrar.max-request-bytes:1048576}") maxRequestBytes: Long,
+    ): RegistrarRequestBodyLimit = RegistrarRequestBodyLimit(maxRequestBytes)
+
+    /**
      * Authentication for the mutating registrar endpoints, from
      * `trustweave.registrar.auth.bearer-token` (32-256 printable ASCII characters) or
      * `trustweave.registrar.auth.fronted-by-proxy` (a statement of what authenticates callers in

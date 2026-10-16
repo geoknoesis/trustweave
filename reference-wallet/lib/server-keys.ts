@@ -20,7 +20,7 @@ import {
   type Ed25519KeyPair,
 } from './crypto'
 
-ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m))
+ed25519.hashes.sha512 = sha512
 
 export interface ServerIdentity {
   did: string

@@ -9,8 +9,8 @@ import * as ed25519 from '@noble/ed25519'
 import { sha512 } from '@noble/hashes/sha2.js'
 import bs58 from 'bs58'
 
-// @noble/ed25519 v2.x requires a SHA-512 implementation to be wired up explicitly.
-ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m))
+// @noble/ed25519 requires a SHA-512 implementation to be wired up explicitly.
+ed25519.hashes.sha512 = sha512
 
 /** Raw 32-byte Ed25519 key pair. */
 export interface Ed25519KeyPair {
@@ -20,7 +20,7 @@ export interface Ed25519KeyPair {
 
 /** Generate a new Ed25519 key pair using a cryptographically secure RNG. */
 export function generateEd25519KeyPair(): Ed25519KeyPair {
-  const privateKey = ed25519.utils.randomPrivateKey()
+  const privateKey = ed25519.utils.randomSecretKey()
   const publicKey = ed25519.getPublicKey(privateKey)
   return { privateKey, publicKey }
 }

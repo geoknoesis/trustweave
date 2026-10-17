@@ -50,6 +50,7 @@ jobs:
           cache-dependency-path: reference-wallet/expo/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: npx expo install --check
       - run: npm test -- --runInBand
       - run: npx expo export --platform web
   android-wallet:

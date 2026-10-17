@@ -2,7 +2,7 @@
 
 The fourth reference wallet alongside [web](../README.md), [native Android](../android/README.md),
 and [native iOS](../ios/README.md). Single TypeScript codebase for iOS + Android (+ web)
-via Expo SDK 51.
+via Expo SDK 57.
 
 **Best for:** quick on-device demos, customer evaluations where the partner's team is
 already TypeScript-first, and anything where install-friction matters more than
@@ -57,6 +57,14 @@ cd reference-wallet
 npm install
 npm run dev -- -H 0.0.0.0   # bind to LAN, not just localhost
 ```
+
+## Patched build dependencies
+
+Two temporary local patches address high-severity advisories in Expo tooling.
+See [vendor provenance and maintenance](vendor/README.md) for the exact fixes,
+upstream references and removal criteria. Run `npm run test:security` and
+`npm run test:vendor` when changing these dependencies. CI also enforces
+`npm audit --audit-level=high`; no advisory exception is configured.
 
 ## What's in here
 
@@ -141,6 +149,15 @@ account for code signing.
 | OTA updates          | n/a           | no                       | no                    | yes (Expo Updates)      |
 
 Pick the right one for the audience.
+
+## Expo 57 dependency alignment
+
+Use Jest 29 with the Expo 57 Jest preset, and the SDK-recommended Reanimated 4.5.1.
+The wallet intentionally retains `react-native-get-random-values` 2: its declared React Native
+peer range is `>=0.81`, which includes this wallet's 0.86 runtime and preserves the RNG upgrade
+already on main. It is excluded only from Expo's bundled-version recommendation check;
+dependency auditing and security review still apply.
+
 
 ## License
 

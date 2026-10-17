@@ -2,7 +2,7 @@ import '../polyfills'
 
 import { Tabs } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { Text } from 'react-native'
+import { Text, type ColorValue } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AppErrorBoundary } from '@/components/AppErrorBoundary'
 import { theme } from '@/lib/credentialDisplay'
@@ -60,6 +60,6 @@ export default function RootLayout() {
   )
 }
 
-function TabIcon({ children, color }: { children: string; color: string }) {
+function TabIcon({ children, color }: { children: string; color: ColorValue }) {
   return <Text style={{ fontSize: 20, opacity: color === theme.primary ? 1 : 0.55 }}>{children}</Text>
 }

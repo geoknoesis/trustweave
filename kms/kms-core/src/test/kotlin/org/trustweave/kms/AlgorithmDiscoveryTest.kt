@@ -32,8 +32,16 @@ class AlgorithmDiscoveryTest {
     }
 
     @Test
-    fun `invalid algorithm name returns no providers`() {
+    fun `unregistered custom algorithm name returns no providers`() {
         assertTrue(AlgorithmDiscovery.findProvidersFor("InvalidAlgorithm").isEmpty())
+    }
+
+    @Test
+    fun `malformed algorithm names return no providers`() {
+        // A syntactically valid unknown name is a custom algorithm, not a parse failure.
+        for (name in listOf("", " ", "not an algorithm", "RSA", "RSA-9999")) {
+            assertTrue(AlgorithmDiscovery.findProvidersFor(name).isEmpty(), "Unexpected provider for '$name'")
+        }
     }
 
     @Test

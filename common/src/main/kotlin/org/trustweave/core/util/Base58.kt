@@ -9,6 +9,11 @@ import java.math.BigInteger
  * did:key / did:peer identifiers, and digest representations.
  */
 private const val BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+private val BASE58_RADIX = BigInteger.valueOf(58)
+private val BASE58_DIGITS =
+    IntArray(128) { -1 }.also { digits ->
+        BASE58_ALPHABET.forEachIndexed { index, character -> digits[character.code] = index }
+    }
 
 /**
  * Base58btc-encodes this byte array.
@@ -25,9 +30,9 @@ fun ByteArray.encodeBase58(): String {
     val sb = StringBuilder()
 
     while (num > BigInteger.ZERO) {
-        val remainder = num.mod(BigInteger.valueOf(58))
+        val (quotient, remainder) = num.divideAndRemainder(BASE58_RADIX)
         sb.append(BASE58_ALPHABET[remainder.toInt()])
-        num = num.divide(BigInteger.valueOf(58))
+        num = quotient
     }
 
     // Leading zero bytes are encoded as '1' characters and represent the most
@@ -46,15 +51,19 @@ fun ByteArray.encodeBase58(): String {
  * @throws IllegalArgumentException if the string contains a character outside the base58 alphabet.
  */
 fun String.decodeBase58(): ByteArray {
-    var num = BigInteger.ZERO
     var leadingZeros = 0
-    for (ch in this) { if (ch == '1') leadingZeros++ else break }
-    for (ch in this) {
-        val digit = BASE58_ALPHABET.indexOf(ch)
-        require(digit >= 0) { "Invalid base58 character: $ch" }
-        num = num.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(digit.toLong()))
+    while (leadingZeros < length && this[leadingZeros] == '1') leadingZeros++
+    var num = BigInteger.ZERO
+    for (index in leadingZeros until length) {
+        val character = this[index]
+        val digit = if (character.code < BASE58_DIGITS.size) BASE58_DIGITS[character.code] else -1
+        require(digit >= 0) { "Invalid base58 character: $character" }
+        num = num.multiply(BASE58_RADIX).add(BigInteger.valueOf(digit.toLong()))
     }
-    var bytes = num.toByteArray()
-    if (bytes.isNotEmpty() && bytes[0].toInt() == 0) bytes = bytes.sliceArray(1 until bytes.size)
-    return ByteArray(leadingZeros) { 0 } + bytes
+    val bytes = num.toByteArray()
+    // BigInteger emits a sign byte for zero and for positive values with the high bit set.
+    val signBytes = if (bytes[0] == 0.toByte()) 1 else 0
+    return ByteArray(leadingZeros + bytes.size - signBytes).also { decoded ->
+        bytes.copyInto(decoded, destinationOffset = leadingZeros, startIndex = signBytes)
+    }
 }

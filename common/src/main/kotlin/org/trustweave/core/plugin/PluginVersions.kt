@@ -18,7 +18,6 @@ package org.trustweave.core.plugin
  * @suppress This is an internal API
  */
 internal object PluginVersions {
-
     private val CONSTRAINT = Regex("""^(>=|<=|==|=|>|<)?\s*([0-9][0-9A-Za-z.+\-]*)$""")
 
     /**
@@ -32,7 +31,10 @@ internal object PluginVersions {
     }
 
     /** Compare two parsed versions; missing segments are treated as `0`. */
-    fun compare(a: List<Int>, b: List<Int>): Int {
+    fun compare(
+        a: List<Int>,
+        b: List<Int>,
+    ): Int {
         for (i in 0 until maxOf(a.size, b.size)) {
             val x = a.getOrElse(i) { 0 }
             val y = b.getOrElse(i) { 0 }
@@ -48,25 +50,32 @@ internal object PluginVersions {
      *   violated, or `null` if the range or version cannot be parsed (callers should
      *   skip enforcement and log).
      */
-    fun satisfies(version: String, range: String): Boolean? {
+    fun satisfies(
+        version: String,
+        range: String,
+    ): Boolean? {
         val v = parseVersion(version) ?: return null
         val constraints = range.split(',').map { it.trim() }.filter { it.isNotEmpty() }
         if (constraints.isEmpty()) return null
+        var satisfied = true
         for (constraint in constraints) {
             val match = CONSTRAINT.matchEntire(constraint) ?: return null
             val op = match.groupValues[1].ifEmpty { "=" }
             val bound = parseVersion(match.groupValues[2]) ?: return null
             val cmp = compare(v, bound)
-            val ok = when (op) {
-                ">=" -> cmp >= 0
-                "<=" -> cmp <= 0
-                ">" -> cmp > 0
-                "<" -> cmp < 0
-                "=", "==" -> cmp == 0
-                else -> return null
-            }
-            if (!ok) return false
+            val ok =
+                when (op) {
+                    ">=" -> cmp >= 0
+                    "<=" -> cmp <= 0
+                    ">" -> cmp > 0
+                    "<" -> cmp < 0
+                    "=", "==" -> cmp == 0
+                    else -> return null
+                }
+            // Validate the whole range, even after a mismatch: an unsupported constraint
+            // must yield null regardless of where it appears in the range.
+            if (!ok) satisfied = false
         }
-        return true
+        return satisfied
     }
 }

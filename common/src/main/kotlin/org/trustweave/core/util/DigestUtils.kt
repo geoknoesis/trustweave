@@ -1,8 +1,13 @@
 package org.trustweave.core.util
 
-import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import org.trustweave.core.exception.TrustWeaveException
 import java.security.MessageDigest
 
 /**
@@ -17,18 +22,18 @@ import java.security.MessageDigest
  * - Thread-safe digest computation
  */
 object DigestUtils {
-
     /**
      * Shared JSON instance for consistent serialization.
      * Configured with stable ordering and no pretty printing.
      */
-    private val json = Json {
-        prettyPrint = false
-        encodeDefaults = false
-        ignoreUnknownKeys = true
-        isLenient = false
-        coerceInputValues = false
-    }
+    private val json =
+        Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+            isLenient = false
+            coerceInputValues = false
+        }
 
     /**
      * Thread-local MessageDigest instance for SHA-256 computation.
@@ -41,9 +46,10 @@ object DigestUtils {
      * creating new MessageDigest instances for each operation, as it reuses instances
      * per thread while maintaining thread safety.
      */
-    private val sha256Digest: ThreadLocal<MessageDigest> = ThreadLocal.withInitial {
-        MessageDigest.getInstance("SHA-256")
-    }
+    private val sha256Digest: ThreadLocal<MessageDigest> =
+        ThreadLocal.withInitial {
+            MessageDigest.getInstance("SHA-256")
+        }
 
     /**
      * Maximum number of entries in the digest cache.
@@ -55,7 +61,7 @@ object DigestUtils {
     var maxCacheSize: Int = 1000
         set(value) {
             require(value >= 0) { "Cache size must be non-negative" }
-            synchronized(digestCache) {
+            synchronized(this) {
                 field = value
                 // Trim cache if new size is smaller
                 if (digestCache.size > value) {
@@ -79,28 +85,32 @@ object DigestUtils {
      * When the cache reaches maxCacheSize, the least recently used entries are evicted.
      * Access is synchronized for thread safety.
      */
-    private val digestCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
-            // Access maxCacheSize via field to avoid synchronization overhead in hot path
-            // This is safe because maxCacheSize is @Volatile
-            return size > this@DigestUtils.maxCacheSize
+    private val digestCache =
+        object : LinkedHashMap<String, String>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
+                // All cache access and configuration changes hold the DigestUtils monitor.
+                return size > this@DigestUtils.maxCacheSize
+            }
         }
-    }
-    
+
     /**
      * Synchronized wrapper for cache access to ensure thread safety.
      */
     @Synchronized
-    private fun getCachedDigest(canonical: String): String? {
-        return digestCache[canonical]
-    }
-    
+    private fun getCachedDigest(canonical: String): String? = if (isDigestCacheEnabled && maxCacheSize > 0) digestCache[canonical] else null
+
     /**
      * Synchronized wrapper for cache storage to ensure thread safety.
      */
     @Synchronized
-    private fun putCachedDigest(canonical: String, digest: String) {
-        digestCache[canonical] = digest
+    private fun putCachedDigest(
+        canonical: String,
+        digest: String,
+    ) {
+        // Configuration may have changed while the digest was computed outside the lock.
+        if (isDigestCacheEnabled && maxCacheSize > 0) {
+            digestCache[canonical] = digest
+        }
     }
 
     /**
@@ -113,9 +123,9 @@ object DigestUtils {
     @Volatile
     var isDigestCacheEnabled: Boolean = true
         set(value) {
-            field = value
-            if (!value) {
-                synchronized(digestCache) {
+            synchronized(this) {
+                field = value
+                if (!value) {
                     digestCache.clear()
                 }
             }
@@ -137,14 +147,14 @@ object DigestUtils {
             throw org.trustweave.core.exception.SerializationException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Parse error",
-                position = null
+                position = null,
             )
         } catch (e: Exception) {
-            // Catch any other unexpected exceptions (e.g., OutOfMemoryError, etc.)
+            // Preserve the public error type for unexpected parsing failures.
             throw org.trustweave.core.exception.SerializationException.InvalidJson(
                 jsonString = jsonString,
                 parseError = e.message ?: "Unknown error: ${e::class.simpleName}",
-                position = null
+                position = null,
             )
         }
     }
@@ -167,7 +177,7 @@ object DigestUtils {
         } catch (e: Exception) {
             throw org.trustweave.core.exception.SerializationException.EncodeFailed(
                 element = element.toString().take(200),
-                reason = e.message ?: "Unknown encoding error"
+                reason = e.message ?: "Unknown encoding error",
             )
         }
     }
@@ -175,11 +185,13 @@ object DigestUtils {
     /**
      * Recursively sorts keys in JSON objects.
      */
-    private fun sortKeys(element: JsonElement): JsonElement {
-        return when (element) {
+    private fun sortKeys(element: JsonElement): JsonElement =
+        when (element) {
             is JsonObject -> {
-                val sortedEntries = element.entries.sortedBy { it.key }
-                    .map { it.key to sortKeys(it.value) }
+                val sortedEntries =
+                    element.entries
+                        .sortedBy { it.key }
+                        .map { it.key to sortKeys(it.value) }
                 buildJsonObject {
                     sortedEntries.forEach { (key, value) ->
                         put(key, value)
@@ -193,7 +205,6 @@ object DigestUtils {
             }
             else -> element
         }
-    }
 
     /**
      * Computes SHA-256 digest of a string with multibase encoding (base58btc).
@@ -201,7 +212,7 @@ object DigestUtils {
      * If the string is valid JSON, it will be canonicalized first.
      *
      * @param data The string to digest (JSON or plain text)
-     * @return The multibase-encoded digest (e.g., "uABC123...")
+     * @return The multibase-encoded digest (e.g., "zABC123...")
      */
     fun sha256DigestMultibase(data: String): String {
         return try {
@@ -231,7 +242,7 @@ object DigestUtils {
      * **Performance**: Uses caching to avoid recomputing digests for the same content.
      *
      * @param element The JSON element to digest
-     * @return The multibase-encoded digest (e.g., "uABC123...")
+     * @return The multibase-encoded digest (e.g., "zABC123...")
      */
     fun sha256DigestMultibase(element: JsonElement): String {
         val canonical = canonicalizeJson(element)
@@ -256,7 +267,7 @@ object DigestUtils {
      * Computes SHA-256 digest from canonical JSON string.
      *
      * @param canonicalJson The canonical JSON string
-     * @return The multibase-encoded digest (prefix 'u' for base58btc)
+     * @return The multibase-encoded digest (prefix 'z' for base58btc)
      */
     private fun computeDigest(canonicalJson: String): String {
         val bytes = canonicalJson.toByteArray(Charsets.UTF_8)
@@ -279,13 +290,13 @@ object DigestUtils {
             // for environments with restricted security providers.
             throw TrustWeaveException.DigestFailed(
                 algorithm = "SHA-256",
-                reason = "Algorithm not available: ${e.message}"
+                reason = "Algorithm not available: ${e.message}",
             )
         } catch (e: Exception) {
             // Catch any other encoding/digest errors and wrap in TrustWeaveException
             throw TrustWeaveException.EncodeFailed(
                 operation = "base58-encoding",
-                reason = e.message ?: "Unknown encoding error"
+                reason = e.message ?: "Unknown encoding error",
             )
         }
     }
@@ -306,4 +317,3 @@ object DigestUtils {
     val cacheSize: Int
         @Synchronized get() = digestCache.size
 }
-

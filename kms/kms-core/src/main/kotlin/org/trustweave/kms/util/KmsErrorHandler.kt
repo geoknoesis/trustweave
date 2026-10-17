@@ -1,102 +1,72 @@
 package org.trustweave.kms.util
 
+import org.slf4j.Logger
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.kms.Algorithm
-import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
-import org.trustweave.kms.results.GetPublicKeyResult
-import org.trustweave.kms.results.SignResult
-import org.slf4j.Logger
+import kotlin.coroutines.cancellation.CancellationException
 
-/**
- * Common error handling utilities for KMS implementations.
- * 
- * Provides standardized error handling patterns to reduce code duplication
- * across different KMS plugin implementations.
- */
+/** Shared logging and failure conversion for KMS implementations. */
 object KmsErrorHandler {
-
     /**
-     * Handles generic exceptions and logs them appropriately.
+     * Logs an ordinary failure and returns null.
+     * Cancellation and interruption propagate without being logged as operation failures.
      */
     fun <T> handleGenericError(
         logger: Logger,
         context: Map<String, Any?>,
         operation: String,
-        e: Exception
+        e: Exception,
     ): T? {
-        logger.error("Unexpected error during $operation", context, e)
+        e.rethrowControlFlowException()
+        logger.error("Unexpected error during {}: {}", operation, context, e)
         return null
     }
 
-    /**
-     * Creates a standardized error context map for logging.
-     * 
-     * This utility helps create consistent error context across all KMS plugins,
-     * ensuring that error logs contain the same structured information.
-     * 
-     * @param keyId Optional key identifier
-     * @param algorithm Optional algorithm used
-     * @param operation Optional operation name (e.g., "generateKey", "sign")
-     * @param additional Additional context key-value pairs
-     * @return Map of error context for logging
-     * 
-     * **Example:**
-     * ```kotlin
-     * val context = KmsErrorHandler.createErrorContext(
-     *     keyId = keyId,
-     *     algorithm = algorithm,
-     *     operation = "generateKey",
-     *     additional = mapOf("requestId" to requestId)
-     * )
-     * logger.error("Operation failed", context, exception)
-     * ```
-     */
+    /** Creates logging context; [additional] fields override standard fields with the same name. */
     fun createErrorContext(
         keyId: KeyId? = null,
         algorithm: Algorithm? = null,
         operation: String? = null,
-        additional: Map<String, Any?> = emptyMap()
-    ): Map<String, Any?> {
-        return buildMap {
+        additional: Map<String, Any?> = emptyMap(),
+    ): Map<String, Any?> =
+        buildMap {
             keyId?.let { put("keyId", it.value) }
             algorithm?.let { put("algorithm", it.name) }
             operation?.let { put("operation", it) }
             putAll(additional)
         }
-    }
-    
+
     /**
-     * Handles generic exceptions and converts them to appropriate Result failure types.
-     * 
-     * This is a generic handler that can be used for operations that don't have
-     * provider-specific exception types.
-     * 
-     * @param logger Logger instance for error logging
-     * @param keyId Optional key identifier
-     * @param algorithm Optional algorithm
-     * @param operation Operation name for logging
-     * @param e Exception to handle
-     * @return Appropriate failure result based on exception type
+     * Logs an ordinary exception and converts it to a key-generation failure when [algorithm]
+     * is supplied, otherwise returns null. Cancellation and interruption propagate unchanged.
      */
     fun handleGenericException(
         logger: Logger,
         keyId: KeyId? = null,
         algorithm: Algorithm? = null,
         operation: String,
-        e: Exception
+        e: Exception,
     ): GenerateKeyResult.Failure? {
+        e.rethrowControlFlowException()
         val context = createErrorContext(keyId, algorithm, operation)
-        logger.error("Unexpected error during $operation", context, e)
-        
-        return when {
-            algorithm != null -> GenerateKeyResult.Failure.Error(
-                algorithm = algorithm,
+        logger.error("Unexpected error during {}: {}", operation, context, e)
+        return algorithm?.let {
+            GenerateKeyResult.Failure.Error(
+                algorithm = it,
                 reason = "Failed to $operation: ${e.message ?: "Unknown error"}",
-                cause = e
+                cause = e,
             )
-            else -> null
+        }
+    }
+
+    private fun Exception.rethrowControlFlowException() {
+        when (this) {
+            is CancellationException -> throw this
+            is InterruptedException -> {
+                Thread.currentThread().interrupt()
+                throw this
+            }
         }
     }
 }
-

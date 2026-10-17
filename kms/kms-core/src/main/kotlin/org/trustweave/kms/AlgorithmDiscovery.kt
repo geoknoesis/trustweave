@@ -1,6 +1,7 @@
 package org.trustweave.kms
 
 import org.trustweave.kms.internal.ProviderLoading
+import org.trustweave.kms.internal.ProviderSelection
 import org.trustweave.kms.spi.KeyManagementServiceProvider
 
 /**
@@ -27,14 +28,14 @@ object AlgorithmDiscovery {
         ProviderLoading.loadAll()
     }
 
+    private val selection by lazy { ProviderSelection(cachedProviders) }
+
     /**
      * Discovers all available KMS providers and their supported algorithms.
      *
      * @return Map of provider name to set of supported algorithms
      */
-    fun discoverProviders(): Map<String, Set<Algorithm>> {
-        return cachedProviders.associate { it.name to it.supportedAlgorithms }
-    }
+    fun discoverProviders(): Map<String, Set<Algorithm>> = cachedProviders.associate { it.name to it.supportedAlgorithms }
 
     /**
      * Finds all providers that support a specific algorithm.
@@ -42,11 +43,12 @@ object AlgorithmDiscovery {
      * @param algorithm The algorithm to search for
      * @return List of provider names that support the algorithm
      */
-    fun findProvidersFor(algorithm: Algorithm): List<String> {
-        return cachedProviders
-            .filter { it.supportsAlgorithm(algorithm) }
-            .map { it.name }
-    }
+    fun findProvidersFor(algorithm: Algorithm): List<String> =
+        buildList {
+            for (provider in cachedProviders) {
+                if (provider.supportsAlgorithm(algorithm)) add(provider.name)
+            }
+        }
 
     /**
      * Finds all providers that support an algorithm by name.
@@ -68,21 +70,8 @@ object AlgorithmDiscovery {
      */
     fun findBestProviderFor(
         algorithm: Algorithm,
-        preferredProvider: String? = null
-    ): String? {
-        // Check preferred provider first
-        preferredProvider?.let { providerName ->
-            cachedProviders.find { it.name == providerName }?.let { provider ->
-                if (provider.supportsAlgorithm(algorithm)) {
-                    return providerName
-                }
-            }
-        }
-
-        // Find any provider that supports it
-        val supportingProviders = findProvidersFor(algorithm)
-        return supportingProviders.firstOrNull()
-    }
+        preferredProvider: String? = null,
+    ): String? = selection.findBestProviderFor(algorithm, preferredProvider)
 
     /**
      * Gets a provider instance that supports a specific algorithm.
@@ -95,10 +84,6 @@ object AlgorithmDiscovery {
     fun createProviderFor(
         algorithm: Algorithm,
         preferredProvider: String? = null,
-        options: Map<String, Any?> = emptyMap()
-    ): KeyManagementService? {
-        val providerName = findBestProviderFor(algorithm, preferredProvider) ?: return null
-        return cachedProviders.find { it.name == providerName }?.create(options)
-    }
+        options: Map<String, Any?> = emptyMap(),
+    ): KeyManagementService? = selection.createProviderFor(algorithm, preferredProvider, options)
 }
-

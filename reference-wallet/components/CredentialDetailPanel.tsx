@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { credentialSummary, formatReceivedDate, humanClaimName } from '@/lib/credential-display'
+import { extractClaimsForDisplay, type ClaimRow } from '@/lib/credential-claims'
 import { portraitSrcFromStoredCredential } from '@/lib/portrait-display'
 import type { StoredCredential } from '@/lib/storage'
 import { PortraitFrame } from '@/components/PortraitFrame'
@@ -14,6 +16,16 @@ interface Props {
 export function CredentialDetailPanel({ cred, onClose, onDelete }: Props) {
   const summary = credentialSummary(cred)
   const portraitSrc = portraitSrcFromStoredCredential(cred)
+  // null = still decoding; [] = nothing displayable
+  const [claims, setClaims] = useState<ClaimRow[] | null>(null)
+
+  useEffect(() => {
+    let active = true
+    extractClaimsForDisplay(cred)
+      .then((c) => { if (active) setClaims(c) })
+      .catch(() => { if (active) setClaims([]) })
+    return () => { active = false }
+  }, [cred])
 
   return (
     <div className="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="cred-detail-title">
@@ -46,15 +58,41 @@ export function CredentialDetailPanel({ cred, onClose, onDelete }: Props) {
             <div>{summary.issuer}</div>
           </div>
 
-          {cred.selectivelyDisclosable.length > 0 && (
+          {claims === null ? (
             <div className="detail-section">
-              <div className="detail-label">Information you can choose to share</div>
-              <ul className="detail-claims">
-                {cred.selectivelyDisclosable.map((name) => (
-                  <li key={name}>{humanClaimName(name)}</li>
-                ))}
-              </ul>
+              <div className="detail-label">Details</div>
+              <p className="detail-subtitle">Reading credential…</p>
             </div>
+          ) : claims.length > 0 ? (
+            <div className="detail-section">
+              <div className="detail-label">Details</div>
+              <dl className="detail-fields">
+                {claims.map((r) => (
+                  <div
+                    className={['detail-field', r.value === null ? 'detail-group' : '', r.depth > 0 ? 'detail-nested' : ''].filter(Boolean).join(' ')}
+                    style={r.depth > 0 ? { marginLeft: `${r.depth * 0.9}rem` } : undefined}
+                    key={r.key}
+                  >
+                    <dt className="detail-field-name">
+                      {r.label}
+                      {r.shareable && <span className="detail-field-tag">shareable</span>}
+                    </dt>
+                    {r.value !== null && <dd className="detail-field-value">{r.value}</dd>}
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : (
+            cred.selectivelyDisclosable.length > 0 && (
+              <div className="detail-section">
+                <div className="detail-label">Information you can choose to share</div>
+                <ul className="detail-claims">
+                  {cred.selectivelyDisclosable.map((name) => (
+                    <li key={name}>{humanClaimName(name)}</li>
+                  ))}
+                </ul>
+              </div>
+            )
           )}
 
           <button type="button" className="detail-delete" onClick={onDelete}>

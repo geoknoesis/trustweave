@@ -1,6 +1,7 @@
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import type { StoredCredential } from '@/lib/storage'
 import { credentialSummary, formatReceivedDate, humanClaimName, theme } from '@/lib/credentialDisplay'
+import { extractClaimsForDisplay } from '@/lib/credentialClaims'
 import { extractPortrait } from '@/lib/credentialImage'
 
 interface Props {
@@ -14,6 +15,7 @@ export function CredentialDetailModal({ cred, visible, onClose, onDelete }: Prop
   if (!cred) return null
   const summary = credentialSummary(cred)
   const portrait = extractPortrait(cred)
+  const claims = extractClaimsForDisplay(cred)
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -48,7 +50,20 @@ export function CredentialDetailModal({ cred, visible, onClose, onDelete }: Prop
           <Text style={styles.sectionValue}>{summary.issuer}</Text>
         </View>
 
-        {cred.selectivelyDisclosable.length > 0 && (
+        {claims.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Details</Text>
+            {claims.map((r) => (
+              <View key={r.key} style={[styles.fieldRow, r.depth > 0 ? { marginLeft: r.depth * 12, borderLeftWidth: 2, borderLeftColor: theme.border, paddingLeft: 8 } : null]}>
+                <View style={styles.fieldHead}>
+                  <Text style={styles.fieldName}>{r.label}</Text>
+                  {r.shareable ? <Text style={styles.fieldTag}>shareable</Text> : null}
+                </View>
+                {r.value !== null ? <Text style={styles.fieldValue}>{r.value}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : cred.selectivelyDisclosable.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Information you can choose to share</Text>
             {cred.selectivelyDisclosable.map((name) => (
@@ -58,7 +73,7 @@ export function CredentialDetailModal({ cred, visible, onClose, onDelete }: Prop
               </View>
             ))}
           </View>
-        )}
+        ) : null}
 
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
           <Text style={styles.deleteText}>Remove from wallet</Text>
@@ -124,6 +139,26 @@ const styles = StyleSheet.create({
   claimRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   claimDot: { color: theme.primary, fontSize: 16 },
   claimName: { fontSize: 15, color: theme.text },
+  fieldRow: { gap: 2 },
+  fieldHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  fieldName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  fieldTag: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.primary,
+    backgroundColor: theme.successBg,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  fieldValue: { fontSize: 15, color: theme.text },
   deleteBtn: {
     alignSelf: 'center',
     paddingVertical: 12,

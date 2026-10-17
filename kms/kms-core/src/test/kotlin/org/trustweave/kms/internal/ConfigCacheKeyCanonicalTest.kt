@@ -14,6 +14,19 @@ class ConfigCacheKeyCanonicalTest {
     private fun key(options: Map<String, Any?>) = ConfigCacheKey.create("p", options)
 
     @Test
+    fun `cache keys preserve the established lowercase SHA-256 format`() {
+        // Fixed vectors protect compatibility when hashing or encoding is refactored.
+        assertEquals(
+            "p:1e0177baf625e5391b9d158f6dc4fb8827445f547b50d7d8d9c7ca3f41d86ce8",
+            key(emptyMap()),
+        )
+        assertEquals(
+            "p:ad3e6094accc148d233a95581040aa9f93598e3c15f5940af5fe5fce55d6eb16",
+            key(mapOf("region" to "us-east-1")),
+        )
+    }
+
+    @Test
     fun `delimiters inside values cannot forge another configuration`() {
         assertNotEquals(key(mapOf("a" to "x:b=y")), key(mapOf("a" to "x", "b" to "y")))
         assertNotEquals(key(mapOf("a" to listOf("x,y"))), key(mapOf("a" to listOf("x", "y"))))

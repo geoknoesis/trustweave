@@ -183,7 +183,7 @@ object EcdsaSignatureCodec {
         if (bytes.size < 8) return null
         if ((bytes[0].toInt() and 0xFF) != 0x30) return null
         val (seqLen, seqContentStart) = readLength(bytes, 1) ?: return null
-        if (seqContentStart + seqLen != bytes.size) return null
+        if (seqLen != bytes.size - seqContentStart) return null
 
         val (r, afterR) = readInteger(bytes, seqContentStart) ?: return null
         val (s, afterS) = readInteger(bytes, afterR) ?: return null
@@ -224,7 +224,8 @@ object EcdsaSignatureCodec {
         if (offset >= bytes.size) return null
         if ((bytes[offset].toInt() and 0xFF) != 0x02) return null
         val (len, contentStart) = readLength(bytes, offset + 1) ?: return null
-        if (len < 1 || contentStart + len > bytes.size) return null
+        // Subtract before comparing: an untrusted length can overflow an addition.
+        if (len < 1 || len > bytes.size - contentStart) return null
         val value = BigInteger(bytes.copyOfRange(contentStart, contentStart + len))
         return value to contentStart + len
     }
@@ -246,17 +247,22 @@ object EcdsaSignatureCodec {
      * Encodes a DER tag + length header. Supports lengths up to 65535 bytes, which is far above
      * any ECDSA signature size.
      */
-    private fun encodeDerHeader(tag: Int, length: Int): ByteArray = when {
-        length < 0x80 -> byteArrayOf(tag.toByte(), length.toByte())
-        length < 0x100 -> byteArrayOf(tag.toByte(), 0x81.toByte(), length.toByte())
-        length < 0x10000 -> byteArrayOf(
-            tag.toByte(),
-            0x82.toByte(),
-            (length ushr 8).toByte(),
-            length.toByte()
-        )
-        else -> throw IllegalArgumentException("DER content too large: $length bytes")
-    }
+    private fun encodeDerHeader(
+        tag: Int,
+        length: Int,
+    ): ByteArray =
+        when {
+            length < 0x80 -> byteArrayOf(tag.toByte(), length.toByte())
+            length < 0x100 -> byteArrayOf(tag.toByte(), 0x81.toByte(), length.toByte())
+            length < 0x10000 ->
+                byteArrayOf(
+                    tag.toByte(),
+                    0x82.toByte(),
+                    (length ushr 8).toByte(),
+                    length.toByte(),
+                )
+            else -> throw IllegalArgumentException("DER content too large: $length bytes")
+        }
 
     /**
      * Writes the unsigned big-endian representation of [value] into [dest] at [offset],
@@ -264,7 +270,12 @@ object EcdsaSignatureCodec {
      *
      * @throws IllegalArgumentException if [value] does not fit in [width] bytes.
      */
-    private fun writeFixedWidth(value: BigInteger, dest: ByteArray, offset: Int, width: Int) {
+    private fun writeFixedWidth(
+        value: BigInteger,
+        dest: ByteArray,
+        offset: Int,
+        width: Int,
+    ) {
         val raw = value.toByteArray()
         // Strip the sign byte BigInteger prepends when the MSB of a positive value is set.
         val start = if (raw.size > 1 && raw[0] == 0.toByte()) 1 else 0

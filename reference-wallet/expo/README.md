@@ -142,6 +142,15 @@ account for code signing.
 
 Pick the right one for the audience.
 
+## Expo 57 dependency alignment
+
+Use Jest 29 with the Expo 57 Jest preset, and the SDK-recommended Reanimated 4.5.1.
+The wallet intentionally retains `react-native-get-random-values` 2: its declared React Native
+peer range is `>=0.81`, which includes this wallet's 0.86 runtime and preserves the RNG upgrade
+already on main. It is excluded only from Expo's bundled-version recommendation check;
+dependency auditing and security review still apply.
+
+
 ## License
 
 See the repository [LICENSE](../../LICENSE) and [commercial license terms](../../LICENSE-COMMERCIAL.md).

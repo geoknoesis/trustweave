@@ -51,6 +51,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npx expo install --check
+      - run: npm run test:security
+      - run: npm run test:vendor
+      - run: npm audit --audit-level=high
       - run: npm test -- --runInBand
       - run: npx expo export --platform web
   android-wallet:

@@ -1,0 +1,6 @@
+* text eol=lf
+# Unified diffs contain a context prefix on blank lines; upstream files retain
+# their original final blank lines for provenance verification.
+braces/** whitespace=-blank-at-eof
+node-forge/LICENSE whitespace=-blank-at-eof
+*.patch -whitespace

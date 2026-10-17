@@ -2,6 +2,8 @@ package org.trustweave.core.plugin
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -57,8 +59,8 @@ internal interface PluginRegistry {
      * Unregister a plugin.
      *
      * If the registered instance implements [PluginLifecycle], `stop()` and `cleanup()`
-     * are invoked after the plugin has been retracted; teardown failures are logged and
-     * never propagated.
+     * are invoked after the plugin has been retracted. Ordinary teardown failures are logged;
+     * cancellation propagates after cleanup completes.
      *
      * @param pluginId Plugin ID to unregister
      */
@@ -163,8 +165,8 @@ internal interface PluginRegistry {
  * [PluginLifecycle.initialize] + [PluginLifecycle.start] during [register] (a plugin
  * that fails either never becomes visible — the registration is rolled back and a
  * [PluginException.InitializationFailed] propagates), and [PluginLifecycle.stop] +
- * [PluginLifecycle.cleanup] during [unregister]/[clear] (teardown failures are logged,
- * never propagated, so unregistration always completes). Lifecycle methods are suspend
+ * [PluginLifecycle.cleanup] during [unregister]/[clear] (ordinary teardown failures are logged;
+ * cancellation propagates after cleanup completes). Lifecycle methods are suspend
  * functions. The `...Suspending` variants await them without blocking; the plain `register` /
  * `unregister` / `clear` are BLOCKING (they park the calling thread in [runBlocking] until the
  * lifecycle finishes) and exist for synchronous callers only. Lifecycle methods run
@@ -320,8 +322,8 @@ internal class DefaultPluginRegistry(
                 // they are logged and attached to it as suppressed exceptions so they are reported.
                 if (t !is Error) {
                     val teardownFailures =
-                        withContext(NonCancellable) { teardownAfterFailedStart(metadata.id, instance, stopFirst = initialized) }
-                    teardownFailures.forEach { t.addSuppressed(it) }
+                        withContext(NonCancellable) { teardownLifecycle(metadata.id, instance, stopFirst = initialized) }
+                    teardownFailures.filter { it !== t }.forEach { t.addSuppressed(it) }
                 }
                 when (t) {
                     is CancellationException -> throw t // cancellation is not an initialization failure
@@ -430,37 +432,27 @@ internal class DefaultPluginRegistry(
 
     /**
      * Drive [PluginLifecycle.stop] + [PluginLifecycle.cleanup] after a plugin has been
-     * retracted. Teardown failures must never break unregistration: every exception is
-     * logged and swallowed, and cleanup() still runs when stop() fails.
+     * retracted. Ordinary exceptions are logged; cancellation is deferred until cleanup finishes.
      */
     private suspend fun teardownQuietly(
         pluginId: String,
         lifecycle: PluginLifecycle,
     ) {
-        try {
-            if (!lifecycle.stop()) {
-                logger.warn("Plugin '{}' stop() returned false during unregistration", pluginId)
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.warn("Plugin '{}' stop() failed during unregistration; continuing with cleanup", pluginId, e)
+        // Once retracted, resources must be released even if the caller is cancelled.
+        val failures = withContext(NonCancellable) { teardownLifecycle(pluginId, lifecycle, stopFirst = true) }
+        failures.filterIsInstance<CancellationException>().firstOrNull()?.let { cancellation ->
+            failures.filter { it !== cancellation }.forEach { cancellation.addSuppressed(it) }
+            throw cancellation
         }
-        try {
-            lifecycle.cleanup()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logger.warn("Plugin '{}' cleanup() failed during unregistration", pluginId, e)
-        }
+        currentCoroutineContext().ensureActive()
     }
 
     /**
-     * Releases a plugin whose registration failed. [stopFirst] is true when initialize() succeeded
-     * (so start() was attempted). cleanup() always runs, even when stop() throws or returns false.
-     * Returns the failures instead of throwing so the caller can report them next to the original error.
+     * Releases a plugin, stopping it first when initialization succeeded. The caller supplies a
+     * NonCancellable context. Cleanup still runs when stop throws an exception or returns false.
+     * Returns exceptions, including cancellation, so the caller can propagate them after cleanup.
      */
-    private suspend fun teardownAfterFailedStart(
+    private suspend fun teardownLifecycle(
         pluginId: String,
         lifecycle: PluginLifecycle,
         stopFirst: Boolean,
@@ -468,20 +460,16 @@ internal class DefaultPluginRegistry(
         val failures = mutableListOf<Throwable>()
         if (stopFirst) {
             try {
-                if (!lifecycle.stop()) logger.warn("Plugin '{}' stop() returned false after a failed start", pluginId)
-            } catch (e: CancellationException) {
-                throw e
+                if (!lifecycle.stop()) logger.warn("Plugin '{}' stop() returned false during teardown", pluginId)
             } catch (e: Exception) {
-                logger.warn("Plugin '{}' stop() failed after a failed start; continuing with cleanup", pluginId, e)
+                logger.warn("Plugin '{}' stop() failed during teardown; continuing with cleanup", pluginId, e)
                 failures += e
             }
         }
         try {
             lifecycle.cleanup()
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
-            logger.warn("Plugin '{}' cleanup() failed after a failed start", pluginId, e)
+            logger.warn("Plugin '{}' cleanup() failed during teardown", pluginId, e)
             failures += e
         }
         return failures
@@ -523,7 +511,7 @@ internal class DefaultPluginRegistry(
             }
 
         // Teardown AFTER full retraction and outside the lock: the plugin is no longer
-        // observable, and any stop()/cleanup() failure is logged but never breaks unregistration.
+        // observable. Ordinary failures are logged; cancellation follows cleanup.
         if (retracted is PluginLifecycle) {
             teardownQuietly(pluginId, retracted)
         }
@@ -619,10 +607,22 @@ internal class DefaultPluginRegistry(
                 snapshot
             }
 
-        // Teardown after retraction and outside the lock; failures are logged, never propagated.
+        // Finish every teardown before propagating cancellation, so no retracted plugin leaks.
+        var cancellation: CancellationException? = null
         lifecycleInstances.forEach { (id, lifecycle) ->
-            teardownQuietly(id, lifecycle)
+            try {
+                teardownQuietly(id, lifecycle)
+            } catch (e: CancellationException) {
+                val previous = cancellation
+                if (previous == null) {
+                    cancellation = e
+                } else if (previous !== e) {
+                    previous.addSuppressed(e)
+                }
+            }
         }
+        cancellation?.let { throw it }
+        currentCoroutineContext().ensureActive()
     }
 
     override fun isRegistered(pluginId: String): Boolean = plugins.containsKey(pluginId)

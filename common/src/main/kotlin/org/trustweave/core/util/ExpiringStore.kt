@@ -38,7 +38,13 @@ public class ExpiringStore<T>(
         check(!closed) { "Exchange store closed" }
         purge()
         if (key !in entries && entries.size >= capacity) throw SessionCapacityExceededException(capacity)
-        entries[key] = Entry(value, entries[key]?.expires ?: (clock.millis() + ttlMillis))
+        val expires =
+            entries[key]?.expires ?: run {
+                val now = clock.millis()
+                // A large positive TTL must not wrap into an already expired timestamp.
+                if (now > Long.MAX_VALUE - ttlMillis) Long.MAX_VALUE else now + ttlMillis
+            }
+        entries[key] = Entry(value, expires)
     }
 
     @Synchronized
@@ -48,7 +54,8 @@ public class ExpiringStore<T>(
 
     @Synchronized
     fun purge() {
-        entries.entries.removeIf { it.value.expires <= clock.millis() }
+        val now = clock.millis()
+        entries.entries.removeIf { it.value.expires <= now }
     }
 
     @Synchronized

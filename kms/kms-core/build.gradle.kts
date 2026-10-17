@@ -5,13 +5,19 @@ plugins {
 }
 
 group = "org.trustweave"
+
+// Tests exercise internal provider selection without exposing it as public API.
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileTestKotlin") {
+    friendPaths.from(tasks.named<Jar>("jar").flatMap { it.archiveFile })
+}
+
 dependencies {
-    implementation(project(":common"))   // Root-level common (exceptions, common utilities)
+    implementation(project(":common")) // Root-level common (exceptions, common utilities)
     // KMS uses TrustWeaveException from root common module
 
     // Kotlinx coroutines for suspend functions in KeyManagementService interface
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // SLF4J for logging utilities (optional - plugins provide implementation)
     compileOnly(libs.slf4j.api)
 
@@ -21,7 +27,7 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     // Add SLF4J for testing logging utilities
     testImplementation(libs.slf4j.api)
-    
+
     // TestFixtures dependencies - exposed to consumers
     testFixturesImplementation(project(":common"))
     testFixturesImplementation(libs.kotlinx.coroutines.core)
@@ -38,7 +44,7 @@ kover {
                     "*.*Test",
                     "*.*Test\$*",
                     "*.*TestKt",
-                    "*.*TestKt\$*"
+                    "*.*TestKt\$*",
                 )
             }
         }
@@ -57,7 +63,10 @@ kover {
 // Ensure Kover directories exist before test task runs
 tasks.test.configure {
     doFirst {
-        layout.buildDirectory.dir("tmp/test").get().asFile.mkdirs()
+        layout.buildDirectory
+            .dir("tmp/test")
+            .get()
+            .asFile
+            .mkdirs()
     }
 }
-

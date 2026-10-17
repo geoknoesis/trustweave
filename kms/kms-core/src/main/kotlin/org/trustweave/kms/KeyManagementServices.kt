@@ -3,8 +3,13 @@ package org.trustweave.kms
 import org.trustweave.kms.internal.ConfigCacheKey
 import org.trustweave.kms.internal.ProviderLoading
 import org.trustweave.kms.spi.KeyManagementServiceProvider
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * Factory for creating KeyManagementService instances.
@@ -58,6 +63,9 @@ object KeyManagementServices {
      */
     private val isShutdown = AtomicBoolean(false)
 
+    // Concurrent creations share the read lock; shutdown exclusively drains the cache.
+    private val lifecycleLock = ReentrantReadWriteLock(true)
+
     /**
      * Shutdown hook registered with JVM to ensure cleanup on application exit.
      */
@@ -89,17 +97,7 @@ object KeyManagementServices {
 
         val cacheKey = ConfigCacheKey.create(providerName, options)
 
-        // computeIfAbsent is atomic — the factory executes at most once per cache key, unlike
-        // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
-        // multiple times, leaking SDK clients with open connection pools.
-        return instanceCache.computeIfAbsent(cacheKey) {
-            val provider =
-                cachedProviders.find { it.name == providerName }
-                    ?: throw IllegalArgumentException(
-                        "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
-                    )
-            provider.create(options)
-        }
+        return createCached(providerName, cacheKey) { it.create(options) }
     }
 
     /**
@@ -122,18 +120,26 @@ object KeyManagementServices {
 
         val cacheKey = ConfigCacheKey.create(providerName, options)
 
-        // computeIfAbsent is atomic — the factory executes at most once per cache key, unlike
-        // the Kotlin stdlib getOrPut which is explicitly non-atomic and may call the lambda
-        // multiple times, leaking SDK clients with open connection pools.
-        return instanceCache.computeIfAbsent(cacheKey) {
-            val provider =
-                cachedProviders.find { it.name == providerName }
-                    ?: throw IllegalArgumentException(
-                        "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
-                    )
-            provider.create(options)
-        }
+        return createCached(providerName, cacheKey) { it.create(options) }
     }
+
+    private fun createCached(
+        providerName: String,
+        cacheKey: String,
+        create: (KeyManagementServiceProvider) -> KeyManagementService,
+    ): KeyManagementService =
+        lifecycleLock.read {
+            // Hashing may have overlapped shutdown; check again before creating or returning a client.
+            checkShutdown()
+            instanceCache.computeIfAbsent(cacheKey) {
+                val provider =
+                    cachedProviders.find { it.name == providerName }
+                        ?: throw IllegalArgumentException(
+                            "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
+                        )
+                create(provider)
+            }
+        }
 
     /**
      * Gets all available provider names.
@@ -157,9 +163,12 @@ object KeyManagementServices {
      * Note: Existing cached instances will not be closed - callers are responsible
      * for managing lifecycle of KMS instances. Use [shutdown] to properly close
      * all cached instances.
+     *
+     * @throws IllegalStateException if called from a provider's creation callback
      */
     fun clearCache() {
-        instanceCache.clear()
+        checkLifecycleCallback()
+        lifecycleLock.write { instanceCache.clear() }
     }
 
     /**
@@ -172,29 +181,34 @@ object KeyManagementServices {
      *
      * **Important:** After calling this method, the factory cannot be used to create new instances.
      * This is automatically called during JVM shutdown via a shutdown hook.
+     *
+     * @throws IllegalStateException if called from a provider's creation callback
      */
     fun shutdown() {
-        if (isShutdown.compareAndSet(false, true)) {
-            // Close all cached instances that implement AutoCloseable
-            val instances = instanceCache.values.toList() // Create snapshot to avoid concurrent modification
-            instanceCache.clear()
+        checkLifecycleCallback()
+        val instances =
+            lifecycleLock.write {
+                if (!isShutdown.compareAndSet(false, true)) return
+                instanceCache.values.toList().also { instanceCache.clear() }
+            }
 
-            instances.forEach { instance ->
-                if (instance is AutoCloseable) {
-                    try {
-                        instance.close()
-                    } catch (e: Exception) {
-                        // Log but don't throw - we want to close all instances. The JDK platform
-                        // logger is used because SLF4J is only a compile-time dependency here; it
-                        // routes to java.util.logging, or to SLF4J when a bridge is installed.
-                        System
-                            .getLogger(KeyManagementServices::class.java.name)
-                            .log(
-                                System.Logger.Level.WARNING,
-                                "Error closing KMS instance ${instance::class.java.name}",
-                                e,
-                            )
-                    }
+        // Close outside the lock so provider cleanup can call back into the factory safely.
+        val closed = Collections.newSetFromMap(IdentityHashMap<KeyManagementService, Boolean>())
+        instances.forEach { instance ->
+            if (instance is AutoCloseable && closed.add(instance)) {
+                try {
+                    instance.close()
+                } catch (e: Exception) {
+                    // Log but don't throw - we want to close all instances. The JDK platform
+                    // logger is used because SLF4J is only a compile-time dependency here; it
+                    // routes to java.util.logging, or to SLF4J when a bridge is installed.
+                    System
+                        .getLogger(KeyManagementServices::class.java.name)
+                        .log(
+                            System.Logger.Level.WARNING,
+                            "Error closing KMS instance ${instance::class.java.name}",
+                            e,
+                        )
                 }
             }
         }
@@ -228,6 +242,12 @@ object KeyManagementServices {
      * This method should not be used in production code.
      */
     fun resetShutdownForTesting() {
-        isShutdown.set(false)
+        checkLifecycleCallback()
+        lifecycleLock.write { isShutdown.set(false) }
+    }
+
+    private fun checkLifecycleCallback() {
+        // A provider must not drain the cache while its own computeIfAbsent is still publishing a client.
+        check(lifecycleLock.readHoldCount == 0) { "Cannot change the KMS factory lifecycle from provider creation" }
     }
 }

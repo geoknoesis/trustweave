@@ -2,15 +2,16 @@ package org.trustweave.did.storage
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 /**
  * In-memory implementation of [DidDocumentStorage].
  *
- * Uses [ConcurrentHashMap] for thread-safe storage. Documents are stored in memory
+ * Uses a [Mutex] to keep document and metadata changes atomic. Documents are stored in memory
  * and will be lost on application restart.
  *
  * **Use Cases:**
@@ -40,8 +41,13 @@ import java.util.concurrent.ConcurrentHashMap
 class InMemoryDocumentStorage : DidDocumentStorage {
     override val backend: StorageBackend = StorageBackend.IN_MEMORY
 
-    private val documents = ConcurrentHashMap<String, DidDocument>()
-    private val metadata = ConcurrentHashMap<String, DidDocumentMetadata>()
+    private data class Entry(
+        val document: DidDocument,
+        val metadata: DidDocumentMetadata,
+    )
+
+    // Keep document and metadata together so every mutation replaces one complete record.
+    private val entries = mutableMapOf<String, Entry>()
     private val mutex = Mutex()
 
     override suspend fun store(
@@ -50,18 +56,14 @@ class InMemoryDocumentStorage : DidDocumentStorage {
         metadata: DidDocumentMetadata?,
     ) {
         mutex.withLock {
-            documents[did.value] = document
-            this.metadata[did.value] = metadata ?: DidDocumentMetadata()
+            entries[did.value] = Entry(document, metadata ?: DidDocumentMetadata())
         }
     }
 
-    override suspend fun get(did: Did): Pair<DidDocument, DidDocumentMetadata>? {
-        return mutex.withLock {
-            val doc = documents[did.value] ?: return null
-            val meta = metadata[did.value] ?: DidDocumentMetadata()
-            doc to meta
+    override suspend fun get(did: Did): Pair<DidDocument, DidDocumentMetadata>? =
+        mutex.withLock {
+            entries[did.value]?.let { it.document to it.metadata }
         }
-    }
 
     override suspend fun update(
         did: Did,
@@ -69,23 +71,11 @@ class InMemoryDocumentStorage : DidDocumentStorage {
     ): DidDocument =
         mutex.withLock {
             val current =
-                documents[did.value]
-                    ?: throw org.trustweave.core.exception.TrustWeaveException.NotFound(
-                        resource = did.value,
-                    )
-
-            val updated = updater(current)
-            documents[did.value] = updated
-
-            // Update metadata
-            val currentMeta = metadata[did.value] ?: DidDocumentMetadata()
-            metadata[did.value] =
-                currentMeta.copy(
-                    updated =
-                        kotlin.time.Clock.System
-                            .now(),
-                )
-
+                entries[did.value]
+                    ?: throw TrustWeaveException.NotFound(resource = did.value)
+            val updated = updater(current.document)
+            entries[did.value] =
+                Entry(updated, current.metadata.copy(updated = Clock.System.now()))
             updated
         }
 
@@ -94,46 +84,23 @@ class InMemoryDocumentStorage : DidDocumentStorage {
         deactivatedDocument: DidDocument,
     ) {
         mutex.withLock {
-            // Unknown DID: nothing to deactivate; do not create state for it.
-            if (!documents.containsKey(did.value)) return
-            documents[did.value] = deactivatedDocument
-            // store() always writes both maps, so a stored document always has metadata.
-            metadata[did.value] =
-                metadata.getValue(did.value).copy(
-                    updated =
-                        kotlin.time.Clock.System
-                            .now(),
-                )
+            val current = entries[did.value] ?: return
+            entries[did.value] =
+                Entry(deactivatedDocument, current.metadata.copy(updated = Clock.System.now()))
         }
     }
 
-    override suspend fun exists(did: Did): Boolean =
-        mutex.withLock {
-            documents.containsKey(did.value)
-        }
+    override suspend fun exists(did: Did): Boolean = mutex.withLock { entries.containsKey(did.value) }
 
-    override suspend fun delete(did: Did): Boolean =
-        mutex.withLock {
-            documents.remove(did.value) != null && metadata.remove(did.value) != null
-        }
+    override suspend fun delete(did: Did): Boolean = mutex.withLock { entries.remove(did.value) != null }
 
-    /**
-     * Clears all stored documents (useful for testing).
-     */
+    /** Clears all documents and their metadata. */
     suspend fun clear() {
-        mutex.withLock {
-            documents.clear()
-            metadata.clear()
-        }
+        mutex.withLock { entries.clear() }
     }
 
-    /**
-     * Gets the number of stored documents.
-     */
-    suspend fun size(): Int =
-        mutex.withLock {
-            documents.size
-        }
+    /** Returns the number of stored documents. */
+    suspend fun size(): Int = mutex.withLock { entries.size }
 }
 
 /**

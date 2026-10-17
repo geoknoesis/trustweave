@@ -51,6 +51,54 @@ class WalletDirectoryTest {
     }
 
     @Test
+    fun `replacement removes old DID mappings and indexes the new identity`() {
+        val directory = WalletDirectory()
+        directory.register(rich)
+        val replacement = RichWallet("rich-1", "did:key:new-wallet", "did:key:new-holder")
+        directory.register(replacement)
+
+        assertNull(directory.getByDid(rich.walletDid))
+        assertNull(directory.getByDid(rich.holderDid))
+        assertSame(replacement, directory.get("rich-1"))
+        assertSame(replacement, directory.getByDid(replacement.walletDid))
+        assertSame(replacement, directory.getByDid(replacement.holderDid))
+    }
+
+    @Test
+    fun `replacing a DID wallet with a plain wallet removes both old DID mappings`() {
+        val directory = WalletDirectory()
+        directory.register(rich)
+        directory.register(MapWallet("rich-1"))
+
+        assertNull(directory.getByDid(rich.walletDid))
+        assertNull(directory.getByDid(rich.holderDid))
+    }
+
+    @Test
+    fun `unregister preserves shared DID mappings owned by a later wallet`() {
+        val directory = WalletDirectory()
+        val later = RichWallet("later", rich.holderDid, rich.walletDid)
+        directory.register(rich)
+        directory.register(later)
+
+        assertTrue(directory.unregister(rich.walletId))
+        assertSame(later, directory.getByDid(rich.walletDid))
+        assertSame(later, directory.getByDid(rich.holderDid))
+    }
+
+    @Test
+    fun `replacement preserves shared DID mappings owned by another wallet`() {
+        val directory = WalletDirectory()
+        val later = RichWallet("later", rich.walletDid, rich.holderDid)
+        directory.register(rich)
+        directory.register(later)
+        directory.register(MapWallet(rich.walletId))
+
+        assertSame(later, directory.getByDid(rich.walletDid))
+        assertSame(later, directory.getByDid(rich.holderDid))
+    }
+
+    @Test
     fun `unregister removes the wallet and its DID entries and reports whether it existed`() {
         val directory = WalletDirectory()
         directory.register(rich)

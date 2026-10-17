@@ -1,38 +1,15 @@
 package org.trustweave.kms.internal
 
-/**
- * Internal utility for creating cache keys from provider name and configuration.
- *
- * This class is used internally by [KeyManagementServices] to create unique
- * cache keys for KMS instances. The cache key is based on the provider name
- * and the configuration options, ensuring that instances with the same
- * configuration are reused from the cache.
- *
- * **Cache Key Strategy:**
- * - Provider name and configuration map are combined to create a unique key
- * - Same provider + same configuration = same cache key = same instance
- * - Different configurations for the same provider create different cache entries
- * - The configuration part of the key is a SHA-256 hash of the normalized
- *   options, so secrets passed as option values (access keys, passwords,
- *   tokens) never appear in the key string retained by the instance cache
- *
- * **Thread Safety:**
- * Cache key creation is thread-safe and immutable once created.
- *
- * **Internal Use Only:**
- * This is an internal class and should not be used directly by KMS plugins
- * or consumers of the KMS API.
- */
-
 import org.trustweave.kms.KmsCreationOptions
 import java.security.MessageDigest
+import java.util.HexFormat
 
 /**
- * Internal utility for creating cache keys from configurations.
+ * Creates stable cache keys from provider names and canonical configurations.
  *
- * Generates stable, comparable keys from both Map and typed configurations.
+ * Configuration values are hashed so secrets are not retained as plain text in cache keys.
  *
- * Note: Made public for testing purposes.
+ * Stateless and safe for concurrent callers. Intended for internal use.
  */
 object ConfigCacheKey {
     /**
@@ -45,10 +22,7 @@ object ConfigCacheKey {
     fun create(
         providerName: String,
         options: KmsCreationOptions,
-    ): String {
-        // Convert to map and use map-based key generation
-        return create(providerName, options.toMap())
-    }
+    ): String = create(providerName, options.toMap())
 
     /**
      * Creates a cache key from provider name and map configuration.
@@ -76,11 +50,10 @@ object ConfigCacheKey {
     /**
      * Computes the lowercase hex SHA-256 digest of the given string.
      */
-    private fun sha256Hex(input: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(input.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+    private fun sha256Hex(input: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(input.toByteArray(Charsets.UTF_8))
+        return HexFormat.of().formatHex(digest)
+    }
 
     /** Appends a type tag and a length-prefixed text, so no value can run into its neighbour. */
     private fun StringBuilder.text(
@@ -99,11 +72,7 @@ object ConfigCacheKey {
      * sets by their encoded elements (they have no order), and lists, arrays and other ordered
      * collections keep their order.
      */
-    private fun canonical(value: Any?): String {
-        val out = StringBuilder()
-        encode(value, out)
-        return out.toString()
-    }
+    private fun canonical(value: Any?): String = buildString { encode(value, this) }
 
     private fun encode(
         value: Any?,

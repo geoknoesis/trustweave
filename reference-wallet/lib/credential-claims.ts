@@ -13,7 +13,7 @@
  * disclosure value is decrypted with the holder's key.
  */
 import { decodeSdJwtVc } from './sdjwt'
-import { b64uDecode, b64uDecodeString } from './crypto'
+import { b64uDecodeString } from './crypto'
 import { decryptClaimJwe, isClaimJwePayload } from './claim-jwe'
 import { humanClaimName } from './credential-display'
 import { loadHolder, type StoredCredential } from './storage'
@@ -118,16 +118,6 @@ export async function extractClaimsForDisplay(cred: StoredCredential): Promise<C
     return []
   }
 
-  let holderPriv: Uint8Array | null = null
-  const holder = loadHolder()
-  if (holder) {
-    try {
-      holderPriv = b64uDecode(holder.privateKey)
-    } catch {
-      holderPriv = null
-    }
-  }
-
   const shareable = new Set(cred.selectivelyDisclosable)
   const rows: ClaimRow[] = []
   for (const [name, value] of Object.entries(raw)) {
@@ -136,9 +126,10 @@ export async function extractClaimsForDisplay(cred: StoredCredential): Promise<C
 
     let resolved: unknown = value
     if (isClaimJwePayload(value)) {
-      if (!holderPriv) continue // cannot decrypt without the holder key
       try {
-        resolved = await decryptClaimJwe(value, holderPriv)
+        const holder = loadHolder()
+        if (!holder) continue
+        resolved = await decryptClaimJwe(value, holder.did)
       } catch {
         resolved = '••• (could not decrypt)'
       }

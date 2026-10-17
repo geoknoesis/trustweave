@@ -2,7 +2,7 @@
   "name": "trustweave-reference-wallet-expo",
   "version": "0.1.0",
   "private": true,
-  "description": "React Native / Expo holder wallet — fourth reference build alongside web, native Android, and native iOS",
+  "description": "React Native / Expo holder wallet \u00e2\u20ac\u201d fourth reference build alongside web, native Android, and native iOS",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -17,7 +17,6 @@
     "@noble/ed25519": "2.1.0",
     "@noble/hashes": "2.4.0",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "babel-preset-expo": "~54.0.10",
     "bs58": "6.0.0",
     "expo": "~57.0.26",
     "expo-camera": "~57.0.6",

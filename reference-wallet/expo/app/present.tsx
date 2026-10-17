@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TouchableOpaci
 import { Link, useFocusEffect } from 'expo-router'
 import { CredentialLibraryCard } from '@/components/CredentialLibraryCard'
 import { VerifierQrScanner, VerifierQrScannerButton } from '@/components/VerifierQrScanner'
+import { NfcVerifierScanButton } from '@/components/NfcVerifierScanButton'
 import { bootstrap, createPresentation, list, type WalletState } from '@/lib/wallet'
 import type { StoredCredential } from '@/lib/storage'
 import { demoBackendBaseUrl } from '@/lib/demoBackend'
@@ -229,6 +230,11 @@ export default function PresentScreen() {
             <VerifierQrScannerButton
               onPress={() => setScannerOpen(true)}
               loading={status.kind === 'loadingRequest'}
+            />
+            <NfcVerifierScanButton
+              onScan={onVerifierScanned}
+              onError={(message) => setStatus({ kind: 'error', message })}
+              disabled={status.kind === 'loadingRequest'}
             />
           </View>
 

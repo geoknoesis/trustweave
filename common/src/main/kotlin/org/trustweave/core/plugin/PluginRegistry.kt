@@ -461,6 +461,9 @@ internal class DefaultPluginRegistry(
         if (stopFirst) {
             try {
                 if (!lifecycle.stop()) logger.warn("Plugin '{}' stop() returned false during teardown", pluginId)
+            } catch (e: CancellationException) {
+                // Defer cancellation until cleanup completes; the caller propagates it.
+                failures += e
             } catch (e: Exception) {
                 logger.warn("Plugin '{}' stop() failed during teardown; continuing with cleanup", pluginId, e)
                 failures += e
@@ -468,6 +471,9 @@ internal class DefaultPluginRegistry(
         }
         try {
             lifecycle.cleanup()
+        } catch (e: CancellationException) {
+            // Preserve the original cancellation for propagation after resource release.
+            failures += e
         } catch (e: Exception) {
             logger.warn("Plugin '{}' cleanup() failed during teardown", pluginId, e)
             failures += e

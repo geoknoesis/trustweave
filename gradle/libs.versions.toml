@@ -16,7 +16,7 @@ wiremock = "3.13.2"
 # HTTP & Serialization
 ktor = "3.6.0"
 okhttp = "4.12.0"
-jackson = "2.22.3"
+jackson = "2.22.4"
 # Jackson 3 (tools.jackson) arrives transitively through web3j 6; pinned to a patched 3.1.x for GHSA-2m67-wjpj-xhg9,
 # GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55, GHSA-rcqc-6cw3-h962 (core >= 3.1.1, databind >= 3.1.4) and the 2026-10
 # batch GHSA-7hhh-6rmp-j9qf, GHSA-cxp5-3px4-pw24, GHSA-p6pp-m3f8-5c89 (>= 3.1.7), GHSA-gx83-3vf8-gh7j (>= 3.1.6).
@@ -61,7 +61,7 @@ jakarta-json = "2.0.1"
 
 # Cloud SDKs
 aws-sdk-bom = "2.55.14"
-azure-sdk-bom = "1.3.8"
+azure-sdk-bom = "1.3.9"
 google-cloud-bom = "26.90.0"
 
 # Other

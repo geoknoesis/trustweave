@@ -15,8 +15,8 @@ wiremock = "3.13.2"
 
 # HTTP & Serialization
 ktor = "3.6.0"
-okhttp = "4.12.0"
-jackson = "2.22.3"
+okhttp = "4.12.1"
+jackson = "2.22.4"
 # Jackson 3 (tools.jackson) arrives transitively through web3j 6; pinned to a patched 3.1.x for GHSA-2m67-wjpj-xhg9,
 # GHSA-5hh8-q8hv-fr38, GHSA-9fxm-vc8v-hj55, GHSA-rcqc-6cw3-h962 (core >= 3.1.1, databind >= 3.1.4) and the 2026-10
 # batch GHSA-7hhh-6rmp-j9qf, GHSA-cxp5-3px4-pw24, GHSA-p6pp-m3f8-5c89 (>= 3.1.7), GHSA-gx83-3vf8-gh7j (>= 3.1.6).
@@ -28,23 +28,23 @@ jacksonAnnotations = "2.22"
 # Patch the Netty 4.1 line used by cloud SDKs, including GHSA-c4c3-7fpv-j4q5.
 netty41 = "4.1.139.Final"
 netty42 = "4.2.18.Final"
-gson = "2.14.0"
+gson = "2.15.0"
 jayway-jsonpath = "3.0.0"
-spring-boot = "4.1.1"
+spring-boot = "4.1.2"
 
 # Observability
 opentelemetry = "1.67.0"
 opentelemetry-proto = "1.11.1-alpha"
 
 # Blockchain
-web3j = "6.0.0"
+web3j = "6.1.0"
 bitcoinj = "0.17.1"
 algosdk = "2.11.0"
 cardano-client = "0.7.3"
 
 # Database
 postgresql = "42.7.14"
-mysql = "26.7.0"
+mysql = "26.10.0"
 h2 = "2.5.252"
 hikaricp = "7.1.0"
 
@@ -61,7 +61,7 @@ jakarta-json = "2.0.1"
 
 # Cloud SDKs
 aws-sdk-bom = "2.55.14"
-azure-sdk-bom = "1.3.8"
+azure-sdk-bom = "1.3.9"
 google-cloud-bom = "26.90.0"
 
 # Other

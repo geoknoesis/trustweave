@@ -78,10 +78,10 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0")
 
     // Networking
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.1")
 
     // Crypto — Ed25519 + did:key encoding
-    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.87")
 
     // Serialization for VC-JWT payloads + DTOs
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
